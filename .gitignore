@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Docs & build
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Misc
+*.log
+*.cache
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# packaging
+*.egg-info/
+dist/
+build/
