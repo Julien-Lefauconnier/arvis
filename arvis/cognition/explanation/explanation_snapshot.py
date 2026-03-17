@@ -27,3 +27,10 @@ class ExplanationSnapshot:
     trajectory: Dict[str, Any] = field(default_factory=dict)
 
     created_at: datetime = field(default_factory=utcnow)
+
+    @classmethod
+    def empty(cls) -> "ExplanationSnapshot":
+        """
+        Deterministic empty explanation snapshot.
+        """
+        return cls()

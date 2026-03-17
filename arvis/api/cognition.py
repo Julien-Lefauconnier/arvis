@@ -11,10 +11,23 @@ from arvis.cognition.state.cognitive_state import (
     CognitiveState,
     CognitiveRiskSnapshot,
 )
+from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
+from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
+from arvis.uncertainty.uncertainty_frame_registry import UncertaintyFrameRegistry
+
+from arvis.cognition.policy import (
+    CognitivePolicyResult,
+    CognitiveSignalSnapshot,
+)
 
 __all__ = [
     "CognitiveBundleSnapshot",
     "CognitiveBundleBuilder",
     "CognitiveState",
     "CognitiveRiskSnapshot",
+    "UncertaintyAxis",
+    "UncertaintyFrame",
+    "UncertaintyFrameRegistry",
+    "CognitivePolicyResult",
+    "CognitiveSignalSnapshot",   
 ]

@@ -33,6 +33,13 @@ Thumbs.db
 .coverage
 htmlcov/
 
+# Hypothesis (property-based testing cache)
+.hypothesis/
+
+# Python caches supplémentaires
+__pypackages__/
+
+
 # packaging
 *.egg-info/
 dist/

@@ -1,12 +1,16 @@
 # arvis/kernel/kernel_contract.py
 
-class CognitiveKernelContract:
+from typing import Protocol
 
-    def observe(self):
-        raise NotImplementedError
+from arvis.interfaces.cognitive_bundle import CognitiveBundle
 
-    def update(self):
-        raise NotImplementedError
 
-    def stabilize(self):
-        raise NotImplementedError
+class CognitiveKernelContract(Protocol):
+    """
+    Core cognitive kernel contract.
+
+    Stateless, pure cognitive transformation.
+    """
+
+    def run(self, bundle: CognitiveBundle) -> CognitiveBundle:
+        ...

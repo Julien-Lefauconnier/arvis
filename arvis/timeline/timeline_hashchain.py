@@ -11,6 +11,15 @@ from typing import Iterable, List
 from .timeline_entry import TimelineEntry
 
 
+def __post_init__(self):
+
+    for h in self.hashes:
+        if len(h) != 64:
+            raise ValueError("invalid hash length")
+
+        if any(c not in "0123456789abcdef" for c in h):
+            raise ValueError("invalid hash format")
+        
 def _dt_iso_utc(dt: datetime) -> str:
     if dt.tzinfo is None:
         raise ValueError("datetime must be tz-aware")
@@ -56,6 +65,19 @@ def chain_hashes(entries: Iterable[TimelineEntry], *, seed: str = "") -> List[st
 @dataclass(frozen=True)
 class TimelineHashChain:
     hashes: tuple[str, ...]
+
+    def __post_init__(self):
+
+        for h in self.hashes:
+
+            if not isinstance(h, str):
+                raise ValueError("hash must be str")
+
+            if len(h) != 64:
+                raise ValueError("invalid hash length")
+
+            if any(c not in "0123456789abcdef" for c in h):
+                raise ValueError("invalid hash format")
 
     @property
     def head(self) -> str | None:

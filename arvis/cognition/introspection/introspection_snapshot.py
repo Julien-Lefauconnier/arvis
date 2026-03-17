@@ -27,3 +27,10 @@ class IntrospectionSnapshot:
     notes: Optional[str] = None
 
     created_at: datetime = field(default_factory=utcnow)
+
+    @classmethod
+    def empty(cls) -> "IntrospectionSnapshot":
+        """
+        Deterministic empty introspection snapshot.
+        """
+        return cls()

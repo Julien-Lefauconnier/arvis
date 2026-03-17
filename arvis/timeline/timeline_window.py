@@ -25,7 +25,7 @@ class TimelineWindow:
 
     def __post_init__(self):
         if self.after and self.before:
-            if self.after.timestamp >= self.before.timestamp:
+            if self.after.timestamp() >= self.before.timestamp():
                 raise ValueError(
                     "TimelineWindow invariant violated: "
                     "'after' must be strictly earlier than 'before'."
@@ -37,7 +37,7 @@ class TimelineWindow:
         """
         return {
             "after": self.after.isoformat() if self.after else None,
-            "before": self.before.timestamp.isoformat() if self.before else None,
+            "before": self.before.isoformat() if self.before else None,
         }
 
     def __lt__(self, other: "TimelineWindow") -> bool:
@@ -45,11 +45,12 @@ class TimelineWindow:
         Optional ordering based on earliest bound.
         Useful for sorting windows deterministically.
         """
+
         if not isinstance(other, TimelineWindow):
             return NotImplemented
 
-        self_ts = self.after.timestamp if self.after else None
-        other_ts = other.after.timestamp if other.after else None
+        self_ts = self.after.timestamp() if self.after else None
+        other_ts = other.after.timestamp() if other.after else None
 
         if self_ts is None and other_ts is None:
             return False

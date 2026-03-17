@@ -23,6 +23,7 @@ from arvis.math.risk.risk_bound import (
 )
 
 from arvis.math.core.change_budget import ChangeBudget
+from arvis.control.control_inertia import ControlInertia
 
 __all__ = [
     "LyapunovState",
@@ -35,4 +36,5 @@ __all__ = [
     "HoeffdingRiskBound",
     "RiskBoundSnapshot",
     "ChangeBudget",
+    "ControlInertia",
 ]

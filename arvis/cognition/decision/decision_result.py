@@ -28,3 +28,11 @@ class DecisionResult:
     uncertainty_frames: List[UncertaintyFrame] = field(default_factory=list)
 
     context_hints: Dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def empty(cls) -> "DecisionResult":
+        """
+        Deterministic empty decision snapshot.
+        Used by replay / simulation.
+        """
+        return cls()

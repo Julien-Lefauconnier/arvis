@@ -8,6 +8,8 @@ import math
 
 from arvis.math.control.eps_adaptive import adaptive_eps, EpsAdaptiveParams, CognitiveMode
 from arvis.math.core.normalization import clamp01
+from arvis.math.signals import RiskSignal, UncertaintySignal, DriftSignal
+from arvis.math.signals.utils import signal_value
 
 
 # ============================================================
@@ -84,14 +86,17 @@ class IRGEpsilonController:
         collapse_risk: float,
         latent_volatility: float,
     ) -> IRGRegime:
-        r = clamp01(collapse_risk)
-        v = clamp01(latent_volatility)
+        cr = collapse_risk
+        lv = latent_volatility
 
-        if r > 0.85:
+        r = signal_value(cr)
+        v = signal_value(lv)
+
+        if hasattr(cr, "is_critical") and cr.is_critical():
             return IRGRegime.COLLAPSE
-        if r > 0.6 or v > 0.7:
+        if (hasattr(cr, "is_unstable_zone") and cr.is_unstable_zone()) or v > 0.7:
             return IRGRegime.UNSTABLE
-        if r > 0.3 or v > 0.4:
+        if (hasattr(cr, "is_transition_zone") and cr.is_transition_zone()) or v > 0.4:
             return IRGRegime.TRANSITION
         return IRGRegime.STABLE
 
@@ -105,7 +110,8 @@ class IRGEpsilonController:
         collapse_risk: float,
     ) -> float:
         p = self.irg_params
-        r = clamp01(collapse_risk)
+       
+        r = signal_value(collapse_risk)
 
         base = math.exp(-p.k_structural * r)
 
@@ -139,6 +145,12 @@ class IRGEpsilonController:
         2. structural modulation
         3. smoothing inertia
         """
+        # -----------------------------------------
+        # Signal-safe normalization
+        # -----------------------------------------
+        uncertainty = signal_value(uncertainty, 0.0)
+        collapse_risk = signal_value(collapse_risk, 0.0)
+        delta_v = signal_value(delta_v, 0.0)
 
         # local epsilon
         eps_local = adaptive_eps(

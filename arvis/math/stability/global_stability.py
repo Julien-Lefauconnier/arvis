@@ -5,8 +5,8 @@ from typing import Optional
 
 from arvis.math.lyapunov.lyapunov import V, LyapunovState
 from arvis.math.predictive.predictive_stability import PredictiveSnapshot
-from arvis.math.predicitive.trajectory_observer import TrajectorySnapshot
-from arivs.math.lyapunov.probabilistic_lyapunov import ProbLyapunovSnapshot
+from arvis.math.predictive.trajectory_observer import TrajectorySnapshot
+from arvis.math.lyapunov.probabilistic_lyapunov import ProbLyapunovSnapshot
 from arvis.math.stability.regime_estimator import RegimeSnapshot
 from arvis.math.core.normalization import clamp01
 

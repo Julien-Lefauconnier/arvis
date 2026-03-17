@@ -14,9 +14,9 @@ class UncertaintyFrame:
     A frame groups uncertainty axes to describe
     a zone of cognitive prudence.
 
-    ⚠️ No decision
-    ⚠️ No execution
-    ⚠️ No inference
+    - No decision
+    - No execution
+    - No inference
     """
 
     frame_id: str

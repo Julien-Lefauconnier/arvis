@@ -11,9 +11,11 @@ from .reasoning_intent import (
 )
 
 from .gap_to_intent_mapper import GapToIntentMapper
+from .reasoning_gap import ReasoningGap
 
 __all__ = [
     "ReasoningIntent",
     "ReasoningIntentType",
     "GapToIntentMapper",
+    "ReasoningGap",
 ]

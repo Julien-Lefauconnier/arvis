@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Any
 
-from arvis.stability.global_forecast_snapshot import GlobalForecastSnapshot
+from arvis.stability import GlobalForecastSnapshot
 from arvis.reflexive.irg_latent_state import IRGLatentState
 
 

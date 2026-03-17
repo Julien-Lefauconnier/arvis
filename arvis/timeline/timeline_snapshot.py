@@ -42,6 +42,26 @@ class TimelineSnapshot:
     def verify(self) -> None:
         self.hashchain.verify(self.entries)
 
+    def cursor(self) -> TimelineCursor:
+        """
+        Deterministic cursor representing the current snapshot state.
+        """
+
+        if not self.entries:
+            return TimelineCursor(
+                timestamp=datetime.fromtimestamp(0, timezone.utc),
+                head=None,
+                total_entries=0,
+            )
+
+        last = self.entries[-1]
+
+        return TimelineCursor(
+            timestamp=last.created_at,
+            head=self.hashchain.head,
+            total_entries=len(self.entries),
+        )
+
     def append(self, entry: TimelineEntry) -> "TimelineSnapshot":
         """
         Incremental deterministic extension of the snapshot.

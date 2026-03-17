@@ -36,6 +36,12 @@ def lyapunov_gate(
     current: LyapunovState,
     params: LyapunovGateParams = LyapunovGateParams(),
 ) -> LyapunovVerdict:
+    # --- safety adapter ---
+    if isinstance(current, float):
+        current = LyapunovState.from_scalar(current)
+    if isinstance(previous, float):
+        previous = LyapunovState.from_scalar(previous)
+
     v = V(current)
 
     # --- global safety ---
