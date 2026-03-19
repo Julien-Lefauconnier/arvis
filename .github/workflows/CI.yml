@@ -29,10 +29,8 @@ jobs:
       - name: Mypy
         run: mypy arvis --strict
 
-      - name: Pytest
-        run: pytest --maxfail=1 --disable-warnings -q
+      - name: Pytest + coverage
+        run: pytest --cov=arvis --cov-report=xml
 
-      - name: Coverage XML
-        run: |
-          pip install pytest-cov
-          pytest --cov=arvis --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
