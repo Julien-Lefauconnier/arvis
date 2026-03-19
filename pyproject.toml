@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "arvis-posix"
+name = "arvis"
 version = "1.0.0"
-description = "ARVIS POSIX — minimal kernel primitives for stable cognitive systems"
+description = "ARVIS — minimal kernel primitives for stable cognitive systems"
 readme = "README.md"
 requires-python = ">=3.10"
 
@@ -46,9 +46,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/arvis-ai/arvis-posix"
-Repository = "https://github.com/arvis-ai/arvis-posix"
-Documentation = "https://github.com/arvis-ai/arvis-posix/docs"
+Homepage = "https://github.com/arvis-ai/arvis"
+Repository = "https://github.com/arvis-ai/arvis"
+Documentation = "https://github.com/arvis-ai/arvis/docs"
 
 [tool.setuptools.packages.find]
 include = ["arvis*"]

@@ -72,7 +72,7 @@ This repository represents a **production-grade cognitive system architecture**.
 ## Installation & Quickstart
 
 ```bash
-git clone https://github.com/arvis-ai/arvis-posix.git
+git clone https://github.com/arvis-ai/arvis.git
 cd arvis-posix
 pip install -e .
 ```
