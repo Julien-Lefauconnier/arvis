@@ -47,9 +47,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/arvis-ai/arvis"
-Repository = "https://github.com/arvis-ai/arvis"
-Documentation = "https://github.com/arvis-ai/arvis/docs"
+Homepage = "https://github.com/Julien-Lefauconnier/arvis"
+Repository = "https://github.com/Julien-Lefauconnier/arvis"
+Documentation = "https://github.com/Julien-Lefauconnier/arvis/docs"
 
 [tool.setuptools.packages.find]
 include = ["arvis*"]

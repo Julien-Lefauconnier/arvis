@@ -64,12 +64,13 @@ If constraints are not satisfied:
 
 #### Badges
 
-![CI](https://github.com/arvis-ai/arvis/actions/workflows/ci.yml/badge.svg)
-![Coverage](https://codecov.io/gh/arvis-ai/arvis/branch/main/graph/badge.svg)
+![CI](https://github.com/Julien-Lefauconnier/arvis/actions/workflows/CI.yml/badge.svg)
+![Coverage](https://codecov.io/gh/Julien-Lefauconnier/arvis/branch/main/graph/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 ![Mypy](https://img.shields.io/badge/mypy-strict-blue)
 ![Ruff](https://img.shields.io/badge/lint-ruff-black)
+![Status](https://img.shields.io/badge/status-research--grade-purple)
 
 ---
 
