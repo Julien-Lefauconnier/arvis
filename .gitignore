@@ -1,46 +1,71 @@
+# ----------------------------
 # Python
+# ----------------------------
 __pycache__/
 *.py[cod]
-*.pyc
 *.pyo
 *.pyd
 .Python
-env/
+__pypackages__/
+
+# ----------------------------
+# Environments
+# ----------------------------
+.env
+.env.*
+*.local
 venv/
+env/
 .venv/
-pip-log.txt
-pip-delete-this-directory.txt
 
-# Docs & build
-.DS_Store
-Thumbs.db
-*.swp
-*.bak
-*.tmp
+# ----------------------------
+# Build / packaging
+# ----------------------------
+*.egg-info/
+dist/
+build/
 
+# ----------------------------
+# Testing
+# ----------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.hypothesis/
+
+# ----------------------------
+# Lint / typing
+# ----------------------------
+.ruff_cache/
+.mypy_cache/
+
+# ----------------------------
+# Logs / runtime
+# ----------------------------
+*.log
+logs/
+*.sqlite3
+
+# ----------------------------
 # IDE
+# ----------------------------
 .idea/
 .vscode/
 *.sublime-project
 *.sublime-workspace
 
+# ----------------------------
+# OS
+# ----------------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------------
 # Misc
-*.log
+# ----------------------------
 *.cache
-
-# pytest
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Hypothesis (property-based testing cache)
-.hypothesis/
-
-# Python caches supplémentaires
-__pypackages__/
-
-
-# packaging
-*.egg-info/
-dist/
-build/
+*.tmp
+*.bak
+*.swp
+.ipynb_checkpoints/

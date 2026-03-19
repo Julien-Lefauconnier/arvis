@@ -1,12 +1,33 @@
-# ARVIS-POSIX
+# ARVIS
 
 **A Cognitive OS that enforces when decisions are allowed to exist**
 
-ARVIS (Adaptive Resilient Vigilant Intelligence System) is a formal cognitive execution system designed 
-to enforce **when a decision is allowed to exist** under stability, determinism, and auditability constraints.
+> Not a model. Not an agent.  
+> A **deterministic cognitive execution system**.
 
-*An operating system for cognition.*  
-*Not a model. Not a framework.*
+---
+
+## 🔥 Core Principle
+
+ARVIS does not generate decisions.
+
+It determines whether a decision is **allowed to exist**.
+
+---
+
+## 🧠 What Makes ARVIS Different
+
+- Deterministic cognitive pipeline (no hidden reasoning)
+- Stability-constrained decision space
+- No decision without prior validation
+- Fully replayable cognition (hash-chained timeline)
+- Strict typing (mypy --strict enforced)
+
+---
+
+## ⚡ In One Sentence
+
+> ARVIS turns cognition into a **constrained system with guarantees**, not a probabilistic process.
 
 ---
 
@@ -43,18 +64,18 @@ If constraints are not satisfied:
 
 #### Badges
 
-![Tests](https://github.com/arvis-ai/arvis-posix/actions/workflows/ci.yml/badge.svg)
-![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen)
-![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)
-![mypy](https://img.shields.io/badge/mypy-strict-blue)
-![License](https://img.shields.io/badge/license-Apache%202.0-blue)
+![CI](https://github.com/arvis-ai/arvis/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://codecov.io/gh/arvis-ai/arvis/branch/main/graph/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue)
+![Mypy](https://img.shields.io/badge/mypy-strict-blue)
+![Ruff](https://img.shields.io/badge/lint-ruff-black)
 
 ---
 
 ## Current Status
 
-ARVIS is not a prototype.
+ARVIS is a **formally constrained cognitive system**.
 It is a **fully operational cognitive kernel** ready for research, safety evaluation, and extension.  
 We welcome collaborators, reviewers, and early adopters.
 
@@ -515,7 +536,7 @@ Kernel (low-level primitives): https://github.com/Julien-Lefauconnier/kernel
 
 Veramem Research Lab: https://github.com/Julien-Lefauconnier/arvis-cognition
 
-arvis-posix (this repo): Cognitive OS specification + contracts + interfaces
+arvis (this repo): Cognitive OS specification + contracts + interfaces
 
 The public repositories are stable surface layers of a much larger private system under active development.
 
