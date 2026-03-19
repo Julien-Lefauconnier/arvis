@@ -42,7 +42,8 @@ dev = [
     "ruff",
     "pytest",
     "pytest-cov",
-    "hypothesis"
+    "hypothesis",
+    "pytest-benchmark"
 ]
 
 [project.urls]
