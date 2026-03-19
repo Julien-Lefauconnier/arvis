@@ -8,11 +8,10 @@ from arvis.timeline.timeline_delta import (
     TimelineDeltaError,
     TimelineDeltaEmptyError,
     TimelineDeltaBaseMismatch,
-    TimelineDeltaTargetMismatch,
 )
 
 from arvis.timeline.timeline_snapshot import TimelineSnapshot
-from arvis.timeline.timeline_entry import TimelineEntry, TimelineEntryNature
+from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.timeline.timeline_types import TimelineEntryType
 
 

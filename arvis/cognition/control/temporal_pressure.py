@@ -1,5 +1,7 @@
 # arvis/cognition/control/temporal_pressure.py
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from arvis.math.core.normalization import clamp01
@@ -11,6 +13,12 @@ class TemporalPressureSnapshot:
     volatility: float
     density: float
     health_penalty: float
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "pressure", clamp01(self.pressure))
+        object.__setattr__(self, "volatility", clamp01(self.volatility))
+        object.__setattr__(self, "density", clamp01(self.density))
+        object.__setattr__(self, "health_penalty", clamp01(self.health_penalty))
 
 
 class TemporalPressure:

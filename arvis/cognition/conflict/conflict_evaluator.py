@@ -40,6 +40,11 @@ class ConflictEvaluator:
 
         for conflict in conflicts:
             for rule in self._rules:
-                results = rule(results, conflict)
+                try:
+                    new_results = rule(results, conflict)
+                    if new_results is not None:
+                        results = new_results
+                except Exception:
+                    continue
 
         return results

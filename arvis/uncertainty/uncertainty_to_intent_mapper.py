@@ -59,3 +59,10 @@ class UncertaintyToIntentMapper:
             )
 
         return intents
+
+# -----------------------------
+# Public functional API
+# -----------------------------
+
+def map_uncertainty_to_intent(frame: UncertaintyFrame) -> List[ReasoningIntent]:
+    return UncertaintyToIntentMapper.map(frame)

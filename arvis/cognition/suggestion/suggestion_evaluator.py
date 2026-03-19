@@ -25,7 +25,7 @@ class SuggestionEvaluator:
 
         # Uncertainty
         for frame in decision.uncertainty_frames:
-            axes = getattr(frame, "axes", set())
+            axes: set[UncertaintyAxis] = getattr(frame, "axes", set())
 
             if UncertaintyAxis.IRREVERSIBLE_RISK in axes:
                 suggestions.append(SuggestionSignal("request_confirmation", "uncertainty"))

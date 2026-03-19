@@ -3,9 +3,8 @@
 import pytest
 
 from arvis.timeline.timeline_view import TimelineView
-from arvis.timeline.timeline_entry import TimelineEntry
 
-from tests.timeline.helpers import make_entry, make_entries
+from tests.timeline.helpers import make_entries
 
 
 def test_view_creation():

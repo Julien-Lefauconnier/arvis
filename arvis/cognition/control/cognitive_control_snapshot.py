@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
-
+from arvis.math.core.normalization import clamp01
 
 @dataclass(frozen=True)
 class CognitiveControlSnapshot:
@@ -23,9 +23,13 @@ class CognitiveControlSnapshot:
     lyap_verdict: LyapunovVerdict
 
     # Optional observability outputs
-    exploration: Optional[Any] = None
-    drift: Optional[Any] = None
-    regime: Optional[Any] = None
-    calibration: Optional[Any] = None
-    temporal_pressure: Optional[Any] = None
-    temporal_modulation: Optional[Any] = None
+    exploration: Any | None = None
+    drift: Any | None = None
+    regime: Any | None = None
+    calibration: Any | None = None
+    temporal_pressure: Any | None = None
+    temporal_modulation: Any | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "epsilon", max(0.0, float(self.epsilon)))
+        object.__setattr__(self, "smoothed_risk", clamp01(self.smoothed_risk))

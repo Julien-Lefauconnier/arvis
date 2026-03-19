@@ -67,5 +67,25 @@ class StabilityStateProjector:
             governance=governance,
         )
     
+    # -----------------------------------------------------
+    # Snapshot projection (API / pipeline contract)
+    # -----------------------------------------------------
+
+    def project(self, snapshot: object) -> object:
+        """
+        Project a StabilitySnapshot into a usable representation.
+
+        For now:
+        - acts as identity (pass-through)
+        - keeps compatibility with existing pipeline/tests
+
+        Future:
+        - normalization
+        - smoothing
+        - multi-horizon projection
+        """
+
+        return snapshot
+    
 # backward compatibility
 LyapunovStateBuilder = StabilityStateProjector

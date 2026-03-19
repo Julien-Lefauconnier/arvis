@@ -10,7 +10,7 @@ class CognitiveRegimePolicy:
     Kernel-safe regime → control mapping.
     """
 
-    def compute(self, regime: str) -> RegimeControlSnapshot:
+    def compute(self, regime: str | None) -> RegimeControlSnapshot:
         regime = str(regime).lower()
 
         if regime == "stable":

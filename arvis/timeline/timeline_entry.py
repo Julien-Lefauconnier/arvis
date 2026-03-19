@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 import unicodedata
 from datetime import datetime,timezone
-from typing import Dict
 from typing import Optional
 from enum import Enum
 
@@ -40,7 +39,7 @@ class TimelineEntry:
     device_id: str = "0" * 64
     lamport: int = 0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
         Enforce Timeline invariants.
 

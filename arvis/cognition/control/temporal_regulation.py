@@ -1,4 +1,5 @@
 # arvis/cognition/control/temporal_regulation.py
+from __future__ import annotations
 
 from dataclasses import dataclass
 
@@ -16,7 +17,15 @@ class TemporalRegulation:
     Requires pre-computed timeline summary input.
     """
 
-    def compute(self, *, total: int, has_conflicts: bool, has_gaps: bool, has_uncertainty: bool, healthy: bool) -> TemporalModulation:
+    def compute(
+        self,
+        *,
+        total: int,
+        has_conflicts: bool,
+        has_gaps: bool,
+        has_uncertainty: bool,
+        healthy: bool,
+    ) -> TemporalModulation:
 
         base = min(1.0, total / 100.0)
 

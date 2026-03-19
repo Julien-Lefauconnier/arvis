@@ -1,12 +1,25 @@
 # arvis/cognition/calibration/calibration_engine.py
 
 from typing import List, Optional
+from dataclasses import dataclass
+from enum import Enum
 
 from arvis.cognition.policy.cognitive_policy_result import CognitivePolicyResult
 
-from .calibration_snapshot import CalibrationSnapshot
-from .calibration_regime import CalibrationRegime
 
+class CalibrationRegime(str, Enum):
+    STABLE = "stable"
+    UNSTABLE = "unstable"
+    DRIFTING = "drifting"
+    REGIME_SHIFT = "regime_shift"
+
+@dataclass
+class CalibrationSnapshot:
+    contraction_rate: float
+    instability_rate: float
+    drift_score: Optional[float]
+    collapse_risk: Optional[float]
+    regime: CalibrationRegime
 
 class CalibrationEngine:
     """

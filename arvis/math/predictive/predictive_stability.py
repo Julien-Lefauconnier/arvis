@@ -6,7 +6,7 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Deque, List, Optional
 
-from arvis.math.lyapunov.lyapunov import LyapunovState, V, delta_V
+from arvis.math.lyapunov.lyapunov import LyapunovState, V
 from arvis.math.core.normalization import clamp01
 
 

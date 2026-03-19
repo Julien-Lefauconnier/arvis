@@ -1,5 +1,7 @@
 # arvis/cognition/decision/decision_evaluator.py
 
+from typing import Any
+
 from arvis.cognition.decision.decision_signal import DecisionSignal
 
 
@@ -8,7 +10,7 @@ class DecisionEvaluator:
     Pure decision evaluator.
     """
 
-    def evaluate(self, ctx) -> DecisionSignal:
+    def evaluate(self, ctx: Any) -> DecisionSignal:
         """
         Accepts pipeline context directly (kernel-first design).
         """

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
+from arvis.math.signals.base import BaseSignal
 from arvis.math.core.normalization import clamp01
 
 
 @dataclass(frozen=True)
-class DriftSignal:
+class DriftSignal(BaseSignal):
     """
     Normalized drift signal in [0,1].
 
@@ -18,7 +18,7 @@ class DriftSignal:
     """
     value: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "value", clamp01(abs(self.value)))
 
     def __float__(self) -> float:

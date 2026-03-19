@@ -35,7 +35,16 @@ class CoherencePolicy:
             - or None (no suggestion)
         """
 
-        if budget.current_changes > budget.max_changes:
+        if snapshot is None or budget is None:
+            return None
+
+        try:
+            current = int(budget.current_changes)
+            maximum = int(budget.max_changes)
+        except Exception:
+            return None
+
+        if current > maximum:
             return CognitivePolicyResult(
                 policy_name=self.POLICY_NAME,
                 dimension="coherence",

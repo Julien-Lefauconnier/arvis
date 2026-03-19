@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from arvis.cognition.control.exploration_snapshot import ExplorationSnapshot
 from arvis.math.signals import RiskSignal, DriftSignal
-from arvis.math.signals.utils import signal_value
-
 
 class ExplorationController:
     """
@@ -16,23 +14,25 @@ class ExplorationController:
         self,
         *,
         regime: str | None,
-        collapse_risk: float | None,
-        drift_score: float | None,
+        collapse_risk: float | RiskSignal | None,
+        drift_score: float | DriftSignal | None,
         stable: bool | None,
     ) -> ExplorationSnapshot:
         
-        # -----------------------------------------
-        # Signal-safe normalization (boundary)
-        # -----------------------------------------
-        cr = collapse_risk
-        ds = drift_score
-
-        cr_val = signal_value(cr, 0.0)
-        ds_val = signal_value(ds, 0.0)
-
         r = (regime or "neutral").lower()
-        cr = float(collapse_risk) if collapse_risk is not None else 0.0
-        ds = float(drift_score) if drift_score is not None else 0.0
+        
+        if isinstance(collapse_risk, RiskSignal):
+            cr = float(collapse_risk)
+            risk_is_critical = collapse_risk.is_critical()
+        else:
+            cr = float(collapse_risk or 0.0)
+            risk_is_critical = cr >= 0.8
+
+        if isinstance(drift_score, DriftSignal):
+            ds = float(drift_score)
+        else:
+            ds = float(drift_score or 0.0)
+
         st = bool(stable) if stable is not None else True
 
         exploration = 1.0
@@ -63,20 +63,20 @@ class ExplorationController:
             budget *= 0.6
             why.append("regime=chaotic")
 
-        if hasattr(cr, "is_critical") and cr.is_critical():
+        if risk_is_critical:
             exploration *= 0.6
             confirm *= 1.3
             abstain *= 1.2
             budget *= 0.7
             why.append("collapse>=0.8")
 
-        elif cr_val >= 0.5:
+        elif cr >= 0.5:
             exploration *= 0.85
             confirm *= 1.1
             budget *= 0.85
             why.append("collapse>=0.5")
 
-        if hasattr(ds, "is_high") and ds.is_high():
+        if ds >= 0.7:
             confirm *= 1.2
             budget *= 0.85
             why.append("drift>=0.7")

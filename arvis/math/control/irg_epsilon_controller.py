@@ -9,7 +9,6 @@ import math
 from arvis.math.control.eps_adaptive import adaptive_eps, EpsAdaptiveParams, CognitiveMode
 from arvis.math.core.normalization import clamp01
 from arvis.math.signals import RiskSignal, UncertaintySignal, DriftSignal
-from arvis.math.signals.utils import signal_value
 
 
 # ============================================================
@@ -83,20 +82,20 @@ class IRGEpsilonController:
 
     def infer_regime(
         self,
-        collapse_risk: float,
-        latent_volatility: float,
+        collapse_risk: RiskSignal,
+        latent_volatility: DriftSignal,
     ) -> IRGRegime:
-        cr = collapse_risk
-        lv = latent_volatility
+        # --- coercion (compat float)
+        if not isinstance(collapse_risk, RiskSignal):
+            collapse_risk = RiskSignal(collapse_risk)
+        if not isinstance(latent_volatility, DriftSignal):
+            latent_volatility = DriftSignal(latent_volatility)
 
-        r = signal_value(cr)
-        v = signal_value(lv)
-
-        if hasattr(cr, "is_critical") and cr.is_critical():
+        if collapse_risk.is_critical():
             return IRGRegime.COLLAPSE
-        if (hasattr(cr, "is_unstable_zone") and cr.is_unstable_zone()) or v > 0.7:
+        if collapse_risk.is_unstable_zone() or latent_volatility > 0.7:
             return IRGRegime.UNSTABLE
-        if (hasattr(cr, "is_transition_zone") and cr.is_transition_zone()) or v > 0.4:
+        if collapse_risk.is_transition_zone() or latent_volatility > 0.4:
             return IRGRegime.TRANSITION
         return IRGRegime.STABLE
 
@@ -107,11 +106,15 @@ class IRGEpsilonController:
     def structural_factor(
         self,
         regime: IRGRegime,
-        collapse_risk: float,
+        collapse_risk: RiskSignal,
     ) -> float:
         p = self.irg_params
        
-        r = signal_value(collapse_risk)
+        # coercion
+        if not isinstance(collapse_risk, RiskSignal):
+            collapse_risk = RiskSignal(collapse_risk)
+
+        r = collapse_risk.level()
 
         base = math.exp(-p.k_structural * r)
 
@@ -130,11 +133,11 @@ class IRGEpsilonController:
     def compute(
         self,
         *,
-        uncertainty: float,
+        uncertainty: float | UncertaintySignal,
         budget_used: float,
-        delta_v: float,
-        collapse_risk: float,
-        latent_volatility: float,
+        delta_v: float | DriftSignal,
+        collapse_risk: float | RiskSignal,
+        latent_volatility: float | DriftSignal,
         mode: CognitiveMode,
         trust_score: float = 0.0,
     ) -> float:
@@ -145,18 +148,27 @@ class IRGEpsilonController:
         2. structural modulation
         3. smoothing inertia
         """
+
         # -----------------------------------------
-        # Signal-safe normalization
+        # Signal coercion (single entry point)
         # -----------------------------------------
-        uncertainty = signal_value(uncertainty, 0.0)
-        collapse_risk = signal_value(collapse_risk, 0.0)
-        delta_v = signal_value(delta_v, 0.0)
+        if not isinstance(uncertainty, UncertaintySignal):
+            uncertainty = UncertaintySignal(uncertainty or 0.0)
+
+        if not isinstance(collapse_risk, RiskSignal):
+            collapse_risk = RiskSignal(collapse_risk or 0.0)
+
+        if not isinstance(delta_v, DriftSignal):
+            delta_v = DriftSignal(delta_v or 0.0)
+
+        if not isinstance(latent_volatility, DriftSignal):
+            latent_volatility = DriftSignal(latent_volatility or 0.0)
 
         # local epsilon
         eps_local = adaptive_eps(
-            uncertainty=uncertainty,
+            uncertainty=float(uncertainty),
             budget_used=budget_used,
-            delta_v=delta_v,
+            delta_v=float(delta_v),
             params=self.adaptive_params,
             mode=mode,
             trust_score=trust_score,

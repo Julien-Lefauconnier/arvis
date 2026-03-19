@@ -31,6 +31,7 @@ def test_public_api_has_expected_symbols():
         "ControlInertia",
         "StabilityObserver",
         "StabilitySnapshot",
+        "StabilityView",
     }
 
     exported = set(getattr(arvis, "__all__", []))
@@ -38,3 +39,9 @@ def test_public_api_has_expected_symbols():
     missing = expected - exported
 
     assert not missing, f"Missing public exports: {sorted(missing)}"
+
+
+def test_api_fingerprint_stable():
+    from arvis.api.version import API_FINGERPRINT
+    assert isinstance(API_FINGERPRINT, str)
+    assert len(API_FINGERPRINT) == 64

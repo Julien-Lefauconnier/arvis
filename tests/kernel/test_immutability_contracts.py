@@ -2,7 +2,6 @@
 
 import inspect
 import dataclasses
-import arvis
 
 
 def iter_classes(module):

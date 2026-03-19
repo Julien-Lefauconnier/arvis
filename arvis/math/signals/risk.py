@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from arvis.math.signals.base import BaseSignal
 
 from arvis.math.core.normalization import clamp01
 
 
 @dataclass(frozen=True)
-class RiskSignal:
+class RiskSignal(BaseSignal):
     """
     Normalized collapse risk signal in [0,1].
 
@@ -19,7 +20,7 @@ class RiskSignal:
     """
     value: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "value", clamp01(self.value))
 
     def __float__(self) -> float:

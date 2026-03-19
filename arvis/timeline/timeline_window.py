@@ -23,7 +23,7 @@ class TimelineWindow:
     after: Optional[datetime] = None
     before: Optional[datetime] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.after and self.before:
             if self.after.timestamp() >= self.before.timestamp():
                 raise ValueError(

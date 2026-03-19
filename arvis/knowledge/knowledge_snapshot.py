@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import timezone
 
 from arvis.knowledge.knowledge_state import KnowledgeState
 from arvis.knowledge.knowledge_signal import KnowledgeSignal

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, Tuple
 
 # tests + core share the exact same parameters.
 DEFAULT_RISK_CALIBRATION: Dict[str, Tuple[float, float]] = {

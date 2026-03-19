@@ -1,6 +1,5 @@
 # arvis/cognition/confirmation/confirmation_evaluator.py
 
-from typing import Optional
 
 from .confirmation_request import ConfirmationRequest
 from .confirmation_result import ConfirmationResult, ConfirmationStatus

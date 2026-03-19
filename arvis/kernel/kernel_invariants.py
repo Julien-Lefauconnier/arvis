@@ -1,6 +1,8 @@
 # arvis/kernel/kernel_invariants.py
 
-def assert_kernel_invariants(bundle):
+from typing import Any
+
+def assert_kernel_invariants(bundle: Any) -> None:
     """
     Global ARVIS invariants.
     """

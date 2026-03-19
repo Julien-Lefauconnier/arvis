@@ -1,14 +1,14 @@
 # arvis/timeline/timeline_consistency_validator.py
 
 from dataclasses import dataclass
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Dict, Any
 
 
 @dataclass(frozen=True)
 class TimelineConsistencyIssue:
     code: str
     message: str
-    context: dict
+    context: Dict[str, Any]
 
 
 @dataclass(frozen=True)

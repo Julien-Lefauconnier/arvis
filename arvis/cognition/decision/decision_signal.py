@@ -1,7 +1,7 @@
 # arvis/cognition/decision/decision_signal.py
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 
 from arvis.memory.memory_intent import MemoryIntent
 from arvis.cognition.conflict.conflict_signal import ConflictSignal

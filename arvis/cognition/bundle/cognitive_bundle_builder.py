@@ -12,8 +12,6 @@ from arvis.cognition.retrieval.cognitive_retrieval_snapshot import CognitiveRetr
 from arvis.memory.memory_long_snapshot import MemoryLongSnapshot
 from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.timeline.timeline_snapshot import TimelineSnapshot
-from arvis.cognition.introspection.introspection_snapshot import IntrospectionSnapshot
-from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
 
 class CognitiveBundleBuilder:
     """
@@ -74,11 +72,11 @@ class CognitiveBundleBuilder:
         ts = snapshot.entries[-1].created_at if snapshot.entries else None
 
         introspection = IntrospectionSnapshot(
-            created_at=ts
+            created_at=ts or datetime.now(timezone.utc)
         )
 
         explanation = ExplanationSnapshot(
-            created_at=ts
+            created_at=ts or datetime.now(timezone.utc)
         )
 
         return cls.build(

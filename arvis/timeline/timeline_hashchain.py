@@ -3,22 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from hashlib import sha256
 import json
-from typing import Iterable, List
+from typing import Iterable, List, Dict, Any
 
 from .timeline_entry import TimelineEntry
-
-
-def __post_init__(self):
-
-    for h in self.hashes:
-        if len(h) != 64:
-            raise ValueError("invalid hash length")
-
-        if any(c not in "0123456789abcdef" for c in h):
-            raise ValueError("invalid hash format")
         
 def _dt_iso_utc(dt: datetime) -> str:
     if dt.tzinfo is None:
@@ -29,7 +19,7 @@ def _dt_iso_utc(dt: datetime) -> str:
     return dt.isoformat()
 
 
-def _canonical_entry_payload(e: TimelineEntry) -> dict:
+def _canonical_entry_payload(e: TimelineEntry) -> Dict[str, Any]:
     # IMPORTANT: explicit list, stable order via json sort_keys=True
     return {
         "entry_id": e.entry_id,
@@ -66,7 +56,7 @@ def chain_hashes(entries: Iterable[TimelineEntry], *, seed: str = "") -> List[st
 class TimelineHashChain:
     hashes: tuple[str, ...]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
 
         for h in self.hashes:
 

@@ -128,7 +128,7 @@ class NormalizedSignals:
     uncertainty: float
     budget_used: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "risk", clamp01(self.risk))
         object.__setattr__(self, "drift", clamp01(self.drift))
         object.__setattr__(self, "uncertainty", clamp01(self.uncertainty))

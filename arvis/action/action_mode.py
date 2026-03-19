@@ -14,3 +14,4 @@ class ActionMode(str, Enum):
     MANUAL = "manual"
     ASSISTED = "assisted"
     AUTOMATIC = "automatic"
+    BLOCKED = "blocked"

@@ -43,7 +43,7 @@ class UncertaintyFrameRegistry:
     )
 
     @classmethod
-    def all(cls):
+    def all(cls) -> list[UncertaintyFrame]:
         return [
             cls.PERSONAL_CONTEXT,
             cls.FINANCIAL,

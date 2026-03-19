@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
 
+
 from arvis.math.lyapunov.lyapunov import LyapunovState,V
 from arvis.stability.stability_state_projector import StabilityStateProjector as LyapunovStateBuilder
 
@@ -13,6 +14,14 @@ from arvis.math.lyapunov.lyapunov_gate import (
 )
 from arvis.stability.stability_observer import StabilityObserver
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
+from arvis.stability.stability_observer import StabilitySnapshot
+
+
+@dataclass
+class _LyapunovStabilitySnapshot:
+    score: float
+    collapse_risk: float
+    verdict: str
 
 
 @dataclass
@@ -61,20 +70,32 @@ class LyapunovObserver(StabilityObserver):
     # --------------------------------------------------
     def observe(
         self,
-        previous_bundle: CognitiveBundleSnapshot,
-        current_bundle: CognitiveBundleSnapshot,
-    ) -> LyapunovObservation:
+        bundle: CognitiveBundleSnapshot,
+    ) -> StabilitySnapshot:
 
-        prev_state = LyapunovStateBuilder.from_bundle(previous_bundle)
-        cur_state = LyapunovStateBuilder.from_bundle(current_bundle)
+        cur_state = LyapunovStateBuilder.from_bundle(bundle)
+
+        if self._last_state is None:
+            self._last_state = cur_state
+            return _LyapunovStabilitySnapshot(
+                score=float(V(cur_state)),
+                collapse_risk=0.0,
+                verdict=LyapunovVerdict.REQUIRE_CONFIRMATION.value,
+            )
+
+        prev_state = self._last_state
 
         # Keep internal last state (optional lifecycle use)
         self._last_state = cur_state
 
         obs = self.evaluate(prev_state, cur_state)
-        return obs
+        return _LyapunovStabilitySnapshot(
+            score=float(obs.v_new),
+            collapse_risk=float(abs(obs.delta)),
+            verdict=obs.verdict.value,
+        )
 
-    def reset(self):
+    def reset(self) -> None:
         """Useful for tests or session reset."""
         self._last_state = None
 
@@ -85,3 +106,4 @@ class LyapunovObserver(StabilityObserver):
             "delta": obs.delta,
             "verdict": obs.verdict.value,
         }
+    

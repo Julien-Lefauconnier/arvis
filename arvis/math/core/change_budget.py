@@ -17,7 +17,7 @@ class ChangeBudget:
     budget: float
     consumption: float = 0.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "budget", clamp01(self.budget))
         object.__setattr__(self, "consumption", clamp01(self.consumption))
 

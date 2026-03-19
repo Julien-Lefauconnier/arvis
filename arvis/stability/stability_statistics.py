@@ -46,3 +46,19 @@ class StabilityStatistics:
             instability_rate=instability,
             samples=n,
         )
+    
+    def compute(self, snapshot: StabilityStatsSnapshot) -> StabilityStatsSnapshot:
+        """
+        Compute stability statistics from a projected snapshot.
+
+        For now:
+        - acts as pass-through
+        - ensures compatibility with pipeline/tests
+
+        Future:
+        - aggregate metrics
+        - compute trends
+        - derive risk envelopes
+        """
+
+        return snapshot
