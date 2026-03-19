@@ -1,6 +1,6 @@
 # tests/timeline/test_timeline_entry.py
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import pytest
 
 from arvis.timeline.timeline_entry import TimelineEntry, TimelineEntryNature
@@ -68,8 +68,10 @@ def test_created_at_must_be_timezone_aware():
 
 def test_created_at_must_be_utc():
 
+    non_utc = datetime(2024, 1, 1, tzinfo=timezone(timedelta(hours=2)))
+
     with pytest.raises(ValueError):
-        make_entry(created_at=datetime.now(timezone.utc).astimezone())
+        make_entry(created_at=non_utc)
 
 
 # ---------------------------------------------------------
