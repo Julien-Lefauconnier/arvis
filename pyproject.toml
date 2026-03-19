@@ -42,6 +42,7 @@ dev = [
     "ruff",
     "pytest",
     "pytest-cov",
+    "hypothesis"
 ]
 
 [project.urls]
