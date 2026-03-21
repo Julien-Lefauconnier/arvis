@@ -34,7 +34,7 @@ This document defines the fundamental stability condition (T1):
 
 The correspondence between the formal model and the production system is defined here:
 
-- **[Theory ↔ System Mapping](./docs/MAPPING_ARVIS_SPECIFICATIONS_IMPLEMENTATION.md)**
+- **[Theory ↔ System Mapping](./docs/architecture/MAPPING_ARVIS_SPECIFICATIONS_IMPLEMENTATION.md)**
 
 This mapping ensures:
 
