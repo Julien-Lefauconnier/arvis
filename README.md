@@ -1,6 +1,6 @@
 # ARVIS
 
-**Cognitive OS with formal Lyapunov stability guarantees**
+**Cognitive OS governed by a formal stability law**
 
 > Not a model. Not an agent.  
 > A **deterministic cognitive execution system**.
@@ -12,6 +12,35 @@
 ARVIS does not generate decisions.
 
 It determines whether a decision is **allowed to exist**.
+
+---
+
+## 🧩 Formal Foundation
+
+ARVIS is grounded in a formally proven stability core.
+
+→ Read the full specification:
+- **[ARVIS Stability Core Specification](./ARVIS_STABILITY_CORE_SPECIFICATIONS.md)**
+
+This document defines the fundamental stability condition (T1):
+
+    log J / τ_d + log(1 - κ_eff) < 0
+
+→ which governs all admissible system behaviors.
+
+---
+
+### Theory ↔ Implementation Mapping
+
+The correspondence between the formal model and the production system is defined here:
+
+- **[Theory ↔ System Mapping](./docs/MAPPING_ARVIS_SPECIFICATIONS_IMPLEMENTATION.md)**
+
+This mapping ensures:
+
+- traceability of all mathematical constructs
+- runtime verifiability of theoretical assumptions
+- strict separation between proven guarantees and system extensions
 
 ---
 
@@ -80,8 +109,8 @@ ARVIS is a **formally constrained cognitive system**.
 It is a **fully operational cognitive kernel** ready for research, safety evaluation, and extension.  
 We welcome collaborators, reviewers, and early adopters.
 
-- 430+ tests (unit, integration, adversarial)
-- 93%+ code coverage
+- 630+ tests (unit, integration, adversarial)
+- 95%+ code coverage
 - deterministic execution pipeline
 - formal invariants enforced at runtime
 - adversarial robustness validation
@@ -94,8 +123,8 @@ This repository represents a **production-grade cognitive system architecture**.
 ## Installation & Quickstart
 
 ```bash
-git clone https://github.com/arvis-ai/arvis.git
-cd arvis-posix
+git clone https://github.com/Julien-Lefauconnier/arvis.git
+cd arvis
 pip install -e .
 ```
 
@@ -185,6 +214,15 @@ It **constrains intelligence**.
 ---
 
 ## Formal Guarantees
+
+### Fundamental Constraint
+
+All ARVIS decisions must satisfy the stability condition (T1).
+
+A decision that violates this condition is:
+
+→ mathematically invalid  
+→ structurally impossible to execute
 
 ARVIS enforces system-level properties:
 
@@ -294,7 +332,9 @@ Additional components are under active research and development.)
 
 ## Mathematical Foundation
 
-ARVIS is grounded in:
+ARVIS is grounded in a formally specified Lyapunov stability core (see Stability Core Specification).
+
+No decision exists outside this stability condition.
 
 - Lyapunov stability theory (composite + switching)
 - runtime stability enforcement (multi-axial fusion)

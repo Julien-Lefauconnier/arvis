@@ -113,6 +113,31 @@ decay behavior.
 The results identify a quantitative stability frontier governed
 by contraction, coupling, and switching excitation.
 
+\section{Scope and Relation to Implementation}
+
+The present work establishes stability guarantees for a discrete-time
+two-timescale switched dynamical system.
+
+It defines the **stability core** of the ARVIS system.
+
+However, the full ARVIS implementation extends this core with additional
+layers, including:
+
+\begin{itemize}
+\item decision fusion mechanisms,
+\item confidence estimation,
+\item runtime enforcement and fallback logic,
+\item multi-dimensional disturbance representations.
+\end{itemize}
+
+These components are not covered by the present theoretical guarantees.
+
+Throughout this paper, all results apply strictly to the Lyapunov-based
+stability core defined in Sections 2--4.
+
+The relationship between theory and implementation is formally described
+in a separate correspondence document.
+
 ------------------------------------------------------------------------
 
 \subsection{Related Work}
