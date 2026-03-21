@@ -43,7 +43,9 @@ dev = [
     "pytest",
     "pytest-cov",
     "hypothesis",
-    "pytest-benchmark"
+    "pytest-benchmark",
+    "numpy",
+    "types-numpy"
 ]
 
 [project.urls]
