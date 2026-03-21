@@ -80,7 +80,7 @@ At a high level:
 2. Detect internal conflicts
 3. Compute system dynamics (risk, drift, stability)
 4. Apply adaptive control
-5. Enforce stability constraints (gate)
+5. Enforce stability constraints through multi-axial fusion (gate)
 6. Decide if execution is allowed
 
 If the system is:

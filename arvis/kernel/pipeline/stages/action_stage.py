@@ -13,24 +13,32 @@ class ActionStage:
 
     def run(self, pipeline: Any, ctx: Any) -> None:
 
+        # 🔥 HARD GUARD (prioritaire)
+        if not getattr(ctx, "_can_execute", False):
+            from arvis.action.action_decision import ActionDecision
+            from arvis.action.action_mode import ActionMode
+
+            ctx.action_decision = ActionDecision(
+                allowed=False,
+                requires_user_validation=getattr(ctx, "_requires_confirmation", False),
+                denied_reason="execution_blocked",
+                audit_required=True,
+                action_mode=ActionMode.AUTOMATIC,
+            )
+            return
+
+        # -----------------------------------------
+        # NORMAL FLOW
+        # -----------------------------------------
         verdict = ctx.gate_result
 
-        # -----------------------------------------
-        # 1. RESOLVE TEMPLATE
-        # -----------------------------------------
         action_template = resolve_action(ctx.decision_result)
 
-        # -----------------------------------------
-        # 2. BUILD CONTEXT
-        # -----------------------------------------
         action_context = ActionContext(
             user_id=ctx.user_id,
             responsibility_mode=getattr(ctx, "responsibility_mode", "standard"),
         )
 
-        # -----------------------------------------
-        # 3. EVALUATE
-        # -----------------------------------------
         action_decision = evaluate_action(
             verdict=verdict,
             template=action_template,
@@ -38,15 +46,9 @@ class ActionStage:
             context=action_context,
         )
 
-        # -----------------------------------------
-        # 4. POLICY LAYER
-        # -----------------------------------------
         action_decision = pipeline.action_policy.apply(
             decision=action_decision,
             risk=ctx.collapse_risk,
         )
 
-        # -----------------------------------------
-        # 5. EXPORT
-        # -----------------------------------------
         ctx.action_decision = action_decision

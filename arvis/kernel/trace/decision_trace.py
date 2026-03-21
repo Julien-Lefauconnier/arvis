@@ -42,6 +42,11 @@ class DecisionTrace:
     stability: Optional[Any] = None
     symbolic: Optional[Any] = None
     system_tension: Optional[Any] = None
+    quadratic_lyapunov: Optional[Any] = None
+    quadratic_comparability: Optional[Any] = None
+    theoretical_regime: Optional[Any] = None
+    fast_dynamics: Optional[Any] = None
+    perturbation: Optional[Any] = None
 
     conversation: Optional[Any] = None
     governance: Optional[Any] = None

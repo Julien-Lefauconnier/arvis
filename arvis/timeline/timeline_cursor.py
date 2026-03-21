@@ -8,16 +8,7 @@ from typing import Any, Optional
 
 @dataclass(frozen=True)
 class TimelineCursor:
-    """
-    Immutable cursor representing a position in a timeline.
-
-    Kernel guarantees:
-    - deterministic
-    - distributed-safe
-    - equality-based identity
-    """
-
-    timestamp: Optional[datetime]
+    timestamp: datetime
     head: Optional[str] = None
     total_entries: int = 0
 

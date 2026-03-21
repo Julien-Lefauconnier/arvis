@@ -98,3 +98,15 @@ Future evolutions may include:
 - probabilistic signals
 - interval-based signals
 - distribution-aware signals
+
+## Role in Control Loop
+
+Signals are not passive representations.
+
+They are actively used to:
+
+- drive control adaptation (epsilon, exploration)
+- influence decision gating
+- propagate stability constraints
+
+They form a **closed-loop interface between measurement and control**.

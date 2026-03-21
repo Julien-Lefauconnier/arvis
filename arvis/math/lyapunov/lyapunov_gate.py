@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from arvis.math.lyapunov.lyapunov import LyapunovState, delta_V, V
 from arvis.math.control.eps_adaptive import EpsAdaptiveParams, CognitiveMode, adaptive_eps
 from arvis.math.core.normalization import clamp01
+from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
+from .slow_state import SlowState
 
 
 class LyapunovVerdict(str, Enum):
@@ -31,26 +33,33 @@ class LyapunovGateParams:
     pos_dv_penalty: float = 0.25 # 0 => off
 
 
-def lyapunov_gate(
+def lyapunov_gate(  # noqa: C901
     previous: LyapunovState,
     current: LyapunovState,
     params: LyapunovGateParams = LyapunovGateParams(),
+    prev_slow: SlowState | None = None,
+    current_slow: SlowState | None = None,
+    prev_symbolic: SymbolicState | None = None,
+    current_symbolic: SymbolicState | None = None,
 ) -> LyapunovVerdict:
-    # --- safety adapter ---
+    # Local fast Lyapunov gate only.
+    # Composite / temporal policy is handled upstream in gate_stage.
     if isinstance(current, float):
         current = LyapunovState.from_scalar(current)
     if isinstance(previous, float):
         previous = LyapunovState.from_scalar(previous)
+    if previous is None or current is None:
+        return LyapunovVerdict.REQUIRE_CONFIRMATION
 
     v = V(current)
 
-    # --- global safety ---
+    # Global safety on instantaneous fast energy
     if v >= params.abstain_threshold:
         return LyapunovVerdict.ABSTAIN
 
     d = delta_V(previous, current)
 
-    # External override has priority (multi-horizon controller)
+    # External override has priority
     if params.eps_override is not None:
         eps_used = params.eps_override
     else:
@@ -63,17 +72,14 @@ def lyapunov_gate(
             trust_score=0.0,
         )
 
-    # -----------------------------
-    # Stabilisation intégrale
-    # -----------------------------
-    # 1) damping: strict when V high
+
+    # 1) damping: stricter when V is high
     gamma = max(0.0, float(params.damping_gamma))
     damping = 1.0 + gamma * clamp01(v)
 
-    # reduce tolerance: eps_eff = eps_used / damping
     eps_eff = eps_used / damping
 
-    # 2) penalize positive drift
+    # 2) penalize positive ΔV
     pen = max(0.0, float(params.pos_dv_penalty))
     d_eff = d + pen * clamp01(max(0.0, d))
 

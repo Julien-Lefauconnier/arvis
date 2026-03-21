@@ -109,27 +109,69 @@ Exposes a stable interface:
 
 ## 4. Cognitive Pipeline
 
-The system executes a **multi-stage pipeline**:
+### Execution Stages
 
-1. Decision bootstrap
-2. Context integration
-3. Bundle construction
-4. Conflict extraction
-5. Scientific modeling (core)
-6. Regime & temporal evaluation
-7. Adaptive control
-8. Stability gating (Lyapunov)
-9. Confirmation resolution
-10. Execution evaluation
-11. Action mapping
-12. Intent formalization
-13. Runtime finalization
+1. Decision Stage  
+   → Intent detection and bootstrap
+2. Passive Context Stage  
+   → Context enrichment (memory, environment)
+3. Bundle Stage  
+   → Immutable cognitive state construction
+4. Conflict Stage  
+   → Conflict extraction and structuring
+5. Core Stage  
+   → Scientific modeling (risk, drift, Lyapunov state)
+6. Regime Stage  
+   → Regime estimation (dynamic system state)
+7. Temporal Stage  
+   → Temporal pressure and modulation
+8. Conflict Modulation Stage  
+   → Conflict signal adjustment
+9. Control Stage  
+   → Adaptive control (epsilon, exploration)
+10. Gate Stage  
+   → Multi-axial stability enforcement  
+   → Lyapunov, switching, global stability
+11. Structural Risk Stage  
+   → Post-gate structural validation
+12. Confirmation Stage  
+   → Human-in-the-loop resolution
+13. Execution Stage  
+   → Execution eligibility determination
+14. Action Stage  
+   → Action resolution and policy enforcement
+15. Intent Stage  
+   → Executable intent formalization
+16. Runtime Stage  
+   → System state update
 
-Each stage is:
+---
+
+### Observability & Trace (Post-Pipeline)
+
+After execution:
+
+- Observability projections are computed
+- Stability statistics are derived
+- A canonical `DecisionTrace` is generated
+
+---
+
+### Properties
 
 - Isolated
 - Deterministic
 - Testable
+
+---
+
+### Control Feedback Loop
+
+The system implements a **closed-loop control system**:
+
+- Gate outputs influence Control parameters
+- Control adjusts exploration and decision behavior
+- Stability is enforced dynamically over time
 
 ---
 
@@ -149,18 +191,75 @@ A decision is **valid only if stable**.
 
 ## 6. Stability Model
 
-The system enforces:
+ARVIS enforces **multi-layer stability constraints** grounded in control theory.
 
-- Lyapunov-based stability
-- Risk bounds (e.g. Hoeffding)
-- Multi-horizon prediction
-- Regime estimation
+### Core Components
 
-Outputs include:
+- Lyapunov-based stability (local and composite)
+- Risk bounds (e.g. Hoeffding inequalities)
+- Multi-horizon predictive stability
+- Regime estimation (dynamic system states)
 
-- Stability score
-- Risk level
-- System regime
+---
+
+### Advanced Stability Mechanisms
+
+- Composite Lyapunov functions (fast + slow + symbolic dynamics)
+- Switched system stability (dwell-time, κ constraints)
+- Global trajectory stability enforcement
+- Exponential stability bounds monitoring
+- Multi-axial stability fusion (decision-level aggregation)
+
+---
+
+### Runtime Enforcement
+
+Stability is not only monitored but **actively enforced**:
+
+- Hard constraints (global / switching / exponential bounds)
+- Soft constraints (drift warnings, slow dynamics detection)
+- Veto mechanisms (abstain / confirmation)
+
+---
+
+### Control Coupling
+
+Stability directly influences control:
+
+- Confidence-driven modulation of epsilon and exploration
+- Lyapunov-informed adaptive control
+- Feedback loop between stability and decision policy
+
+---
+
+### Outputs
+
+- Stability certificate (local / global / switching / exponential)
+- System confidence score
+- Regime classification
+- Stability projections and statistics
+
+---
+
+## 6.1 Control-Theoretic Interpretation
+
+ARVIS OS can be interpreted as a **closed-loop cognitive control system**:
+
+- State estimation → Core, Regime, Temporal stages
+- Control law → Control stage
+- Stability enforcement → Gate + Structural Risk
+- Decision output → Execution / Action / Intent
+- Observation → Observability + Trace
+
+This architecture aligns with:
+
+- Hybrid systems theory
+- Switched systems stability
+- Lyapunov-based control systems
+
+ARVIS is therefore not only a cognitive system, but a:
+
+    Dynamical system with enforced stability constraints
 
 ---
 

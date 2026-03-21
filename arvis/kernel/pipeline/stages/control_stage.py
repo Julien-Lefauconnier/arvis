@@ -38,7 +38,17 @@ class ControlStage:
             ctx.uncertainty_intent = None
 
         # -----------------------------------------
-        # 3. EPSILON
+        # 3. TEMPORAL
+        # -----------------------------------------
+        if getattr(ctx, "timeline", None):
+            ctx.temporal_pressure = 1.0
+            ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.2})()
+        else:
+            ctx.temporal_pressure = 0.0
+            ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.0})()
+
+        # -----------------------------------------
+        # 4. EPSILON
         # -----------------------------------------
         epsilon = pipeline.epsilon_controller.compute(
             uncertainty=float(ctx.uncertainty),
@@ -50,20 +60,27 @@ class ControlStage:
         )
 
         # -----------------------------------------
-        # 4. REGIME POLICY
+        # 5. REGIME POLICY
         # -----------------------------------------
         regime_control = pipeline.regime_policy.compute(
             ctx.regime or "neutral"
         )
 
         # -----------------------------------------
-        # 5. MODULATION
+        # 6. MODULATION
         # -----------------------------------------
         epsilon *= getattr(regime_control, "epsilon_multiplier", 1.0)
         epsilon *= getattr(ctx.temporal_modulation, "epsilon_multiplier", 1.0)
 
+        if getattr(ctx, "timeline", None):
+            ctx.temporal_pressure = 1.0
+            ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.2})()
+        else:
+            ctx.temporal_pressure = 0.0
+            ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.0})()
+
         # -----------------------------------------
-        # 6. EXPLORATION
+        # 7. EXPLORATION
         # -----------------------------------------
         exploration_snapshot = pipeline.exploration.compute(
             regime=ctx.regime,
@@ -73,7 +90,7 @@ class ControlStage:
         )
 
         # -----------------------------------------
-        # 7. SNAPSHOT
+        # 8. SNAPSHOT
         # -----------------------------------------
         control_snapshot = CognitiveControlSnapshot(
             gate_mode=cognitive_mode,
@@ -87,6 +104,8 @@ class ControlStage:
             },
             regime=regime_control,
             calibration=None,
+            temporal_pressure=ctx.temporal_pressure,
+            temporal_modulation=ctx.temporal_modulation,
         )
 
         ctx.control_snapshot = control_snapshot

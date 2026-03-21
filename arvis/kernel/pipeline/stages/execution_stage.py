@@ -14,9 +14,6 @@ class ExecutionStage:
         verdict = ctx.gate_result
         needs_confirmation = getattr(ctx, "_needs_confirmation", False)
 
-        # -----------------------------------------
-        # 1. FLAGS
-        # -----------------------------------------
         requires_confirmation = (
             needs_confirmation
             and ctx.confirmation_result is None
@@ -27,9 +24,6 @@ class ExecutionStage:
             and not requires_confirmation
         )
 
-        # -----------------------------------------
-        # 2. STATUS
-        # -----------------------------------------
         if can_execute:
             execution_status = ExecutionGateStatus.READY
 
@@ -39,9 +33,7 @@ class ExecutionStage:
         else:
             execution_status = ExecutionGateStatus.BLOCKED_ABSTAIN
 
-        # -----------------------------------------
-        # 3. EXPORT
-        # -----------------------------------------
+        ctx._needs_confirmation = needs_confirmation
         ctx._requires_confirmation = requires_confirmation
         ctx._can_execute = can_execute
         ctx.execution_status = execution_status

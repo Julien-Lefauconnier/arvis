@@ -182,21 +182,34 @@ This ensures:
 
 ### 10. Gate Stage (Critical)
 
-**Purpose:** Enforce stability constraints before execution
+Decision logic (multi-axial fusion):
 
-This is the **core safety mechanism**.
+The Gate Stage is no longer a pure Lyapunov validator.
 
-Decision logic:
+It performs a **multi-axial stability fusion**, combining:
 
-* unstable → ABSTAIN
-* high collapse risk → ABSTAIN
-* critical mode → ABSTAIN
-* missing Lyapunov state → REQUIRE_CONFIRMATION
-* otherwise → Lyapunov-based validation
+* local Lyapunov stability (ΔW)
+* switching constraints (dwell-time condition)
+* global trajectory stability (history-based)
+* system confidence
+
+Core operator:
 
 ```python
-verdict = lyapunov_gate(previous, current, params)
+fusion = multiaxial_fusion(...)
+verdict = fusion.verdict
 ```
+
+Then applies:
+
+1. strict theoretical enforcement (optional)
+2. policy layer (global stability handling)
+
+Final verdict is:
+
+→ a **composed stability decision**
+
+not a single Lyapunov test
 
 **Outputs:**
 

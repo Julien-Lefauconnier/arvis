@@ -38,40 +38,57 @@ ARVIS is structured as a **strictly layered system**:
 
 ```mermaid
 graph TD
-    A[Input] --> B[API Layer\nPublic Contract\nCognitiveOS.run]
 
-    B --> C[Pipeline Layer\nExecution Protocol\nDeterministic Stages]
+    A[Input] --> B[Decision Stage\nIntent Detection]
 
-    subgraph Cognition_Layer
-        C --> D[Bundle Stage\nImmutable Cognitive State]
-        D --> E[Conflict Stage\nConflict Detection]
-        E --> F[Core Stage\nScientific Modeling\nRisk / Drift / Stability]
-    end
+    B --> C[Passive Context Stage\nContext Enrichment]
 
-    F --> G[Control & Regime Layers\nAdaptive Control\nRegime Detection\nTemporal Pressure]
+    C --> D[Bundle Stage\nImmutable Cognitive State]
 
-    G --> H[Gate Stage\nStability Gating\nLyapunov / Risk Bounds]
+    D --> E[Conflict Stage\nConflict Extraction]
 
-    H -->|Pass| I[Execution & Action\nAllowed Decision\nIntent Formalization]
+    E --> F[Core Stage\nScientific Modeling\nRisk / Drift / Lyapunov]
 
-    H -->|Fail| J[Abstain / Confirmation\nNo Decision Exists]
+    F --> G[Regime Stage\nRegime Estimation]
 
-    I --> K[Timeline & Trace\nHash-Chained Memory\nDecision Trace]
+    G --> H[Temporal Stage\nTemporal Pressure]
 
-    L[Observability\nProjections & Stats\nRead-Only] -->|Post-Execution| K
+    H --> I[Conflict Modulation\nConflict Adjustment]
 
-    classDef public fill:#e6f3ff,stroke:#0077cc,stroke-width:2px
-    classDef pipeline fill:#fff3e6,stroke:#cc7700,stroke-width:2px
-    classDef cognition fill:#e6ffe6,stroke:#009900,stroke-width:2px
-    classDef gate fill:#ffe6e6,stroke:#cc0000,stroke-width:2px
-    classDef output fill:#f0f0f5,stroke:#333399,stroke-width:2px
+    I --> J[Control Stage\nAdaptive Control\nEpsilon / Exploration]
 
-    class B public
-    class C pipeline
-    class D,E,F cognition
-    class H gate
-    class I,J,K output
-    class L output
+    J --> K[Gate Stage\nMulti-Axial Stability Fusion\nLyapunov + Switching + Global]
+
+    K --> L[Structural Risk Stage\nPost-Gate Risk Check]
+
+    L --> M[Confirmation Stage\nHuman-in-the-loop Decision]
+
+    M --> N[Execution Stage\nExecution Eligibility]
+
+    N --> O[Action Stage\nAction Resolution]
+
+    O --> P[Intent Stage\nExecutable Intent]
+
+    P --> Q[Runtime Stage\nState Update]
+
+    Q --> R[Observability\nProjection / Stability / Forecast]
+
+    R --> S[Decision Trace\nCanonical Output]
+
+    %% Feedback loop (critical)
+    K -->|Control Feedback| J
+
+    %% Styles
+    classDef stage fill:#f9f9f9,stroke:#333,stroke-width:1px
+    classDef critical fill:#ffe6e6,stroke:#cc0000,stroke-width:2px
+    classDef control fill:#f3e6ff,stroke:#6600cc,stroke-width:2px
+    classDef output fill:#e6f3ff,stroke:#0077cc,stroke-width:2px
+
+    class B,C,D,E,F,G,H,I stage
+    class J control
+    class K critical
+    class L,M,N,O,P,Q stage
+    class R,S output
 ```
 
 ---
@@ -235,9 +252,28 @@ This layer defines:
 
 ---
 
-## Critical Architectural Separations
+### 7. Gate Layer (Stability Enforcement Engine)
+
+The Gate is not a single validator but a **decision fusion system**.
+
+It integrates:
+
+- Lyapunov local stability
+- switching constraints
+- global trajectory stability
+- confidence estimation
+
+and produces a **single enforceable verdict**.
+
+This makes ARVIS a:
+
+> runtime-enforced stability system
+
+rather than a post-hoc validator.
 
 ---
+
+## Critical Architectural Separations
 
 ### 1. State vs Computation
 

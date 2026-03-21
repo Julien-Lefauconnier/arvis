@@ -21,8 +21,17 @@ class CognitiveCoreEngine:
 
         core_snapshot = self.core_model.compute(bundle=bundle)
 
-        collapse_risk = getattr(core_snapshot, "fused_risk", 0.0)
-        dv = getattr(core_snapshot, "dv", 0.0)
+        # Core exposes current scientific observables.
+        # Causal history is owned by the pipeline.
+
+        collapse_risk = (
+            getattr(core_snapshot, "fused_risk", None)
+            or getattr(core_snapshot, "collapse_risk", 0.0)
+        )
+        dv = (
+            getattr(core_snapshot, "dv", None)
+            or getattr(core_snapshot, "drift_score", 0.0)
+        )
 
         reflexive_state = None
 
@@ -36,6 +45,15 @@ class CognitiveCoreEngine:
                     "regime_persistence": getattr(irg_snapshot, "regime_persistence", None),
                     "uncertainty_drift": getattr(irg_snapshot, "uncertainty_drift", None),
                 }
+            else:
+                direct_reflexive = getattr(core_snapshot, "reflexive_state", None)
+                if direct_reflexive:
+                    reflexive_state = {
+                        "stability_memory": direct_reflexive.get("stability_memory", None),
+                        "structural_risk": direct_reflexive.get("structural_risk", None),
+                        "regime_persistence": direct_reflexive.get("regime_persistence", None),
+                        "uncertainty_drift": direct_reflexive.get("uncertainty_drift", None),
+                    }
         except Exception:
             reflexive_state = None
 

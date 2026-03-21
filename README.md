@@ -1,6 +1,6 @@
 # ARVIS
 
-**A Cognitive OS that enforces when decisions are allowed to exist**
+**Cognitive OS with formal Lyapunov stability guarantees**
 
 > Not a model. Not an agent.  
 > A **deterministic cognitive execution system**.
@@ -20,7 +20,7 @@ It determines whether a decision is **allowed to exist**.
 - Deterministic cognitive pipeline (no hidden reasoning)
 - Stability-constrained decision space
 - No decision without prior validation
-- Fully replayable cognition (hash-chained timeline)
+- Fully replayable cognition (hash-chained timeline) — built on the [Veramem Kernel](https://github.com/Julien-Lefauconnier/kernel)
 - Strict typing (mypy --strict enforced)
 
 ---
@@ -296,13 +296,16 @@ Additional components are under active research and development.)
 
 ARVIS is grounded in:
 
-- Lyapunov stability theory
+- Lyapunov stability theory (composite + switching)
+- runtime stability enforcement (multi-axial fusion)
 - probabilistic risk bounds (Hoeffding-style)
 - multi-horizon predictive modeling
 - regime detection (stable / unstable / collapse)
 - adaptive control (IRG-based)
 
 No decision exists outside a stability proof context
+
+No decision exists without passing a runtime stability enforcement layer.
 
 ---
 
@@ -495,7 +498,7 @@ result = os.run(
 
 ## Testing & Validation
 
-- 430+ tests
+- 630+ tests
 
 - invariant validation (kernel-level)
 
@@ -534,8 +537,10 @@ The system is designed to be:
 ## Research & Ecosystem
 
 Kernel (low-level primitives): https://github.com/Julien-Lefauconnier/kernel
+→ Provides the append-only, hash-chained timeline foundation with deterministic behavior, temporal integrity, and optional cryptographic attestation (HMAC-SHA256 / Ed25519).
 
 Veramem Research Lab: https://github.com/Julien-Lefauconnier/arvis-cognition
+→ Provides the public research materials, experiments, results pusblished by the Veramem Research Lab
 
 arvis (this repo): Cognitive OS specification + contracts + interfaces
 

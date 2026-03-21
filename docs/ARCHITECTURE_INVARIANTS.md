@@ -10,6 +10,8 @@ They are grouped by layer and enforced at every cognitive step.
 - Hybrid risk observers must combine deterministic and probabilistic bounds.
 - Change budgets and temporal pressure must be respected (no unbounded exploration).
 - Regime classification must include hysteresis to avoid oscillations.
+- Stability enforcement must occur at runtime (not post-hoc).
+- No decision may bypass the gate fusion layer.
 
 ## 2. Cognitive Bundle Invariants
 

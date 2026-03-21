@@ -4,6 +4,9 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from arvis.math.signals import RiskSignal, UncertaintySignal, DriftSignal
+from arvis.math.lyapunov.lyapunov import LyapunovState
+from arvis.math.lyapunov.slow_state import SlowState
+from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationResult
 from arvis.cognition.conversation.conversation_context import ConversationContext
@@ -15,6 +18,8 @@ from arvis.cognition.policy import CognitivePolicyResult
 from arvis.action.action_decision import ActionDecision
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 from arvis.kernel.trace.decision_trace import DecisionTrace
+from arvis.math.switching.switching_runtime import SwitchingRuntime
+
 
 @dataclass
 class CognitivePipelineContext:
@@ -36,8 +41,6 @@ class CognitivePipelineContext:
     # -------------------------
     cognitive_input: Any
     long_memory: Dict[str, Any] = field(default_factory=dict)
-
-    # Optional precomputed / external kernel-safe inputs
     timeline: List[Any] = field(default_factory=list)
     introspection: Optional[Any] = None
     explanation: Optional[Any] = None
@@ -61,12 +64,48 @@ class CognitivePipelineContext:
     scientific_snapshot: Optional[Any] = None
     collapse_risk: RiskSignal | float = 0.0
     uncertainty: UncertaintySignal | float | None = None
-    prev_lyap: Optional[Any] = None
-    cur_lyap: Optional[Any] = None
+    # Fast Lyapunov state (x)
+    prev_lyap: Optional[LyapunovState] = None
+    cur_lyap: Optional[LyapunovState] = None
+    prev_quadratic_lyap_state: Optional[Any] = None
+    cur_quadratic_lyap_state: Optional[Any] = None
+    quadratic_lyap_snapshot: Optional[Any] = None
+    quadratic_comparability: Optional[Any] = None
+    # Slow state (z)
+    slow_state: Optional[SlowState] = None
+    slow_state_prev: Optional[SlowState] = None
+    # Symbolic state (used for T(x))
+    symbolic_state: Optional[SymbolicState] = None
+    symbolic_state_prev: Optional[SymbolicState] = None
+    # Composite Lyapunov tracking
+    w_current: Optional[float] = None
+    w_prev: Optional[float] = None
+    delta_w: Optional[float] = None
+
     drift_score: DriftSignal | float = 0.0
     regime: Optional[str] = None
     stable: Optional[bool] = None
+    regime_confidence: float = 0.0
+    theoretical_regime: Optional[Any] = None
+    fast_dynamics: Optional[Any] = None
+    perturbation: Optional[Any] = None
 
+    # -------------------------
+    # Switching runtime (theorem)
+    # -------------------------
+    switching_runtime: Optional[SwitchingRuntime] = None
+    switching_params: Optional[Any] = None
+    switching_safe: Optional[bool] = None
+    switching_metrics: Dict[str, Any] = field(default_factory=dict)
+    use_paper_slow_dynamics: bool = False
+    use_paper_composite_gate: bool = False
+    global_stability_metrics: Optional[Any] = None
+    enforce_global_stability: bool = False
+    # -----------------------------------------
+    # Global stability enforcement policy
+    # "ignore" | "confirm" | "abstain"
+    # -----------------------------------------
+    global_stability_action: str = "ignore"
     # -------------------------
     # Control layer
     # -------------------------
@@ -114,9 +153,6 @@ class CognitivePipelineContext:
     stability_stats: Optional[Any] = None
     stability_projection: Optional[Any] = None
     stability_statistics: Optional[Any] = None
-
-
-    symbolic_state: Optional[Any] = None
     symbolic_drift: Optional[Any] = None
     symbolic_features: Optional[Any] = None
     system_tension: Optional[Any] = None

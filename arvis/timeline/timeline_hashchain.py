@@ -88,10 +88,9 @@ class TimelineHashChain:
 
         Guarantees strict equivalence with batch build.
         """
-
         h_e = hash_entry(entry)
 
-        prev = self.head or seed
+        prev: str = self.head if self.head is not None else seed
         new_hash = sha256((prev + h_e).encode("utf-8")).hexdigest()
 
         return TimelineHashChain(self.hashes + (new_hash,))

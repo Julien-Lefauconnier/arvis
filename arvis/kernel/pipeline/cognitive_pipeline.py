@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import os
+import warnings
+from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
 from typing import Any, cast, Protocol, Dict
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
@@ -34,6 +37,13 @@ from arvis.cognition.coherence.coherence_observer import CoherenceObserver
 from arvis.stability.stability_state_projector import StabilityStateProjector
 from arvis.stability.stability_statistics import StabilityStatistics
 from arvis.stability.stability_statistics import StabilityStatsSnapshot
+from arvis.cognition.gate.cognitive_gate_result import CognitiveGateResult
+from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.switching.switching_params import SwitchingParams
+from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
+from arvis.math.lyapunov.quadratic_lyapunov import make_default_quadratic_family
+from arvis.math.switching.switching_runtime import SwitchingRuntime
+
 from arvis.kernel.pipeline.stages import (
     DecisionStage,
     PassiveContextStage,
@@ -45,6 +55,7 @@ from arvis.kernel.pipeline.stages import (
     ConflictModulationStage,
     ControlStage,
     GateStage,
+    StructuralRiskStage,
     ConfirmationStage,
     ExecutionStage,
     ActionStage,
@@ -52,12 +63,32 @@ from arvis.kernel.pipeline.stages import (
     RuntimeStage,
 )
 
+DEFAULT_SWITCHING_PARAMS = SwitchingParams(
+    alpha=0.15,
+    gamma_z=0.4,
+    eta=0.05,
+    L_T=1.0,
+    J=1.5,
+)
+
 class PipelineStage(Protocol):
     def run(self, pipeline: "CognitivePipeline", ctx: CognitivePipelineContext) -> None: ...
+
 
 class CognitivePipeline:
 
     def __init__(self, core_model: Any | None = None) -> None:
+        strict_mode = os.getenv("ARVIS_STRICT_STABILITY", "false").lower() == "true"
+        comp = CompositeLyapunov()
+        if not comp.check_small_gain(eta=0.05, alpha=0.3, L_T=1.0):
+            msg = (
+                "Configuration système potentiellement instable : small-gain non satisfait "
+                "(ajustez eta, alpha ou L_T)"
+            )
+            if strict_mode:
+                raise RuntimeError(msg)
+            else:
+                warnings.warn(msg, RuntimeWarning)
         self.decision = DecisionEvaluator()
         self.bundle_builder = CognitiveBundleBuilder()
         self.core = CognitiveCoreEngine(core_model=core_model)
@@ -91,11 +122,16 @@ class CognitivePipeline:
         self.conflict_modulation_stage = ConflictModulationStage()
         self.control_stage = ControlStage()
         self.gate_stage = GateStage()
+        self.structural_risk_stage = StructuralRiskStage()
         self.confirmation_stage = ConfirmationStage()
         self.execution_stage = ExecutionStage()
         self.action_stage = ActionStage()
         self.intent_stage = IntentStage()
         self.runtime_stage = RuntimeStage()
+        self.global_stability_observer = GlobalStabilityObserver()
+        self.quadratic_lyapunov_family = make_default_quadratic_family(dim=4)
+        self.quadratic_comparability = self.quadratic_lyapunov_family.comparability()
+        
 
     def _get_control_runtime(self, user_id: str) -> CognitiveControlRuntime:
         runtime = self.control_runtimes.get(user_id)
@@ -133,6 +169,30 @@ class CognitivePipeline:
         return self.run(ctx)
         
     def run(self, ctx: CognitivePipelineContext) -> CognitivePipelineResult:
+        # -----------------------------------------
+        # Switching (theorem parameters) 
+        # -----------------------------------------
+        if getattr(ctx, "switching_params", None) is None:
+            ctx.switching_params = DEFAULT_SWITCHING_PARAMS
+        if getattr(ctx, "switching_runtime", None) is None:
+            ctx.switching_runtime = SwitchingRuntime()
+        # Align J with quadratic Lyapunov family comparability
+        try:
+            comp = getattr(self, "quadratic_comparability", None)
+            if comp is not None and getattr(ctx, "switching_params", None) is not None:
+                from arvis.math.switching.switching_params import SwitchingParams
+                p = ctx.switching_params
+                if p is None:
+                    p = DEFAULT_SWITCHING_PARAMS
+                ctx.switching_params = SwitchingParams(
+                    alpha=float(p.alpha),
+                    gamma_z=float(p.gamma_z),
+                    eta=float(p.eta),
+                    L_T=float(p.L_T),
+                    J=float(comp.J),
+                )
+        except Exception:
+            pass
         # -----------------------------------------------------
         # 1. DECISION STAGE
         # -----------------------------------------------------
@@ -184,12 +244,17 @@ class CognitivePipeline:
         self._safe_run(self.gate_stage, ctx)
 
         # -----------------------------------------------------
-        # 11. CONFIRMATION STAGE
+        # 11. STRUCTURAL RISK STAGE   
+        # -----------------------------------------------------
+        self._safe_run(self.structural_risk_stage, ctx)
+
+        # -----------------------------------------------------
+        # 12. CONFIRMATION STAGE
         # -----------------------------------------------------
         self._safe_run(self.confirmation_stage, ctx)
 
         # -----------------------------------------------------
-        # 12. EXECUTION STAGE
+        # 13. EXECUTION STAGE
         # -----------------------------------------------------
         self._safe_run(self.execution_stage, ctx)
 
@@ -197,25 +262,22 @@ class CognitivePipeline:
         can_execute = ctx._can_execute
         assert ctx.execution_status is not None
         execution_status = ctx.execution_status
-
-        # -----------------------------------------
-        # Sync public execution flags into context
-        # -----------------------------------------
+        # Sync public execution flags into context  
         ctx.requires_confirmation = requires_confirmation
         ctx.can_execute = can_execute
 
         # -----------------------------------------------------
-        # 13. ACTION STAGE
+        # 14. ACTION STAGE
         # -----------------------------------------------------
         self._safe_run(self.action_stage, ctx)
 
         # -----------------------------------------------------
-        # 14. INTENT STAGE
+        # 15. INTENT STAGE
         # -----------------------------------------------------
         self._safe_run(self.intent_stage, ctx)
 
         # -----------------------------------------------------
-        # 15. RUNTIME STAGE
+        # 16. RUNTIME STAGE
         # -----------------------------------------------------
         self._safe_run(self.runtime_stage, ctx)
 
@@ -259,11 +321,31 @@ class CognitivePipeline:
         # -----------------------------------------------------
         #  DECISION TRACE (canonical output)
         # -----------------------------------------------------
-        assert ctx.gate_result is not None
+        if ctx.gate_result is None:
+            warnings.warn(
+                "gate_result is None → fallback ABSTAIN (vérifiez gate_stage)",
+                RuntimeWarning
+            )
+            ctx.gate_result = LyapunovVerdict.ABSTAIN
+
+        # --- normalize gate_result (strict typing for trace) ---
+        if isinstance(ctx.gate_result, LyapunovVerdict):
+            normalized_gate_result = CognitiveGateResult.from_lyapunov(
+                ctx.gate_result,
+                bundle_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
+                reason=str(getattr(ctx.decision_result, "reason", None)),
+            )
+        else:
+            normalized_gate_result = CognitiveGateResult.from_lyapunov(
+                LyapunovVerdict.ABSTAIN,
+                bundle_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
+                reason="fallback",
+            )
+
         trace = DecisionTrace(
             timestamp=datetime.now(timezone.utc),
             user_id=ctx.user_id,
-            gate_result=ctx.gate_result,
+            gate_result=normalized_gate_result,
             confirmation_request=ctx.confirmation_request,
             confirmation_result=ctx.confirmation_result,
             action_decision=ctx.action_decision,
@@ -273,6 +355,11 @@ class CognitivePipeline:
             stability=ctx.global_stability,
             symbolic=ctx.symbolic_state,
             system_tension=ctx.system_tension,
+            quadratic_lyapunov=ctx.quadratic_lyap_snapshot,
+            quadratic_comparability=ctx.quadratic_comparability,
+            theoretical_regime=ctx.theoretical_regime,
+            fast_dynamics=ctx.fast_dynamics,
+            perturbation=ctx.perturbation,
             conversation=ctx.conversation_signal,
             governance=ctx.governance,
             pending_actions=ctx.pending_actions,
@@ -301,3 +388,6 @@ class CognitivePipeline:
             requires_confirmation=requires_confirmation,
             trace=trace,
         )
+    
+
+    

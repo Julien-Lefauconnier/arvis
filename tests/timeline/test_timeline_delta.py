@@ -35,14 +35,19 @@ def make_snapshot(n: int) -> TimelineSnapshot:
     return TimelineSnapshot.build(entries)
 
 
+def extend_snapshot(base: TimelineSnapshot, n_extra: int) -> TimelineSnapshot:
+    start = len(base.entries)
+    extra = [make_entry(start + i) for i in range(n_extra)]
+    return TimelineSnapshot.build(tuple(base.entries) + tuple(extra))
+
+
 # ---------------------------------------------------------
 # basic delta creation
 # ---------------------------------------------------------
 
 def test_delta_from_snapshots_basic():
-
     base = make_snapshot(2)
-    target = make_snapshot(5)
+    target = extend_snapshot(base, 3)
 
     delta = TimelineDelta.from_snapshots(base, target)
 
@@ -56,7 +61,6 @@ def test_delta_from_snapshots_basic():
 # ---------------------------------------------------------
 
 def test_delta_empty_error():
-
     snap = make_snapshot(3)
 
     with pytest.raises(TimelineDeltaEmptyError):
@@ -68,7 +72,6 @@ def test_delta_empty_error():
 # ---------------------------------------------------------
 
 def test_delta_rollback_error():
-
     base = make_snapshot(5)
     target = make_snapshot(2)
 
@@ -81,15 +84,10 @@ def test_delta_rollback_error():
 # ---------------------------------------------------------
 
 def test_apply_delta():
-
     base = make_snapshot(2)
-
-    target = base
-    target = target.append(make_entry(2))
-    target = target.append(make_entry(3))
+    target = extend_snapshot(base, 2)
 
     delta = TimelineDelta.from_snapshots(base, target)
-
     result = delta.apply_to(base)
 
     assert result.cursor() == target.cursor()
@@ -101,11 +99,10 @@ def test_apply_delta():
 # ---------------------------------------------------------
 
 def test_apply_base_mismatch():
-
     base = make_snapshot(2)
-    target = make_snapshot(4)
     other = make_snapshot(3)
 
+    target = extend_snapshot(base, 2)
     delta = TimelineDelta.from_snapshots(base, target)
 
     with pytest.raises(TimelineDeltaBaseMismatch):
@@ -117,21 +114,18 @@ def test_apply_base_mismatch():
 # ---------------------------------------------------------
 
 def test_verify_against():
-
     base = make_snapshot(2)
-    target = make_snapshot(4)
+    target = extend_snapshot(base, 2)
 
     delta = TimelineDelta.from_snapshots(base, target)
-
     delta.verify_against(base)
 
 
 def test_verify_mismatch():
-
     base = make_snapshot(2)
-    target = make_snapshot(4)
     other = make_snapshot(3)
 
+    target = extend_snapshot(base, 2)
     delta = TimelineDelta.from_snapshots(base, target)
 
     with pytest.raises(TimelineDeltaBaseMismatch):
@@ -143,11 +137,10 @@ def test_verify_mismatch():
 # ---------------------------------------------------------
 
 def test_duplicate_entries_rejected():
-
     e = make_entry(1)
 
     base = make_snapshot(1)
-    target = make_snapshot(2)
+    target = extend_snapshot(base, 1)
 
     with pytest.raises(TimelineDeltaError):
         TimelineDelta(
@@ -162,9 +155,8 @@ def test_duplicate_entries_rejected():
 # ---------------------------------------------------------
 
 def test_delta_size():
-
     base = make_snapshot(1)
-    target = make_snapshot(4)
+    target = extend_snapshot(base, 3)
 
     delta = TimelineDelta.from_snapshots(base, target)
 

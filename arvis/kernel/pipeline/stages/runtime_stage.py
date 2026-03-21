@@ -19,5 +19,29 @@ class RuntimeStage:
             )
 
         except Exception:
-            # volontairement silencieux → non bloquant
             pass
+        
+        # -----------------------------------------
+        #  Switching runtime
+        # -----------------------------------------
+        try:
+            switching_runtime = getattr(ctx, "switching_runtime", None)
+            regime = getattr(ctx, "regime", None)
+
+            if switching_runtime is not None and regime is not None:
+                switching_runtime.update(str(regime))
+        except Exception:
+            pass
+        
+        # -----------------------------------------
+        # Global stability observer 
+        # -----------------------------------------
+        try:
+            observer = getattr(pipeline, "global_stability_observer", None)
+            if observer:
+                metrics = observer.update(ctx)
+                ctx.global_stability_metrics = metrics
+        except Exception:
+            ctx.global_stability_metrics = None
+
+

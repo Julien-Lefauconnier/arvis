@@ -99,6 +99,10 @@ class TimelineDelta:
         if not isinstance(self.entries, tuple):
             raise TimelineDeltaError("entries must be a tuple")
         
+        for e in self.entries:
+            if e is None:
+                raise TimelineDeltaError("entry must not be None")
+
         ids = [e.entry_id for e in self.entries]
         if len(ids) != len(set(ids)):
             raise TimelineDeltaError("duplicate entries in delta")
@@ -171,6 +175,16 @@ class TimelineDelta:
         # --- extract appended entries ---
         start = base_cursor.total_entries
         end = target_cursor.total_entries
+
+        # --------------------------------------------------
+        # VALIDATE APPEND-ONLY INTEGRITY (CRITICAL)
+        # --------------------------------------------------
+        base_len = base_cursor.total_entries
+
+        if tuple(target.entries[:base_len]) != tuple(base.entries):
+            raise TimelineDeltaError(
+                "target is not an append-only extension of base"
+            )
 
         try:
             new_entries = target.entries[start:end]

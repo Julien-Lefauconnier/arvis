@@ -14,6 +14,10 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 class ConfirmationStage:
 
     def run(self, pipeline: Any, ctx: Any) -> None:
+        print("\n[CONFIRMATION DEBUG] START")
+        print("incoming gate_result:", getattr(ctx, "gate_result", None))
+        print("incoming confirmation_result:", getattr(ctx, "confirmation_result", None))
+        print("incoming conflict_pressure:", getattr(ctx, "conflict_pressure", None))
 
         verdict = ctx.gate_result
 
@@ -30,18 +34,39 @@ class ConfirmationStage:
 
             ctx.gate_result = verdict
 
+        print("[CONFIRMATION DEBUG] post-override verdict:", verdict)
+
         # -----------------------------------------
         # 2. CONFLICT PRESSURE
         # -----------------------------------------
         conflict_pressure = getattr(ctx, "conflict_pressure", None)
 
         if conflict_pressure is None:
+            conflict_pressure = getattr(ctx, "extra", {}).get("conflict_pressure")
+
+        if conflict_pressure is None:
             conflict_pressure = pipeline.conflict_pressure_engine.compute([])
 
+        #  normalize value
+        if isinstance(conflict_pressure, (int, float)):
+            conflict_value = float(conflict_pressure)
+        else:
+            conflict_value = getattr(conflict_pressure, "decisional", 0.0)
+
         conflict_requires_confirmation = requires_conflict_confirmation(
-            conflict_pressure=conflict_pressure.decisional,
+            conflict_pressure=conflict_value,
             threshold=0.8,
         )
+
+        print("[CONFIRMATION DEBUG] conflict_value:", conflict_value)
+        print("[CONFIRMATION DEBUG] conflict_requires_confirmation:", conflict_requires_confirmation)
+
+        # -----------------------------------------
+        # 2.5 STRUCTURAL RISK (non-math layer)
+        # -----------------------------------------
+        structural_risk = getattr(ctx, "extra", {}).get("structural_risk", False)
+
+        print("[CONFIRMATION DEBUG] structural_risk:", structural_risk)
 
         # -----------------------------------------
         # 3. NEEDS CONFIRMATION
@@ -50,9 +75,11 @@ class ConfirmationStage:
             verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
             or (
                 verdict == LyapunovVerdict.ALLOW
-                and conflict_requires_confirmation
+                and (conflict_requires_confirmation or structural_risk)
             )
         )
+
+        print("[CONFIRMATION DEBUG] needs_confirmation:", needs_confirmation)
 
         # -----------------------------------------
         # 4. REQUEST
@@ -71,3 +98,9 @@ class ConfirmationStage:
         # -----------------------------------------
         ctx.confirmation_request = confirmation_request
         ctx._needs_confirmation = needs_confirmation
+        ctx._requires_confirmation = (
+            needs_confirmation and ctx.confirmation_result is None
+        )
+
+        print("[CONFIRMATION DEBUG] exported _needs_confirmation:", ctx._needs_confirmation)
+        print("[CONFIRMATION DEBUG] exported _requires_confirmation:", ctx._requires_confirmation)
