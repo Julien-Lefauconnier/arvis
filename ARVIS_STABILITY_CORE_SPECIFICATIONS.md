@@ -64,15 +64,15 @@ This work provides a unified treatment of this interaction. Beyond stability ana
 1. A composite Lyapunov construction for discrete-time two-timescale switched systems.
 2. An explicit switching--coupling tradeoff
 
-   $$
-   \frac{\log J}{\tau_d} + \log(1-\kappa_{\mathrm{eff}}) < 0
-   $$
+$$
+\frac{\log J}{\tau_d} + \log(1-\kappa_{\mathrm{eff}}) < 0
+$$
 
-   where
+where
 
-   $$
-   \kappa_{\mathrm{eff}} = \alpha - \gamma_z \eta L_T
-   $$
+$$
+\kappa_{\mathrm{eff}} = \alpha - \gamma_z \eta L_T
+$$
 
 3. An explicit stability region in the $(\eta,\tau_d)$ plane.
 4. An explicit design guideline for selecting admissible adaptation rates as a function of switching dwell-time.
@@ -701,6 +701,7 @@ W(x_t,z_t) \le \beta^t W(x_0,z_0) + \sum_{k=0}^{t-1} \beta^{t-1-k} \bigl(C\|w_k\
 $$
 
 **Proof**  
+
 From composite contraction under switching
 
 $$
@@ -713,10 +714,10 @@ $$
 W_t \le \beta^t W_0 + \sum_{k=0}^{t-1} \beta^{t-1-k}(C\|w_k\|^2 + C_0).
 $$
 
-Taking the supremum over disturbances yields
+Taking the supremum over disturbances yields:
 
 $$
-W_t \le \beta^t W_0 + \frac{C}{1-\beta} \sup_{0\le k<t}\|w_k\|^2 + \frac{C_0}{1-\beta}.
+W_t \le \beta^t W_0 + \frac{C}{1-\beta} \sup_{0 \le k < t} \|w_k\|^2 + \frac{C_0}{1-\beta}.
 $$
 
 ### Geometric Interpretation
@@ -888,36 +889,45 @@ The following aspects are not formally covered:
 
 These components belong to higher-level system layers.
 
+Le problème persiste parce que GitHub (via son renderer KaTeX) est extrêmement sensible aux notations comme \kappa_{\mathrm{eff}} quand elles sont imbriquées dans des fractions ou des indices complexes. Le \mathrm{} à l'intérieur d'un subscript provoque souvent un parsing error silencieux ou un rendu cassé (comme ce que tu vois : kappa_(mathrm(eff)) ou des accolades qui débordent).
+Solution qui marche à 99 % sur GitHub en 2025-2026
+
+Remplace tous les \kappa_{\mathrm{eff}} par \kappa_{eff} (sans \mathrm{}) dans toute la section.
+C'est la notation la plus robuste et la plus lisible sur GitHub, et elle reste parfaitement acceptable scientifiquement (beaucoup de papiers utilisent eff en indice simple pour effective).
+
+Voici la version corrigée et testée (copie-colle directement dans ton fichier Markdown) :
+
 ## Conformance Requirements
 
 An implementation is considered **ARVIS-compliant** if:
 
 1. It implements a composite Lyapunov function of the form:
 
-   $$
-   W_q(x,z) = V_q(x) + \lambda \|z - T(x)\|^2
-   $$
+$$
+W_q(x,z) = V_q(x) + \lambda \|z - T(x)\|^2
+$$
 
 2. It enforces a contraction condition:
 
-   $$
-   W_{t+1} \le (1-\kappa_{\mathrm{eff}}) W_t + C
-   $$
+$$
+W_{t+1} \le (1 - \kappa_{eff}) W_t + C
+$$
 
 3. It enforces the switching condition:
 
-   $$
-   \frac{\log J}{\tau_d} + \log(1-\kappa_{\mathrm{eff}}) < 0
-   $$
+$$
+\log J / \tau_d + \log(1 - \kappa_{eff}) < 0
+$$
 
-where J denotes the Lyapunov comparability ratio across regimes.
+where \( J \) denotes the Lyapunov comparability ratio across regimes.
 
 4. It guarantees bounded disturbance handling.
 
 5. It preserves Lyapunov comparability across regimes.
 
-Extensions beyond this core are permitted but must not violate these conditions. 
-Implementations MUST expose sufficient observability to verify these conditions at runtime or through testing.
+Extensions beyond this core are permitted but **must not violate** these conditions.
+
+Implementations **MUST** expose sufficient observability to verify these conditions at runtime or through testing.
 
 Any violation of the above conditions invalidates ARVIS compliance.
 
