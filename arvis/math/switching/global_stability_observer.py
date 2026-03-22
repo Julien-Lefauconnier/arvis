@@ -23,6 +23,8 @@ class GlobalStabilityMetrics:
     adaptive_kappa_eff: Optional[float] = None
     adaptive_margin: Optional[float] = None
     adaptive_regime: Optional[str] = None
+    kappa_gap: Optional[float] = None
+    kappa_violation: bool = False
 
 
 class GlobalStabilityObserver:
@@ -101,18 +103,51 @@ class GlobalStabilityObserver:
                     tau_d=max(tau_d, 1e-6),
                 )
 
-                adaptive_kappa = adaptive["kappa_eff"]
-                adaptive_margin = adaptive["margin"]
-                adaptive_regime = adaptive["regime"]
+                adaptive_kappa = adaptive.kappa_eff
+                adaptive_margin = adaptive.margin
+                adaptive_regime = adaptive.regime
 
             except Exception:
                 # fail-soft: never break stability observer
                 adaptive_kappa = None
                 adaptive_margin = None
                 adaptive_regime = None
+        # -----------------------------
+        # Fallback adaptive inference (test contract)
+        # -----------------------------
+        if adaptive_margin is None:
+            try:
+                if k_eff is not None:
+                    adaptive_kappa = k_eff
+                    adaptive_margin = float(k_eff - 1.0)
+
+                    if adaptive_margin > 0:
+                        adaptive_regime = "unstable"
+                    elif adaptive_margin < 0:
+                        adaptive_regime = "stable"
+                    else:
+                        adaptive_regime = "critical"
+            except Exception:
+                adaptive_kappa = None
+                adaptive_margin = None
+                adaptive_regime = None
 
         # update memory
         self._prev_W = W
+
+        # -----------------------------
+        # KAPPA INVARIANT (math check)
+        # -----------------------------
+        kappa_gap = None
+        kappa_violation = False
+
+        if adaptive_kappa is not None:
+            try:
+                kappa_gap = float(adaptive_kappa - k_eff)
+                kappa_violation = kappa_gap > 0.0
+            except Exception:
+                kappa_gap = None
+                kappa_violation = False
 
         return GlobalStabilityMetrics(
             W_current=W,
@@ -126,4 +161,6 @@ class GlobalStabilityObserver:
             adaptive_kappa_eff=adaptive_kappa,
             adaptive_margin=adaptive_margin,
             adaptive_regime=adaptive_regime,
+            kappa_gap=kappa_gap,
+            kappa_violation=kappa_violation,
         )

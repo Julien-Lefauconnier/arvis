@@ -45,3 +45,17 @@ def test_normalized_signals_clamping():
     assert s.uncertainty == 0.5
     assert s.budget_used == 1.0
 
+def test_normalize_weights_empty():
+    from arvis.math.core.normalization import normalize_weights
+    assert normalize_weights([]) == []
+
+
+def test_weighted_sum_basic():
+    from arvis.math.core.normalization import weighted_sum01
+    result = weighted_sum01([0.2, 0.8], [1.0, 1.0])
+    assert 0.49 < result < 0.51
+
+
+def test_budget_ratio_normal():
+    from arvis.math.core.normalization import budget_ratio01
+    assert budget_ratio01(5.0, 10.0) == 0.5

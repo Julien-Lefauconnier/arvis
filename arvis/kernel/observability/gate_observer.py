@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from typing import Any, Optional, Dict
+from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 
 
 class GateObserver:
@@ -23,7 +24,7 @@ class GateObserver:
         delta_w: Optional[float],
         w_prev: Optional[float],
         w_current: Optional[float],
-        adaptive_metrics: Optional[Dict[str, Any]],
+        adaptive_metrics: Optional[AdaptiveSnapshot],
         switching_safe: bool,
         global_safe: bool,
         envelope: Any,
@@ -98,10 +99,10 @@ class GateObserver:
         # -----------------------------------------
         if adaptive_metrics:
             ctx.extra["adaptive_trace"] = {
-                "kappa_eff": adaptive_metrics.get("kappa_eff"),
-                "margin": adaptive_metrics.get("margin"),
-                "regime": adaptive_metrics.get("regime"),
-                "available": adaptive_metrics.get("available"),
+                "kappa_eff": adaptive_metrics.kappa_eff,
+                "margin": adaptive_metrics.margin,
+                "regime": adaptive_metrics.regime,
+                "available": adaptive_metrics.is_available,
             }
         else:
             ctx.extra["adaptive_trace"] = {"available": False}
@@ -129,8 +130,8 @@ class GateObserver:
         except Exception:
             pass
 
-        if adaptive_metrics and adaptive_metrics.get("margin") is not None:
-            if adaptive_metrics["margin"] > -0.02:
+        if adaptive_metrics and adaptive_metrics.margin is not None:
+            if adaptive_metrics.margin < 0:
                 disturbance["adaptive_warning"] = True
 
         ctx.extra["disturbance_signals"] = disturbance

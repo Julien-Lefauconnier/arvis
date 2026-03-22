@@ -3,6 +3,7 @@
 
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 
 
 def _base_ctx():
@@ -55,7 +56,7 @@ def test_adaptive_trace_fallback():
 
     adaptive = ctx.extra.get("adaptive_trace")
     assert adaptive is not None
-    assert adaptive["available"] is False
+    assert adaptive.get("available") is False
 
 
 def test_disturbance_signals_present():
@@ -95,12 +96,12 @@ def test_adaptive_warning_trigger():
     ctx = _base_ctx()
     pipeline = _base_pipeline()
 
-    ctx.adaptive_stability = {
-        "kappa_eff": 0.1,
-        "margin": -0.01,
-        "regime": "marginal",
-        "available": True,
-    }
+    ctx.adaptive_snapshot = AdaptiveSnapshot(
+        kappa_eff=0.1,
+        margin=-0.01,
+        regime="critical",
+        available=True,
+    )
 
     stage.run(pipeline, ctx)
 
@@ -198,12 +199,12 @@ def test_adaptive_instability_veto():
     ctx = _base_ctx()
     pipeline = _base_pipeline()
 
-    ctx.adaptive_stability = {
-        "kappa_eff": 0.1,
-        "margin": 0.01,  # instable
-        "regime": "unstable",
-        "available": True,
-    }
+    ctx.adaptive_snapshot = AdaptiveSnapshot(
+        kappa_eff=0.1,
+        margin=0.01,
+        regime="unstable",
+        available=True,
+    )
 
     stage.run(pipeline, ctx)
 

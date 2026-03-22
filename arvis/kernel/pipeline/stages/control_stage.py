@@ -98,18 +98,40 @@ class ControlStage:
         # -----------------------------------------
         # 8. ADAPTIVE CONTROL
         # -----------------------------------------
-        adaptive_snapshot = getattr(ctx, "adaptive_stability", None)
+        adaptive_snapshot = getattr(ctx, "adaptive_snapshot", None)
 
-        if adaptive_snapshot and getattr(adaptive_snapshot, "is_available", False):
+        if adaptive_snapshot and adaptive_snapshot.is_available:
             try:
                 ctrl = self._adaptive_policy.compute(
                     kappa_eff=adaptive_snapshot.kappa_eff,
-                    margin=adaptive_snapshot.switching_margin,
+                    margin=adaptive_snapshot.margin,
                     regime=adaptive_snapshot.regime,
                 )
 
                 # --- Apply safe multiplicative modulation ---
                 epsilon *= ctrl.exploration_scale
+
+                # -----------------------------------------
+                # Continuous kappa margin regulation (M8)
+                # -----------------------------------------
+                margin = adaptive_snapshot.margin
+                if margin is not None:
+                    if margin > 0.0:
+                        epsilon *= 0.25
+                        ctx.kappa_band = "hard"
+                    elif margin > -0.02:
+                        epsilon *= 0.5
+                        ctx.kappa_band = "critical"
+                    elif margin > -0.05:
+                        epsilon *= 0.8
+                        ctx.kappa_band = "warning"
+                    else:
+                        ctx.kappa_band = "stable"
+                # -----------------------------------------
+                # HARD SAFETY: unstable regime clamp
+                # -----------------------------------------
+                if adaptive_snapshot.is_unstable:
+                    epsilon *= 0.5  # conservative fallback
 
                 # Optional: enrich context for downstream stages
                 ctx.adaptive_control = ctrl

@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 
 
 def apply_gate_policy(
     verdict: LyapunovVerdict,
     envelope: Any,
-    adaptive_metrics: Dict[str, Any] | None,
+    adaptive_metrics: AdaptiveSnapshot | None,
     ctx: Any,
     kernel_result: Any,
 ) -> LyapunovVerdict:
@@ -55,8 +56,8 @@ def apply_gate_policy(
     # -----------------------------------------
     if kernel_result.recovery_detected or ctx.extra.get("recovery_detected"):
         adaptive_margin = None
-        if adaptive_metrics and adaptive_metrics.get("available"):
-            adaptive_margin = adaptive_metrics.get("margin")
+        if adaptive_metrics and adaptive_metrics.is_available:
+            adaptive_margin = adaptive_metrics.margin
 
         adaptive_block = adaptive_margin is not None and adaptive_margin > 0
 

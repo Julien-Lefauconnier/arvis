@@ -141,6 +141,28 @@ Repeated positive drift cannot accumulate silently.
 
 These layers combine to deliver **robust practical stability** rather than brittle nominal stability.
 
+### 5.6 Adaptive Margin Layer (Runtime)
+
+The system introduces a **continuous kappa margin signal**:
+
+$$
+m_t = \text{adaptive margin}
+$$
+
+with runtime classification:
+
+- hard: m_t > 0
+- critical: -0.02 < m_t ≤ 0
+- warning: -0.05 < m_t ≤ -0.02
+- stable: m_t ≤ -0.05
+
+This is exposed via:
+
+```python
+ctx.extra["kappa_margin"]
+ctx.extra["kappa_band"]
+```
+
 ---
 
 ## 6. Main Theorem — Robust Practical Stability on the Validated Domain
@@ -203,6 +225,17 @@ $$
 
 → the closed-loop gain from perturbation to state deviation is reduced.
 
+Additionally, the system exposes a decomposition of perturbations:
+
+```python
+ctx.extra["iss_perturbation"] = {
+    projection,
+    noise,
+    switch,
+    adversarial,
+}
+```
+
 This is the operational mechanism supporting the ISS interpretation.
 
 ---
@@ -248,6 +281,10 @@ The current implementation enforces the following runtime invariants:
 
 - **I5** — Fail-soft observability  
   If one robustness observer fails, the system falls back conservatively.
+
+- **I6 — Margin-aware robustness**
+   System reacts continuously to contraction degradation,
+   not only binary violations.
 
 ---
 

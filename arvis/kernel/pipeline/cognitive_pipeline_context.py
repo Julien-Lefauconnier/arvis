@@ -19,6 +19,8 @@ from arvis.action.action_decision import ActionDecision
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 from arvis.kernel.trace.decision_trace import DecisionTrace
 from arvis.math.switching.switching_runtime import SwitchingRuntime
+from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
+from arvis.math.stability.validity_envelope import ValidityEnvelope
 
 
 @dataclass
@@ -97,6 +99,12 @@ class CognitivePipelineContext:
     switching_params: Optional[Any] = None
     switching_safe: Optional[bool] = None
     switching_metrics: Dict[str, Any] = field(default_factory=dict)
+    # -------------------------
+    # Adaptive stability (canonical)
+    # -------------------------
+    adaptive_snapshot: Optional[AdaptiveSnapshot] = None
+    validity_envelope: Optional[ValidityEnvelope] = None
+
     use_paper_slow_dynamics: bool = False
     use_paper_composite_gate: bool = False
     global_stability_metrics: Optional[Any] = None

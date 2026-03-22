@@ -43,6 +43,7 @@ from arvis.math.switching.switching_params import SwitchingParams
 from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
 from arvis.math.lyapunov.quadratic_lyapunov import make_default_quadratic_family
 from arvis.math.switching.switching_runtime import SwitchingRuntime
+from arvis.math.adaptive.adaptive_kappa_eff import AdaptiveKappaEffEstimator
 
 from arvis.kernel.pipeline.stages import (
     DecisionStage,
@@ -133,6 +134,11 @@ class CognitivePipeline:
         self.global_stability_observer = GlobalStabilityObserver()
         self.quadratic_lyapunov_family = make_default_quadratic_family(dim=4)
         self.quadratic_comparability = self.quadratic_lyapunov_family.comparability()
+
+        # -----------------------------------------
+        # Adaptive stability (M4/M5)
+        # -----------------------------------------
+        self.adaptive_kappa_estimator = AdaptiveKappaEffEstimator()
         
 
     def _get_control_runtime(self, user_id: str) -> CognitiveControlRuntime:

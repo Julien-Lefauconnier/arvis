@@ -101,6 +101,29 @@ $$
 
 with **monotonic safety ordering**:
 
+### 3.6 Hard Kappa Invariant (Final Enforcement)
+
+The implementation enforces a **post-fusion hard invariant**:
+
+$$
+\kappa\text{-violation} \;\Rightarrow\; v_t = \text{ABSTAIN}
+$$
+
+This constraint is applied **after fusion and policy layers** and cannot be overridden.
+
+It ensures that:
+
+- contraction failure dominates all other signals,
+- no recovery or fusion logic can re-enable unsafe evolution,
+- the Gate remains a **strict safety operator**.
+
+This corresponds in code to:
+
+```python
+if metrics.kappa_violation:
+    verdict = ABSTAIN
+```
+
 $$
 \text{ABSTAIN} \succ \text{CONFIRM} \succ \text{ALLOW}
 $$
@@ -182,3 +205,11 @@ and stores in
 ```python
 ctx.extra["theoretical_trace"]
 ```
+
+Additionally, the implementation exposes:
+
+- `kappa_violation`, `kappa_gap`
+- `kappa_margin`, `kappa_band`
+- `validity_envelope`
+
+which bridge theoretical conditions to runtime observability.

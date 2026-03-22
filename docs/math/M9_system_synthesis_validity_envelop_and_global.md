@@ -103,6 +103,29 @@ The adaptive estimator $\widehat{\kappa}_t$ is:
 - observable at runtime,
 - conservative near instability regions.
 
+### 3.6 Runtime Validity Envelope
+
+The implementation introduces a structured object:
+
+$$
+\mathcal{V}_t = \text{ValidityEnvelope}
+$$
+
+defined by:
+
+- projection availability
+- switching safety
+- exponential bound
+- kappa safety
+- adaptive availability
+
+and exposed via:
+
+```python
+ctx.validity_envelope
+ctx.extra["validity_envelope"]
+```
+
 ---
 
 ## 4. Global Stability Mechanism
@@ -132,6 +155,12 @@ v_t \in \{ \text{ALLOW}, \text{CONFIRM}, \text{ABSTAIN} \}
 $$
 
 Filters instability, slows decisions, enforces safety.
+
+This layer now includes:
+
+- hard kappa invariant (M7)
+- adaptive margin band (M8)
+- validity envelope filtering (M9)
 
 ### 4.4 Control Modulation
 
@@ -199,6 +228,20 @@ The implementation enforces:
 - **I5 — Drift Detectability**  
   Persistent positive drift is detected and acted upon.
 
+- **I6 — Envelope Validity**
+   Decisions are only fully trusted when:
+
+   $$
+   \mathcal{V}_t.\text{valid} = \text{True}
+   $$
+
+ - **I7 — Envelope Enforcement**
+   If envelope invalid:
+
+   $$
+   v_t = \text{ALLOW} \Rightarrow \text{downgraded}
+   $$
+
 ---
 
 ## 7. System Interpretation
@@ -209,6 +252,12 @@ ARVIS is a **self-regulating cognitive system** combining:
 - adaptive runtime estimation
 - decision filtering via Gate
 - conservative control modulation
+
+with an explicit **runtime validity domain estimator** (ValidityEnvelope) and **multi-layer robustness signals**:
+
+- kappa violation (hard)
+- kappa margin (continuous)
+- ISS perturbation decomposition
 
 ---
 

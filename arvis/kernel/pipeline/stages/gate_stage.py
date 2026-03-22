@@ -16,6 +16,8 @@ from arvis.math.stability.global_guard import GlobalStabilityGuard
 from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
 from arvis.math.confidence.system_confidence import SystemConfidenceInputs, compute_system_confidence
 from arvis.math.adaptive.adaptive_runtime_observer import AdaptiveRuntimeObserver
+from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
+from arvis.math.stability.validity_envelope import build_validity_envelope
 from arvis.math.gate.gate_types import GateKernelInputs
 from arvis.math.gate.gate_policy import apply_gate_policy
 from arvis.math.gate.gate_adapter import ensure_lyapunov_state
@@ -128,7 +130,7 @@ class GateStage:
         # -----------------------------------------
         # ADAPTIVE STABILITY ESTIMATION 
         # -----------------------------------------
-        adaptive_metrics = None
+        adaptive_metrics: Optional[AdaptiveSnapshot] = None
         try:
             if (
                 w_prev is not None
@@ -151,7 +153,7 @@ class GateStage:
                     tau_d=tau_d,
                 )
 
-                ctx.adaptive_stability = adaptive_metrics
+                ctx.adaptive_snapshot = adaptive_metrics
 
         except Exception:
             adaptive_metrics = None
@@ -160,7 +162,7 @@ class GateStage:
         # if adaptive runtime estimation is unavailable, reuse any pre-injected
         # adaptive stability payload already present on the context.
         if adaptive_metrics is None:
-            adaptive_metrics = getattr(ctx, "adaptive_stability", None)
+            adaptive_metrics = getattr(ctx, "adaptive_snapshot", None)
 
         # -----------------------------------------
         # 1. Global stability tracking
@@ -302,8 +304,18 @@ class GateStage:
         # -----------------------------------------
         w_ratio = None
         try:
-            observer = GlobalStabilityObserver()
-            metrics = observer.update(ctx)
+            # Respect pre-injected metrics (tests / overrides)
+            metrics = getattr(ctx, "global_stability_metrics", None)
+
+            if metrics is None:
+                observer = GlobalStabilityObserver()
+                metrics = observer.update(ctx)
+
+                # only write if we computed it
+                ctx.global_stability_metrics = metrics
+
+            # otherwise: keep injected metrics untouched
+
             if metrics is not None:
                 w_ratio = getattr(metrics, "ratio", None)
                 if w_ratio is not None:
@@ -457,11 +469,12 @@ class GateStage:
             w_prev=w_prev,
             w_current=w_current,
             adaptive_margin=(
-                adaptive_metrics.get("margin")
-                if adaptive_metrics else None
+                adaptive_metrics.margin
+                if adaptive_metrics and adaptive_metrics.is_available
+                else None
             ),
             adaptive_available=bool(
-                adaptive_metrics and adaptive_metrics.get("available")
+                adaptive_metrics and adaptive_metrics.is_available
             ),
             cognitive_mode=getattr(ctx, "_cognitive_mode", None),
             epsilon=float(getattr(ctx, "_epsilon", 1.0)),
@@ -479,9 +492,8 @@ class GateStage:
         # -----------------------------------------
         # HARD adaptive veto invariant
         # -----------------------------------------
-        if adaptive_metrics and adaptive_metrics.get("available"):
-            margin = adaptive_metrics.get("margin")
-            if margin is not None and margin > 0:
+        if adaptive_metrics and adaptive_metrics.is_available:
+            if adaptive_metrics.is_unstable:
                 pre_verdict = LyapunovVerdict.ABSTAIN
         # -----------------------------------------
         # BACKWARD COMPATIBILITY (adaptive reasons)
@@ -501,13 +513,50 @@ class GateStage:
         # -----------------------------------------
         # BACKWARD COMPAT: marginal adaptive warning
         # -----------------------------------------
-        if adaptive_metrics and adaptive_metrics.get("available"):
-            margin = adaptive_metrics.get("margin")
+        if adaptive_metrics and adaptive_metrics.is_available:
+            margin = adaptive_metrics.margin
             if margin is not None and -0.02 < margin <= 0:
                 ctx.extra.setdefault("fusion_reasons", []).append(
                     "adaptive_margin_warning"
                 )
+        
+        # -----------------------------------------
+        # CONTINUOUS KAPPA MARGIN LAYER (M8)
+        # -----------------------------------------
+        try:
+            kappa_band = None
+            kappa_margin = None
 
+            if adaptive_metrics is not None and adaptive_metrics.margin is not None:
+                kappa_margin = float(adaptive_metrics.margin)
+                ctx.extra["kappa_margin"] = kappa_margin
+
+                if kappa_margin > 0.0:
+                    kappa_band = "hard"
+                elif kappa_margin > -0.02:
+                    kappa_band = "critical"
+                elif kappa_margin > -0.05:
+                    kappa_band = "warning"
+                else:
+                    kappa_band = "stable"
+
+                ctx.extra["kappa_band"] = kappa_band
+
+                reasons = ctx.extra.setdefault("fusion_reasons", [])
+
+                if kappa_band == "critical":
+                    if "kappa_margin_critical" not in reasons:
+                        reasons.append("kappa_margin_critical")
+                    if pre_verdict == LyapunovVerdict.ALLOW:
+                        pre_verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
+
+                elif kappa_band == "warning":
+                    if "kappa_margin_warning" not in reasons:
+                        reasons.append("kappa_margin_warning")
+
+        except Exception:
+            pass
+    
         if kernel_result.recovery_detected:
             ctx.extra["recovery_detected"] = True
 
@@ -532,7 +581,7 @@ class GateStage:
             # ensure kernel influence is preserved
             if kernel_result.final_verdict == LyapunovVerdict.ABSTAIN:
                 verdict = LyapunovVerdict.ABSTAIN
-            if adaptive_metrics and adaptive_metrics.get("available") and adaptive_metrics.get("margin") is not None and adaptive_metrics.get("margin") > 0:
+            if adaptive_metrics and adaptive_metrics.is_unstable:
                 verdict = LyapunovVerdict.ABSTAIN
             # Merge adaptive + fusion reasons (do NOT overwrite)
             existing = list(ctx.extra.get("fusion_reasons", []))
@@ -551,12 +600,104 @@ class GateStage:
         # FINAL recovery override (post-fusion)
         # -----------------------------------------
         if recovery_detected or kernel_result.recovery_detected:
-             if verdict == LyapunovVerdict.ABSTAIN:
-                 if not (adaptive_metrics and adaptive_metrics.get("margin", 0) > 0):
+            if verdict == LyapunovVerdict.ABSTAIN:
+                 if not (adaptive_metrics and adaptive_metrics.is_unstable):
                      verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
                      ctx.extra.setdefault("fusion_reasons", []).append(
                          "recovery_post_fusion_override"
                      )
+                
+        # -----------------------------------------
+        # VALIDITY ENVELOPE (M9)
+        # -----------------------------------------
+        try:
+            metrics = getattr(ctx, "global_stability_metrics", None)
+            kappa_safe = not bool(
+                metrics is not None and getattr(metrics, "kappa_violation", False)
+            )
+
+            projection_available = (
+                ctx.prev_lyap is not None or ctx.cur_lyap is not None
+            )
+            exponential_safe = (w_ratio is None or w_ratio <= w_bound_tol)
+            adaptive_band = ctx.extra.get("kappa_band")
+
+            validity_envelope = build_validity_envelope(
+                projection_available=bool(projection_available),
+                switching_safe=bool(switching_safe),
+                exponential_safe=bool(exponential_safe),
+                kappa_safe=bool(kappa_safe),
+                adaptive_available=bool(adaptive_metrics and adaptive_metrics.is_available),
+                adaptive_band=adaptive_band,
+            )
+
+            ctx.validity_envelope = validity_envelope
+            ctx.extra["validity_envelope"] = validity_envelope.__dict__.copy()
+        except Exception:
+            ctx.validity_envelope = None
+        # -----------------------------------------
+        # THEORETICAL TRACE (M6)
+        # G(x,z,W,kappa,H) → v_t
+        # -----------------------------------------
+        try:
+            metrics = getattr(ctx, "global_stability_metrics", None)
+
+            ctx.extra["theoretical_trace"] = {
+                "W": w_current,
+                "delta_W": delta_w,
+                "kappa_eff": (
+                    float(getattr(metrics, "kappa_eff", 0.0))
+                    if metrics is not None else None
+                ),
+                "history_len": len(ctx.delta_w_history),
+                "pre_verdict": str(pre_verdict),
+                "final_verdict": str(verdict),
+            }
+        except Exception:
+            pass
+
+        # -----------------------------------------
+        # CLOSED-LOOP INVARIANT TRACE (M7)
+        # W↑ ⇒ control↓ (negative feedback)
+        # -----------------------------------------
+        try:
+            if delta_w is not None:
+                ctx.extra["closed_loop_feedback"] = {
+                    "energy_increase": bool(delta_w > 0),
+                    "energy_decrease": bool(delta_w < 0),
+                    "control_should_reduce": bool(delta_w > 0),
+                }
+        except Exception:
+            pass
+
+        # -----------------------------------------
+        # ISS PERTURBATION DECOMPOSITION (M8)
+        # w = w_proj + w_noise + w_switch + w_adv
+        # -----------------------------------------
+        try:
+            ctx.extra["iss_perturbation"] = {
+                "projection": float(getattr(ctx, "projection_disturbance", 0.0) or 0.0),
+                "noise": float(getattr(ctx, "noise_disturbance", 0.0) or 0.0),
+                "switch": float(getattr(ctx, "switching_disturbance", 0.0) or 0.0),
+                "adversarial": float(getattr(ctx, "adversarial_disturbance", 0.0) or 0.0),
+            }
+        except Exception:
+            pass
+
+        # -----------------------------------------
+        # VALIDITY ENVELOPE (M9) — enriched trace only
+        # (no change to builder contract → safe)
+        # -----------------------------------------
+        try:
+            if ctx.validity_envelope is not None:
+                ctx.extra["validity_envelope_extended"] = {
+                    **ctx.extra.get("validity_envelope", {}),
+                    "projection_valid": bool(ctx.prev_lyap is not None or ctx.cur_lyap is not None),
+                    "switching_constraints_valid": bool(switching_safe),
+                    "perturbation_bounded": True,  # future hook (M10)
+                }
+        except Exception:
+            pass
 
         verdict = apply_gate_policy(
             verdict=verdict,
@@ -565,6 +706,55 @@ class GateStage:
             ctx=ctx,
             kernel_result=kernel_result,
         )
+
+        # -----------------------------------------
+        # VALIDITY ENVELOPE ENFORCEMENT (M9)
+        # -----------------------------------------
+        try:
+            validity = getattr(ctx, "validity_envelope", None)
+            if validity is not None and not validity.valid:
+                ctx.extra.setdefault("fusion_reasons", []).append(f"validity_{validity.reason}")
+                if verdict == LyapunovVerdict.ALLOW:
+                    verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
+        except Exception:
+            pass
+
+        # -----------------------------------------
+        # HARD KAPPA INVARIANT ENFORCEMENT (FINAL)
+        # Must dominate fusion / recovery / policy (M7/M8/M9)
+        # -----------------------------------------
+        try:
+            metrics = getattr(ctx, "global_stability_metrics", None)
+            if metrics is not None and getattr(metrics, "kappa_violation", False):
+                reasons = ctx.extra.setdefault("fusion_reasons", [])
+                if "kappa_violation" not in reasons:
+                    reasons.append("kappa_violation")
+
+                ctx.extra["kappa_hard_block"] = True
+                ctx.extra["kappa_gap"] = getattr(metrics, "kappa_gap", None)
+
+                verdict = LyapunovVerdict.ABSTAIN
+        except Exception:
+            pass
+
+        # -----------------------------------------
+        # Final math-aligned observability payloads
+        # -----------------------------------------
+        try:
+            metrics = getattr(ctx, "global_stability_metrics", None)
+            ctx.extra["theoretical_trace"] = {
+                "W": w_current,
+                "delta_W": delta_w,
+                "kappa_eff": (
+                    float(getattr(metrics, "kappa_eff", 0.0))
+                    if metrics is not None else None
+                ),
+                "history_len": len(ctx.delta_w_history),
+                "pre_verdict": str(pre_verdict),
+                "final_verdict": str(verdict),
+            }
+        except Exception:
+            pass
 
         # -----------------------------------------
         # OBSERVABILITY (extracted layer)
@@ -602,17 +792,55 @@ class GateStage:
             ctx.extra.setdefault("confidence_flags", [])
 
         # -----------------------------------------
+        # CLOSED-LOOP INVARIANT TRACE (M7)
+        # W↑ ⇒ control↓ (negative feedback)
+        # -----------------------------------------
+        try:
+            if delta_w is not None:
+                ctx.extra["closed_loop_feedback"] = {
+                    "energy_increase": bool(delta_w > 0),
+                    "energy_decrease": bool(delta_w < 0),
+                    "control_should_reduce": bool(delta_w > 0),
+                }
+        except Exception:
+            pass
+
+        # -----------------------------------------
+        # ISS PERTURBATION DECOMPOSITION (M8)
+        # -----------------------------------------
+        try:
+            ctx.extra["iss_perturbation"] = {
+                "projection": float(getattr(ctx, "projection_disturbance", 0.0) or 0.0),
+                "noise": float(getattr(ctx, "noise_disturbance", 0.0) or 0.0),
+                "switch": float(getattr(ctx, "switching_disturbance", 0.0) or 0.0),
+                "adversarial": float(getattr(ctx, "adversarial_disturbance", 0.0) or 0.0),
+            }
+        except Exception:
+            pass
+
+        # -----------------------------------------
+        # VALIDITY ENVELOPE (M9) — enriched trace only
+        # -----------------------------------------
+        try:
+            if ctx.validity_envelope is not None:
+                ctx.extra["validity_envelope_extended"] = {
+                    **ctx.extra.get("validity_envelope", {}),
+                    "projection_valid": bool(ctx.prev_lyap is not None or ctx.cur_lyap is not None),
+                    "switching_constraints_valid": bool(switching_safe),
+                    "perturbation_bounded": True,
+                }
+        except Exception:
+            pass
+
+        # -----------------------------------------
         # HARD adaptive veto invariant (final)
         # -----------------------------------------
-        if adaptive_metrics and adaptive_metrics.get("available"):
-            margin = adaptive_metrics.get("margin")
-            if margin is not None and margin > 0:
-                verdict = LyapunovVerdict.ABSTAIN
+        if adaptive_metrics and adaptive_metrics.is_unstable:
+            verdict = LyapunovVerdict.ABSTAIN
 
-        # Final trace update (only if observer already populated it)
         if "fusion_trace" in ctx.extra:
             ctx.extra["fusion_trace"]["final_verdict"] = str(verdict)
-        
+
         ctx.gate_result = verdict
 
         

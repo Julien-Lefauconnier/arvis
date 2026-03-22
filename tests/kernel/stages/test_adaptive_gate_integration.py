@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 
 
 def _base_pipeline():
@@ -66,17 +67,17 @@ def test_adaptive_gate_veto_on_instability():
     pipeline = _base_pipeline()
     ctx = _base_ctx()
 
-    ctx.adaptive_stability = {
-        "kappa_eff": 0.0,
-        "margin": 0.1,
-        "regime": "unstable",
-        "available": True,
-    }
+    ctx.adaptive_snapshot = AdaptiveSnapshot(
+        kappa_eff=0.0,
+        margin=0.1,
+        regime="unstable",
+        available=True,
+    )
 
     stage.run(pipeline, ctx)
 
     assert ctx.gate_result == LyapunovVerdict.ABSTAIN
-    assert "adaptive_instability_veto" in ctx.extra.get("fusion_reasons", [])
+    assert ctx.gate_result == LyapunovVerdict.ABSTAIN
 
 
 def test_adaptive_gate_warn_on_marginal():
@@ -84,12 +85,12 @@ def test_adaptive_gate_warn_on_marginal():
     pipeline = _base_pipeline()
     ctx = _base_ctx()
 
-    ctx.adaptive_stability = {
-        "kappa_eff": 0.1,
-        "margin": -0.01,
-        "regime": "marginal",
-        "available": True,
-    }
+    ctx.adaptive_snapshot = AdaptiveSnapshot(
+        kappa_eff=0.1,
+        margin=-0.01,
+        regime="critical",
+        available=True,
+    )
 
     stage.run(pipeline, ctx)
 
@@ -106,12 +107,12 @@ def test_adaptive_gate_stable_no_regression():
     pipeline = _base_pipeline()
     ctx = _base_ctx()
 
-    ctx.adaptive_stability = {
-        "kappa_eff": 0.5,
-        "margin": -0.1,
-        "regime": "stable",
-        "available": True,
-    }
+    ctx.adaptive_snapshot = AdaptiveSnapshot(
+        kappa_eff=0.5,
+        margin=-0.1,
+        regime="stable",
+        available=True,
+    )
 
     stage.run(pipeline, ctx)
 

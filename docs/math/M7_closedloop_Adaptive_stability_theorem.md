@@ -145,6 +145,15 @@ If $\kappa^t \leq 0$ (contraction fails or reverses):
 - Gate → ABSTAIN or strong CONFIRM
 - Control → strong reduction of aggressiveness
 
+Additionally, if a **hard kappa violation** is detected:
+
+$$
+\kappa\text{-violation} \Rightarrow v_t = \text{ABSTAIN}
+$$
+
+This enforces a strict safety barrier independent of recovery signals.
+
+
 ### 6.3 Global protection
 
 If instability accumulates ($\sum \Delta W_t > \text{threshold}$):
@@ -161,6 +170,17 @@ The system satisfies the **negative feedback invariant**:
 $$
 W_t \uparrow \quad \Longrightarrow \quad u_t \downarrow
 $$
+
+This invariant is explicitly exposed at runtime via:
+
+```python
+ctx.extra["closed_loop_feedback"]
+```
+
+which encodes:
+
+- energy increase detection
+- expected control reduction
 
 **Interpretation:**  
 Any increase in Lyapunov energy automatically reduces system aggressiveness (self-stabilizing behavior).
@@ -183,6 +203,10 @@ The current implementation enforces the following invariants:
 
 - **I4 — Gate dominance**  
   If $v_t = \text{ABSTAIN}$ → no risky evolution is allowed
+
+- **I5 — Kappa Dominance (Hard Constraint)**  
+  If contraction fails → system cannot proceed  
+  (enforced after fusion)
 
 ---
 
