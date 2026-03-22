@@ -10,6 +10,7 @@ from .regime_stage import RegimeStage
 from .conflict_modulation_stage import ConflictModulationStage
 from .control_stage import ControlStage
 from .gate_stage import GateStage
+from .control_feedback_stage import ControlFeedbackStage
 from .structural_risk_stage import StructuralRiskStage
 from .confirmation_stage import ConfirmationStage
 from .execution_stage import ExecutionStage
@@ -19,5 +20,5 @@ from .runtime_stage import RuntimeStage
 
 __all__ = ["DecisionStage", "PassiveContextStage", "BundleStage", "ConflictStage",
             "CoreStage", "TemporalStage", "RegimeStage", "ConflictModulationStage",
-            "ControlStage", "GateStage", "StructuralRiskStage", "ConfirmationStage",
-            "ExecutionStage", "ActionStage", "IntentStage", "RuntimeStage"  ]
+            "ControlStage", "GateStage", "ControlFeedbackStage", "StructuralRiskStage",
+            "ConfirmationStage","ExecutionStage", "ActionStage", "IntentStage", "RuntimeStage" ]

@@ -8,9 +8,15 @@ from arvis.math.signals import UncertaintySignal
 from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
 from arvis.uncertainty.uncertainty_to_intent_mapper import map_uncertainty_to_intent
+from arvis.math.adaptive.adaptive_control_policy import AdaptiveControlPolicy
+
 
 
 class ControlStage:
+
+    def __init__(self) -> None:
+        # Lazy adaptive control (safe: no dependency on pipeline init)
+        self._adaptive_policy = AdaptiveControlPolicy()
 
     def run(self, pipeline: Any, ctx: Any) -> None:
 
@@ -90,7 +96,32 @@ class ControlStage:
         )
 
         # -----------------------------------------
-        # 8. SNAPSHOT
+        # 8. ADAPTIVE CONTROL
+        # -----------------------------------------
+        adaptive_snapshot = getattr(ctx, "adaptive_stability", None)
+
+        if adaptive_snapshot and getattr(adaptive_snapshot, "is_available", False):
+            try:
+                ctrl = self._adaptive_policy.compute(
+                    kappa_eff=adaptive_snapshot.kappa_eff,
+                    margin=adaptive_snapshot.switching_margin,
+                    regime=adaptive_snapshot.regime,
+                )
+
+                # --- Apply safe multiplicative modulation ---
+                epsilon *= ctrl.exploration_scale
+
+                # Optional: enrich context for downstream stages
+                ctx.adaptive_control = ctrl
+
+            except Exception:
+                # fail-soft: never break control stage
+                ctx.adaptive_control = None
+        else:
+            ctx.adaptive_control = None
+
+        # -----------------------------------------
+        # 9. SNAPSHOT
         # -----------------------------------------
         control_snapshot = CognitiveControlSnapshot(
             gate_mode=cognitive_mode,
@@ -111,3 +142,4 @@ class ControlStage:
         ctx.control_snapshot = control_snapshot
         ctx._epsilon = epsilon  # used later by gate
         ctx._cognitive_mode = cognitive_mode
+

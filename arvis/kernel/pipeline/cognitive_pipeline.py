@@ -55,6 +55,7 @@ from arvis.kernel.pipeline.stages import (
     ConflictModulationStage,
     ControlStage,
     GateStage,
+    ControlFeedbackStage,
     StructuralRiskStage,
     ConfirmationStage,
     ExecutionStage,
@@ -122,6 +123,7 @@ class CognitivePipeline:
         self.conflict_modulation_stage = ConflictModulationStage()
         self.control_stage = ControlStage()
         self.gate_stage = GateStage()
+        self.control_feedback_stage = ControlFeedbackStage()
         self.structural_risk_stage = StructuralRiskStage()
         self.confirmation_stage = ConfirmationStage()
         self.execution_stage = ExecutionStage()
@@ -243,18 +245,23 @@ class CognitivePipeline:
         # -----------------------------------------------------
         self._safe_run(self.gate_stage, ctx)
 
+        # -----------------------------------------
+        # 11. CONTROL FEEDBACK STAGE
+        # -----------------------------------------
+        self._safe_run(self.control_feedback_stage, ctx)
+
         # -----------------------------------------------------
-        # 11. STRUCTURAL RISK STAGE   
+        # 12. STRUCTURAL RISK STAGE   
         # -----------------------------------------------------
         self._safe_run(self.structural_risk_stage, ctx)
 
         # -----------------------------------------------------
-        # 12. CONFIRMATION STAGE
+        # 13. CONFIRMATION STAGE
         # -----------------------------------------------------
         self._safe_run(self.confirmation_stage, ctx)
 
         # -----------------------------------------------------
-        # 13. EXECUTION STAGE
+        # 14. EXECUTION STAGE
         # -----------------------------------------------------
         self._safe_run(self.execution_stage, ctx)
 
@@ -267,17 +274,17 @@ class CognitivePipeline:
         ctx.can_execute = can_execute
 
         # -----------------------------------------------------
-        # 14. ACTION STAGE
+        # 15. ACTION STAGE
         # -----------------------------------------------------
         self._safe_run(self.action_stage, ctx)
 
         # -----------------------------------------------------
-        # 15. INTENT STAGE
+        # 16. INTENT STAGE
         # -----------------------------------------------------
         self._safe_run(self.intent_stage, ctx)
 
         # -----------------------------------------------------
-        # 16. RUNTIME STAGE
+        # 17. RUNTIME STAGE
         # -----------------------------------------------------
         self._safe_run(self.runtime_stage, ctx)
 

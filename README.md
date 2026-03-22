@@ -24,7 +24,7 @@ ARVIS is grounded in a formally proven stability core.
 
 This document defines the fundamental stability condition (T1):
 
-    log J / τ_d + log(1 - κ_eff) < 0
+**log(J) / tau_d + log(1 - k_eff) < 0**
 
 → which governs all admissible system behaviors.
 

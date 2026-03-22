@@ -71,7 +71,7 @@ def test_fusion_fallback(monkeypatch):
         raise RuntimeError("boom")
 
     monkeypatch.setattr(
-        "arvis.kernel.pipeline.stages.gate_stage.multiaxial_fusion",
+        "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
         broken_fusion,
     )
 

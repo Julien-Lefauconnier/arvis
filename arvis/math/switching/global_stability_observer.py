@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import Optional, Any
 
 from arvis.math.switching.switching_params import kappa_eff
+from arvis.math.adaptive.adaptive_kappa_eff import AdaptiveKappaEffEstimator
+from arvis.math.adaptive.adaptive_runtime_observer import AdaptiveRuntimeObserver
 
 
 @dataclass
@@ -18,6 +20,9 @@ class GlobalStabilityMetrics:
     time: int
     kappa_eff: float
     safe: bool
+    adaptive_kappa_eff: Optional[float] = None
+    adaptive_margin: Optional[float] = None
+    adaptive_regime: Optional[str] = None
 
 
 class GlobalStabilityObserver:
@@ -25,6 +30,11 @@ class GlobalStabilityObserver:
     def __init__(self) -> None:
         self.t = 0
         self.W0: Optional[float] = None
+        self._prev_W: Optional[float] = None
+
+        # Adaptive layer
+        self._adaptive_estimator = AdaptiveKappaEffEstimator()
+        self._adaptive_observer = AdaptiveRuntimeObserver(self._adaptive_estimator)
 
     def update(self, ctx: Any) -> GlobalStabilityMetrics:
 
@@ -44,6 +54,9 @@ class GlobalStabilityObserver:
                 time=self.t,
                 kappa_eff=0.0,
                 safe=True,
+                adaptive_kappa_eff=None,
+                adaptive_margin=None,
+                adaptive_regime=None,
             )
 
         if self.W0 is None:
@@ -72,6 +85,35 @@ class GlobalStabilityObserver:
 
         safe = ratio is None or ratio <= 1.0
 
+        # -----------------------------
+        # Adaptive stability
+        # -----------------------------
+        adaptive_kappa = None
+        adaptive_margin = None
+        adaptive_regime = None
+
+        if self._prev_W is not None and W is not None:
+            try:
+                adaptive = self._adaptive_observer.update(
+                    W_prev=self._prev_W,
+                    W_next=W,
+                    J=float(params.J),
+                    tau_d=max(tau_d, 1e-6),
+                )
+
+                adaptive_kappa = adaptive["kappa_eff"]
+                adaptive_margin = adaptive["margin"]
+                adaptive_regime = adaptive["regime"]
+
+            except Exception:
+                # fail-soft: never break stability observer
+                adaptive_kappa = None
+                adaptive_margin = None
+                adaptive_regime = None
+
+        # update memory
+        self._prev_W = W
+
         return GlobalStabilityMetrics(
             W_current=W,
             W_bound=W_bound,
@@ -81,4 +123,7 @@ class GlobalStabilityObserver:
             time=self.t,
             kappa_eff=k_eff,
             safe=safe,
+            adaptive_kappa_eff=adaptive_kappa,
+            adaptive_margin=adaptive_margin,
+            adaptive_regime=adaptive_regime,
         )
