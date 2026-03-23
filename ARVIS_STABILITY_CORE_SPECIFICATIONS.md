@@ -4,10 +4,26 @@
 Veramem  
 March 2026
 
-## Document Type
+## Position in ARVIS
 
-This document defines the ARVIS stability core specification.
-It combines theoretical guarantees with implementation-level constraints.
+This document defines the **theoretical stability core** of ARVIS.
+
+It does NOT describe the full ARVIS system.
+
+In particular, it does NOT cover:
+
+- the projection operator Π (real implementation)
+- the decision Gate G
+- the control layer C
+- the cognitive pipeline
+
+These elements are introduced in M3–M9 and are not covered by the guarantees established here.
+
+This document should be interpreted as:
+
+→ a theoretical reference model  
+→ a baseline stability system  
+→ a constraint layer for the full implementation
 
 ## Scope
 

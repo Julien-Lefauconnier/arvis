@@ -1,4 +1,4 @@
-# ARVIS — M1: Theorem Inventory
+# ARVIS — M1: Result Inventory
 
 ## Objective
 
@@ -6,7 +6,7 @@ This document defines the **complete structure of theoretical results** for ARVI
 
 It organizes:
 
-- all theorems
+- all results
 - their dependencies
 - proof hierarchy
 - scope of each result
@@ -30,7 +30,7 @@ The proof is decomposed into:
 
 ## 2. Dependency Graph
 
-Theorems depend on each other as follows:
+Results depend on each other as follows:
 
 T1 → T2 → T3 → T4 → T5
 
@@ -44,11 +44,11 @@ where:
 
 ---
 
-## 3. Theorem Definitions
+## 3. Results Definitions
 
 ---
 
-### Theorem T1 — Fast Subsystem Stability
+### Results T1 — Fast Subsystem Stability
 
 **Statement**
 
@@ -66,7 +66,7 @@ V_q(x_{t+1}) - V_q(x_t)
 
 ---
 
-### Theorem T2 — Slow Tracking Bound
+### Results T2 — Slow Tracking Bound
 
 **Statement**
 
@@ -85,7 +85,7 @@ for some constant \( C > 0 \)
 
 ---
 
-### Theorem T3 — Composite Lyapunov Decrease
+### Results T3 — Composite Lyapunov Decrease
 
 **Statement**
 
@@ -104,7 +104,7 @@ with:
 
 ---
 
-### Theorem T4 — Stability Under Switching
+### Results T4 — Stability Under Switching
 
 **Statement**
 
@@ -118,7 +118,7 @@ and switching frequency bounded by dwell-time constraint.
 
 ---
 
-### Theorem T5 — Global Exponential Stability
+### Results T5 — Global Exponential Stability
 
 **Statement**
 
@@ -140,7 +140,7 @@ for some \( C > 0, \beta > 0 \)
 
 ---
 
-### Theorem T6 — Input-to-State Stability (ISS)
+### Results T6 — Input-to-State Stability (ISS)
 
 **Statement**
 
@@ -152,7 +152,7 @@ W(t) \leq C e^{-\beta t} W(0) + \gamma \sup_{k \leq t} \|w_k\|^2
 
 ---
 
-### Theorem T7 — Observed Stability Consistency
+### Results T7 — Observed Stability Consistency
 
 **Statement**
 
@@ -164,7 +164,7 @@ Under A14:
 
 ---
 
-### Theorem T8 — Projection Consistency (CRITICAL)
+### Results T8 — Projection Consistency (CRITICAL)
 
 **Statement**
 
@@ -178,7 +178,7 @@ Under A15:
 
 ## 4. Proof Strategy
 
-Each theorem will be proven using:
+Each results will be proven using:
 
 - Lyapunov methods
 - singular perturbation arguments
@@ -212,7 +212,7 @@ Everything else extends it.
 
 Next additions:
 
-- Adaptive dwell-time theorem
+- Adaptive dwell-time result
 - Contraction-based stability
 - Robust switching adaptation
 

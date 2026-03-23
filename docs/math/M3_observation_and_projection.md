@@ -206,7 +206,7 @@ Projection is empirically Lipschitz on validated neighborhoods and robust to noi
 
 Projection is bounded, locally regular, and switching behavior is stable under perturbations.
 
-### Level 4 — Theorem-Compatible
+### Level 4 — Result-Compatible
 
 Projection satisfies validated conditions sufficient for the assumptions of the stability core.
 
@@ -458,7 +458,7 @@ Certification should proceed in this order:
 2. certify local regularity,
 3. certify mode stability,
 4. certify Lyapunov compatibility,
-5. only then connect to theorem-level claims.
+5. only then connect to result-level claims.
 
 Do not certify the full projection in one step.
 

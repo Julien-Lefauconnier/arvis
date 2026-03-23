@@ -1,314 +1,200 @@
-# ARVIS — M9: System Synthesis, Validity Envelope & Global Guarantee
+# ARVIS — M9: System Synthesis, Validity Envelope & Global Guarantee (Implementation-Aligned)
 
 ## 1. Objective
 
-This document provides the **global synthesis** of the ARVIS system as of March 2026.
+This document provides the **final synthesis** of the ARVIS theoretical and implementation stack (M0–M8) as of March 2026.
 
 It establishes:
+- the unified system representation,
+- the precise **runtime validity envelope** (operational, not mathematical),
+- the scoped global stability claim (referencing T8 of M8),
+- the explicit boundary between what is proven, what is implementation-aligned, and what is not claimed.
 
-- the unified system interpretation across all layers,
-- the precise **validity envelope** of all guarantees,
-- the **final stability statement** of the implemented system,
-- the explicit boundary between proven results, implementation-aligned guarantees, and non-claimed properties.
-
-This document serves as the **closure layer** of the current ARVIS theoretical and empirical stack (M0–M8).
+This document is the **closure layer** of the current foundational stack. All guarantees remain **conditional** on the assumptions and validated domain defined in prior documents.
 
 ---
 
-## 2. Unified System Representation
+## 2. Unified System Representation (Implementation-Aligned)
 
-The ARVIS system is a **closed-loop hybrid cognitive dynamical system**:
+The ARVIS system is modeled as a **closed-loop hybrid switched system** with projection and runtime feedback:
 
-$$
+\[
 o_t \xrightarrow{\Pi} (x_t, z_t, q_t, w_t) \quad \longrightarrow \quad W_t \longrightarrow \widehat{\kappa}_t \longrightarrow v_t \longrightarrow u_t \longrightarrow (x_{t+1}, z_{t+1})
-$$
+\]
 
-### 2.1 Functional Decomposition
+### 2.1 Functional Layers (Mapping to Code)
 
-| Layer          | Operator          | Role                              |
-|----------------|-------------------|-----------------------------------|
-| Observation    | $\Omega$          | Produces observable state $o_t$   |
-| Projection     | $\Pi$             | Maps cognition → hybrid state     |
-| Dynamics       | $f_q, g_q$        | System evolution                  |
-| Lyapunov       | $W$               | Stability metric                  |
-| Adaptive       | $\widehat{\kappa}$| Runtime contraction estimate      |
-| Gate           | $G$               | Decision filtering                |
-| Control        | $C$               | Action modulation                 |
+| Layer              | Mathematical Object                  | Runtime Counterpart                  | Reference |
+|--------------------|--------------------------------------|--------------------------------------|-----------|
+| Observation        | \(\Omega(c_t)\)                      | `Observation`                        | M3        |
+| Projection         | \(\Pi : \mathcal{O} \to (x,z,q,w)\)  | `project_observation(...)`           | M3        |
+| Dynamics           | \(f_q, g_q\)                         | Pipeline stages                      | M0, M1    |
+| Lyapunov           | \(W_q(x,z)\)                         | `CompositeLyapunov`                  | M0, M2    |
+| Adaptive Estimation| \(\widehat{\kappa}_t\)               | `AdaptiveKappaEffEstimator`          | M4, M5    |
+| Gate               | \(G(W_t, \Delta W_t, \widehat{\kappa}_t)\) | `GateStage`                        | M6        |
+| Control            | \(C(v_t, W_t, \widehat{\kappa}_t)\)  | `ControlStage`                       | M7        |
 
-### 2.2 Closed-Loop Equation
-
-$$
+Closed-loop dynamics (as implemented):
+\[
 \begin{aligned}
 x_{t+1} &= f_{q_t}(x_t, z_t, u_t, w_t) \\
 z_{t+1} &= z_t + \eta \, g_{q_t}(x_t, z_t, u_t, w_t) \\
-u_t     &= C(v_t, \widehat{\kappa}_t, W_t) \\
-v_t     &= G(x_t, z_t, W_t, \widehat{\kappa}_t, H_t)
+u_t &= C(v_t, W_t, \widehat{\kappa}_t) \\
+v_t &= G(W_t, \Delta W_t, \widehat{\kappa}_t, H_t)
 \end{aligned}
-$$
+\]
 
 ---
 
-## 3. Validity Envelope (CRITICAL)
+## 3. Validity Envelope (Runtime Structure)
 
-All guarantees hold **only** within a restricted operational domain.
+The implementation introduces a runtime object:
 
-### 3.1 Valid Observation Domain
-
-There exists a subset
-
-$$
-\mathcal{O}_{\text{valid}} \subseteq \mathcal{O}
-$$
-
-such that for all trajectories satisfying
-
-$$
-o_t \in \mathcal{O}_{\text{valid}} \quad \forall t
-$$
-
-the following conditions are met.
-
-### 3.2 Projection Validity Conditions
-
-The projection operator $\Pi$ satisfies (empirically validated — Phase A, M3):
-
-- boundedness: $\|\Pi(o)\| \leq M$
-- local Lipschitz regularity
-- noise robustness
-- switching stability away from boundaries
-- Lyapunov compatibility
-
-### 3.3 Perturbation Model
-
-$$
-w_t = w_t^{\text{proj}} + w_t^{\text{noise}} + w_t^{\text{switch}} + w_t^{\text{adv}}
-$$
-
-with bounded magnitude
-
-$$
-\|w_t\| \leq \bar{w}
-$$
-
-### 3.4 Switching Constraints
-
-- bounded jump condition: $W_{q'}(x,z) \leq J \cdot W_q(x,z)$
-- average dwell-time constraint satisfied (empirical precursor)
-
-### 3.5 Adaptive Observability
-
-The adaptive estimator $\widehat{\kappa}_t$ is:
-
-- bounded,
-- observable at runtime,
-- conservative near instability regions.
-
-### 3.6 Runtime Validity Envelope
-
-The implementation introduces a structured object:
-
-$$
+\[
 \mathcal{V}_t = \text{ValidityEnvelope}
-$$
+\]
 
-defined by:
+containing five boolean flags + metadata:
+- projection_available
+- switching_safe
+- exponential_bound_satisfied
+- kappa_safe
+- adaptive_available
 
-- projection availability
-- switching safety
-- exponential bound
-- kappa safety
-- adaptive availability
-
-and exposed via:
-
+Exposed via:
 ```python
 ctx.validity_envelope
 ctx.extra["validity_envelope"]
 ```
+---
+
+**Important clarification :**
+
+This is not a mathematical validity envelope (no invariant set, no tube, no level-set of W). It is a structured runtime diagnostic aggregating empirical checks. 
+It provides operational safety signals, not a formal invariance proof.
+
+All guarantees below apply only when 
+
+(\(\mathcal{V}t.\text{valid} = \text{True}\)) and (\(o_t \in \mathcal{O}_{\text{valid}}\)).
+
+## 4. Validity Domain 
+
+Guarantees hold exclusively on the empirically validated projection domain (\(\mathcal{O}_{\text{valid}} \subseteq \mathcal{O}\)) (Phase A, M3):
+
+* Projection (\(\Pi\)) empirically bounded, locally Lipschitz, noise-robust, switching-stable away from boundaries, Lyapunov-compatible.
+* Perturbations bounded: (\(|w_t| \leq \bar{w}\)).
+* Assumptions A1–A15 (M1) are taken as granted on this domain (no runtime monitoring of all A_i).
+
+Outside (\(\mathcal{O}_{\text{valid}}\)) or if any assumption is violated: no guarantee is claimed.
 
 ---
 
-## 4. Global Stability Mechanism
+## 5. Global Stability Result (Reference to Existing Results)
 
-ARVIS achieves stability through four interacting layers:
+The culminating result of the stack is Result T8 (M8) (Robust Practical Stability and ISS Interpretation, M8):  
 
-### 4.1 Lyapunov Core
+Under the conditions of
 
-$$
-W(x,z) = V(x) + \lambda \|z - T(x)\|^2
-$$
+- M3 (projection validity on (\(\mathcal{O}_{\text{valid}}\))), 
+- M1 (A1–A15), 
+- M4–M5 (bounded adaptive estimator), 
+- M6 (gate filtering), 
+- M7 (conservative closed-loop modulation), 
+- and bounded perturbations:  
 
-Provides energy representation, contraction structure, stability metric.
+there exist (under assumptions and validated domain only):
 
-### 4.2 Adaptive Stability Layer
+(\(C > 0\)), (\(\beta > 0\)), (\(r \geq 0\)) 
 
-$$
-\widehat{\kappa}_t = \text{runtime contraction estimate}
-$$
+and a class-\(\mathcal{K}\) function (\(\Gamma\)) such that  
 
-Detects degradation, classifies regimes, estimates margins.
+\[  
+W(t) \leq C , e^{-\beta t} , W(0) + \Gamma\!\left( \sup_{k \leq t} |w_k| \right) + r  
+\]  
 
-### 4.3 Gate Enforcement
+for all trajectories remaining in (\(\mathcal{O}_{\text{valid}}\)) and satisfying assumptions A1–A15.
 
-$$
-v_t \in \{ \text{ALLOW}, \text{CONFIRM}, \text{ABSTAIN} \}
-$$
+**Interpretation :**  
 
-Filters instability, slows decisions, enforces safety.
+ARVIS implements an **implementation-aligned practically stable closed-loop hybrid cognitive system** with an ISS-style robustness interpretation on its validated operational domain. 
 
-This layer now includes:
+This is explicitly not:
 
-- hard kappa invariant (M7)
-- adaptive margin band (M8)
-- validity envelope filtering (M9)
+* global asymptotic stability,
+* exact exponential stability,
+* robustness to unbounded/adversarial inputs,
+* a machine-checked proof (no formal verification system used)
+* a universal guarantee over all possible inputs
 
-### 4.4 Control Modulation
-
-$$
-u_t = (\epsilon_t, \text{exploration}_t)
-$$
-
-Reduces gain under instability, implements negative feedback.
-
-### 4.5 Global Guard
-
-History-based constraint
-
-$$
-H_t = \{\Delta W_k\}_{k \leq t}
-$$
-
-Detects persistent drift, prevents silent accumulation.
+It is an implementation-aligned practical stability guarantee built on the local proof skeleton (M2).
 
 ---
 
-## 5. Main Result — Global Practical Stability
+## 6. System-Level Invariants Enforced by Implementation (NON-PROOF)
 
-**Theorem T9 — ARVIS Global Practical Stability**
+The runtime (M5–M8) enforces the following operational invariants (not formal proofs, but enforced runtime constraints):
 
-**Under:**
-
-- assumptions A1–A15 (M1)
-- projection validity on $\mathcal{O}_{\text{valid}}$ (M3)
-- adaptive estimator bounded (M4)
-- gate stability preservation (M6 — T6)
-- closed-loop modulation (M7 — T7)
-- bounded perturbations (M8 — T8)
-
-**Then** there exist constants $C > 0$, $\beta > 0$, $r \geq 0$ and a class-$\mathcal{K}$ function $\Gamma$ such that:
-
-$$
-W(t) \leq C \, e^{-\beta t} \, W(0) + \Gamma\!\left( \sup_{k \leq t} \|w_k\| \right) + r
-$$
-
-for all trajectories satisfying $o_t \in \mathcal{O}_{\text{valid}}$ $\forall t$.
-
-**Interpretation**
-
-ARVIS is a **practically stable closed-loop hybrid cognitive system** with an **ISS-type robustness guarantee** on a validated domain.
+* I1 — Bounded energy on valid trajectories
+* I2 — Negative feedback: (\(W_t \uparrow \implies u_t \downarrow\))
+* I3 — Gate monotonicity (ABSTAIN ≻ CONFIRM ≻ ALLOW)
+* I4 — No instability amplification
+* I5 — Persistent drift detection via history (\(H_t\))
+* I6 — Conservative response when (\(\mathcal{V}_t.\text{valid} = \text{False}\))
 
 ---
 
-## 6. Stability Invariants (System-Level)
+## 7. Explicit Claim Boundary (CRITICAL)
 
-The implementation enforces:
+### 7.1 What is Guaranteed (CONDITIONAL)
 
-- **I1 — Boundedness**  
-  $W_t < \infty$ for all valid trajectories.
+* Practical stability (Result T8, implementation-aligned) on the validated projection domain (\(\mathcal{O}_{\text{valid}}\)).
+* Bounded response to bounded perturbations (ISS-style interpretation).
+* Adaptive runtime detection and conservative reaction to instability.
+* Closed-loop negative-feedback behavior via gate + control.
 
-- **I2 — Negative Feedback**  
-  $W_t \uparrow \quad \Longrightarrow \quad u_t \downarrow$
+### 7.2 What is NOT Guaranteed (STRICT)
 
-- **I3 — Gate Monotonicity**  
-  Instability $\Rightarrow$ non-increasing permissiveness
+* Global asymptotic or exponential stability.
+* Validity outside (\(\mathcal{O}_{\text{valid}}\)) or if any A1–A15 fails.
+* Global Lipschitz or injective projection (\(\Pi\)) (M3, M0).
+* Robustness to unbounded or arbitrary adversarial inputs.
+* Full formal certification (no Coq/Lean/Isabelle proof)
+* Optimality of decisions or task-level performance.
 
-- **I4 — No Instability Amplification**  
-  No mechanism such that $W_t \uparrow \Rightarrow u_t \uparrow$
+**Critical dependency (REQUIRED):**
 
-- **I5 — Drift Detectability**  
-  Persistent positive drift is detected and acted upon.
+All claims rest on the projection (\(\Pi\)), which is: 
 
-- **I6 — Envelope Validity**
-   Decisions are only fully trusted when:
+* not injective
+* not globally Lipschitz
+* only empirically validated on a restricted domain
 
-   $$
-   \mathcal{V}_t.\text{valid} = \text{True}
-   $$
+Therefore:
 
- - **I7 — Envelope Enforcement**
-   If envelope invalid:
+> stability guarantees apply only to the projected system, not the full cognitive state space.
 
-   $$
-   v_t = \text{ALLOW} \Rightarrow \text{downgraded}
-   $$
-
----
-
-## 7. System Interpretation
-
-ARVIS is a **self-regulating cognitive system** combining:
-
-- Lyapunov-grounded stability core
-- adaptive runtime estimation
-- decision filtering via Gate
-- conservative control modulation
-
-with an explicit **runtime validity domain estimator** (ValidityEnvelope) and **multi-layer robustness signals**:
-
-- kappa violation (hard)
-- kappa margin (continuous)
-- ISS perturbation decomposition
+If (\(\Pi\)) is lossy or leaves (\(\mathcal{O}_{\text{valid}}\)), no stability guarantee holds.
 
 ---
 
-## 8. Explicit Claim Boundary
-
-### 8.1 What ARVIS Guarantees
-
-- practical stability on validated domain
-- bounded response to bounded perturbations
-- adaptive detection of instability
-- conservative reaction under degradation
-- closed-loop negative feedback behavior
-
-### 8.2 What ARVIS Does NOT Guarantee
-
-- global asymptotic convergence to zero
-- global Lipschitz projection
-- robustness to unbounded adversarial inputs
-- optimal decision-making under arbitrary conditions
-- stability outside $\mathcal{O}_{\text{valid}}$
-
----
-
-## 9. Critical Dependency
-
-All guarantees critically depend on:
-
-$$
-\Pi : \mathcal{O}_{\text{valid}} \rightarrow (x, z, q, w)
-$$
-
-If projection validity fails (even locally), **no stability guarantee is claimed**.
-
----
-
-## 10. Conceptual Closure
-
-This document establishes that:
-
-- the ARVIS system is coherently defined end-to-end,
-- the mathematical core and implementation are aligned,
-- the system admits a clear and bounded validity envelope,
-- the final guarantees are precisely stated and scoped.
-
-**Final Statement**
+## 8. Conceptual Closure (SCOPED)
 
 ARVIS constitutes:
 
 > a closed-loop hybrid cognitive system  
 > with a Lyapunov-grounded adaptive stability architecture,  
-> providing **practical stability** and **ISS-type robustness**  
-> on a validated operational domain.
+> providing **conditional practical stability**  
+> and **ISS-style robustness interpretation**  
+> on an empirically validated operational domain.
 
-This marks the closure of the foundational theoretical-empirical stack (M0–M9).
+This synthesis (M0–M9) marks the current boundary of the foundational stack. 
+
+Future work (adaptive dwell-time results, richer projection validation, formal verification) will be required to extend the domain or strengthen the claims.
+
+---
+
+## Final Statement (STRICT)
+
+The current ARVIS system is **mathematically coherent within its stated assumptions**
+
+Guarantees are **strictly conditional**, explicitly scoped, and limited to the validated domain and assumptions.

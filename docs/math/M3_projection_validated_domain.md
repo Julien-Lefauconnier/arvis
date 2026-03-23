@@ -216,7 +216,7 @@ The implemented switching projection $\Pi_q$ behaves consistently with the expec
 This is a strong empirical precursor for later connection with average dwell-time reasoning.
 
 **Important limitation:**  
-Current switching law is still simple and hand-defined — no theorem-level dwell-time certificate yet attached.
+Current switching law is still simple and hand-defined — no result-level dwell-time certificate yet attached.
 
 ### 4.6 Lyapunov Compatibility
 
@@ -251,7 +251,7 @@ The current empirical campaign covers the following fixture families:
 - Interior alert case
 - Boundary micro-perturbation trajectories
 
-This is sufficient for **Phase A**, but insufficient for final theorem-grade claims.
+This is sufficient for **Phase A**, but insufficient for final result-grade claims.
 
 ## 6. What Can Be Claimed Now
 
@@ -267,7 +267,7 @@ This is sufficient for **Phase A**, but insufficient for final theorem-grade cla
 **Claims not yet justified:**
 
 - Global Lipschitz continuity of the projection
-- Full theorem-level compatibility of implemented projection with all assumptions A1–A15
+- Full result-level compatibility of implemented projection with all assumptions A1–A15
 - Robustness to arbitrary semantic or symbolic perturbations
 - Projection validity on arbitrary real runtime observations
 - Certified dwell-time satisfaction of the implemented switching logic
@@ -290,11 +290,11 @@ such that for all tested observations $o \in \mathcal{O}_{\text{valid}}$:
 - $\Pi_q$ is empirically stable away from switching boundaries,
 - a Lyapunov-style energy remains computable and non-pathological.
 
-This is an **empirical compatibility result**, not yet a formal theorem.
+This is an **empirical compatibility result**, not yet a formal result.
 
 ## 8. Main Remaining Gaps
 
-The main remaining gaps before theorem-level extension are:
+The main remaining gaps before result-level extension are:
 
 - richer structural / symbolic projection validation,
 - richer external uncertainty projection validation,
@@ -311,7 +311,7 @@ The next sequence should be:
 2. expand fixtures to structured and semantic perturbations,
 3. attach compatibility tests to the actual ARVIS composite Lyapunov implementation,
 4. produce benchmark reports with empirical constants,
-5. move to theorem-proof construction on the validated domain.
+5. move to result-proof construction on the validated domain.
 
 ## 10. Final Statement
 

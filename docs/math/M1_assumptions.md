@@ -2,57 +2,43 @@
 
 ## Objective
 
-This document defines all **explicit assumptions** required for:
+This document defines all assumptions required for the **mathematical analysis of the ARVIS abstract system**.
 
-- stability analysis
-- Lyapunov decrease
-- switching behavior
-- robustness to disturbances
+These assumptions apply only to the **projected dynamical system** defined in M0.
 
-These assumptions define the **validity domain** of all theoretical guarantees.
-
-No result in ARVIS is valid outside this domain.
+They do not necessarily hold for the full cognitive pipeline.
 
 ---
 
 ## 1. General Principle
 
-All assumptions must be:
+All guarantees in ARVIS are **conditional**:
 
-- explicit
-- minimal
-- testable (when possible)
-- associated with code-level interpretation
+> They hold only if the assumptions below are satisfied.
+
+No runtime certification of these assumptions is claimed.
 
 ---
 
-## 2. Regularity Assumptions
+## 2. Structural Assumptions
 
 ### A1 — Measurability
 
-For all \( q \in \mathcal{Q} \):
+For all modes \( q \in \mathcal{Q} \):
 
-- \( f_q(x, z, w) \) is measurable
-- \( g_q(x, z, w) \) is measurable
+- \( f_q(x, z, w) \) is measurable  
+- \( g_q(x, z, w) \) is measurable  
 
 ---
 
-### A2 — Local Lipschitz Continuity
+### A2 — Local Regularity
 
-For all \( q \), there exist constants:
-
-- \( L_x > 0 \)
-- \( L_z > 0 \)
-- \( L_w > 0 \)
-
-such that:
+Functions \( f_q \), \( g_q \) are locally Lipschitz:
 
 \[
 \|f_q(x_1, z_1, w_1) - f_q(x_2, z_2, w_2)\|
 \leq L_x \|x_1 - x_2\| + L_z \|z_1 - z_2\| + L_w \|w_1 - w_2\|
 \]
-
-Same for \( g_q \)
 
 ---
 
@@ -86,10 +72,11 @@ c_1 \|x\|^2 \leq V_q(x) \leq c_2 \|x\|^2
 
 ### A6 — Decrease Condition
 
-There exists \( \alpha > 0 \) such that:
+There exist \( \alpha > 0 \), \( \gamma_w > 0 \) such that:
 
 \[
-V_q(x_{t+1}) - V_q(x_t) \leq -\alpha \|x_t\|^2 + \gamma_w \|w_t\|^2
+V_q(x_{t+1}) - V_q(x_t)
+\leq -\alpha \|x_t\|^2 + \gamma_w \|w_t\|^2
 \]
 
 ---
@@ -104,8 +91,6 @@ V_q(x_{t+1}) - V_q(x_t) \leq -\alpha \|x_t\|^2 + \gamma_w \|w_t\|^2
 
 ### A8 — Slow-Fast Coupling
 
-There exists \( \gamma_z > 0 \) such that:
-
 \[
 \|g_q(x, z, w)\| \leq \gamma_z ( \|x\| + \|z\| + \|w\| )
 \]
@@ -114,17 +99,13 @@ There exists \( \gamma_z > 0 \) such that:
 
 ## 5. Time-Scale Separation
 
-### A9 — Small Parameter
+### A9 — Small Adaptation Rate
 
 \[
 0 < \eta \leq \eta_{\max}
 \]
 
-with:
-
-\[
-\eta_{\max} \text{ sufficiently small}
-\]
+with \( \eta_{\max} \) sufficiently small for stability analysis.
 
 ---
 
@@ -140,21 +121,27 @@ N_\sigma(t_0, t) \leq N_0 + \frac{t - t_0}{\tau_d}
 
 ### A11 — Mode Compatibility
 
-For all \( q, q' \):
-
 \[
 W_{q'}(x, z) \leq J \cdot W_q(x, z)
 \]
 
 ---
 
-## 7. Effective Contraction
+## 7. Effective Contraction Condition
 
-### A12 — Positive Effective Decay
+### A12 — Contraction Condition
 
 \[
-\kappa_{\mathrm{eff}} = \alpha - \gamma_z \eta L_T > 0
+\kappa_{\mathrm{eff}} = \alpha - \gamma_z \eta L_T
 \]
+
+The system is contractive only if:
+
+\[
+\kappa_{\mathrm{eff}} > 0
+\]
+
+This condition is **not guaranteed a priori** and must be estimated or enforced.
 
 ---
 
@@ -162,22 +149,20 @@ W_{q'}(x, z) \leq J \cdot W_q(x, z)
 
 ### A13 — Bounded Influence
 
-There exists \( \gamma > 0 \):
-
 \[
 \|f_q(x, z, w) - f_q(x, z, 0)\| \leq \gamma \|w\|
 \]
 
 ---
 
-## 9. Observability Assumptions
+## 9. Interface Assumptions (Critical)
 
-### A14 — Observable State Mapping
+### A14 — State Observability (Approximate)
 
-The system provides a mapping:
+The system produces observable quantities:
 
 \[
-\hat{x}_t = \mathcal{O}(y_t)
+\hat{x}_t
 \]
 
 such that:
@@ -186,62 +171,76 @@ such that:
 \|\hat{x}_t - x_t\| \leq \epsilon
 \]
 
+This is an **approximation**, not a guaranteed observer.
+
 ---
 
-## 10. Projection Assumptions (CRITICAL)
-
-### A15 — Cognitive Projection Consistency
+### A15 — Projection Assumption (Weak Form)
 
 There exists a projection:
 
 \[
-\Pi : \mathcal{C} \to (x, z, q, w)
+\Pi : \mathcal{C} \rightarrow (x, z, q, w)
 \]
 
 such that:
 
-- bounded output
-- locally Lipschitz
-- stable under perturbations
+- outputs are bounded
+- projection is locally regular in nominal conditions
+
+However:
+
+- Π is not assumed injective  
+- Π is not guaranteed globally Lipschitz  
+- Π may lose information  
+
+Therefore:
+
+> All guarantees apply only to the projected system.
 
 ---
 
-## 11. Hidden Assumptions (Explicitly Exposed)
+## 10. Hidden Engineering Assumptions
 
-This system implicitly assumes:
+The implementation implicitly assumes:
 
-- normalization of signals
-- no adversarial unbounded input
-- finite-dimensional representation of cognition
-- stability of measurement process
+- normalized signals
+- finite-dimensional representations
+- bounded numerical errors
+- stable measurement pipeline
+
+These are not formally proven.
 
 ---
 
-## 12. Assumption Violations
+## 11. Assumption Violations
 
 If any assumption is violated:
 
-- no stability guarantee holds
-- runtime monitoring may become unreliable
-- system behavior is undefined mathematically
+- theoretical guarantees do not hold
+- stability claims become invalid
+- runtime behavior may diverge from model
 
 ---
 
-## 13. Summary
+## 12. Summary
 
-The ARVIS guarantees are valid ONLY if:
+All ARVIS guarantees are:
 
-- A1–A15 hold simultaneously
-- parameters satisfy T1 condition
-- system remains within bounded domain
+- conditional
+- model-level (projected system)
+- dependent on A1–A15
+
+---
+
+## 13. Key Limitation
+
+The main limitation is:
+
+> the lack of formal characterization of the projection Π
 
 ---
 
 ## 14. Next Step
 
-→ `M1_theorem_inventory.md`
-
-Defines:
-- all theorems
-- proof structure
-- dependencies
+→ M1_result_inventory.md

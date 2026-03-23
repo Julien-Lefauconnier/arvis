@@ -1,4 +1,4 @@
-# M7 — Closed-Loop Adaptive Stability Theorem (FINAL)
+# M7 — Closed-Loop Adaptive Stability Result
 
 ## 1. Objective
 
@@ -98,9 +98,9 @@ The system implements three nested stability feedback loops:
 
 ---
 
-## 5. Main Theorem — Closed-Loop Practical Stability
+## 5. Main Result — Closed-Loop Practical Stability
 
-**Theorem T7 — Closed-Loop Practical Stability**
+**Result T7 — Closed-Loop Practical Stability**
 
 **Under assumptions:**
 

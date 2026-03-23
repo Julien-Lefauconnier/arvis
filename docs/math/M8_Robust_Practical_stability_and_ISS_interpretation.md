@@ -1,4 +1,4 @@
-# M8 — Robust Practical Stability and ISS Interpretation (FINAL)
+# M8 — Robust Practical Stability and ISS Interpretation 
 
 ## 1. Objective
 
@@ -26,8 +26,8 @@ This document extends:
 - the validated projection domain (M3),
 - the adaptive estimator (M4),
 - the runtime adaptive integration (M5),
-- the gate theorem (M6),
-- the closed-loop adaptive theorem (M7).
+- the gate result (M6),
+- the closed-loop adaptive result (M7).
 
 ---
 
@@ -165,9 +165,9 @@ ctx.extra["kappa_band"]
 
 ---
 
-## 6. Main Theorem — Robust Practical Stability on the Validated Domain
+## 6. Main Result — Robust Practical Stability on the Validated Domain
 
-**Theorem T8 — Robust Practical Stability**
+**Result T8 — Implementation-Aligned Robust Practical Stability**
 
 **Under assumptions:**
 
@@ -177,19 +177,19 @@ ctx.extra["kappa_band"]
 4. control modulation is monotone conservative under instability,
 5. switching remains within the admissible bounded-runtime envelope.
 
-**Then** there exist constants $C, \beta, r > 0$ and a class-$\mathcal{K}$ function $\Gamma$ such that:
+**Then (implementation-aligned, non-formally proven)** there exist constants $C, \beta, r > 0$ and a class-$\mathcal{K}$ function $\Gamma$ such that:
 
 $$
 W(t) \leq C \, e^{-\beta t} \, W(0) + \Gamma(\bar{w}) + r
 $$
 
-for all runtime trajectories that remain in $\mathcal{O}_{\text{valid}}$.
+for all runtime trajectories that remain in $\mathcal{O}_{\text{valid}}$ and satisfy assumptions A1–A15.
 
 ---
 
-## 7. Interpretation of the Theorem
+## 7. Interpretation of the Result
 
-This theorem **does not** claim:
+This result **does not** claim:
 
 - exact convergence of all trajectories to zero,
 - full cancellation of perturbations,
@@ -202,7 +202,7 @@ It **does** claim:
 - the state is attracted toward a bounded practical tube,
 - the gate/control architecture prevents instability amplification.
 
-This is the appropriate theorem level for a cognitive runtime system operating under bounded uncertainty.
+This is an **implementation-aligned stability result**, not a machine-checked theorem.
 
 ---
 
@@ -288,9 +288,9 @@ The current implementation enforces the following runtime invariants:
 
 ---
 
-## 11. Limits of the Current Robustness Claim
+## 11. Limits of the Current Robustness Claim (CRITICAL)
 
-The theorem **does not** yet prove:
+This result **does not** prove:
 
 - strongest-form global ISS over arbitrary switching,
 - robustness outside the validated projection domain,
@@ -320,7 +320,7 @@ To tighten the theoretical claim further, the most valuable next steps are:
 
 ---
 
-## 13. Final Statement
+## 13. Final Statement (Scoped)
 
 ARVIS can now be interpreted as:
 
@@ -337,4 +337,4 @@ This means:
 - the system is confined to a practical stability tube  
   rather than entering uncontrolled divergence.
 
-This constitutes the **correct high-standard robustness level** for the current ARVIS implementation — a meaningful and defensible final stability milestone.
+This constitutes a **defensible and scoped robustness level** for the current ARVIS implementation — a meaningful and defensible final stability milestone.

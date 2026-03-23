@@ -2,396 +2,253 @@
 
 ## Overview
 
-ARVIS is a **layered cognitive system architecture** designed to enforce:
+ARVIS is a **deterministic cognitive execution system** implemented as a **closed-loop pipeline**.
 
-* deterministic reasoning
+It enforces:
+
+* structured cognition
 * stability-constrained decision-making
-* full traceability of cognitive execution
+* full traceability of execution
 
-It is not a model architecture.
+ARVIS is not a model architecture.
 
-It is a **constraint architecture**, where cognition is structured, evaluated, and gated before any decision is allowed to exist.
+It is a **cognitive execution system** where:
 
----
-
-## Architectural Model
-
-ARVIS is structured as a **strictly layered system**:
-
-```text
-API Layer
-↓
-Pipeline Layer (Execution Protocol)
-↓
-Cognition Layer (State Construction)
-↓
-Core Layer (Scientific Modeling)
-↓
-Mathematical Layer (Signals & Stability)
-↓
-Kernel Layer (Invariants & Guarantees)
-```
-
-Each layer has **strict responsibilities** and cannot bypass the others.
-
-ARVIS is structured as a **strictly layered system**:
-
-```mermaid
-graph TD
-
-    A[Input] --> B[Decision Stage\nIntent Detection]
-
-    B --> C[Passive Context Stage\nContext Enrichment]
-
-    C --> D[Bundle Stage\nImmutable Cognitive State]
-
-    D --> E[Conflict Stage\nConflict Extraction]
-
-    E --> F[Core Stage\nScientific Modeling\nRisk / Drift / Lyapunov]
-
-    F --> G[Regime Stage\nRegime Estimation]
-
-    G --> H[Temporal Stage\nTemporal Pressure]
-
-    H --> I[Conflict Modulation\nConflict Adjustment]
-
-    I --> J[Control Stage\nAdaptive Control\nEpsilon / Exploration]
-
-    J --> K[Gate Stage\nMulti-Axial Stability Fusion\nLyapunov + Switching + Global]
-
-    K --> L[Structural Risk Stage\nPost-Gate Risk Check]
-
-    L --> M[Confirmation Stage\nHuman-in-the-loop Decision]
-
-    M --> N[Execution Stage\nExecution Eligibility]
-
-    N --> O[Action Stage\nAction Resolution]
-
-    O --> P[Intent Stage\nExecutable Intent]
-
-    P --> Q[Runtime Stage\nState Update]
-
-    Q --> R[Observability\nProjection / Stability / Forecast]
-
-    R --> S[Decision Trace\nCanonical Output]
-
-    %% Feedback loop (critical)
-    K -->|Control Feedback| J
-
-    %% Styles
-    classDef stage fill:#f9f9f9,stroke:#333,stroke-width:1px
-    classDef critical fill:#ffe6e6,stroke:#cc0000,stroke-width:2px
-    classDef control fill:#f3e6ff,stroke:#6600cc,stroke-width:2px
-    classDef output fill:#e6f3ff,stroke:#0077cc,stroke-width:2px
-
-    class B,C,D,E,F,G,H,I stage
-    class J control
-    class K critical
-    class L,M,N,O,P,Q stage
-    class R,S output
-```
+> cognition is constructed, evaluated, regulated, and only then allowed to produce an action.
 
 ---
 
-## Core Principle
+## Core Architectural Principle
 
 > ARVIS does not generate decisions.
-> It determines whether a decision is **allowed to exist under constraints**.
+> It determines whether a decision is **allowed to be executed under stability constraints**.
 
 ---
 
-## Layer-by-Layer Specification
+## System Model
 
----
+ARVIS is implemented as a **deterministic, sequential pipeline with feedback control**.
 
-### 1. API Layer
+### Execution Flow
 
-**Role:** External interface
-
-* exposes `CognitiveOS`
-* returns stable, versioned outputs
-* hides internal complexity
-
-**Key properties:**
-
-* contract-based output
-* versioned serialization
-* no access to internal execution
-
----
-
-### 2. Pipeline Layer (Execution Protocol)
-
-**Role:** Deterministic orchestration
-
-* enforces ordered execution
-* coordinates all cognitive stages
-* ensures fail-safe execution
-
-**Key properties:**
-
-* fixed stage sequence
-* no implicit branching
-* fail-soft execution (`_safe_run`)
-
-The pipeline is the **only place where cognition is allowed to evolve over time**.
-
----
-
-### 3. Cognition Layer (State Construction)
-
-**Role:** Build structured cognitive state
-
-Main component:
-
-```python
-CognitiveBundleBuilder
+```text
+Input
+ → Cognitive Pipeline (17 stages)
+ → Observability Projection
+ → Decision Trace
 ```
 
-**Guarantees:**
+---
 
-* no reasoning
-* no execution
-* deterministic construction
+## Cognitive Pipeline (Core System)
 
-The bundle is:
+The pipeline is the **central execution engine** of ARVIS.
 
-> a **pure snapshot of cognitive state**
+All cognition, control, and decision logic occur inside it.
 
-It aggregates:
+### Pipeline Structure
 
-* decision context
-* introspection
-* explanation
-* timeline
-* memory
-* retrieval signals
+The system executes a fixed sequence of stages:
 
-This layer ensures that:
+1. Decision Stage
+2. Passive Context Stage
+3. Bundle Stage
+4. Conflict Stage
+5. Core Stage
+6. Regime Stage
+7. Temporal Stage
+8. Conflict Modulation Stage
+9. Control Stage
+10. Gate Stage
+11. Control Feedback Stage
+12. Structural Risk Stage
+13. Confirmation Stage
+14. Execution Stage
+15. Action Stage
+16. Intent Stage
+17. Runtime Stage
 
-> all downstream reasoning operates on a **fully explicit, immutable state**
+(see `cognitive_pipeline.py`) 
 
 ---
 
-### 4. Core Layer (Scientific Modeling)
+## Closed-Loop Control Structure (CRITICAL)
 
-**Role:** Compute system dynamics
+ARVIS implements a **closed-loop control system**:
 
-Main component:
-
-```python
-CognitiveCoreEngine
+```text
+Control → Gate → Control Feedback → Control
 ```
 
-The core:
+### Roles
 
-* does not decide
-* does not control execution
-* does not apply constraints
+* **Control Stage**
 
-It only computes:
+  * sets exploration / epsilon
+  * adjusts decision aggressiveness
 
-* collapse risk
-* drift (`dv`)
-* optional reflexive signals
+* **Gate Stage**
 
-Output:
+  * enforces stability constraints
+  * filters unsafe decisions
 
-```python
-CognitiveCoreResult
-```
+* **Control Feedback Stage**
 
-This is:
-
-> a **pure scientific measurement of system state**
+  * updates control based on Gate outcome
+  * closes the feedback loop
 
 ---
 
-### 5. Mathematical Layer (Signals & Stability)
+## Key Insight
 
-**Role:** Provide formal primitives
-
-Includes:
-
-* RiskSignal
-* DriftSignal
-* StabilitySignal
-* ConflictSignal
-
-**Properties:**
-
-* normalized [0,1]
-* immutable
-* type-safe
-* float-compatible (controlled coercion)
-
-This layer ensures:
-
-> no raw scalar can influence cognition without semantic constraints
+> ARVIS is not a layered architecture.
+> It is a **closed-loop cognitive dynamical system implemented as a pipeline**.
 
 ---
 
-### 6. Kernel Layer (Invariants & Guarantees)
+## Logical Components (Functional View)
 
-**Role:** Enforce global system correctness
+Although implemented as a pipeline, ARVIS can be decomposed into functional roles:
 
-Example:
+### 1. State Construction
 
-```python
-assert_kernel_invariants(bundle)
-```
+* Bundle Stage
+* Context + memory aggregation
 
-Ensures:
-
-* bounded stability values
-* consistency between reasoning components
-
-This layer defines:
-
-> what is structurally valid cognition
+→ produces an **explicit cognitive state**
 
 ---
 
-### 7. Gate Layer (Stability Enforcement Engine)
+### 2. Scientific Modeling
 
-The Gate is not a single validator but a **decision fusion system**.
+* Core Stage
+* Regime Stage
+* Temporal Stage
 
-It integrates:
+→ computes:
 
-- Lyapunov local stability
-- switching constraints
-- global trajectory stability
-- confidence estimation
-
-and produces a **single enforceable verdict**.
-
-This makes ARVIS a:
-
-> runtime-enforced stability system
-
-rather than a post-hoc validator.
+* risk
+* drift
+* system regime
+* stability signals
 
 ---
 
-## Critical Architectural Separations
+### 3. Control System
 
-### 1. State vs Computation
+* Control Stage
+* Control Feedback Stage
 
-* Bundle → state
-* Core → computation
-* Pipeline → orchestration
-
-No component mixes these responsibilities.
+→ adjusts system behavior dynamically
 
 ---
 
-### 2. Cognition vs Observability
+### 4. Stability Enforcement
 
-* cognition produces state
-* observability projects state
+* Gate Stage
+* Structural Risk Stage
 
-Observability:
+→ ensures:
 
-* is read-only
-* has no influence on decisions
-
----
-
-### 3. Decision vs Execution
-
-* decision is evaluated early
-* execution is gated later
-
-No decision is directly executable.
+* unsafe decisions are blocked
+* unstable states cannot propagate
 
 ---
 
-### 4. Signals vs Scalars
+### 5. Decision Resolution
 
-* all critical values are signals
-* raw floats are controlled and wrapped
+* Confirmation Stage
+* Execution Stage
+* Action Stage
+* Intent Stage
 
----
-
-## Stability as a First-Class Constraint
-
-In ARVIS:
-
-* stability is not evaluated after decision
-* stability is not advisory
-
-It is **structural**.
-
-The Gate stage ensures:
-
-* unstable systems cannot act
-* high-risk states are blocked
-* uncertainty triggers confirmation
-
-A decision:
-
-> exists only if it passes stability constraints
+→ transforms evaluated cognition into **actionable intent**
 
 ---
 
-## Determinism Model
+### 6. System Update
 
-The system guarantees:
+* Runtime Stage
 
-* fixed execution order
-* explicit state transitions
-* no hidden mutation
-* identical inputs → identical outputs
+→ updates internal state and timeline
 
-This makes ARVIS:
+---
 
+## Observability Layer (Post-Execution)
+
+After pipeline execution:
+
+* system state is projected
+* stability metrics are computed
+* predictions and statistics are derived
+
+This layer is:
+
+* read-only
+* non-causal (does not influence decisions)
+
+---
+
+## Trace & Replay
+
+Each execution produces:
+
+* a **DecisionTrace**
+* a structured timeline entry
+
+Properties:
+
+* deterministic
 * replayable
 * auditable
-* verifiable
 
 ---
 
-## Replayability
+## Determinism Guarantees
 
-Through:
+ARVIS ensures:
 
-* timeline snapshots
-* bundle reconstruction (`from_timeline`)
-
-ARVIS supports:
-
-* deterministic replay
-* simulation
-* forensic analysis
+* fixed execution order
+* no hidden branching
+* fail-soft execution
+* deterministic outputs (given same input)
 
 ---
 
 ## Architectural Guarantees
 
-ARVIS enforces:
+The system enforces:
 
-* no implicit reasoning
-* no uncontrolled side effects
-* no unbounded values
-* no direct action without validation
-* full traceability of decisions
+* no direct execution without validation
+* explicit cognitive state construction
+* stability constraints before action
+* bounded and normalized signals
+* full decision traceability
+
+---
+
+## Relation to ARVIS OS Standard
+
+ARVIS architecture aligns with the Cognitive OS standard:
+
+* **Kernel Layer** → CognitivePipeline (execution engine)
+* **Cognition Layer** → pipeline stages (reasoning & modeling)
+* **API Layer** → CognitiveOS interface
+
+(see ARVIS_STANDARD_V1.md) 
 
 ---
 
 ## Summary
 
-ARVIS is not a framework.
+ARVIS is:
 
-It is a **cognitive constraint system** where:
+> a deterministic cognitive pipeline
+> implementing a closed-loop control system
+> where decisions are:
+>
+> constructed → evaluated → constrained → allowed → executed
 
-* state is explicit
-* computation is isolated
-* control is deterministic
-* stability is enforced
-* decisions are gated
+It is not a passive architecture.
 
-A cognitive process is not executed.
-
-It is:
-
-> constructed → evaluated → constrained → allowed
+It is an **active stability-enforcing system**.

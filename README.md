@@ -1,6 +1,6 @@
 # ARVIS
 
-**A runtime-certified cognitive dynamical system**
+**A runtime-monitored and validated cognitive dynamical system**
 
 > Not a model. Not an agent.  
 > A **closed-loop system that enforces decision stability under uncertainty**.
@@ -13,7 +13,7 @@ ARVIS is a **discrete-time hybrid dynamical system** operating on cognitive sign
 
 At each timestep:
 
-o_t → Π → s_t → W_t → κ̂_t → G → C → s_{t+1}
+o_t → Π → (x_t, z_t, q_t, w_t) → W_t → κ̂_t → G → C → (x_{t+1}, z_{t+1})
 
 Where:
 
@@ -68,11 +68,15 @@ Where:
 - τ_d : dwell time  
 - k_eff : effective contraction factor  
 
-This condition governs admissible system trajectories.
+This condition defines the admissible trajectories of the reference switching system.
 
 → Specification:  
-- [ARVIS Stability Core](./ARVIS_STABILITY_CORE_SPECIFICATIONS.md)  
-- [M6 — Gate Stability Theorem](docs/math/M6_gate_stabilty_theorem_and_decision_consistency.md)
+- [Theoretical Stability Core (reference model)](./ARVIS_STABILITY_CORE_SPECIFICATIONS.md)  
+- [M6 — Gate Stability Result](docs/math/M6_gate_stabilty_result_and_decision_consistency.md)
+
+The stability core defines a theoretical baseline system.
+
+The full ARVIS implementation extends this core with projection, gating, control and runtime validation layers that are not covered by the same guarantees.
 
 ---
 
@@ -96,7 +100,7 @@ A decision violating constraints:
 → **is rejected (ABSTAIN)**
 
 → Formalization:  
-- [M6 — Gate Theorem](docs/math/M6_gate_stabilty_theorem_and_decision_consistency.md)
+- [M6 — Gate Condition](docs/math/M6_gate_stabilty_result_and_decision_consistency.md)
 
 ---
 
@@ -115,13 +119,13 @@ This produces a regulation loop:
 instability ↑ → control ↓ → stabilization
 
 → Formalization:  
-- [M7 — Closed-loop Adaptive Stability](docs/math/M7_closedloop_Adaptive_stability_theorem.md)
+- [M7 — Closed-loop Adaptive Stability](docs/math/M7_closedloop_Adaptive_stability_result.md)
 
 ---
 
 ## 📊 Stability Guarantees (Conditional)
 
-Under assumptions A1–A15:
+Under assumptions A1–A15 (not fully verifiable at runtime):
 
 - bounded trajectories  
 - exponential decay up to a perturbation tube  
@@ -134,7 +138,7 @@ Formally:
 W(t) ≤ C e^{-β t} W(0) + Γ(||w||) + r
 
 → Formalization:  
-- [M8 — Robust Practical Stability (ISS)](docs/math/M8_Robust_Practical_stability_and_ISS_interpratation.md)
+- [M8 — Robust Practical Stability (ISS)](docs/math/M8_Robust_Practical_stability_and_ISS_interpretation.md)
 
 ---
 
@@ -144,7 +148,7 @@ At runtime, ARVIS enforces a **validity envelope**:
 
 V_t = ValidityEnvelope
 
-It encodes:
+It aggregates runtime indicators related to:
 
 - projection validity  
 - switching safety  
@@ -160,7 +164,7 @@ If violated:
 
 ---
 
-## 📡 Runtime Certification
+## 📡 Runtime validation
 
 ARVIS combines:
 
@@ -171,10 +175,10 @@ ARVIS combines:
 
 → Result:
 
-decisions are **certified at runtime**, not assumed safe
+decisions are **evaluated and constrained at runtime under observable conditions**, not assumed safe
 
 → Formalization:  
-- [M10 — Runtime Certification](docs/math/M10_empirical_stability_validation_and_runtime_certification.md)
+- [M10 — Runtime Validation](docs/math/M10_empirical_stability_validation_and_runtime_validation.md)
 
 ---
 
@@ -204,7 +208,7 @@ ARVIS guarantees **stability constraints**, not decision quality.
 
 ## 🧩 System Architecture
 
-ARVIS separates:
+ARVIS can be functionally decomposed into:
 
 ### State (Bundle)
 Deterministic cognitive snapshot
@@ -236,7 +240,7 @@ Append-only, hash-chained memory
 - invariant validation (Lyapunov, switching, ISS)  
 - adversarial pipeline testing  
 
-This is a **validated cognitive system**, not a heuristic pipeline.
+This is a **empirically validated cognitive system implementation**, not a heuristic pipeline.
 
 ---
 

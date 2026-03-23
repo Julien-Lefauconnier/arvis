@@ -80,6 +80,20 @@ with:
 
 ---
 
+### Important Scope Clarification
+
+The system defined above represents an **abstract mathematical model**.
+
+It is not the full cognitive system.
+
+In particular:
+- the projection Π from real inputs to (x, z, q, w) is external to this model
+- stability guarantees apply only to the projected dynamics
+
+No guarantee is made on the original input space.
+
+---
+
 ## 3. Code → Math Mapping
 
 ### 3.1 Core Signals
@@ -100,7 +114,7 @@ with:
 |------------|--------------------|--------|
 | target_map | \( T_q(x) \) | IN MODEL |
 | composite_lyapunov | \( W_q(x,z) \) | IN MODEL |
-| global_stability_observer | bound estimator | RUNTIME MONITOR |
+| global_stability_observer | bound estimator | RUNTIME MONITOR (no formal guarantee) |
 | switching_params | \( J, \tau_d, \kappa \) | IN MODEL |
 
 ---
@@ -129,13 +143,17 @@ with:
 
 ## 4. Scope Classification
 
-### 4.1 Fully Formalized
+### 4.1 Mathematically Defined (Abstract Model)
 
 - Fast state dynamics \( x_t \)
 - Slow state \( z_t \)
 - Composite Lyapunov \( W \)
 - Stability condition T1
 - Switching bounds (idealized)
+
+These components are formally defined at the model level.
+
+They are not formally verified (no machine-checked proof).
 
 ---
 
@@ -160,23 +178,29 @@ with:
 
 ## 5. Critical Gap (Primary Risk)
 
-The **main theoretical gap** is:
-
-> The projection from real cognitive signals → mathematical state variables.
-
-Formally:
+The main theoretical gap is the projection:
 
 \[
 \Pi : \mathcal{C} \rightarrow (x, z, q, w)
 \]
 
-is currently:
-- not formally defined
-- not proven stable
-- not guaranteed Lipschitz
-- not bounded in all regimes
+This projection is:
 
-This is the **main source of potential invalidation of guarantees**.
+- not formally defined
+- not guaranteed to be injective
+- potentially lossy
+- not proven Lipschitz globally
+
+This implies:
+
+- distinct cognitive states may map to identical projected states
+- Lyapunov stability may hold in the projected space while failing in the original space
+
+Therefore:
+
+> All stability guarantees are **conditional on the projection being well-behaved**.
+
+This is currently the **main limitation of the system**.
 
 ---
 
@@ -192,6 +216,10 @@ They DO NOT apply to:
 - decision making
 - symbolic reasoning
 - external model outputs
+
+These guarantees are theoretical results on the abstract system.
+
+They are not runtime-certified and rely on the validity of assumptions.
 
 ---
 
@@ -212,7 +240,7 @@ To extend guarantees to the full system:
 A claim is valid ONLY if:
 
 1. It corresponds to a defined mathematical object
-2. It is covered by a proven theorem
+2. It is covered by a result
 3. The code implements that object faithfully
 4. The assumptions are satisfied in practice
 

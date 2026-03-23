@@ -21,8 +21,8 @@ This document extends and operationally closes:
 - theoretical core and proof skeleton (M0–M2)
 - validated projection and cognitive state model (M3)
 - adaptive stability estimation and integration (M4–M5)
-- gate stability preservation theorem (M6)
-- closed-loop adaptive stability theorem (M7)
+- gate stability preservation results (M6)
+- closed-loop adaptive stability results (M7)
 - robust practical stability & ISS interpretation (M8)
 - global system synthesis and validity envelope (M9)
 
@@ -206,9 +206,9 @@ $$
 o_t \in \mathcal{O}_{\text{valid}} \quad \Longrightarrow \quad V_t \text{ valid}
 $$
 
-## 6. Empirical Theorem (Operational)
+## 6. Empirical Results (Operational)
 
-**Theorem T10 — Empirical Stability Validation**
+**Result T10 — Empirical Stability Validation**
 
 **Under**:
 - validated projection domain (M3)
@@ -228,7 +228,7 @@ $$
 
 ## 7. Consistency with Theoretical Results
 
-| Theorem | Theoretical claim                  | Empirical status       |
+| Result | Theoretical claim                  | Empirical status       |
 |---------|------------------------------------|------------------------|
 | T6      | Gate stability preservation        | Empirically validated  |
 | T7      | Closed-loop adaptive stability     | Empirically validated  |
@@ -248,7 +248,7 @@ This empirical layer **does not** prove or claim:
 Current ARVIS certification snapshot:
 
 - Projection layer → Level 3–4 (validated domain + diagnostics)
-- Stability core → theorem-level (M6–M9)
+- Stability core → result-level (M6–M9)
 - Full runtime system → **empirically validated closed-loop practically stable system**
 
 ## 10. Final Statement

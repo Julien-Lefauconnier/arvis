@@ -277,7 +277,7 @@ The projection operator \( \Pi \):
 
 ## 10. Guiding Principle
 
-> A perfect theorem on a wrong projection is worthless.
+> A perfect result on a wrong projection is worthless.
 
 ---
 

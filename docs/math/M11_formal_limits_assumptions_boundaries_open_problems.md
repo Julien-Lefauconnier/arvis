@@ -19,7 +19,7 @@ It enforces scientific honesty by defining the **non-claims** as rigorously as t
 
 | Layer     | Role                                      | Nature                     |
 |-----------|-------------------------------------------|----------------------------|
-| M0–M9     | Formal system definition + core theorems  | Theoretical / proven       |
+| M0–M9     | Formal system definition + core results  | Theoretical / proven       |
 | M10       | Empirical validation & runtime statistics | Empirical / observed       |
 | M11       | Full system architecture & integration    | Architectural / operational|
 | M12       | Limits, non-claims & open problems        | Critical boundary analysis |
@@ -230,7 +230,7 @@ $$
 
 ## 13. Open Theoretical Problems
 
-1. Strong-form adaptive stability theorem: prove $\kappa^t$ tracks true contraction under general perturbations.
+1. Strong-form adaptive stability result: prove $\kappa^t$ tracks true contraction under general perturbations.
 2. Full hybrid ISS for switching system with adaptive control.
 3. Optimal coupling $(G, C)$ under stability constraints.
 4. Rigorous characterization of domain expansion $\mathcal{O}_{\text{valid}} \to \mathcal{O}_{\text{max}}$.

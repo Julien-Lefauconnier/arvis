@@ -169,7 +169,7 @@ Used for:
 
 ---
 
-## 3. Switching Stability (Theorem ↔ Runtime)
+## 3. Switching Stability (Result ↔ Runtime)
 
 ### 3.1 Theoretical Condition
 

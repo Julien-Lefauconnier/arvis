@@ -132,17 +132,21 @@ Exposes a stable interface:
 10. Gate Stage  
    → Multi-axial stability enforcement  
    → Lyapunov, switching, global stability
-11. Structural Risk Stage  
+11. Control Feedback stage
+   → Apply confidence-based control
+   → Apply Lyapunov-informed modulation
+   → Update control state
+12. Structural Risk Stage  
    → Post-gate structural validation
-12. Confirmation Stage  
+13. Confirmation Stage  
    → Human-in-the-loop resolution
-13. Execution Stage  
+14. Execution Stage  
    → Execution eligibility determination
-14. Action Stage  
+15. Action Stage  
    → Action resolution and policy enforcement
-15. Intent Stage  
+16. Intent Stage  
    → Executable intent formalization
-16. Runtime Stage  
+17. Runtime Stage  
    → System state update
 
 ---
