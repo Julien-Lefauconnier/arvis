@@ -34,8 +34,9 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
 ]
 
-[project.dependencies]
-jsonschema = "^4.0"
+dependencies = [
+  "jsonschema>=4.0"
+]
 
 [project.optional-dependencies]
 dev = [

@@ -1,7 +1,7 @@
 # arvis/api/ir_diff.py
 
 from __future__ import annotations
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 
 def diff_ir(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Tuple[Any, Any]]:
@@ -16,8 +16,8 @@ def diff_ir(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Tuple[Any, An
 
     diffs: Dict[str, Tuple[Any, Any]] = {}
 
-    def _walk(o: Any, n: Any, path: str):
-        if type(o) != type(n):
+    def _walk(o: Any, n: Any, path: str) -> None:
+        if type(o) is not type(n):
             diffs[path] = (o, n)
             return
 

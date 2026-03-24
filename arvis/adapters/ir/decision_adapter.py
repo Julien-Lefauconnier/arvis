@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any, Dict
 from hashlib import sha256
 from json import dumps
 
@@ -15,7 +16,7 @@ from arvis.ir.decision import (
 )
 
 
-def _hash(payload: dict) -> str:
+def _hash(payload: Dict[str, Any]) -> str:
     return sha256(
         dumps(payload, sort_keys=True, default=str).encode()
     ).hexdigest()

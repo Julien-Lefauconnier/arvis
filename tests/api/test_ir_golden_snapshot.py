@@ -1,6 +1,5 @@
 # tests/api/test_ir_golden_snapshot.py
 
-import json
 from arvis.api.ir import build_ir_view
 
 
