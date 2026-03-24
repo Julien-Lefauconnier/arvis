@@ -70,6 +70,11 @@ from arvis.stability.stability_observer import StabilityObserver
 from arvis.stability.stability_snapshot import StabilitySnapshot
 from arvis.api.stability import StabilityView
 
+
+# IR
+from .ir import build_ir_view
+from .ir_canonical import canonicalize_ir, hash_ir
+
 # -----------------------------------------------------
 # PUBLIC SURFACE (CONTRACT)
 # -----------------------------------------------------
@@ -133,4 +138,8 @@ __all__ = [
     "StabilityObserver",
     "StabilitySnapshot",
 
+    # IR (new public layer)
+    "build_ir_view",
+    "canonicalize_ir",
+    "hash_ir",
 ]

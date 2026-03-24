@@ -21,7 +21,11 @@ from arvis.kernel.trace.decision_trace import DecisionTrace
 from arvis.math.switching.switching_runtime import SwitchingRuntime
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.stability.validity_envelope import ValidityEnvelope
-
+from arvis.ir.input import CognitiveInputIR
+from arvis.ir.context import CognitiveContextIR
+from arvis.ir.decision import CognitiveDecisionIR
+from arvis.ir.state import CognitiveStateIR
+from arvis.ir.gate import CognitiveGateIR
 
 @dataclass
 class CognitivePipelineContext:
@@ -42,6 +46,8 @@ class CognitivePipelineContext:
     # Inputs
     # -------------------------
     cognitive_input: Any
+    ir_input: Optional[CognitiveInputIR] = None
+    ir_context: Optional[CognitiveContextIR] = None
     long_memory: Dict[str, Any] = field(default_factory=dict)
     timeline: List[Any] = field(default_factory=list)
     introspection: Optional[Any] = None
@@ -54,6 +60,7 @@ class CognitivePipelineContext:
     # -------------------------
     decision_result: Optional[Any] = None
     decision: Optional[Any] = None
+    ir_decision: Optional[CognitiveDecisionIR] = None
 
     # -------------------------
     # Bundle layer
@@ -125,6 +132,7 @@ class CognitivePipelineContext:
     # Gate layer
     # -------------------------
     gate_result: Optional[Any] = None
+    ir_gate: Optional[CognitiveGateIR] = None
 
     # -------------------------
     # Confirmation layer
@@ -164,6 +172,7 @@ class CognitivePipelineContext:
     symbolic_drift: Optional[Any] = None
     symbolic_features: Optional[Any] = None
     system_tension: Optional[Any] = None
+    ir_state: Optional[CognitiveStateIR] = None
 
     # -----------------------------------------------------
     # Conversation layer (optional, passive)

@@ -25,3 +25,21 @@ def ctx():
             "query": "test"
         }
     )
+
+
+class DummyIR:
+    def to_dict(self):
+        return {"ok": True}
+
+
+class DummyPipelineResult:
+    ir_input = DummyIR()
+    ir_context = DummyIR()
+    ir_decision = DummyIR()
+    ir_state = DummyIR()
+    ir_gate = DummyIR()
+
+
+@pytest.fixture
+def dummy_pipeline_result():
+    return DummyPipelineResult()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from arvis.adapters.ir.decision_adapter import DecisionIRAdapter
 
 class DecisionStage:
     """
@@ -17,6 +18,10 @@ class DecisionStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
         decision_result = pipeline.decision.evaluate(ctx)
         ctx.decision_result = decision_result
+        try:
+            ctx.ir_decision = DecisionIRAdapter.from_result(decision_result)
+        except Exception:
+            ctx.extra.setdefault("errors", []).append("decision_ir_adapter_failure")
 
         # Control Runtime (stateful per user)
         ctx.control_runtime = pipeline._get_control_runtime(ctx.user_id)

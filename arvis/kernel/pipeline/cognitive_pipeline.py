@@ -38,6 +38,10 @@ from arvis.stability.stability_state_projector import StabilityStateProjector
 from arvis.stability.stability_statistics import StabilityStatistics
 from arvis.stability.stability_statistics import StabilityStatsSnapshot
 from arvis.cognition.gate.cognitive_gate_result import CognitiveGateResult
+from arvis.adapters.ir.gate_adapter import GateIRAdapter
+from arvis.adapters.ir.state_adapter import StateIRAdapter
+from arvis.ir.input import CognitiveInputIR
+from arvis.ir.context import CognitiveContextIR
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.switching.switching_params import SwitchingParams
 from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
@@ -157,6 +161,51 @@ class CognitivePipeline:
                 f"{stage.__class__.__name__}_failure"
             )
 
+    def _bootstrap_ir_input(self, ctx: CognitivePipelineContext) -> None:
+        if getattr(ctx, "ir_input", None) is not None:
+            return
+
+        cognitive_input = getattr(ctx, "cognitive_input", None)
+        metadata: Dict[str, Any] = (
+            dict(cognitive_input) if isinstance(cognitive_input, dict) else {}
+        )
+
+        ctx.ir_input = CognitiveInputIR(
+            input_id=str(metadata.get("input_id", f"input::{ctx.user_id}")),
+            actor_id=str(metadata.get("actor_id", ctx.user_id)),
+            surface_kind=str(metadata.get("surface_kind", "unknown")),
+            intent_hint=metadata.get("intent_hint"),
+            metadata=metadata,
+        )
+
+    def _bootstrap_ir_context(self, ctx: CognitivePipelineContext) -> None:
+        if getattr(ctx, "ir_context", None) is not None:
+            return
+
+        long_memory = getattr(ctx, "long_memory", {}) or {}
+        constraints = tuple(long_memory.get("constraints", []) or [])
+        preferences = long_memory.get("preferences", {}) or {}
+        conversation_mode = None
+
+        conversation_context = getattr(ctx, "conversation_context", None)
+        if conversation_context is not None:
+            conversation_mode = getattr(conversation_context, "mode", None)
+
+        if conversation_mode is None:
+            conversation_mode = getattr(ctx, "extra", {}).get("conversation_mode")
+
+        if conversation_mode is not None:
+            conversation_mode = str(getattr(conversation_mode, "value", conversation_mode))
+
+        ctx.ir_context = CognitiveContextIR(
+            user_id=ctx.user_id,
+            session_id=getattr(ctx, "extra", {}).get("session_id"),
+            conversation_mode=conversation_mode,
+            long_memory_constraints=constraints,
+            long_memory_preferences=preferences,
+            extra={},
+        )
+
     # -----------------------------------------------------
     # PUBLIC API (safe wrapper)
     # -----------------------------------------------------
@@ -168,17 +217,29 @@ class CognitivePipeline:
         ctx = CognitivePipelineContext(
             user_id=input_data.get("user_id", "anonymous"),
             cognitive_input=input_data.get("cognitive_input", {}),
+            long_memory=input_data.get("long_memory", {}) or {},
+            timeline=input_data.get("timeline", []) or [],
+            introspection=input_data.get("introspection"),
         )
 
         # optional: attach raw input safely
         ctx.extra = getattr(ctx, "extra", {})
         ctx.extra["input_data"] = input_data
+        if "session_id" in input_data:
+            ctx.extra["session_id"] = input_data["session_id"]
+        if "conversation_mode" in input_data:
+            ctx.extra["conversation_mode"] = input_data["conversation_mode"]
+
+        self._bootstrap_ir_input(ctx)
+        self._bootstrap_ir_context(ctx)
 
         return self.run(ctx)
         
     def run(self, ctx: CognitivePipelineContext) -> CognitivePipelineResult:
+        self._bootstrap_ir_input(ctx)
+        self._bootstrap_ir_context(ctx)
         # -----------------------------------------
-        # Switching (theorem parameters) 
+        # Switching (result parameters) 
         # -----------------------------------------
         if getattr(ctx, "switching_params", None) is None:
             ctx.switching_params = DEFAULT_SWITCHING_PARAMS
@@ -354,6 +415,18 @@ class CognitivePipeline:
                 bundle_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
                 reason="fallback",
             )
+        
+        try:
+            ctx.ir_gate = GateIRAdapter.from_gate(normalized_gate_result)
+        except Exception:
+            ctx.extra.setdefault("errors", []).append("gate_ir_adapter_failure")
+            ctx.ir_gate = None
+
+        try:
+            ctx.ir_state = StateIRAdapter.from_context(ctx)
+        except Exception:
+            ctx.extra.setdefault("errors", []).append("state_ir_adapter_failure")
+            ctx.ir_state = None
 
         trace = DecisionTrace(
             timestamp=datetime.now(timezone.utc),
@@ -400,6 +473,11 @@ class CognitivePipeline:
             can_execute=can_execute,
             requires_confirmation=requires_confirmation,
             trace=trace,
+            ir_input=ctx.ir_input,
+            ir_context=ctx.ir_context,
+            ir_decision=ctx.ir_decision,
+            ir_state=ctx.ir_state,
+            ir_gate=ctx.ir_gate,
         )
     
 

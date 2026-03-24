@@ -153,6 +153,10 @@ class CoreStage:
             or getattr(core_snapshot, "dv", 0.0)
             or 0.0
         )
+        try:
+            ctx._dv = float(ctx.drift_score)
+        except Exception:
+            ctx._dv = 0.0
 
         ctx.regime = (
             getattr(scientific, "regime", None)

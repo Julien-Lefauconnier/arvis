@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ARVIS IR v1",
+  "type": "object",
+  "required": [
+    "version",
+    "fingerprint",
+    "input",
+    "context",
+    "decision",
+    "state",
+    "gate",
+    "meta"
+  ],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "fingerprint": {
+      "type": "string"
+    },
+    "input": {
+      "type": ["object", "null"]
+    },
+    "context": {
+      "type": ["object", "null"]
+    },
+    "decision": {
+      "type": ["object", "null"]
+    },
+    "state": {
+      "type": ["object", "null"]
+    },
+    "gate": {
+      "type": ["object", "null"]
+    },
+    "meta": {
+		 "type": "object",
+		       "properties": {
+		         "canonical_hash": {
+		           "type": "string",
+		           "pattern": "^[a-f0-9]{64}$"
+		         }
+		       },
+		       "additionalProperties": true
+    }
+  }
+}

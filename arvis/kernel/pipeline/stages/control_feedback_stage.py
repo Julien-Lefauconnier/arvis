@@ -90,3 +90,4 @@ class ControlFeedbackStage:
             temporal_pressure=getattr(ctx, "temporal_pressure", None),
             temporal_modulation=getattr(ctx, "temporal_modulation", None),
         )
+        ctx._effective_epsilon = float(new_epsilon)

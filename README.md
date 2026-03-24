@@ -252,6 +252,16 @@ cd arvis
 pip install -e .
 ```
 
+# 🧠 Cognitive OS (Public Interface)
+
+ARVIS exposes a **Cognitive Operating System interface** for external use.
+
+This layer provides:
+
+- a stable public API
+- a unified result view
+- abstraction over the internal pipeline
+
 ```python
 from arvis.api import CognitiveOS
 
@@ -259,12 +269,40 @@ os = CognitiveOS()
 
 result = os.run(
     user_id="test-user",
-    cognitive_input="Should I approve this transaction?"
+    cognitive_input={}
 )
 
-print(result.decision)
-print(result.stability.score)
+print(result.summary())
 ```
+
+---
+
+# 🔄 Intermediate Representation (IR)
+
+ARVIS provides a structured **Intermediate Representation (IR)** of cognition.
+
+The IR is:
+
+- deterministic
+- serializable
+- model-agnostic
+- replayable
+
+```python
+ir = result.to_ir()
+```
+
+The IR exposes:
+
+- decision state
+- cognitive state
+- gate outcome
+
+It enables:
+
+- LLM integration
+- replay / simulation
+- external system interoperability
 
 ---
 

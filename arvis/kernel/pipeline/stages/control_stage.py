@@ -163,5 +163,6 @@ class ControlStage:
 
         ctx.control_snapshot = control_snapshot
         ctx._epsilon = epsilon  # used later by gate
+        ctx._effective_epsilon = float(epsilon)
         ctx._cognitive_mode = cognitive_mode
 

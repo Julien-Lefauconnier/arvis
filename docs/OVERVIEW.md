@@ -199,6 +199,42 @@ ARVIS controls how reasoning and decisions are allowed to happen.
 
 ---
 
+## Cognitive OS Interface
+
+ARVIS exposes a **Cognitive Operating System interface**.
+
+This interface:
+
+- hides internal pipeline complexity
+- provides a stable contract
+- enables integration with external systems
+
+Main entrypoint:
+
+```python
+from arvis.api import CognitiveOS
+```
+
+---
+
+## Intermediate Representation (IR)
+
+ARVIS produces a structured **Intermediate Representation (IR)**.
+
+The IR is:
+
+- deterministic
+- portable
+- independent from execution
+
+It allows:
+
+- replay of decisions
+- LLM interaction
+- system interoperability
+
+---
+
 ## In One Sentence
 
 ARVIS is a system where:

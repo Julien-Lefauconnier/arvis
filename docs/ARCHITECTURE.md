@@ -36,6 +36,8 @@ Input
  → Cognitive Pipeline (17 stages)
  → Observability Projection
  → Decision Trace
+ → Intermediate Representation (IR)
+ → API (Cognitive OS)
 ```
 
 ---
@@ -212,6 +214,33 @@ ARVIS ensures:
 * no hidden branching
 * fail-soft execution
 * deterministic outputs (given same input)
+
+---
+
+## Intermediate Representation (IR)
+
+ARVIS introduces an **Intermediate Representation (IR)** layer.
+
+This layer sits between the kernel and the external API:
+
+```
+Pipeline → Result → IR → API
+```
+
+### Properties
+
+- deterministic
+- serializable
+- model-agnostic
+- replayable
+
+### Role
+
+The IR provides:
+
+- a stable system output
+- a decoupling layer between cognition and execution
+- a bridge for external integrations (LLM, APIs, replay systems)
 
 ---
 

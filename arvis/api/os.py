@@ -11,6 +11,7 @@ from arvis.api.stability import StabilityView
 from arvis.api.trace import DecisionTraceView
 from arvis.api.timeline import TimelineView
 from arvis.api.version import API_VERSION, API_FINGERPRINT
+from arvis.api.ir import build_ir_view
 
 
 @dataclass
@@ -37,6 +38,7 @@ class CognitiveResultView:
     trace_view: Optional[DecisionTraceView] = None
     timeline: Optional[Any] = None
     timeline_view: Optional[TimelineView] = None
+    _ir: Optional[Dict[str, Any]] = None
 
     @staticmethod
     def from_pipeline(result: Any) -> "CognitiveResultView":
@@ -58,6 +60,7 @@ class CognitiveResultView:
                 if timeline
                 else None
             ),
+            _ir=build_ir_view(result),
         )
     # -----------------------------------------------------
     # STANDARD SERIALIZATION 
@@ -84,7 +87,16 @@ class CognitiveResultView:
             "has_timeline": self.timeline is not None,
             "trace": self.trace_view.to_dict() if self.trace_view else None,
             "timeline": self.timeline_view.to_dict() if self.timeline_view else None,
+            # IR intentionally NOT exposed by default (non-breaking)
         }
+    
+    def to_ir(self) -> Optional[Dict[str, Any]]:
+        """
+        Explicit IR access (versioned contract).
+
+        This is the canonical machine interface.
+        """
+        return self._ir
 
     def summary(self) -> str:
         """
@@ -165,6 +177,37 @@ class CognitiveOS:
             "action": getattr(result, "action_decision", None),
             "can_execute": getattr(result, "can_execute", None),
         }
+    
+
+    def run_ir(
+        self,
+        user_id: str,
+        cognitive_input: Any,
+        *,
+        conversation_context: Any = None,
+        timeline: Any = None,
+        confirmation_result: Any = None,
+        extra: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Canonical IR API (machine contract).
+
+        Returns:
+            dict compliant with ARVIS IR schema (versioned).
+        """
+
+        ctx = self._build_context(
+            user_id=user_id,
+            cognitive_input=cognitive_input,
+            conversation_context=conversation_context,
+            timeline=timeline,
+            confirmation_result=confirmation_result,
+            extra=extra,
+        )
+
+        result = self.pipeline.run(ctx)
+
+        return build_ir_view(result)
 
     # -----------------------------------------------------
     # INTERNAL

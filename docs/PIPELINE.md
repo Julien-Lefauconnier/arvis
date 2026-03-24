@@ -335,6 +335,26 @@ This trace is:
 
 ---
 
+## Final Output Layers
+
+After pipeline execution, ARVIS produces multiple output layers:
+
+1. **CognitivePipelineResult** (internal representation)
+2. **DecisionTrace** (canonical trace)
+3. **Intermediate Representation (IR)** (portable output)
+
+```
+Pipeline → Result → Trace → IR
+```
+
+The IR is:
+
+- a pure transformation of pipeline outputs
+- side-effect free
+- stable across environments
+
+---
+
 ## Determinism Guarantees
 
 The pipeline ensures:
