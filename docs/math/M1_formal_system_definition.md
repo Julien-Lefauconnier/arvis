@@ -2,8 +2,7 @@
 
 ## Objective
 
-This document provides a **fully explicit mathematical definition** of the ARVIS core system.
-
+This document provides a **fully explicit mathematical definition** of the ARVIS core system.  
 It defines:
 - the exact state space
 - the system dynamics
@@ -17,9 +16,9 @@ This definition is **the reference model** for all subsequent proofs.
 
 ## 1. Notation
 
-- \( t \in \mathbb{N} \): discrete time
-- \( \|\cdot\| \): Euclidean norm unless specified
-- \( \mathcal{Q} \): finite set of modes
+- $`t \in \mathbb{N}`$: discrete time
+- $`\|\cdot\|`$: Euclidean norm unless specified
+- $`\mathcal{Q}`$: finite set of modes
 
 ---
 
@@ -27,43 +26,39 @@ This definition is **the reference model** for all subsequent proofs.
 
 We define the global state:
 
-\[
+$$
 s_t = (x_t, z_t, q_t)
-\]
+$$
 
 with:
 
 ### 2.1 Fast State
 
-\[
+$$
 x_t \in \mathbb{R}^n
-\]
+$$
 
 Represents:
 - risk signals
 - stability indicators
 - instantaneous cognitive metrics
 
----
-
 ### 2.2 Slow State
 
-\[
+$$
 z_t \in \mathbb{R}^m
-\]
+$$
 
 Represents:
 - memory accumulation
 - long-term adaptation
 - contextual integration
 
----
-
 ### 2.3 Switching State
 
-\[
+$$
 q_t \in \mathcal{Q}
-\]
+$$
 
 - finite set of modes
 - each mode corresponds to a regime of operation
@@ -74,13 +69,13 @@ q_t \in \mathcal{Q}
 
 We define:
 
-\[
+$$
 w_t \in \mathcal{W}
-\]
+$$
 
 where:
-- \( \mathcal{W} \subset \mathbb{R}^d \) is bounded
-- \( \|w_t\| \leq W_{\max} \)
+- $`\mathcal{W} \subset \mathbb{R}^d`$ is bounded
+- $`\|w_t\| \leq W_{\max}`$
 
 Disturbances represent:
 - input noise
@@ -93,41 +88,35 @@ Disturbances represent:
 
 ### 4.1 Fast Dynamics
 
-\[
+$$
 x_{t+1} = f_{q_t}(x_t, z_t, w_t)
-\]
+$$
 
 where:
 
-\[
+$$
 f_q : \mathbb{R}^n \times \mathbb{R}^m \times \mathcal{W} \to \mathbb{R}^n
-\]
-
----
+$$
 
 ### 4.2 Slow Dynamics
 
-\[
-z_{t+1} = z_t + \eta g_{q_t}(x_t, z_t, w_t)
-\]
+$$
+z_{t+1} = z_t + \eta \, g_{q_t}(x_t, z_t, w_t)
+$$
 
 where:
-
-- \( \eta > 0 \) is a small parameter (time-scale separation)
-- \( g_q : \mathbb{R}^n \times \mathbb{R}^m \times \mathcal{W} \to \mathbb{R}^m \)
-
----
+- $`\eta > 0`$ is a small parameter (time-scale separation)
+- $`g_q : \mathbb{R}^n \times \mathbb{R}^m \times \mathcal{W} \to \mathbb{R}^m`$
 
 ### 4.3 Switching Dynamics
 
-\[
+$$
 q_{t+1} = \sigma(q_t, \xi_t)
-\]
+$$
 
 where:
-
-- \( \sigma : \mathcal{Q} \times \Xi \to \mathcal{Q} \)
-- \( \xi_t \): switching trigger signal
+- $`\sigma : \mathcal{Q} \times \Xi \to \mathcal{Q}`$
+- $`\xi_t`$ : switching trigger signal
 
 ---
 
@@ -136,37 +125,34 @@ where:
 ### 5.1 Average Dwell-Time
 
 There exist constants:
-
-- \( \tau_d > 0 \)
-- \( N_0 \geq 0 \)
+- $`\tau_d > 0`$
+- $`N_0 \geq 0`$
 
 such that for any interval:
 
-\[
+$$
 N_\sigma(t_0, t) \leq N_0 + \frac{t - t_0}{\tau_d}
-\]
-
----
+$$
 
 ### 5.2 Jump Condition
 
-There exists \( J \geq 1 \) such that:
+There exists $`J \geq 1`$ such that:
 
-\[
+$$
 W_{q'}(x, z) \leq J \cdot W_q(x, z)
-\]
+$$
 
-for all admissible mode transitions \( q \to q' \)
+for all admissible mode transitions $`q \to q'`$
 
 ---
 
 ## 6. Target Map
 
-For each mode \( q \), define:
+For each mode $`q`$, define:
 
-\[
+$$
 T_q : \mathbb{R}^n \to \mathbb{R}^m
-\]
+$$
 
 Interpretation:
 - desired slow state given fast state
@@ -177,21 +163,19 @@ Interpretation:
 
 ### 7.1 Fast Lyapunov
 
-For each \( q \):
+For each $`q`$:
 
-\[
+$$
 V_q : \mathbb{R}^n \to \mathbb{R}_{\geq 0}
-\]
-
----
+$$
 
 ### 7.2 Composite Lyapunov
 
-\[
+$$
 W_q(x, z) = V_q(x) + \lambda \|z - T_q(x)\|^2
-\]
+$$
 
-with \( \lambda > 0 \)
+with $`\lambda > 0`$
 
 ---
 
@@ -199,15 +183,15 @@ with \( \lambda > 0 \)
 
 We define observable output:
 
-\[
+$$
 y_t = h(x_t, z_t)
-\]
+$$
 
 where:
 
-\[
+$$
 h : \mathbb{R}^n \times \mathbb{R}^m \to \mathbb{R}^p
-\]
+$$
 
 This represents:
 - runtime signals
@@ -217,18 +201,17 @@ This represents:
 
 ## 9. Initial Conditions
 
-\[
+$$
 x_0 \in \mathbb{R}^n, \quad z_0 \in \mathbb{R}^m, \quad q_0 \in \mathcal{Q}
-\]
+$$
 
 ---
 
 ## 10. Well-Posedness Requirements
 
 The system is well-defined if:
-
-1. \( f_q, g_q \) are measurable
-2. solutions exist for all \( t \)
+1. $`f_q`$, $`g_q`$ are measurable
+2. solutions exist for all $`t`$
 3. trajectories remain bounded under assumptions
 
 ---
@@ -237,9 +220,9 @@ The system is well-defined if:
 
 We assume:
 
-\[
+$$
 0 < \eta \ll 1
-\]
+$$
 
 ensuring:
 - fast dynamics dominate locally
@@ -250,7 +233,6 @@ ensuring:
 ## 12. Summary
 
 The ARVIS core system is:
-
 - a **discrete-time switched nonlinear system**
 - with **two time scales**
 - subject to **bounded disturbances**
@@ -261,10 +243,9 @@ The ARVIS core system is:
 ## 13. Next Step
 
 The next document defines:
-
 - regularity assumptions
 - contraction properties
 - bounds on disturbances
 - Lipschitz conditions
 
-→ see `M1_assumptions.md`
+→ see [`M1_assumptions.md`](M1_assumptions.md)

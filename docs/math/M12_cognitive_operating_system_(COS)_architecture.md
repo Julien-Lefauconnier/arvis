@@ -1,4 +1,4 @@
-# ARVIS — M10: Cognitive Operating System (COS) Architecture
+# ARVIS — M12: Cognitive Operating System (COS) Architecture
 
 ## 1. Objective
 
@@ -66,27 +66,29 @@ it manages **decision integrity under uncertainty**.
 
 ### 4.1 Layered Architecture
 
-┌──────────────────────────────────────┐
-│          Applications                │
-│   (Agents / APIs / LLMs / Workflows) │
-├──────────────────────────────────────┤
-│      Cognitive Interface             │
-│   (Observation / Intent API)         │
-├──────────────────────────────────────┤
-│          ARVIS CORE                  │
-│   ┌──────────────────────────────┐   │
-│   │ Projection (Π)               │   │
-│   │ Lyapunov Stability (W)       │   │
-│   │ Adaptive Estimation (κ̂)      │   │
-│   │ Gate (G)                     │   │
-│   │ Control Modulation (C)       │   │
-│   │ Timeline & Memory (H)        │   │
-│   └──────────────────────────────┘   │
-├──────────────────────────────────────┤
-│     Execution Environment            │
-│   (LLMs / Tools / External Memory)   │
-└──────────────────────────────────────┘
 
+```text
+┌──────────────────────────────────────────────┐
+│                 Applications                 │
+│     (Agents / APIs / LLMs / Workflows)       │
+├──────────────────────────────────────────────┤
+│             Cognitive Interface              │
+│        (Observation / Intent API)            │
+├──────────────────────────────────────────────┤
+│                 ARVIS CORE                   │
+│   ┌──────────────────────────────────────┐   │
+│   │ Projection (Π)                       │   │
+│   │ Lyapunov Stability (W)               │   │
+│   │ Adaptive Estimation (κ̂)              │   │
+│   │ Gate (G)                             │   │
+│   │ Control Modulation (C)               │   │
+│   │ Timeline & Memory (H)                │   │
+│   └──────────────────────────────────────┘   │
+├──────────────────────────────────────────────┤
+│           Execution Environment              │
+│     (LLMs / Tools / External Memory)         │
+└──────────────────────────────────────────────┘
+```
 
 ### 4.2 Core Responsibilities
 

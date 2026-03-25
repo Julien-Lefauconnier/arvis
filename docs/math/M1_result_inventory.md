@@ -2,23 +2,20 @@
 
 ## Objective
 
-This document defines the **complete structure of theoretical results** for ARVIS.
-
+This document defines the **complete structure of theoretical results** for ARVIS.  
 It organizes:
-
 - all results
 - their dependencies
 - proof hierarchy
 - scope of each result
 
-This is the **blueprint of the formal proof**.
+This is **the blueprint of the formal proof**.
 
 ---
 
 ## 1. Structure Overview
 
 The proof is decomposed into:
-
 1. Fast subsystem stability
 2. Slow-fast coupling control
 3. Switching behavior
@@ -32,10 +29,9 @@ The proof is decomposed into:
 
 Results depend on each other as follows:
 
-T1 → T2 → T3 → T4 → T5
+**T1 → T2 → T3 → T4 → T5**
 
 where:
-
 - T1: Fast stability
 - T2: Slow tracking
 - T3: Composite decrease
@@ -46,140 +42,109 @@ where:
 
 ## 3. Results Definitions
 
----
+### T1 — Fast Subsystem Stability
 
-### Results T1 — Fast Subsystem Stability
+**Statement**  
+Under assumptions A1–A6, for each mode $`q`$:
 
-**Statement**
-
-For each mode \( q \), under assumptions A1–A6:
-
-\[
-V_q(x_{t+1}) - V_q(x_t)
-\leq -\alpha \|x_t\|^2 + \gamma_w \|w_t\|^2
-\]
+$$
+V_q(x_{t+1}) - V_q(x_t) \leq -\alpha \|x_t\|^2 + \gamma_w \|w_t\|^2
+$$
 
 **Interpretation**
-
 - Fast dynamics are **dissipative**
 - Stability holds in absence of large disturbances
 
----
+### T2 — Slow Tracking Bound
 
-### Results T2 — Slow Tracking Bound
-
-**Statement**
-
+**Statement**  
 Under A7–A9:
 
-\[
+$$
 \|z_t - T_q(x_t)\| \leq C \eta
-\]
+$$
 
-for some constant \( C > 0 \)
+for some constant $`C > 0`$
 
 **Interpretation**
+- Slow state tracks the target manifold
+- Error is proportional to the time-scale parameter $`\eta`$
 
-- Slow state tracks target manifold
-- Error proportional to time-scale parameter
+### T3 — Composite Lyapunov Decrease
 
----
-
-### Results T3 — Composite Lyapunov Decrease
-
-**Statement**
-
+**Statement**  
 Under A1–A9:
 
-\[
-W_q(x_{t+1}, z_{t+1}) - W_q(x_t, z_t)
-\leq -\kappa_{\mathrm{eff}} W_q(x_t, z_t) + \gamma \|w_t\|^2
-\]
+$$
+W_q(x_{t+1}, z_{t+1}) - W_q(x_t, z_t) \leq -\kappa_{\mathrm{eff}} W_q(x_t, z_t) + \gamma \|w_t\|^2
+$$
 
 with:
 
-\[
+$$
 \kappa_{\mathrm{eff}} = \alpha - \gamma_z \eta L_T
-\]
+$$
 
----
+### T4 — Stability Under Switching
 
-### Results T4 — Stability Under Switching
-
-**Statement**
-
+**Statement**  
 Under A10–A11:
 
-\[
+$$
 W_{q_{t+1}}(x_t, z_t) \leq J \cdot W_{q_t}(x_t, z_t)
-\]
+$$
 
-and switching frequency bounded by dwell-time constraint.
+and switching frequency bounded by the dwell-time constraint.
 
----
+### T5 — Global Exponential Stability
 
-### Results T5 — Global Exponential Stability
+**Statement**  
+Under all assumptions A1–A12, if:
 
-**Statement**
-
-Under all assumptions A1–A12:
-
-If:
-
-\[
+$$
 \frac{\log J}{\tau_d} + \log(1 - \kappa_{\mathrm{eff}}) < 0
-\]
+$$
 
 then:
 
-\[
+$$
 W(t) \leq C \cdot e^{-\beta t} W(0)
-\]
+$$
 
-for some \( C > 0, \beta > 0 \)
+for some $`C > 0`$, $`\beta > 0`$.
 
----
+### T6 — Input-to-State Stability (ISS)
 
-### Results T6 — Input-to-State Stability (ISS)
-
-**Statement**
-
+**Statement**  
 Under A1–A13:
 
-\[
+$$
 W(t) \leq C e^{-\beta t} W(0) + \gamma \sup_{k \leq t} \|w_k\|^2
-\]
+$$
 
----
+### T7 — Observed Stability Consistency
 
-### Results T7 — Observed Stability Consistency
-
-**Statement**
-
+**Statement**  
 Under A14:
 
-\[
+$$
 |\hat{W}(t) - W(t)| \leq \epsilon
-\]
+$$
 
----
+### T8 — Projection Consistency (CRITICAL)
 
-### Results T8 — Projection Consistency (CRITICAL)
-
-**Statement**
-
+**Statement**  
 Under A15:
 
-\[
+$$
 \|\Pi(c_1) - \Pi(c_2)\| \leq L_\Pi \|c_1 - c_2\|
-\]
+$$
 
 ---
 
 ## 4. Proof Strategy
 
-Each results will be proven using:
-
+Each result will be proven using:
 - Lyapunov methods
 - singular perturbation arguments
 - switching system theory
@@ -190,8 +155,7 @@ Each results will be proven using:
 ## 5. Key Risks
 
 The weakest links are:
-
-1. Projection operator \( \Pi \)
+1. Projection operator $`\Pi`$
 2. Disturbance modeling
 3. Switching approximation
 4. Observability error
@@ -200,9 +164,8 @@ The weakest links are:
 
 ## 6. Minimal Valid Core
 
-The minimal provable core is:
-
-T1 + T3 + T4 + T5
+The minimal provable core is:  
+**T1 + T3 + T4 + T5**
 
 Everything else extends it.
 
@@ -211,7 +174,6 @@ Everything else extends it.
 ## 7. Extension Plan
 
 Next additions:
-
 - Adaptive dwell-time result
 - Contraction-based stability
 - Robust switching adaptation
@@ -220,7 +182,7 @@ Next additions:
 
 ## 8. Next Step
 
-→ `M3_cognitive_state_model.md`
+→ [`M3_cognitive_state_model.md`](M3_cognitive_state_model.md)
 
 Where we formalize:
 - cognitive variables

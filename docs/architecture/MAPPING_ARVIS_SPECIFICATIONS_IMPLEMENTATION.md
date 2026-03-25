@@ -27,8 +27,9 @@ It serves three critical roles:
 
 **Theory**
 
-x_t ∈ ℝⁿ  
-Fast contracting dynamics governed by f_q
+$$ x_t \in \mathbb{R}^n $$
+
+Fast contracting dynamics governed by $f_q$.
 
 **Implementation**
 
@@ -49,9 +50,11 @@ The system operates directly in Lyapunov space instead of state space.
 
 **Theory**
 
-z_t ∈ ℝᵐ  
+$$ z_t \in \mathbb{R}^m $$
+
 Slow adaptation via:
-z_{t+1} = (1 - η)z_t + ηT(x_t)
+
+$$ z_{t+1} = (1 - \eta) z_t + \eta T(x_t) $$
 
 **Implementation**
 
@@ -73,8 +76,9 @@ not captured in the original Lyapunov formulation.
 
 **Theory**
 
-q_t ∈ Q  
-Finite discrete regime
+$$ q_t \in Q $$
+
+Finite discrete regime.
 
 **Implementation**
 
@@ -99,7 +103,7 @@ This enables runtime evaluation of:
 
 **Theory**
 
-w_t bounded
+$$ w_t \text{ bounded} $$
 
 **Implementation**
 
@@ -123,7 +127,7 @@ This is strictly more expressive than the scalar disturbance model.
 
 **Theory**
 
-W_q(x,z) = V_q(x) + λ‖z - T(x)‖²
+$$ W_q(x,z) = V_q(x) + \lambda \| z - T(x) \|^2 $$
 
 **Implementation**
 
@@ -141,7 +145,7 @@ W_q(x,z) = V_q(x) + λ‖z - T(x)‖²
 
 **Theory**
 
-ΔW_t drives stability
+$\Delta W_t$ drives stability.
 
 **Implementation**
 
@@ -173,7 +177,7 @@ Used for:
 
 ### 3.1 Theoretical Condition
 
-(log J)/τ_d + log(1 - κ_eff) < 0
+$$ \frac{\log J}{\tau_d} + \log(1 - \kappa_{\text{eff}}) < 0 $$
 
 ---
 

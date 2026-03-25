@@ -905,14 +905,6 @@ The following aspects are not formally covered:
 
 These components belong to higher-level system layers.
 
-Le problème persiste parce que GitHub (via son renderer KaTeX) est extrêmement sensible aux notations comme \kappa_{\mathrm{eff}} quand elles sont imbriquées dans des fractions ou des indices complexes. Le \mathrm{} à l'intérieur d'un subscript provoque souvent un parsing error silencieux ou un rendu cassé (comme ce que tu vois : kappa_(mathrm(eff)) ou des accolades qui débordent).
-Solution qui marche à 99 % sur GitHub en 2025-2026
-
-Remplace tous les \kappa_{\mathrm{eff}} par \kappa_{eff} (sans \mathrm{}) dans toute la section.
-C'est la notation la plus robuste et la plus lisible sur GitHub, et elle reste parfaitement acceptable scientifiquement (beaucoup de papiers utilisent eff en indice simple pour effective).
-
-Voici la version corrigée et testée (copie-colle directement dans ton fichier Markdown) :
-
 ## Conformance Requirements
 
 An implementation is considered **ARVIS-compliant** if:

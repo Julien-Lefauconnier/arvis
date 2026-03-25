@@ -1,4 +1,4 @@
-# M12 — Formal Limits, Assumption Boundaries & Open Problems
+# M11 — Formal Limits, Assumption Boundaries & Open Problems
 
 ## 1. Objective
 
@@ -60,9 +60,9 @@ If $o_t \notin \mathcal{O}_{\text{valid}}$:
 - composite Lyapunov structure $W_q(x,z)$ may collapse.
 
 **Consequence**  
-$$
-o_t \notin \mathcal{O}_{\text{valid}} \quad \Longrightarrow \quad \text{no stability guarantee}
-$$
+```math
+o_t \notin \mathcal{O}_{\mathrm{valid}} \quad \Longrightarrow \quad \mathrm{no\ stability\ guarantee}
+```
 
 ## 5. Adaptive Estimation Limits
 
@@ -136,9 +136,9 @@ $$
 $$
 
 **Consequence**  
-$$
-W(t) \not\to 0 \text{ necessarily} \quad \text{but} \quad W(t) \to \text{bounded tube}
-$$
+```math
+W(t) \not\to 0 \;\text{necessarily} \quad \text{but} \quad W(t) \to \text{bounded tube}
+```
 
 ## 8. Robustness Limits (ISS Interpretation)
 
@@ -197,9 +197,9 @@ $V_t$ is **not**:
 - a formally reachable set.
 
 **Consequence**  
-$$
-V_t = \text{valid} \quad \not\Rightarrow \quad \text{absolute safety}
-$$
+```math
+V_t = \mathrm{valid} \quad \not\Rightarrow \quad \mathrm{absolute\ safety}
+```
 
 ## 11. Empirical Validation Limits
 
@@ -230,12 +230,15 @@ $$
 
 ## 13. Open Theoretical Problems
 
-1. Strong-form adaptive stability result: prove $\kappa^t$ tracks true contraction under general perturbations.
-2. Full hybrid ISS for switching system with adaptive control.
-3. Optimal coupling $(G, C)$ under stability constraints.
-4. Rigorous characterization of domain expansion $\mathcal{O}_{\text{valid}} \to \mathcal{O}_{\text{max}}$.
-5. Formal bounded-adversarial resilience (minimax sense).
-6. Conversion of $V_t$ into a verifiable formal invariant set.
+1. **Adaptive stability tracking** — Prove that $\kappa^t$ consistently tracks true contraction under general perturbations.
+2. **Hybrid ISS theory** — Establish a full hybrid ISS result for switching systems with adaptive control.
+3. **Optimal coupling** — Characterize optimal $(G, C)$ under stability constraints.
+4. **Domain expansion** — Provide a rigorous description of the expansion:
+```math
+$\mathcal{O}_{\mathrm{valid}} \to \mathcal{O}_{\mathrm{max}}$.
+```
+5. **Adversarial robustness** — Formalize bounded-adversarial resilience in a minimax framework.
+6. **Invariant certification** — Convert $V_t$ into a formally verifiable invariant set.
 
 ## 14. Open Engineering Problems
 

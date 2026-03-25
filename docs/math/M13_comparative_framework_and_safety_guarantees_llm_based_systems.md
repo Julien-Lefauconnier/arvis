@@ -19,9 +19,9 @@ The goal is to position ARVIS not as a competitor to behavioral alignment techni
 ### 2.1 Classical Control Systems
 
 **Dynamics**:
-$$
+```math
 x_{t+1} = f(x_t, u_t)
-$$
+```
 
 **Key properties**:
 - known (or partially known) dynamics,
@@ -31,9 +31,9 @@ $$
 ### 2.2 Reinforcement Learning (RL)
 
 **Policy**:
-$$
+```math
 \pi(a|s) \quad \text{or} \quad \pi(a|s,\theta)
-$$
+```
 
 **Key properties**:
 - learned stochastic/deterministic behavior,
@@ -44,9 +44,9 @@ $$
 ### 2.3 Modern LLM-based Systems
 
 **Mapping**:
-$$
+```math
 y_t = M(o_t; \theta)
-$$
+```
 
 **Key properties**:
 - extremely high-dimensional latent representations,
@@ -58,9 +58,9 @@ $$
 ### 2.4 ARVIS Cognitive Operating System
 
 **Closed-loop dynamics**:
-$$
+```math
 o_t \xrightarrow{\Pi} (x_t, z_t, q_t, w_t) \to W_t \to \kappa^t \to G \to C \to o_{t+1}
-$$
+```
 
 **Key properties**:
 - Lyapunov-grounded composite energy function $W$,
@@ -85,14 +85,14 @@ $$
 ## 4. Core Paradigm Difference: Stability vs Optimization
 
 **RL / LLM paradigm**:
-$$
+```math
 \max_\theta \mathbb{E}[R] \quad \text{or} \quad \text{align to human preferences}
-$$
+```
 
 **ARVIS paradigm**:
-$$
+```math
 \text{ensure } W(t) \downarrow \text{ or bounded under perturbation}
-$$
+```
 
 **Key insight**  
 ARVIS enforces **stability-first**: performance is acceptable only if the system remains practically stable. Optimization (task reward, alignment) is secondary and constrained by stability invariants.
@@ -112,42 +112,42 @@ ARVIS enforces **stability-first**: performance is acceptable only if the system
 
 An LLM-based system is **practically safe** if:
 
-$$
+```math
 \forall t, \quad W(t) \leq \bar{W} \quad \text{(bounded energy)}
-$$
+```
 
 and under bounded perturbation:
 
-$$
+```math
 \Delta W_t \leq 0 \quad \text{or bounded (practical stability)}
-$$
+```
 
 ### 5.3 Decision Safety
 
 A cognitive decision $d_t$ is **safe** if:
 
-$$
+```math
 G(d_t) \neq \text{ABSTAIN violation}
-$$
+```
 
 i.e., the Gate does not classify it as unstable.
 
 ## 6. ARVIS Three-Layer Safety Stack
 
 **Layer 1** — Lyapunov constraint  
-$$
+```math
 \Delta W_t \leq 0 \quad \text{(nominal contraction)}
-$$
+```
 
 **Layer 2** — Adaptive kappa constraint  
-$$
+```math
 \kappa_{\text{eff}}^t \leq 1 \quad \text{(contraction not critically lost)}
-$$
+```
 
 **Layer 3** — Validity envelope  
-$$
+```math
 o_t \in \mathcal{O}_{\text{valid}} \quad \text{and} \quad V_t = \text{valid}
-$$
+```
 
 **Combined safety invariant**:
 
@@ -163,9 +163,9 @@ $$
 ## 7. Gate as Formal Safety Operator
 
 **Definition**:
-$$
+```math
 G : \mathcal{D} \mapsto \{\text{ALLOW}, \text{CONFIRM}, \text{ABSTAIN}\}
-$$
+```
 
 **Safety guarantee** (M6):  
 If $G(d_t) = \text{ABSTAIN}$, then the decision is blocked → unsafe transition prevented.
@@ -198,14 +198,14 @@ Defines $W(o_t)$ — a **Lyapunov-like cognitive energy** — that quantifies in
 - adversarial / jailbreak inputs.
 
 **ARVIS modeling**:
-$$
+```math
 w_t = w_t^{\text{noise}} + w_t^{\text{adv}} + w_t^{\text{switch}} + w_t^{\text{proj}}
-$$
+```
 
 **Guarantee** (M8, conditional):
-$$
+```math
 W(t) \leq C \, e^{-\beta t} \, W(0) + \Gamma(\|w\|) + r
-$$
+```
 
 ## 10. Safety vs Alignment
 
@@ -236,14 +236,14 @@ ARVIS provides **stability guarantees** even if alignment fails.
 ## 12. Theoretical Guarantee Summary (ARVIS on LLM Systems)
 
 - **Conditional practical stability**:
-  $$
+  ```math
   W(t) \leq C \, e^{-\beta t} \, W(0) + \Gamma(\bar{w}) + r
-  $$
+  ```
 - **Decision safety**: Gate blocks unstable actions.
 - **Bounded latent state**:
-  $$
+  ```math
   \|z_t\| \leq B \quad \text{(practical tube)}
-  $$
+  ```
 
 ## 13. What ARVIS Does NOT Provide
 
@@ -275,8 +275,8 @@ AI / LLM systems = **controlled dynamical systems** subject to **stability const
 
 ## 17. Implications
 
-- **For LLM systems**: stability becomes **measurable** (W(t), κ^t), **enforceable** (Gate), **controllable** (adaptive modulation).
-- **For AI safety research**: shift from heuristic evaluation → formal invariants, from alignment → stability guarantees.
+- **For LLM systems**: stability becomes **measurable** ($W(t), \kappa^t$), **enforceable** (Gate), and **controllable** (adaptive modulation).
+- **For AI safety research**: shift from heuristic evaluation → formal invariants, and from alignment → stability guarantees.
 
 ## 18. Final Statement
 
