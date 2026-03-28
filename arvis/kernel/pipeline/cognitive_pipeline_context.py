@@ -26,6 +26,8 @@ from arvis.ir.context import CognitiveContextIR
 from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.state import CognitiveStateIR
 from arvis.ir.gate import CognitiveGateIR
+from arvis.kernel.projection.certificate import ProjectionCertificate
+from arvis.kernel.pipeline.gate_overrides import GateOverrides
 
 @dataclass
 class CognitivePipelineContext:
@@ -204,4 +206,16 @@ class CognitivePipelineContext:
     # Canonical trace
     # -----------------------------------------------------
     trace: Optional[DecisionTrace] = None
+
+    # -------------------------
+    # Projection (Pi certification)
+    # -------------------------
+    projection_certificate: Optional[ProjectionCertificate] = None
+    projection_domain_valid: Optional[bool] = None
+    projection_margin: Optional[float] = None
+
+    # -------------------------
+    # Gate overrides
+    # -------------------------
+    gate_overrides: Optional[GateOverrides] = None
     

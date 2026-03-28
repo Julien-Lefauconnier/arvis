@@ -1,14 +1,22 @@
-# ARVIS — M3: Projection Validated Domain (Phase A)
+# ARVIS — M3: Appendix Projection Validation
 
 ## Objective
 
-This document records the **empirically validated domain** of the projection operator
+This document records the empirically validated domain of the currently implemented projection layer
+(i.e. the projection stub / certification-aligned projection used in runtime),
+not the full theoretical projection Π.
 
-$$
-\Pi : \mathcal{O} \to (x, z, q, w)
-$$
+The theoretical projection operator:
 
-after Phase A validation.
+ $$
+ \Pi : \mathcal{O} \to (x, z, q, w)
+ $$
+
+ is **not** what is validated in this document.  
+ This document concerns the **implemented projection stub / certification-aligned projection layer**.
+
+
+This validation corresponds to Phase A of the projection validation process.
 
 It defines:
 - what has been empirically validated,
@@ -113,11 +121,11 @@ The validated projection currently assumes:
 - valid projected mode.
 
 **Interpretation:**  
-On the current fixture corpus, $\Pi$ is empirically bounded.  
+On the current fixture corpus, the implemented projection layer is empirically bounded.  
 This supports the property:
 
 $$
-\|\Pi(o)\| \leq M
+\|\Pi_{\text{impl}}(o)\| \leq M
 $$
 
 for the tested subset of inputs.
@@ -134,7 +142,7 @@ for the tested subset of inputs.
 - projection remains total and diagnosable.
 
 **Interpretation:**  
-The projection operator is currently implemented as a **total diagnostic map**, not a partial crashing function.  
+The implemented projection layer behaves as a **total diagnostic map**, not a partial crashing function.  
 This is required for runtime monitoring, traceability, and robust cognitive pipeline behavior.
 
 ### 4.3 Local Lipschitz Regularity
@@ -147,11 +155,11 @@ This is required for runtime monitoring, traceability, and robust cognitive pipe
 - empirical local ratio remains below provisional thresholds on tested neighborhoods.
 
 **Interpretation:**  
-The implemented projection is empirically locally regular around tested nominal observations.  
+The implemented projection layer is empirically locally regular around tested nominal observations.  
 This supports a local version of:
 
 $$
-\|\Pi(o_1) - \Pi(o_2)\| \leq L_\Pi \|o_1 - o_2\|
+\|\Pi_{\text{impl}}(o_1) - \Pi_{\text{impl}}(o_2)\| \leq L_\Pi \|o_1 - o_2\|
 $$
 
 on tested neighborhoods.
@@ -171,11 +179,11 @@ on tested neighborhoods.
 - no catastrophic amplification of perturbation.
 
 **Interpretation:**  
-The implemented projection is empirically robust to bounded numeric perturbations on the tested fixture set.  
+The implemented projection layer is empirically robust to bounded numeric perturbations on the tested fixture set.  
 This supports a practical bounded-gain behavior of the form:
 
 $$
-\|\Pi(o + \delta o) - \Pi(o)\| \leq \gamma_\Pi \|\delta o\|
+\|\Pi_{\text{impl}}(o + \delta o) - \Pi_{\text{impl}}(o)\| \leq \gamma_\Pi \|\delta o\|
 $$
 
 **Important limitation:** Current noise model is mainly numeric — semantic / structured corruption is not yet fully validated.
@@ -190,7 +198,7 @@ $$
 - boundary-near cases exhibit measurable but admissible instability.
 
 **Interpretation:**  
-The implemented switching projection $\Pi_q$ behaves consistently with the expected distinction between stable interior regions and sensitive boundary regions.  
+The implemented switching projection component behaves consistently with the expected distinction between stable interior regions and sensitive boundary regions.  
 This is a strong empirical precursor for later connection with average dwell-time reasoning.
 
 **Important limitation:** Current switching law is still simple and hand-defined — no result-level dwell-time certificate yet attached.
@@ -206,7 +214,7 @@ This is a strong empirical precursor for later connection with average dwell-tim
 - invalid inputs do not break compatibility checks.
 
 **Interpretation:**  
-The current projection produces states that remain compatible with a surrogate quadratic Lyapunov computation on the tested fixture set.  
+The implemented projection layer produces states that remain compatible with a surrogate quadratic Lyapunov computation on the tested fixture set.  
 This is sufficient to justify that the current projection does not immediately violate the structural requirements of the stability core on the validated test domain.
 
 **Important limitation:** The current compatibility test uses a simplified proxy energy — full compatibility with the mode-dependent composite Lyapunov $W_q(x,z)$ still needs tighter connection to the production mathematical core.
@@ -261,9 +269,9 @@ $$
 
 such that for all tested observations $o \in \mathcal{O}_{\text{valid}}$:
 
-- $\Pi(o)$ is finite and bounded,
-- $\Pi$ is empirically locally regular,
-- $\Pi_q$ is empirically stable away from switching boundaries,
+- the implemented projection output is finite and bounded,
+- the implemented projection layer is empirically locally regular,
+- the switching component of the implemented projection is empirically stable away from switching boundaries,
 - a Lyapunov-style energy remains computable and non-pathological.
 
 This constitutes an **empirical compatibility result**, not yet a formal mathematical proof.
@@ -299,7 +307,7 @@ The immediate next steps are:
 
 The current **Phase A** result is:
 
-> The implemented ARVIS projection layer has been empirically validated as a bounded, fail-soft, locally regular, noise-robust, switching-stable, and Lyapunov-compatible projection on the current deterministic validated fixture set.
+> The implemented ARVIS projection layer has been empirically validated as a bounded, fail-soft, locally regular, noise-robust, switching-stable, and Lyapunov-compatible runtime projection layer on the current deterministic validated fixture set.
 
 This is a **meaningful and defensible milestone**.  
 It is **not the end state**, but it represents the **first solid validated bridge** between the real cognitive system and the formal stability core.

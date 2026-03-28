@@ -13,11 +13,24 @@ ARVIS is a **discrete-time hybrid dynamical system** operating on cognitive sign
 
 At each timestep:
 
-$$ o_t \xrightarrow{\Pi} (x_t, z_t, q_t, w_t) \xrightarrow{W_t} \hat{\kappa}_t \xrightarrow{G} C \rightarrow (x_{t+1}, z_{t+1}) $$
+$$ o_t \xrightarrow{\Pi_{\text{cert}}} P_t \xrightarrow{W_t} \hat{\kappa}_t \xrightarrow{G} C \rightarrow (x_{t+1}, z_{t+1}) $$
+
+⚠️ Important:
+
+ ARVIS currently implements a **runtime projection certification layer**:
+
+ $$ \Pi_{\text{cert}} : \mathcal{O}_{runtime} \to P_t $$
+
+ The full projection:
+
+ $$ \Pi : \mathcal{C} \to (x, z, q, w) $$
+
+ is **not yet fully implemented in production**.
 
 Where:
 
-- $\Pi$ : projection from cognition to state
+- $\Pi$ : theoretical projection from cognition to state (not fully implemented)
+- $\Pi_{\text{cert}}$ : runtime projection certification layer (implemented)
 - $W$ : composite Lyapunov function
 - $\hat{\kappa}$ : adaptive contraction estimate
 - $G$ : decision gate
@@ -31,6 +44,35 @@ This defines a **closed-loop cognitive system with feedback**.
 
 ---
 
+## 🔍 Projection Layer (Current State)
+
+ARVIS currently implements a **projection certification layer**, not the full theoretical projection.
+
+Runtime projection produces a certificate:
+
+$$ P_t = (\text{domain_valid}, \text{margin}, \text{safety}) $$
+
+This certificate is:
+
+- computed in the cognitive pipeline
+- consumed by the Gate
+- used for runtime safety enforcement
+
+The projection layer includes:
+
+- ProjectionDomain
+- ProjectionValidator
+- ProjectionCertificate
+- ProjectionStage
+
+→ Formalization:
+- [M3.1 — Cognitive State Model & Target Projection](docs/math/M3_1_cognitive_state_model.md)
+- [M3.2 — Observation & Certification Protocol](docs/math/M3_2_observation_and_projection.md)
+- [M3.3 — Runtime Projection & Certificate](docs/math/M3_3_projection_validated_domain.md)
+- [M3 Appendix — Projection Validation](docs/math/M3_appendix_projection_validation.md)
+
+---
+
 ## 📐 Mathematical Scope
 
 ARVIS is defined within a **validated operational domain**.
@@ -40,7 +82,8 @@ All guarantees apply only if:
 $$ \forall t, \quad o_t \in O_{\text{valid}} $$
 
 This requires:
-- bounded projection $\Pi$
+- bounded projection (theoretical Π, assumed)
+- bounded certification layer (implemented Π_cert)
 - Lipschitz continuity of state transitions
 - bounded disturbances
 - valid switching dynamics
@@ -50,7 +93,7 @@ Outside this domain:
 
 → Formalization:
 - [M1 — Assumptions](docs/math/M1_assumptions.md)
-- [M3 — Projection Validated Domain](docs/math/M3_projection_validated_domain.md)
+- [M3.3 — Runtime Projection Domain](docs/math/M3_3_projection_validated_domain.md)
 
 ---
 
@@ -78,11 +121,25 @@ This condition defines the admissible trajectories of the reference switching sy
 Decisions are not generated.  
 They are **validated through a constrained operator**:
 
-$` G : (x, z, W, \hat{\kappa}, H) \mapsto \{\text{ALLOW}, \text{REQUIRE CONFIRMATION}, \text{ABSTAIN}\} `$
+$` G : (W, \Delta W, \kappa, V, P, H) \mapsto \{\text{ALLOW}, \text{REQUIRE CONFIRMATION}, \text{ABSTAIN}\} `$
+
+The Gate is:
+
+- Lyapunov-aware
+- projection-aware
+- validity-aware
+
+It enforces:
+
+- stability constraints
+- projection domain validity
+- runtime safety conditions
 
 The Gate enforces:
 
 - Lyapunov decrease constraints
+- projection validity constraints
+- projection boundary constraints
 - adaptive instability detection
 - switching constraints
 - trajectory consistency
@@ -98,7 +155,7 @@ A decision violating constraints → **is rejected (ABSTAIN)**
 
 ARVIS is a feedback system:
 
-1. state is projected ($\Pi$)
+1. observation is certified ($\Pi_{\text{cert}}$)
 2. stability is measured ($W$)
 3. contraction is estimated ($\hat{\kappa}$)
 4. decisions are filtered ($G$)
@@ -147,6 +204,26 @@ Decisions are **evaluated and constrained at runtime under observable conditions
 
 ---
 
+## ⚠️ Theory vs Implementation
+
+ARVIS distinguishes between:
+
+**Theoretical model:**
+$$ \Pi : \mathcal{C} \to (x, z, q, w) $$
+
+**Current implementation:**
+$$ \Pi_{\text{cert}} : \mathcal{O}_{runtime} \to P_t $$
+
+The system currently operates on:
+
+- certified projection views
+- bounded runtime signals
+- safety-enforced decision filtering
+
+Full projection remains a **target architecture**.
+
+---
+
 ## 🧠 What ARVIS guarantees
 
 - dynamically stable (within domain)
@@ -185,7 +262,7 @@ ARVIS guarantees **stability constraints**, not decision quality.
 
 ## 🧪 Validation
 
-- 600+ tests (unit, integration, adversarial)
+- 800+ tests (unit, integration, adversarial)
 - 95%+ coverage
 - invariant validation (Lyapunov, switching, ISS)
 

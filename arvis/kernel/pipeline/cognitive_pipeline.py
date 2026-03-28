@@ -48,6 +48,8 @@ from arvis.math.switching.global_stability_observer import GlobalStabilityObserv
 from arvis.math.lyapunov.quadratic_lyapunov import make_default_quadratic_family
 from arvis.math.switching.switching_runtime import SwitchingRuntime
 from arvis.math.adaptive.adaptive_kappa_eff import AdaptiveKappaEffEstimator
+from arvis.kernel.projection.domain import ProjectionDomain, NumericBounds
+from arvis.kernel.projection.validator import ProjectionValidator
 
 from arvis.kernel.pipeline.stages import (
     DecisionStage,
@@ -59,6 +61,7 @@ from arvis.kernel.pipeline.stages import (
     TemporalStage,
     ConflictModulationStage,
     ControlStage,
+    ProjectionStage,
     GateStage,
     ControlFeedbackStage,
     StructuralRiskStage,
@@ -127,6 +130,7 @@ class CognitivePipeline:
         self.temporal_stage = TemporalStage()
         self.conflict_modulation_stage = ConflictModulationStage()
         self.control_stage = ControlStage()
+        self.projection_stage = ProjectionStage()
         self.gate_stage = GateStage()
         self.control_feedback_stage = ControlFeedbackStage()
         self.structural_risk_stage = StructuralRiskStage()
@@ -143,6 +147,18 @@ class CognitivePipeline:
         # Adaptive stability (M4/M5)
         # -----------------------------------------
         self.adaptive_kappa_estimator = AdaptiveKappaEffEstimator()
+
+        # -----------------------------------------
+        # Projection domain (Pi validation)
+        # -----------------------------------------
+        self.projection_domain = ProjectionDomain(
+            bounds={
+                # Minimal safe defaults (can be extended later)
+                "system_tension": NumericBounds(0.0, 100.0),
+            },
+            max_payload_size=10000,
+        )
+        self.projection_validator = ProjectionValidator(self.projection_domain)
         
 
     def _get_control_runtime(self, user_id: str) -> CognitiveControlRuntime:
@@ -308,6 +324,11 @@ class CognitivePipeline:
         self._safe_run(self.control_stage, ctx)
 
         # -----------------------------------------------------
+        # PRE-GATE PROJECTION (canonical stage)
+        # -----------------------------------------------------
+        self._safe_run(self.projection_stage, ctx)
+
+        # -----------------------------------------------------
         # 10. GATE STAGE
         # -----------------------------------------------------
         self._safe_run(self.gate_stage, ctx)
@@ -361,12 +382,20 @@ class CognitivePipeline:
         obs = self.observability.build(ctx)
 
         # -----------------------------------------
-        #  System Tension 
+        #  System Tension (extracted early for projection)
         # -----------------------------------------
         system_tension = obs.get("system_tension", None)
         if system_tension is not None:
             ctx.extra["system_tension"] = system_tension
             ctx.system_tension = system_tension
+
+        # -----------------------------------------------------
+        # POST-OBSERVABILITY PROJECTION REFRESH
+        # -----------------------------------------------------
+        try:
+            self.projection_stage.refresh(self, ctx)
+        except Exception:
+            ctx.extra.setdefault("errors", []).append("projection_refresh_failure")
 
         ctx.predictive_snapshot = obs["predictive"]
         ctx.multi_horizon = obs["multi"]

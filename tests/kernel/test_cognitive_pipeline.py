@@ -489,12 +489,34 @@ def test_pipeline_blocks_when_delta_w_positive():
     pipeline.core = pipeline.core.__class__(core_model=CompositePositiveDeltaCore())
 
     ctx = make_ctx()
+    ctx.extra["force_safe_projection"] = True
+    ctx.extra["force_safe_switching"] = True
+    ctx.switching_runtime = None
+    ctx.switching_params = None
+
+    ctx.global_stability_metrics = type("M", (), {
+        "ratio": 1.0,
+        "kappa_violation": False,
+    })()
+
+    ctx.projection_certificate = type("P", (), {
+        "domain_valid": True,
+        "is_projection_safe": True,
+        "margin_to_boundary": 1.0,
+    })()
 
     pipeline.run(ctx)      # initialise t0
     result = pipeline.run(ctx)
 
     assert ctx.delta_w is not None
     assert ctx.delta_w is not None
+    print("verdict_transition_trace:", ctx.extra.get("verdict_transition_trace"))
+    print("fusion_reasons:", ctx.extra.get("fusion_reasons"))
+    print("kappa_hard_block:", ctx.extra.get("kappa_hard_block"))
+    print("kappa_gap:", ctx.extra.get("kappa_gap"))
+    print("adaptive_snapshot:", getattr(ctx, "adaptive_snapshot", None))
+    print("validity_envelope:", getattr(ctx, "validity_envelope", None))
+    print("projection_certificate:", getattr(ctx, "projection_certificate", None))
     assert result.gate_result in {
         LyapunovVerdict.ALLOW,
         LyapunovVerdict.REQUIRE_CONFIRMATION,
@@ -513,12 +535,33 @@ def test_pipeline_allows_when_delta_w_negative():
     pipeline.core = pipeline.core.__class__(core_model=CompositeNegativeDeltaCore())
 
     ctx = make_ctx()
-
+    ctx.extra["force_safe_projection"] = True
+    ctx.extra["force_safe_switching"] = True
     # First pass (initialisation)
+    ctx.switching_runtime = None
+    ctx.switching_params = None
+
+    ctx.global_stability_metrics = type("M", (), {
+        "ratio": 1.0,
+        "kappa_violation": False,
+    })()
+
+    ctx.projection_certificate = type("P", (), {
+        "domain_valid": True,
+        "is_projection_safe": True,
+        "margin_to_boundary": 1.0,
+    })()
     pipeline.run(ctx)
 
     # Second pass (ΔW calculable)
     result = pipeline.run(ctx)
+    print("verdict_transition_trace:", ctx.extra.get("verdict_transition_trace"))
+    print("fusion_reasons:", ctx.extra.get("fusion_reasons"))
+    print("kappa_hard_block:", ctx.extra.get("kappa_hard_block"))
+    print("kappa_gap:", ctx.extra.get("kappa_gap"))
+    print("adaptive_snapshot:", getattr(ctx, "adaptive_snapshot", None))
+    print("validity_envelope:", getattr(ctx, "validity_envelope", None))
+    print("projection_certificate:", getattr(ctx, "projection_certificate", None))
 
     assert result.gate_result in {
         LyapunovVerdict.ALLOW,
