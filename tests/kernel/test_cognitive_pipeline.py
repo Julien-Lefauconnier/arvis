@@ -100,15 +100,19 @@ def test_pipeline_runs_minimal():
 # 2. Execution intent when ALLOW
 # ---------------------------------------------------------
 
-def test_pipeline_returns_executable_intent_when_allowed():
+def test_pipeline_no_intent_when_abstain_even_if_confirmation_required():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
     ctx = make_ctx()
 
     result = pipeline.run(ctx)
 
     assert result.requires_confirmation is True
-    assert result.executable_intent.user_id == "test_user"
-    assert result.execution_status == ExecutionGateStatus.BLOCKED_CONFIRMATION
+    assert result.gate_result == LyapunovVerdict.ABSTAIN
+    assert result.executable_intent is None
+    assert result.execution_status in {
+        ExecutionGateStatus.BLOCKED_CONFIRMATION,
+        ExecutionGateStatus.BLOCKED_ABSTAIN,
+    }
 
 
 # ---------------------------------------------------------

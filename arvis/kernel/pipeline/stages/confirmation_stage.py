@@ -69,14 +69,18 @@ class ConfirmationStage:
         print("[CONFIRMATION DEBUG] structural_risk:", structural_risk)
 
         # -----------------------------------------
-        # 3. NEEDS CONFIRMATION
+        # 3. NEEDS CONFIRMATION (include Gate signal)
         # -----------------------------------------
+        gate_requires_confirmation = bool(
+            getattr(ctx, "extra", {}).get("_requires_confirmation", False)
+        )
+
         needs_confirmation = (
-            verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
-            or (
-                verdict == LyapunovVerdict.ALLOW
-                and (conflict_requires_confirmation or structural_risk)
-            )
+            gate_requires_confirmation
+            or verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
+            or verdict == LyapunovVerdict.ABSTAIN
+            or conflict_requires_confirmation
+            or structural_risk
         )
 
         print("[CONFIRMATION DEBUG] needs_confirmation:", needs_confirmation)

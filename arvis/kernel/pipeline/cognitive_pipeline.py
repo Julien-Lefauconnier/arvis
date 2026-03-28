@@ -50,6 +50,8 @@ from arvis.math.switching.switching_runtime import SwitchingRuntime
 from arvis.math.adaptive.adaptive_kappa_eff import AdaptiveKappaEffEstimator
 from arvis.kernel.projection.domain import ProjectionDomain, NumericBounds
 from arvis.kernel.projection.validator import ProjectionValidator
+from arvis.kernel.projection.pi_impl import PiImpl
+from arvis.math.projection.pi_operator import PiOperator
 
 from arvis.kernel.pipeline.stages import (
     DecisionStage,
@@ -151,10 +153,18 @@ class CognitivePipeline:
         # -----------------------------------------
         # Projection domain (Pi validation)
         # -----------------------------------------
+        self.pi_impl = PiImpl()
+        self.pi_operator = PiOperator()
+
         self.projection_domain = ProjectionDomain(
             bounds={
-                # Minimal safe defaults (can be extended later)
-                "system_tension": NumericBounds(0.0, 100.0),
+                "state.system_tension": NumericBounds(0.0, 100.0),
+
+                # extensions safe Π_impl
+                "state.coherence_score": NumericBounds(0.0, 1.0),
+                "risk.conflict_pressure": NumericBounds(0.0, 100.0),
+                "control.control_signal": NumericBounds(0.0, 100.0),
+                "trace.adaptive_kappa_eff": NumericBounds(0.0, 1.0),
             },
             max_payload_size=10000,
         )

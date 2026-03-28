@@ -38,12 +38,73 @@ class GateObserver:
         recovery_detected: bool,
         recovery_magnitude: Optional[float],
     ) -> None:
+        ctx.extra["system_confidence"] = float(system_confidence)
+        ctx.extra.setdefault("confidence_flags", [])
+
+        # -----------------------------------------
+        # adaptive_trace
+        # -----------------------------------------
+        if adaptive_metrics:
+            adaptive_trace = {
+                "kappa_eff": adaptive_metrics.kappa_eff,
+                "margin": adaptive_metrics.margin,
+                "regime": adaptive_metrics.regime,
+                "available": adaptive_metrics.is_available,
+            }
+        else:
+            adaptive_trace = {"available": False}
+        ctx.extra["adaptive_trace"] = adaptive_trace
+        # -----------------------------------------
+        # projection_trace
+        # -----------------------------------------
+        projection_certificate = getattr(ctx, "projection_certificate", None)
+        projection_view = getattr(ctx, "projection_view", None)
+        projection_view_raw = getattr(ctx, "projection_view_raw", None)
+
+        projection_trace = {
+            "available": projection_certificate is not None,
+            "domain_valid": (
+                bool(getattr(projection_certificate, "domain_valid", False))
+                if projection_certificate is not None
+                else None
+            ),
+            "safe": (
+                bool(getattr(projection_certificate, "is_projection_safe", False))
+                if projection_certificate is not None
+                else None
+            ),
+            "lyapunov_compatible": (
+                bool(getattr(projection_certificate, "lyapunov_compatibility_ok", False))
+                if projection_certificate is not None
+                else None
+            ),
+            "margin": (
+                float(getattr(projection_certificate, "margin_to_boundary"))
+                if projection_certificate is not None
+                and getattr(projection_certificate, "margin_to_boundary", None) is not None
+                else None
+            ),
+            "certification_level": (
+                str(getattr(getattr(projection_certificate, "certification_level", None), "value", None))
+                if projection_certificate is not None
+                else None
+            ),
+            "view": dict(projection_view) if isinstance(projection_view, dict) else None,
+            "raw_view": dict(projection_view_raw) if isinstance(projection_view_raw, dict) else None,
+        }
+
+        projection_summary = {
+            "available": projection_trace["available"],
+            "domain_valid": projection_trace["domain_valid"],
+            "safe": projection_trace["safe"],
+            "lyapunov_compatible": projection_trace["lyapunov_compatible"],
+            "margin": projection_trace["margin"],
+            "certification_level": projection_trace["certification_level"],
+        }
 
         # -----------------------------------------
         # fusion_trace
         # -----------------------------------------
-        ctx.extra["system_confidence"] = float(system_confidence)
-        ctx.extra.setdefault("confidence_flags", [])
         ctx.extra["fusion_trace"] = {
             "pre_verdict": str(pre_verdict),
             "final_verdict": str(final_verdict),
@@ -60,6 +121,7 @@ class GateObserver:
                 "collapse_risk": confidence_inputs.collapse_risk,
             },
             "system_confidence": float(system_confidence),
+            "projection": projection_summary,
             "reasons": list(ctx.extra.get("fusion_reasons", [])),
         }
 
@@ -73,12 +135,13 @@ class GateObserver:
                 "w_current": float(w_current) if w_current is not None else None,
                 "delta_w": float(delta_w) if delta_w is not None else None,
             },
-            "adaptive": ctx.extra.get("adaptive_trace"),
+            "adaptive": adaptive_trace,
             "switching": dict(switching_metrics or {}),
             "global": {
                 "safe": bool(global_safe),
                 "history_len": len(ctx.delta_w_history),
             },
+            "projection": {**projection_summary, "view": projection_trace["view"], "raw_view": projection_trace["raw_view"]},
             "envelope": {
                 "hard_block": envelope.hard_block,
                 "reason": envelope.hard_reason,
@@ -93,19 +156,7 @@ class GateObserver:
 
         # canonical projection
         ctx.extra["switching_metrics"] = dict(switching_metrics or {})
-
-        # -----------------------------------------
-        # adaptive_trace
-        # -----------------------------------------
-        if adaptive_metrics:
-            ctx.extra["adaptive_trace"] = {
-                "kappa_eff": adaptive_metrics.kappa_eff,
-                "margin": adaptive_metrics.margin,
-                "regime": adaptive_metrics.regime,
-                "available": adaptive_metrics.is_available,
-            }
-        else:
-            ctx.extra["adaptive_trace"] = {"available": False}
+        ctx.extra["projection_trace"] = projection_trace
 
         # -----------------------------------------
         # disturbance_signals
@@ -115,6 +166,10 @@ class GateObserver:
             "switching_disturbance": None,
             "adaptive_warning": False,
             "global_instability": bool(ctx.extra.get("global_instability", False)),
+            "projection_lyapunov_incompatible": (
+                ctx.extra.get("projection_lyapunov_compatible") is False
+                or projection_trace.get("lyapunov_compatible") is False
+            ),
         }
 
         try:

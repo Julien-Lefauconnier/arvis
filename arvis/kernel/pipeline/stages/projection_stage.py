@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 class ProjectionStage:
@@ -10,22 +10,17 @@ class ProjectionStage:
     Canonical projection stage.
 
     Responsibilities:
-    - Build minimal projection (pre-gate safety)
-    - Refresh projection after observability (full signal space)
+    - Run Π_impl (runtime projection)
+    - Build projection_view
+    - Run certification (Π_cert)
     """
 
     def run(self, pipeline: Any, ctx: Any) -> None:
         self._compute_projection(pipeline, ctx, allow_overwrite=False)
 
-    # -----------------------------------------
-    # PUBLIC: post-observability refresh
-    # -----------------------------------------
     def refresh(self, pipeline: Any, ctx: Any) -> None:
         self._compute_projection(pipeline, ctx, allow_overwrite=True)
 
-    # -----------------------------------------
-    # INTERNAL
-    # -----------------------------------------
     def _compute_projection(
         self,
         pipeline: Any,
@@ -33,27 +28,66 @@ class ProjectionStage:
         allow_overwrite: bool = False,
     ) -> None:
         try:
-            projection_view: Dict[str, float] = {}
-
-            system_tension = getattr(ctx, "system_tension", None)
-
-            if isinstance(system_tension, (int, float)):
-                projection_view["system_tension"] = float(system_tension)
-
             # -----------------------------------------
-            # SAFETY FALLBACK
-            # Projection must always exist (kernel invariant)
+            # Skip if already computed (pre-gate)
             # -----------------------------------------
-            if not projection_view:
-                projection_view["system_tension"] = 0.0
-
             if ctx.projection_certificate is not None and not allow_overwrite:
                 return
 
-            projection_certificate = pipeline.projection_validator.validate(
-                projection_view,
-                previous_projected=None,
+            # -----------------------------------------
+            # Π_impl
+            # -----------------------------------------
+            projected_state = pipeline.pi_impl.project(ctx)
+            projection_view: Dict[str, float] = projected_state.to_projection_view()
+
+            # -----------------------------------------
+            # SAFETY FALLBACK (kernel invariant)
+            # -----------------------------------------
+            if not projection_view:
+                projection_view = {"state.system_tension": 0.0}
+
+            # -----------------------------------------
+            # RAW SNAPSHOT (observability)
+            # -----------------------------------------
+            projection_view_raw: Dict[str, float] = dict(projection_view)
+
+            # -----------------------------------------
+            # Π_op (optional)
+            # -----------------------------------------
+            if hasattr(pipeline, "pi_operator"):
+                projection_view = pipeline.pi_operator.project(projection_view, ctx)
+
+            # -----------------------------------------
+            # Previous projection (for Lipschitz)
+            # -----------------------------------------
+            previous_projected: Optional[Dict[str, float]] = (
+                pipeline.pi_impl.project_previous(ctx)
             )
+
+            if hasattr(pipeline, "pi_operator") and previous_projected:
+               previous_projected = pipeline.pi_operator.project(previous_projected, ctx)
+
+            # -----------------------------------------
+            # Π_cert
+            # -----------------------------------------
+            try:
+                projection_certificate = pipeline.projection_validator.validate(
+                    projection_view,
+                    previous_projected=previous_projected,
+                    ctx=ctx,
+                )
+            except TypeError:
+                projection_certificate = pipeline.projection_validator.validate(
+                    projection_view,
+                    previous_projected=previous_projected,
+                )
+
+            # -----------------------------------------
+            # Persist in context
+            # -----------------------------------------
+            ctx.projected_state = projected_state
+            ctx.projection_view = projection_view
+            ctx.projection_view_raw = projection_view_raw
 
             ctx.projection_certificate = projection_certificate
             ctx.projection_domain_valid = projection_certificate.domain_valid
@@ -62,6 +96,8 @@ class ProjectionStage:
             ctx.extra["projection_certification_level"] = (
                 projection_certificate.certification_level.value
             )
+            ctx.extra["projection_source"] = "PiImpl"
 
         except Exception:
             ctx.extra.setdefault("errors", []).append("projection_stage_failure")
+            raise

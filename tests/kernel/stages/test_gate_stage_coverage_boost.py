@@ -136,6 +136,8 @@ def test_adaptive_unstable(monkeypatch):
         is_available=True,
         is_unstable=True,
         margin=0.2,
+        kappa_eff=1.0,
+        regime="test",
     )
 
     monkeypatch.setattr(
@@ -594,6 +596,8 @@ def test_gate_stage_final_adaptive_unstable(monkeypatch):
         is_unstable = True
         is_available = True
         margin = 1.0
+        kappa_eff = 1.0
+        regime = "test"
 
     ctx.adaptive_snapshot = FakeAdaptive()
 

@@ -21,15 +21,18 @@ class ProjectionValidator:
         domain: ProjectionDomain,
         lipschitz_threshold: float = 10.0,
         noise_threshold: float = 5.0,
+        lyapunov_positive_threshold: float = 1e-9,
     ) -> None:
         self.domain = domain
         self.lipschitz_threshold = lipschitz_threshold
         self.noise_threshold = noise_threshold
+        self.lyapunov_positive_threshold = lyapunov_positive_threshold
 
     def validate(
         self,
         projected: Dict[str, Any],
         previous_projected: Optional[Dict[str, Any]] = None,
+        ctx: Optional[Any] = None,
     ) -> ProjectionCertificate:
 
         domain_valid, checks_detail = self.domain.validate(projected)
@@ -66,7 +69,24 @@ class ProjectionValidator:
         mode_stability_ok = True  # placeholder
 
         # --- lyapunov compatibility ---
-        lyapunov_ok = True  # placeholder
+        lyapunov_ok = True
+        if ctx is not None:
+            try:
+                delta_w = getattr(ctx, "delta_w", None)
+                dv = getattr(ctx, "_dv", None)
+
+                if delta_w is not None:
+                    lyapunov_ok = float(delta_w) <= self.lyapunov_positive_threshold
+                    checks_detail["lyapunov_delta_w_non_positive"] = lyapunov_ok
+                elif dv is not None:
+                    lyapunov_ok = float(dv) <= self.lyapunov_positive_threshold
+                    checks_detail["lyapunov_dv_non_positive"] = lyapunov_ok
+                else:
+                    checks_detail["lyapunov_signal_available"] = False
+                    lyapunov_ok = True
+            except Exception:
+                lyapunov_ok = False
+                checks_detail["lyapunov_check_error"] = False
 
         # --- certification level ---
         if not domain_valid:
