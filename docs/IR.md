@@ -8,7 +8,7 @@ Current version: `arvis-ir.v1`
 
 ## Definition
 
-The IR is the **canonical, versioned output** of ARVIS cognition.
+The IR is the **canonical, versioned machine output** of ARVIS.
 
 It is:
 
@@ -62,14 +62,14 @@ Properties:
 
 ## state
 
-Represents the scientific cognitive state.
+Represents the canonical cognitive state of the system.
 
-Properties:
-
-- stability signals
+Properties include canonical, normalized state signals such as:
+- stability
 - risk
 - drift
 - regime
+- confidence / control-related normalized values when exposed by the adapter
 
 ---
 
@@ -133,4 +133,6 @@ The IR guarantees:
 
 ## Design Principle
 
-The IR is the contract between cognition and the external world.
+The IR is the contract between the canonical CognitiveState of ARVIS and the external world.
+
+It is produced from stable adapters, not from ad hoc runtime serialization.

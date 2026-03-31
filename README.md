@@ -1,15 +1,23 @@
 # ARVIS
 
-**A runtime-monitored and validated cognitive dynamical system**
+**A deterministic Cognitive Operating System (Cognitive OS)**
 
-> Not a model. Not an agent.  
-> A **closed-loop system that enforces decision stability under uncertainty**.
+> Not a model. Not an agent.
+> A deterministic Cognitive OS that enforces stability-constrained decisions
+> through a canonical cognitive state, a versioned IR layer, and a reflexive
+> self-observation architecture.
 
 ---
 
 ## 🧠 What ARVIS is
 
-ARVIS is a **discrete-time hybrid dynamical system** operating on cognitive signals.
+ARVIS is a deterministic Cognitive Operating System built as:
+
+- a closed-loop cognitive pipeline
+- a canonical `CognitiveState` kernel
+- a stable Intermediate Representation (IR)
+- a reflexive self-observation layer
+- a timeline-backed traceability system
 
 At each timestep:
 
@@ -44,7 +52,30 @@ This defines a **closed-loop cognitive system with feedback**.
 
 ---
 
-## 🔍 Projection Layer (Current State)
+## 🔍 Cognitive State Kernel
+
+ARVIS now exposes a canonical `CognitiveState` representation.
+
+This state is:
+
+- deterministic
+- serializable
+- contract-validated
+- safe to export through IR
+
+The CognitiveState layer includes:
+
+- `CognitiveState`
+- `CognitiveStateBuilder`
+- `CognitiveStateContract`
+- `StateIRAdapter`
+
+This turns the pipeline output into a stable, inspectable system state rather
+than a collection of loosely coupled runtime artifacts.
+
+---
+
+## Projection Layer (Current State)
 
 ARVIS currently implements a **projection certification layer**, not the full theoretical projection.
 
@@ -245,10 +276,31 @@ ARVIS guarantees **stability constraints**, not decision quality.
 
 ## 🧩 System Architecture
 
-### State (Bundle)
-### Modeling (Core)
-### Control & Gate
-### Timeline (append-only, hash-chained)
+ARVIS is now structured around four major layers:
+
+### 1. Cognitive Execution Layer
+- deterministic pipeline
+- staged cognition
+- closed-loop control and gate enforcement
+
+### 2. Canonical State Layer
+- `CognitiveState`
+- bundle/state normalization
+- contract validation
+
+### 3. Reflexive Layer
+- capabilities
+- introspection
+- rendering
+- reflexive snapshots
+- timeline exposure explanation
+- compliance and attestation
+
+### 4. Public Contract Layer
+- `CognitiveOS`
+- result views
+- IR export
+- reflexive API entrypoint
 
 → [M12 — Cognitive Operating System](docs/math/M12_cognitive_operating_system_(COS)_architecture.md)
 
@@ -322,11 +374,35 @@ The IR exposes:
 - cognitive state
 - gate outcome
 
+It is now aligned with the canonical CognitiveState kernel rather than being
+only a post-pipeline serialization convenience.
+
 It enables:
 
 - LLM integration
 - replay / simulation
 - external system interoperability
+
+---
+
+## Reflexive System
+
+ARVIS now includes an explicit reflexive architecture.
+
+This layer provides:
+
+- declarative capability snapshots
+- structured introspection views
+- reflexive timeline aggregation and explanation
+- compliance-oriented explanation and attestation
+- read-only reflexive snapshots for safe external exposure
+
+The reflexive layer is observational only:
+
+- no hidden inference
+- no self-modification
+- no authority escalation
+- no raw cognitive leakage
 
 ---
 

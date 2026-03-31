@@ -12,6 +12,7 @@ from arvis.ir.context import CognitiveContextIR
 from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.state import CognitiveStateIR
 from arvis.ir.gate import CognitiveGateIR
+from arvis.cognition.state.cognitive_state import CognitiveState
 
 
 @dataclass(frozen=True)
@@ -41,4 +42,5 @@ class CognitivePipelineResult:
     ir_decision: Optional[CognitiveDecisionIR] = None
     ir_state: Optional[CognitiveStateIR] = None
     ir_gate: Optional[CognitiveGateIR] = None
+    cognitive_state: Optional[CognitiveState] = None
     

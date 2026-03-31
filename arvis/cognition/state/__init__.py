@@ -9,10 +9,18 @@ by the ARVIS kernel.
 
 from .cognitive_state import (
     CognitiveState,
-    CognitiveRiskSnapshot,
+    CognitiveRisk,
+    CognitiveStability,
+    CognitiveControl,
+    CognitiveDynamics,
+    CognitiveProjection,
 )
 
 __all__ = [
     "CognitiveState",
-    "CognitiveRiskSnapshot",
+    "CognitiveRisk",
+    "CognitiveStability",
+    "CognitiveControl",
+    "CognitiveDynamics",
+    "CognitiveProjection",
 ]

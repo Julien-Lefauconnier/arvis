@@ -1,7 +1,7 @@
 # arvis/ir/state.py
 
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Optional
 
 
 @dataclass(frozen=True)
@@ -18,7 +18,7 @@ class CognitiveStateIR:
     """
     Canonical cognitive state snapshot.
     """
-
+    version: str = field(default="1.0", init=False)
     state_id: str
     bundle_id: str
 
@@ -31,3 +31,12 @@ class CognitiveStateIR:
     world_prediction: Any | None = None
     forecast: Any | None = None
     irg: Any | None = None
+    regime: Optional[str] = None
+    stable: Optional[bool] = None
+
+    system_tension: Optional[float] = None
+    drift: Optional[float] = None
+
+    projection_valid: Optional[bool] = None
+    projection_margin: Optional[float] = None
+    

@@ -26,6 +26,7 @@ from arvis.ir.context import CognitiveContextIR
 from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.state import CognitiveStateIR
 from arvis.ir.gate import CognitiveGateIR
+
 from arvis.kernel.projection.certificate import ProjectionCertificate
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 
@@ -175,6 +176,7 @@ class CognitivePipelineContext:
     symbolic_features: Optional[Any] = None
     system_tension: Optional[Any] = None
     ir_state: Optional[CognitiveStateIR] = None
+    cognitive_state: Optional[Any] = None
 
     # -----------------------------------------------------
     # Conversation layer (optional, passive)

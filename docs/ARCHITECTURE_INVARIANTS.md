@@ -24,6 +24,13 @@ They are grouped by layer and enforced at every cognitive step.
 - MemoryLong must be passive (no mutation methods exposed).
 - Invariants must be validated on construction (raise on violation).
 
+## 2.1 Canonical Cognitive State Invariants
+
+- `CognitiveState` must be deterministic and serializable.
+- Exported state values must respect bounded, normalized contracts.
+- Canonical state must be suitable for IR export without hidden runtime mutation.
+- Contract validation must happen before externalization whenever applicable.
+
 ## 3. Cognitive Timeline Invariants
 
 - Append-only journal — no mutation of past entries.

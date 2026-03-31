@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 
-from arvis.reflexive.irg_latent_state import IRGLatentState
+from arvis.reflexive.core.irg_latent_state import IRGLatentState
 
 @dataclass(frozen=True)
 class SlowState:

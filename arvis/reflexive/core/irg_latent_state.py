@@ -1,4 +1,4 @@
-# arvis/reflexive/irg_latent_state.py
+# arvis/reflexive/core/irg_latent_state.py
 
 from dataclasses import dataclass
 from typing import Tuple

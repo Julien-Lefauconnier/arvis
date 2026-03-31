@@ -2,7 +2,8 @@
 
 ## Overview
 
-ARVIS is a **deterministic cognitive execution system** implemented as a **closed-loop pipeline**.
+ARVIS is a **deterministic Cognitive Operating System** implemented around a
+**closed-loop pipeline, a canonical state kernel, and a reflexive self-observation layer**.
 
 It enforces:
 
@@ -27,26 +28,68 @@ It is a **cognitive execution system** where:
 
 ## System Model
 
-ARVIS is implemented as a **deterministic, sequential pipeline with feedback control**.
+ARVIS is implemented as a **deterministic system** with four architectural domains:
+
+1. execution
+2. canonical state
+3. reflexive observation
+4. public contract / IR
+
+---
 
 ### Execution Flow
 
 ```text
 Input
- → Cognitive Pipeline (17 stages)
- → Observability Projection
- → Decision Trace
- → Intermediate Representation (IR)
- → API (Cognitive OS)
+  → Cognitive Pipeline
+  → Canonical CognitiveState
+  → Observability / Trace / Timeline
+  → Reflexive Snapshot
+  → Intermediate Representation (IR)
+  → Public API
 ```
 
 ---
 
-## Cognitive Pipeline (Core System)
+## Cognitive Pipeline 
 
-The pipeline is the **central execution engine** of ARVIS.
+The pipeline remains the **execution core**, but it is no longer the whole system.
 
-All cognition, control, and decision logic occur inside it.
+Its outputs are normalized into a **canonical CognitiveState** and may then be
+
+exported through IR or observed through reflexive services.
+
+---
+
+## Canonical State Layer
+
+This layer defines the stable internal state contract of ARVIS:
+
+- CognitiveState
+- CognitiveStateBuilder
+- CognitiveStateContract
+- StateIRAdapter
+
+It is the bridge between execution and external interoperability.
+
+---
+
+## Reflexive Layer
+
+The reflexive layer is read-only and declarative.
+
+It includes:
+
+- capability registry and snapshots
+- architecture / cognition / runtime / uncertainty introspection
+- reflexive rendering
+- reflexive snapshot building
+- reflexive timeline aggregation and explanation
+- compliance and attestation
+
+This layer does not perform cognition. It observes and exposes structure safely.
+
+---
 
 ### Pipeline Structure
 

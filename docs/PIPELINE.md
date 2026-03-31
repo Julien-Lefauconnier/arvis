@@ -34,6 +34,27 @@ Each stage:
 
 ---
 
+## Post-Pipeline Normalization
+
+The pipeline does not directly define the public system contract.
+
+After execution, ARVIS can normalize pipeline outputs into:
+
+- a canonical `CognitiveState`
+- a `DecisionTrace`
+- timeline projections
+- a stable IR representation
+- a reflexive snapshot
+
+This separation is intentional:
+
+- pipeline = execution
+- cognitive state = canonical internal representation
+- IR = external machine contract
+- reflexive = safe self-observation layer
+
+---
+
 ## Fail-Safe Execution
 
 All stages are executed through a protected wrapper:

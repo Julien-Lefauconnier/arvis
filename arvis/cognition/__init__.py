@@ -11,12 +11,20 @@ from .bundle.cognitive_bundle_builder import CognitiveBundleBuilder
 
 from .state.cognitive_state import (
     CognitiveState,
-    CognitiveRiskSnapshot,
+    CognitiveRisk,
+    CognitiveStability,
+    CognitiveControl,
+    CognitiveDynamics,
+    CognitiveProjection,
 )
 
 __all__ = [
     "CognitiveBundleSnapshot",
     "CognitiveBundleBuilder",
     "CognitiveState",
-    "CognitiveRiskSnapshot",
+    "CognitiveRisk",
+    "CognitiveStability",
+    "CognitiveControl",
+    "CognitiveDynamics",
+    "CognitiveProjection",
 ]

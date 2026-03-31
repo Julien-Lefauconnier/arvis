@@ -61,7 +61,7 @@ If conditions are not met:
 
 In most systems, reasoning is implicit.
 
-ARVIS forces all cognition into a **fully explicit state**:
+ARVIS forces cognition into a **fully explicit and canonical state**:
 
 - decision context
 - introspection
@@ -73,7 +73,9 @@ This state is:
 
 - immutable
 - deterministic
-- fully inspectable
+- contract-validated
+- serializable
+- suitable for IR export and reflexive observation
 
 ---
 

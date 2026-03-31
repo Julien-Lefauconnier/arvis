@@ -9,7 +9,7 @@ from arvis.cognition.bundle.cognitive_bundle_builder import CognitiveBundleBuild
 
 from arvis.cognition.state.cognitive_state import (
     CognitiveState,
-    CognitiveRiskSnapshot,
+    CognitiveRisk,
 )
 from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
 from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
@@ -24,7 +24,7 @@ __all__ = [
     "CognitiveBundleSnapshot",
     "CognitiveBundleBuilder",
     "CognitiveState",
-    "CognitiveRiskSnapshot",
+    "CognitiveRisk",
     "UncertaintyAxis",
     "UncertaintyFrame",
     "UncertaintyFrameRegistry",

@@ -138,7 +138,7 @@ __all__ = [
     "StabilityObserver",
     "StabilitySnapshot",
 
-    # IR (new public layer)
+    # IR 
     "build_ir_view",
     "canonicalize_ir",
     "hash_ir",

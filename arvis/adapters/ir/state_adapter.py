@@ -1,4 +1,4 @@
-# aarvis/adapters/ir/state_adapter.py
+# arvis/adapters/ir/state_adapter.py
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from typing import Any, Mapping
 
 from arvis.ir.state import CognitiveRiskIR, CognitiveStateIR
 
+_IR_VERSION = "1.0"
 
 def _maybe_get(obj: Any, *names: str) -> Any:
     if obj is None:
@@ -37,21 +38,30 @@ def _as_float(value: Any, default: float = 0.0) -> float:
 class StateIRAdapter:
     @staticmethod
     def from_state(state: object) -> CognitiveStateIR:
-        risk = getattr(state, "collapse_risk", None)
+        stability = getattr(state, "stability", None)
+        risk = getattr(state, "risk", None)
+        control = getattr(state, "control", None)
+        dynamics = getattr(state, "dynamics", None)
+        projection = getattr(state, "projection", None)
+        fused = _as_float(getattr(risk, "fused_risk", None))
+        fused = min(max(fused, 0.0), 1.0)
+        smoothed = _as_float(getattr(risk, "smoothed_risk", None))
+        smoothed = min(max(smoothed, 0.0), 1.0)
 
         risk_ir = CognitiveRiskIR(
             mh_risk=_as_float(getattr(risk, "mh_risk", None)),
             world_risk=_as_float(getattr(risk, "world_risk", None)),
             forecast_risk=_as_float(getattr(risk, "forecast_risk", None)),
-            fused_risk=_as_float(getattr(risk, "fused_risk", None)),
-            smoothed_risk=_as_float(getattr(risk, "smoothed_risk", None)),
+            fused_risk=fused,
+            smoothed_risk=smoothed,
         )
 
         payload = {
             "bundle_id": str(getattr(state, "bundle_id", "")),
-            "dv": _as_float(getattr(state, "dv", 0.0)),
-            "risk": risk_ir.fused_risk,
-            "epsilon": _as_float(getattr(state, "epsilon", 0.0)),
+            "dv": _as_float(getattr(stability, "dv", 0.0)),
+            "fused_risk": risk_ir.fused_risk,
+            "epsilon": _as_float(getattr(control, "epsilon", 0.0)),
+            "version": _IR_VERSION,
         }
 
         state_id = sha256(
@@ -61,13 +71,21 @@ class StateIRAdapter:
         return CognitiveStateIR(
             state_id=state_id,
             bundle_id=str(getattr(state, "bundle_id", "")),
-            dv=_as_float(getattr(state, "dv", 0.0)),
+            dv=_as_float(getattr(stability, "dv", 0.0)),
             collapse_risk=risk_ir,
-            epsilon=_as_float(getattr(state, "epsilon", 0.0)),
-            early_warning=bool(getattr(state, "early_warning", False)),
+            epsilon=min(max(_as_float(getattr(control, "epsilon", 0.0)), 0.0), 1.0),
+            early_warning=bool(getattr(risk, "early_warning", False)),
             world_prediction=getattr(state, "world_prediction", None),
             forecast=getattr(state, "forecast", None),
             irg=getattr(state, "irg", None),
+            regime=getattr(stability, "regime", None),
+            stable=getattr(stability, "stable", None),
+
+            system_tension=getattr(dynamics, "system_tension", None),
+            drift=getattr(dynamics, "drift", None),
+
+            projection_valid=getattr(projection, "valid", None) if projection else None,
+            projection_margin=getattr(projection, "margin", None) if projection else None,
         )
 
     @staticmethod
@@ -99,10 +117,13 @@ class StateIRAdapter:
             _maybe_get(control_snapshot, "epsilon"),
             _as_float(getattr(ctx, "_effective_epsilon", None), _as_float(getattr(ctx, "_epsilon", None), 0.0)),
         )
+        fused_risk = min(max(fused_risk, 0.0), 1.0)
+        epsilon = min(max(epsilon, 0.0), 1.0)
         smoothed_risk = _as_float(
             _maybe_get(control_snapshot, "smoothed_risk"),
             fused_risk,
         )
+        smoothed_risk = min(max(smoothed_risk, 0.0), 1.0)
 
         dv = _as_float(
             getattr(ctx, "_dv", None),
@@ -148,4 +169,12 @@ class StateIRAdapter:
             world_prediction=getattr(ctx, "predictive_snapshot", None),
             forecast=getattr(ctx, "global_forecast", None),
             irg=getattr(ctx, "irg", None) or getattr(ctx, "introspection", None),
+            regime=getattr(ctx, "regime", None),
+            stable=getattr(ctx, "stable", None),
+
+            system_tension=getattr(ctx, "system_tension", None),
+            drift=getattr(ctx, "drift_score", None),
+
+            projection_valid=getattr(ctx, "projection_domain_valid", None),
+            projection_margin=getattr(ctx, "projection_margin", None),
         )

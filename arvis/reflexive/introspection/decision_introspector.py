@@ -1,0 +1,29 @@
+# arvis/reflexive/introspection/decision_introspector.py
+
+from typing import Dict, Any
+class DecisionIntrospector:
+    """
+    Explains the decision engine.
+    """
+
+    def describe(self)-> Dict[str, Any]:
+
+        return {
+            "name": "decision_engine",
+            "description": (
+                "The decision engine routes user intents and proposes "
+                "actions while respecting governance and uncertainty signals."
+            ),
+            "signals_used": [
+                "prompt intent",
+                "memory intent",
+                "knowledge state",
+                "uncertainty frames",
+                "conversation mode",
+            ],
+            "guarantees": [
+                "no raw user content analysis",
+                "deterministic routing",
+                "explicit uncertainty exposure",
+            ],
+        }

@@ -38,6 +38,7 @@ from arvis.stability.stability_state_projector import StabilityStateProjector
 from arvis.stability.stability_statistics import StabilityStatistics
 from arvis.stability.stability_statistics import StabilityStatsSnapshot
 from arvis.cognition.gate.cognitive_gate_result import CognitiveGateResult
+from arvis.cognition.state.cognitive_state_builder import CognitiveStateBuilder
 from arvis.adapters.ir.gate_adapter import GateIRAdapter
 from arvis.adapters.ir.state_adapter import StateIRAdapter
 from arvis.ir.input import CognitiveInputIR
@@ -461,8 +462,35 @@ class CognitivePipeline:
             ctx.extra.setdefault("errors", []).append("gate_ir_adapter_failure")
             ctx.ir_gate = None
 
+        # -----------------------------------------------------
+        # COGNITIVE STATE (canonical)
+        # -----------------------------------------------------
         try:
-            ctx.ir_state = StateIRAdapter.from_context(ctx)
+            ctx.cognitive_state = CognitiveStateBuilder.from_context(ctx)
+        except Exception:
+            ctx.cognitive_state = None
+            ctx.extra.setdefault("errors", []).append("cognitive_state_build_failure")
+
+        # -----------------------------------------------------
+        # CONTRACT VALIDATION (critical)
+        # -----------------------------------------------------
+        try:
+            if ctx.cognitive_state is not None:
+                from arvis.contracts.cognitive_state_contract import CognitiveStateContract
+
+                CognitiveStateContract.validate(ctx.cognitive_state)
+        except Exception:
+            ctx.extra.setdefault("errors", []).append("cognitive_state_contract_failure")
+            ctx.cognitive_state = None
+
+        # -----------------------------------------------------
+        # STATE IR (export from canonical state)
+        # -----------------------------------------------------
+        try:
+            if ctx.cognitive_state is not None:
+                ctx.ir_state = StateIRAdapter.from_state(ctx.cognitive_state)
+            else:
+                ctx.ir_state = None
         except Exception:
             ctx.extra.setdefault("errors", []).append("state_ir_adapter_failure")
             ctx.ir_state = None
@@ -499,7 +527,7 @@ class CognitivePipeline:
         ctx.decision = ctx.decision_result
         ctx.control = ctx.control_snapshot
 
-        return CognitivePipelineResult(
+        result = CognitivePipelineResult(
             bundle=ctx.bundle,
             decision=ctx.decision_result,
             scientific=ctx.scientific_snapshot,
@@ -517,7 +545,7 @@ class CognitivePipeline:
             ir_decision=ctx.ir_decision,
             ir_state=ctx.ir_state,
             ir_gate=ctx.ir_gate,
+            cognitive_state=ctx.cognitive_state,
         )
-    
 
-    
+        return result

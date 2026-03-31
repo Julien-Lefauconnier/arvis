@@ -72,11 +72,10 @@ The system supports reasoning without requiring access to raw data:
 
 ## 3. System Architecture
 
-ARVIS OS is structured into 3 layers:
+ARVIS OS is structured into 4 layers:
 
-### 3.1 Kernel Layer
-
-Responsible for execution:
+### 3.1 Execution Layer
+Responsible for deterministic execution:
 
 - CognitivePipeline
 - Execution stages
@@ -84,26 +83,34 @@ Responsible for execution:
 
 ---
 
-### 3.2 Cognition Layer
-
-Implements reasoning logic:
-
-- Decision making
-- Conflict resolution
-- Stability evaluation
-- Predictive modeling
+### 3.2 Canonical State Layer
+Responsible for stable internal representation:
+- CognitiveState
+- CognitiveStateBuilder
+- CognitiveStateContract
+- IR state normalization
 
 ---
 
-### 3.3 API Layer (Public Contract)
+### 3.3 Reflexive Layer
+Responsible for safe self-observation:
+- capability snapshots
+- introspection services
+- reflexive rendering
+- timeline exposure explanations
+- reflexive snapshots
+- compliance and attestation
 
+---
+
+### 3.4 API Layer (Public Contract)
 Exposes a stable interface:
-
 - `CognitiveOS`
 - `CognitiveResultView`
 - `TimelineView`
 - `DecisionTraceView`
 - `StabilityView`
+- `reflexive` API entrypoint
 
 ---
 

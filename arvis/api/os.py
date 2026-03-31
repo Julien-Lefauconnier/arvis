@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
-
+from typing import Callable, cast
+from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.api.stability import StabilityView
@@ -39,12 +40,29 @@ class CognitiveResultView:
     timeline: Optional[Any] = None
     timeline_view: Optional[TimelineView] = None
     _ir: Optional[Dict[str, Any]] = None
+    reflexive: Optional[Dict[str, Any]] = None
 
     @staticmethod
     def from_pipeline(result: Any) -> "CognitiveResultView":
         stability = getattr(result, "stability", None)
         trace = getattr(result, "trace", None)
         timeline = getattr(result, "timeline", None)
+        # --- reflexive snapshot (safe, optional) ---
+        reflexive_payload = None
+        try:
+            from arvis.api.reflexive import get_reflexive_snapshot
+
+            typed_get_snapshot = cast(
+                Callable[[Any], ReflexiveSnapshot],
+                get_reflexive_snapshot,
+            )
+
+            state = getattr(result, "cognitive_state", None)
+            if state is not None:
+                snapshot = typed_get_snapshot(state)
+                reflexive_payload = snapshot.to_dict()
+        except Exception:
+            reflexive_payload = None
 
         return CognitiveResultView(
             decision=getattr(result, "action_decision", None),
@@ -61,6 +79,7 @@ class CognitiveResultView:
                 else None
             ),
             _ir=build_ir_view(result),
+            reflexive=reflexive_payload,
         )
     # -----------------------------------------------------
     # STANDARD SERIALIZATION 

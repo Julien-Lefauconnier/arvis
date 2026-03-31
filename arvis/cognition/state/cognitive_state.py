@@ -1,64 +1,67 @@
-#  arvis/cognition/state/cogntive_state.py
+# arvis/cognition/state/cognitive_state.py
 
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Any
 
-from arvis.stability import GlobalForecastSnapshot
-from arvis.reflexive.irg_latent_state import IRGLatentState
+
+# ------------------------
+# Sub-blocks
+# ------------------------
+
+@dataclass(frozen=True)
+class CognitiveStability:
+    dv: float
+    regime: Optional[str]
+    stable: Optional[bool]
 
 
 @dataclass(frozen=True)
-class CognitiveRiskSnapshot:
-    """
-    Canonical risk aggregation snapshot.
-    """
-
+class CognitiveRisk:
     mh_risk: float
     world_risk: float
     forecast_risk: float
     fused_risk: float
     smoothed_risk: float
+    early_warning: bool
 
+
+@dataclass(frozen=True)
+class CognitiveControl:
+    epsilon: float
+
+
+@dataclass(frozen=True)
+class CognitiveDynamics:
+    system_tension: Optional[float]
+    drift: Optional[float]
+
+
+@dataclass(frozen=True)
+class CognitiveProjection:
+    valid: Optional[bool]
+    margin: Optional[float]
+
+
+# ------------------------
+# Main state
+# ------------------------
 
 @dataclass(frozen=True)
 class CognitiveState:
     """
-    Unified cognitive state (ARVIS unified model v1).
-
-    Immutable.
-    ZKCS-safe.
-    Numeric-only.
+    CognitiveState V1 (structured, ZKCS-safe)
     """
 
-    # ------------------------
-    # Core bundle reference
-    # ------------------------
     bundle_id: str
 
-    # ------------------------
-    # Stability
-    # ------------------------
-    dv: float
-    collapse_risk: CognitiveRiskSnapshot
+    stability: CognitiveStability
+    risk: CognitiveRisk
+    control: CognitiveControl
+    dynamics: CognitiveDynamics
+    projection: Optional[CognitiveProjection]
 
-    # ------------------------
-    # World / Forecast
-    # ------------------------
     world_prediction: Optional[Any]
-    forecast: Optional[GlobalForecastSnapshot]
+    forecast: Optional[Any]
 
-    # ------------------------
-    # Reflexive geometry
-    # ------------------------
-    irg: Optional[IRGLatentState]
-
-    # ------------------------
-    # Control parameters
-    # ------------------------
-    epsilon: float
-
-    # ------------------------
-    # Flags
-    # ------------------------
-    early_warning: bool
+    irg: Optional[Any]

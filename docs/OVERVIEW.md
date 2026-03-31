@@ -76,12 +76,10 @@ Every input is processed through a **deterministic cognitive pipeline**.
 
 At a high level:
 
-1. Build a complete cognitive state (bundle)
-2. Detect internal conflicts
-3. Compute system dynamics (risk, drift, stability)
-4. Apply adaptive control
-5. Enforce stability constraints through multi-axial fusion (gate)
-6. Decide if execution is allowed
+1. Build cognitive execution outputs through the deterministic pipeline
+2. Normalize them into a canonical `CognitiveState`
+3. Compute trace, timeline, and IR projections
+4. Expose safe self-observation through the reflexive layer
 
 If the system is:
 
