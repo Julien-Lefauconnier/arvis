@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from dataclasses import replace
 import os
 import warnings
 from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
@@ -43,8 +44,19 @@ from arvis.cognition.gate.cognitive_gate_result import CognitiveGateResult
 from arvis.cognition.state.cognitive_state_builder import CognitiveStateBuilder
 from arvis.adapters.ir.gate_adapter import GateIRAdapter
 from arvis.adapters.ir.state_adapter import StateIRAdapter
+from arvis.adapters.ir.projection_adapter import ProjectionIRAdapter
+from arvis.adapters.ir.validity_adapter import ValidityIRAdapter
+from arvis.adapters.ir.stability_adapter import StabilityIRAdapter
+from arvis.adapters.ir.adaptive_adapter import AdaptiveIRAdapter
+from arvis.adapters.ir.cognitive_ir_builder import CognitiveIRBuilder
 from arvis.ir.input import CognitiveInputIR
 from arvis.ir.context import CognitiveContextIR
+from arvis.ir.envelope import CognitiveIREnvelope
+from arvis.ir.cognitive_ir import CognitiveIR
+from arvis.ir.serialization.cognitive_ir_serializer import CognitiveIRSerializer
+from arvis.ir.serialization.cognitive_ir_hasher import CognitiveIRHasher
+from arvis.ir.validation.cognitive_ir_validator import CognitiveIRValidator
+from arvis.ir.normalization.cognitive_ir_normalizer import CognitiveIRNormalizer
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.switching.switching_params import SwitchingParams
 from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
@@ -96,8 +108,8 @@ class CognitivePipeline:
         comp = CompositeLyapunov()
         if not comp.check_small_gain(eta=0.05, alpha=0.3, L_T=1.0):
             msg = (
-                "Configuration système potentiellement instable : small-gain non satisfait "
-                "(ajustez eta, alpha ou L_T)"
+                "Potentially unstable system configuration: small-gain not satisfied"
+                "(adjust eta, alpha or L_T)"
             )
             if strict_mode:
                 raise RuntimeError(msg)
@@ -184,11 +196,12 @@ class CognitivePipeline:
     def _safe_run(self, stage: PipelineStage, ctx: CognitivePipelineContext) -> None:
         try:
             stage.run(self, ctx)
-        except Exception:
-            # fail-soft: never break pipeline
-            ctx.extra.setdefault("errors", []).append(
-                f"{stage.__class__.__name__}_failure"
-            )
+        except Exception as e:
+            ctx.extra.setdefault("errors", []).append({
+                "stage": stage.__class__.__name__,
+                "error": str(e),
+                "type": type(e).__name__,
+            })
 
     def _bootstrap_ir_input(self, ctx: CognitivePipelineContext) -> None:
         if getattr(ctx, "ir_input", None) is not None:
@@ -234,6 +247,23 @@ class CognitivePipeline:
             long_memory_preferences=preferences,
             extra={},
         )
+    
+    def _refresh_ir_context_extra(self, ctx: CognitivePipelineContext) -> None:
+        ir_context = ctx.ir_context
+        if ir_context is None:
+            return
+
+        current_extra = dict(ir_context.extra or {})
+
+        propagated_keys = (
+            "confirmation_override",
+        )
+
+        for key in propagated_keys:
+            if key in ctx.extra:
+                current_extra[key] = ctx.extra[key]
+
+        ctx.ir_context = replace(ir_context, extra=current_extra)
 
     # -----------------------------------------------------
     # PUBLIC API (safe wrapper)
@@ -473,6 +503,94 @@ class CognitivePipeline:
         except Exception:
             ctx.extra.setdefault("errors", []).append("gate_ir_adapter_failure")
             ctx.ir_gate = None
+        
+        # -----------------------------------------------------
+        # IR (projection / validity / stability / adaptive)
+        # -----------------------------------------------------
+        try:
+            ctx.ir_projection = ProjectionIRAdapter.from_projection(
+                getattr(ctx, "projection_certificate", None)
+            )
+        except Exception:
+            ctx.ir_projection = None
+            ctx.extra.setdefault("errors", []).append("projection_ir_adapter_failure")
+
+        try:
+            ctx.ir_validity = ValidityIRAdapter.from_validity(
+                getattr(ctx, "validity_envelope", None)
+            )
+        except Exception:
+            ctx.ir_validity = None
+            ctx.extra.setdefault("errors", []).append("validity_ir_adapter_failure")
+
+        try:
+            ctx.ir_stability = StabilityIRAdapter.from_stability(
+                getattr(ctx, "stability_projection", None)
+            )
+        except Exception:
+            ctx.ir_stability = None
+            ctx.extra.setdefault("errors", []).append("stability_ir_adapter_failure")
+
+        try:
+            ctx.ir_adaptive = AdaptiveIRAdapter.from_adaptive(
+                getattr(ctx, "adaptive_snapshot", None)
+            )
+        except Exception:
+            ctx.ir_adaptive = None
+            ctx.extra.setdefault("errors", []).append("adaptive_ir_adapter_failure")
+        
+        # -----------------------------------------------------
+        # IR CONTEXT REFRESH (propagate late pipeline flags)
+        # -----------------------------------------------------
+        try:
+            self._refresh_ir_context_extra(ctx)
+        except Exception:
+            ctx.extra.setdefault("errors", []).append("ir_context_refresh_failure")
+        
+        # -----------------------------------------------------
+        # COGNITIVE IR (canonical aggregation)
+        # -----------------------------------------------------
+        try:
+            ctx.cognitive_ir = CognitiveIRBuilder.from_context(ctx)
+        except Exception:
+            ctx.cognitive_ir = None
+            ctx.extra.setdefault("errors", []).append("cognitive_ir_build_failure")
+
+        if ctx.cognitive_ir is not None:
+            ir = CognitiveIRNormalizer.normalize(ctx.cognitive_ir)
+            ctx.cognitive_ir = ir
+
+        # -----------------------------------------------------
+        # IR VALIDATION
+        # -----------------------------------------------------
+        try:
+            if ctx.cognitive_ir is not None:
+                CognitiveIRValidator.validate(ctx.cognitive_ir)
+        except Exception:
+            ctx.extra.setdefault("errors", []).append("cognitive_ir_validation_failure")
+            raise
+
+        # -----------------------------------------------------
+        # IR SERIALIZATION + HASH (canonical)
+        # -----------------------------------------------------
+        try:
+            if ctx.cognitive_ir is not None:
+                ctx.ir_serialized = CognitiveIRSerializer.to_canonical_dict(ctx.cognitive_ir)
+                ctx.ir_hash = CognitiveIRHasher.hash(ctx.cognitive_ir)
+                ctx.ir_envelope = CognitiveIREnvelope.build(
+                    ir=ctx.cognitive_ir,
+                    serialized=ctx.ir_serialized,
+                    hash_value=ctx.ir_hash,
+                )
+            else:
+                ctx.ir_serialized = None
+                ctx.ir_hash = None
+                ctx.ir_envelope = None
+        except Exception:
+            ctx.ir_serialized = None
+            ctx.ir_hash = None
+            ctx.ir_envelope = None
+            ctx.extra.setdefault("errors", []).append("ir_serialization_failure")
 
         # -----------------------------------------------------
         # COGNITIVE STATE (canonical)
@@ -557,7 +675,38 @@ class CognitivePipeline:
             ir_decision=ctx.ir_decision,
             ir_state=ctx.ir_state,
             ir_gate=ctx.ir_gate,
+            ir_projection=ctx.ir_projection,
+            ir_validity=ctx.ir_validity,
+            ir_stability=ctx.ir_stability,
+            ir_adaptive=ctx.ir_adaptive,
+            cognitive_ir=ctx.cognitive_ir,
+            ir_serialized=ctx.ir_serialized,
+            ir_hash=ctx.ir_hash,
+            ir_envelope=ctx.ir_envelope,
             cognitive_state=ctx.cognitive_state,
         )
 
         return result
+    
+
+    def run_from_ir(self, ir: CognitiveIR) -> CognitivePipelineResult:
+        """
+        Replay pipeline from canonical IR (deterministic mode).
+        """
+        if ir.context is None:
+            raise ValueError("Cannot replay from IR without context")
+
+        if ir.input is None:
+            raise ValueError("Cannot replay from IR without input")
+
+        ctx = CognitivePipelineContext(
+            user_id=ir.context.user_id,
+            cognitive_input=ir.input.metadata,
+        )
+
+        ctx.ir_input = ir.input
+        ctx.ir_context = ir.context
+        ctx.cognitive_ir = ir
+        ctx.extra["replay_mode"] = True
+
+        return self.run(ctx)

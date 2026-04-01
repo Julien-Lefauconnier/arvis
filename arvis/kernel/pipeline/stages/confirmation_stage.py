@@ -28,9 +28,11 @@ class ConfirmationStage:
 
             if ctx.confirmation_result.status == ConfirmationStatus.CONFIRMED:
                 verdict = LyapunovVerdict.ALLOW
+                ctx.extra["confirmation_override"] = True
 
             elif ctx.confirmation_result.status == ConfirmationStatus.REJECTED:
                 verdict = LyapunovVerdict.ABSTAIN
+                ctx.extra["confirmation_override"] = True
 
             ctx.gate_result = verdict
 

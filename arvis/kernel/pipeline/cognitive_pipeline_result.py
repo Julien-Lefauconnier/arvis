@@ -12,6 +12,7 @@ from arvis.ir.context import CognitiveContextIR
 from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.state import CognitiveStateIR
 from arvis.ir.gate import CognitiveGateIR
+from arvis.ir.envelope import CognitiveIREnvelope
 from arvis.cognition.state.cognitive_state import CognitiveState
 
 
@@ -42,5 +43,13 @@ class CognitivePipelineResult:
     ir_decision: Optional[CognitiveDecisionIR] = None
     ir_state: Optional[CognitiveStateIR] = None
     ir_gate: Optional[CognitiveGateIR] = None
+    ir_projection: Optional[Any] = None
+    ir_validity: Optional[Any] = None
+    ir_stability: Optional[Any] = None
+    ir_adaptive: Optional[Any] = None
+    cognitive_ir: Optional[Any] = None
+    ir_serialized: Optional[dict[str, Any]] = None
+    ir_hash: Optional[str] = None
+    ir_envelope: Optional[CognitiveIREnvelope] = None
     cognitive_state: Optional[CognitiveState] = None
     

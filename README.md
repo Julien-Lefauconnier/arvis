@@ -19,6 +19,13 @@ ARVIS is a deterministic Cognitive Operating System built as:
 - a reflexive self-observation layer
 - a timeline-backed traceability system
 
+The system enforces a strict separation between:
+
+- execution (pipeline)
+- canonical state (CognitiveState)
+- external representation (IR)
+- reflexive observation (read-only)
+
 At each timestep:
 
 $$ o_t \xrightarrow{\Pi_{\text{cert}}} P_t \xrightarrow{W_t} \hat{\kappa}_t \xrightarrow{G} C \rightarrow (x_{t+1}, z_{t+1}) $$
@@ -101,6 +108,18 @@ The projection layer includes:
 - [M3.2 — Observation & Certification Protocol](docs/math/M3_2_observation_and_projection.md)
 - [M3.3 — Runtime Projection & Certificate](docs/math/M3_3_projection_validated_domain.md)
 - [M3 Appendix — Projection Validation](docs/math/M3_appendix_projection_validation.md)
+
+Important:
+
+The current implementation exposes a **runtime projection certification layer**, not the full theoretical projection Π.
+
+This layer:
+
+- validates observations against a bounded domain
+- produces a ProjectionCertificate
+- is consumed by the Gate for safety enforcement
+
+The full projection Π remains a target architecture and is not yet implemented.
 
 ---
 
@@ -261,6 +280,8 @@ Full projection remains a **target architecture**.
 - bounded under perturbations
 - rejected when instability is detected
 - reproducible & traceable
+- deterministic IR generation and hashing
+- replayable cognitive execution
 
 ---
 
@@ -301,6 +322,7 @@ ARVIS is now structured around four major layers:
 - result views
 - IR export
 - reflexive API entrypoint
+- canonical IR pipeline (build → normalize → validate → serialize → hash → envelope)
 
 → [M12 — Cognitive Operating System](docs/math/M12_cognitive_operating_system_(COS)_architecture.md)
 
@@ -314,9 +336,20 @@ ARVIS is now structured around four major layers:
 
 ## 🧪 Validation
 
-- 800+ tests (unit, integration, adversarial)
-- 95%+ coverage
-- invariant validation (Lyapunov, switching, ISS)
+ARVIS includes an extensive deterministic validation suite:
+
+- unit tests (pipeline, IR, adapters)
+- integration tests (end-to-end pipeline execution)
+- replay determinism tests (IR → pipeline)
+- normalization and hashing invariants
+- stability and gate constraint validation
+
+The system enforces:
+
+- deterministic execution
+- order-invariant IR normalization
+- stable hashing
+- replay consistency
 
 ---
 
@@ -355,33 +388,80 @@ print(result.summary())
 
 # 🔄 Intermediate Representation (IR)
 
-ARVIS provides a structured **Intermediate Representation (IR)** of cognition.
+ARVIS exposes a **canonical Intermediate Representation (IR)** of each cognitive execution.
+
+The IR is not a simple export.
+
+It is a **deterministic, normalized, validated, and hashed representation** of the cognitive process.
+
+---
+
+## IR Pipeline
+
+The IR is constructed through a canonical pipeline:
+
+```text
+CognitivePipeline
+    → CognitiveIRBuilder
+    → CognitiveIRNormalizer
+    → CognitiveIRValidator
+    → CognitiveIRSerializer
+    → CognitiveIRHasher
+    → CognitiveIREnvelope
+```
+This guarantees:
+
+- deterministic structure
+- order-invariant normalization
+- validation before exposure
+- stable hashing
+- replayability
+
+### Properties
 
 The IR is:
 
 - deterministic
 - serializable
-- model-agnostic
+- hashable
 - replayable
+- model-independent
+- Structure (v1 — implementation-aligned)
+
+The current IR exposes a canonical aggregation:
 
 ```python
 ir = result.to_ir()
 ```
 
-The IR exposes:
+It includes:
 
-- decision state
-- cognitive state
-- gate outcome
+- input (CognitiveInputIR)
+- context (CognitiveContextIR)
+- decision (CognitiveDecisionIR)
+- state (CognitiveStateIR)
+- gate (CognitiveGateIR)
 
-It is now aligned with the canonical CognitiveState kernel rather than being
-only a post-pipeline serialization convenience.
+Optional extensions (implementation-dependent):
 
-It enables:
+- projection
+- validity
+- stability
+- adaptive snapshot
 
-- LLM integration
-- replay / simulation
-- external system interoperability
+### Key Guarantees
+
+- identical input → identical IR
+- normalization removes ordering ambiguity
+- hash stability is guaranteed
+- IR can be replayed deterministically
+
+### Use Cases
+
+- deterministic replay
+- audit and compliance
+- system interoperability
+- LLM-safe structured prompting
 
 ---
 

@@ -152,7 +152,15 @@ Each reason code MUST define a severity:
 
 ---
 
-### 4.7 System Layer
+### 4.7 Recovery / Override Layer
+
+| Code | Severity | Type | Effect |
+|------|----------|------|--------|
+| `recovery_override` | medium | normative | downgrade |
+
+---
+
+### 4.8 System Layer
 
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
@@ -234,6 +242,12 @@ The registry MUST include:
 ```text
 reason_registry_version: v1
 ```
+
+### 7.4 Normalization Requirement
+
+Implementations MAY internally emit legacy or implementation-local reason codes,
+but all public-facing outputs MUST be normalized to canonical registry codes
+before exposure through public objects or IR.
 
 ---
 

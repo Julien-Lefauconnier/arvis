@@ -26,6 +26,7 @@ from arvis.ir.context import CognitiveContextIR
 from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.state import CognitiveStateIR
 from arvis.ir.gate import CognitiveGateIR
+from arvis.ir.envelope import CognitiveIREnvelope
 
 from arvis.kernel.projection.certificate import ProjectionCertificate
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
@@ -136,6 +137,22 @@ class CognitivePipelineContext:
     # -------------------------
     gate_result: Optional[Any] = None
     ir_gate: Optional[CognitiveGateIR] = None
+    ir_projection: Optional[Any] = None
+    ir_validity: Optional[Any] = None
+    ir_stability: Optional[Any] = None
+    ir_adaptive: Optional[Any] = None
+
+    # -------------------------
+    # Canonical IR
+    # -------------------------
+    cognitive_ir: Optional[Any] = None
+
+    # -------------------------
+    # IR Serialization / Hash
+    # -------------------------
+    ir_serialized: Optional[dict[str, Any]] = None
+    ir_hash: Optional[str] = None
+    ir_envelope: Optional[CognitiveIREnvelope] = None
 
     # -------------------------
     # Confirmation layer

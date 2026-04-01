@@ -8,91 +8,216 @@ Current version: `arvis-ir.v1`
 
 ## Definition
 
-The IR is the **canonical, versioned machine output** of ARVIS.
+The IR is the **canonical, deterministic machine representation** of a cognitive execution in ARVIS.
 
-It is:
+It is not a raw export.
 
-- deterministic
-- serializable
-- model-independent
-- forward-compatible
+It is a **normalized, validated, and hashed representation** of the cognitive process.
 
 ---
 
-## Top-Level Structure
+## IR Construction Pipeline
 
-```json
-{
-  "version": "arvis-ir.v1",
-  "fingerprint": "stable",
-  "input": {...},
-  "context": {...},
-  "decision": {...},
-  "state": {...},
-  "gate": {...},
-  "meta": {}
-}
+The IR is built through a canonical pipeline:
+
+```text
+CognitiveIRBuilder
+→ CognitiveIRNormalizer
+→ CognitiveIRValidator
+→ CognitiveIRSerializer
+→ CognitiveIRHasher
+→ CognitiveIREnvelope
+```
+
+This ensures:
+
+- deterministic structure
+- order-invariant normalization
+- validation before exposure
+- stable hashing
+- replayability
+
+---
+
+## Top-Level Structure (v1)
+
+The IR is represented by the CognitiveIR object:
+
+```python
+CognitiveIR(
+    input=...,
+    context=...,
+    decision=...,
+    state=...,
+    gate=...,
+    stability=...,
+    adaptive=...,
+)
 ```
 
 ---
 
-## Fields
+## Core Components
 
-### input
+### 1. Input (CognitiveInputIR)
 
-Currently not populated in v1.
-Reserved for future versions.
+Represents the originating input.
 
-### context
+Fields:
 
-Currently not populated in v1.
-Reserved for future versions.
+- input_id
+- actor_id
+- surface_kind
+- intent_hint
+- metadata
 
-### decision
+### 2. Context (CognitiveContextIR)
 
-Represents the final decision outcome.
+Represents execution context.
 
-Properties:
+Fields:
 
-- action decision
-- execution intent
-- confirmation requirements
+- user_id
+- session_id
+- conversation_mode
+- long_memory_constraints
+- long_memory_preferences
+- extra
 
----
+### 3. Decision (CognitiveDecisionIR)
 
-## state
+Represents structured decision semantics.
 
-Represents the canonical cognitive state of the system.
+Fields include:
 
-Properties include canonical, normalized state signals such as:
+- decision_id
+- decision_kind
+- memory_intent
+- reason_codes
+- proposed_actions
+- gaps
+- conflicts
+- reasoning_intents
+- uncertainty_frames
+- knowledge
+- context_hints
+
+### 4. State (CognitiveStateIR)
+
+Represents the canonical cognitive state.
+
+Derived from:
+
+- CognitiveStateBuilder
+- CognitiveStateContract
+
+Contains normalized signals such as:
+
 - stability
-- risk
-- drift
+- control state
 - regime
-- confidence / control-related normalized values when exposed by the adapter
+- risk indicators
 
----
-
-## gate
+### 5. Gate (CognitiveGateIR)
 
 Represents the stability validation outcome.
 
-Values:
+Fields:
 
-- allow
-- require_confirmation
-- abstain
+- verdict (ALLOW / REQUIRE_CONFIRMATION / ABSTAIN)
+- bundle_id
+- reason_codes
 
 ---
 
-## meta
+## Optional Extensions
 
-Reserved for extensions.
+Depending on runtime configuration, IR may include:
 
-Must:
+### Projection
 
-- never break existing fields
-- be optional
+- projection certificate
+- domain validity
+
+### Validity
+
+- validity envelope
+
+### Stability
+
+- projected stability state
+- stability statistics
+
+### Adaptive
+- adaptive control snapshot
+
+---
+
+## Normalization
+
+The IR is normalized before validation:
+
+- reason codes are sorted
+- actions are ordered
+- conflicts and gaps are canonicalized
+- context hints are sorted
+
+This guarantees:
+
+  - identical semantic IR → identical normalized IR
+
+---
+
+## Validation
+
+The IR is validated before serialization.
+
+Validation enforces:
+
+- schema integrity
+- field consistency
+- type correctness
+
+---
+
+## Serialization
+
+The IR is serialized into a deterministic representation:
+
+```python
+serialized = CognitiveIRSerializer.serialize(ir)
+```
+
+---
+
+## Hashing
+
+A stable hash is computed:
+
+```python
+hash_value = CognitiveIRHasher.hash(ir)
+```
+
+Guarantees:
+
+- identical IR → identical hash
+- normalization ensures hash stability
+
+---
+
+## Envelope
+
+The IR can be wrapped into a canonical envelope:
+
+```python
+CognitiveIREnvelope(
+    ir=...,
+    serialized=...,
+    hash=...
+)
+```
+
+The envelope is the portable contract.
 
 ---
 
@@ -100,11 +225,28 @@ Must:
 
 The IR guarantees:
 
-1. No hidden state
-2. Pure transformation from pipeline output
-3. Deterministic serialization
-4. Backward compatibility across versions
-5. Schema stability (field meaning cannot change without version bump)
+- Determinism
+- No hidden state
+- Pure transformation from pipeline output
+- Stable normalization
+- Stable hashing
+- Replay consistency
+
+---
+
+## Replay
+
+The IR can be used to replay execution:
+
+```python
+pipeline.run_from_ir(ir)
+```
+
+Replay mode:
+
+- deterministic
+- side-effect free
+- used for validation and auditing
 
 ---
 
@@ -113,7 +255,7 @@ The IR guarantees:
 ### Minor updates
 
 - new fields allowed
-- existing fields unchanged
+- no change to existing semantics
 
 ### Major updates
 
@@ -122,17 +264,26 @@ The IR guarantees:
 
 ---
 
-## Use Cases
+### Use Cases
 
-- LLM prompting
+- deterministic replay
+- audit and compliance
 - system interoperability
-- replay & simulation
-- auditing
+- LLM structured prompting
+- trace verification
 
 ---
 
 ## Design Principle
 
-The IR is the contract between the canonical CognitiveState of ARVIS and the external world.
+The IR is the external contract of ARVIS.
 
-It is produced from stable adapters, not from ad hoc runtime serialization.
+It connects:
+
+- the internal CognitiveState
+- the pipeline execution
+- external consumers
+
+It is:
+
+  stable, deterministic, and machine-verifiable

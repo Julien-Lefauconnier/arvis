@@ -70,193 +70,176 @@ Only `public` objects appear in this registry.
 
 ## 4. Canonical Public Objects (v1)
 
+Public objects are defined at the **interface boundary of the pipeline**.
+
+They correspond to **canonical, normalized, and validated structures**.
+
 ---
 
-### 4.1 GateResult
+### 4.1 CognitiveGateIR
 
 #### Role
-Represents the final decision of the Gate.
+
+Represents the canonical Gate output.
 
 ```yaml
-GateResult:
-  schema_version: str
+CognitiveGateIR:
   verdict: Enum(ALLOW, REQUIRE_CONFIRMATION, ABSTAIN)
+  bundle_id: str
   reason_codes: list[str]
-  decision_trace: DecisionTrace
 ```
 
-Invariants
+#### Invariants
+- verdict MUST follow the gate lattice
+- reason_codes MUST be normalized and deterministic
+- MUST be derived from CognitiveGateResult
 
-- verdict MUST follow the lattice rules
-- reason_codes MUST belong to the registry
-- decision_trace MUST be complete
+---
 
 ### 4.2 DecisionTrace
 
-Role
+#### Role
 
-Provides a step-by-step trace of the Gate decision.
+Represents the canonical execution trace.
 
-```yaml
-DecisionTrace:
-  schema_version: str
-  steps:
-    - stage: str
-      input_snapshot: dict
-      partial_verdict: Enum
-      reason_codes: list[str]
-```
+#### Notes (implementation-aligned)
 
-Invariants
-- All decision stages MUST be recorded
-- No stage affecting the verdict may be omitted
+In ARVIS v1, DecisionTrace is richer than the minimal spec and includes:
 
-Note:
-Implementations MAY use an extended internal trace representation.
-Only canonical fields are required for public exposure.
+- predictive state
+- stability projection
+- symbolic state
+- control / governance signals
 
-### 4.3 ValidityEnvelope
+This extended trace is considered public and deterministic.
+The extended trace MUST remain deterministic and replay-compatible
 
-Role
+---
 
-Represents the validity domain of the current decision.
+### 4.3 CognitiveStateIR
 
-```yaml
-ValidityEnvelope:
-  schema_version: str
-  valid: bool
-  reason: str | null
-  projection_available: bool
-  switching_safe: bool
-  exponential_safe: bool
-  kappa_safe: bool
-  adaptive_available: bool
-  adaptive_band: str | null
-  certification_scope: str
-```
+#### Role
 
-Invariants
+Represents canonical cognitive state projection.
 
-- valid = False MUST imply ABSTAIN at Gate level
-- reason MUST be present if valid = False
+Derived from:
 
-### 4.4 ProjectionCertificate
+- CognitiveStateBuilder
+- CognitiveStateContract
 
-Role
+#### Invariants
 
-Represents the certification status of projection.
+- MUST pass contract validation
+- MUST be deterministic
+- MUST not contain runtime-only data
 
-```yaml
-ProjectionCertificate:
-  schema_version: str
-  available: bool
-  domain_valid: bool | null
-  is_projection_safe: bool | null
-  lyapunov_compatibility_ok: bool | null
-  margin_to_boundary: float | null
-  certification_level: str
-  projection_domain: str | null
-  proof_status: str
-  warning_codes: list[str]
-```
+---
 
-Invariants
-- If available = False, all other fields MUST be null
-- warning_codes MUST follow reason registry
+### 4.4 CognitiveIR
 
-### 4.5 CognitiveIR
+#### Role
 
-Role
-
-Canonical intermediate representation of a cognitive decision.
+Canonical intermediate representation of a cognitive execution.
 
 ```yaml
 CognitiveIR:
-  schema_version: str
-  decision_id: str
-  timestamp: str
-  verdict: str
-  reason_codes: list[str]
-  projection_summary: dict
-  validity_envelope: ValidityEnvelope
-  stability_certificate: dict
-  timeline_refs: list[str]
-  metadata: dict
+  input: CognitiveInputIR
+  context: CognitiveContextIR
+  decision: CognitiveDecisionIR
+  state: CognitiveStateIR | null
+  gate: CognitiveGateIR
+  stability: StabilityIR | null
+  adaptive: AdaptiveIR | null
 ```
+#### Invariants
 
-Invariants
+- MUST be normalized before exposure
 - MUST be deterministic
 - MUST be replayable
-- MUST include all normative outputs
+- MUST be consistent with Gate output
 
-### 4.6 TimelineEntry
+---
 
-Role
+### 4.5 CognitiveIREnvelope
 
-Represents an event in the cognitive timeline.
+#### Role
+
+Portable representation of the IR.
 
 ```yaml
-TimelineEntry:
-  schema_version: str
-  event_id: str
-  timestamp: str
-  lamport: int
-  event_type: str
-  payload_ref: str
+CognitiveIREnvelope:
+  ir: CognitiveIR
+  serialized: str
   hash: str
-  parent_hash: str
 ```
 
-Invariants
-- timestamps MUST be UTC
+#### Invariants
+
+- serialized MUST be canonical
 - hash MUST be deterministic
-- parent_hash MUST form a chain
+- MUST match IR content exactly
 
-### 4.7 StabilityCertificate
+---
 
-Role
+### 4.6 ProjectionIR
 
-Represents stability guarantees at decision time.
+#### Role
 
-```yaml
-StabilityCertificate:
-  schema_version: str
-  local_stability: bool
-  global_stability: bool
-  kappa_safe: bool
-  margin: float | null
-  stability_domain: str
+Represents projection certificate in IR form.
+
+Derived via:
+
+```python
+ProjectionIRAdapter.from_projection(...)
 ```
 
-Invariants
-- MUST align with Gate inputs
-- MUST NOT contradict verdict
+---
 
-### 4.8 AdaptiveSnapshot
+### 4.7 ValidityIR
 
-Role
+#### Role
 
-Represents adaptive system state at decision time.
+Represents validity envelope in IR form.
 
-```yaml
-AdaptiveSnapshot:
-  schema_version: str
-  available: bool
-  stability_band: str
-  veto: bool
-  margin: float | null
+Derived via:
+
+```python
+ValidityIRAdapter.from_validity(...)
 ```
 
-Invariants
+---
 
-- If veto = True → Gate MUST ABSTAIN
-- If available = False → no adaptive constraints applied
+### 4.8 StabilityIR
+
+#### Role
+
+Represents projected stability state.
+
+Derived via:
+
+```python
+StabilityIRAdapter.from_stability(...)
+```
+
+---
+
+### 4.9 AdaptiveIR
+
+#### Role
+
+Represents adaptive control snapshot.
+
+Derived via:
+
+```python
+AdaptiveIRAdapter.from_adaptive(...)
+```
 
 ---
 
 ## 5. Object Versioning
 
-Each object MUST include:
+Each object SHOULD include schema_version 
 
 ```text
 schema_version: str

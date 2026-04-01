@@ -161,6 +161,10 @@ Required Tests
 - IR contains all mandatory fields
 - IR matches Gate output
 - IR serialization is stable
+- Aggregated IR consistency:
+    - input/context/state/gate MUST be internally consistent
+    - gate.verdict MUST match IR verdict
+    - reason_codes MUST match normalized registry codes
 
 ---
 
@@ -179,7 +183,8 @@ Required Tests
 - identical input → identical output
 - decision trace replay produces same verdict
 - reason codes are stable across replay
-- extended trace fields MUST NOT affect replay determinism
+- extended trace fields MUST NOT alter replay verdicts
+- extended trace fields MUST remain deterministic across identical runs
 
 ---
 
@@ -190,6 +195,8 @@ The system MUST pass:
 - repeated execution consistency
 - no hidden randomness
 - no time-based drift
+- deterministic observability extensions MUST remain stable
+- trace scoring outputs MUST be identical across identical executions
 
 ---
 

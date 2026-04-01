@@ -22,7 +22,24 @@ Every execution follows the **same ordered stages**, without implicit branching.
 The pipeline is strictly sequential:
 
 ```text
-Decision → Context → Bundle → Conflict → Core → Regime → Temporal → Modulation → Control → Gate → Confirmation → Execution → Action → Intent → Runtime
+Decision
+→ PassiveContext
+→ Bundle
+→ Conflict
+→ Core
+→ Regime
+→ Temporal
+→ ConflictModulation
+→ Control
+→ Projection
+→ Gate
+→ ControlFeedback
+→ StructuralRisk
+→ Confirmation
+→ Execution
+→ Action
+→ Intent
+→ Runtime
 ```
 
 Each stage:
@@ -201,7 +218,29 @@ This ensures:
 
 ---
 
-### 10. Gate Stage (Critical)
+### 10. Projection Stage (Pre-Gate)
+
+**Purpose:** Enforce projection domain constraints before decision gating
+
+This stage applies the runtime projection certification layer:
+
+$$ \Pi_{\text{cert}} : \mathcal{O}_{runtime} \to P_t $$
+
+It ensures:
+
+- bounded signal space
+- domain validity
+- projection safety constraints
+
+Outputs:
+
+- `ctx.projection_certificate`
+
+This stage is **mandatory before Gate**, as the Gate consumes projection safety signals.
+
+---
+
+### 11. Gate Stage (Critical)
 
 Decision logic (multi-axial fusion):
 
@@ -213,6 +252,7 @@ It performs a **multi-axial stability fusion**, combining:
 * switching constraints (dwell-time condition)
 * global trajectory stability (history-based)
 * system confidence
+* projection certificate (Π_cert)
 
 Core operator:
 
@@ -239,36 +279,77 @@ not a single Lyapunov test
 
 ---
 
-### 11. Confirmation Stage
+### 12. Control Feedback Stage
 
-**Purpose:** Resolve uncertainty when required
+**Purpose:** Close the control loop after gate decision
 
-* triggers confirmation if needed
-* processes confirmation results
+- updates control state based on gate outcome
+- stabilizes future system dynamics
 
-**Outputs:**
+Outputs:
 
-* `ctx.confirmation_request`
-* `ctx.confirmation_result`
+- updated `ctx.control_snapshot`
 
----
-
-### 12. Execution Stage
-
-**Purpose:** Determine executability
-
-* computes:
-
-  * `can_execute`
-  * `requires_confirmation`
-
-**Outputs:**
-
-* `ctx.execution_status`
+This stage ensures **closed-loop regulation**.
 
 ---
 
-### 13. Action Stage
+### 13. Structural Risk Stage
+
+**Purpose:** Detect structural instability beyond local signals
+
+- evaluates systemic risks not captured by Lyapunov metrics
+- flags structural instability conditions
+
+Outputs:
+
+- `ctx.extra["structural_risk"]`
+
+This signal can trigger confirmation requirements.
+
+---
+
+### 14. Confirmation Stage
+
+**Purpose:** Resolve uncertainty and enforce human-in-the-loop constraints
+
+Confirmation is triggered if:
+
+- gate requires confirmation
+- conflict pressure exceeds threshold
+- structural risk is detected
+- decision is abstained
+
+Supports:
+
+- user override
+- confirmation request generation
+- confirmation result integration
+
+Outputs:
+
+- `ctx.confirmation_request`
+- `ctx.confirmation_result`
+- `_requires_confirmation`
+
+---
+
+### 15. Execution Stage
+
+**Purpose:** Determine execution feasibility
+
+Computes:
+
+- `can_execute`
+- `requires_confirmation`
+
+Outputs:
+
+- `ctx.execution_status`
+
+---
+
+### 16. Action Stage
 
 **Purpose:** Map decision to executable action
 
@@ -278,7 +359,7 @@ not a single Lyapunov test
 
 ---
 
-### 14. Intent Stage
+### 17. Intent Stage
 
 **Purpose:** Formalize executable intent
 
@@ -288,7 +369,7 @@ not a single Lyapunov test
 
 ---
 
-### 15. Runtime Stage
+### 18. Runtime Stage
 
 **Purpose:** Finalize execution state
 
@@ -311,11 +392,25 @@ This includes:
 * multi-horizon projections
 * global stability
 * symbolic state
+* system tension
 
 Important:
 
-> Observability does not influence decision execution.
-> It is a **read-only projection of system state**.
+> Observability is strictly read-only and does not affect decision execution.
+
+---
+
+## Post-Observability Projection Refresh
+
+After observability, projection is refreshed:
+
+```python
+projection_stage.refresh(ctx)
+```
+This ensures:
+
+- consistency between runtime signals and projection certificate
+- updated safety validation
 
 ---
 
@@ -364,15 +459,22 @@ After pipeline execution, ARVIS produces multiple output layers:
 2. **DecisionTrace** (canonical trace)
 3. **Intermediate Representation (IR)** (portable output)
 
-```
-Pipeline → Result → Trace → IR
+```text
+CognitiveIRBuilder
+→ CognitiveIRNormalizer
+→ CognitiveIRValidator
+→ CognitiveIRSerializer
+→ CognitiveIRHasher
+→ CognitiveIREnvelope
 ```
 
-The IR is:
+This ensures:
 
-- a pure transformation of pipeline outputs
-- side-effect free
-- stable across environments
+- deterministic structure
+- order-invariant normalization
+- validation before exposure
+- stable hashing
+- replayability
 
 ---
 
@@ -384,6 +486,8 @@ The pipeline ensures:
 * no hidden branching
 * explicit state transitions
 * identical input → identical output (given same context)
+* deterministic IR normalization and hashing
+* replayable pipeline execution
 
 ---
 
