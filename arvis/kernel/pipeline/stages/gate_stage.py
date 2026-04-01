@@ -45,6 +45,10 @@ def _record_verdict_transition(
     reason: str,
 ) -> None:
     trace = ctx.extra.setdefault("verdict_transition_trace", [])
+    if not isinstance(trace, list):
+        ctx.extra["verdict_transition_trace"] = []
+        trace = ctx.extra["verdict_transition_trace"]
+
     trace.append(
         {"stage": stage, "before": str(before), "after": str(after), "reason": reason}
     )
@@ -740,6 +744,17 @@ class GateStage:
 
         if "fusion_trace" in ctx.extra:
             ctx.extra["fusion_trace"]["final_verdict"] = str(verdict)
+
+        # --------------------------------------------------
+        # BUILD FINAL REASON CODES 
+        # --------------------------------------------------
+        reason_codes = tuple(
+            str(code).strip()
+            for code in dict.fromkeys(ctx.extra.get("fusion_reasons", []))
+            if str(code).strip()
+        )
+
+        ctx.extra["final_reason_codes"] = reason_codes
 
         return verdict, pre_verdict, kernel_result, stability_certificate
 

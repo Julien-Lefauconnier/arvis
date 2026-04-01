@@ -147,6 +147,8 @@ Each reason code MUST define a severity:
 | `fusion_fallback` | medium | normative | downgrade |
 | `fusion_override` | high | normative | downgrade |
 | `fusion_consensus` | low | informative | none |
+| `recovery_post_fusion_override` | medium | normative | downgrade |
+| `gate_policy_adjustment` | medium | normative | downgrade |
 
 ---
 

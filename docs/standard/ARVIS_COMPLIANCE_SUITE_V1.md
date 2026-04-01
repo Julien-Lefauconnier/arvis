@@ -179,6 +179,7 @@ Required Tests
 - identical input → identical output
 - decision trace replay produces same verdict
 - reason codes are stable across replay
+- extended trace fields MUST NOT affect replay determinism
 
 ---
 

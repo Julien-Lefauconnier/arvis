@@ -14,7 +14,7 @@ class DummyVerdict(str, Enum):
     ABSTAIN = "abstain"
 
 
-def test_gate_adapter_maps_reason_string_to_codes() -> None:
+def test_gate_adapter_ignores_legacy_reason_string() -> None:
     gate = SimpleNamespace(
         verdict=DummyVerdict.ALLOW,
         reason="high_cognitive_risk|memory_write_requires_confirmation",
@@ -23,12 +23,8 @@ def test_gate_adapter_maps_reason_string_to_codes() -> None:
 
     ir = GateIRAdapter.from_gate(gate)
 
-    assert ir.verdict == CognitiveGateVerdictIR.ALLOW
-    assert ir.bundle_id == "bundle-1"
-    assert ir.reason_codes == (
-        "high_cognitive_risk",
-        "memory_write_requires_confirmation",
-    )
+    # Legacy field must be ignored
+    assert ir.reason_codes == ()
 
 
 def test_gate_adapter_accepts_explicit_reason_codes() -> None:

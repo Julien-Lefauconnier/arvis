@@ -12,7 +12,6 @@ from arvis.cognition.confirmation.confirmation_result import ConfirmationResult
 from arvis.action.action_decision import ActionDecision
 from arvis.cognition.execution.executable_intent import ExecutableIntent
 
-
 @dataclass(frozen=True)
 class DecisionTrace:
     """

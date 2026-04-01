@@ -111,6 +111,10 @@ Invariants
 - All decision stages MUST be recorded
 - No stage affecting the verdict may be omitted
 
+Note:
+Implementations MAY use an extended internal trace representation.
+Only canonical fields are required for public exposure.
+
 ### 4.3 ValidityEnvelope
 
 Role

@@ -20,6 +20,8 @@ from arvis.cognition.control.mode_hysteresis import ModeHysteresis
 from arvis.cognition.control.exploration_controller import ExplorationController
 from arvis.cognition.control.regime_policy import CognitiveRegimePolicy
 from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
+from arvis.cognition.gate.reason_code_normalizer import ReasonCodeNormalizer
+from arvis.cognition.gate.gate_trace_builder import GateTraceBuilder
 
 from arvis.math.stability.regime_estimator import CognitiveRegimeEstimator
 from arvis.math.control.irg_epsilon_controller import IRGEpsilonController
@@ -442,18 +444,28 @@ class CognitivePipeline:
             )
             ctx.gate_result = LyapunovVerdict.ABSTAIN
 
+        gate_decision_trace = GateTraceBuilder.build(
+            tuple(ctx.extra.get("verdict_transition_trace", []) or ())
+        )
+
         # --- normalize gate_result (strict typing for trace) ---
+        raw_reason_codes = ctx.extra.get("final_reason_codes", ()) or ()
+
+        final_reason_codes = ReasonCodeNormalizer.normalize(raw_reason_codes)
+
         if isinstance(ctx.gate_result, LyapunovVerdict):
             normalized_gate_result = CognitiveGateResult.from_lyapunov(
                 ctx.gate_result,
                 bundle_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
-                reason=str(getattr(ctx.decision_result, "reason", None)),
+                reason_codes=final_reason_codes,
+                decision_trace=gate_decision_trace,
             )
         else:
             normalized_gate_result = CognitiveGateResult.from_lyapunov(
                 LyapunovVerdict.ABSTAIN,
                 bundle_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
-                reason="fallback",
+                reason_codes=final_reason_codes or ("fallback_abstain",),
+                decision_trace=gate_decision_trace,
             )
         
         try:

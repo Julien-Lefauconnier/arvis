@@ -86,6 +86,20 @@ CognitiveIR:
     execution_id: str
 ```
 
+### 3.1 Minimal Implementation (v1 Transitional)
+
+A minimal IR MAY expose a reduced subset:
+
+- verdict
+- reason_codes
+- decision_trace
+
+Missing fields MUST be considered:
+- unavailable
+- or null
+
+Full compliance requires complete structure.
+
 ---
 
 ## 4. Field Definitions

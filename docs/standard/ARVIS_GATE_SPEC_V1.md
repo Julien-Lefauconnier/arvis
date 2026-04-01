@@ -151,6 +151,20 @@ Requirements
 - Every normative constraint MUST emit a reason code if triggered
 - The trace MUST allow replay and audit
 
+### 8.1 Extended Trace Layer (Non-Normative)
+
+Implementations MAY include extended trace fields for observability:
+
+- before: previous verdict
+- after: resulting verdict
+- severity: float
+- stability_impact: float
+
+These fields:
+- MUST NOT affect the final verdict
+- MUST remain deterministic
+- MUST NOT replace normative trace fields
+
 ---
 
 ## 9. Required Properties
