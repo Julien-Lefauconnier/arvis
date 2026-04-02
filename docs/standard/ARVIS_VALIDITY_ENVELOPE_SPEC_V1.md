@@ -69,11 +69,25 @@ ValidityEnvelope:
   certification_scope: str
   ```
 
+## 3.1 Validity in IR (Normative Requirement)
+
+The ValidityEnvelope MUST be included in the Cognitive IR.
+
+It MUST be:
+
+- preserved through normalization,
+- included in serialization,
+- included in hashing,
+- replayable without loss of information.
+
+Validity omission is a compliance failure.
+
 ---
 
 ## 4. Field Definitions
 
 ### 4.1 valid
+
 - Type: bool
 - Indicates whether the system is within its validity domain
 
@@ -83,29 +97,38 @@ Rules:
 - True MUST NOT imply ALLOW
 
 ### 4.2 reason
+
 - Type: string | null
 - MUST explain invalidity if valid = False
 
 ### 4.3 projection_available
-- Indicates projection availability
-- MUST be consistent with ProjectionCertificate
+
+- MUST be consistent with ProjectionCertificate.available
+Rules:
+- projection_available = False → valid MUST be False
+- projection_available = False → Gate MUST NOT produce ALLOW
 
 ### 4.4 switching_safe
+
 - Indicates switching stability condition
 - MUST reflect switching constraint evaluation
 
 ### 4.5 exponential_safe
+
 - Indicates exponential stability bounds
 - MUST reflect Lyapunov-based guarantees
 
 ### 4.6 kappa_safe
+
 - Indicates compliance with kappa constraints
 - MUST align with Gate inputs
 
 ### 4.7 adaptive_available
+
 - Indicates presence of adaptive layer
 
 ### 4.8 adaptive_band
+
 - Type: string | null
 - Possible values:
     - stable
@@ -113,6 +136,7 @@ Rules:
     - critical
 
 ### 4.9 certification_scope
+
 - Type: string
 - Describes the domain under which validity applies
 
@@ -128,10 +152,39 @@ Examples:
 
 The ValidityEnvelope MUST satisfy:
 
-- If valid = False → Gate MUST ABSTAIN
+- If valid = False → Gate MUST NOT produce ALLOW and MUST degrade the verdict to REQUIRE_CONFIRMATION or ABSTAIN
 - If any critical constraint fails → valid = False
 - No contradiction between fields is allowed
 - reason MUST exist when invalid
+
+## 5.1 Projection Consistency (Normative)
+
+The ValidityEnvelope MUST be consistent with Projection:
+
+- If Projection.available = False → projection_available = False
+- If Projection.domain_valid = False → valid = False
+- No contradiction between Projection and Validity is allowed
+
+## 5.2 Gate Interaction (Normative Constraints)
+
+The Gate MUST enforce:
+
+- valid = False → verdict = ABSTAIN
+- kappa_safe = False → verdict ≠ ALLOW
+- exponential_safe = False → verdict ≠ ALLOW
+- switching_safe = False → verdict ≠ ALLOW
+- adaptive_band = critical → verdict = ABSTAIN
+
+Validity MUST act as a hard constraint layer.
+
+## 5.3 Operational Role
+
+The validity envelope is not only diagnostic.
+It actively participates in decision filtering:
+
+- it may force REQUIRE_CONFIRMATION,
+- it may contribute to ABSTAIN,
+- it interacts with recovery and override logic.
 
 ---
 
@@ -152,13 +205,19 @@ adaptive unavailable	adaptive_unavailable
 
 The ValidityEnvelope acts as:
 
-- a partial certificate
+- a partial certification object
 - a runtime validation snapshot
+
+It defines:
+
+- the domain in which the decision is acceptable
+- the constraints that were verified at decision time
 
 It does NOT guarantee:
 
-- full-system correctness
+- global correctness
 - long-term stability
+- correctness outside the declared domain
 
 ---
 

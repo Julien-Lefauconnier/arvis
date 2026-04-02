@@ -67,6 +67,17 @@ Exposed via:
 ctx.validity_envelope
 ctx.extra["validity_envelope"]
 ```
+
+## 3.1 Operational Role of Validity Envelope
+
+Although the validity envelope is not a formal invariant set, it plays an active role in decision filtering:
+
+- it influences Gate decision overrides,
+- it may force REQUIRE_CONFIRMATION,
+- it contributes to execution-level constraints.
+
+Therefore, the validity envelope acts as an operational safety signal, not only a diagnostic object.
+
 ---
 
 **Important clarification:**

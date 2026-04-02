@@ -80,7 +80,6 @@ class ConfirmationStage:
         needs_confirmation = (
             gate_requires_confirmation
             or verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
-            or verdict == LyapunovVerdict.ABSTAIN
             or conflict_requires_confirmation
             or structural_risk
         )

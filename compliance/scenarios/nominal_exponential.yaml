@@ -1,0 +1,37 @@
+id: nominal_exponential
+
+input:
+  numeric_signals:
+    risk: 0.05
+    instability: 0.02
+    confidence: 0.95
+
+  lyapunov:
+    prev: 1.0
+    current: 0.97
+
+  projection:
+    domain_valid: true
+    boundedness_ok: true
+    lipschitz_ok: true
+    noise_robustness_ok: true
+    mode_stability_ok: true
+    lyapunov_compatibility_ok: true
+    margin_to_boundary: 1.5
+    local_lipschitz_estimate: 0.8
+    noise_gain_estimate: 0.0
+    certification_level: NONE
+    checks_detail: {}
+
+  switching:
+    tau_d: 25.0
+
+expected:
+  gate:
+    verdict: REQUIRE_CONFIRMATION
+
+  validity:
+    valid: true
+
+  execution:
+    requires_confirmation: true

@@ -26,7 +26,7 @@ class CognitiveIRNormalizer:
                 verdict=gate.verdict,
                 bundle_id=gate.bundle_id,
                 reason_codes=tuple(sorted(gate.reason_codes)),
-                decision_trace=gate.decision_trace,  # important: preserve
+                decision_trace=gate.decision_trace,  # preserve (normative trace)
             )
 
         # -------------------------
@@ -66,6 +66,27 @@ class CognitiveIRNormalizer:
             )
 
         # -------------------------
+        # Projection normalization (NEW - NORMATIVE)
+        # -------------------------
+        projection = ir.projection
+
+        normalized_projection = None
+        if projection is not None:
+            # ⚠️ pour l’instant pass-through (safe)
+            # on ajoutera une normalisation stricte avec la Projection Spec
+            normalized_projection = projection
+
+        # -------------------------
+        # Validity normalization (NEW - NORMATIVE)
+        # -------------------------
+        validity = ir.validity
+
+        normalized_validity = None
+        if validity is not None:
+            # ⚠️ pass-through pour l’instant
+            normalized_validity = validity
+
+        # -------------------------
         # Return new IR
         # -------------------------
         return CognitiveIR(
@@ -76,4 +97,6 @@ class CognitiveIRNormalizer:
             gate=normalized_gate,
             stability=ir.stability,
             adaptive=ir.adaptive,
+            projection=normalized_projection,
+            validity=normalized_validity,
         )

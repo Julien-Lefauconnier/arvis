@@ -1,0 +1,37 @@
+id: nominal_local
+
+input:
+  numeric_signals:
+    risk: 0.1
+    instability: 0.05
+    confidence: 0.9
+
+  lyapunov:
+    prev: 1.0
+    current: 0.7
+
+  projection:
+    domain_valid: true
+    boundedness_ok: true
+    lipschitz_ok: true
+    noise_robustness_ok: true
+    mode_stability_ok: true
+    lyapunov_compatibility_ok: true
+    margin_to_boundary: 1.0
+    local_lipschitz_estimate: 1.0
+    noise_gain_estimate: 0.0
+    certification_level: NONE
+    checks_detail: {}
+
+  switching:
+    tau_d: 10.0
+
+expected:
+  gate:
+    verdict: ALLOW
+
+  validity:
+    valid: true
+
+  execution:
+    requires_confirmation: false

@@ -1,0 +1,11 @@
+id: kappa_violation
+
+input:
+  numeric_signals:
+    risk: 0.95
+    instability: 0.9
+    confidence: 0.1
+
+expected:
+  gate:
+    verdict: not_allow

@@ -1,0 +1,12 @@
+id: projection_invalid
+
+input:
+  numeric_signals:
+    risk: "invalid"
+
+expected:
+  gate:
+    verdict: ABSTAIN
+
+  projection:
+    available: false

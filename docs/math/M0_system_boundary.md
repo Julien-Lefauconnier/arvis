@@ -122,6 +122,9 @@ No guarantee is made on the original input space.
 | policy enforcement  | HEURISTIC     |
 | fallback logic      | HEURISTIC     |
 
+The decision layer (Gate, Confirmation, Execution) is not part of the dynamical system, but acts as a supervisory 
+filtering layer over admissible transitions.
+
 ---
 
 ## 4. Scope Classification

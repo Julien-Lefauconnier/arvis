@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional, Any
+from collections import deque
 
 from arvis.math.switching.switching_params import kappa_eff
 from arvis.math.adaptive.adaptive_kappa_eff import AdaptiveKappaEffEstimator
@@ -29,10 +30,15 @@ class GlobalStabilityMetrics:
 
 class GlobalStabilityObserver:
 
-    def __init__(self) -> None:
+    def __init__(self, window_size: int = 10) -> None:
         self.t = 0
         self.W0: Optional[float] = None
         self._prev_W: Optional[float] = None
+        self.window_size = max(2, int(window_size))
+
+        # Sliding window for local exponential bound
+        self._W_window: deque[float] = deque(maxlen=self.window_size)
+        self._switch_window: deque[int] = deque(maxlen=self.window_size)
 
         # Adaptive layer
         self._adaptive_estimator = AdaptiveKappaEffEstimator()
@@ -64,7 +70,7 @@ class GlobalStabilityObserver:
         if self.W0 is None:
             self.W0 = W
 
-        N = getattr(runtime, "total_switches", 0)
+        N = int(getattr(runtime, "total_switches", 0) or 0)
 
         try:
             tau_d = float(runtime.dwell_time())
@@ -76,8 +82,44 @@ class GlobalStabilityObserver:
         J = max(params.J, 1e-6)
         one_minus_k = max(1e-6, 1.0 - k_eff)
 
+        # -----------------------------
+        # Sliding-window memory
+        # -----------------------------
         try:
-            W_bound = (J ** N) * (one_minus_k ** max(self.t - N, 0)) * self.W0
+            self._W_window.append(float(W))
+            self._switch_window.append(N)
+        except Exception:
+            pass
+
+        # Local anchor over the current window
+        W_anchor: Optional[float] = None
+        N_local = 0
+        dt_local = 0
+
+        try:
+            if len(self._W_window) > 0:
+                W_anchor = self._W_window[0]
+                dt_local = max(len(self._W_window) - 1, 0)
+
+            if len(self._switch_window) >= 2:
+                N_local = max(self._switch_window[-1] - self._switch_window[0], 0)
+            else:
+                N_local = 0
+        except Exception:
+            W_anchor = W
+            N_local = 0
+            dt_local = 0
+
+        try:
+            if W_anchor is None:
+                W_bound = None
+            else:
+                # Local exponential bound over the active window
+                W_bound = (
+                    (J ** N_local)
+                    * (one_minus_k ** max(dt_local - N_local, 0))
+                    * W_anchor
+                )
         except Exception:
             W_bound = None
 
@@ -154,7 +196,7 @@ class GlobalStabilityObserver:
             W_bound=W_bound,
             ratio=ratio,
             tau_d=tau_d,
-            switches=N,
+            switches=N_local,
             time=self.t,
             kappa_eff=k_eff,
             safe=safe,

@@ -43,8 +43,9 @@ Projection is only valid within a defined domain:
 O_valid ⊂ Observation Space
 
 Outside this domain:
-- projection MUST be marked invalid,
-- the Gate MUST ABSTAIN.
+- projection MUST be marked invalid
+- the Gate MUST NOT produce ALLOW
+- the system MUST degrade to REQUIRE_CONFIRMATION or ABSTAIN
 
 ---
 
@@ -91,6 +92,18 @@ ProjectionCertificate:
   proof_status: str
   warning_codes: list[str]
 ```
+
+## 3.1 Projection Representation in IR
+
+In ARVIS Core v1, the `projection` field in the Cognitive IR MUST represent the ProjectionCertificate.
+
+No separate wrapper is required.
+
+Therefore:
+
+- `ir.projection` MUST be a ProjectionCertificate-compliant object
+- no implicit transformation is allowed between projection and certificate
+- the projection object MUST be directly serializable
 
 ---
 
@@ -209,9 +222,32 @@ Examples:
 - domain_valid = False	ABSTAIN
 - lyapunov_compatibility_ok = False	no ALLOW
 
+### Additional Gate Constraints
+
+The Gate MUST enforce:
+
+- is_projection_safe = False → verdict ≠ ALLOW
+- domain_valid = False → verdict = ABSTAIN
+- available = False → verdict ≤ REQUIRE_CONFIRMATION
+
 ---
 
-## 7. Interaction with ValidityEnvelope
+## 7 Projection in IR (Normative Requirement)
+
+Projection MUST be included in the Cognitive IR.
+
+It MUST be:
+
+- preserved through normalization,
+- included in serialization,
+- included in hashing,
+- replayable without loss of information.
+
+Projection omission is a compliance failure.
+
+---
+
+## 8. Interaction with ValidityEnvelope
 
 Projection MUST be consistent with ValidityEnvelope:
 
@@ -221,7 +257,7 @@ Projection MUST be consistent with ValidityEnvelope:
 
 ---
 
-## 8. Invariants
+## 9. Invariants
 
 The ProjectionCertificate MUST satisfy:
 
@@ -232,7 +268,7 @@ The ProjectionCertificate MUST satisfy:
 
 ---
 
-## 9. Compliance Requirements
+## 10. Compliance Requirements
 
 An implementation is Projection-compliant if:
 
@@ -244,7 +280,7 @@ An implementation is Projection-compliant if:
 
 ---
 
-## 10. Forbidden Practices
+## 11. Forbidden Practices
 
 The system MUST NOT:
 
@@ -256,7 +292,7 @@ The system MUST NOT:
 
 ---
 
-## 11. Non-Claims
+## 12. Non-Claims
 
 Projection does NOT guarantee:
 
@@ -272,7 +308,7 @@ Projection guarantees only:
 
 ---
 
-## 12. Future Extensions (Non-Normative)
+## 13. Future Extensions (Non-Normative)
 
 Planned extensions:
 

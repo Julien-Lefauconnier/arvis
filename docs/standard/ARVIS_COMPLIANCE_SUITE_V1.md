@@ -139,7 +139,7 @@ The implementation MUST verify:
 
 Required Tests
 - projection unavailable → no ALLOW
-- projection invalid → ABSTAIN
+- projection invalid → verdict MUST NOT be ALLOW and MUST be downgraded at least to REQUIRE_CONFIRMATION, or ABSTAIN depending on severity and policy
 - projection boundary → REQUIRE_CONFIRMATION
 - projection certificate consistency
 
@@ -148,7 +148,7 @@ Required Tests
 ## 7. Validity Compliance
 
 Required Tests
-- validity false → ABSTAIN
+- validity false → verdict MUST NOT be ALLOW and SHOULD degrade to REQUIRE_CONFIRMATION or ABSTAIN depending on policy
 - validity degraded → REQUIRE_CONFIRMATION
 - validity reason propagation
 

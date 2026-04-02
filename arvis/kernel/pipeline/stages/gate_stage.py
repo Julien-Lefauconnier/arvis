@@ -861,6 +861,29 @@ class GateStage:
                 verdict = LyapunovVerdict.ABSTAIN
             existing = list(ctx.extra.get("fusion_reasons", []))
             ctx.extra["fusion_reasons"] = list(dict.fromkeys(existing + fusion.reasons))
+
+            # -----------------------------------------
+            # LOCAL STABILITY SOFT FILTER
+            # -----------------------------------------
+            try:
+                if delta_w is not None:
+                    soft_threshold = getattr(
+                        ctx, "delta_w_soft_threshold", -0.05
+                    )
+
+                    # faible décroissance → prudence
+                    if soft_threshold < delta_w < 0:
+                        if verdict == LyapunovVerdict.ALLOW:
+                            _record_verdict_transition(
+                                ctx,
+                                stage="local_soft_filter",
+                                before=verdict,
+                                after=LyapunovVerdict.REQUIRE_CONFIRMATION,
+                                reason="weak_stability",
+                            )
+                            verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
+            except Exception:
+                pass
             return verdict
         except Exception:
             verdict = pre_verdict or LyapunovVerdict.ABSTAIN
@@ -879,18 +902,32 @@ class GateStage:
     ) -> LyapunovVerdict:
         if recovery_detected or kernel_result.recovery_detected:
             if verdict == LyapunovVerdict.ABSTAIN:
-                if not (adaptive_metrics and adaptive_metrics.is_unstable):
+                validity = getattr(ctx, "validity_envelope", None)
+
+                #  recovery inside valid envelope = ALLOW
+                if (
+                    validity is not None
+                    and validity.valid
+                    and not (adaptive_metrics and adaptive_metrics.is_unstable)
+                ):
                     _record_verdict_transition(
                         ctx,
-                        stage="recovery_post_fusion_override",
+                        stage="recovery_to_allow",
                         before=verdict,
-                        after=LyapunovVerdict.REQUIRE_CONFIRMATION,
-                        reason="recovery_detected",
+                        after=LyapunovVerdict.ALLOW,
+                        reason="stable_recovery",
                     )
-                    verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
-                    ctx.extra.setdefault("fusion_reasons", []).append(
-                        "recovery_post_fusion_override"
-                    )
+                    return LyapunovVerdict.ALLOW
+
+                # fallback (unsafe case)
+                _record_verdict_transition(
+                    ctx,
+                    stage="recovery_to_confirmation",
+                    before=verdict,
+                    after=LyapunovVerdict.REQUIRE_CONFIRMATION,
+                    reason="uncertain_recovery",
+                )
+                return LyapunovVerdict.REQUIRE_CONFIRMATION
         return verdict
 
     def _build_validity_envelope(

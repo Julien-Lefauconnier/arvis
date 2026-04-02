@@ -728,7 +728,7 @@ def test_validity_forces_confirmation(monkeypatch):
 
 
 
-def test_recovery_post_fusion_override(monkeypatch):
+def test_recovery_uncertain_forces_confirmation(monkeypatch):
     ctx = make_ctx()
 
     class K:
@@ -753,11 +753,49 @@ def test_recovery_post_fusion_override(monkeypatch):
         lambda **k: k["verdict"]
     )
 
+    monkeypatch.setattr(
+        "arvis.kernel.pipeline.stages.gate_stage.build_validity_envelope",
+        lambda **k: SimpleNamespace(valid=False, reason="exponential_violation")
+    )
+
     GateStage().run(None, ctx)
 
-    assert "recovery_post_fusion_override" in ctx.extra["fusion_reasons"]
+    assert ctx.gate_result == LyapunovVerdict.REQUIRE_CONFIRMATION
 
 
+def test_recovery_valid_promotes_to_confirmation(monkeypatch):
+    ctx = make_ctx()
+
+    class K:
+        pre_verdict = LyapunovVerdict.ABSTAIN
+        final_verdict = LyapunovVerdict.ABSTAIN
+        recovery_detected = True
+        reasons = []
+        certificate = {}
+
+    monkeypatch.setattr(
+        "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
+        lambda inputs: K()
+    )
+
+    monkeypatch.setattr(
+        "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
+        lambda **k: DummyFusion(LyapunovVerdict.ABSTAIN)
+    )
+
+    monkeypatch.setattr(
+        "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
+        lambda **k: k["verdict"]
+    )
+
+    monkeypatch.setattr(
+        "arvis.kernel.pipeline.stages.gate_stage.build_validity_envelope",
+        lambda **k: SimpleNamespace(valid=True, reason=None)
+    )
+
+    GateStage().run(None, ctx)
+
+    assert ctx.gate_result == LyapunovVerdict.REQUIRE_CONFIRMATION
 
 def test_trace_exception(monkeypatch):
     ctx = make_ctx()

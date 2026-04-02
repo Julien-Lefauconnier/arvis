@@ -158,6 +158,10 @@ Each reason code MUST define a severity:
 |------|----------|------|--------|
 | `recovery_override` | medium | normative | downgrade |
 
+
+Recovery-related codes MAY promote or degrade decisions depending on policy and context.
+They MUST remain consistent with the final verdict.
+
 ---
 
 ### 4.8 System Layer

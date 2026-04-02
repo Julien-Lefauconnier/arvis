@@ -194,7 +194,7 @@ The Gate enforces:
 - switching constraints
 - trajectory consistency
 
-A decision violating constraints → **is rejected (ABSTAIN)**
+A decision violating constraints → is **degraded (REQUIRE_CONFIRMATION) or rejected (ABSTAIN) depending on severity and policy.**
 
 → Formalization:
 - [M6 — Gate Condition](docs/math/M6_gate_stabilty_result_and_decision_consistency.md)

@@ -127,17 +127,20 @@ including:
 
 ### 5.1 Projection constraints
 
-- If projection domain validity is false, final verdict MUST be ABSTAIN.
+- If projection domain validity is false, final verdict MUST NOT be ALLOW and MUST be downgraded at least to REQUIRE_CONFIRMATION,
+  or ABSTAIN depending on policy and severity.
 - If projection and Lyapunov compatibility is false, final verdict MUST NOT be ALLOW.
 - If projection boundary safety is degraded, the verdict MAY be downgraded to REQUIRE_CONFIRMATION.
 - Projection observability MUST NOT silently override stronger vetoes.
 
 ### 5.2 Validity constraints
-- If the validity envelope is invalid, final verdict MUST NOT remain ALLOW.
+
+- If the validity envelope is invalid, final verdict MUST NOT remain ALLOW and MUST be downgraded to REQUIRE_CONFIRMATION or ABSTAIN.
 - If validity indicates a critical violation, final verdict MUST be downgraded at least to REQUIRE_CONFIRMATION, and MAY be ABSTAIN depending on implementation policy.
 - Kappa-unsafety exposed through validity or hard veto layers MUST NOT coexist with final ALLOW.
 
 ### 5.3 Adaptive constraints
+
 - If adaptive instability is detected, final verdict MUST be ABSTAIN.
 - If adaptive band is critical or margin is in warning range, final verdict MUST NOT remain silently permissive.
 - Adaptive vetoes MUST emit deterministic reason codes.
@@ -149,14 +152,28 @@ including:
 - Global policy behavior MUST remain deterministic.
 
 ### 5.5 Confirmation constraints
+
 - Confirmation is a distinct post-gate decision layer.
 - A confirmed override MAY promote a previously blocked verdict.
 - Such promotion MUST be explicit, traceable, and propagated into canonical IR context.
 - A rejected confirmation MUST result in ABSTAIN.
 
+## 5.6 Recovery and Override Semantics
+
+The Gate supports explicit override mechanisms:
+- recovery_override:
+  allows promotion of a degraded verdict under controlled conditions
+- uncertain_recovery:
+  enforces REQUIRE_CONFIRMATION when recovery confidence is insufficient
+
+All overrides MUST:
+- be explicitly traceable,
+- emit reason codes,
+- preserve determinism.
+
 ---
 
-6. Evaluation Model
+## 6. Evaluation Model
 
 The Gate MUST be evaluated as an ordered deterministic process.
 

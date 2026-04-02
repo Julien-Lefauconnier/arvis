@@ -2,6 +2,7 @@
 
 from arvis.ir.normalization.cognitive_ir_normalizer import CognitiveIRNormalizer
 from arvis.ir.serialization.cognitive_ir_hasher import CognitiveIRHasher
+from arvis.ir.serialization.cognitive_ir_serializer import CognitiveIRSerializer
 
 from arvis.ir.input import CognitiveInputIR
 from arvis.ir.context import CognitiveContextIR
@@ -14,7 +15,7 @@ from arvis.ir.cognitive_ir import CognitiveIR
 # Helpers
 # -----------------------------------------
 
-def make_ir(reason_codes=("a", "b")):
+def make_ir(reason_codes=("a", "b"), projection=None, validity=None):
     return CognitiveIR(
         input=CognitiveInputIR(
             input_id="input-1",
@@ -45,11 +46,28 @@ def make_ir(reason_codes=("a", "b")):
         ),
         stability=None,
         adaptive=None,
+        projection=projection,
+        validity=validity,
     )
-
 
 def hash_ir(ir):
     return CognitiveIRHasher.hash(ir)
+
+class DummyProjection:
+    def __init__(self, value="p"):
+        self.value = value
+
+    def __eq__(self, other):
+        return isinstance(other, DummyProjection) and self.value == other.value
+
+
+class DummyValidity:
+    def __init__(self, value="v"):
+        self.value = value
+
+    def __eq__(self, other):
+        return isinstance(other, DummyValidity) and self.value == other.value
+    
 
 
 # -----------------------------------------
@@ -82,3 +100,28 @@ def test_ir_normalization_idempotent():
     norm2 = CognitiveIRNormalizer.normalize(norm1)
 
     assert norm1 == norm2
+
+
+def test_ir_preserves_projection_and_validity():
+    ir = make_ir(
+        projection=DummyProjection("proj"),
+        validity=DummyValidity("valid"),
+    )
+
+    normalized = CognitiveIRNormalizer.normalize(ir)
+
+    assert normalized.projection == ir.projection
+    assert normalized.validity == ir.validity
+
+
+def test_ir_hash_includes_projection_and_validity():
+    ir = make_ir(
+        projection=DummyProjection("proj"),
+        validity=DummyValidity("valid"),
+    )
+
+    normalized = CognitiveIRNormalizer.normalize(ir)
+    serialized = CognitiveIRSerializer.serialize(normalized)
+
+    assert "projection" in serialized
+    assert "validity" in serialized

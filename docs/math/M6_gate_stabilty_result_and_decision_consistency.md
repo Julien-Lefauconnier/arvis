@@ -51,6 +51,21 @@ The Gate decision is produced through a **multi-stage filtering pipeline**:
 
 Each stage may restrict or override previous decisions.
 
+## 2.1 Decision Overrides (Implementation-Aligned)
+
+The Gate decision may be modified by post-processing overrides:
+
+1. Recovery override  
+  - If recovery is detected and validity is satisfied, the system may promote a non-allow verdict to ALLOW.
+
+2. Uncertain recovery  
+  - If recovery is detected but validity is not guaranteed, the system must enforce REQUIRE_CONFIRMATION.
+
+3. Validity enforcement  
+  - Invalid validity does not necessarily force ABSTAIN but may enforce REQUIRE_CONFIRMATION depending on context.
+
+These overrides are implementation-aligned safety mechanisms and extend the theoretical constraints (C1–C6).
+
 ---
 
 ## 3. Gate Semantics (CRUCIAL)

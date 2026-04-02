@@ -128,6 +128,17 @@ A categorical label:
 
 This regime is an **operational abstraction**, not a formal theorem statement.
 
+## 4.4 Role in Gate Decision
+
+The adaptive estimate does not directly determine the decision,
+but contributes to the Gate filtering process through:
+
+- fusion signals,
+- instability detection,
+- decision overrides.
+
+It acts as a secondary stability signal supporting the Lyapunov core.
+
 ---
 
 ## 5. Runtime Integration Points

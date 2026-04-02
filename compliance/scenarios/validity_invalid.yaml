@@ -1,0 +1,12 @@
+id: validity_invalid
+
+input:
+  numeric_signals:
+    risk: "invalid"
+
+expected:
+  gate:
+    verdict: ABSTAIN
+
+  validity:
+    valid: false

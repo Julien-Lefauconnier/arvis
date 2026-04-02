@@ -163,6 +163,9 @@ ctx.extra["kappa_margin"]
 ctx.extra["kappa_band"]
 ```
 
+Additional robustness is provided by the confirmation layer, which introduces a human or higher-level validation step
+when the system operates in uncertain regions.
+
 ---
 
 ## 6. Main Result — Robust Practical Stability on the Validated Domain

@@ -28,9 +28,12 @@ class CoreStage:
         # -----------------------------------------
         # The pipeline owns causal history.
         # The core only produces the current state.
+        preserve_injected = bool(getattr(ctx, "extra", {}).get("preserve_injected_lyapunov", False))
+        injected_prev = getattr(ctx, "prev_lyap", None)
+        injected_cur = getattr(ctx, "cur_lyap", None)
         prev_slow_before = getattr(ctx, "slow_state", None)
         prev_symbolic_before = getattr(ctx, "symbolic_state", None)
-        prev_lyap_before = getattr(ctx, "cur_lyap", None)
+        prev_lyap_before = injected_prev if preserve_injected and injected_prev is not None else injected_cur
 
         # -----------------------------------------
         # 1. Core processing
@@ -62,6 +65,12 @@ class CoreStage:
 
 
         new_cur = _normalize_lyap(new_cur)
+
+        # -----------------------------------------
+        # Compliance / injected-state preservation
+        # -----------------------------------------
+        if preserve_injected and injected_cur is not None and new_cur is None:
+            new_cur = injected_cur
 
         # Causal convention:
         # prev = last cycle current, cur = current cycle current

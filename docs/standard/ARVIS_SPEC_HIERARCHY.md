@@ -52,7 +52,7 @@ Defines:
 
 Rules:
 
-* Gate verdict is the **final authority on decision existence**
+* Gate verdict is the **the primary authority on decision admissibility**, but may be extended by post-gate layers such as confirmation and execution policies.
 * All upstream components MUST comply with Gate constraints
 
 ---
