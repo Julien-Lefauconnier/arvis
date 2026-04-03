@@ -80,18 +80,47 @@ Rules:
 ### Level 4 — Execution Model
 
 * `PIPELINE.md`
+* `TOOL_SYSTEM_V1.md`
 
 Defines:
 
 * deterministic execution stages
 * signal propagation
 * runtime behavior
+* tool execution system (runtime layer)
 
 Rules:
 
 * MUST remain deterministic
 * MUST produce inputs compatible with Gate and IR
-* MAY evolve internally if external contracts remain unchanged
+* MUST preserve separation between:
+  - decision (pipeline)
+  - execution (runtime / tools)
+* tool execution MUST NOT influence decision logic in the same run
+* tool results MUST be externalized (ctx.extra / IR)
+
+---
+
+#### Tool System Position
+
+The Tool System is part of the Execution Model.
+
+It is responsible for:
+
+- executing side-effectful actions
+- interfacing with external systems
+- capturing execution results
+
+The Tool System operates strictly in the Runtime layer and MUST NOT:
+
+- influence decision semantics
+- modify pipeline outputs during execution
+
+Tool execution is:
+
+- observable
+- replay-safe (results only)
+- externally contained
 
 ---
 
@@ -239,7 +268,7 @@ But:
 | 1     | Invariants            | Absolute           |
 | 2     | Gate                  | Decision authority |
 | 3     | IR / Public Objects   | External contract  |
-| 4     | Pipeline              | Execution model    |
+| 4     | Pipeline + Tools      | Execution model    |
 | 5     | Projection / Validity | Constraint inputs  |
 | 6     | Compliance            | Verification       |
 | 7     | Architecture / Docs   | Informative        |

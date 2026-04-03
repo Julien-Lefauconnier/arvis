@@ -39,7 +39,6 @@ Decision
 → Execution
 → Action
 → Intent
-→ Runtime
 ```
 
 Each stage:
@@ -367,14 +366,23 @@ Outputs:
 
 * `ctx.executable_intent`
 
+
+### end of pipeline
+
 ---
 
-### 18. Runtime Stage
+## Runtime layer
 
-**Purpose:** Finalize execution state
+**Purpose: Execute side-effects (tool execution)**
 
-* prepares final system state
-* resolves pending runtime signals
+This stage is responsible for:
+- executing tools selected by ActionStage
+- capturing ToolResults
+- updating ctx.extra
+
+Important:
+- this stage is NOT part of the decision logic
+- it operates after decision finalization
 
 ---
 

@@ -37,6 +37,8 @@ class ActionPolicy:
                 requires_user_validation=False,
                 denied_reason="policy_risk_threshold",
                 audit_required=True,
+                tool=decision.tool,
+                tool_payload=decision.tool_payload,
                 action_mode=ActionMode.BLOCKED,
             )
 
@@ -49,6 +51,8 @@ class ActionPolicy:
                 requires_user_validation=decision.requires_user_validation,
                 denied_reason=decision.denied_reason,
                 audit_required=True,
+                tool=decision.tool,
+                tool_payload=decision.tool_payload,
                 action_mode=decision.action_mode,
             )
 

@@ -1,5 +1,7 @@
 # arvis/kernel/pipeline/stages/__init__.py
 
+from .tool_feedback_stage import ToolFeedbackStage
+from .tool_retry_stage import ToolRetryStage
 from .decision_stage import DecisionStage
 from .passive_context_stage import PassiveContextStage
 from .bundle_stage import BundleStage
@@ -19,8 +21,8 @@ from .action_stage import ActionStage
 from .intent_stage import IntentStage
 from .runtime_stage import RuntimeStage
 
-__all__ = ["DecisionStage", "PassiveContextStage", "BundleStage", "ConflictStage",
-            "CoreStage", "TemporalStage", "RegimeStage", "ConflictModulationStage",
+__all__ = ["ToolFeedbackStage", "ToolRetryStage", "DecisionStage", "PassiveContextStage", "BundleStage", 
+           "ConflictStage", "CoreStage", "TemporalStage", "RegimeStage", "ConflictModulationStage",
             "ControlStage", "ProjectionStage", "GateStage", "ControlFeedbackStage", 
             "StructuralRiskStage", "ConfirmationStage","ExecutionStage", "ActionStage", 
             "IntentStage", "RuntimeStage" ]

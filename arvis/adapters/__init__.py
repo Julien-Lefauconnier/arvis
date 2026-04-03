@@ -1,5 +1,10 @@
-# arvis/adapters/ir/__init__.py
+# arvis/adapters/__init__.py
 """
-Adapters between internal kernel objects and Cognitive IR.
+ARVIS adapters package.
 """
 
+from .registry import get_llm_adapter
+
+__all__ = [
+    "get_llm_adapter",
+]

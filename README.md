@@ -18,10 +18,12 @@ ARVIS is a deterministic Cognitive Operating System built as:
 - a stable Intermediate Representation (IR)
 - a reflexive self-observation layer
 - a timeline-backed traceability system
+- a runtime execution layer (tools, adapters, external actions)
 
 The system enforces a strict separation between:
 
-- execution (pipeline)
+- decision (pipeline, deterministic cognition)
+- execution (runtime layer, tools and side effects)
 - canonical state (CognitiveState)
 - external representation (IR)
 - reflexive observation (read-only)
@@ -326,11 +328,119 @@ ARVIS is now structured around four major layers:
 
 → [M12 — Cognitive Operating System](docs/math/M12_cognitive_operating_system_(COS)_architecture.md)
 
+### 5. Runtime Execution Layer
+
+ARVIS includes a dedicated Runtime Layer responsible for executing side-effectful actions after the 
+cognitive pipeline has produced a decision.
+
+This layer includes:
+
+- Tool system (ToolRegistry, ToolExecutor)
+- Adapters (LLM, external APIs, etc.)
+- Execution orchestration
+
+Properties:
+
+- strictly separated from the pipeline
+- does not influence decision logic
+- fully observable and traceable
+- produces ToolResults captured in IR
+
+Important:
+
+Tool execution is **not part of cognition**.
+
+It is an externalized execution phase that preserves:
+
+- determinism of decision-making
+- replayability of cognitive logic
+- full auditability of actions
+
 ---
 
 ## ⚡ In One Sentence
 
 > ARVIS turns cognition into a **runtime-regulated dynamical system with enforceable stability constraints**
+
+---
+
+---
+
+## 🔄 Canonical Cognitive Flow
+
+ARVIS follows a strict separation between cognition, decision, and execution.
+
+The full system can be represented as:
+
+```text
+                 ┌──────────────────────────────┐
+                 │      Cognitive Pipeline      │
+                 │ (deterministic reasoning)    │
+                 └──────────────┬───────────────┘
+                                │
+                                ▼
+                    ┌──────────────────────┐
+                    │   Decision System    │
+                    │ Gate → Confirmation │
+                    │ → Execution         │
+                    └────────────┬────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────┐
+                    │    Action Decision   │
+                    │ (tool / no tool)    │
+                    └────────────┬────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────┐
+                    │   Runtime Layer      │
+                    │ ToolExecutor         │
+                    │ Adapters             │
+                    └────────────┬────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────┐
+                    │   Tool Execution     │
+                    │ (side effects)       │
+                    └────────────┬────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────┐
+                    │   Observability      │
+                    │ ToolResults          │
+                    │ DecisionTrace        │
+                    │ CognitiveState       │
+                    └────────────┬────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────┐
+                    │   IR Projection      │
+                    │ CognitiveIR          │
+                    │ (deterministic)      │
+                    └──────────────────────┘
+```
+
+### Key Properties
+
+- The pipeline is deterministic and produces decisions only
+- The runtime executes side effects (tools, adapters)
+- The decision layer never performs execution
+- All execution is:
+    - observable
+    - recorded
+    - replay-safe
+
+### Critical Separation
+
+Layer	Responsibility
+Pipeline	cognition (deterministic)
+Decision	admissibility & constraints
+Runtime	execution (side effects)
+IR	deterministic external representation
+
+This separation is fundamental to ARVIS:
+
+**→ decisions remain deterministic and replayable, even when execution is not**
 
 ---
 
@@ -448,6 +558,7 @@ Optional extensions (implementation-dependent):
 - validity
 - stability
 - adaptive snapshot
+- tools (runtime execution results)
 
 ### Key Guarantees
 

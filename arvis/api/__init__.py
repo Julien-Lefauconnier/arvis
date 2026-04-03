@@ -75,6 +75,20 @@ from arvis.api.stability import StabilityView
 from .ir import build_ir_view
 from .ir_canonical import canonicalize_ir, hash_ir
 
+
+# -----------------------------------------------------
+# Adapters
+# -----------------------------------------------------
+from arvis.adapters.llm import BaseLLMAdapter, OpenAIAdapter
+
+# -----------------------------------------------------
+# Tools
+# -----------------------------------------------------
+from arvis.tools.base import BaseTool
+from arvis.tools.executor import ToolExecutor
+from arvis.tools.registry import ToolRegistry
+
+
 # -----------------------------------------------------
 # PUBLIC SURFACE (CONTRACT)
 # -----------------------------------------------------
@@ -142,4 +156,13 @@ __all__ = [
     "build_ir_view",
     "canonicalize_ir",
     "hash_ir",
+
+    # Adapters
+    "BaseLLMAdapter",
+    "OpenAIAdapter",
+
+    # Tools
+    "BaseTool",
+    "ToolExecutor",
+    "ToolRegistry",
 ]

@@ -237,6 +237,35 @@ AdaptiveIRAdapter.from_adaptive(...)
 
 ---
 
+### 4.10 CognitiveIR.tools
+
+Represents tool execution results.
+
+Invariants:
+- MUST reflect runtime execution
+- MUST be deterministic (recorded, not executed)
+- MUST NOT influence decision semantics
+
+---
+
+### 4.11 ToolResult (Runtime Object)
+
+Represents execution of a tool.
+
+Fields:
+- tool_name: str
+- success: bool
+- output: Any | null
+- error: str | null
+- latency_ms: float | null
+
+Status:
+- public
+- runtime-derived
+- observable
+
+---
+
 ## 5. Object Versioning
 
 Each object SHOULD include schema_version 

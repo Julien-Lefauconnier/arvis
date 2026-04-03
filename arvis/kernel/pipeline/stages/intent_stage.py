@@ -6,11 +6,15 @@ from datetime import datetime, timezone
 from typing import Any
 from arvis.cognition.execution.executable_intent import ExecutableIntent
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.adapters.registry import get_llm_adapter
 
 
 class IntentStage:
 
     def run(self, pipeline: Any, ctx: Any) -> None:
+        # 🔒 TOOL FORCED EXECUTION LOCK
+        if getattr(ctx, "_tool_forced_execution", False):
+            print("[INTENT DEBUG] SKIP (forced tool execution)")
         action_decision = ctx.action_decision
         verdict = getattr(ctx, "gate_result", None)
 
@@ -40,3 +44,37 @@ class IntentStage:
         )
 
         print("[INTENT DEBUG] exported executable_intent:", ctx.executable_intent)
+
+        # -----------------------------------------------------
+        # LLM ENRICHMENT (NON-CRITICAL / SAFE)
+        # -----------------------------------------------------
+        llm = get_llm_adapter(ctx)
+
+        if llm is not None:
+            try:
+                prompt = f"""
+You are a cognitive assistant inside a Cognitive OS.
+
+Intent:
+{ctx.executable_intent}
+
+Provide:
+- a short execution plan
+- potential risks
+- optional refinement
+
+Keep it structured and concise.
+"""
+
+                response = llm.generate(
+                    prompt,
+                    temperature=0.2,
+                )
+
+                ctx.extra.setdefault("llm", {})["intent_enrichment"] = response.content
+
+            except Exception as e:
+                ctx.extra.setdefault("errors", []).append({
+                    "stage": "IntentStage",
+                    "llm_error": str(e),
+                })

@@ -69,6 +69,8 @@ from arvis.kernel.projection.pi_impl import PiImpl
 from arvis.math.projection.pi_operator import PiOperator
 
 from arvis.kernel.pipeline.stages import (
+    ToolFeedbackStage,
+    ToolRetryStage,
     DecisionStage,
     PassiveContextStage,
     BundleStage,
@@ -138,6 +140,8 @@ class CognitivePipeline:
         self.coherence_observer = CoherenceObserver()
         self.coherence_policy = CoherencePolicy()
         self.control_runtimes: dict[str, CognitiveControlRuntime] = {}
+        self.tool_feedback_stage = ToolFeedbackStage()
+        self.tool_retry_stage = ToolRetryStage()
         self.decision_stage = DecisionStage()
         self.passive_stage = PassiveContextStage()
         self.bundle_stage = BundleStage()
@@ -159,6 +163,7 @@ class CognitivePipeline:
         self.global_stability_observer = GlobalStabilityObserver()
         self.quadratic_lyapunov_family = make_default_quadratic_family(dim=4)
         self.quadratic_comparability = self.quadratic_lyapunov_family.comparability()
+        self.tool_executor = None
 
         # -----------------------------------------
         # Adaptive stability (M4/M5)
@@ -321,6 +326,16 @@ class CognitivePipeline:
                 )
         except Exception:
             pass
+        # -----------------------------------------------------
+        # 0. TOOL FEEDBACK STAGE (previous cycle)
+        # -----------------------------------------------------
+        self._safe_run(self.tool_feedback_stage, ctx)
+
+        # -----------------------------------------------------
+        # 0.1 TOOL RETRY STAGE
+        # -----------------------------------------------------
+        self._safe_run(self.tool_retry_stage, ctx)
+
         # -----------------------------------------------------
         # 1. DECISION STAGE
         # -----------------------------------------------------

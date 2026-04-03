@@ -3,35 +3,88 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
-from typing import Callable, cast
+from typing import Any, Dict, Optional, Callable, cast, List
+
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+
 from arvis.api.stability import StabilityView
 from arvis.api.trace import DecisionTraceView
 from arvis.api.timeline import TimelineView
 from arvis.api.version import API_VERSION, API_FINGERPRINT
 from arvis.api.ir import build_ir_view
+from arvis.kernel.replay_engine import ReplayEngine
+from arvis.ir.cognitive_ir import CognitiveIR
+from arvis.tools.executor import ToolExecutor
+from arvis.tools.registry import ToolRegistry
+from arvis.tools.spec import ToolSpec
 
+# =====================================================
+# CONFIG
+# =====================================================
 
 @dataclass
 class CognitiveOSConfig:
     enable_trace: bool = True
     strict_mode: bool = False
 
-# -----------------------------------------------------
-# Public unified result view 
-# -----------------------------------------------------
+    # OS-level extensions
+    adapter_registry: Optional[Dict[str, Any]] = None
+    runtime_mode: str = "local"  # local | replay | distributed
+
+
+# =====================================================
+# RUNTIME
+# =====================================================
+
+class CognitiveRuntime:
+    """
+    Runtime layer for CognitiveOS.
+
+    Responsible for:
+    - executing pipeline
+    - hosting adapters
+    - future scheduling / multi-agent
+    """
+
+    def __init__(
+        self,
+        pipeline: CognitivePipeline,
+        adapters: Optional[Dict[str, Any]] = None,
+        tool_executor: Optional[Any] = None,
+    ):
+        self.pipeline = pipeline
+        self.adapters = adapters or {}
+        self.tool_executor = tool_executor
+
+    def execute(self, ctx: CognitivePipelineContext) -> Any:
+        if self.adapters:
+            ctx.extra["adapters"] = self.adapters
+
+        result = self.pipeline.run(ctx)
+
+        # -------------------------------------------------
+        # TOOL EXECUTION (RUNTIME LAYER ONLY)
+        # -------------------------------------------------
+        action = getattr(result, "action_decision", None)
+
+        if action and getattr(action, "tool", None) and getattr(action, "allowed", False):
+            if self.tool_executor:
+                try:
+                    self.tool_executor.execute(result, ctx)
+                except Exception:
+                    ctx.extra.setdefault("errors", []).append("tool_execution_failure")
+
+        return result
+
+
+# =====================================================
+# RESULT VIEW (UNCHANGED CORE)
+# =====================================================
 
 @dataclass(frozen=True)
 class CognitiveResultView:
-    """
-    Unified public result of the Cognitive OS.
-
-    This is the stable contract exposed to external users.
-    """
-
     decision: Any
     stability: Any
     stability_view: Optional[StabilityView]
@@ -47,7 +100,8 @@ class CognitiveResultView:
         stability = getattr(result, "stability", None)
         trace = getattr(result, "trace", None)
         timeline = getattr(result, "timeline", None)
-        # --- reflexive snapshot (safe, optional) ---
+
+        # reflexive snapshot (safe)
         reflexive_payload = None
         try:
             from arvis.api.reflexive import get_reflexive_snapshot
@@ -74,22 +128,17 @@ class CognitiveResultView:
             trace_view=DecisionTraceView.from_trace(trace) if trace else None,
             timeline=timeline,
             timeline_view=(
-                TimelineView.from_snapshot(timeline)
-                if timeline
-                else None
+                TimelineView.from_snapshot(timeline) if timeline else None
             ),
             _ir=build_ir_view(result),
             reflexive=reflexive_payload,
         )
-    # -----------------------------------------------------
-    # STANDARD SERIALIZATION 
-    # -----------------------------------------------------
 
-    def to_dict(self) -> dict[str, Any]:
-        """
-        Stable JSON-ready representation.
-        """
+    # -------------------------
+    # SERIALIZATION
+    # -------------------------
 
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "version": API_VERSION,
             "fingerprint": API_FINGERPRINT,
@@ -106,22 +155,12 @@ class CognitiveResultView:
             "has_timeline": self.timeline is not None,
             "trace": self.trace_view.to_dict() if self.trace_view else None,
             "timeline": self.timeline_view.to_dict() if self.timeline_view else None,
-            # IR intentionally NOT exposed by default (non-breaking)
         }
-    
-    def to_ir(self) -> Optional[Dict[str, Any]]:
-        """
-        Explicit IR access (versioned contract).
 
-        This is the canonical machine interface.
-        """
+    def to_ir(self) -> Optional[Dict[str, Any]]:
         return self._ir
 
     def summary(self) -> str:
-        """
-        Human-readable short summary.
-        """
-
         if not self.stability_view:
             return "No stability data"
 
@@ -131,20 +170,67 @@ class CognitiveResultView:
             f"Risk={self.stability_view.risk_level:.2f} | "
             f"Regime={self.stability_view.regime}"
         )
+
+
+# =====================================================
+# COGNITIVE OS (REFactored)
+# =====================================================
+
 class CognitiveOS:
     """
     Public entrypoint for ARVIS Cognitive OS.
 
-    This is the ONLY class external users should need.
+    Now upgraded to:
+    - runtime-enabled
+    - adapter-ready
+    - replay-capable
+    - multi-agent-ready
     """
 
-    def __init__(self, config: Optional[CognitiveOSConfig] = None):
-        self.pipeline = CognitivePipeline()
+    def __init__(
+        self,
+        config: Optional[CognitiveOSConfig] = None,
+        *,
+        pipeline: Optional[CognitivePipeline] = None,
+    ):
         self.config = config or CognitiveOSConfig()
 
-    # -----------------------------------------------------
-    # PUBLIC API
-    # -----------------------------------------------------
+        # -------------------------------------------------
+        # TOOLS 
+        # -------------------------------------------------
+        self.tool_registry = ToolRegistry()
+        self.tool_executor = ToolExecutor(self.tool_registry)
+
+        # pipeline injection
+        self.pipeline = pipeline or CognitivePipeline()
+
+        # runtime layer 
+        self.runtime = CognitiveRuntime(
+            pipeline=self.pipeline,
+            adapters=self.config.adapter_registry,
+            tool_executor=self.tool_executor,
+        )
+
+    # =====================================================
+    # TOOLS API
+    # =====================================================
+
+    def register_tool(self, tool: Any) -> None:
+        self.tool_registry.register(tool)
+
+    def list_tools(self) -> list[str]:
+        return self.tool_registry.list()
+    
+    def get_tool_spec(self, name: str) -> Optional[ToolSpec]:
+        return self.tool_registry.get_spec(name)
+
+    def list_tool_specs(self) -> Dict[str, ToolSpec]:
+        return self.tool_registry.list_specs()
+
+    # =====================================================
+    # CORE EXECUTION
+    # =====================================================
+
     def run(
         self,
         user_id: str,
@@ -155,19 +241,6 @@ class CognitiveOS:
         confirmation_result: Any = None,
         extra: Optional[Dict[str, Any]] = None,
     ) -> Any:
-        """
-        Public API v1.
-
-        Contract:
-            - input: cognitive_input (required)
-            - output: CognitiveResultView
-
-        This contract is stable and versioned.
-        
-        High-level execution entrypoint.
-
-        This method hides ALL internal complexity.
-        """
 
         ctx = self._build_context(
             user_id=user_id,
@@ -178,25 +251,19 @@ class CognitiveOS:
             extra=extra,
         )
 
-        result = self.pipeline.run(ctx)
-
-        # -----------------------------------------------------
-        # Unified result (future-proof)
-        # -----------------------------------------------------
+        result = self.runtime.execute(ctx)
 
         if self.config.enable_trace:
-            # Return structured OS result instead of raw pipeline
             return CognitiveResultView.from_pipeline(result)
-
-        # -----------------------------------------------------
-        # Minimal backward-compatible output
-        # -----------------------------------------------------
 
         return {
             "action": getattr(result, "action_decision", None),
             "can_execute": getattr(result, "can_execute", None),
         }
-    
+
+    # =====================================================
+    # IR API
+    # =====================================================
 
     def run_ir(
         self,
@@ -208,12 +275,6 @@ class CognitiveOS:
         confirmation_result: Any = None,
         extra: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """
-        Canonical IR API (machine contract).
-
-        Returns:
-            dict compliant with ARVIS IR schema (versioned).
-        """
 
         ctx = self._build_context(
             user_id=user_id,
@@ -224,13 +285,64 @@ class CognitiveOS:
             extra=extra,
         )
 
-        result = self.pipeline.run(ctx)
-
+        result = self.runtime.execute(ctx)
         return build_ir_view(result)
 
-    # -----------------------------------------------------
+    # =====================================================
+    #  REPLAY API
+    # =====================================================
+
+    def replay(self, ir: Dict[str, Any]) -> CognitiveResultView:
+
+        parsed = CognitiveIR.from_dict(ir)
+        engine = ReplayEngine()
+        result = engine.replay_ir(parsed, pipeline=self.pipeline)
+
+        return CognitiveResultView.from_pipeline(result)
+
+    # =====================================================
+    #  INSPECT
+    # =====================================================
+
+    def inspect(self, result: CognitiveResultView) -> Dict[str, Any]:
+        return {
+            "summary": result.summary(),
+            "stability": (
+                {
+                    "score": result.stability_view.stability_score,
+                    "risk": result.stability_view.risk_level,
+                    "regime": result.stability_view.regime,
+                }
+                if result.stability_view else None
+            ),
+            "trace": (
+                result.trace_view.to_dict()
+                if result.trace_view else None
+            ),
+        }
+
+    # =====================================================
+    #  MULTI AGENT (V1)
+    # =====================================================
+
+    def run_multi(
+        self,
+        inputs: List[Any],
+        *,
+        user_id: str = "multi",
+    ) -> List[CognitiveResultView]:
+
+        results = []
+        for inp in inputs:
+            result = self.run(user_id=user_id, cognitive_input=inp)
+            results.append(result)
+
+        return results
+
+    # =====================================================
     # INTERNAL
-    # -----------------------------------------------------
+    # =====================================================
+
     def _build_context(
         self,
         user_id: str,
@@ -248,7 +360,7 @@ class CognitiveOS:
             conversation_context=conversation_context,
             timeline=timeline or [],
             confirmation_result=confirmation_result,
-            extra=extra or {},
+            extra=extra if extra is not None else {}
         )
 
         return ctx

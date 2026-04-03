@@ -1,7 +1,7 @@
 # arvis/cognition/state/cognitive_state.py
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Any
 
 
@@ -65,3 +65,4 @@ class CognitiveState:
     forecast: Optional[Any]
 
     irg: Optional[Any]
+    tool_results: list[Any] = field(default_factory=list)

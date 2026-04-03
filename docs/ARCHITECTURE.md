@@ -91,6 +91,20 @@ This layer does not perform cognition. It observes and exposes structure safely.
 
 ---
 
+## Runtime Layer 
+
+The Runtime Layer is responsible for executing side-effectful actions
+after the cognitive pipeline has produced a decision.
+
+Responsibilities:
+- tool execution
+- adapter hosting
+- execution orchestration
+
+This layer is strictly separated from the pipeline to preserve determinism.
+
+---
+
 ### Pipeline Structure
 
 The system executes a fixed sequence of stages:

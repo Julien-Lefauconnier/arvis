@@ -24,6 +24,13 @@ The Decision Layer is responsible for:
 - managing uncertainty and recovery
 - ensuring deterministic and auditable outcomes
 
+
+Execution does NOT perform side effects.
+
+It only determines whether execution is allowed.
+
+Actual execution is delegated to the Runtime Layer.
+
 ---
 
 ## 2. Decision Architecture
@@ -178,7 +185,7 @@ If:
 Then:
 
 ```text
-final verdict MAY be promoted to ALLOV
+final verdict MAY be promoted to ALLOW
 ```
 
 #### Case 2 — Uncertain Recovery

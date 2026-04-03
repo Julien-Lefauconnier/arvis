@@ -65,4 +65,8 @@ class CognitiveStateBuilder:
             forecast=ir.forecast,
 
             irg=ir.irg,
+            # -----------------------------------------
+            # TOOL EXECUTION TRACE (NEW)
+            # -----------------------------------------
+            tool_results=list(ctx.extra.get("tool_results", [])),
         )

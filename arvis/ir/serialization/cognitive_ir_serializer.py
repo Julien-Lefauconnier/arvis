@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import is_dataclass, asdict
+from dataclasses import is_dataclass, asdict, fields
 from typing import Any, Dict
 
 
@@ -94,3 +94,51 @@ class CognitiveIRSerializer:
         Backward-compatible canonical JSON serialization.
         """
         return cls.to_json(ir)
+    
+    # -----------------------------------------
+    # PUBLIC: dict → CognitiveIR (REQUIRED FOR REPLAY)
+    # -----------------------------------------
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> Any:
+        from arvis.ir.cognitive_ir import CognitiveIR
+
+        # -----------------------------------------
+        # Remove API-level fields
+        # -----------------------------------------
+        clean_data: Dict[str, Any] = {
+            k: v
+            for k, v in data.items()
+            if k not in ("version", "fingerprint", "meta")
+        }
+
+        # -----------------------------------------
+        # Minimal reconstruction for runtime
+        # -----------------------------------------
+
+        context = clean_data.get("context")
+        if isinstance(context, dict):
+            context = type("IRContext", (), context)
+
+        input_data = clean_data.get("input")
+        if isinstance(input_data, dict):
+            input_obj = type("IRInput", (), {})()
+            input_obj.metadata = input_data
+        else:
+            input_obj = input_data
+
+        # -----------------------------------------
+        # Build ONLY allowed fields dynamically
+        # -----------------------------------------
+        allowed_fields = {f.name for f in fields(CognitiveIR)}
+
+        init_data: Dict[str, Any] = {}
+
+        for key in allowed_fields:
+            if key == "context":
+                init_data[key] = context
+            elif key == "input":
+                init_data[key] = input_obj
+            else:
+                init_data[key] = clean_data.get(key)
+
+        return CognitiveIR(**init_data)

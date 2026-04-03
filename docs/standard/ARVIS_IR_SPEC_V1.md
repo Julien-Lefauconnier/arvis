@@ -164,6 +164,24 @@ Represents projected stability state.
 
 Represents adaptive control snapshot.
 
+### 5.8 Tools ( Runtime Execution Layer)
+
+Represents tool execution results associated with the cognitive episode.
+
+Properties:
+- MUST be deterministic
+- MUST reflect actual runtime execution
+- MUST NOT influence decision semantics
+
+Structure:
+
+ToolResultIR:
+  tool_name: str
+  success: bool
+  output: Any | null
+  error: str | null
+  latency_ms: float | null
+
 ---
 
 ## 6. Normalization

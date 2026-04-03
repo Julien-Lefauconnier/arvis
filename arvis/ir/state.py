@@ -1,7 +1,7 @@
 # arvis/ir/state.py
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Optional, List, Dict
 
 
 @dataclass(frozen=True)
@@ -28,9 +28,9 @@ class CognitiveStateIR:
     epsilon: float
     early_warning: bool
 
-    world_prediction: Any | None = None
-    forecast: Any | None = None
-    irg: Any | None = None
+    world_prediction: Optional[Any] = None
+    forecast: Optional[Any] = None
+    irg: Optional[Any] = None
     regime: Optional[str] = None
     stable: Optional[bool] = None
 
@@ -39,4 +39,8 @@ class CognitiveStateIR:
 
     projection_valid: Optional[bool] = None
     projection_margin: Optional[float] = None
-    
+
+    # -----------------------------------------
+    # TOOL EXECUTION
+    # -----------------------------------------
+    tool_results: Optional[List[Dict[str, object]]] = None

@@ -1,7 +1,7 @@
 # arvis/ir/cognitive_ir.py
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, List, Optional, cast
 
 from arvis.ir.input import CognitiveInputIR
 from arvis.ir.context import CognitiveContextIR
@@ -24,8 +24,18 @@ class CognitiveIR:
     state: Optional[CognitiveStateIR]
     gate: Optional[CognitiveGateIR]
 
-    # Extensions (Phase 3)
     projection: Optional[object] = None
     validity: Optional[object] = None
     stability: Optional[object] = None
     adaptive: Optional[object] = None
+
+    # -----------------------------------------
+    # TOOL EXECUTION
+    # -----------------------------------------
+    tools: Optional[List[Dict[str, Any]]] = None
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "CognitiveIR":
+        from arvis.ir.serialization.cognitive_ir_serializer import CognitiveIRSerializer
+
+        return cast(CognitiveIR, CognitiveIRSerializer.from_dict(data))
