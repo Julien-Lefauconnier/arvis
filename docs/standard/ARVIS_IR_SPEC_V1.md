@@ -97,6 +97,13 @@ are handled by external projection layers (e.g. Kernel Adapter) and are:
 
 The IR remains the authoritative representation.
 
+External projections MAY introduce runtime metadata.
+
+To ensure consistency, projections MUST define a semantic fingerprint
+mechanism allowing deterministic comparison with the source IR.
+
+If origin is None, it MUST be normalized to a deterministic default value ("unknown").
+
 ---
 
 ## 3. Canonical IR Structure (v1)

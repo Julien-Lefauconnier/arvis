@@ -111,13 +111,20 @@ This layer is strictly separated from the pipeline to preserve determinism.
 
 The Kernel Adapter Layer enables interoperability between ARVIS IR and external canonical signal systems (e.g. Veramem Kernel).
 
+The Kernel Adapter Layer introduces a semantic fingerprinting mechanism to guarantee deterministic equivalence of signals
+across executions, independent of runtime metadata.
+
 This layer is responsible for:
 
 - mapping CognitiveIR → CanonicalSignals
 - applying deterministic projection rules (no decision logic)
 - ensuring compatibility with external canonical registries
-- preserving determinism and replayability
+- preserving semantic determinism and replayability
 - enforcing closed-world signal validity (via registry)
+
+Semantic equivalence of projected signals MUST be evaluated using a canonical fingerprinting mechanism defined at the adapter level.
+
+This ensures replay compatibility independent of runtime metadata.
 
 ### Structure
 

@@ -86,7 +86,7 @@ This projection corresponds to the Canonical Projection Layer (see Specification
 
 If implemented, it MUST:
 
-- be deterministic
+- be semantically deterministic (excluding runtime metadata)
 - be rule-based
 - preserve IR semantics exactly
 - remain fully post-IR

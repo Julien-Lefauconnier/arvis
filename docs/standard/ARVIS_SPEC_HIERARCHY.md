@@ -119,7 +119,7 @@ This layer includes:
 
 Rules:
 
-* MUST be fully deterministic
+* MUST be semantically deterministic (excluding runtime metadata)
 * MUST NOT introduce decision logic
 * MUST NOT override or reinterpret Gate outputs
 * MUST NOT influence the cognitive pipeline

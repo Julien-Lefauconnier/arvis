@@ -2,7 +2,7 @@
 
 ## Status
 - Scope: Architecture (Extension Layer)
-- Type: Deterministic Interoperability Layer
+- Type: Semantically Deterministic Interoperability Layer
 - Position: Post-IR / Runtime-adjacent (non-cognitive)
 
 ---
@@ -39,8 +39,8 @@ This layer is:
 
 - post-pipeline
 - post-IR
-- read-only
-- deterministic
+- read-only with respect to IR
+- semantically deterministic (excluding runtime metadata)
 
 ---
 
@@ -64,7 +64,7 @@ Canonical Signals (external systems)
 
 The Kernel Adapter Layer MUST:
 
-- be deterministic
+- be semantically deterministic (excluding runtime metadata)
 - be replay-safe
 - not mutate IR
 - not influence decision semantics
@@ -84,6 +84,137 @@ The Kernel Adapter Layer MUST NOT:
 - perform scoring, weighting, or prioritization
 - resolve conflicts between signals
 - introduce interpretation beyond rule conditions
+
+Signals are runtime artifacts and MUST NOT be considered canonical representations.
+They are projections of canonical IR-derived structures enriched with runtime metadata.
+
+### 4.1 Semantic Determinism 
+
+Given identical IR input:
+
+- the same canonical signal types MUST be emitted
+- the same semantic payload MUST be produced
+- the same signal ordering MUST be preserved
+
+This guarantees:
+
+ > identical IR → identical semantic signals
+
+#### Runtime Metadata (NON-DETERMINISTIC)
+
+The following fields are explicitly **excluded from determinism guarantees**:
+
+- signal_id (UUID)
+- event_id (UUID)
+- timestamps (event creation, signal emission)
+
+These fields:
+
+- are generated at runtime
+- are not part of the semantic contract
+- MUST NOT affect replay validation
+ 
+#### Replay Model
+
+Replay compatibility is defined as:
+
+ > semantic equivalence of emitted signals, independent of runtime metadata
+
+Implementations MUST:
+
+- ignore runtime-generated identifiers during replay comparison
+- rely on semantic fingerprints derived from signal payloads
+
+#### Rationale
+
+The Kernel Adapter Layer bridges:
+
+- a deterministic IR system
+- an external signal system requiring runtime identity and time anchoring
+
+Therefore:
+
+- semantic structure MUST remain deterministic
+- runtime identity MAY remain non-deterministic
+
+---
+
+### 4.2 Semantic Fingerprinting
+
+To enforce semantic determinism, the Kernel Adapter Layer defines
+a **semantic fingerprinting mechanism** for signals.
+
+#### Definition
+
+A semantic fingerprint is a deterministic representation of a signal,
+excluding all runtime-generated metadata.
+
+Formally:
+
+```text
+fingerprint(signal) = (origin, signal_type, normalized_payload)
+```
+
+Where:
+- `origin` is the signal source (default: "unknown")
+- `signal_type` is derived from the canonical payload
+- `normalized_payload` is a reduced, deterministic projection
+
+#### Excluded Fields
+
+The following fields MUST be excluded from the fingerprint:
+
+- signal_id
+- event_id
+- timestamps
+
+These fields are considered **runtime identity**, not semantics.
+
+#### Normalization Rules
+
+Payload normalization MUST:
+
+- extract only deterministic semantic fields
+- ignore runtime-generated identifiers
+- produce a stable, hashable structure
+
+Example:
+
+```python
+(
+    payload.get("state"),
+    payload.get("subject_ref"),
+    payload.get("temporal_anchor"),
+)
+```
+
+#### Guarantees
+
+The system MUST guarantee:
+
+```text
+identical IR → identical semantic fingerprints
+```
+
+Even if:
+
+- signal IDs differ
+- timestamps differ
+
+#### Compliance Requirement
+
+Implementations MUST:
+
+- provide a semantic fingerprinting mechanism
+- use it for replay validation
+- ensure testable equivalence of signals across executions
+
+### Reference Implementation
+
+See:
+
+- `SignalSemantics.fingerprint`
+- `tests/adapters/kernel/test_signal_semantics.py`
 
 ---
 
