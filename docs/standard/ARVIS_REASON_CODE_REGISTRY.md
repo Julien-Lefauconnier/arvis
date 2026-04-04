@@ -21,6 +21,14 @@ Every reason code MUST be:
 - uniquely identifiable,
 - semantically unambiguous.
 
+Reason codes are a **normative component of the CognitiveIR**.
+
+They provide the **only authoritative explanation layer** for:
+
+- Gate verdicts
+- decision constraints
+- stability violations
+
 ---
 
 ## 2. Core Principles
@@ -67,6 +75,20 @@ Each reason code MUST be classified as:
 
 - `normative` → affects the verdict
 - `informative` → does not affect the verdict
+
+---
+
+### 2.6 Gate Consistency
+
+The set of emitted reason codes MUST be consistent with the final Gate verdict.
+
+Rules:
+
+- if a `critical` normative reason is present → verdict MUST be ABSTAIN
+- if a `high` normative reason is present → verdict MUST NOT be ALLOW
+- if a `medium` normative reason is present → verdict MUST be ≤ REQUIRE_CONFIRMATION
+
+Violation of this rule invalidates the IR.
 
 ---
 
@@ -201,6 +223,11 @@ A reason code MUST be emitted if:
 - a verdict downgrade occurs,
 - a veto condition is applied.
 
+Additionally:
+
+- all triggered constraints MUST produce at least one reason code
+- absence of a required reason code invalidates the IR
+
 ### 6.2 No Silent Failures
 
 The system MUST NOT:
@@ -218,6 +245,21 @@ Rules:
 - order is not normative
 - duplication is forbidden
 - all relevant constraints MUST be included
+
+Reason code ordering:
+
+- MUST be deterministic after normalization
+- MUST NOT carry semantic meaning
+
+### 6.4 Separation from Interoperability Layers
+
+Reason codes are independent from external canonical signal systems.
+
+In particular:
+
+- reason codes MUST NOT be derived from canonical signals
+- reason codes MUST NOT be modified by projection layers
+- reason codes MUST remain identical across IR → projection transformations
 
 ---
 
@@ -263,6 +305,7 @@ An implementation is reason-compliant if:
 - no unknown code is emitted
 - all triggered constraints produce a reason
 - reason semantics match their defined effect
+- reason codes fully explain the Gate verdict (no missing causal reason)
 
 ---
 

@@ -34,6 +34,7 @@ ARVIS is implemented as a **deterministic system** with four architectural domai
 2. canonical state
 3. reflexive observation
 4. public contract / IR
+5. interoperability / canonical projection
 
 ---
 
@@ -46,6 +47,7 @@ Input
   → Observability / Trace / Timeline
   → Reflexive Snapshot
   → Intermediate Representation (IR)
+  → Canonical Projection (Kernel Adapter)
   → Public API
 ```
 
@@ -102,6 +104,59 @@ Responsibilities:
 - execution orchestration
 
 This layer is strictly separated from the pipeline to preserve determinism.
+
+---
+
+## Kernel Adapter Layer 
+
+The Kernel Adapter Layer enables interoperability between ARVIS IR and external canonical signal systems (e.g. Veramem Kernel).
+
+This layer is responsible for:
+
+- mapping CognitiveIR → CanonicalSignals
+- applying deterministic projection rules (no decision logic)
+- ensuring compatibility with external canonical registries
+- preserving determinism and replayability
+- enforcing closed-world signal validity (via registry)
+
+### Structure
+
+- `ir_to_canonical.py` → IR → signals mapping
+- `rules/` → rule-based emission system
+- `signal_factory.py` → canonical signal construction
+- `kernel_adapter.py` → orchestration layer
+
+### Design Principles
+
+- deterministic mapping
+- no hidden logic
+- rule-based extensibility
+- strict separation from cognitive pipeline
+  - no interpretation or policy resolution
+  - no side-effects or execution logic
+  - canonical registry compliance (closed-world assumption)
+
+IMPORTANT:
+
+This layer is NOT part of cognition.
+It is a **a canonical projection layer for interoperability**.
+
+It does NOT:
+
+- make decisions
+- resolve conflicts
+- apply business or cognitive logic
+- influence the cognitive pipeline
+
+It ONLY:
+
+- projects already-computed cognition into a canonical external representation
+- enforces compatibility with external signal systems
+
+This guarantees that:
+
+> cognition remains inside ARVIS,
+> while canonical truth validation remains external.
 
 ---
 
@@ -281,7 +336,7 @@ ARVIS introduces an **Intermediate Representation (IR)** layer.
 This layer sits between the kernel and the external API:
 
 ```
-Pipeline → Result → IR → API
+Pipeline → Result → IR → Canonical Projection → API
 ```
 
 ### Properties
@@ -299,6 +354,15 @@ The IR provides:
 - a decoupling layer between cognition and execution
 - a bridge for external integrations (LLM, APIs, replay systems)
 
+IMPORTANT:
+
+IR is NOT a canonical representation.
+
+- IR is expressive, extensible, and system-oriented
+- CanonicalSignals are constrained, registry-bound, and external
+
+The Kernel Adapter is responsible for transforming IR into canonical signals.
+
 ---
 
 ## Architectural Guarantees
@@ -310,6 +374,8 @@ The system enforces:
 * stability constraints before action
 * bounded and normalized signals
 * full decision traceability
+* strict separation between cognition and canonical projection
+* no policy or decision logic outside the cognitive pipeline
 
 ---
 

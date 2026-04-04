@@ -44,6 +44,35 @@ ABSTAIN > REQUIRE_CONFIRMATION > ALLOW
 ### Rules:
 
 - A stricter verdict dominates a weaker verdict.
+
+Formal definition:
+
+Let V = {ALLOW, REQUIRE_CONFIRMATION, ABSTAIN}
+
+with ordering:
+
+ALLOW < REQUIRE_CONFIRMATION < ABSTAIN
+
+Formal definition:
+
+Let partial_verdicts be the set of verdict contributions derived from:
+
+- projection constraints
+- validity constraints
+- adaptive constraints
+- stability constraints
+- policy constraints
+
+verdict = max(partial_verdicts)
+
+The Gate verdict MUST be computed as:
+
+verdict = max(partial_verdicts)
+
+where max is taken under the lattice ordering.
+
+This guarantees monotonic safety.
+
 - Unsafe silent promotion is forbidden.
 - Any explicit promotion MUST be externally justified, traceable, and exposed in context.
 
@@ -108,6 +137,16 @@ GateResult:
 
 The canonical gate result MUST be representable by the public Gate IR.
 
+The GateResult is the **source of truth** for:
+
+- CognitiveGateResult
+- CognitiveGateIR
+
+No transformation layer (including IR or adapters) may alter:
+
+- the verdict
+- the normalized reason codes
+
 ### 4.1 Public IR alignment
 
 The final exposed Gate representation MUST remain consistent with:
@@ -155,6 +194,10 @@ including:
 
 - Confirmation is a distinct post-gate decision layer.
 - A confirmed override MAY promote a previously blocked verdict.
+  - Constraint:
+    Confirmation override MUST NOT violate hard safety constraints:
+    - critical veto conditions MUST NOT be overridden
+    - override is only allowed for degradations within policy-defined bounds
 - Such promotion MUST be explicit, traceable, and propagated into canonical IR context.
 - A rejected confirmation MUST result in ABSTAIN.
 
@@ -181,7 +224,7 @@ In ARVIS v1, the implementation-aligned evaluation flow is:
 
 1. local gate evaluation,
 2. fusion of gate-relevant signals,
-2. validity enforcement,
+3. validity enforcement,
 4. projection enforcement,
 5. kappa / hard veto enforcement,
 6. final adaptive veto,
@@ -265,12 +308,22 @@ The trace MUST:
 
 Reason codes are normative.
 
+All reason codes MUST:
+
+- belong to the ARVIS Reason Code Registry
+- respect their defined severity and effect
+- remain consistent with the final verdict (see Gate Consistency rules)
+
 Requirements:
 
 - MUST be non-empty on exposed gate output,
 - MUST be normalized before IR exposure,
 - MUST be deterministic,
 - MUST remain consistent with the final verdict,
+  Consistency rules:
+    - presence of a `critical` reason code → verdict MUST be ABSTAIN
+    - presence of a `high` reason code → verdict MUST NOT be ALLOW
+    - presence of a `medium` reason code → verdict MUST be ≤ REQUIRE_CONFIRMATION
 - MUST not contain contradictory active veto codes under final ALLOW, except when explicitly justified by a confirmation override mechanism propagated in context.
 
 ---
@@ -301,6 +354,15 @@ Every final verdict MUST be explainable through:
 
 Gate output MUST remain compatible with canonical IR replay.
 
+### 10.5 IR Consistency
+
+The Gate output MUST be fully explainable by:
+
+- emitted reason codes
+- decision trace
+
+No implicit decision logic is allowed.
+
 ---
 
 ## 11. Forbidden Behaviors
@@ -313,6 +375,9 @@ The Gate MUST NOT:
 - produce a verdict without traceable justification,
 - depend on hidden non-replayable state,
 - perform implicit override without explicit context propagation.
+- depend on external projection or canonical signal systems
+
+The Gate MUST operate purely on IR-level or pipeline-level data.
 
 ---
 

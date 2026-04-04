@@ -14,6 +14,21 @@ It is not a raw export.
 
 It is a **normalized, validated, and hashed representation** of the cognitive process.
 
+IMPORTANT:
+
+The IR is NOT a signal system.
+
+It is an **expressive, information-complete representation** of cognition.
+
+It is designed for:
+
+- traceability
+- replay
+- auditability
+- structured interpretation
+
+It is NOT constrained by external canonical signal registries.
+
 ---
 
 ## IR Construction Pipeline
@@ -231,6 +246,7 @@ The IR guarantees:
 - Stable normalization
 - Stable hashing
 - Replay consistency
+- Information completeness (no semantic loss from pipeline output)
 
 ---
 
@@ -272,6 +288,20 @@ Replay mode:
 - LLM structured prompting
 - trace verification
 
+NOTE:
+
+For interoperability with **external signal-based systems** (e.g. Veramem Kernel),
+the IR MUST be transformed through a dedicated projection layer:
+
+→ Kernel Adapter (Canonical Projection Layer)
+
+This transformation:
+
+- is deterministic
+- is rule-based
+- is lossy (information may be reduced to match canonical constraints)
+- does NOT belong to the IR itself
+
 ---
 
 ## Design Principle
@@ -287,3 +317,42 @@ It connects:
 It is:
 
   stable, deterministic, and machine-verifiable
+
+---
+
+---
+
+## IR vs Canonical Signals (CRITICAL DISTINCTION)
+
+ARVIS distinguishes between:
+
+### IR (Intermediate Representation)
+
+- expressive
+- complete
+- information-rich
+- internal canonical contract
+
+### Canonical Signals (External Systems)
+
+- constrained
+- registry-bound
+- reduced representation
+- interoperability-focused
+
+The transformation:
+
+```text
+IR → Canonical Signals
+```
+
+is:
+
+- deterministic
+- rule-based
+- external to the IR specification
+
+This ensures:
+
+- IR remains stable and expressive
+- external integrations remain compatible with strict canonical systems

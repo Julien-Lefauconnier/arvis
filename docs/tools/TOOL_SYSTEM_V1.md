@@ -14,6 +14,10 @@ This system is fully compatible with:
 - ZKCS (Zero-Knowledge Cognitive System)
 - ARVIS principles (traceability, bounded execution, abstention)
 
+This component belongs to:
+
+- Specification Hierarchy Level 4 (Execution Model)
+
 ---
 
 ## Architecture
@@ -33,7 +37,17 @@ ToolResult → ctx.extra
 ↓
 IR / State / Replay
 
+Note:
 
+Any projection to external signal systems (Kernel Adapter Layer)
+occurs strictly after IR generation and is not part of the Tool System.
+
+Constraint:
+
+The Runtime layer MUST only execute after:
+
+- Gate validation is complete
+- decision is finalized
 
 ---
 
@@ -53,8 +67,14 @@ IR / State / Replay
 ### 2. Determinism
 
 - Pipeline must remain pure
-- Tool execution MUST NOT influence decision logic in the same run
 - All effects are externalized in `ctx.extra`
+- Tool execution MUST NOT influence decision logic in the same run
+
+Tool execution MUST NOT:
+
+- influence decision semantics
+- modify Gate outcomes
+- inject signals into the cognitive pipeline
 
 ---
 
@@ -78,6 +98,16 @@ Stored in:
 ctx.extra["tool_results"]
 ```
 
+ToolResults MUST be propagated to:
+
+- CognitiveState (if applicable)
+- CognitiveIR (as runtime artifacts)
+
+ToolResults MUST be:
+
+- deterministic representations of execution
+- not re-executed during replay
+
 ---
 
 ### 4. Replay Compatibility
@@ -85,6 +115,16 @@ ctx.extra["tool_results"]
 - Tool execution is NOT replayed
 - Only ToolResults are persisted
 - Replay uses recorded state, not side-effects
+
+Replay MUST NOT:
+
+- trigger tool execution
+- depend on external systems
+
+Replay MUST rely exclusively on:
+
+- recorded ToolResults
+- deterministic IR
 
 ---
 
@@ -172,6 +212,7 @@ ctx.extra["retry_tool"] = True
 - Retry bounded
 - Side-effects isolated
 - Failures captured (never silent)
+- Runtime MUST NOT alter IR semantics
 
 ---
 

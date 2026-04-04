@@ -358,6 +358,94 @@ It is an externalized execution phase that preserves:
 
 ---
 
+## 🔗 Ecosystem & Interoperability
+
+ARVIS integrates with external canonical signal systems through a deterministic
+projection layer.
+
+### Veramem Kernel Integration
+
+ARVIS now supports interoperability with the  
+[Veramem Kernel](https://github.com/Julien-Lefauconnier/kernel)
+
+This kernel defines:
+
+- canonical signal registries
+- signal semantics and constraints
+- external validation systems
+- audit-compatible signal structures
+
+---
+
+### Positioning
+
+```text
+ARVIS           → Cognitive OS (decision system)
+Veramem Kernel  → Signal OS (external semantic layer)
+```
+
+Together, they enable:
+
+- standardized observability
+- cross-system interoperability
+- external audit pipelines
+- compliance-ready signal emission
+
+---
+
+### Canonical Projection Layer
+
+After IR generation, ARVIS MAY project CognitiveIR into canonical signals:
+
+```text
+CognitiveIR → Canonical Signals (Veramem Kernel)
+```
+
+This layer:
+
+- is deterministic
+- is rule-based
+- is fully post-IR
+- does NOT influence cognition or decision logic
+
+---
+
+### Architectural Position
+
+```text
+Pipeline → Gate → IR → Kernel Adapter → External Systems
+```
+
+This ensures:
+
+- strict separation of concerns
+- deterministic cognition
+- auditable external projection
+
+---
+
+### Key Guarantees
+
+- identical IR → identical canonical signals
+- no hidden transformation
+- full replay compatibility
+- registry-compliant signal emission
+
+---
+
+### Design Principle
+
+    ARVIS defines cognition.
+    Veramem Kernel defines external signal semantics.
+
+Together, they enable:
+
+- standardized observability
+- cross-system interoperability
+- external validation pipelines
+
+---
+
 ## ⚡ In One Sentence
 
 > ARVIS turns cognition into a **runtime-regulated dynamical system with enforceable stability constraints**
@@ -594,6 +682,178 @@ The reflexive layer is observational only:
 - no self-modification
 - no authority escalation
 - no raw cognitive leakage
+
+---
+
+## 🔍 Traceability & Audit
+
+ARVIS provides **full deterministic traceability** across all layers:
+
+- Cognitive pipeline execution
+- Gate decision logic
+- Reason codes (normative registry)
+- DecisionTrace (structured)
+- CognitiveIR (canonical contract)
+- ToolResults (runtime observability)
+- Canonical Signals (external projection)
+
+---
+
+### End-to-End Trace Chain
+
+```text
+Input
+ → Pipeline
+ → Gate (verdict + reason codes)
+ → DecisionTrace
+ → CognitiveIR (hashed)
+ → ToolResults (runtime)
+ → Canonical Signals (optional)
+```
+
+### Properties
+
+- deterministic
+- replayable
+- hash-verifiable
+- machine-auditable
+- human-explainable (via reason codes)
+
+---
+
+### No Hidden State
+
+ARVIS guarantees:
+
+- no implicit reasoning
+- no silent failures
+- no undocumented decisions
+
+Everything is:
+
+→ explicit
+→ traceable
+→ verifiable
+
+---
+
+---
+
+## ⚖️ Compliance & Regulatory Alignment
+
+ARVIS is designed to support **high-assurance AI systems** and aligns with
+emerging regulatory frameworks such as:
+
+- EU AI Act (high-risk systems)
+- auditability and traceability requirements
+- safety-critical decision systems
+
+---
+
+### Key Compliance Features
+
+#### Deterministic Decision Process
+
+- no stochastic decision-making
+- reproducible outputs
+- identical input → identical decision
+
+---
+
+#### Full Traceability
+
+- structured DecisionTrace
+- canonical IR with hashing
+- reason code registry (normative)
+- complete audit chain
+
+---
+
+#### Explicit Decision Constraints
+
+- Gate-enforced admissibility
+- stability constraints
+- projection validity enforcement
+
+---
+
+#### Replay Capability
+
+- IR-based replay
+- deterministic reconstruction
+- audit reproducibility
+
+---
+
+#### Separation of Concerns
+
+| Layer | Responsibility |
+|------|---------------|
+| Pipeline | cognition |
+| Gate | decision admissibility |
+| Runtime | execution |
+| IR | audit contract |
+| Kernel Adapter | external projection |
+
+---
+
+### External Audit Compatibility
+
+Through the Veramem Kernel integration, ARVIS enables:
+
+- standardized signal emission
+- external audit pipelines
+- regulatory inspection compatibility
+- cross-system trace verification
+
+---
+
+### Important
+
+ARVIS does NOT guarantee:
+
+- correctness of decisions
+- optimality
+
+It guarantees:
+
+→ **that unsafe or unstable decisions are not allowed to execute**
+
+---
+
+## 🔐 Security Model
+
+ARVIS follows a **Zero-Knowledge compatible architecture (ZKCS)**:
+
+- cognition does not depend on external execution
+- runtime side-effects are isolated
+- IR contains no hidden internal state
+- observability is controlled and explicit
+
+---
+
+### Security Properties
+
+- no hidden execution paths
+- no implicit state mutation
+- deterministic decision boundary
+- auditable reasoning chain
+
+---
+
+### Isolation Model
+
+```text
+Cognition (pure)
+    ≠ Runtime (side effects)
+    ≠ External systems (signals)
+```
+
+This prevents:
+
+- hidden influence of tools
+- execution-time decision corruption
+- non-replayable behaviors
 
 ---
 

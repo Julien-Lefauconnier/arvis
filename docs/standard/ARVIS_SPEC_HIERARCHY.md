@@ -101,6 +101,59 @@ Rules:
 
 ---
 
+### Level 5 — Interoperability / Canonical Projection Layer
+
+* `KERNEL_ADAPTER.md`
+
+Defines:
+
+* mapping from ARVIS IR → external canonical signal systems
+* deterministic projection rules
+* canonical signal emission constraints
+
+This layer includes:
+
+- Kernel Adapter
+- Rule Engine (projection only)
+- Canonical Signal Factory
+
+Rules:
+
+* MUST be fully deterministic
+* MUST NOT introduce decision logic
+* MUST NOT override or reinterpret Gate outputs
+* MUST NOT influence the cognitive pipeline
+* MUST operate strictly post-IR
+* MUST comply with external canonical registries (closed-world assumption)
+
+IMPORTANT:
+
+This layer is NOT part of:
+
+- cognition
+- decision-making
+- execution logic
+
+It is a **pure projection layer** between:
+
+> ARVIS internal semantics (IR)
+> and external canonical systems (e.g. Veramem Kernel)
+
+It ensures:
+
+- interoperability
+- canonical consistency
+- external validation compatibility
+
+It MUST NOT:
+
+- resolve conflicts
+- prioritize signals
+- apply business logic
+- introduce side effects
+
+---
+
 #### Tool System Position
 
 The Tool System is part of the Execution Model.
@@ -124,7 +177,7 @@ Tool execution is:
 
 ---
 
-### Level 5 — Supporting Normative Layers
+### Level 6 — Supporting Normative Layers
 
 * `ARVIS_PROJECTION_SPEC_V1.md`
 * `ARVIS_VALIDITY_ENVELOPE_SPEC_V1.md`
@@ -142,7 +195,7 @@ Rules:
 
 ---
 
-### Level 6 — Compliance & Verification
+### Level 7 — Compliance & Verification
 
 * `ARVIS_COMPLIANCE_SUITE_V1.md`
 
@@ -159,7 +212,7 @@ Rules:
 
 ---
 
-### Level 7 — Architecture & Informative Documents
+### Level 8 — Architecture & Informative Documents
 
 * `ARCHITECTURE.md`
 * `OVERVIEW.md`
@@ -187,7 +240,8 @@ In case of conflict between documents:
 2. System invariants override all other rules
 3. Gate specification overrides pipeline behavior
 4. IR specification overrides serialization or representation differences
-5. Informative documents MUST be ignored in conflicts
+5. Canonical Projection Layer MUST NOT override IR semantics
+6. Informative documents MUST be ignored in conflicts
 
 ---
 
@@ -240,6 +294,13 @@ An implementation is **ARVIS-compliant** if and only if:
 * execution is deterministic
 * compliance suite tests pass
 
+If a Canonical Projection Layer is implemented:
+
+* it MUST preserve IR semantics exactly
+* it MUST remain deterministic
+* it MUST NOT introduce decision or policy logic
+* it MUST comply with external canonical registry constraints
+
 ---
 
 ## 7. Design Principle
@@ -269,9 +330,10 @@ But:
 | 2     | Gate                  | Decision authority |
 | 3     | IR / Public Objects   | External contract  |
 | 4     | Pipeline + Tools      | Execution model    |
-| 5     | Projection / Validity | Constraint inputs  |
-| 6     | Compliance            | Verification       |
-| 7     | Architecture / Docs   | Informative        |
+| 5     | Canonical Projection  | Interoperability   |
+| 6     | Projection / Validity | Constraint inputs  |
+| 7     | Compliance            | Verification       |
+| 8     | Architecture / Docs   | Informative        |
 
 ---
 

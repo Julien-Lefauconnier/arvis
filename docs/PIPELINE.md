@@ -48,6 +48,13 @@ Each stage:
 * has no hidden side effects
 * can fail safely without breaking execution
 
+Each stage MAY emit reason codes.
+
+Reason codes:
+- MUST follow the ARVIS Reason Code Registry
+- MUST be deterministic
+- MUST be propagated to the Gate
+
 ---
 
 ## Post-Pipeline Normalization
@@ -68,6 +75,32 @@ This separation is intentional:
 - cognitive state = canonical internal representation
 - IR = external machine contract
 - reflexive = safe self-observation layer
+
+---
+
+## Kernel Signal Mapping (Extension Layer)
+
+After IR generation, ARVIS MAY project the IR into external canonical signal systems.
+
+This projection corresponds to the Canonical Projection Layer (see Specification Hierarchy Level 5).
+
+If implemented, it MUST:
+
+- be deterministic
+- be rule-based
+- preserve IR semantics exactly
+- remain fully post-IR
+
+This mapping:
+
+- is deterministic
+- is rule-based
+- does NOT influence the pipeline
+- is external to decision semantics
+
+Example:
+
+CognitiveIR → CanonicalSignals (Veramem Kernel)
 
 ---
 
@@ -467,6 +500,11 @@ After pipeline execution, ARVIS produces multiple output layers:
 2. **DecisionTrace** (canonical trace)
 3. **Intermediate Representation (IR)** (portable output)
 
+The GateResult produced during the pipeline is the authoritative source for:
+
+- CognitiveGateIR
+- IR decision semantics
+
 ```text
 CognitiveIRBuilder
 → CognitiveIRNormalizer
@@ -510,6 +548,8 @@ All reasoning must pass through explicit stages.
 ### 2. Stability Before Action
 
 No decision can execute without passing the Gate Stage.
+
+The Gate Stage is the only authority allowed to validate or reject execution.
 
 ---
 

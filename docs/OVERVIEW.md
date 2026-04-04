@@ -68,6 +68,16 @@ Instead of optimizing outputs, ARVIS enforces:
 * **when decisions are allowed**
 * **under which conditions execution is safe**
 
+ARVIS can interoperate with external systems through adapter layers.
+
+These adapters allow:
+- signal translation
+- external kernel integration
+- modular extension of the system
+
+Example:
+- Veramem Kernel integration via canonical signals
+
 ---
 
 ## How It Works (Conceptually)

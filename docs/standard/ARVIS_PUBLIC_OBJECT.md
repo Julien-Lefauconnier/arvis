@@ -19,6 +19,15 @@ These objects form the **external contract** of ARVIS and are used for:
 
 Any object not listed here MUST be considered **internal** and non-normative.
 
+IMPORTANT:
+
+Public Objects define the **external contract boundary of ARVIS**.
+
+They are distinct from:
+
+- internal execution structures (pipeline state)
+- interoperability projections (e.g. canonical signals)
+
 ---
 
 ## 2. Core Principles
@@ -56,6 +65,35 @@ Public objects MUST NOT:
 
 ---
 
+
+### 2.5 Separation from Interoperability Layers
+
+Public Objects are NOT equivalent to external canonical signal systems.
+
+In particular:
+
+- Public Objects are expressive and information-complete
+- Canonical Signals are constrained and registry-bound
+
+The transformation:
+
+```text
+CognitiveIR → Canonical Signals
+```
+
+is handled by the **Kernel Adapter Layer** and is:
+
+- deterministic
+- rule-based
+- lossy
+
+Public Objects MUST NOT:
+
+- depend on canonical signal representations
+- embed signal registry constraints
+
+---
+
 ## 3. Object Classification
 
 Each object MUST declare its status:
@@ -73,6 +111,15 @@ Only `public` objects appear in this registry.
 Public objects are defined at the **interface boundary of the pipeline**.
 
 They correspond to **canonical, normalized, and validated structures**.
+
+NOTE:
+
+The CognitiveIR is the **core canonical object** of ARVIS.
+
+However, not all public objects are equal in role:
+
+- CognitiveIR → full canonical representation
+- Other objects → partial projections or structured views
 
 ---
 
@@ -157,6 +204,7 @@ CognitiveIR:
 - MUST be deterministic
 - MUST be replayable
 - MUST be consistent with Gate output
+- MUST be the single source of truth for external projection layers
 
 ---
 
@@ -264,6 +312,15 @@ Status:
 - runtime-derived
 - observable
 
+IMPORTANT:
+
+ToolResult reflects execution outputs only.
+
+It MUST NOT:
+
+- influence decision semantics
+- be re-injected into the same execution cycle
+
 ---
 
 ## 5. Object Versioning
@@ -290,6 +347,24 @@ All public objects MUST:
 - use canonical field ordering
 - avoid floating ambiguity (explicit precision rules)
 - produce stable hashes when serialized
+
+---
+
+## 6.1 Exposure Model
+
+Not all Public Objects are necessarily exposed in all contexts.
+
+Exposure is controlled by:
+
+- API layer
+- reflexive rendering layer
+- compliance / audit interfaces
+
+Rules:
+
+- exposed objects MUST remain deterministic
+- partial exposure MUST preserve semantic consistency
+- hidden fields MUST NOT affect exposed semantics
 
 ---
 

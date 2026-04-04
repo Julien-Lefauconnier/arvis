@@ -19,6 +19,12 @@ The IR serves as:
 
 Every ARVIS-compliant system MUST produce a valid IR.
 
+IMPORTANT:
+
+The IR is the **single source of truth** for all external representations of a cognitive execution.
+
+All interoperability layers (e.g. canonical signal systems) MUST derive exclusively from the IR.
+
 ---
 
 ## 2. Core Principles
@@ -63,6 +69,33 @@ The IR system is composed of distinct layers:
 4. Serialized IR
 5. Hashed IR
 6. Envelope (portable contract)
+
+---
+
+---
+
+### 2.5 Separation from Interoperability Layers
+
+The IR is independent from any external canonical signal system.
+
+In particular:
+
+- the IR MUST NOT embed signal registry constraints
+- the IR MUST NOT be reduced to signal-based representations
+
+Transformations such as:
+
+```text
+IR → Canonical Signals
+```
+
+are handled by external projection layers (e.g. Kernel Adapter) and are:
+
+- deterministic
+- rule-based
+- lossy
+
+The IR remains the authoritative representation.
 
 ---
 
@@ -173,6 +206,16 @@ Properties:
 - MUST reflect actual runtime execution
 - MUST NOT influence decision semantics
 
+IMPORTANT:
+
+Tool results are **attached to the IR**, but are not part of the decision computation.
+
+They are:
+
+- post-decision
+- non-causal
+- replay-observable only
+
 Structure:
 
 ToolResultIR:
@@ -260,6 +303,7 @@ The IR MUST satisfy:
 - consistency between gate and decision
 - reason_codes reflect triggered conditions
 - normalized IR is idempotent
+- the IR MUST preserve all semantically relevant information produced by the pipeline
 
 ---
 
@@ -302,6 +346,12 @@ An implementation is IR-compliant if:
 - serialization is deterministic
 - hashing is stable
 - replay is consistent
+
+If external projection layers are implemented:
+
+- they MUST use the IR as input
+- they MUST NOT alter IR semantics
+- they MUST remain deterministic and side-effect free
 
 ---
 
