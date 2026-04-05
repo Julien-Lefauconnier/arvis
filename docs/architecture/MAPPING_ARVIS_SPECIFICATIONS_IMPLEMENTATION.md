@@ -1,409 +1,272 @@
+# ARVIS — Formal Theory ↔ System Correspondence 
 
-# ARVIS — Formal Theory ↔ System Correspondence
-## (Research-grade Mapping Document)
-
----
+**Research-grade Mapping Document — Implementation-Aligned (M0–M12)**
 
 ## 0. Purpose
 
-This document establishes a **formal correspondence** between:
+This document establishes a formal correspondence between:
 
-- The theoretical framework introduced in  
-  *ARVIS: Two-Timescale Hybrid Cognitive Control with Lyapunov Stability Guarantees*
-
-- The production-grade implementation of the ARVIS Cognitive Operating System.
+- the theoretical framework introduced in *ARVIS: Two-Timescale Hybrid Cognitive Control with Lyapunov Stability Guarantees*,
+- and the current implementation of the ARVIS Cognitive Operating System.
 
 It serves three critical roles:
 
-1. **Traceability** — linking each mathematical construct to an implementation artifact  
-2. **Auditability** — enabling verification of theoretical assumptions at runtime  
-3. **Extensibility** — clearly separating proven theory from system-level extensions  
-
----
+- **Traceability** — mapping each mathematical construct to runtime artifacts
+- **Auditability** — clarifying which theoretical assumptions are enforced, approximated, or unverified
+- **Structural clarity** — separating the proven theoretical core, the implementation-aligned extensions, and the decision-theoretic algebra layer
 
 ## 1. Formal Model vs Runtime Representation
 
 ### 1.1 Fast State (Contracting Subsystem)
 
-**Theory**
-
-$$ x_t \in \mathbb{R}^n $$
-
+**Theory**  
+$x_t \in \mathbb{R}^n$  
 Fast contracting dynamics governed by $f_q$.
 
-**Implementation**
+**Implementation**  
+`ctx.cur_lyap`, `ctx.prev_lyap`
 
-- `ctx.cur_lyap`
-- `ctx.prev_lyap`
+**Interpretation**  
+The implementation does not represent $x_t$ explicitly. Instead, it operates on a compressed Lyapunov-relevant projection of the state.  
+Thus, the system is **energy-driven** rather than state-driven. Stability is monitored directly in Lyapunov space.
 
-**Interpretation**
-
-These variables encode a **compressed Lyapunov-relevant projection** of the fast state,
-rather than the raw state x_t.
-
-→ This is a **model reduction**:  
-The system operates directly in Lyapunov space instead of state space.
-
----
+→ This constitutes a **model reduction**: $x_t \mapsto W_t$
 
 ### 1.2 Slow State (Adaptive Subsystem)
 
-**Theory**
+**Theory**  
+$z_t \in \mathbb{R}^m$ with slow adaptation:  
+$z_{t+1} = (1-\eta)z_t + \eta T(x_t)$
 
-$$ z_t \in \mathbb{R}^m $$
+**Implementation**  
+`ctx.slow_state`, `ctx.symbolic_state`
 
-Slow adaptation via:
+**Extension**  
+The implementation introduces a **symbolic / cognitive state layer** that is:
+- non-metric,
+- not part of the original Lyapunov formulation,
+- interacting with decision and control.
 
-$$ z_{t+1} = (1 - \eta) z_t + \eta T(x_t) $$
-
-**Implementation**
-
-- `ctx.slow_state`
-- `ctx.symbolic_state`
-
-**Extension**
-
-The system introduces an additional:
-
-→ **symbolic layer**
-
-This corresponds to a **non-metric extension** of z_t,
-not captured in the original Lyapunov formulation.
-
----
+Thus:  
+$z_t^{\text{impl}} = (z_t^{\text{metric}}, z_t^{\text{symbolic}})$
 
 ### 1.3 Switching System
 
-**Theory**
+**Theory**  
+$q_t \in Q$ (discrete switching mode)
 
-$$ q_t \in Q $$
+**Implementation**  
+`ctx.switching_runtime`, `ctx.switching_params`, `ctx.switching_metrics`
 
-Finite discrete regime.
+**Interpretation**  
+Switching is implemented as a constraint-evaluated runtime process including dwell-time estimation, switching frequency monitoring, and stability condition evaluation.  
 
-**Implementation**
-
-- `ctx.switching_runtime`
-- `ctx.switching_params`
-
-**Key Difference**
-
-Switching is not represented as a discrete variable but as:
-
-→ a **continuous-time constraint system**
-
-This enables runtime evaluation of:
-
-- dwell time
-- switching frequency
-- stability margin
-
----
+Switching directly influences decision filtering (Gate). It is therefore both a dynamical component and a decision constraint source.
 
 ### 1.4 Disturbance Model
 
-**Theory**
+**Theory**  
+$w_t$ bounded (scalar disturbance)
 
-$$ w_t \text{ bounded} $$
+**Implementation**  
+`collapse_risk`, `uncertainty`, `conflict_pressure`
 
-**Implementation**
-
-- `collapse_risk`
-- `uncertainty`
-- `conflict_pressure`
-
-**Interpretation**
-
-The system generalizes disturbance into:
-
-→ a **multi-dimensional cognitive disturbance space**
-
-This is strictly more expressive than the scalar disturbance model.
-
----
+**Interpretation**  
+Disturbance is lifted to a multi-dimensional **cognitive disturbance space**:  
+$w_t \in \mathbb{R}^k$ with $k > 1$.  
+This strictly generalizes the scalar disturbance model in the theory.
 
 ## 2. Lyapunov Layer (Core Equivalence)
 
 ### 2.1 Composite Lyapunov Function
 
-**Theory**
+**Theory**  
+$W_q(x,z) = V_q(x) + \lambda \|z - T(x)\|^2$
 
-$$ W_q(x,z) = V_q(x) + \lambda \| z - T(x) \|^2 $$
+**Implementation**  
+`CompositeLyapunov.W`, `CompositeLyapunov.delta_W`
 
-**Implementation**
-
-- `CompositeLyapunov.W`
-- `CompositeLyapunov.delta_W`
-
-**Guarantee**
-
-✔ Direct implementation of theoretical construct  
-✔ Same structural decomposition (fast + slow)
-
----
+**Status**  
+✔ Structurally equivalent  
+✔ Same decomposition (fast + slow components)
 
 ### 2.2 Lyapunov Increment
 
-**Theory**
+**Theory**  
+$\Delta W_t = W_{t+1} - W_t$
 
-$\Delta W_t$ drives stability.
+**Implementation**  
+`ctx.delta_w`
 
-**Implementation**
+**Extension**  
+Computed under partial observability and fallback-compatible. Introduces robust observability without requiring full state access.
 
-- `ctx.delta_w`
+### 2.3 Temporal Extension (Implementation only)
 
-**Additional Capability**
-
-- fallback handling
-- observability even without full state
-
-→ This introduces **partial observability robustness**
-
----
-
-### 2.3 Temporal Extension
-
-**Implementation only**
-
-- `ctx.delta_w_history`
-
+`ctx.delta_w_history`  
 Used for:
-
-- empirical stability tracking
-- global stability guard
-
----
+- empirical stability monitoring (M10)
+- global stability guards
 
 ## 3. Switching Stability (Result ↔ Runtime)
 
 ### 3.1 Theoretical Condition
 
-$$ \frac{\log J}{\tau_d} + \log(1 - \kappa_{\text{eff}}) < 0 $$
-
----
+$$
+\frac{\log J}{\tau_d} + \log(1 - \kappa_{\text{eff}}) < 0
+$$
 
 ### 3.2 Runtime Evaluation
 
-- `switching_condition`
-- `switching_lhs`
-- `kappa_eff`
-
-**Exposed Metrics**
-
-```
-ctx.switching_metrics = {
-    tau_d,
-    kappa_eff,
-    lhs,
-    safe
-}
-```
-
----
+`switching_lhs`, `kappa_eff`, `ctx.switching_metrics`
 
 ### 3.3 Interpretation
 
-The system implements:
+The system performs **online verification** of the theoretical inequality.  
+Unlike the pure theoretical model, this condition is not only observed but actively **enforced** via decision filtering (Gate operator).
 
-→ **online verification of a theoretical inequality**
+## 4. Projection Layer (Runtime Certification — M3.3)
 
-This is stronger than the paper, which is:
+### 4.1 Theoretical Projection
 
-→ offline / analytical
+$\Pi : \mathcal{C} \to (x_t, z_t, q_t, w_t)$
 
----
+### 4.2 Implemented Projection
 
-## 4. Global Stability Layer
+$\Pi_{\text{cert}} : \mathcal{O}_{\text{runtime}} \to P_t$  
+with $P_t = (\text{domain_valid}, m_t, \text{is_projection_safe}, \text{level})$
 
-### Theory
+### 4.3 Interpretation
 
-Lyapunov + dwell-time ⇒ exponential stability
+The projection layer currently acts as a **runtime certification operator**, not a full mathematical projection. It ensures bounded domain, deterministic validation, and compatibility with Gate enforcement.
 
----
+## 5. Decision System (Algebraic Layer — M11–M12)
 
-### Implementation
+### 5.1 Decision Space
 
-- `GlobalStabilityGuard`
+$$
+V = \{\text{ALLOW}, \text{REQUIRE\_CONFIRMATION}, \text{ABSTAIN}\}
+$$
 
-**Behavior**
+with the order:
 
-Evaluates stability over a trajectory:
+$$
+\text{ALLOW} \preceq \text{REQUIRE\_CONFIRMATION} \preceq \text{ABSTAIN}
+$$
 
-→ approximates ISS / boundedness empirically
+### 5.2 Algebraic Structure
 
----
+$(V, \wedge)$ where $v_1 \wedge v_2 := \min_{\succ}(v_1, v_2)$ forms a **totally ordered meet-semilattice**.
 
-## 5. Decision Layer (Non-Theoretical Extension)
+Since $V$ is finite and totally ordered, it also forms a **complete lattice**.
 
-This section defines **system-level innovations not covered by the paper**.
+### 5.3 Decision Operators
 
----
+- Gate: $G : \mathcal{S} \times \mathcal{P} \to V$
+- Projection-control: $\Pi_{\text{ctrl}} : \mathcal{S} \to V$
 
-### 5.1 Multiaxial Decision Fusion
+### 5.4 Final Decision Rule
 
-Combines:
+$$
+v_t = G(s_t, P_t) \wedge \Pi_{\text{ctrl}}(s_t)
+$$
 
-- Lyapunov verdict
-- switching stability
-- global stability
+### 5.5 Interpretation
 
-→ Produces a **single operational decision**
+The system is no longer heuristic: it is a **lattice-based decision system** with guaranteed properties of monotonicity, non-relaxation, and absorption of unsafe decisions.
 
-This corresponds to:
+## 6. Dual Stability Structure
 
-→ a **meta-decision operator over stability signals**
+ARVIS implements two orthogonal stability layers:
 
----
+### 6.1 Energy Stability (Lyapunov)
+Driven by $W_t$, $\Delta W_t$, $\widehat{\kappa}_t$ and enforced by the Gate operator $G$.
 
-### 5.2 System Confidence
+### 6.2 Structural Stability (Projection)
+Driven by projection signals and enforced by $\Pi_{\text{ctrl}}$.
 
-Defines:
+### 6.3 Composition
 
-C_system ∈ [0,1]
+$$
+v_t = v_t^{\text{gate}} \wedge v_t^\pi
+$$
 
-Computed from:
+ensures that no structural violation can be bypassed by energy signals.
 
-- ΔW
-- switching validity
-- observability
-- risk
+## 7. Control Layer (Closed-Loop — M7)
 
----
+**Implementation**  
+- adaptive epsilon  
+- exploration modulation  
 
-### 5.3 Confidence-Control Loop
+**Key invariant**  
+$W_t \uparrow \implies u_t \downarrow$
 
-Control parameters adapted:
+## 8. Runtime Enforcement Layer
 
-- epsilon
-- exploration
+Unlike the theoretical model, ARVIS actively enforces constraints at runtime through:
+- Gate filtering (M6)
+- Projection certification (M3.3)
+- Projection-control filtering (M11)
+- Algebraic fusion (M12)
 
-→ This introduces:
-
-**closed-loop control on epistemic reliability**
-
----
-
-## 5.4 Runtime Enforcement Extension
-
-The implementation introduces a **runtime enforcement layer** absent from the theoretical model.
-
-This includes:
-
-- multiaxial fusion (`multiaxial_fusion`)
-- policy override (global stability handling)
-- strict theoretical mode (hard enforcement)
-
-Interpretation:
-
-→ The system does not only evaluate stability conditions
-
-→ it **enforces them at decision time**
-
-This transforms the theoretical model into a:
-
-→ **control system with real-time constraint enforce
-
----
-
-## 6. Robustness & Fault Tolerance
+## 9. Robustness & Fault Tolerance
 
 The implementation includes:
-
-- guarded execution (try/except)
-- fallback values
+- fallback execution
+- safe defaults
 - degraded modes
 
-This yields:
+**Result**: graceful degradation instead of instability.
 
-→ **graceful degradation instead of instability**
+## 10. Validity Domain
 
-This property is **absent from the theoretical model**
+All guarantees apply only within the valid operating region $\mathcal{O}_{\text{valid}}$, where:
+- projection is valid,
+- assumptions A1–A15 hold,
+- perturbations are bounded.
 
----
+## 11. Theoretical Coverage vs System Scope
 
-## 7. Theoretical Coverage vs System Scope
-
-### Covered by Paper
-
+**Fully Covered**
 - Lyapunov stability
-- slow-fast coupling
-- switching constraints
-- stability region
+- Hybrid switching constraints
+- Practical stability (M8)
 
----
+**Partially Formalized**
+- Decision algebra (M12)
+- Projection-control (M11)
 
-### System Extensions
+**Not Fully Proven**
+- Confidence modeling
+- Full cognitive disturbance model
+- Adaptive control optimality
 
-- confidence modeling
-- multi-axial decision making
-- adaptive control modulation
-- cognitive disturbance modeling
+## 12. Research Implications
 
----
+ARVIS is a **strict extension** of the theoretical model.
 
-## 8. Validity Domain
+- The theory defines → a stable dynamical core  
+- The system adds → a decision-theoretic safety architecture
 
-### Theoretical Guarantees Apply To
+## 13. Roadmap Toward Full Formalization
 
-- Lyapunov layer
-- switching constraints
-- composite stability
+- Formalize $\Pi_{\text{ctrl}}$ as an operator with guarantees
+- Extend ISS theory to the cognitive disturbance space
+- Formalize the decision algebra in control-theoretic terms
+- Prove stability under adaptive control laws
 
----
-
-### Not Yet Formally Proven
-
-- confidence layer
-- fusion logic
-- control adaptation
-
-However:
-
-These components are **structurally constrained by Lyapunov signals**
-and do not violate the theoretical stability layer.
-
-They operate as:
-
-→ admissible extensions on top of a proven stable core
-
----
-
-## 9. Research Implications
-
-The ARVIS system represents:
-
-→ a **strict superset of the theoretical model**
-
-Key insight:
-
-The theory defines a **stable core**, while the system builds:
-
-→ a **cognitive control architecture on top of it**
-
----
-
-## 10. Roadmap Toward Full Formalization
-
-Future work required to align system and theory:
-
-1. Formalize confidence as a stochastic Lyapunov extension  
-2. Model fusion as a decision operator with guarantees  
-3. Extend ISS to cognitive disturbance space  
-4. Prove stability under adaptive control parameters  
-
----
-
-## 11. Conclusion
+## 14. Conclusion
 
 The ARVIS implementation:
+-  preserves the theoretical stability core
+- ✔ introduces a decision lattice enforcing safety constraints
+- ✔ integrates energy and structural stability
+- ✔ provides empirically validated behavior (M10)
 
-✔ strictly implements the theoretical stability core  
-✔ extends it into a robust, adaptive cognitive system  
+**Final Insight**
 
-The present paper captures:
-
-→ the **mathematical backbone**
-
-The system demonstrates:
-
-→ the **operational realization and extension**
-
+ARVIS is not only a Lyapunov-stable system, but a **lattice-controlled hybrid cognitive system** where:
+- stability is measured (Lyapunov),
+- safety is enforced (Gate + $\Pi_{\text{ctrl}}$),
+- decisions are structured algebraically (M12).

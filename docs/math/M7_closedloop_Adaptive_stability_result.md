@@ -29,14 +29,31 @@ $$
 with control input:
 
 $$
-u_t = C(v_t, \kappa^t, W_t)
+u_t = C(v_t^{\text{final}}, \kappa^t, W_t)
 $$
 
 and decision coming from the Gate:
 
 $$
-v_t = G(x_t, z_t, W_t, \kappa^t)
+v_t^{\text{gate}} = G(W_t, \Delta W_t, \kappa^t, P_t, V_t, H_t)
 $$
+
+$$
+v_t^{\text{final}} = \min_{\succ} \big(v_t^{\text{gate}}, v_t^{\pi}\big)
+$$
+
+where:
+
+- $v_t^{\pi}$ : projection-control decision (Π_ctrl)
+
+
+The projection-control layer is defined as:
+
+$$
+v_t^{\pi} = \Pi_{\text{ctrl}}(x_t, z_t, H_t)
+$$
+
+This layer produces a decision-level constraint applied after Gate evaluation.
 
 ---
 
@@ -80,7 +97,7 @@ soft_decrease   → epsilon *= 0.9
 
 ---
 
-## 4. Closed-Loop Mechanism — Three Feedback Loops
+## 4. Closed-Loop Mechanism 
 
 The system implements three nested stability feedback loops:
 
@@ -93,8 +110,12 @@ The system implements three nested stability feedback loops:
    (Gate reacts to long-term contraction/adaptation estimate)
 
 3. **Loop 3 — Control modulation feedback**  
-   $v_t, W_t \to u_t \to f_{q_t}(\cdot)$  
+   $v_t^{\text{final}}, W_t \to u_t \to f_{q_t}(\cdot)$
    (Control reduces aggressiveness when Gate signals caution or when energy increases)
+
+4. **Loop 4 — Projection-control feedback (NEW)**  
+   $(x_t, z_t) \to v_t^{\pi} \to v_t^{\text{final}}$  
+   (structured projection constrains final decision independently of Lyapunov signals)
 
 ---
 
@@ -106,7 +127,7 @@ The system implements three nested stability feedback loops:
 
 - A1–A15 (M1)
 - projection validity on $\mathcal{O}_{\text{valid}}$ (M3)
-- Gate stability preservation (M6 — T6)
+- Gate stability preservation (M6 — T6, including Π_ctrl constraints)
 - bounded control modulation ($\epsilon_t, \text{exploration}_t$ remain bounded)
 
 **then:**
@@ -137,6 +158,7 @@ If $\Delta W_t > 0$:
 
 - Gate → restricts decisions (CONFIRM or ABSTAIN)
 - Control → reduces exploration and action scale ($\epsilon_t \downarrow$, exploration$_t \downarrow$)
+- Π_ctrl → may further restrict decisions based on structured state
 
 ### 6.2 Adaptive reaction
 
@@ -144,11 +166,12 @@ If $\kappa^t \leq 0$ (contraction fails or reverses):
 
 - Gate → ABSTAIN or strong CONFIRM
 - Control → strong reduction of aggressiveness
+- Π_ctrl → enforces consistency constraints even when Lyapunov signals are borderline
 
 Additionally, if a **hard kappa violation** is detected:
 
 $$
-\kappa\text{-violation} \Rightarrow v_t = \text{ABSTAIN}
+\kappa\text{-violation} \Rightarrow v_t^{\text{gate}} = \text{ABSTAIN}
 $$
 
 This enforces a strict safety barrier independent of recovery signals.
@@ -160,6 +183,25 @@ If instability accumulates ($\sum \Delta W_t > \text{threshold}$):
 
 - Global guard triggers
 - System evolution is blocked or heavily slowed
+
+### 6.4 Projection-Control Reaction
+
+The projection-control layer enforces additional constraints:
+
+- If projected state indicates high-risk configuration → downgrade decision
+- If structured inconsistencies are detected → REQUIRE_CONFIRMATION or ABSTAIN
+
+$$
+v_t^{\text{final}} = \min_{\succ}(v_t^{\text{gate}}, v_t^{\pi})
+$$
+
+#### Strong invariant
+
+**Irreversibility of abstention**
+
+$$
+v_t^{\text{gate}} = \text{ABSTAIN} \Rightarrow v_t^{\text{final}} = \text{ABSTAIN}
+$$
 
 ---
 
@@ -185,6 +227,14 @@ which encodes:
 **Interpretation:**  
 Any increase in Lyapunov energy automatically reduces system aggressiveness (self-stabilizing behavior).
 
+Additionally:
+
+$$
+(x_t, z_t) \text{ unsafe} \quad \Longrightarrow \quad v_t^{\text{final}} \downarrow
+$$
+
+The system is not only energy-stabilized, but also **structure-stabilized** via Π_ctrl.
+
 ---
 
 ## 8. Stability Invariants (Runtime Enforcement)
@@ -202,11 +252,17 @@ The current implementation enforces the following invariants:
   → **This is critical** for stability
 
 - **I4 — Gate dominance**  
-  If $v_t = \text{ABSTAIN}$ → no risky evolution is allowed
+  If $v_t^{\text{final}} = \text{ABSTAIN}$ → no risky evolution is allowed
 
 - **I5 — Kappa Dominance (Hard Constraint)**  
   If contraction fails → system cannot proceed  
   (enforced after fusion)
+
+- **I6 — Projection monotonicity (Π_ctrl)**  
+   Π_ctrl cannot relax a restrictive decision
+
+- **I7 — Abstention irreversibility**  
+   $v_t^{\text{gate}} = \text{ABSTAIN} \Rightarrow v_t^{\text{final}} = \text{ABSTAIN}$
 
 ---
 
@@ -214,7 +270,7 @@ The current implementation enforces the following invariants:
 
 The ARVIS closed-loop system — Projection → Dynamics → Gate → Control → Dynamics — is **practically stable** under the validated assumptions and implementation constraints.
 
-The combination of Lyapunov-based Gate decisions and adaptive control modulation creates a **self-stabilizing feedback architecture** that:
+The combination of Lyapunov-based Gate decisions, projection-control constraints (Π_ctrl), and adaptive control modulation creates a **multi-layer self-stabilizing feedback architecture** that:
 
 - detects instability early,
 - restricts decisions conservatively,
@@ -222,3 +278,8 @@ The combination of Lyapunov-based Gate decisions and adaptive control modulation
 - prevents positive feedback loops.
 
 This constitutes the **final runtime stability guarantee** of the ARVIS cognitive architecture, closing the loop between formal hybrid stability theory and implemented adaptive behavior.
+
+This architecture combines:
+- energy-based stabilization (Lyapunov)
+- structural stabilization (Π_ctrl)
+- adaptive modulation (control layer)

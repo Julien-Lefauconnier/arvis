@@ -30,7 +30,14 @@ The system enforces a strict separation between:
 
 At each timestep:
 
-$$ o_t \xrightarrow{\Pi_{\text{cert}}} P_t \xrightarrow{W_t} \hat{\kappa}_t \xrightarrow{G} C \rightarrow (x_{t+1}, z_{t+1}) $$
+$$
+o_t \xrightarrow{\Pi_{\text{cert}}} P_t
+\xrightarrow{W_t} \widehat{\kappa}_t
+\xrightarrow{G} v_t^{\text{gate}}
+\xrightarrow{\Pi_{\text{ctrl}}} v_t
+\xrightarrow{C} (x_{t+1}, z_{t+1})
+$$
+
 
 ⚠️ Important:
 
@@ -50,7 +57,8 @@ Where:
 - $\Pi_{\text{cert}}$ : runtime projection certification layer (implemented)
 - $W$ : composite Lyapunov function
 - $\hat{\kappa}$ : adaptive contraction estimate
-- $G$ : decision gate
+- $G$ : Gate operator (energy-based decision)
+- $\Pi_{\text{ctrl}}$ : projection-control operator (structural filter)
 - $C$ : control modulation
 
 This defines a **closed-loop cognitive system with feedback**.
@@ -131,7 +139,7 @@ ARVIS is defined within a **validated operational domain**.
 
 All guarantees apply only if:
 
-$$ \forall t, \quad o_t \in O_{\text{valid}} $$
+\forall t, \quad o_t \in \mathcal{O}_{\text{valid}} $$
 
 This requires:
 - bounded projection (theoretical Π, assumed)
@@ -153,7 +161,7 @@ Outside this domain:
 
 ARVIS enforces a stability condition on switching dynamics:
 
-$$ \frac{\log(J)}{\tau_d} + \log(1 - k_{\text{eff}}) < 0 $$
+\frac{\log(J)}{\tau_d} + \log(1 - \kappa_{\text{eff}}) < 0 $$
 
 Where:
 - $J$ : switching gain
@@ -173,7 +181,9 @@ This condition defines the admissible trajectories of the reference switching sy
 Decisions are not generated.  
 They are **validated through a constrained operator**:
 
-$` G : (W, \Delta W, \kappa, V, P, H) \mapsto \{\text{ALLOW}, \text{REQUIRE CONFIRMATION}, \text{ABSTAIN}\} `$
+$$
+G : (W, \Delta W, \widehat{\kappa}, V, P, H) \mapsto V
+$$
 
 The Gate is:
 
@@ -247,7 +257,7 @@ If violated → the decision is **downgraded or rejected**
 
 ## 📡 Runtime validation
 
-ARVIS combine theoretical guarantees (M6–M9) + runtime observers + adaptive estimation.
+ARVIS combines theoretical guarantees (M6–M9) with runtime observers and adaptive estimation.
 
 Decisions are **evaluated and constrained at runtime under observable conditions**, not assumed safe.
 
@@ -264,7 +274,7 @@ ARVIS distinguishes between:
 $$ \Pi : \mathcal{C} \to (x, z, q, w) $$
 
 **Current implementation:**
-$$ \Pi_{\text{cert}} : \mathcal{O}_{runtime} \to P_t $$
+$$ \Pi_{\text{cert}} : \mathcal{O}_{\text{runtime}} \to P_t $$
 
 The system currently operates on:
 
@@ -326,7 +336,7 @@ ARVIS is now structured around four major layers:
 - reflexive API entrypoint
 - canonical IR pipeline (build → normalize → validate → serialize → hash → envelope)
 
-→ [M12 — Cognitive Operating System](docs/math/M12_cognitive_operating_system_(COS)_architecture.md)
+→ [M14 — Cognitive Operating System](docs/math/M14_cognitive_operating_system_(COS)_architecture.md)
 
 ### 5. Runtime Execution Layer
 

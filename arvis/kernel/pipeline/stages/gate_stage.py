@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 from typing import cast
 import logging
+from arvis.kernel.gate.pi_gate import PiBasedGate
 
 from arvis.math.lyapunov.lyapunov_gate import (
     LyapunovVerdict,
@@ -739,6 +740,55 @@ class GateStage:
             verdict,
             assessment.global_safe,
         )
+
+        # =========================================
+        # Π-BASED GATE (Cognitive override layer)
+        # =========================================
+        try:
+            pi_state = getattr(ctx, "pi_state", None)
+
+            if pi_state is not None:
+                pi_gate = PiBasedGate()
+                pi_result = pi_gate.evaluate(pi_state, bundle_id="kernel")
+
+                ctx.extra["pi_gate_verdict"] = pi_result.verdict.value
+                ctx.extra["pi_gate_risk"] = pi_result.risk_level
+
+                # -----------------------------------------
+                # Mapping IR → LyapunovVerdict
+                # -----------------------------------------
+                if pi_result.verdict.value == "abstain":
+                    pi_verdict = LyapunovVerdict.ABSTAIN
+                elif pi_result.verdict.value == "require_confirmation":
+                    pi_verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
+                else:
+                    pi_verdict = LyapunovVerdict.ALLOW
+
+                # -----------------------------------------
+                # Override logic (conservative only)
+                # Π can ONLY restrict, never relax
+                # -----------------------------------------
+                if pi_verdict != verdict:
+                    _record_verdict_transition(
+                        ctx,
+                        stage="pi_gate_override",
+                        before=verdict,
+                        after=pi_verdict,
+                        reason="pi_structured_decision",
+                    )
+
+                    # STRICT ORDER:
+                    # ABSTAIN > CONFIRMATION > ALLOW
+                    if pi_verdict == LyapunovVerdict.ABSTAIN:
+                        verdict = LyapunovVerdict.ABSTAIN
+                    elif (
+                        pi_verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
+                        and verdict == LyapunovVerdict.ALLOW
+                    ):
+                        verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
+
+        except Exception:
+            ctx.extra.setdefault("errors", []).append("pi_gate_failure")
 
         _sync_confirmation_flags(ctx, verdict)
 

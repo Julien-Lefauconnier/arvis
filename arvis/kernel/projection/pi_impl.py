@@ -2,10 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from .projected_state import ProjectedState
+from .pi_types import (
+    PiState,
+    XState,
+    ZState,
+    ZDecisionState,
+    ZGateState,
+    ZControlState,
+    ZDynamicState,
+    QState,
+    WState,
+)
 
+Number = Union[int, float]
 
 class PiImpl:
     """
@@ -16,24 +28,17 @@ class PiImpl:
     - normalize them into a deterministic projected state
     - remain conservative and fail-soft
     """
-
     def project(self, ctx: Any) -> ProjectedState:
         state_signals: Dict[str, float] = {}
         risk_signals: Dict[str, float] = {}
         control_signals: Dict[str, float] = {}
         trace_features: Dict[str, float] = {}
 
-        def _coerce(value: Any, default: float = 0.0) -> float:
-            if isinstance(value, (int, float)):
-                return float(value)
-            return float(default)
-
         system_tension = getattr(ctx, "system_tension", None)
-        state_signals["system_tension"] = _coerce(system_tension, 0.0)
+        state_signals["system_tension"] = self._coerce(system_tension, 0.0)
 
         conflict_pressure = getattr(ctx, "conflict_pressure", None)
-        if isinstance(conflict_pressure, (int, float)):
-            risk_signals["conflict_pressure"] = float(conflict_pressure)
+        risk_signals["conflict_pressure"] = self._coerce(conflict_pressure, 0.0)
 
         coherence_score = getattr(ctx, "coherence_score", None)
         if isinstance(coherence_score, (int, float)):
@@ -72,3 +77,147 @@ class PiImpl:
                     out[str(key)] = float(value)
             return out
         return None
+    
+    def _coerce(self, value: Any, default: Number = 0.0) -> float:
+        if isinstance(value, (int, float)):
+            return float(value)
+        return float(default)
+
+    # =========================================
+    # STRUCTURED Π
+    # =========================================
+
+    def project_structured(self, ctx: Any) -> PiState:
+        ir_state = getattr(ctx, "ir_state", None)
+        ir_decision = getattr(ctx, "ir_decision", None)
+        ir_gate = getattr(ctx, "ir_gate", None)
+
+        # =========================
+        # X STATE
+        # =========================
+
+        coherence = self._coerce(getattr(ctx, "coherence_score", None), 0.5)
+        tension = self._coerce(getattr(ctx, "system_tension", None), 0.0)
+        drift = self._coerce(getattr(ctx, "drift_score", None), 0.0)
+
+        conflict_pressure = self._coerce(
+            getattr(ctx, "collapse_risk", None), 0.0
+        )
+
+        uncertainty = self._coerce(
+            getattr(ctx, "uncertainty", None), 0.0
+        )
+
+        decision_commitment = 0.5
+        if ir_decision:
+            decision_commitment = 1.0 if ir_decision.decision_kind else 0.3
+
+        x = XState(
+            cognitive_load=tension,
+            coherence_score=coherence,
+            conflict_pressure=conflict_pressure,
+            uncertainty_mass=uncertainty,
+            decision_commitment=decision_commitment,
+            memory_activation=0.5,
+            symbolic_stability=max(0.0, 1.0 - drift),
+            retrieval_salience=0.5,
+        )
+
+        # =========================
+        # Z STATE
+        # =========================
+
+        # decision
+        decision_kind = None
+        if ir_decision:
+            decision_kind = ir_decision.decision_kind
+
+        confidence = 1.0 - uncertainty
+
+        z_decision = ZDecisionState(
+            decision_kind=decision_kind,
+            actionability_score=decision_commitment,
+            confidence_score=confidence,
+        )
+
+        # -----------------------------------------
+        # Gate fallback logic (Π must be self-sufficient)
+        # -----------------------------------------
+        if ir_gate and getattr(ir_gate, "verdict", None):
+            verdict = str(getattr(ir_gate.verdict, "value", ir_gate.verdict)).lower()
+        else:
+            # fallback based on uncertainty & tension
+            if uncertainty > 0.8:
+                verdict = "require_confirmation"
+            elif uncertainty < 0.7:
+                verdict = "allow"
+            else:
+                verdict = "require_confirmation"
+
+        safety_margin = self._coerce(
+            getattr(ctx, "projection_margin", getattr(ctx, "m_t", None)), 0.0
+        )
+
+        z_gate = ZGateState(
+            verdict=verdict,
+            safety_margin=safety_margin,
+            veto_intensity=1.0 - safety_margin,
+            confirmation_required=(verdict == "require_confirmation"),
+        )
+
+        # control
+        epsilon = self._coerce(
+            getattr(ir_state, "epsilon", None) if ir_state else None, 0.1
+        )
+
+        z_control = ZControlState(
+            control_mode="exploit" if epsilon < 0.2 else "explore",
+            epsilon=epsilon,
+            beta=1.0,
+            exploration_pressure=epsilon,
+        )
+
+        # dynamics
+        regime = getattr(ctx, "regime", None)
+
+        delta_w = self._coerce(getattr(ctx, "delta_w", None), 0.0)
+
+        z_dyn = ZDynamicState(
+            regime=regime,
+            temporal_pressure=tension,
+            recent_delta_norm=abs(delta_w),
+            runtime_instability=drift,
+        )
+
+        z = ZState(
+            decision=z_decision,
+            gate=z_gate,
+            control=z_control,
+            dynamics=z_dyn,
+        )
+
+        # =========================
+        # Q STATE
+        # =========================
+
+        q = QState(
+            regime_mode=regime,
+            gate_mode=verdict,
+            conversation_mode=None,
+            execution_mode=None,
+            switching_safe=bool(getattr(ctx, "switching_safe", True)),
+        )
+
+        # =========================
+        # W STATE
+        # =========================
+
+        w = WState(
+            uncertainty_pressure=uncertainty,
+            ambiguity_pressure=uncertainty,
+            observation_gap=uncertainty,
+            external_disturbance=drift,
+            projection_residual=1.0 - safety_margin,
+        )
+
+        return PiState(x=x, z=z, q=q, w=w)

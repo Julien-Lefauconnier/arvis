@@ -33,6 +33,20 @@ class ProjectionStage:
             # -----------------------------------------
             if ctx.projection_certificate is not None and not allow_overwrite:
                 return
+            
+            # -----------------------------------------
+            # Structured Π (intermediate/full-theory path)
+            # -----------------------------------------
+            pi_state = None
+            if hasattr(pipeline.pi_impl, "project_structured"):
+                pi_state = pipeline.pi_impl.project_structured(ctx)
+                ctx.pi_state = pi_state
+                ctx.extra["pi_structured_available"] = True
+                ctx.extra["projection_structured"] = True
+            else:
+                ctx.pi_state = None
+                ctx.extra["pi_structured_available"] = False
+                ctx.extra["projection_structured"] = False
 
             # -----------------------------------------
             # Π_impl
@@ -97,6 +111,12 @@ class ProjectionStage:
                 projection_certificate.certification_level.value
             )
             ctx.extra["projection_source"] = "PiImpl"
+
+            ctx.extra["projection_semantics"] = (
+                "structured+certified"
+                if ctx.extra.get("pi_structured_available")
+                else "flat+certified"
+            )
 
         except Exception:
             ctx.extra.setdefault("errors", []).append("projection_stage_failure")

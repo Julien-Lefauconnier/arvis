@@ -233,6 +233,7 @@ class CognitivePipelineContext:
     projection_domain_valid: Optional[bool] = None
     projection_margin: Optional[float] = None
     projected_state: Optional[Any] = None
+    pi_state: Optional[Any] = None
     projection_view: Optional[dict[str, float]] = None
     projection_view_raw: Optional[dict[str, float]] = None
 

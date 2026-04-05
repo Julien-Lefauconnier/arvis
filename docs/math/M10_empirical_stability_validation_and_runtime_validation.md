@@ -50,7 +50,13 @@ as formally defined and bounded in M3.
 The evaluated closed-loop pipeline is:
 
 $$
-o_t \ \xrightarrow{\Pi}\ (x_t,\ z_t,\ q_t,\ w_t)\ \to\ W_t\ \to\ \widehat{\kappa}_t\ \to\ v_t\ \to\ u_t
+o_t \ \xrightarrow{\Pi}\ (x_t,\ z_t,\ q_t,\ w_t)\ \to\ W_t\ \to\ \widehat{\kappa}_t\ \to\ v_t^{\text{gate}} \ \to\ v_t^{\text{final}} \ \to\ u_t
+$$
+
+with:
+
+$$
+v_t^{\text{final}} = \min_{\succ}(v_t^{\text{gate}},\ v_t^{\pi})
 $$
 
 including in particular:
@@ -58,6 +64,7 @@ including in particular:
 - composite Lyapunov evaluation
 - adaptive $\kappa$ estimator
 - GateStage (verdict computation)
+- PiBasedGate (projection-control layer $\Pi_{\text{ctrl}}$)
 - control modulation layer
 
 ---
@@ -146,14 +153,15 @@ m_t = \widehat{\kappa}_t - \kappa_{\text{threshold}}
 Every time a violation occurs → $v_t = \text{ABSTAIN}$  
 → direct empirical confirmation of the hard invariant of M6.
 
-### 5.5 Gate Behavior Distribution
+$$
++v_t^{\text{gate}} = \text{ABSTAIN} \Rightarrow v_t^{\text{final}} = \text{ABSTAIN}
++$$
 
-**Metric**: 
 ### 5.5 Gate Behavior Distribution
 
 **Metric**:
 ```math
-v_t \in \{\text{ALLOW}, \text{REQUIRE\_CONFIRMATION}, \text{ABSTAIN}\}
+v_t^{\text{final}} \in \{\text{ALLOW}, \text{REQUIRE\_CONFIRMATION}, \text{ABSTAIN}\}
 ```
 
 **Evaluations**:
@@ -170,6 +178,24 @@ P(v_t \mid \Delta W_t, \widehat{\kappa}_t)
 - ABSTAIN strongly concentrated in regions of detected instability
 
 **Interpretation**: The Gate acts as an effective **monotone stability filter**.
+
+### 5.5.1 Projection-Control Overrides (NEW)
+
+**Additional metrics**:
+
+$$
+P(v_t^{\pi})
+$$
+
+$$
+P(v_t^{\pi} \prec v_t^{\text{gate}})
+$$
+
+P(vtfinal​≺vtgate​)+
+
+**Interpretation**:
+- measures how often structural constraints dominate energy-based decisions
+- quantifies the contribution of $\Pi_{\text{ctrl}}$ in restricting unsafe transitions
 
 ### 5.6 Closed-Loop Feedback Validation
 
@@ -202,7 +228,9 @@ w_t = w_t^{\mathrm{proj}} + w_t^{\mathrm{noise}} + w_t^{\mathrm{switch}} + w_t^{
 ```math
 P(\mathcal{V}_t.\mathrm{valid})
 ```
+
 where 
+
 ```math
 $\mathcal{V}_t$
 ```
@@ -234,10 +262,22 @@ $$
 W(t) \leq C \, e^{-\beta t} \, W(0) + \Gamma_{\text{emp}}(\bar{w}) + r
 $$
 
+Additionally, structural filtering ensures:
+
+$$
+v_t^{\pi} = \text{ABSTAIN} \Rightarrow v_t = \text{ABSTAIN}
+$$
+
 **Interpretation**:
 - exponential decay dominates in expectation
 - bounded practical residual tube observed
 - no divergence or blow-up inside the validated domain
+
+Additionally:
+
+vtfinal⪯vtgate+
+
+confirming the monotone non-relaxation property introduced in M11–M12.
 
 ---
 
@@ -249,6 +289,7 @@ $$
 | T7     | Closed-loop adaptive stability           | Empirically validated |
 | T8     | Robust practical stability + ISS         | Strongly supported    |
 | T9     | Global validity envelope                 | Strongly supported    |
+|        | M11–M12                                  | Decision monotonicity & stability algebra  |
 
 ---
 

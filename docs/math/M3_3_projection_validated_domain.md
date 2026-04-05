@@ -10,10 +10,10 @@ $$
 \Pi : \mathcal{C} \to (x_t, z_t, q_t, w_t)
 $$
 
-the current system implements a **runtime projection certification layer**:
+the current system implements a **runtime projection certification layer**, denoted:
 
 $$
-\Pi_{\text{cert}} : \mathcal{O}_{\text{runtime}} \to P_t
+\Pi_{\text{cert}} : \mathcal{O}_{\text{runtime}} \to \mathcal{P}
 $$
 
 This layer:
@@ -23,6 +23,12 @@ This layer:
 
 It is a **safety and validity mechanism**, not a full state projection.
 
+**Important distinction:**
+- $\Pi$ (M3.1) is a **theoretical projection operator** used for analysis,
+- $\Pi_{\text{cert}}$ is an **implemented certification operator** used for runtime safety.
+
+No claim is made that $\Pi_{\text{cert}}$ approximates or reconstructs $\Pi$.
+
 ---
 
 ## 1. Implemented Projection Object
@@ -30,7 +36,13 @@ It is a **safety and validity mechanism**, not a full state projection.
 The runtime projection output is a certificate:
 
 $$
-P_t = (\text{domain\_valid},\; m_t,\; \text{is\_projection\_safe},\; \text{certification\_level})
+P_t \in \mathcal{P}
+$$
+
+where:
+
+$$
+\mathcal{P} = \{(\text{domain\_valid},\; m_t,\; \text{is\_projection\_safe},\; \text{certification\_level})\}
 $$
 
 where:
@@ -41,6 +53,9 @@ where:
 - `certification_level` ∈ structured levels (implementation-defined)
 
 This object is directly consumed by the Gate.
+
+**Remark:**  
+$P_t$ is **not** a state representation. It is a **diagnostic certificate**.
 
 ---
 
@@ -60,11 +75,19 @@ $$
 \mathcal{O}_{\text{valid}} \subseteq \mathcal{O}_{\text{runtime}}
 $$
 
+This domain is **empirically defined and bounded** (see M3 Appendix).
+
 ### 2.2 ProjectionValidator
 Deterministically checks whether a runtime observation belongs to the validated domain and computes:
 - domain validity
 - margin to boundary
 - safety flag
+
+This operator is a **deterministic predicate + metric extractor**:
+
+$$
+\mathcal{V} : \mathcal{O}_{\text{runtime}} \to \{0,1\} \times \mathbb{R}_{\geq 0}
+$$
 
 ### 2.3 ProjectionCertificate
 Encapsulates the validation results in a structured object passed through the pipeline.
@@ -73,6 +96,12 @@ Encapsulates the validation results in a structured object passed through the pi
 Integrated into the cognitive pipeline. It ensures:
 - projection certification is always available
 - the certificate is refreshed after observability updates
+
+It defines the implemented mapping:
+
+$$
+\Pi_{\text{cert}} := \text{ProjectionStage} \circ \mathcal{V}
+$$
 
 ---
 
@@ -94,6 +123,9 @@ $$
 
 This narrow scope is intentional.
 
+**Limitation:**  
+This input space is a **strict subset** of the theoretical observation space $\mathcal{O}$.
+
 ---
 
 ## 4. Validated Domain
@@ -113,6 +145,12 @@ $$
 ### 4.3 Deterministic evaluation
 Validation is deterministic: identical input → identical certificate.
 
+This implies:
+
+$$
+o_t = o_t' \implies \Pi_{\text{cert}}(o_t) = \Pi_{\text{cert}}(o_t')
+$$
+
 ---
 
 ## 5. Projection Certificate Semantics
@@ -124,6 +162,12 @@ $$
 means the runtime observation lies inside the validated domain.  
 
 If `domain_valid = False`, the projection is considered **invalid** for safe execution.
+
+Formally:
+
+$$
+\text{domain\_valid} = 1 \iff o_t \in \mathcal{O}_{\text{valid}}
+$$
 
 ### 5.2 Margin to boundary
 $$
@@ -139,9 +183,13 @@ $$
 `is_projection_safe` indicates whether the projected runtime state is considered safe for execution.  
 It is used by the Gate in coupled safety logic.
 
+This is a **derived boolean**, not a primitive property of the system.
+
 ### 5.4 Certification level
 Encodes confidence tier, validation strength, and fallback usage.  
 It is implementation-defined and extensible.
+
+No formal ordering or metric structure is currently imposed on certification levels.
 
 ---
 
@@ -163,6 +211,8 @@ $$
 \text{early certification} \rightarrow \text{refined certification}
 $$
 
+This is a **two-pass evaluation**, not a dynamical system.
+
 ---
 
 ## 7. Safety Fallback
@@ -175,6 +225,12 @@ If no usable signal exists:
 This guarantees that **the certificate is always defined**.  
 This is a **kernel invariant**.
 
+Formally:
+
+$$
+\forall o_t \in \mathcal{O}_{\text{runtime}}, \quad \exists P_t
+$$
+
 ---
 
 ## 8. Integration with the Gate
@@ -182,17 +238,22 @@ This is a **kernel invariant**.
 The projection certificate is actively used by the Gate:
 
 ### 8.1 Hard invalidity constraint
+
 $$
 \text{domain\_valid} = \text{False} \implies v_t = \text{ABSTAIN}
 $$
 
 ### 8.2 Boundary constraint
+
 $$
 m_t < \epsilon \implies v_t \neq \text{ALLOW}
 $$
 
 ### 8.3 Coupled instability constraint
+
 If projection is unsafe **AND** instability signals are present ($\Delta W_t > 0$, or global/switching unsafe), then escalation to ABSTAIN via Gate enforcement layers.
+
+These constraints are **operational rules**, not derived from Lyapunov analysis.
 
 ---
 
@@ -206,8 +267,10 @@ The implemented projection layer satisfies:
 - **Gate compatibility**: Does not break Gate execution and provides usable safety signals
 - **Stability compatibility (weak form)**: Does not invalidate Lyapunov evaluation when consumed by the Gate
 
-**Important**: It does **not** produce $(x, z, q, w)$. It only constrains execution.
-
+**Important**:  
+It does **not** produce $(x, z, q, w)$.  
+It only provides **constraints on admissible execution**.
+ 
 ---
 
 ## 10. What Is NOT Implemented Yet
@@ -232,7 +295,15 @@ $$
 $$
 such that validation is deterministic, safety constraints are enforceable, and the projection produces a certificate usable by the Gate.
 
-This is a **runtime safety certification result**, not a full projection theorem.
+This is a **runtime safety certification result**, not a projection theorem.
+
+In particular, no statement of the form:
+
+$$
+\Pi_{\text{cert}} \approx \Pi
+$$
+
+is claimed.
 
 ---
 
@@ -249,6 +320,8 @@ The Gate uses $P_t$ to:
 - restrict boundary states
 - couple projection safety with stability signals
 
+Thus, $P_t$ acts as an **external constraint signal** in the decision process.
+
 ---
 
 ## 13. Final Statement
@@ -263,3 +336,7 @@ It is:
 - architecturally integrated
 
 But it remains **a partial realization** of the full projection operator defined in the original M3 theoretical framework.
+
+It should therefore be interpreted as:
+
+> a **validation and safety interface**, not a state reconstruction operator.
