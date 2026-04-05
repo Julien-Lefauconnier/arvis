@@ -20,6 +20,12 @@ This definition is **the reference model** for all subsequent proofs.
 - $`\|\cdot\|`$: Euclidean norm unless specified
 - $`\mathcal{Q}`$: finite set of modes
 
+### Time Semantics
+
+Each time index $t$ corresponds to a **logical system transition**.
+
+A transition $(t \to t+1)$ is defined as a **fully completed system update**, regardless of the internal execution mechanism.
+
 ---
 
 ## 2. State Space
@@ -85,6 +91,11 @@ Disturbances represent:
 ---
 
 ## 4. System Dynamics
+
+The following equations define the **abstract state transition** between two consecutive logical time steps.
+
+Each transition $(t \to t+1)$ is assumed to be **atomic** at the model level, even if its computation is
+performed incrementally in an implementation.
 
 ### 4.1 Fast Dynamics
 
@@ -213,6 +224,9 @@ The system is well-defined if:
 1. $`f_q`$, $`g_q`$ are measurable
 2. solutions exist for all $`t`$
 3. trajectories remain bounded under assumptions
+
+Additionally, it is assumed that each transition $(t \to t+1)$ corresponds to a **fully evaluated system update**, 
+ensuring consistency between the mathematical model and any staged or incremental execution.
 
 ---
 

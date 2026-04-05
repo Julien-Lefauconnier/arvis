@@ -25,6 +25,28 @@ ARVIS is modeled as a **discrete-time hybrid dynamical system** with:
 
 ---
 
+### Execution Semantics Clarification
+
+The discrete-time index $t$ represents a **logical system transition**.
+
+In the implemented system, a transition from $t$ to $t+1$ may require
+multiple internal runtime execution steps (scheduler ticks).
+
+However:
+- the mathematical model treats each transition as **atomic**
+- stability guarantees apply **only to completed transitions**
+
+Formally:
+
+$$
+t \rightarrow t+1 \quad \Longleftrightarrow \quad \text{pipeline fully executed}
+$$
+
+Intermediate execution states (partial pipeline execution, scheduling, preemption)
+are **not part of the mathematical model**.
+
+---
+
 ## 2. Mathematical Core (IN SCOPE)
 
 The current formal system is defined by:
@@ -75,6 +97,9 @@ $$
 The system defined above represents an **abstract mathematical model**.  
 It is **not** the full cognitive system.
 
+In particular, the model assumes that each transition $(t \to t+1)$ is computed as a **fully completed transformation**,
+even if the runtime system executes this transformation incrementally.
+
 In particular:
 - the projection \( \Pi \) from real inputs to \( (x, z, q, w) \) is **external** to this model
 - stability guarantees apply **only** to the projected dynamics
@@ -124,6 +149,9 @@ No guarantee is made on the original input space.
 
 The decision layer (Gate, Confirmation, Execution) is not part of the dynamical system, but acts as a supervisory 
 filtering layer over admissible transitions.
+
+The runtime scheduler, which orchestrates process execution and resource allocation, is also outside the mathematical model. 
+It ensures that transitions are executed consistently with the atomic step assumption but does not alter the modeled dynamics.
 
 ---
 

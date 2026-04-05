@@ -9,6 +9,8 @@ IR_VERSION = "arvis-ir.v1"
 IR_FINGERPRINT = "stable"
 
 def build_ir_view(result: Any) -> Dict[str, Any]:
+    if result is None:
+        raise ValueError("Pipeline returned None result (invalid state)")
     """
     Canonical IR view (stable public contract).
 

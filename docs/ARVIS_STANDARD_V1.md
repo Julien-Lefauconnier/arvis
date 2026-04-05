@@ -26,6 +26,12 @@ Every cognitive decision must be:
 - Traceable
 - Context-dependent but structurally deterministic
 
+Determinism includes:
+
+- pipeline execution
+- scheduling decisions
+- process lifecycle transitions
+
 ---
 
 ### 2.2 Stability First
@@ -72,18 +78,61 @@ The system supports reasoning without requiring access to raw data:
 
 ## 3. System Architecture
 
-ARVIS OS is structured into 4 layers:
+ARVIS OS is structured into 5 layers:
 
-### 3.1 Execution Layer
+### 3.1 Runtime Layer
+Responsible for execution orchestration:
+
+- CognitiveScheduler
+- CognitiveProcess
+- CognitiveRuntimeState
+- PipelineExecutor
+- Resource model
+
+Responsibilities:
+
+- process lifecycle management
+- deterministic scheduling
+- preemptive execution (tick-based)
+- resource-aware prioritization
+
+This layer defines:
+
+- *when* execution happens
+- *how much* execution happens per step
+
+It does NOT execute side-effects (tools or external actions).
+Side-effects are handled in a separate runtime execution layer.
+
+It does NOT define decision semantics.
+
+---
+
+### 3.2 Execution Layer
 Responsible for deterministic execution:
 
 - CognitivePipeline
 - Execution stages
 - Deterministic flow control
 
+This layer defines *what* happens during cognition, but not *when* it is executed.
+
+### 3.2.1 Runtime Execution Layer
+Responsible for executing side-effects after decision validation:
+
+- tool execution
+- external system interaction
+- adapter invocation
+
+This layer:
+
+- operates strictly after pipeline completion
+- MUST NOT influence decision logic
+- MUST NOT modify cognitive outputs
+
 ---
 
-### 3.2 Canonical State Layer
+### 3.3 Canonical State Layer
 Responsible for stable internal representation:
 - CognitiveState
 - CognitiveStateBuilder
@@ -92,7 +141,7 @@ Responsible for stable internal representation:
 
 ---
 
-### 3.3 Reflexive Layer
+### 3.4 Reflexive Layer
 Responsible for safe self-observation:
 - capability snapshots
 - introspection services
@@ -103,7 +152,7 @@ Responsible for safe self-observation:
 
 ---
 
-### 3.4 API Layer (Public Contract)
+### 3.5 API Layer (Public Contract)
 Exposes a stable interface:
 - `CognitiveOS`
 - `CognitiveResultView`
@@ -117,6 +166,15 @@ Exposes a stable interface:
 ## 4. Cognitive Pipeline
 
 ### Execution Stages
+
+The pipeline may be executed:
+
+- in a single step (full execution)
+- or iteratively across scheduler ticks
+
+The pipeline itself remains deterministic and context-driven.
+Execution state (progress, staging, budgeting) is managed by the Runtime Layer, while cognitive state is carried
+within the pipeline context (`ctx`).
 
 1. Decision Stage  
    → Intent detection and bootstrap
@@ -136,25 +194,28 @@ Exposes a stable interface:
    → Conflict signal adjustment
 9. Control Stage  
    → Adaptive control (epsilon, exploration)
-10. Gate Stage  
+10. Projection Stage  
+   → Projection certification (Π_cert)
+11. Gate Stage  
    → Multi-axial stability enforcement  
    → Lyapunov, switching, global stability
-11. Control Feedback stage
+12. Control Feedback stage
    → Apply confidence-based control
    → Apply Lyapunov-informed modulation
    → Update control state
-12. Structural Risk Stage  
+13. Structural Risk Stage  
    → Post-gate structural validation
-13. Confirmation Stage  
+14. Confirmation Stage  
    → Human-in-the-loop resolution
-14. Execution Stage  
+15. Execution Stage  
    → Execution eligibility determination
-15. Action Stage  
+16. Action Stage  
    → Action resolution and policy enforcement
-16. Intent Stage  
+17. Intent Stage  
    → Executable intent formalization
-17. Runtime Stage  
-   → System state update
+
+
+(Runtime execution is handled outside the pipeline)
 
 ---
 
@@ -173,6 +234,15 @@ After execution:
 - Isolated
 - Deterministic
 - Testable
+- Scheduler-compatible (supports preemptive execution)
+
+Determinism applies across:
+
+- pipeline execution
+- scheduling decisions
+- process transitions
+
+Identical inputs and runtime conditions guarantee identical outputs.
 
 ---
 
@@ -256,6 +326,7 @@ Stability directly influences control:
 
 ARVIS OS can be interpreted as a **closed-loop cognitive control system**:
 
+- Execution orchestration → Runtime Layer (scheduler + process control)
 - State estimation → Core, Regime, Temporal stages
 - Control law → Control stage
 - Stability enforcement → Gate + Structural Risk
@@ -381,6 +452,9 @@ The system enforces:
 - Deterministic transformations
 - Stability constraints before execution
 - Time consistency (UTC)
+- At most one running process per scheduler
+- Terminal processes are not re-executed
+- Scheduler decisions MUST be deterministic and reproducible
 
 ---
 
@@ -396,7 +470,7 @@ A compliant ARVIS OS implementation must:
 
 ---
 
-14. Future Extensions
+## 14. Future Extensions
 
 Planned evolutions include:
 
@@ -408,11 +482,11 @@ Planned evolutions include:
 
 ---
 
-15. Conclusion
+## 15. Conclusion
 
 ARVIS OS defines a new class of systems:
 
-    Cognitive Operating Systems
+   Cognitive Operating Systems
 
 Where intelligence is:
 

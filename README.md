@@ -11,8 +11,9 @@
 
 ## 🧠 What ARVIS is
 
-ARVIS is a deterministic Cognitive Operating System built as:
+ARVIS is a deterministic Cognitive Operating System built as a discrete-time, scheduler-orchestrated cognitive system :
 
+- a runtime orchestration layer (scheduler)
 - a closed-loop cognitive pipeline
 - a canonical `CognitiveState` kernel
 - a stable Intermediate Representation (IR)
@@ -22,13 +23,20 @@ ARVIS is a deterministic Cognitive Operating System built as:
 
 The system enforces a strict separation between:
 
-- decision (pipeline, deterministic cognition)
-- execution (runtime layer, tools and side effects)
+- cognition (deterministic pipeline)
+- execution (runtime execution layer, tools and side effects)
+- orchestration (runtime scheduler)
 - canonical state (CognitiveState)
 - external representation (IR)
 - reflexive observation (read-only)
 
 At each timestep:
+
+scheduler tick →
+    select process →
+    execute pipeline stage →
+    update control & stability →
+    update process + system state
 
 $$
 o_t \xrightarrow{\Pi_{\text{cert}}} P_t
@@ -38,6 +46,12 @@ o_t \xrightarrow{\Pi_{\text{cert}}} P_t
 \xrightarrow{C} (x_{t+1}, z_{t+1})
 $$
 
+Note:
+ This describes the logical cognitive transition.
+ Execution of this transition is controlled by the runtime scheduler.
+
+This equation describes the logical cognitive transition.
+Its execution is discretized and orchestrated by the runtime scheduler.
 
 ⚠️ Important:
 
@@ -139,7 +153,7 @@ ARVIS is defined within a **validated operational domain**.
 
 All guarantees apply only if:
 
-\forall t, \quad o_t \in \mathcal{O}_{\text{valid}} $$
+$$ \forall t, \quad o_t \in \mathcal{O}_{\text{valid}} $$
 
 This requires:
 - bounded projection (theoretical Π, assumed)
@@ -161,7 +175,7 @@ Outside this domain:
 
 ARVIS enforces a stability condition on switching dynamics:
 
-\frac{\log(J)}{\tau_d} + \log(1 - \kappa_{\text{eff}}) < 0 $$
+$$ \frac{\log(J)}{\tau_d} + \log(1 - \kappa_{\text{eff}}) < 0 $$
 
 Where:
 - $J$ : switching gain
@@ -309,7 +323,19 @@ ARVIS guarantees **stability constraints**, not decision quality.
 
 ## 🧩 System Architecture
 
-ARVIS is now structured around four major layers:
+ARVIS is now structured around five major layers:
+
+### 0. Runtime Orchestration Layer
+- CognitiveScheduler
+- CognitiveProcess lifecycle
+- PipelineExecutor
+- deterministic tick-based execution
+
+This layer controls:
+- when cognition executes
+- how much cognition executes per step
+
+It does NOT define decision logic.
 
 ### 1. Cognitive Execution Layer
 - deterministic pipeline
@@ -471,6 +497,18 @@ ARVIS follows a strict separation between cognition, decision, and execution.
 The full system can be represented as:
 
 ```text
+                 ┌──────────────────────────────┐
+                 │   Cognitive Scheduler        │
+                 │ (process orchestration)      │
+                 └──────────────┬───────────────┘
+                                │
+                                ▼
+                 ┌──────────────────────────────┐
+                 │     Pipeline Executor        │
+                 │   (stage-by-stage exec)      │
+                 └──────────────┬───────────────┘
+                                │
+                                ▼
                  ┌──────────────────────────────┐
                  │      Cognitive Pipeline      │
                  │ (deterministic reasoning)    │

@@ -82,20 +82,43 @@ Example:
 
 ## How It Works (Conceptually)
 
-Every input is processed through a **deterministic cognitive pipeline**.
+Every input is processed through a **deterministic cognitive pipeline**, orchestrated by a runtime execution layer.
 
 At a high level:
 
-1. Build cognitive execution outputs through the deterministic pipeline
-2. Normalize them into a canonical `CognitiveState`
-3. Compute trace, timeline, and IR projections
-4. Expose safe self-observation through the reflexive layer
+1. Create a cognitive process in the runtime
+2. Execute the pipeline (possibly iteratively)
+3. Normalize them into a canonical `CognitiveState`
+4. Compute trace, timeline, and IR projections
+5. Expose safe self-observation through the reflexive layer
 
 If the system is:
 
 * unstable → no decision
 * too risky → no decision
 * uncertain → confirmation required
+
+Execution may occur:
+
+- in a single step (simple case)
+- or across multiple scheduler ticks (iterative execution)
+
+This enables:
+
+- bounded execution per step
+- prioritization between processes
+- deterministic scheduling
+
+Important:
+
+- the pipeline defines *what* happens
+- the scheduler defines *when and how* it happens
+
+This separation is critical for:
+
+- scalability
+- control of computation
+- future multi-process reasoning
 
 ---
 
@@ -130,6 +153,11 @@ Same input, same context → same result
 No hidden randomness
 No implicit branching
 
+This guarantee holds even under iterative execution:
+
+- scheduler decisions are deterministic
+- partial execution does not change final outcomes
+
 ---
 
 ### 4. Signals Instead of Raw Values
@@ -158,6 +186,12 @@ Every decision produces a complete trace:
 * what constraints were applied
 
 Nothing is implicit.
+
+Execution is also traceable:
+
+- process lifecycle is observable
+- scheduling decisions are deterministic
+- execution steps can be replayed
 
 ---
 
@@ -203,7 +237,7 @@ Think of ARVIS as:
 > an operating system for cognition
 
 Like an OS controls how programs execute,
-ARVIS controls how reasoning and decisions are allowed to happen.
+ARVIS controls how reasoning and decisions are allowed to happen — and how they are executed over time.
 
 ---
 
@@ -214,6 +248,7 @@ ARVIS exposes a **Cognitive Operating System interface**.
 This interface:
 
 - hides internal pipeline complexity
+- hides runtime scheduling and process management
 - provides a stable contract
 - enables integration with external systems
 

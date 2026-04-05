@@ -13,6 +13,14 @@ It is an **implementation-aligned proof outline** designed to guide future forma
 
 The skeleton follows standard techniques from switched hybrid systems literature (Liberzon 2003, Hespanha 2004, Branicky 1998, Lin & Antsaklis).
 
+### Execution Semantics
+
+All transitions $(t \to t+1)$ are treated as **atomic state updates** in the mathematical model.
+
+In the implemented system, such a transition may be computed through multiple runtime steps (e.g., staged pipeline execution or scheduler ticks).
+
+However, the proof considers only the **fully completed transition**, and all intermediate execution states are excluded from the model.
+
 ---
 
 ## 1. System Definition (Recap from M1)
@@ -76,6 +84,9 @@ $$
 
 ## 4. One-Step Decrease – Fast Dynamics (Core Contraction Step)
 
+This section analyzes the decrease of the Lyapunov function over a **single logical transition** $(t \to t+1)$, 
+assumed to correspond to a fully evaluated system update.
+
 **Under** the fast subsystem contraction assumption (A7–A9, local exponential decrease rate $\alpha > 0$):
 
 $$
@@ -103,6 +114,8 @@ This is the **local contraction step** in each mode (fast timescale dominance).
 ---
 
 ## 5. Switching Extension – Average Dwell-Time Condition
+
+The dwell-time condition is evaluated over **logical time steps** $t$, each corresponding to a completed system transition.
 
 **Under** the jump condition at switching instants (A10–A11):
 
@@ -148,6 +161,9 @@ This skeleton establishes:
 - empirical grounding via Phase A validation of projection properties (M3)
 
 It bridges control-theoretic guarantees to the cognitive pipeline without overclaiming.
+
+In particular, the runtime scheduler is responsible for ensuring that each transition is executed to completion 
+before being considered in the logical time evolution used in this proof.
 
 ---
 

@@ -3,7 +3,7 @@
 ## Overview
 
 ARVIS is a **deterministic Cognitive Operating System** implemented around a
-**closed-loop pipeline, a canonical state kernel, and a reflexive self-observation layer**.
+**runtime orchestration layer, a closed-loop pipeline, a canonical state kernel, and a reflexive self-observation layer**.
 
 It enforces:
 
@@ -28,8 +28,9 @@ It is a **cognitive execution system** where:
 
 ## System Model
 
-ARVIS is implemented as a **deterministic system** with four architectural domains:
+ARVIS is implemented as a **deterministic system** with six architectural domains:
 
+0. runtime orchestration
 1. execution
 2. canonical state
 3. reflexive observation
@@ -42,7 +43,11 @@ ARVIS is implemented as a **deterministic system** with four architectural domai
 
 ```text
 Input
-  → Cognitive Pipeline
+  → Cognitive Scheduler
+  → Cognitive Pipeline (step execution)
+  → Cognitive Scheduler (process selection)
+  → PipelineExecutor (stage execution)
+  → Cognitive Pipeline (logical execution)
   → Canonical CognitiveState
   → Observability / Trace / Timeline
   → Reflexive Snapshot
@@ -53,6 +58,43 @@ Input
 
 ---
 
+## Runtime Orchestration Layer
+
+The Runtime Layer is responsible for **execution orchestration**.
+
+It defines:
+
+- which process executes
+- when execution happens
+- how much execution is performed per step
+
+Core components:
+
+- `CognitiveScheduler`
+- `CognitiveProcess`
+- `CognitiveRuntimeState`
+- `PipelineExecutor`
+- `ResourcePressure`
+
+Execution model:
+
+- tick-based scheduling
+- one execution step per tick
+- preemptive execution
+- deterministic selection
+
+Important:
+
+> The runtime does NOT define cognition.
+> It only orchestrates execution.
+
+This creates a strict separation:
+
+- runtime → execution control
+- pipeline → decision semantics
+
+---
+
 ## Cognitive Pipeline 
 
 The pipeline remains the **execution core**, but it is no longer the whole system.
@@ -60,6 +102,13 @@ The pipeline remains the **execution core**, but it is no longer the whole syste
 Its outputs are normalized into a **canonical CognitiveState** and may then be
 
 exported through IR or observed through reflexive services.
+
+The pipeline is executed under the control of the Runtime Layer.
+
+It may run:
+
+- as a full execution (single step)
+- or incrementally across multiple scheduler ticks
 
 ---
 
@@ -93,17 +142,23 @@ This layer does not perform cognition. It observes and exposes structure safely.
 
 ---
 
-## Runtime Layer 
+## Runtime Execution Layer
 
-The Runtime Layer is responsible for executing side-effectful actions
-after the cognitive pipeline has produced a decision.
+This layer executes **side-effects AFTER decision finalization**.
+It is distinct from the runtime orchestration layer.
 
 Responsibilities:
+
 - tool execution
 - adapter hosting
-- execution orchestration
+- external system interaction
 
-This layer is strictly separated from the pipeline to preserve determinism.
+Important:
+
+- this layer is NOT part of cognition
+- this layer is NOT the scheduler (orchestration is handled separately)
+
+It operates strictly after the decision pipeline.
 
 ---
 
@@ -180,14 +235,16 @@ The system executes a fixed sequence of stages:
 7. Temporal Stage
 8. Conflict Modulation Stage
 9. Control Stage
-10. Gate Stage
-11. Control Feedback Stage
-12. Structural Risk Stage
-13. Confirmation Stage
-14. Execution Stage
-15. Action Stage
-16. Intent Stage
-17. Runtime Stage
+10. Projection Stage
+11. Gate Stage
+12. Control Feedback Stage
+13. Structural Risk Stage
+14. Confirmation Stage
+15. Execution Stage
+16. Action Stage
+17. Intent Stage
+
+(runtime execution handled outside pipeline)
 
 (see `cognitive_pipeline.py`) 
 
@@ -198,7 +255,7 @@ The system executes a fixed sequence of stages:
 ARVIS implements a **closed-loop control system**:
 
 ```text
-Control → Gate → Control Feedback → Control
+Scheduler → PipelineExecutor → Pipeline → Control → Gate → Control Feedback → Control
 ```
 
 ### Roles
@@ -230,6 +287,15 @@ Control → Gate → Control Feedback → Control
 ## Logical Components (Functional View)
 
 Although implemented as a pipeline, ARVIS can be decomposed into functional roles:
+
+### 0. Execution Orchestration
+
+* CognitiveScheduler
+* Process lifecycle management
+
+→ ensures deterministic execution ordering
+
+---
 
 ### 1. State Construction
 
@@ -289,9 +355,11 @@ Although implemented as a pipeline, ARVIS can be decomposed into functional role
 
 ### 6. System Update
 
-* Runtime Stage
+* Runtime orchestration (scheduler state)
+* Runtime execution (side-effects)
+* timeline integration
 
-→ updates internal state and timeline
+→ updates internal state and timeline after execution
 
 ---
 
@@ -333,6 +401,12 @@ ARVIS ensures:
 * no hidden branching
 * fail-soft execution
 * deterministic outputs (given same input)
+
+This includes:
+
+- scheduler decisions
+- process transitions
+- pipeline execution steps
 
 ---
 
@@ -402,7 +476,7 @@ ARVIS architecture aligns with the Cognitive OS standard:
 
 ARVIS is:
 
-> a deterministic cognitive pipeline
+> a deterministic cognitive runtime system
 > implementing a closed-loop control system
 > where decisions are:
 >

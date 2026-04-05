@@ -20,6 +20,19 @@ from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
 
+
+from arvis.runtime import (
+    CognitiveRuntimeState,
+    CognitiveScheduler,
+    PipelineExecutor,
+    CognitiveProcess,
+    CognitiveProcessId,
+    CognitiveProcessKind,
+    CognitiveProcessStatus,
+    CognitivePriority,
+    CognitiveBudget,
+)
+
 # =====================================================
 # CONFIG
 # =====================================================
@@ -57,15 +70,86 @@ class CognitiveRuntime:
         self.pipeline = pipeline
         self.adapters = adapters or {}
         self.tool_executor = tool_executor
+        self.runtime_state = CognitiveRuntimeState()
+
+        self.pipeline_executor = PipelineExecutor(self.pipeline)
+
+        self.scheduler = CognitiveScheduler(
+            runtime_state=self.runtime_state,
+            pipeline_executor=self.pipeline_executor,
+        )
 
     def execute(self, ctx: CognitivePipelineContext) -> Any:
         if self.adapters:
             ctx.extra["adapters"] = self.adapters
 
-        result = self.pipeline.run(ctx)
+        # -----------------------------------------
+        # CREATE PROCESS
+        # -----------------------------------------
+        process = CognitiveProcess(
+            process_id=CognitiveProcessId(
+                f"proc::{ctx.user_id}::{len(self.runtime_state.processes)}"
+            ),
+            kind=CognitiveProcessKind.USER_REQUEST,
+            status=CognitiveProcessStatus.READY,
+            priority=CognitivePriority(50.0),
+            budget=CognitiveBudget(
+                reasoning_steps = 2 * len(list(self.pipeline.iter_stages())),
+                time_slice_ms=100,
+            ),
+            local_state=ctx,
+            created_tick=self.runtime_state.scheduler_state.tick_count,
+            user_id=ctx.user_id,
+        )
+
+        # -----------------------------------------
+        # ENQUEUE
+        # -----------------------------------------
+        self.scheduler.enqueue(process)
+
+        # -----------------------------------------
+        # EXECUTION LOOP (until completion)
+        # -----------------------------------------
+        result = None
+
+        for _ in range(100):  # safety guard
+            decision = self.scheduler.tick()
+
+            selected_id = decision.selected_process_id
+
+            if selected_id is None:
+                break
+
+            proc = self.runtime_state.get_process(selected_id)
+
+            # -----------------------------------------
+            # TERMINAL STATE → source of truth
+            # -----------------------------------------
+            if proc.status == CognitiveProcessStatus.COMPLETED:
+                result = proc.last_result
+                break
+
+            if proc.status == CognitiveProcessStatus.ABORTED:
+                error = getattr(proc, "error", None)
+                raise RuntimeError(f"Process aborted: {error}")
+
+            if proc.status == CognitiveProcessStatus.WAITING_CONFIRMATION:
+                result = proc.last_result
+                break
+
+            if decision.result is not None:
+                result = decision.result
+                break
+
+            if proc.last_result is not None:
+                result = proc.last_result
+                break
+
+        if result is None:
+            raise RuntimeError("Execution did not produce any result")
 
         # -------------------------------------------------
-        # TOOL EXECUTION (RUNTIME LAYER ONLY)
+        # TOOL EXECUTION
         # -------------------------------------------------
         action = getattr(result, "action_decision", None)
 

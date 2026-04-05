@@ -7,7 +7,7 @@ from dataclasses import replace
 import os
 import warnings
 from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
-from typing import Any, cast, Protocol, Dict
+from typing import Any, cast, Protocol, Dict, Iterable, Iterator
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.kernel.pipeline.cognitive_pipeline_result import CognitivePipelineResult
@@ -189,7 +189,39 @@ class CognitivePipeline:
             max_payload_size=10000,
         )
         self.projection_validator = ProjectionValidator(self.projection_domain)
-        
+
+
+    # -----------------------------------------------------
+    # ITERATIVE PIPELINE SUPPORT (non-breaking)
+    # -----------------------------------------------------
+    def iter_stages(self) -> Iterable[PipelineStage]:
+        """
+        Ordered list of pipeline stages.
+        Single source of truth for execution order.
+        """
+        return [
+            self.tool_feedback_stage,
+            self.tool_retry_stage,
+            self.decision_stage,
+            self.passive_stage,
+            self.bundle_stage,
+            self.conflict_stage,
+            self.core_stage,
+            self.regime_stage,
+            self.temporal_stage,
+            self.conflict_modulation_stage,
+            self.control_stage,
+            self.projection_stage,
+            self.gate_stage,
+            self.control_feedback_stage,
+            self.structural_risk_stage,
+            self.confirmation_stage,
+            self.execution_stage,
+            self.action_stage,
+            self.intent_stage,
+            self.runtime_stage,
+        ]
+
 
     def _get_control_runtime(self, user_id: str) -> CognitiveControlRuntime:
         runtime = self.control_runtimes.get(user_id)
@@ -269,6 +301,55 @@ class CognitivePipeline:
                 current_extra[key] = ctx.extra[key]
 
         ctx.ir_context = replace(ir_context, extra=current_extra)
+    
+    def _prepare_run(self, ctx: CognitivePipelineContext) -> None:
+        if ctx.extra.get("__pipeline_prepared", False):
+            return
+
+        self._bootstrap_ir_input(ctx)
+        self._bootstrap_ir_context(ctx)
+
+        if getattr(ctx, "switching_params", None) is None:
+            ctx.switching_params = DEFAULT_SWITCHING_PARAMS
+        if getattr(ctx, "switching_runtime", None) is None:
+            ctx.switching_runtime = SwitchingRuntime()
+
+        try:
+            comp = getattr(self, "quadratic_comparability", None)
+            if comp is not None and getattr(ctx, "switching_params", None) is not None:
+                from arvis.math.switching.switching_params import SwitchingParams
+                p = ctx.switching_params
+                if p is None:
+                    p = DEFAULT_SWITCHING_PARAMS
+                ctx.switching_params = SwitchingParams(
+                    alpha=float(p.alpha),
+                    gamma_z=float(p.gamma_z),
+                    eta=float(p.eta),
+                    L_T=float(p.L_T),
+                    J=float(comp.J),
+                )
+        except Exception:
+            pass
+
+        ctx.extra["__pipeline_prepared"] = True
+
+    def _sync_execution_flags(self, ctx: CognitivePipelineContext) -> None:
+        requires_confirmation = ctx._requires_confirmation
+        can_execute = ctx._can_execute
+        assert ctx.execution_status is not None
+        ctx.requires_confirmation = requires_confirmation
+        ctx.can_execute = can_execute
+
+    def run_stage(
+        self,
+        ctx: CognitivePipelineContext,
+        stage: PipelineStage
+    ) -> None:
+        self._prepare_run(ctx)
+        self._safe_run(stage, ctx)
+        if stage is self.execution_stage:
+            self._sync_execution_flags(ctx)
+
 
     # -----------------------------------------------------
     # PUBLIC API (safe wrapper)
@@ -300,139 +381,26 @@ class CognitivePipeline:
         return self.run(ctx)
         
     def run(self, ctx: CognitivePipelineContext) -> CognitivePipelineResult:
-        self._bootstrap_ir_input(ctx)
-        self._bootstrap_ir_context(ctx)
-        # -----------------------------------------
-        # Switching (result parameters) 
-        # -----------------------------------------
-        if getattr(ctx, "switching_params", None) is None:
-            ctx.switching_params = DEFAULT_SWITCHING_PARAMS
-        if getattr(ctx, "switching_runtime", None) is None:
-            ctx.switching_runtime = SwitchingRuntime()
-        # Align J with quadratic Lyapunov family comparability
-        try:
-            comp = getattr(self, "quadratic_comparability", None)
-            if comp is not None and getattr(ctx, "switching_params", None) is not None:
-                from arvis.math.switching.switching_params import SwitchingParams
-                p = ctx.switching_params
-                if p is None:
-                    p = DEFAULT_SWITCHING_PARAMS
-                ctx.switching_params = SwitchingParams(
-                    alpha=float(p.alpha),
-                    gamma_z=float(p.gamma_z),
-                    eta=float(p.eta),
-                    L_T=float(p.L_T),
-                    J=float(comp.J),
-                )
-        except Exception:
-            pass
-        # -----------------------------------------------------
-        # 0. TOOL FEEDBACK STAGE (previous cycle)
-        # -----------------------------------------------------
-        self._safe_run(self.tool_feedback_stage, ctx)
+        self._prepare_run(ctx)
+        for stage in self.iter_stages():
+            self.run_stage(ctx, stage)
+        return self.finalize_run(ctx)
 
-        # -----------------------------------------------------
-        # 0.1 TOOL RETRY STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.tool_retry_stage, ctx)
+    def run_iter(self, ctx: CognitivePipelineContext) -> Iterator[PipelineStage]:
+        self._prepare_run(ctx)
+        for stage in self.iter_stages():
+            self.run_stage(ctx, stage)
+            yield stage
 
-        # -----------------------------------------------------
-        # 1. DECISION STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.decision_stage, ctx)
-
-        # -----------------------------------------------------
-        # 2. PASSIVE CONTEXT STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.passive_stage, ctx)
-
-        # -----------------------------------------------------
-        # 3. BUNDLE STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.bundle_stage, ctx)
-
-        # -----------------------------------------------------
-        # 4. CONFLICT STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.conflict_stage, ctx) 
-
-        # -----------------------------------------------------
-        # 5. CORE STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.core_stage, ctx)  
-
-        # -----------------------------------------------------
-        # 6. REGIME STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.regime_stage, ctx)
-
-        # -----------------------------------------------------
-        # 7. TEMPORAL STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.temporal_stage, ctx)
-
-        # -----------------------------------------
-        # 8. CONFLICT MODULATION STAGE
-        # -----------------------------------------
-        self._safe_run(self.conflict_modulation_stage, ctx)
-
-        # -----------------------------------------------------
-        # 9. CONTROL STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.control_stage, ctx)
-
-        # -----------------------------------------------------
-        # PRE-GATE PROJECTION (canonical stage)
-        # -----------------------------------------------------
-        self._safe_run(self.projection_stage, ctx)
-
-        # -----------------------------------------------------
-        # 10. GATE STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.gate_stage, ctx)
-
-        # -----------------------------------------
-        # 11. CONTROL FEEDBACK STAGE
-        # -----------------------------------------
-        self._safe_run(self.control_feedback_stage, ctx)
-
-        # -----------------------------------------------------
-        # 12. STRUCTURAL RISK STAGE   
-        # -----------------------------------------------------
-        self._safe_run(self.structural_risk_stage, ctx)
-
-        # -----------------------------------------------------
-        # 13. CONFIRMATION STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.confirmation_stage, ctx)
-
-        # -----------------------------------------------------
-        # 14. EXECUTION STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.execution_stage, ctx)
-
-        requires_confirmation = ctx._requires_confirmation
-        can_execute = ctx._can_execute
+    def finalize_run(self, ctx: CognitivePipelineContext) -> CognitivePipelineResult:
+        if ctx.extra.get("__pipeline_finalized", False):
+            cached = ctx.extra.get("__pipeline_result")
+            if cached is not None:
+                return cast(CognitivePipelineResult, cached)
+        requires_confirmation = ctx.requires_confirmation
+        can_execute = ctx.can_execute
         assert ctx.execution_status is not None
         execution_status = ctx.execution_status
-        # Sync public execution flags into context  
-        ctx.requires_confirmation = requires_confirmation
-        ctx.can_execute = can_execute
-
-        # -----------------------------------------------------
-        # 15. ACTION STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.action_stage, ctx)
-
-        # -----------------------------------------------------
-        # 16. INTENT STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.intent_stage, ctx)
-
-        # -----------------------------------------------------
-        # 17. RUNTIME STAGE
-        # -----------------------------------------------------
-        self._safe_run(self.runtime_stage, ctx)
 
         # -----------------------------------------------------
         #  OBSERVABILITY (PURE PROJECTION)
@@ -700,6 +668,8 @@ class CognitivePipeline:
             ir_envelope=ctx.ir_envelope,
             cognitive_state=ctx.cognitive_state,
         )
+        ctx.extra["__pipeline_finalized"] = True
+        ctx.extra["__pipeline_result"] = result
 
         return result
     

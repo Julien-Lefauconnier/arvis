@@ -15,11 +15,21 @@ It is a **cognitive execution protocol** enforcing:
 
 Every execution follows the **same ordered stages**, without implicit branching.
 
+IMPORTANT:
+
+The pipeline defines a **logical execution**, not a runtime execution.
+
+In the current implementation:
+
+- the pipeline may be executed **iteratively (stage-by-stage)**
+- execution is controlled by the **Runtime Scheduler**
+- the pipeline itself remains **pure and deterministic**
+
 ---
 
 ## Execution Model
 
-The pipeline is strictly sequential:
+The pipeline is logically sequential:
 
 ```text
 Decision
@@ -41,12 +51,56 @@ Decision
 → Intent
 ```
 
+### Logical vs Runtime Execution
+
+The pipeline defines a logical atomic transition:
+
+```text
+input → full pipeline → decision
+```
+
+However, in the runtime implementation:
+
+```text
+multiple scheduler ticks → one pipeline execution
+```
+
+Each scheduler tick executes:
+
+```text
+ONE stage of the pipeline
+```
+
+until completion.
+
+This implies:
+
+- pipeline = logical unit
+- scheduler = execution controller
+
+Execution supports:
+
+- preemption (process returns to READY queue)
+- budget-aware suspension
+- confirmation blocking
+
+Invariant:
+
+- A pipeline execution is finalized ONLY when `completed=True`
+- Partial execution MUST NOT produce terminal decisions
+
 Each stage:
 
 * reads from the shared context (`ctx`)
 * writes explicit outputs back into `ctx`
 * has no hidden side effects
 * can fail safely without breaking execution
+
+Stages are:
+
+- deterministic
+- side-effect free
+- safe to execute independently (required for iterative runtime execution)
 
 Each stage MAY emit reason codes.
 
@@ -116,6 +170,11 @@ If a stage fails:
 
 * the pipeline **continues execution**
 * the error is recorded in `ctx.extra["errors"]`
+
+This behavior is preserved in iterative execution:
+
+- failures are contained at the stage level
+- scheduler execution is not interrupted
 
 This ensures:
 
@@ -406,16 +465,56 @@ Outputs:
 
 ## Runtime layer
 
-**Purpose: Execute side-effects (tool execution)**
+The runtime layer is responsible for:
 
-This stage is responsible for:
-- executing tools selected by ActionStage
-- capturing ToolResults
-- updating ctx.extra
+- scheduling cognitive processes
+- executing pipeline stages iteratively
+- managing process lifecycle and budgets
+- executing side-effects (tools)
+
+It operates on **CognitiveProcess** objects and maintains:
+
+- process states (READY, RUNNING, WAITING_CONFIRMATION, COMPLETED, etc.)
+- scheduling queues
+- execution budgets
+
+### Execution Model
+
+Execution is controlled by a **CognitiveScheduler**:
+
+```text
+tick:
+  → select process
+  → execute ONE pipeline stage
+  → update process state
+
+Process lifecycle:
+
+READY → RUNNING → (PREEMPTED | WAITING_CONFIRMATION | COMPLETED | BLOCKED | SUSPENDED)
+```
+
+The pipeline is therefore:
+
+- **logically atomic**
+- **physically iterative**
+
+### Tool Execution
+
+Tool execution remains:
+
+- post-decision
+- isolated from cognitive reasoning
+- handled within runtime execution
+
+Tool execution occurs ONLY after:
+
+- pipeline completion
+- decision validation
 
 Important:
-- this stage is NOT part of the decision logic
-- it operates after decision finalization
+
+- runtime MUST NOT modify pipeline semantics
+- runtime MUST NOT influence decision logic
 
 ---
 
@@ -535,6 +634,20 @@ The pipeline ensures:
 * deterministic IR normalization and hashing
 * replayable pipeline execution
 
+Determinism holds at two levels:
+
+1. Pipeline level:
+   - identical input → identical outputs
+
+2. Runtime level:
+   - scheduler decisions are deterministic
+   - execution order is reproducible
+   - iterative execution produces identical final results
+
+This guarantees:
+
+- preemptive execution does NOT alter final decisions
+
 ---
 
 ## Design Principles
@@ -591,6 +704,17 @@ It is a **controlled cognitive execution system** where:
 * decisions are constrained
 * execution is gated
 * outcomes are traceable
+
+Execution is:
+
+- logically atomic (pipeline)
+- physically controlled (scheduler + runtime)
+
+The scheduler ensures:
+
+- deterministic execution ordering
+- bounded computation
+- safe interruption and resumption
 
 A decision is not produced.
 
