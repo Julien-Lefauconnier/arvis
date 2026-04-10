@@ -22,6 +22,7 @@ class _LyapunovStabilitySnapshot:
     score: float
     collapse_risk: float
     verdict: str
+    delta_v: float
 
 
 @dataclass
@@ -81,6 +82,7 @@ class LyapunovObserver(StabilityObserver):
                 score=float(V(cur_state)),
                 collapse_risk=0.0,
                 verdict=LyapunovVerdict.REQUIRE_CONFIRMATION.value,
+                 delta_v=0.0,
             )
 
         prev_state = self._last_state
@@ -93,6 +95,7 @@ class LyapunovObserver(StabilityObserver):
             score=float(obs.v_new),
             collapse_risk=float(abs(obs.delta)),
             verdict=obs.verdict.value,
+            delta_v=float(obs.delta),
         )
 
     def reset(self) -> None:

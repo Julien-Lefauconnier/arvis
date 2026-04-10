@@ -1,4 +1,4 @@
-# backend/app/domain/cognition/temporal/temporal_context.py
+# arvis/cognition/temporal/temporal_context.py
 
 from dataclasses import dataclass, asdict
 from typing import Dict

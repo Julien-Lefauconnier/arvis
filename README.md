@@ -342,12 +342,50 @@ It does NOT define decision logic.
 - staged cognition
 - closed-loop control and gate enforcement
 
-### 2. Canonical State Layer
+### 2. Conversation Layer (Adaptive Interaction Layer)
+
+ARVIS includes a dedicated **conversation layer** responsible for transforming
+cognitive decisions into structured interaction strategies.
+
+This layer operates strictly **after cognition and before execution**.
+
+It includes:
+
+- ConversationOrchestrator (high-level pipeline)
+- Strategy resolution and policy engine
+- Stability control (Lyapunov, drift, regime)
+- Adaptive control (feedback loops)
+- Memory projection (ZKCS-compliant, declarative only)
+- Linguistic act system and response planning
+
+Properties:
+
+- fully deterministic (given cognitive inputs)
+- stability-constrained (mathematical control layer)
+- memory-safe (no payload exposure, declarative signals only)
+- adaptive (feedback-driven strategy modulation)
+
+Important:
+
+The conversation layer does NOT perform cognition.
+
+It:
+- interprets cognitive outputs
+- selects interaction strategies
+- prepares execution plans
+
+This preserves:
+
+- separation between cognition and interaction
+- deterministic decision guarantees
+- replayability of the cognitive core
+
+### 3. Canonical State Layer
 - `CognitiveState`
 - bundle/state normalization
 - contract validation
 
-### 3. Reflexive Layer
+### 4. Reflexive Layer
 - capabilities
 - introspection
 - rendering
@@ -355,7 +393,7 @@ It does NOT define decision logic.
 - timeline exposure explanation
 - compliance and attestation
 
-### 4. Public Contract Layer
+### 5. Public Contract Layer
 - `CognitiveOS`
 - result views
 - IR export
@@ -364,7 +402,7 @@ It does NOT define decision logic.
 
 → [M14 — Cognitive Operating System](docs/math/M14_cognitive_operating_system_(COS)_architecture.md)
 
-### 5. Runtime Execution Layer
+### 6. Runtime Execution Layer
 
 ARVIS includes a dedicated Runtime Layer responsible for executing side-effectful actions after the 
 cognitive pipeline has produced a decision.
@@ -484,7 +522,7 @@ Together, they enable:
 
 ## ⚡ In One Sentence
 
-> ARVIS turns cognition into a **runtime-regulated dynamical system with enforceable stability constraints**
+> ARVIS turns cognition and interaction into a **runtime-regulated dynamical system with enforceable stability constraints**
 
 ---
 

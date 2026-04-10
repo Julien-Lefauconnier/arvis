@@ -74,10 +74,29 @@ Rules:
 * MUST be deterministic
 * MUST reflect Gate output exactly
 * MUST be stable across executions
+* IR defines the canonical boundary of cognition.
+* All downstream layers MUST derive strictly from IR without modifying its semantics.
 
 ---
 
-### Level 4 — Execution Model
+### Level 4 — Response Construction Layer
+
+* `CONVERSATION_SPEC_V1.md`
+* `LINGUISTIC_SPEC_V1.md`
+
+Defines:
+- transformation of validated cognition into response strategies
+- response planning and linguistic realization constraints
+
+Rules:
+- MUST NOT modify decision semantics
+- MUST derive strictly from IR
+- MUST preserve determinism and safety constraints
+- MUST NOT introduce new decision logic
+
+---
+
+### Level 5 — Execution Model
 
 * `PIPELINE.md`
 * `TOOL_SYSTEM_V1.md`
@@ -86,12 +105,13 @@ Defines:
 
 * deterministic execution stages
 * signal propagation
-* runtime behavior
+* runtime orchestration (scheduler, processes, execution ticks)
 * tool execution system (runtime layer)
 
 Rules:
 
 * MUST remain deterministic
+* MUST define both logical execution (pipeline) and physical execution (runtime scheduler)
 * MUST produce inputs compatible with Gate and IR
 * MUST preserve separation between:
   - decision (pipeline)
@@ -101,7 +121,26 @@ Rules:
 
 ---
 
-### Level 5 — Interoperability / Canonical Projection Layer
+### Level 6 — Constraint Input Layer
+
+* `ARVIS_PROJECTION_SPEC_V1.md`
+* `ARVIS_VALIDITY_ENVELOPE_SPEC_V1.md`
+
+Defines:
+- projection certification
+- validity constraints
+
+Rules:
+- MUST feed structured inputs into Gate
+- MUST be consistent with Gate evaluation inputs
+- MUST remain deterministic and auditable
+- MUST NOT override Gate semantics
+- Projection invalid ⇒ Validity invalid
+- Validity MUST be evaluated before or during Gate evaluation
+
+---
+
+### Level 7 — Interoperability / Canonical Projection Layer
 
 * `KERNEL_ADAPTER.md`
 
@@ -177,25 +216,7 @@ Tool execution is:
 
 ---
 
-### Level 6 — Supporting Normative Layers
-
-* `ARVIS_PROJECTION_SPEC_V1.md`
-* `ARVIS_VALIDITY_ENVELOPE_SPEC_V1.md`
-
-Defines:
-
-* projection certification
-* validity constraints
-
-Rules:
-
-* MUST NOT override Gate semantics
-* MUST feed structured inputs into Gate
-* MUST remain deterministic and auditable
-
----
-
-### Level 7 — Compliance & Verification
+### Level 8 — Compliance & Verification
 
 * `ARVIS_COMPLIANCE_SUITE_V1.md`
 
@@ -212,7 +233,7 @@ Rules:
 
 ---
 
-### Level 8 — Architecture & Informative Documents
+### Level 9 — Architecture & Informative Documents
 
 * `ARCHITECTURE.md`
 * `OVERVIEW.md`
@@ -230,6 +251,14 @@ Rules:
 * MUST NOT contradict higher-level specifications
 * MAY explain, illustrate, or contextualize the system
 
+NOTE:
+Reflexive is not a standalone system layer.
+It is a read-only projection of Level 3 public objects:
+- CognitiveState
+- DecisionTrace
+- CognitiveIR
+- Timeline
+
 ---
 
 ## 3. Conflict Resolution Rules
@@ -242,6 +271,8 @@ In case of conflict between documents:
 4. IR specification overrides serialization or representation differences
 5. Canonical Projection Layer MUST NOT override IR semantics
 6. Informative documents MUST be ignored in conflicts
+7. IR MUST be considered the canonical boundary before response construction. 
+    Conversation and linguistic layers MUST NOT override IR semantics.
 
 ---
 
@@ -324,16 +355,17 @@ But:
 
 ## 8. Summary
 
-| Level | Role                  | Authority          |
-| ----- | --------------------- | ------------------ |
-| 1     | Invariants            | Absolute           |
-| 2     | Gate                  | Decision authority |
-| 3     | IR / Public Objects   | External contract  |
-| 4     | Pipeline + Tools      | Execution model    |
-| 5     | Canonical Projection  | Interoperability   |
-| 6     | Projection / Validity | Constraint inputs  |
-| 7     | Compliance            | Verification       |
-| 8     | Architecture / Docs   | Informative        |
+| Level | Role                          | Authority          |
+| ----- | ----------------------------- | ------------------ |
+| 1     | Invariants                    | Absolute           |
+| 2     | Gate                          | Decision authority |
+| 3     | IR / Public Objects           | External contract  |
+| 4     | Conversation / Linguistic     | Response layer     |
+| 5     | Pipeline + Runtime + Tools    | Execution model    |
+| 6     | Projection / Validity         | Constraint inputs  |
+| 7     | Canonical Projection          | Interoperability   |
+| 8     | Compliance                    | Verification       |
+| 9     | Architecture / Docs           | Informative        |
 
 ---
 

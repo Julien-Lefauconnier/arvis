@@ -29,6 +29,15 @@ It is designed for:
 
 It is NOT constrained by external canonical signal registries.
 
+IMPORTANT:
+
+The IR represents **cognitive evaluation**, not the final user response.
+
+- It contains validated intent, state, and decision signals
+- It does NOT contain conversational realization or generated outputs
+
+Response generation occurs in the Conversation & Realization layers.
+
 ---
 
 ## IR Construction Pipeline
@@ -54,7 +63,7 @@ This ensures:
 
 ---
 
-## Top-Level Structure (v1)
+## Top-level structure (simplified view)
 
 The IR is represented by the CognitiveIR object:
 
@@ -200,7 +209,7 @@ Validation enforces:
 The IR is serialized into a deterministic representation:
 
 ```python
-serialized = CognitiveIRSerializer.serialize(ir)
+serialized = to_canonical_dict(...)
 ```
 
 ---
@@ -242,7 +251,7 @@ The IR guarantees:
 
 - Determinism
 - No hidden state
-- Pure transformation from pipeline output
+- Deterministic transformation from finalized cognitive context (including post-pipeline observability and projection layers)
 - Stable normalization
 - Stable hashing
 - Replay consistency
@@ -261,7 +270,7 @@ pipeline.run_from_ir(ir)
 Replay mode:
 
 - deterministic
-- side-effect free
+- side-effect minimized (but may depend on runtime configuration)
 - used for validation and auditing
 
 ---

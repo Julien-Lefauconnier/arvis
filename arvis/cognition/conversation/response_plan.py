@@ -28,3 +28,9 @@ class ResponsePlan:
     short_circuit: bool = False
 
     context_hints: Dict[str, Any] = field(default_factory=dict)
+
+    # --------------------------------------------
+    # LINGUISTIC LAYER (optional, non-executable)
+    # --------------------------------------------
+    generation_frame: Optional[Dict[str, Any]] = None
+    prompt: Optional[str] = None

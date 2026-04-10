@@ -1,4 +1,4 @@
-# backend/app/domain/reflexive/core/reflexive_mode_registry.py
+# arvis/reflexive/core/reflexive_mode_registry.py
 
 from typing import Any, Optional
 

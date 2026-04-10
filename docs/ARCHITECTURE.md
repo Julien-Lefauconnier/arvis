@@ -15,7 +15,7 @@ ARVIS is not a model architecture.
 
 It is a **cognitive execution system** where:
 
-> cognition is constructed, evaluated, regulated, and only then allowed to produce an action.
+> cognition is constructed, evaluated, regulated, and only then allowed to produce a validated intent (which may result in an action).
 
 ---
 
@@ -28,14 +28,15 @@ It is a **cognitive execution system** where:
 
 ## System Model
 
-ARVIS is implemented as a **deterministic system** with six architectural domains:
+ARVIS is implemented as a **deterministic system** with seven architectural domains:
 
 0. runtime orchestration
 1. execution
 2. canonical state
-3. reflexive observation
-4. public contract / IR
-5. interoperability / canonical projection
+3. public contract / IR 
+4. reflexive observation
+5. conversation & response layer
+6. interoperability / canonical projection
 
 ---
 
@@ -45,16 +46,21 @@ ARVIS is implemented as a **deterministic system** with six architectural domain
 Input
   → Cognitive Scheduler
   → Cognitive Pipeline (step execution)
-  → Cognitive Scheduler (process selection)
-  → PipelineExecutor (stage execution)
-  → Cognitive Pipeline (logical execution)
   → Canonical CognitiveState
-  → Observability / Trace / Timeline
-  → Reflexive Snapshot
+  → Decision (validated / abstained)
   → Intermediate Representation (IR)
+  → Conversation Layer (strategy + plan)
+  → Response Plan
+  → (Optional) Realization (template / LLM)
+  → Observability / Trace / Timeline
+  → Runtime Execution (tools / side-effects)
+  → Reflexive Snapshot
   → Canonical Projection (Kernel Adapter)
   → Public API
 ```
+
+IMPORTANT:
+The IR defines the canonical boundary between cognition and response construction.
 
 ---
 
@@ -125,6 +131,110 @@ It is the bridge between execution and external interoperability.
 
 ---
 
+## Conversation & Response Layer
+
+This layer transforms a **validated cognitive decision** into a **controlled response**.
+
+It is responsible for:
+
+- selecting a response strategy
+- integrating memory constraints
+- adapting to conversational context
+- constructing a structured response plan
+
+Core components:
+
+- `ConversationOrchestrator`
+- `ResponseStrategyDecision`
+- `ResponsePlan`
+- `LinguisticAct`
+
+### Responsibilities
+
+1. Strategy Selection
+
+Maps CognitiveIR (+ authorized context) → response strategy
+
+- ABSTENTION
+- CONFIRMATION
+- INFORMATIONAL
+- ACTION
+
+2. Memory Integration
+
+- injects memory signals
+- constrains actions
+- influences strategy selection
+
+3. Adaptive Control
+
+- reacts to instability signals
+- adjusts response behavior dynamically
+
+4. Response Planning
+
+Builds a `ResponsePlan`:
+
+- defines act type
+- defines structure of response
+- prepares realization phase
+
+IMPORTANT:
+
+> This layer does NOT perform cognition.  
+> It transforms validated cognition into a safe communicable form.
+
+---
+
+## Realization Layer
+
+This layer converts a `ResponsePlan` into an actual output.
+
+It supports:
+
+- template-based rendering
+- controlled LLM generation
+
+Components:
+
+- `RealizationService`
+- `PromptBuilder`
+- `LLMExecutor`
+
+IMPORTANT:
+
+- LLMs are NOT part of cognition
+- LLMs are NOT decision makers
+- they only realize a pre-validated plan
+
+This guarantees:
+
+> generation is always constrained by cognition
+
+---
+
+## Memory System
+
+ARVIS includes a structured memory subsystem.
+
+Components:
+
+- long-term memory registry
+- memory policy gates
+- memory projection into cognition and conversation
+
+Memory can:
+- inject contextual signals
+- constrain decisions
+- constrain response strategies (without introducing new semantics)
+
+Memory is integrated at:
+
+- pipeline level (state construction)
+- conversation level (response shaping)
+
+---
+
 ## Reflexive Layer
 
 The reflexive layer is read-only and declarative.
@@ -145,6 +255,9 @@ This layer does not perform cognition. It observes and exposes structure safely.
 ## Runtime Execution Layer
 
 This layer executes **side-effects AFTER decision finalization**.
+
+This layer is consistent with the Decision Specification, the Pipeline Specification, and the execution-level constraints defined in the specification hierarchy.
+
 It is distinct from the runtime orchestration layer.
 
 Responsibilities:
@@ -152,6 +265,17 @@ Responsibilities:
 - tool execution
 - adapter hosting
 - external system interaction
+
+This layer operates AFTER:
+
+- decision validation
+- response planning
+- (optional) response realization
+
+It executes:
+
+- tools
+- external actions
 
 Important:
 
@@ -342,14 +466,14 @@ Although implemented as a pipeline, ARVIS can be decomposed into functional role
 
 ---
 
-### 5. Decision Resolution
+### 5. Decision Finalization (Cognitive Output)
 
 * Confirmation Stage
 * Execution Stage
 * Action Stage
 * Intent Stage
 
-→ transforms evaluated cognition into **actionable intent**
+→ produces a **validated cognitive intent**, not a final user response
 
 ---
 
@@ -437,7 +561,7 @@ The IR provides:
 
 IMPORTANT:
 
-IR is NOT a canonical representation.
+IR is the canonical internal representation of ARVIS.
 
 - IR is expressive, extensible, and system-oriented
 - CanonicalSignals are constrained, registry-bound, and external

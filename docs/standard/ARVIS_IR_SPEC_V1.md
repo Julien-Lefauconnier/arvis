@@ -23,6 +23,9 @@ IMPORTANT:
 
 The IR is the **single source of truth** for all external representations of a cognitive execution.
 
+The IR defines the canonical boundary between cognition and response construction.
+All downstream layers (conversation, linguistic, execution, interoperability) MUST derive strictly from the IR without modifying its semantics.
+
 All interoperability layers (e.g. canonical signal systems) MUST derive exclusively from the IR.
 
 ---
@@ -63,7 +66,7 @@ The IR MUST allow:
 
 The IR system is composed of distinct layers:
 
-1. Raw IR (from pipeline)
+1. Constructed IR (from CognitiveIRBuilder)
 2. Normalized IR
 3. Validated IR
 4. Serialized IR
@@ -104,6 +107,9 @@ mechanism allowing deterministic comparison with the source IR.
 
 If origin is None, it MUST be normalized to a deterministic default value ("unknown").
 
+Missing or undefined fields MUST be normalized to deterministic default values.
+These defaults MUST be explicitly defined and consistent across implementations.
+
 ---
 
 ## 3. Canonical IR Structure (v1)
@@ -119,6 +125,7 @@ CognitiveIR:
   gate: CognitiveGateIR
   stability: StabilityIR | null
   adaptive: AdaptiveIR | null
+  tools: list[ToolResultIR] | null
 ```
 
 ---
@@ -161,8 +168,10 @@ MUST include:
 
 - user_id
 - session_id (if available)
+- conversation_mode (if applicable)
 - memory constraints / preferences
 - execution context hints
+- additional deterministic context fields (normalized)
 
 ### 5.3 Decision
 
@@ -194,6 +203,7 @@ Represents final decision validation.
 MUST include:
 
 - verdict ∈ {ALLOW, REQUIRE_CONFIRMATION, ABSTAIN}
+- bundle_id
 - reason_codes
 
 ### 5.6 Stability (Optional)
@@ -308,6 +318,8 @@ The IR MUST satisfy:
 - no hidden state
 - full determinism
 - consistency between gate and decision
+- MUST be fully derived from validated Gate output
+- MUST NOT be modified by downstream layers
 - reason_codes reflect triggered conditions
 - normalized IR is idempotent
 - the IR MUST preserve all semantically relevant information produced by the pipeline
@@ -327,6 +339,8 @@ Replay MUST produce:
 - identical verdict
 - identical reason_codes
 - identical IR after normalization
+- independence from runtime execution order
+- independence from scheduler behavior
 
 ---
 
@@ -359,6 +373,10 @@ If external projection layers are implemented:
 - they MUST use the IR as input
 - they MUST NOT alter IR semantics
 - they MUST remain deterministic and side-effect free
+
+Conversation and linguistic layers MUST:
+- derive strictly from IR
+- NOT alter IR semantics
 
 ---
 

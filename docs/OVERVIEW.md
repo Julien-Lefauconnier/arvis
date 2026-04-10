@@ -4,8 +4,8 @@
 
 ARVIS is a **Cognitive Operating System**.
 
-It does not generate answers.
-It **controls how decisions are allowed to exist**.
+It does not generate answers directly.
+It **controls how decisions and responses are allowed to exist**.
 
 ---
 
@@ -20,7 +20,10 @@ input → model → output
 ARVIS replaces it with:
 
 ```text
-input → constrained cognition → validated decision
+input 
+→ constrained cognition 
+→ validated decision 
+→ controlled response
 ```
 
 A decision is not automatically produced.
@@ -32,7 +35,11 @@ It must pass through:
 * stability constraints
 * execution gating
 
-Only then can it exist.
+Then, if allowed:
+
+a response strategy is selected
+a response plan is constructed
+the response is realized (template or LLM)
 
 ---
 
@@ -98,6 +105,10 @@ If the system is:
 * too risky → no decision
 * uncertain → confirmation required
 
+---
+
+### Execution Model
+
 Execution may occur:
 
 - in a single step (simple case)
@@ -114,11 +125,53 @@ Important:
 - the pipeline defines *what* happens
 - the scheduler defines *when and how* it happens
 
-This separation is critical for:
+---
 
-- scalability
-- control of computation
-- future multi-process reasoning
+### Response Layer 
+
+ARVIS separates decision from response.
+
+#### Decision layer:
+
+- determines if something is allowed
+
+#### Response layer:
+
+- determines how to express it safely
+
+This is implemented via:
+
+- ResponseStrategyDecision
+- ResponsePlan
+- LinguisticAct
+
+Example strategies:
+
+- ABSTENTION
+- CONFIRMATION
+- INFORMATIONAL
+- ACTION
+
+---
+
+### LLM Integration (Controlled)
+
+ARVIS can use LLMs, but never directly.
+
+LLMs are:
+
+- not decision makers
+- not trusted sources of truth
+
+They are used only for:
+
+- controlled realization
+- natural language generation
+
+Always under:
+
+- a predefined ResponsePlan
+- a constrained LinguisticAct
 
 ---
 
@@ -153,10 +206,10 @@ Same input, same context → same result
 No hidden randomness
 No implicit branching
 
-This guarantee holds even under iterative execution:
+This holds even with:
 
-- scheduler decisions are deterministic
-- partial execution does not change final outcomes
+- iterative execution
+- scheduling
 
 ---
 
@@ -187,11 +240,28 @@ Every decision produces a complete trace:
 
 Nothing is implicit.
 
-Execution is also traceable:
+also:
 
-- process lifecycle is observable
-- scheduling decisions are deterministic
-- execution steps can be replayed
+- execution is traceable
+- scheduling is deterministic
+- processes can be replayed
+
+---
+
+## Memory (Emerging Layer)
+
+ARVIS includes a structured memory system:
+
+- long-term entries
+- policy gating
+- memory-to-decision influence
+
+Memory can:
+
+- influence strategy selection
+- constrain actions
+- inject contextual signals
+
 
 ---
 
@@ -237,7 +307,7 @@ Think of ARVIS as:
 > an operating system for cognition
 
 Like an OS controls how programs execute,
-ARVIS controls how reasoning and decisions are allowed to happen — and how they are executed over time.
+ARVIS controls how reasoning and decisions are allowed to happen — and how responses are safely produced.
 
 ---
 

@@ -56,7 +56,7 @@ Decision
 The pipeline defines a logical atomic transition:
 
 ```text
-input → full pipeline → decision
+input → full pipeline → validated cognitive intent
 ```
 
 However, in the runtime implementation:
@@ -99,7 +99,7 @@ Each stage:
 Stages are:
 
 - deterministic
-- side-effect free
+- side-effect confined to the pipeline context (ctx)
 - safe to execute independently (required for iterative runtime execution)
 
 Each stage MAY emit reason codes.

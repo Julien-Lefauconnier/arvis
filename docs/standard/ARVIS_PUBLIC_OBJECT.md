@@ -28,6 +28,9 @@ They are distinct from:
 - internal execution structures (pipeline state)
 - interoperability projections (e.g. canonical signals)
 
+The CognitiveIR defines the canonical boundary between cognition and response construction.
+All response-related public objects MUST be strictly derived from the IR.
+
 ---
 
 ## 2. Core Principles
@@ -59,7 +62,7 @@ All public objects MUST be:
 ### 2.4 Separation of Concerns
 
 Public objects MUST NOT:
-- embed runtime-only state
+- embed transient runtime execution state (scheduler state, process state, execution budgets)
 - contain hidden or implicit fields
 - depend on implementation-specific structures
 
@@ -110,7 +113,11 @@ Only `public` objects appear in this registry.
 
 Public objects are defined at the **interface boundary of the pipeline**.
 
-They correspond to **canonical, normalized, and validated structures**.
+Public objects are defined at the **interface boundary of the IR**.
+
+They correspond to:
+- canonical cognitive representations (IR)
+- deterministic post-cognitive transformations (response, memory, execution)
 
 NOTE:
 
@@ -197,6 +204,7 @@ CognitiveIR:
   gate: CognitiveGateIR
   stability: StabilityIR | null
   adaptive: AdaptiveIR | null
+  tools: list[ToolResult] | null
 ```
 #### Invariants
 
@@ -285,9 +293,9 @@ AdaptiveIRAdapter.from_adaptive(...)
 
 ---
 
-### 4.10 CognitiveIR.tools
+### 4.10 ToolResult (IR Field)
 
-Represents tool execution results.
+Represents tool execution results attached to CognitiveIR.
 
 Invariants:
 - MUST reflect runtime execution
@@ -320,6 +328,137 @@ It MUST NOT:
 
 - influence decision semantics
 - be re-injected into the same execution cycle
+
+---
+
+### 4.12 ResponseStrategyDecision
+
+#### Role
+
+Represents the canonical response strategy selected after cognitive decision validation.
+
+This object defines **how the system intends to communicate**, not what it has decided.
+
+```yaml
+ResponseStrategyDecision:
+  strategy: Enum(ABSTENTION, CONFIRMATION, INFORMATIONAL, ACTION)
+  requires_confirmation: bool
+  can_execute: bool
+```
+
+#### Invariants
+
+- MUST be derived from validated decision outputs
+- MUST be derived strictly from CognitiveIR
+- MUST NOT alter decision semantics
+- MUST be deterministic given identical inputs
+- MUST NOT depend on linguistic realization
+- MUST NOT depend on runtime execution
+
+---
+
+### 4.13 ResponsePlan
+
+#### Role
+
+Represents the canonical pre-linguistic communication plan.
+
+It defines how a validated cognitive intent is structured for communication.
+
+```yaml
+ResponsePlan:
+  strategy: ResponseStrategyDecision
+  act_type: str
+  structure: dict
+  constraints: dict
+  realization_hints: dict | null
+```
+
+#### Invariants
+
+- MUST be deterministic
+- MUST NOT contain natural language
+- MUST NOT contain runtime-only artifacts
+- MUST NOT modify cognitive decision semantics
+- MUST be sufficient to drive realization deterministically
+- MUST be fully derivable from CognitiveIR + ResponseStrategyDecision
+- MUST NOT introduce new information not present in IR
+
+IMPORTANT:
+
+ResponsePlan is a language-agnostic communication contract.
+
+---
+
+### 4.14 MemoryLongEntry
+
+#### Role
+
+Represents a canonical long-term memory unit.
+
+```yaml
+MemoryLongEntry:
+  memory_id: str
+  content: structured deterministic data
+  constraints: list[str]
+  metadata: dict
+  created_at: timestamp
+```
+
+#### Invariants
+
+- MUST be immutable once created
+- MUST be identifiable via memory_id
+- MUST NOT contain runtime-only state
+
+---
+
+### 4.15 MemoryLongSnapshot
+
+#### Role
+
+Represents the deterministic memory state used during a cognitive execution.
+
+```yaml
+MemoryLongSnapshot:
+  entries: list[MemoryLongEntry]
+  constraints: list[str]
+  preferences: dict
+```
+
+#### Invariants
+
+- MUST reflect filtered memory (post-policy)
+- MUST be deterministic
+- MUST NOT expose unauthorized memory
+- MUST match CognitiveContextIR constraints
+- MUST be consistent with CognitiveContextIR
+
+IMPORTANT:
+
+MemoryLongSnapshot is the audit surface of memory.
+
+---
+
+### 4.16 LinguisticAct
+
+#### Role
+
+Represents the canonical communicative act derived from a ResponsePlan.
+
+```yaml
+LinguisticAct:
+  act_type: str
+  strategy: ResponseStrategyDecision
+```
+
+#### Invariants
+
+- MUST be derived from ResponsePlan
+- MUST be deterministic
+- MUST NOT introduce new decision semantics
+- MUST remain consistent with ResponseStrategyDecision
+- MUST NOT introduce new information beyond ResponsePlan
 
 ---
 
@@ -365,6 +504,7 @@ Rules:
 - exposed objects MUST remain deterministic
 - partial exposure MUST preserve semantic consistency
 - hidden fields MUST NOT affect exposed semantics
+- exposure MUST NOT alter object semantics
 
 ---
 
