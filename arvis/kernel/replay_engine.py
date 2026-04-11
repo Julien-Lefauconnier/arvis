@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Iterable, List, Any, Optional
 
-from arvis.timeline.timeline_snapshot import TimelineSnapshot
+from veramem_kernel.api.timeline import TimelineSnapshot
 from arvis.cognition.bundle.cognitive_bundle_builder import CognitiveBundleBuilder
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline

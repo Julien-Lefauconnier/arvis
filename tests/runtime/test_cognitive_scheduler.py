@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.runtime.cognitive_process import (
+    BudgetConsumption,
     CognitiveBudget,
     CognitivePriority,
     CognitiveProcess,
@@ -107,3 +108,137 @@ def test_scheduler_waits_confirmation_when_pipeline_requires_it():
 
     updated = runtime_state.get_process(CognitiveProcessId("p-confirm"))
     assert updated.status == CognitiveProcessStatus.WAITING_CONFIRMATION
+
+
+def test_scheduler_budget_exhausted_without_completion_sets_no_result():
+
+    @dataclass
+    class DummyOutcome:
+        completed: bool
+        result: object | None
+        consumption: BudgetConsumption
+        stage_name: str | None = "dummy_stage"
+
+    def make_consumption() -> BudgetConsumption:
+        return BudgetConsumption(
+            reasoning_steps=1,
+            attention_tokens=1,
+            uncertainty_spent=0.0,
+            elapsed_ms=1,
+            memory_span_used=0,
+        )
+
+    class StubPipelineExecutor:
+        def execute_process(self, process):
+            return DummyOutcome(
+                completed=False,
+                result=None,
+                consumption=make_consumption(),
+                stage_name="dummy_stage",
+            )
+
+    runtime_state = CognitiveRuntimeState()
+    executor = StubPipelineExecutor()
+    scheduler = CognitiveScheduler(runtime_state, executor)  # type: ignore[arg-type]
+
+    process = CognitiveProcess(
+        process_id=CognitiveProcessId("p1"),
+        kind=CognitiveProcessKind.USER_REQUEST,
+        status=CognitiveProcessStatus.READY,
+        priority=CognitivePriority(10.0),
+        budget=CognitiveBudget(reasoning_steps=1, time_slice_ms=100),
+        local_state=CognitivePipelineContext(user_id="u1", cognitive_input={}),
+        created_tick=0,
+        user_id="u1",
+    )
+
+    scheduler.enqueue(process)
+    decision = scheduler.tick()
+
+    updated = runtime_state.get_process(CognitiveProcessId("p1"))
+
+    assert decision.result is None
+    assert updated.status == CognitiveProcessStatus.SUSPENDED
+    assert runtime_state.scheduler_state.active_process_id is None
+    assert CognitiveProcessId("p1") in runtime_state.scheduler_state.suspended_queue
+
+
+
+def test_scheduler_preempts_incomplete_process_when_budget_remains():
+
+    @dataclass
+    class DummyOutcome:
+        completed: bool
+        result: object | None
+        consumption: BudgetConsumption
+        stage_name: str | None = "dummy_stage"
+
+    def make_consumption() -> BudgetConsumption:
+        return BudgetConsumption(
+            reasoning_steps=1,
+            attention_tokens=1,
+            uncertainty_spent=0.0,
+            elapsed_ms=1,
+            memory_span_used=0,
+        )
+
+    class StubPipelineExecutor:
+        def execute_process(self, process):
+            return DummyOutcome(
+                completed=False,
+                result=None,
+                consumption=make_consumption(),
+                stage_name="dummy_stage",
+            )
+
+    runtime_state = CognitiveRuntimeState()
+    executor = StubPipelineExecutor()
+    scheduler = CognitiveScheduler(runtime_state, executor)  # type: ignore[arg-type]
+
+    process = CognitiveProcess(
+        process_id=CognitiveProcessId("p-preempt"),
+        kind=CognitiveProcessKind.USER_REQUEST,
+        status=CognitiveProcessStatus.READY,
+        priority=CognitivePriority(10.0),
+        budget=CognitiveBudget(reasoning_steps=2, time_slice_ms=100),
+        local_state=CognitivePipelineContext(user_id="u1", cognitive_input={}),
+        created_tick=0,
+        user_id="u1",
+    )
+
+    scheduler.enqueue(process)
+    decision = scheduler.tick()
+
+    updated = runtime_state.get_process(CognitiveProcessId("p-preempt"))
+
+    assert decision.result is None
+    assert updated.status == CognitiveProcessStatus.READY
+    assert runtime_state.scheduler_state.active_process_id is None
+    assert CognitiveProcessId("p-preempt") in runtime_state.scheduler_state.ready_queue
+
+
+
+def test_executor_raises_if_finalize_returns_none():
+    class BadPipeline:
+        def iter_stages(self):
+            return []
+
+        def _prepare_run(self, ctx): pass
+        def finalize_run(self, ctx): return None
+
+    executor = PipelineExecutor(BadPipeline())
+
+    process = CognitiveProcess(
+        process_id=CognitiveProcessId("bad"),
+        kind=CognitiveProcessKind.USER_REQUEST,
+        status=CognitiveProcessStatus.READY,
+        priority=CognitivePriority(10),
+        budget=CognitiveBudget(reasoning_steps=1),
+        local_state=CognitivePipelineContext(user_id="u", cognitive_input={}),
+        created_tick=0,
+        user_id="u",
+    )
+
+    import pytest
+    with pytest.raises(RuntimeError):
+        executor.execute_process(process)

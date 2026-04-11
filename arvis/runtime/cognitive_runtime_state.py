@@ -8,7 +8,9 @@ from typing import Any, Optional
 from arvis.runtime.cognitive_process import CognitiveProcess, CognitiveProcessId
 from arvis.runtime.resource_model import ResourceState
 from arvis.runtime.scheduler_state import SchedulerState
-
+from veramem_kernel.signals.signal_journal import SignalJournal
+from veramem_kernel.api.signals import CanonicalSignal
+from arvis.adapters.kernel.signals.signal_factory import SignalFactory
 
 @dataclass
 class CognitiveRuntimeState:
@@ -17,7 +19,9 @@ class CognitiveRuntimeState:
     processes: dict[CognitiveProcessId, CognitiveProcess] = field(default_factory=dict)
     memory_topology: Optional[Any] = None
     control_state: Optional[Any] = None
-    timeline: list[dict[str, Any]] = field(default_factory=list)
+    timeline: Any = field(default_factory=SignalJournal)
+    _local_counter: int = 0
+    _last_tick: int = -1
 
     def register_process(self, process: CognitiveProcess) -> None:
         process.validate()
@@ -29,15 +33,56 @@ class CognitiveRuntimeState:
             return self.processes[process_id]
         except KeyError as exc:
             raise KeyError(f"Unknown process id: {process_id.value}") from exc
+    
 
     def append_event(self, event_type: str, payload: dict[str, Any]) -> None:
-        self.timeline.append(
-            {
-                "event_type": event_type,
-                "tick": self.scheduler_state.tick_count,
-                "payload": payload,
-            }
+        signal = self._map_runtime_event(event_type, payload)
+        self.timeline.append(signal)
+
+    # -----------------------------------------------------
+    # Runtime → Canonical Signal Mapping
+    # -----------------------------------------------------
+    _EVENT_TO_CODE = {
+        "process_enqueued": "decision_emitted",
+        "process_completed": "decision_emitted",
+        "process_aborted": "instability_detected",
+        "process_suspended": "early_warning_detected",
+        "process_blocked": "conflict_detected",
+        "process_waiting_confirmation": "uncertainty_detected",
+        "scheduler_selected": "decision_emitted",
+        "process_preempted": "early_warning_detected",
+    }
+
+    def _map_runtime_event(
+        self,
+        event_type: str,
+        payload: dict[str, Any]
+    ) -> CanonicalSignal:
+        code = self._EVENT_TO_CODE.get(event_type)
+
+        if code is None:
+            # fallback safe (important for forward compatibility)
+            code = "ghost_signal"
+
+        current_tick = self.scheduler_state.tick_count
+
+        # reset counter when tick changes
+        if current_tick != self._last_tick:
+            self._local_counter = 0
+            self._last_tick = current_tick
+
+        self._local_counter += 1
+
+        ts = float(current_tick) + (self._local_counter * 1e-6)
+
+        signal = SignalFactory.create(
+            code,
+            subject_ref=f"process:{payload.get('process_id', 'unknown')}",
+            temporal_anchor=f"tick:{self.scheduler_state.tick_count}",
+            timestamp=ts,
         )
+
+        return signal
 
     def running_processes(self) -> list[CognitiveProcess]:
         return [

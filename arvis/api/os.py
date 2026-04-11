@@ -14,12 +14,14 @@ from arvis.api.trace import DecisionTraceView
 from arvis.api.timeline import TimelineView
 from arvis.api.version import API_VERSION, API_FINGERPRINT
 from arvis.api.ir import build_ir_view
+from arvis.adapters.kernel.timeline_from_signals import signal_journal_to_timeline_snapshot
+from veramem_kernel.signals.signal_journal import SignalJournal
 from arvis.kernel.replay_engine import ReplayEngine
 from arvis.ir.cognitive_ir import CognitiveIR
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
-
+from arvis.cognition.state.cognitive_state import CognitiveState
 
 from arvis.runtime import (
     CognitiveRuntimeState,
@@ -46,6 +48,10 @@ class CognitiveOSConfig:
     adapter_registry: Optional[Dict[str, Any]] = None
     runtime_mode: str = "local"  # local | replay | distributed
 
+@dataclass(frozen=True)
+class RuntimeExecutionResult:
+    result: Any
+    state: Optional[CognitiveState]
 
 # =====================================================
 # RUNTIME
@@ -160,7 +166,10 @@ class CognitiveRuntime:
                 except Exception:
                     ctx.extra.setdefault("errors", []).append("tool_execution_failure")
 
-        return result
+        return RuntimeExecutionResult(
+            result=result,
+            state=ctx.cognitive_state,
+        )
 
 
 # =====================================================
@@ -180,10 +189,18 @@ class CognitiveResultView:
     reflexive: Optional[Dict[str, Any]] = None
 
     @staticmethod
-    def from_pipeline(result: Any) -> "CognitiveResultView":
+    def from_state(state: CognitiveState, result: Any) -> "CognitiveResultView":
         stability = getattr(result, "stability", None)
         trace = getattr(result, "trace", None)
-        timeline = getattr(result, "timeline", None)
+        timeline_journal = state.timeline
+        
+        # -----------------------------------------
+        #  SAFE TIMELINE HANDLING
+        # -----------------------------------------
+        if not isinstance(timeline_journal, SignalJournal):
+            timeline_snapshot = None
+        else:
+            timeline_snapshot = signal_journal_to_timeline_snapshot(timeline_journal)
 
         # reflexive snapshot (safe)
         reflexive_payload = None
@@ -195,10 +212,9 @@ class CognitiveResultView:
                 get_reflexive_snapshot,
             )
 
-            state = getattr(result, "cognitive_state", None)
-            if state is not None:
-                snapshot = typed_get_snapshot(state)
-                reflexive_payload = snapshot.to_dict()
+            snapshot = typed_get_snapshot(state)
+            reflexive_payload = snapshot.to_dict()
+
         except Exception:
             reflexive_payload = None
 
@@ -210,11 +226,13 @@ class CognitiveResultView:
             ),
             trace=trace,
             trace_view=DecisionTraceView.from_trace(trace) if trace else None,
-            timeline=timeline,
+            timeline=timeline_snapshot,
             timeline_view=(
-                TimelineView.from_snapshot(timeline) if timeline else None
+                TimelineView.from_snapshot(timeline_snapshot)
+                if timeline_snapshot is not None
+                else None
             ),
-            _ir=build_ir_view(result),
+            _ir=build_ir_view(state),
             reflexive=reflexive_payload,
         )
 
@@ -335,10 +353,15 @@ class CognitiveOS:
             extra=extra,
         )
 
-        result = self.runtime.execute(ctx)
+        execution = self.runtime.execute(ctx)
+        state = execution.state
+        result = execution.result
 
         if self.config.enable_trace:
-            return CognitiveResultView.from_pipeline(result)
+            return CognitiveResultView.from_state(
+                state,
+                result
+            )
 
         return {
             "action": getattr(result, "action_decision", None),
@@ -369,8 +392,8 @@ class CognitiveOS:
             extra=extra,
         )
 
-        result = self.runtime.execute(ctx)
-        return build_ir_view(result)
+        execution = self.runtime.execute(ctx)
+        return build_ir_view(execution.state)
 
     # =====================================================
     #  REPLAY API
@@ -381,8 +404,15 @@ class CognitiveOS:
         parsed = CognitiveIR.from_dict(ir)
         engine = ReplayEngine()
         result = engine.replay_ir(parsed, pipeline=self.pipeline)
+        state = getattr(result, "cognitive_state", None)
 
-        return CognitiveResultView.from_pipeline(result)
+        if state is None:
+            raise RuntimeError("Replay result missing cognitive_state")
+
+        return CognitiveResultView.from_state(
+            state,
+            result
+        )
 
     # =====================================================
     #  INSPECT

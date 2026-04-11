@@ -576,6 +576,36 @@ class CognitivePipeline:
             ctx.extra.setdefault("errors", []).append("ir_serialization_failure")
 
         # -----------------------------------------------------
+        # TRACE (must exist BEFORE state)
+        # -----------------------------------------------------
+        trace = DecisionTrace(
+            timestamp=datetime.now(timezone.utc),
+            user_id=ctx.user_id,
+            gate_result=normalized_gate_result,
+            confirmation_request=ctx.confirmation_request,
+            confirmation_result=ctx.confirmation_result,
+            action_decision=ctx.action_decision,
+            executable_intent=ctx.executable_intent,
+            conflict=ctx.extra.get("conflict"),
+            predictive=ctx.predictive_snapshot,
+            stability=ctx.global_stability,
+            symbolic=ctx.symbolic_state,
+            system_tension=ctx.system_tension,
+            quadratic_lyapunov=ctx.quadratic_lyap_snapshot,
+            quadratic_comparability=ctx.quadratic_comparability,
+            theoretical_regime=ctx.theoretical_regime,
+            fast_dynamics=ctx.fast_dynamics,
+            perturbation=ctx.perturbation,
+            conversation=ctx.conversation_signal,
+            governance=ctx.governance,
+            pending_actions=ctx.pending_actions,
+            events=ctx.events,
+            coherence_policy=ctx.coherence_policy,
+        )
+
+        ctx.trace = trace
+
+        # -----------------------------------------------------
         # COGNITIVE STATE (canonical)
         # -----------------------------------------------------
         try:
@@ -608,35 +638,10 @@ class CognitivePipeline:
             ctx.extra.setdefault("errors", []).append("state_ir_adapter_failure")
             ctx.ir_state = None
 
-        trace = DecisionTrace(
-            timestamp=datetime.now(timezone.utc),
-            user_id=ctx.user_id,
-            gate_result=normalized_gate_result,
-            confirmation_request=ctx.confirmation_request,
-            confirmation_result=ctx.confirmation_result,
-            action_decision=ctx.action_decision,
-            executable_intent=ctx.executable_intent,
-            conflict=ctx.extra.get("conflict"),
-            predictive=ctx.predictive_snapshot,
-            stability=ctx.global_stability,
-            symbolic=ctx.symbolic_state,
-            system_tension=ctx.system_tension,
-            quadratic_lyapunov=ctx.quadratic_lyap_snapshot,
-            quadratic_comparability=ctx.quadratic_comparability,
-            theoretical_regime=ctx.theoretical_regime,
-            fast_dynamics=ctx.fast_dynamics,
-            perturbation=ctx.perturbation,
-            conversation=ctx.conversation_signal,
-            governance=ctx.governance,
-            pending_actions=ctx.pending_actions,
-            events=ctx.events,
-            coherence_policy=ctx.coherence_policy,
-        )
-
         # -----------------------------------------
         # Sync canonical context projections
         # -----------------------------------------
-        ctx.trace = trace
+        
         ctx.decision = ctx.decision_result
         ctx.control = ctx.control_snapshot
 

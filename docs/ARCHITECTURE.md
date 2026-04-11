@@ -45,7 +45,8 @@ ARVIS is implemented as a **deterministic system** with seven architectural doma
 ```text
 Input
   → Cognitive Scheduler
-  → Cognitive Pipeline (step execution)
+  → Pipeline Executor
+  → Cognitive Pipeline (stage-by-stage execution)
   → Canonical CognitiveState
   → Decision (validated / abstained)
   → Intermediate Representation (IR)
@@ -99,6 +100,16 @@ This creates a strict separation:
 - runtime → execution control
 - pipeline → decision semantics
 
+Execution flow detail:
+
+```text
+tick:
+  → select process
+  → PipelineExecutor.execute_process()
+      → run_stage OR finalize_run
+  → update process state
+```
+
 ---
 
 ## Cognitive Pipeline 
@@ -115,6 +126,35 @@ It may run:
 
 - as a full execution (single step)
 - or incrementally across multiple scheduler ticks
+
+---
+
+### Pipeline Execution Contract 
+
+The pipeline is executed under a strict runtime contract:
+
+- execution is stage-by-stage (iterative)
+- only one stage is executed per scheduler tick
+- stages are non-terminal by definition
+- pipeline completion is ONLY allowed via `finalize_run()`
+
+The execution flow is:
+
+```text
+Scheduler → PipelineExecutor → run_stage() → ... → finalize_run()
+```
+
+Rules:
+
+- run_stage() MUST NOT produce a final decision
+- finalize_run() MUST produce a non-null terminal result
+- any violation results in runtime error
+
+This ensures:
+
+- deterministic execution
+- safe preemption
+- no implicit decision leakage
 
 ---
 
@@ -284,6 +324,14 @@ Important:
 
 It operates strictly after the decision pipeline.
 
+Clarification:
+
+- Runtime Orchestration Layer → controls WHEN cognition runs
+- Pipeline Executor → controls HOW cognition runs
+- Runtime Execution Layer → executes actions AFTER cognition
+
+These three layers are strictly separated.
+
 ---
 
 ## Kernel Adapter Layer 
@@ -350,23 +398,31 @@ This guarantees that:
 
 The system executes a fixed sequence of stages:
 
-1. Decision Stage
-2. Passive Context Stage
-3. Bundle Stage
-4. Conflict Stage
-5. Core Stage
-6. Regime Stage
-7. Temporal Stage
-8. Conflict Modulation Stage
-9. Control Stage
-10. Projection Stage
-11. Gate Stage
-12. Control Feedback Stage
-13. Structural Risk Stage
-14. Confirmation Stage
-15. Execution Stage
-16. Action Stage
-17. Intent Stage
+Tool Interaction Stages:
+0. ToolFeedback Stage
+1. ToolRetry Stage
+
+Core Cognitive Stages:
+2. Decision Stage
+3. Passive Context Stage
+4. Bundle Stage
+5. Conflict Stage
+6. Core Stage
+7. Regime Stage
+8. Temporal Stage
+9. Conflict Modulation Stage
+10. Control Stage
+11. Projection Stage
+12. Gate Stage
+13. Control Feedback Stage
+14. Structural Risk Stage
+15. Confirmation Stage
+16. Execution Stage
+17. Action Stage
+18. Intent Stage
+
+Execution Boundary:
+19. Runtime Execution (non-cognitive layer)
 
 (runtime execution handled outside pipeline)
 
@@ -379,7 +435,14 @@ The system executes a fixed sequence of stages:
 ARVIS implements a **closed-loop control system**:
 
 ```text
-Scheduler → PipelineExecutor → Pipeline → Control → Gate → Control Feedback → Control
+Scheduler
+→ PipelineExecutor
+→ Pipeline (stages)
+→ Control
+→ Gate
+→ Control Feedback
+→ Control
+→ (loop across scheduler ticks)
 ```
 
 ### Roles
@@ -480,6 +543,7 @@ Although implemented as a pipeline, ARVIS can be decomposed into functional role
 ### 6. System Update
 
 * Runtime orchestration (scheduler state)
+* Pipeline execution progression (stage index, lifecycle)
 * Runtime execution (side-effects)
 * timeline integration
 

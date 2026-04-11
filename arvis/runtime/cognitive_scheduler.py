@@ -212,6 +212,7 @@ class CognitiveScheduler:
             state.active_process_id = None
 
             if process.has_budget():
+                process.last_result = None
                 process.mark_ready()
                 state.ready_queue.append(process.process_id)
 
@@ -223,10 +224,13 @@ class CognitiveScheduler:
                         "next_stage_index": getattr(process, "current_stage_index", None),
                     },
                 )
+
                 return decision
 
+            # -----------------------------
+            # Budget exhausted BEFORE completion
+            # -----------------------------
             process.mark_suspended(reason="budget_exhausted")
-            state.active_process_id = None
             state.suspended_queue.append(process.process_id)
  
 
@@ -238,7 +242,7 @@ class CognitiveScheduler:
                     "next_stage_index": getattr(process, "current_stage_index", None),
                 },
             )
-            decision.result = result
+            decision.result = None
             return decision
 
         except Exception as exc:

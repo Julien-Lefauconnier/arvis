@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.cognition.state.cognitive_state import (
     CognitiveState,
@@ -13,6 +14,7 @@ from arvis.cognition.state.cognitive_state import (
 )
 
 from arvis.adapters.ir.state_adapter import StateIRAdapter
+from veramem_kernel.signals.signal_journal import SignalJournal
 
 
 class CognitiveStateBuilder:
@@ -25,8 +27,32 @@ class CognitiveStateBuilder:
         ir = StateIRAdapter.from_context(ctx)
         risk = ir.collapse_risk
 
+        # -----------------------------------------
+        # TIMELINE NORMALIZATION
+        # -----------------------------------------
+        timeline_obj = getattr(ctx, "timeline", None)
+        timeline: SignalJournal
+
+        if isinstance(timeline_obj, SignalJournal):
+            timeline = timeline_obj
+        else:
+            timeline = SignalJournal()  # type: ignore
+
+        # -----------------------------------------
+        # IR BRIDGE
+        # -----------------------------------------
+        ir_input = getattr(ctx, "ir_input", None)
+        ir_context = getattr(ctx, "ir_context", None)
+        ir_decision = getattr(ctx, "ir_decision", None)
+        ir_state = getattr(ctx, "ir_state", None)
+        ir_gate = getattr(ctx, "ir_gate", None)
+
         return CognitiveState(
             bundle_id=ir.bundle_id,
+
+            decision=getattr(ctx, "action_decision", None),
+            trace=getattr(ctx, "trace", None),
+            timeline=timeline,
 
             stability=CognitiveStability(
                 dv=ir.dv,
@@ -60,13 +86,21 @@ class CognitiveStateBuilder:
                 if getattr(ir, "projection_valid", None) is not None
                 else None
             ),
-
+            
             world_prediction=ir.world_prediction,
             forecast=ir.forecast,
 
             irg=ir.irg,
             # -----------------------------------------
-            # TOOL EXECUTION TRACE (NEW)
+            #  IR ATTACHMENT
+            # -----------------------------------------
+            ir_input=ir_input,
+            ir_context=ir_context,
+            ir_decision=ir_decision,
+            ir_state=ir_state,
+            ir_gate=ir_gate,
+            # -----------------------------------------
+            # TOOL EXECUTION TRACE
             # -----------------------------------------
             tool_results=list(ctx.extra.get("tool_results", [])),
         )

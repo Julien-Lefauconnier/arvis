@@ -32,7 +32,9 @@ In the current implementation:
 The pipeline is logically sequential:
 
 ```text
-Decision
+ToolFeedback
+→ ToolRetry
+→ Decision
 → PassiveContext
 → Bundle
 → Conflict
@@ -49,6 +51,7 @@ Decision
 → Execution
 → Action
 → Intent
+→ [Runtime Execution]
 ```
 
 ### Logical vs Runtime Execution
@@ -87,14 +90,19 @@ Execution supports:
 Invariant:
 
 - A pipeline execution is finalized ONLY when `completed=True`
-- Partial execution MUST NOT produce terminal decisions
+- Partial execution MUST NOT produce terminal decisions.
 
-Each stage:
+This is enforced by the runtime:
 
-* reads from the shared context (`ctx`)
-* writes explicit outputs back into `ctx`
-* has no hidden side effects
-* can fail safely without breaking execution
+- intermediate stage results are never treated as final outputs
+- only finalize_run() may produce a terminal result
+- any attempt to finalize at stage level is considered a runtime error
+
+Each stage executes independently but under a strict runtime contract:
+
+- stages are non-terminal by definition
+- only finalize_run() produces a decision
+- no stage may produce a final decision
 
 Stages are:
 
@@ -108,6 +116,75 @@ Reason codes:
 - MUST follow the ARVIS Reason Code Registry
 - MUST be deterministic
 - MUST be propagated to the Gate
+
+Important clarification:
+
+- the pipeline defines the logical order of reasoning
+- the runtime defines how this order is executed
+
+The runtime MAY:
+
+- interrupt execution (preemption)
+- suspend processes (budget exhaustion)
+- delay completion (confirmation)
+- requeue processes
+
+But the runtime MUST NOT:
+
+- modify pipeline semantics
+- alter stage outputs
+- inject decisions
+
+The pipeline remains the single source of truth for reasoning.
+
+---
+
+## Pipeline Contract (Runtime Semantics)
+
+The pipeline execution contract is explicit and enforced at runtime.
+
+### Stage Execution
+
+Each stage MAY return:
+
+- `PipelineStageSignal(completed=False, result=None)` → normal progression
+- `None` (legacy mode, interpreted as non-terminal)
+
+IMPORTANT:
+
+- Stages MUST NOT finalize the pipeline.
+- Terminal completion is forbidden at stage level.
+
+### Finalization
+
+Pipeline completion occurs ONLY through:
+
+```python
+finalize_run(ctx)
+```
+
+This method MUST return:
+
+- PipelineFinalizeSignal(result=...)
+- or a non-null legacy result (temporary compatibility)
+
+The following is strictly forbidden:
+
+- returning None from finalize_run
+- completing the pipeline from run_stage
+
+### Runtime Interpretation
+
+The runtime enforces:
+
+- completed=True ⇒ terminal decision produced by finalize_run()
+- completed=False ⇒ intermediate step
+
+This guarantees:
+
+- deterministic iterative execution
+- safe preemption
+- no implicit decision leakage
 
 ---
 
@@ -168,8 +245,14 @@ _safe_run(stage, ctx)
 
 If a stage fails:
 
-* the pipeline **continues execution**
+* the pipeline execution continues logically.
 * the error is recorded in `ctx.extra["errors"]`
+
+In iterative runtime execution:
+
+- failure is recorded
+- execution proceeds at the next stage on the next scheduler tick
+- scheduler flow is never interrupted
 
 This behavior is preserved in iterative execution:
 
@@ -180,6 +263,27 @@ This ensures:
 
 * no uncontrolled crashes
 * full traceability of degraded reasoning paths
+
+---
+
+### Tool Interaction Stages
+
+The pipeline begins with tool interaction management:
+
+- ToolFeedbackStage
+- ToolRetryStage
+
+These stages:
+
+- process results from previous tool executions
+- retry failed tool calls if needed
+- inject tool feedback into the cognitive context
+
+They ensure:
+
+- tool execution remains outside the cognitive pipeline
+- tool results are integrated into the cognitive context
+- feedback is properly integrated before decision stages
 
 ---
 

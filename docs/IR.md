@@ -61,6 +61,14 @@ This ensures:
 - stable hashing
 - replayability
 
+Construction precondition:
+
+- pipeline execution must be finalized
+- the terminal result must be non-null
+- the cognitive context must be in a valid post-pipeline state
+
+IR construction from partial or non-finalized execution is invalid.
+
 ---
 
 ## Top-level structure (simplified view)
@@ -156,7 +164,12 @@ Fields:
 
 ## Optional Extensions
 
-Depending on runtime configuration, IR may include:
+For any fixed configuration, inclusion or exclusion of these sections MUST remain deterministic.
+
+Optional does NOT mean arbitrary:
+- identical finalized cognition + identical configuration → identical IR structure
+
+Depending on deterministic system configuration, IR may include:
 
 ### Projection
 
@@ -251,11 +264,19 @@ The IR guarantees:
 
 - Determinism
 - No hidden state
-- Deterministic transformation from finalized cognitive context (including post-pipeline observability and projection layers)
+- Construction ONLY from finalized cognitive execution
+- No derivation from partial pipeline state
+- Deterministic transformation from finalized cognitive context
 - Stable normalization
 - Stable hashing
 - Replay consistency
-- Information completeness (no semantic loss from pipeline output)
+- Information completeness (no semantic loss from finalized pipeline output)
+
+For avoidance of doubt:
+
+- intermediate stage outputs are not canonical IR inputs
+- scheduler preemption does not change final IR semantics
+- runtime orchestration order must not affect finalized IR content
 
 ---
 
@@ -315,7 +336,19 @@ This transformation:
 
 ## Design Principle
 
-The IR is the external contract of ARVIS.
+The IR is the canonical machine contract of ARVIS.
+
+It is the boundary between:
+
+- finalized cognition
+- downstream response construction
+- external machine consumers
+
+It is NOT:
+
+- a conversational response
+- a stage-level artifact
+- a runtime scheduling artifact
 
 It connects:
 

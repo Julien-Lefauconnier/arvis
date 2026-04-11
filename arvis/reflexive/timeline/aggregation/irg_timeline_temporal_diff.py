@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Sequence
 
-from arvis.timeline.timeline_types import TimelineEntryType
+from veramem_kernel.journals.timeline.timeline_types import TimelineEntryType
 
 
 @dataclass(frozen=True)

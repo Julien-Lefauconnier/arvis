@@ -1,10 +1,8 @@
-# arvis/reflexive/irg_timeline_view.py
+# arvis/reflexive/timeline/irg_timeline_view.py
 
 from dataclasses import dataclass
 from datetime import datetime
-from arvis.timeline.timeline_view_types import (
-    TimelineViewRole,
-)
+from veramem_kernel.journals.timeline.timeline_view_types import TimelineViewRole
 
 @dataclass(frozen=True)
 class IRGTimelineView:
@@ -17,7 +15,7 @@ class IRGTimelineView:
     has_gaps: bool
     has_linguistic_constraints: bool
 
-    role: TimelineViewRole = TimelineViewRole.TRACE_FACTUAL
+    role: TimelineViewRole = TimelineViewRole.TRACE_FACTUELLE
 
     def to_dict(self) -> dict[str, object]:
         return {

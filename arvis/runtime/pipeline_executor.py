@@ -8,6 +8,10 @@ from typing import Any
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.pipeline.pipeline_contract import (
+    PipelineFinalizeSignal,
+    PipelineStageSignal,
+)
 from arvis.runtime.cognitive_process import BudgetConsumption, CognitiveProcess
 
 
@@ -20,19 +24,19 @@ class PipelineExecutionOutcome:
 
 class PipelineExecutor:
     """
-    V1 bridge:
-    one scheduler execution = one full pipeline run.
+    Runtime bridge between scheduler and cognitive pipeline.
 
-    Later this class can evolve toward stage-by-stage execution without
-    changing the scheduler contract.
+    In iterative mode:
+    - one scheduler execution = one pipeline stage
+    - finalization is explicit
+    - completion is never inferred from accidental None / object conventions
 
     EXECUTION INVARIANTS:
 
-    1. Always returns a non-null result (fallback enforced)
-    2. completed=True ⇒ pipeline fully executed (final state)
-    3. completed=False ⇒ intermediate step (iterative mode only)
-    4. BudgetConsumption is always reported
-    5. Single-step budget MAY force full execution (test/runtime fallback)
+    1. completed=True ⇒ pipeline fully finalized
+    2. completed=False ⇒ intermediate step only
+    3. BudgetConsumption is always reported
+    4. finalize_run returning None is an error
 
     """
 
@@ -47,11 +51,6 @@ class PipelineExecutor:
 
         start = perf_counter()
 
-        # =====================================================
-        # AUTO-FALLBACK: single-step budget = full execution
-        # =====================================================
-        if process.budget.reasoning_steps <= 1:
-            return self._run_full_pipeline(ctx, start, "AutoFullRun")
 
         # =====================================================
         # TEST MODE FALLBACK (no iter_stages)
@@ -80,21 +79,30 @@ class PipelineExecutor:
 
         if process.has_remaining_stages():
             stage = stages[process.current_stage_index]
-            self.pipeline.run_stage(ctx, stage)
+            stage_result = self.pipeline.run_stage(ctx, stage)  # type: ignore[func-returns-value]
             process.advance_stage(stage.__class__.__name__)
-            result = self._build_partial_result(ctx)
-            completed = False
-            stage_name = stage.__class__.__name__
-        else:
-            result = self.pipeline.finalize_run(ctx)
-            assert result is not None
-            process.mark_pipeline_finalized()
+            if isinstance(stage_result, PipelineStageSignal):
+                completed = stage_result.completed
+                result = stage_result.result
+            else:
+                # Backward-compat mode:
+                # old run_stage() implementations usually return None
+                completed = False
+                result = None
 
-            # ----------------------------------------
-            # HARD GUARANTEE: finalize must not return None
-            # ----------------------------------------
-            if result is None:
-                result = self._build_fallback_result(ctx)
+            if completed:
+                raise RuntimeError(
+                    "run_stage() must not finalize the pipeline directly; "
+                    "use finalize_run() for terminal completion"
+                )
+
+            stage_name = stage.__class__.__name__
+
+        else:
+            finalize_result = self.pipeline.finalize_run(ctx)
+
+            result = self._normalize_finalize_result(finalize_result)
+            process.mark_pipeline_finalized()
 
             completed = True
             stage_name = "FinalizeRun"
@@ -115,51 +123,42 @@ class PipelineExecutor:
             stage_name=stage_name,
         )
     
-    def _build_partial_result(self, ctx: CognitivePipelineContext) -> Any:
+    def _normalize_finalize_result(self, finalize_result: Any) -> Any:
         """
-        Minimal non-null result for intermediate stages.
-        Prevents None propagation in iterative execution.
-        """
+        Normalize finalize_run() output to a terminal result.
 
-        class PartialResult:
-            can_execute = True
-            requires_confirmation = False
-
-            ir_input = getattr(ctx, "ir_input", {})
-            ir_context = getattr(ctx, "ir_context", {})
-            ir_decision: dict[str, Any] = {}
-            ir_state: dict[str, Any] = {}
-            ir_gate: dict[str, Any] = {}
-
-        return PartialResult()
-
-
-    def _build_fallback_result(self, ctx: CognitivePipelineContext) -> Any:
-        """
-        Safety fallback if finalize_run returns None.
+        Accepted forms:
+        - PipelineFinalizeSignal(result=...)
+        - legacy direct result object (non-null)
+        Rejected:
+        - None
         """
 
-        class FallbackResult:
-            can_execute = True
-            requires_confirmation = False
+        if isinstance(finalize_result, PipelineFinalizeSignal):
+            if not finalize_result.completed:
+                raise RuntimeError(
+                    "PipelineFinalizeSignal.completed must be True in finalize_run()"
+                )
+            if finalize_result.result is None:
+                raise RuntimeError(
+                    "PipelineFinalizeSignal.result must not be None in finalize_run()"
+                )
+            return finalize_result.result
 
-            ir_input = getattr(ctx, "ir_input", {})
-            ir_context = getattr(ctx, "ir_context", {})
-            ir_decision: dict[str, Any] = {}
-            ir_state: dict[str, Any] = {}
-            ir_gate: dict[str, Any] = {}
+        if finalize_result is None:
+            raise RuntimeError("Pipeline finalize_run returned None")
 
-        return FallbackResult()
+        return finalize_result
     
     def _run_full_pipeline(
         self,
         ctx: CognitivePipelineContext,
         start: float,
-        stage_name: str
+        stage_name: str,
     ) -> PipelineExecutionOutcome:
         result = self.pipeline.run(ctx)
         if result is None:
-            result = self._build_fallback_result(ctx)
+            raise RuntimeError("Pipeline run(ctx) returned None")
         elapsed_ms = max(1, int((perf_counter() - start) * 1000.0))
         return PipelineExecutionOutcome(
             result=result,

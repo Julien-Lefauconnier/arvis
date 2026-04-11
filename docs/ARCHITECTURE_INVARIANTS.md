@@ -1,4 +1,4 @@
-# ARVIS-POSIX Architecture Invariants
+# ARVIS Architecture Invariants
 
 This document lists the **non-negotiable invariants** that every compliant implementation must respect.  
 They are grouped by layer and enforced at every cognitive step.
@@ -51,6 +51,58 @@ They are grouped by layer and enforced at every cognitive step.
    - scheduling decisions MUST be reproducible
    - process selection MUST be deterministic
 
+- Runtime MUST NOT:
+  - call finalize_run() directly
+  - inject results into the pipeline
+  - alter stage outputs
+  - simulate pipeline completion
+
+- Runtime MUST:
+  - rely exclusively on PipelineExecutor for execution
+
+
+- Determinism MUST hold across:
+  - scheduler decisions
+  - pipeline stage execution
+  - pipeline finalization
+  - process lifecycle transitions
+
+- Any non-deterministic behavior MUST be considered a violation.
+
+---
+
+## 0.1 Pipeline Executor Invariants
+
+- The PipelineExecutor is the ONLY component allowed to:
+  - invoke `run_stage()`
+  - invoke `finalize_run()`
+
+- Execution MUST follow:
+  ```text
+  Scheduler → PipelineExecutor → Pipeline
+  ```
+
+- The executor MUST enforce:
+  - exactly ONE stage execution per tick
+  - OR finalization when pipeline is complete
+
+- The executor MUST NOT:
+  - skip stages
+  - execute multiple stages in one tick
+  - infer completion from partial results
+  - generate fallback results
+
+- The executor MUST:
+  - treat run_stage() as non-terminal
+  - treat finalize_run() as the ONLY terminal point
+
+- If finalize_run() returns None:
+  - execution MUST fail
+  - process MUST be aborted
+
+- If a stage attempts to finalize:
+  -execution MUST fail
+
 ---
 
 ## 1. Mathematical Stability Core
@@ -74,10 +126,16 @@ They are grouped by layer and enforced at every cognitive step.
 
 - Pipeline execution MUST be scheduler-compatible:
    - execution MAY be iterative (stage-by-stage)
-   - iterative execution MUST be equivalent to full execution
+   - Iterative execution MUST be strictly equivalent to full execution:
+      - identical input → identical final result
+      - execution order MAY differ physically (due to scheduling)
+      - but logical execution MUST be identical
+    Preemption MUST NOT alter final decision semantics.
 
 - A pipeline execution is finalized ONLY when:
   - `completed=True`
+  - AND the result is produced by `finalize_run()`
+No other component may produce a terminal result.
 
 - Partial execution MUST NOT:
   - produce terminal decisions
@@ -85,6 +143,21 @@ They are grouped by layer and enforced at every cognitive step.
 
 - Iterative execution MUST:
   - produce identical results as full execution
+
+- Stages MUST NOT:
+  - produce terminal results
+  - return completed=True
+  - bypass finalize_run()
+
+- Any stage attempting to finalize the pipeline MUST trigger a runtime error.
+
+- `finalize_run()` MUST:
+  - return a non-null result
+  - produce the ONLY valid terminal output
+
+- `finalize_run()` MUST NOT:
+  - be called multiple times
+  - return None
 
 ---
 

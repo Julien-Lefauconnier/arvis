@@ -8,9 +8,13 @@ from arvis.api.ir_canonical import hash_ir
 IR_VERSION = "arvis-ir.v1"
 IR_FINGERPRINT = "stable"
 
-def build_ir_view(result: Any) -> Dict[str, Any]:
+def build_ir_view(obj: Any) -> Dict[str, Any]:
+    if obj is None:
+        raise ValueError("IR source is None")
+
+    result = getattr(obj, "last_result", obj)
     if result is None:
-        raise ValueError("Pipeline returned None result (invalid state)")
+        raise ValueError("IR result is None")
     """
     Canonical IR view (stable public contract).
 
@@ -20,11 +24,11 @@ def build_ir_view(result: Any) -> Dict[str, Any]:
     ir = {
         "version": IR_VERSION,
         "fingerprint": IR_FINGERPRINT,
-        "input": _serialize_ir(result.ir_input),
-        "context": _serialize_ir(result.ir_context),
-        "decision": _serialize_ir(result.ir_decision),
-        "state": _serialize_ir(result.ir_state),
-        "gate": _serialize_ir(result.ir_gate),
+        "input": _serialize_ir(getattr(result, "ir_input", None)),
+        "context": _serialize_ir(getattr(result, "ir_context", None)),
+        "decision": _serialize_ir(getattr(result, "ir_decision", None)),
+        "state": _serialize_ir(getattr(result, "ir_state", None)),
+        "gate": _serialize_ir(getattr(result, "ir_gate", None)),
 
         # extension zone 
         "meta": {},

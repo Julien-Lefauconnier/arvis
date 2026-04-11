@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Any
 
+from veramem_kernel.signals.signal_journal import SignalJournal
+
 
 # ------------------------
 # Sub-blocks
@@ -49,20 +51,52 @@ class CognitiveProjection:
 
 @dataclass(frozen=True)
 class CognitiveState:
-    """
-    CognitiveState V1 (structured, ZKCS-safe)
-    """
-
+    # ------------------------
+    # Identity
+    # ------------------------
     bundle_id: str
 
+    # ------------------------
+    # Stability & math
+    # ------------------------
     stability: CognitiveStability
     risk: CognitiveRisk
     control: CognitiveControl
     dynamics: CognitiveDynamics
     projection: Optional[CognitiveProjection]
 
+    # ------------------------
+    # Predictive
+    # ------------------------
     world_prediction: Optional[Any]
     forecast: Optional[Any]
 
+    # ------------------------
+    # Reflexive / IRG
+    # ------------------------
     irg: Optional[Any]
+
+    # ------------------------
+    # Core outputs
+    # ------------------------
+    decision: Optional[Any] = None
+    trace: Optional[Any] = None
+    timeline: Optional[SignalJournal] = None 
+
+    # ------------------------
+    # Tools
+    # ------------------------
     tool_results: list[Any] = field(default_factory=list)
+
+    # ------------------------
+    # IR BRIDGE 
+    # ------------------------
+    ir_input: Optional[Any] = None
+    ir_context: Optional[Any] = None
+
+    # ------------------------
+    # IR EXTENSION 
+    # ------------------------
+    ir_decision: Optional[Any] = None
+    ir_state: Optional[Any] = None
+    ir_gate: Optional[Any] = None

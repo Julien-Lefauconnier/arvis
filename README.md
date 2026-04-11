@@ -35,6 +35,7 @@ At each timestep:
 scheduler tick →
     select process →
     execute pipeline stage →
+    (no decision produced)
     update control & stability →
     update process + system state
 
@@ -337,6 +338,7 @@ This layer controls:
 
 It does NOT define decision logic.
 
+
 ### 1. Cognitive Execution Layer
 - deterministic pipeline
 - staged cognition
@@ -432,6 +434,28 @@ It is an externalized execution phase that preserves:
 
 ---
 
+## Pipeline Finalization 
+Pipeline execution is non-terminal by default.
+
+- Each scheduler tick executes ONE stage
+- Stages do NOT produce decisions
+
+A cognitive decision exists ONLY when:
+
+```python
+finalize_run(ctx)
+```
+
+returns a terminal result.
+
+This guarantees:
+
+- no decision leakage during iterative execution
+- safe preemption
+- deterministic equivalence between full and iterative execution
+
+---
+
 ## 🔗 Ecosystem & Interoperability
 
 ARVIS integrates with external canonical signal systems through a deterministic
@@ -487,7 +511,13 @@ This layer:
 ### Architectural Position
 
 ```text
-Pipeline → Gate → IR → Kernel Adapter → External Systems
+Pipeline (stages)
+→ finalize_run()
+→ terminal result
+→ CognitiveState
+→ IR
+→ Kernel Adapter
+→ External Systems
 ```
 
 This ensures:
@@ -504,6 +534,9 @@ This ensures:
 - no hidden transformation
 - full replay compatibility
 - registry-compliant signal emission
+- scheduler preemption does not affect final decision semantics
+- a decision exists ONLY after finalize_run()
+- no stage-level execution can produce a terminal decision
 
 ---
 
@@ -554,9 +587,9 @@ The full system can be represented as:
                                 │
                                 ▼
                     ┌──────────────────────┐
-                    │   Decision System    │
-                    │ Gate → Confirmation │
-                    │ → Execution         │
+                    │ finalize_run()      │
+                    │ → Gate → Confirmation │
+                    │ → Execution           │
                     └────────────┬────────┘
                                  │
                                  ▼
@@ -596,7 +629,8 @@ The full system can be represented as:
 
 ### Key Properties
 
-- The pipeline is deterministic and produces decisions only
+- The pipeline is deterministic.
+- Decisions exist ONLY at finalization (finalize_run).
 - The runtime executes side effects (tools, adapters)
 - The decision layer never performs execution
 - All execution is:
@@ -685,7 +719,7 @@ It is a **deterministic, normalized, validated, and hashed representation** of t
 The IR is constructed through a canonical pipeline:
 
 ```text
-CognitivePipeline
+finalize_run()
     → CognitiveIRBuilder
     → CognitiveIRNormalizer
     → CognitiveIRValidator
@@ -739,7 +773,7 @@ Optional extensions (implementation-dependent):
 - identical input → identical IR
 - normalization removes ordering ambiguity
 - hash stability is guaranteed
-- IR can be replayed deterministically
+- IR is replay-oriented and supports deterministic reconstruction under controlled replay conditions
 
 ### Use Cases
 
@@ -789,7 +823,8 @@ ARVIS provides **full deterministic traceability** across all layers:
 
 ```text
 Input
- → Pipeline
+ → Pipeline (stages)
+ → finalize_run()
  → Gate (verdict + reason codes)
  → DecisionTrace
  → CognitiveIR (hashed)

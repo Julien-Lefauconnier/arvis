@@ -22,7 +22,9 @@ class CognitiveStateContract:
         # -------------------------
         # NUMERICAL SANITY
         # -------------------------
-        assert state.stability.dv is not None and state.stability.dv >= 0.0
+        assert state.stability is not None
+        assert state.stability.dv is not None
+        assert state.stability.dv >= 0.0
 
         assert 0.0 <= state.control.epsilon <= 1.0, "epsilon out of bounds"
 
@@ -59,3 +61,9 @@ class CognitiveStateContract:
         if state.projection is not None:
             if state.projection.valid is False:
                 assert state.projection.margin is not None
+
+        # -------------------------
+        # TIMELINE SAFETY
+        # -------------------------
+        if state.timeline is not None:
+            assert hasattr(state.timeline, "list_signals")
