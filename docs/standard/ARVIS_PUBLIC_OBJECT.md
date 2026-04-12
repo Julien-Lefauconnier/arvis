@@ -31,6 +31,16 @@ They are distinct from:
 The CognitiveIR defines the canonical boundary between cognition and response construction.
 All response-related public objects MUST be strictly derived from the IR.
 
+Public objects are defined at the **interface boundary of the IR**.
+
+They correspond to:
+- canonical cognitive representations (IR)
+- deterministic post-cognitive transformations (response, memory, execution)
+
+NOTE:
+
+The CognitiveIR is the **core canonical object** of ARVIS.
+
 ---
 
 ## 2. Core Principles
@@ -94,6 +104,19 @@ Public Objects MUST NOT:
 
 - depend on canonical signal representations
 - embed signal registry constraints
+
+---
+
+### 2.6 Syscall Authority (CRITICAL)
+
+All side-effects MUST be represented as SyscallResults.
+
+Public objects MUST NOT:
+
+- expose side-effects outside syscall representation
+- introduce alternative execution artifacts
+
+SyscallResults are the canonical representation of execution.
 
 ---
 
@@ -204,7 +227,7 @@ CognitiveIR:
   gate: CognitiveGateIR
   stability: StabilityIR | null
   adaptive: AdaptiveIR | null
-  tools: list[ToolResult] | null
+  syscalls: list[SyscallResult] | null
 ```
 #### Invariants
 
@@ -213,6 +236,11 @@ CognitiveIR:
 - MUST be replayable
 - MUST be consistent with Gate output
 - MUST be the single source of truth for external projection layers
+
+IMPORTANT:
+
+- SyscallResults represent ALL side-effects
+- Tools are a specialization of syscalls
 
 ---
 
@@ -293,41 +321,61 @@ AdaptiveIRAdapter.from_adaptive(...)
 
 ---
 
-### 4.10 ToolResult (IR Field)
+### 4.10 SyscallResult (IR Field)
 
-Represents tool execution results attached to CognitiveIR.
+Represents execution results of syscalls attached to CognitiveIR.
+
+```yaml
+SyscallResult:
+  syscall: str
+  success: bool
+  result: Any | null
+  error: str | null
+```
 
 Invariants:
-- MUST reflect runtime execution
+- MUST reflect kernel-executed side-effects
 - MUST be deterministic (recorded, not executed)
 - MUST NOT influence decision semantics
+- MUST be the canonical runtime artifact
 
 ---
 
-### 4.11 ToolResult (Runtime Object)
+### 4.11 ToolResult (Derived Object)
 
-Represents execution of a tool.
+Represents a derived view of a syscall execution where:
 
-Fields:
-- tool_name: str
-- success: bool
-- output: Any | null
-- error: str | null
-- latency_ms: float | null
+```text
+syscall == "tool.execute"
+```
 
-Status:
-- public
-- runtime-derived
-- observable
+ToolResult is NOT a primary runtime object.
+
+It is a projection of SyscallResult.
+
+```yaml
+ToolResult:
+  tool_name: str
+  success: bool
+  output: Any | null
+  error: str | null
+```
+
+Mapping:
+
+```text
+SyscallResult → ToolResult
+```
+
+Rules:
+
+- ToolResult MUST be derivable from SyscallResult
+- ToolResult MUST NOT introduce new information
+- ToolResult is OPTIONAL and presentation-oriented
 
 IMPORTANT:
 
-ToolResult reflects execution outputs only.
-
-It MUST NOT:
-
-- influence decision semantics
-- be re-injected into the same execution cycle
+SyscallResult is the ONLY source of truth.
 
 ---
 

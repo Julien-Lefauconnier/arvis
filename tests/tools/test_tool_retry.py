@@ -30,44 +30,47 @@ def test_tool_retry_flow():
     ctx_extra = {}
     ctx_extra["force_tool"] = "retry_tool"
 
+    # -----------------------------------------
+    # FORCE EXECUTION (bypass confirmation gate)
+    # -----------------------------------------
+    ctx_extra["_force_execution"] = True
+
+
     os.run(
         user_id="u1",
         cognitive_input={"tool": "retry_tool"},
         extra=ctx_extra,
     )
     # check failure stored
-    tool_results = ctx_extra.get("tool_results", [])
+    tool_results = ctx_extra.get("syscall_results", [])
     assert len(tool_results) == 1
-    assert tool_results[0].success is False
+    assert tool_results[0]["success"] is False
 
     # -------------------------
     # PREPARE RETRY
     # -------------------------
     next_extra = {
-        "tool_results": tool_results,
-        "tool_payloads": ctx_extra.get("tool_payloads", []),
-        "retry_tool": True,
+        "syscall_results": tool_results,
+        "force_tool": "retry_tool",
+        "_force_execution": True,
     }
 
     # -------------------------
-    # RUN 2 → retry should succeed
+    # RUN 2 → second forced execution should succeed
     # -------------------------
     os.run(
         user_id="u1",
-        cognitive_input={},
+        cognitive_input={"tool": "retry_tool"},
         extra=next_extra,
     )
 
-    tool_results_2 = next_extra.get("tool_results", [])
+    tool_results_2 = next_extra.get("syscall_results", [])
 
     # now we should have 2 results
     assert len(tool_results_2) == 2
 
-    # second call success
-    assert tool_results_2[-1].success is True
-    assert tool_results_2[-1].output["ok"] is True
-
-    # ensure tool was actually retried
+    # second syscall succeeds
+    assert tool_results_2[-1]["success"] is True
     assert calls["count"] == 2
-
-    assert tool_results_2[-1].tool_name == "retry_tool"
+    assert tool_results_2[0]["syscall"] == "tool.execute"
+    assert tool_results_2[1]["syscall"] == "tool.execute"

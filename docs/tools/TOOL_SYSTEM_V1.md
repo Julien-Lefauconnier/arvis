@@ -1,12 +1,12 @@
-# ARVIS — Tool System V1
+# ARVIS — Tool System V1 (Syscall-Aligned)
 
 ## Overview
 
-The Tool System is the execution layer of the Cognitive OS.
+The Tool System is the **syscall-backed execution layer** of the Cognitive OS.
 
 It enables:
 - deterministic cognition (pipeline)
-- controlled side-effects (runtime)
+- controlled side-effects (kernel + syscalls)
 - observable execution (tool results)
 - safe retry mechanisms
 
@@ -22,20 +22,23 @@ This component belongs to:
 
 ## Architecture
 
-
-Cognitive Pipeline (pure)
+```text
+Pipeline (pure cognition)
 ↓
 ActionDecision (tool selected)
 ↓
-Cognitive Runtime
+Kernel Core
+↓
+SyscallHandler
 ↓
 ToolExecutor
 ↓
 Tool (BaseTool)
 ↓
-ToolResult → ctx.extra
+SyscallResult → ctx.extra
 ↓
 IR / State / Replay
+```
 
 Note:
 
@@ -44,10 +47,26 @@ occurs strictly after IR generation and is not part of the Tool System.
 
 Constraint:
 
-The Runtime layer MUST only execute after:
+The Kernel Core MUST only execute syscalls after:
 
 - Gate validation is complete
 - decision is finalized
+
+---
+
+## Syscall Mediation (CRITICAL)
+
+Tools are NEVER executed directly.
+
+All tool executions MUST be mediated through the syscall system.
+
+This guarantees:
+
+- execution traceability
+- replay safety
+- strict separation from cognition
+
+Pipeline → Intent → Kernel → Syscall → Tool
 
 ---
 
@@ -58,9 +77,11 @@ The Runtime layer MUST only execute after:
 | Layer | Responsibility |
 |------|--------|
 | Pipeline | Decision (pure, deterministic) |
-| Runtime | Execution (side effects allowed) |
+| Kernel Core | Execution control |
+| Syscalls | Side-effect mediation |
 | Tool | External capability |
 | IR | Observability |
+
 
 ---
 
@@ -76,6 +97,11 @@ Tool execution MUST NOT:
 - modify Gate outcomes
 - inject signals into the cognitive pipeline
 
+Additionally:
+
+- Tools MUST NOT be invoked from the pipeline
+- Tools MUST only be executed via syscalls
+
 ---
 
 ### 3. Observability
@@ -83,7 +109,7 @@ Tool execution MUST NOT:
 Every tool execution produces:
 
 ```python
-ToolResult(
+SyscallResult(
     tool_name: str
     success: bool
     output: Any
@@ -95,15 +121,15 @@ ToolResult(
 Stored in:
 
 ```python
-ctx.extra["tool_results"]
+ctx.extra["syscall_results"]
 ```
 
-ToolResults MUST be propagated to:
+SyscallResults MUST be propagated to:
 
 - CognitiveState (if applicable)
 - CognitiveIR (as runtime artifacts)
 
-ToolResults MUST be:
+SyscallResults MUST be:
 
 - deterministic representations of execution
 - not re-executed during replay
@@ -113,7 +139,7 @@ ToolResults MUST be:
 ### 4. Replay Compatibility
 
 - Tool execution is NOT replayed
-- Only ToolResults are persisted
+- Only SyscallResults are persisted
 - Replay uses recorded state, not side-effects
 
 Replay MUST NOT:
@@ -123,7 +149,7 @@ Replay MUST NOT:
 
 Replay MUST rely exclusively on:
 
-- recorded ToolResults
+- recorded SyscallResults
 - deterministic IR
 
 ---
@@ -140,16 +166,16 @@ ActionDecision(tool="my_tool", allowed=True)
 
 ---
 
-### Step 2 — Runtime Execution
+### Step 2 — Kernel Execution
 
 ```python
-runtime.execute(ctx)
+kernel.execute(ctx)
 ```
 
 Triggers:
 
 ```python
-ToolExecutor.execute(result, ctx)
+syscall_handler.handle(intent, ctx)
 ```
 
 ---
@@ -169,7 +195,7 @@ tool.execute({
 ### Step 4 — Result Storage
 
 ```python
-ctx.extra["tool_results"].append(ToolResult(...))
+ctx.extra["syscall_results"].append(SyscallResult(...))
 ```
 
 ---
@@ -194,7 +220,7 @@ ctx.extra["retry_tool"] = True
 
 - previous tool is re-injected
 - payload reused
-- execution retried in runtime
+- execution retried via syscall
 
 ---
 
@@ -212,7 +238,13 @@ ctx.extra["retry_tool"] = True
 - Retry bounded
 - Side-effects isolated
 - Failures captured (never silent)
-- Runtime MUST NOT alter IR semantics
+- Kernel MUST NOT alter IR semantics
+
+Additionally:
+
+- Syscalls are the ONLY entry point for side-effects
+- Tool execution is strictly post-decision
+- Execution is fully observable and replay-safe
 
 ---
 
@@ -229,10 +261,11 @@ Future-ready for:
 
 ## Version
 
-### Tool System V1
+### Tool System V1 (Syscall-Aligned)
 
 Stable baseline for:
 
 - local execution
 - deterministic replay
 - observable cognition
+- kernel-mediated execution

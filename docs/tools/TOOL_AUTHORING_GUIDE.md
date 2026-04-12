@@ -1,5 +1,14 @@
 # Tool Authoring Guide — ARVIS
 
+## Position in ARVIS Architecture
+
+Tools are NOT executed directly.
+
+They are executed via the Syscall System:
+
+Pipeline → Intent → Kernel → Syscall (tool.execute) → Tool
+
+
 ## Overview
 
 A Tool is a capability exposed to the Cognitive OS.
@@ -32,9 +41,20 @@ class MyTool(BaseTool):
 input_data = {
     "decision": ActionDecision,
     "context": CognitivePipelineContext,
-    "tool_payload": dict
+    "tool_payload": dict,
+    "syscall_context": dict  # optional runtime metadata
 }
 ```
+
+---
+
+## Execution Constraints
+
+Tools MUST:
+
+- be callable via syscall only
+- not be invoked directly by the pipeline
+- not modify cognitive reasoning
 
 ---
 

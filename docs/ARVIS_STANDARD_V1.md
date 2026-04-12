@@ -31,6 +31,7 @@ Determinism includes:
 - pipeline execution
 - scheduling decisions
 - process lifecycle transitions
+- syscall execution ordering (results only)
 
 ---
 
@@ -76,12 +77,31 @@ The system supports reasoning without requiring access to raw data:
 
 ---
 
+### 2.6 Syscall Authority Principle
+
+All external interactions MUST be executed through syscalls.
+
+Rules:
+
+- Syscalls are the ONLY authorized execution mechanism
+- Tools are implemented as syscall specializations
+- No execution MUST occur outside the syscall layer
+- Syscall results MUST be the canonical execution artifacts
+
+This guarantees:
+
+- deterministic cognition
+- isolated side-effects
+- replay-safe execution
+
+---
+
 ## 3. System Architecture
 
-ARVIS OS is structured into 5 layers:
+ARVIS OS is structured into **5 core layers**:
 
-### 3.1 Runtime Layer
-Responsible for execution orchestration:
+### 3.1 Kernel Core Layer
+The Kernel Core is the execution authority of ARVIS.
 
 - CognitiveScheduler
 - CognitiveProcess
@@ -89,20 +109,35 @@ Responsible for execution orchestration:
 - PipelineExecutor
 - Resource model
 
+Core components:
+
+- CognitiveScheduler
+- CognitiveProcess
+- ProcessFactory
+- SyscallHandler
+- InterruptBus
+
 Responsibilities:
 
 - process lifecycle management
 - deterministic scheduling
 - preemptive execution (tick-based)
 - resource-aware prioritization
+- process lifecycle management
+- deterministic scheduling
+- preemptive execution (tick-based)
+- interrupt handling
+- syscall execution
 
 This layer defines:
 
-- *when* execution happens
-- *how much* execution happens per step
+- *when* cognition executes
+- *how execution is controlled*
+- *how side-effects are triggered*
 
-It does NOT execute side-effects (tools or external actions).
-Side-effects are handled in a separate runtime execution layer.
+IMPORTANT:
+
+The Kernel Core executes cognition but does NOT define cognition.
 
 It does NOT define decision semantics.
 
@@ -117,22 +152,34 @@ Responsible for deterministic execution:
 
 This layer defines *what* happens during cognition, but not *when* it is executed.
 
-### 3.2.1 Runtime Execution Layer
-Responsible for executing side-effects after decision validation:
+---
 
-- tool execution
+### 3.3 Syscall Execution Layer
+
+Responsible for all side-effect execution.
+
+This layer is the ONLY authorized execution mechanism.
+
+Responsibilities:
+
+- tool execution (via syscalls)
 - external system interaction
 - adapter invocation
 
-This layer:
+Rules:
 
-- operates strictly after pipeline completion
+- MUST operate strictly after pipeline completion
 - MUST NOT influence decision logic
 - MUST NOT modify cognitive outputs
+- MUST be replay-safe (no re-execution)
+
+IMPORTANT:
+
+All side-effects MUST be executed via syscalls.
 
 ---
 
-### 3.3 Canonical State Layer
+### 3.4 Canonical State Layer
 Responsible for stable internal representation:
 - CognitiveState
 - CognitiveStateBuilder
@@ -141,7 +188,7 @@ Responsible for stable internal representation:
 
 ---
 
-### 3.4 Reflexive Layer
+### 3.5 Reflexive Layer
 Responsible for safe self-observation:
 - capability snapshots
 - introspection services
@@ -152,7 +199,7 @@ Responsible for safe self-observation:
 
 ---
 
-### 3.5 API Layer (Public Contract)
+### 3.6 API Layer (Public Contract)
 Exposes a stable interface:
 - `CognitiveOS`
 - `CognitiveResultView`
@@ -216,6 +263,8 @@ within the pipeline context (`ctx`).
 
 
 (Runtime execution is handled outside the pipeline)
+
+All side-effects triggered after pipeline completion MUST be executed via syscalls.
 
 ---
 
@@ -455,6 +504,8 @@ The system enforces:
 - At most one running process per scheduler
 - Terminal processes are not re-executed
 - Scheduler decisions MUST be deterministic and reproducible
+- All side-effects MUST be executed via syscalls
+- No execution MUST occur outside the syscall layer
 
 ---
 

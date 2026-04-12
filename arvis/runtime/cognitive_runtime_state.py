@@ -5,9 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from arvis.runtime.cognitive_process import CognitiveProcess, CognitiveProcessId
 from arvis.runtime.resource_model import ResourceState
-from arvis.runtime.scheduler_state import SchedulerState
+from arvis.kernel_core.process import CognitiveProcess, CognitiveProcessId
+from arvis.kernel_core.state.scheduler_state import SchedulerState
+from arvis.kernel_core.interrupts.interrupt_bus import CognitiveInterruptBus
 from veramem_kernel.signals.signal_journal import SignalJournal
 from veramem_kernel.api.signals import CanonicalSignal
 from arvis.adapters.kernel.signals.signal_factory import SignalFactory
@@ -22,6 +23,8 @@ class CognitiveRuntimeState:
     timeline: Any = field(default_factory=SignalJournal)
     _local_counter: int = 0
     _last_tick: int = -1
+    interrupt_bus: CognitiveInterruptBus = field(default_factory=CognitiveInterruptBus)
+    
 
     def register_process(self, process: CognitiveProcess) -> None:
         process.validate()
@@ -51,6 +54,7 @@ class CognitiveRuntimeState:
         "process_waiting_confirmation": "uncertainty_detected",
         "scheduler_selected": "decision_emitted",
         "process_preempted": "early_warning_detected",
+        "hook_error": "ghost_signal",
     }
 
     def _map_runtime_event(

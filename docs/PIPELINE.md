@@ -2,28 +2,27 @@
 
 ## Overview
 
-The ARVIS Cognitive Pipeline is a **deterministic, stage-based execution system** that transforms input into a **constrained, stability-validated decision**.
+The ARVIS Cognitive Pipeline is a **deterministic, stage-based cognitive system**.
 
-It is not a model pipeline.
+It transforms input into a **stability-constrained, validated cognitive intent**.
 
-It is a **cognitive execution protocol** enforcing:
+It is NOT an execution system.
 
-* ordered reasoning
-* explicit signal propagation
-* stability constraints before action
-* traceable decision formation
+It is a **pure cognitive protocol** enforcing:
 
-Every execution follows the **same ordered stages**, without implicit branching.
+- ordered reasoning
+- explicit signal propagation
+- stability constraints before action
+- traceable decision formation
 
-IMPORTANT:
+---
 
-The pipeline defines a **logical execution**, not a runtime execution.
+## Core Principle
 
-In the current implementation:
+> The pipeline defines cognition.  
+> It does NOT control execution.
 
-- the pipeline may be executed **iteratively (stage-by-stage)**
-- execution is controlled by the **Runtime Scheduler**
-- the pipeline itself remains **pure and deterministic**
+Execution is handled exclusively by the **Kernel Core**.
 
 ---
 
@@ -32,7 +31,7 @@ In the current implementation:
 The pipeline is logically sequential:
 
 ```text
-ToolFeedback
+→ToolFeedback
 → ToolRetry
 → Decision
 → PassiveContext
@@ -51,193 +50,85 @@ ToolFeedback
 → Execution
 → Action
 → Intent
-→ [Runtime Execution]
 ```
-
-### Logical vs Runtime Execution
-
-The pipeline defines a logical atomic transition:
-
-```text
-input → full pipeline → validated cognitive intent
-```
-
-However, in the runtime implementation:
-
-```text
-multiple scheduler ticks → one pipeline execution
-```
-
-Each scheduler tick executes:
-
-```text
-ONE stage of the pipeline
-```
-
-until completion.
-
-This implies:
-
-- pipeline = logical unit
-- scheduler = execution controller
-
-Execution supports:
-
-- preemption (process returns to READY queue)
-- budget-aware suspension
-- confirmation blocking
-
-Invariant:
-
-- A pipeline execution is finalized ONLY when `completed=True`
-- Partial execution MUST NOT produce terminal decisions.
-
-This is enforced by the runtime:
-
-- intermediate stage results are never treated as final outputs
-- only finalize_run() may produce a terminal result
-- any attempt to finalize at stage level is considered a runtime error
-
-Each stage executes independently but under a strict runtime contract:
-
-- stages are non-terminal by definition
-- only finalize_run() produces a decision
-- no stage may produce a final decision
-
-Stages are:
-
-- deterministic
-- side-effect confined to the pipeline context (ctx)
-- safe to execute independently (required for iterative runtime execution)
-
-Each stage MAY emit reason codes.
-
-Reason codes:
-- MUST follow the ARVIS Reason Code Registry
-- MUST be deterministic
-- MUST be propagated to the Gate
-
-Important clarification:
-
-- the pipeline defines the logical order of reasoning
-- the runtime defines how this order is executed
-
-The runtime MAY:
-
-- interrupt execution (preemption)
-- suspend processes (budget exhaustion)
-- delay completion (confirmation)
-- requeue processes
-
-But the runtime MUST NOT:
-
-- modify pipeline semantics
-- alter stage outputs
-- inject decisions
-
-The pipeline remains the single source of truth for reasoning.
 
 ---
 
-## Pipeline Contract (Runtime Semantics)
+## Logical vs Physical Execution
 
-The pipeline execution contract is explicit and enforced at runtime.
+### Logical (Pipeline)
 
-### Stage Execution
+```text
+input → pipeline → validated cognitive intent
+```
 
-Each stage MAY return:
+### Physical (Kernel Execution)
 
-- `PipelineStageSignal(completed=False, result=None)` → normal progression
-- `None` (legacy mode, interpreted as non-terminal)
+```text
+Kernel Scheduler → executes ONE stage per tick
+```
 
-IMPORTANT:
+Key properties:
 
-- Stages MUST NOT finalize the pipeline.
-- Terminal completion is forbidden at stage level.
+- pipeline is logically atomic
+- execution is physically iterative
+- preemption does NOT affect final result
+
+---
+
+## Pipeline Contract
+
+### Stage Properties
+
+Each stage is:
+
+- deterministic
+- non-terminal
+- side-effect free
+- confined to ctx
+
+STRICT RULE:
+
+   No stage may produce a final decision.
+
+---
 
 ### Finalization
 
-Pipeline completion occurs ONLY through:
+Pipeline completion occurs ONLY via:
 
 ```python
 finalize_run(ctx)
 ```
 
-This method MUST return:
+This MUST:
 
-- PipelineFinalizeSignal(result=...)
-- or a non-null legacy result (temporary compatibility)
+- produce a non-null result
+- represent the only valid terminal decision
 
-The following is strictly forbidden:
+Forbidden:
 
-- returning None from finalize_run
-- completing the pipeline from run_stage
-
-### Runtime Interpretation
-
-The runtime enforces:
-
-- completed=True ⇒ terminal decision produced by finalize_run()
-- completed=False ⇒ intermediate step
-
-This guarantees:
-
-- deterministic iterative execution
-- safe preemption
-- no implicit decision leakage
+- stage-level completion
+- implicit decision emission
 
 ---
 
-## Post-Pipeline Normalization
+### Determinism Guarantees
 
-The pipeline does not directly define the public system contract.
+The pipeline guarantees:
 
-After execution, ARVIS can normalize pipeline outputs into:
+- fixed execution order
+- no hidden branching
+- identical input → identical output
+- replayable execution
 
-- a canonical `CognitiveState`
-- a `DecisionTrace`
-- timeline projections
-- a stable IR representation
-- a reflexive snapshot
-
-This separation is intentional:
-
-- pipeline = execution
-- cognitive state = canonical internal representation
-- IR = external machine contract
-- reflexive = safe self-observation layer
-
----
-
-## Kernel Signal Mapping (Extension Layer)
-
-After IR generation, ARVIS MAY project the IR into external canonical signal systems.
-
-This projection corresponds to the Canonical Projection Layer (see Specification Hierarchy Level 5).
-
-If implemented, it MUST:
-
-- be semantically deterministic (excluding runtime metadata)
-- be rule-based
-- preserve IR semantics exactly
-- remain fully post-IR
-
-This mapping:
-
-- is deterministic
-- is rule-based
-- does NOT influence the pipeline
-- is external to decision semantics
-
-Example:
-
-CognitiveIR → CanonicalSignals (Veramem Kernel)
+Determinism is independent of runtime execution strategy.
 
 ---
 
 ## Fail-Safe Execution
 
-All stages are executed through a protected wrapper:
+All stages are executed under:
 
 ```python
 _safe_run(stage, ctx)
@@ -245,45 +136,34 @@ _safe_run(stage, ctx)
 
 If a stage fails:
 
-* the pipeline execution continues logically.
-* the error is recorded in `ctx.extra["errors"]`
-
-In iterative runtime execution:
-
-- failure is recorded
-- execution proceeds at the next stage on the next scheduler tick
-- scheduler flow is never interrupted
-
-This behavior is preserved in iterative execution:
-
-- failures are contained at the stage level
-- scheduler execution is not interrupted
+- execution continues
+- error is recorded in ctx.extra["errors"]
 
 This ensures:
 
-* no uncontrolled crashes
-* full traceability of degraded reasoning paths
+- no pipeline interruption
+- full traceability of degraded reasoning
 
 ---
 
-### Tool Interaction Stages
+## Tool Interaction (Pre-Cognitive Layer)
 
-The pipeline begins with tool interaction management:
+The pipeline integrates tool results but does NOT execute tools.
+
+### Tool Stages
 
 - ToolFeedbackStage
 - ToolRetryStage
 
-These stages:
+Responsibilities:
 
-- process results from previous tool executions
-- retry failed tool calls if needed
-- inject tool feedback into the cognitive context
+- process previous tool outputs
+- prepare retry signals
+- inject feedback into cognitive context
 
-They ensure:
+IMPORTANT:
 
-- tool execution remains outside the cognitive pipeline
-- tool results are integrated into the cognitive context
-- feedback is properly integrated before decision stages
+   Tool execution is handled by the Kernel via syscalls, NOT by the pipeline.
 
 ---
 
@@ -291,535 +171,261 @@ They ensure:
 
 ### 1. Decision Stage
 
-**Purpose:** Initialize decision context
+Initializes decision context.
 
-* evaluates decision intent
-* attaches user-specific control runtime
+Outputs:
 
-**Outputs:**
-
-* `ctx.decision_result`
-* `ctx.control_runtime`
+- ctx.decision_result
+- ctx.control_runtime
 
 ---
 
 ### 2. Passive Context Stage
 
-**Purpose:** Integrate external context
+Integrates:
 
-* conversation state
-* memory
-* timeline
-
-**Outputs:**
-
-* enriched `ctx`
+- memory
+- conversation
+- timeline
 
 ---
 
 ### 3. Bundle Stage
 
-**Purpose:** Build a unified cognitive representation
+Builds unified cognitive representation.
 
-* aggregates all signals and inputs into a structured bundle
+Outputs:
 
-**Outputs:**
-
-* `ctx.bundle`
+- ctx.bundle
 
 ---
 
 ### 4. Conflict Stage
 
-**Purpose:** Detect and structure internal conflicts
+Detects and structures conflicts.
 
-* extracts conflicts from bundle
-* evaluates conflict structure
-* computes conflict pressure
+Outputs:
 
-**Outputs:**
-
-* `ctx.conflict`
-* `ctx.conflict_pressure`
+- ctx.conflict
+- ctx.conflict_pressure
 
 ---
 
 ### 5. Core Stage
 
-**Purpose:** Scientific modeling of system dynamics
+Scientific modeling:
 
-* computes collapse risk (`RiskSignal`)
-* computes drift (`DriftSignal`)
-* updates Lyapunov states
-* determines regime and stability
-
-**Outputs:**
-
-* `ctx.collapse_risk`
-* `ctx.drift_score`
-* `ctx.prev_lyap`, `ctx.cur_lyap`
-* `ctx.regime`
-* `ctx.stable`
+- risk
+- drift
+- Lyapunov state
+- stability
 
 ---
 
 ### 6. Regime Stage
 
-**Purpose:** Classify system dynamics
-
-* stable / oscillatory / critical / chaotic
-
-**Outputs:**
-
-* `ctx._cognitive_mode`
-* regime classification
+Classifies system dynamics.
 
 ---
 
 ### 7. Temporal Stage
 
-**Purpose:** Model temporal constraints
-
-* temporal pressure
-* temporal modulation
-
-**Outputs:**
-
-* `ctx.temporal_pressure`
-* `ctx.temporal_modulation`
+Applies temporal constraints.
 
 ---
 
 ### 8. Conflict Modulation Stage
 
-**Purpose:** Adjust system behavior based on conflict pressure
-
-* modifies control parameters
-* influences downstream decision behavior
+Adjusts behavior based on conflict pressure.
 
 ---
 
 ### 9. Control Stage
 
-**Purpose:** Apply adaptive cognitive control
+Adaptive cognitive control:
 
-* exploration vs exploitation
-* epsilon adaptation
-* regime-aware control
-
-**Outputs:**
-
-* `ctx.control_snapshot`
+- exploration
+- epsilon
+- regime-aware adjustments
 
 ---
 
-### 10. Projection Stage (Pre-Gate)
+### 10. Projection Stage
 
-**Purpose:** Enforce projection domain constraints before decision gating
+Applies projection constraints:
 
-This stage applies the runtime projection certification layer:
-
-$$ \Pi_{\text{cert}} : \mathcal{O}_{runtime} \to P_t $$
-
-It ensures:
-
-- bounded signal space
-- domain validity
-- projection safety constraints
+- bounded domain
+- safety certification
 
 Outputs:
 
-- `ctx.projection_certificate`
-
-This stage is **mandatory before Gate**, as the Gate consumes projection safety signals.
+- ctx.projection_certificate
 
 ---
 
 ### 11. Gate Stage (Critical)
 
-Decision logic (multi-axial fusion):
+Performs multi-axial stability validation.
 
-The Gate Stage is no longer a pure Lyapunov validator.
+Combines:
 
-It performs a **multi-axial stability fusion**, combining:
+- Lyapunov stability
+- switching constraints
+- trajectory stability
+- system confidence
+- projection certificate
 
-* local Lyapunov stability (ΔW)
-* switching constraints (dwell-time condition)
-* global trajectory stability (history-based)
-* system confidence
-* projection certificate (Π_cert)
+Outputs:
 
-Core operator:
-
-```python
-fusion = multiaxial_fusion(...)
-verdict = fusion.verdict
-```
-
-Then applies:
-
-1. strict theoretical enforcement (optional)
-2. policy layer (global stability handling)
-
-Final verdict is:
-
-→ a **composed stability decision**
-
-not a single Lyapunov test
-
-**Outputs:**
-
-* `ctx.gate_result`
-* enriched `ctx.control_snapshot`
+- ctx.gate_result
 
 ---
 
 ### 12. Control Feedback Stage
 
-**Purpose:** Close the control loop after gate decision
-
-- updates control state based on gate outcome
-- stabilizes future system dynamics
-
-Outputs:
-
-- updated `ctx.control_snapshot`
-
-This stage ensures **closed-loop regulation**.
+Closes control loop based on Gate outcome.
 
 ---
 
 ### 13. Structural Risk Stage
 
-**Purpose:** Detect structural instability beyond local signals
-
-- evaluates systemic risks not captured by Lyapunov metrics
-- flags structural instability conditions
-
-Outputs:
-
-- `ctx.extra["structural_risk"]`
-
-This signal can trigger confirmation requirements.
+Detects systemic instability.
 
 ---
 
 ### 14. Confirmation Stage
 
-**Purpose:** Resolve uncertainty and enforce human-in-the-loop constraints
+Handles:
 
-Confirmation is triggered if:
-
-- gate requires confirmation
-- conflict pressure exceeds threshold
-- structural risk is detected
-- decision is abstained
-
-Supports:
-
-- user override
-- confirmation request generation
-- confirmation result integration
-
-Outputs:
-
-- `ctx.confirmation_request`
-- `ctx.confirmation_result`
-- `_requires_confirmation`
+- uncertainty
+- human validation
+- override logic
 
 ---
 
 ### 15. Execution Stage
 
-**Purpose:** Determine execution feasibility
+Determines:
 
-Computes:
-
-- `can_execute`
-- `requires_confirmation`
-
-Outputs:
-
-- `ctx.execution_status`
+- can_execute
+- requires_confirmation
 
 ---
 
 ### 16. Action Stage
 
-**Purpose:** Map decision to executable action
-
-**Outputs:**
-
-* `ctx.action_decision`
+Maps decision to action.
 
 ---
 
 ### 17. Intent Stage
 
-**Purpose:** Formalize executable intent
+Produces executable cognitive intent.
 
-**Outputs:**
+Outputs:
 
-* `ctx.executable_intent`
-
-
-### end of pipeline
+- ctx.executable_intent
 
 ---
 
-## Runtime layer
+## Output of the Pipeline
 
-The runtime layer is responsible for:
+The pipeline produces:
 
-- scheduling cognitive processes
-- executing pipeline stages iteratively
-- managing process lifecycle and budgets
-- executing side-effects (tools)
+- a validated cognitive intent
+- a fully populated cognitive context (ctx)
 
-It operates on **CognitiveProcess** objects and maintains:
+It does NOT:
 
-- process states (READY, RUNNING, WAITING_CONFIRMATION, COMPLETED, etc.)
-- scheduling queues
-- execution budgets
-
-### Execution Model
-
-Execution is controlled by a **CognitiveScheduler**:
-
-```text
-tick:
-  → select process
-  → execute ONE pipeline stage
-  → update process state
-
-Process lifecycle:
-
-READY → RUNNING → (PREEMPTED | WAITING_CONFIRMATION | COMPLETED | BLOCKED | SUSPENDED)
-```
-
-The pipeline is therefore:
-
-- **logically atomic**
-- **physically iterative**
-
-### Tool Execution
-
-Tool execution remains:
-
-- post-decision
-- isolated from cognitive reasoning
-- handled within runtime execution
-
-Tool execution occurs ONLY after:
-
-- pipeline completion
-- decision validation
-
-Important:
-
-- runtime MUST NOT modify pipeline semantics
-- runtime MUST NOT influence decision logic
+- execute actions
+- trigger side-effects
 
 ---
 
-## Observability Layer (Post-Pipeline)
+## Boundary with Kernel
 
-After execution, ARVIS computes a **pure projection layer**:
+STRICT SEPARATION:
 
-```python
-obs = observability.build(ctx)
-```
+| Layer       | Responsibility |
+| ----------- | -------------- |
+| Pipeline    | Cognition      |
+| Kernel Core | Execution      |
+| Syscalls    | Side-effects   |
 
-This includes:
-
-* predictive modeling
-* multi-horizon projections
-* global stability
-* symbolic state
-* system tension
-
-Important:
-
-> Observability is strictly read-only and does not affect decision execution.
 
 ---
 
-## Post-Observability Projection Refresh
+## Post-Pipeline Processing
 
-After observability, projection is refreshed:
+After pipeline completion:
 
-```python
-projection_stage.refresh(ctx)
-```
-This ensures:
-
-- consistency between runtime signals and projection certificate
-- updated safety validation
+- CognitiveState is finalized
+- DecisionTrace is built
+- IR is generated
+- Observability is computed
+- Syscalls MAY be triggered by the Kernel
 
 ---
 
-## Stability Projection & Statistics
+## Observability (Read-Only)
 
-The system computes derived stability metrics:
+Observability computes:
 
-* projected stability state
-* statistical interpretation of stability
+- predictive state
+- global stability
+- system metrics
 
-These are:
+It is:
 
-* optional
-* fail-safe (exceptions are absorbed)
-
----
-
-## Decision Trace (Canonical Output)
-
-Every execution produces a **DecisionTrace**:
-
-Includes:
-
-* gate result
-* confirmation flow
-* action decision
-* predictive state
-* stability state
-* conflict state
-* symbolic state
-* governance signals
-
-This trace is:
-
-* timestamped (UTC)
-* fully reconstructible
-* the authoritative record of reasoning
-
----
-
-## Final Output Layers
-
-After pipeline execution, ARVIS produces multiple output layers:
-
-1. **CognitivePipelineResult** (internal representation)
-2. **DecisionTrace** (canonical trace)
-3. **Intermediate Representation (IR)** (portable output)
-
-The GateResult produced during the pipeline is the authoritative source for:
-
-- CognitiveGateIR
-- IR decision semantics
-
-```text
-CognitiveIRBuilder
-→ CognitiveIRNormalizer
-→ CognitiveIRValidator
-→ CognitiveIRSerializer
-→ CognitiveIRHasher
-→ CognitiveIREnvelope
-```
-
-This ensures:
-
-- deterministic structure
-- order-invariant normalization
-- validation before exposure
-- stable hashing
-- replayability
-
----
-
-## Determinism Guarantees
-
-The pipeline ensures:
-
-* fixed execution order
-* no hidden branching
-* explicit state transitions
-* identical input → identical output (given same context)
-* deterministic IR normalization and hashing
-* replayable pipeline execution
-
-Determinism holds at two levels:
-
-1. Pipeline level:
-   - identical input → identical outputs
-
-2. Runtime level:
-   - scheduler decisions are deterministic
-   - execution order is reproducible
-   - iterative execution produces identical final results
-
-This guarantees:
-
-- preemptive execution does NOT alter final decisions
+- read-only
+- non-causal
 
 ---
 
 ## Design Principles
 
-### 1. No Implicit Reasoning
+### 1. Pure Cognition
 
-All reasoning must pass through explicit stages.
+The pipeline contains no execution logic.
 
 ---
 
 ### 2. Stability Before Action
 
-No decision can execute without passing the Gate Stage.
-
-The Gate Stage is the only authority allowed to validate or reject execution.
+No decision exists without passing the Gate.
 
 ---
 
 ### 3. Signals Over Scalars
 
-All critical values are typed signals:
-
-* RiskSignal
-* DriftSignal
-* ConflictSignal
+All critical values are typed signals.
 
 ---
 
-### 4. Fail-Soft Execution
+### 4. Fail-Soft
 
-Failures do not stop execution.
-They are captured and exposed.
+Failures are captured, never fatal.
 
 ---
 
 ### 5. Full Traceability
 
-Every decision is:
+All reasoning is:
 
-* inspectable
-* reproducible
-* auditable
+- inspectable
+- replayable
+- auditable
 
 ---
 
 ## Summary
 
-The ARVIS pipeline is not a processing chain.
+The ARVIS pipeline is:
 
-It is a **controlled cognitive execution system** where:
-
-* reasoning is structured
-* stability is enforced
-* decisions are constrained
-* execution is gated
-* outcomes are traceable
+   a deterministic cognitive system
+   independent from execution
+   producing only validated intent
 
 Execution is:
 
-- logically atomic (pipeline)
-- physically controlled (scheduler + runtime)
-
-The scheduler ensures:
-
-- deterministic execution ordering
-- bounded computation
-- safe interruption and resumption
-
-A decision is not produced.
-
-It is **allowed to exist under constraints**.
+   delegated to the Kernel Core

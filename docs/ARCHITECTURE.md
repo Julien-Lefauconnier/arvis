@@ -2,8 +2,18 @@
 
 ## Overview
 
-ARVIS is a **deterministic Cognitive Operating System** implemented around a
-**runtime orchestration layer, a closed-loop pipeline, a canonical state kernel, and a reflexive self-observation layer**.
+ARVIS is a **deterministic Cognitive Operating System with a kernel-based architecture**.
+
+It is implemented around:
+
+- a **Kernel Core Layer** (processes, scheduler, syscalls, interrupts)
+- a **deterministic cognitive pipeline** (decision system)
+- a **canonical state system**
+- a **reflexive self-observation layer**
+
+ARVIS behaves as a **cognitive execution kernel**:
+
+> cognition is constructed, evaluated, regulated, and only then allowed to produce a validated intent.
 
 It enforces:
 
@@ -28,15 +38,16 @@ It is a **cognitive execution system** where:
 
 ## System Model
 
-ARVIS is implemented as a **deterministic system** with seven architectural domains:
+ARVIS is implemented as a deterministic system with the following architectural domains:
 
-0. runtime orchestration
-1. execution
-2. canonical state
-3. public contract / IR 
-4. reflexive observation
-5. conversation & response layer
-6. interoperability / canonical projection
+0. kernel core (process / scheduler / syscalls / interrupts)
+1. cognitive execution (pipeline)
+2. runtime execution (side-effects via syscalls)
+3. canonical state
+4. public contract / IR 
+5. reflexive observation
+6. conversation & response layer
+7. interoperability / canonical projection
 
 ---
 
@@ -44,17 +55,17 @@ ARVIS is implemented as a **deterministic system** with seven architectural doma
 
 ```text
 Input
-  → Cognitive Scheduler
-  → Pipeline Executor
-  → Cognitive Pipeline (stage-by-stage execution)
+  → Process creation (Kernel)
+  → Scheduler selection
+  → Pipeline execution (stage-by-stage)
   → Canonical CognitiveState
   → Decision (validated / abstained)
   → Intermediate Representation (IR)
-  → Conversation Layer (strategy + plan)
+  → Conversation Layer
   → Response Plan
-  → (Optional) Realization (template / LLM)
+  → (Optional) Realization
+  → Syscall Layer (tool execution / side-effects)
   → Observability / Trace / Timeline
-  → Runtime Execution (tools / side-effects)
   → Reflexive Snapshot
   → Canonical Projection (Kernel Adapter)
   → Public API
@@ -65,15 +76,67 @@ The IR defines the canonical boundary between cognition and response constructio
 
 ---
 
-## Runtime Orchestration Layer
+## Kernel Core Layer
 
-The Runtime Layer is responsible for **execution orchestration**.
+The Kernel Core is the **execution authority of ARVIS**, analogous to an operating system kernel.
 
-It defines:
+It is responsible for:
+
+- process lifecycle management
+- scheduling decisions
+- execution control
+- syscall handling
+- interrupt handling
+
+Core components:
+
+- `CognitiveScheduler`
+- `CognitiveProcess`
+- `ProcessFactory`
+- `SyscallHandler`
+- `InterruptBus`
+
+### Responsibilities
+
+The Kernel Core defines:
 
 - which process executes
-- when execution happens
-- how much execution is performed per step
+- when execution occurs
+- how execution is interrupted or resumed
+- how side-effects are triggered (via syscalls)
+
+### Key Principle
+
+> The Kernel executes cognition but does NOT define cognition.
+
+It enforces:
+
+- deterministic scheduling
+- safe preemption
+- strict execution boundaries
+
+### Execution Model
+
+- tick-based scheduling
+- preemptive execution
+- process states (READY / RUNNING / WAITING / COMPLETED)
+- syscall-based side-effect execution
+
+The Kernel Core is the only layer allowed to trigger execution and side-effects.
+
+---
+
+## Kernel Scheduling Layer
+
+This layer is part of the Kernel Core.
+
+It is responsible for:
+
+- process scheduling
+- execution ordering
+- preemption
+- budget enforcement
+
 
 Core components:
 
@@ -120,7 +183,7 @@ Its outputs are normalized into a **canonical CognitiveState** and may then be
 
 exported through IR or observed through reflexive services.
 
-The pipeline is executed under the control of the Runtime Layer.
+The pipeline is executed under the control of the Kernel Core.
 
 It may run:
 
@@ -292,7 +355,7 @@ This layer does not perform cognition. It observes and exposes structure safely.
 
 ---
 
-## Runtime Execution Layer
+## Syscall Execution Layer
 
 This layer executes **side-effects AFTER decision finalization**.
 
@@ -326,11 +389,48 @@ It operates strictly after the decision pipeline.
 
 Clarification:
 
-- Runtime Orchestration Layer → controls WHEN cognition runs
+- Kernel Scheduling Layer → controls WHEN cognition runs
 - Pipeline Executor → controls HOW cognition runs
-- Runtime Execution Layer → executes actions AFTER cognition
+- Syscall Execution Layer → executes actions AFTER cognition
 
 These three layers are strictly separated.
+
+All side-effects are executed through syscalls.
+
+This includes:
+
+- tool execution
+- external interactions
+- adapter calls
+
+This layer is:
+
+- strictly post-decision
+- fully observable
+- replay-safe (no re-execution)
+
+---
+
+## Interrupt System 
+
+ARVIS supports an interrupt mechanism for runtime control.
+
+Interrupts allow:
+
+- process suspension
+- external signaling
+- runtime coordination
+
+Core components:
+
+- `Interrupt`
+- `InterruptBus`
+- `InterruptType`
+
+Constraints:
+
+- interrupts MUST NOT alter cognitive semantics
+- interrupts only affect execution flow
 
 ---
 
@@ -422,7 +522,7 @@ Core Cognitive Stages:
 18. Intent Stage
 
 Execution Boundary:
-19. Runtime Execution (non-cognitive layer)
+19. Syscall Execution (non-cognitive layer)
 
 (runtime execution handled outside pipeline)
 
@@ -652,9 +752,10 @@ The system enforces:
 
 ARVIS architecture aligns with the Cognitive OS standard:
 
-* **Kernel Layer** → CognitivePipeline (execution engine)
-* **Cognition Layer** → pipeline stages (reasoning & modeling)
-* **API Layer** → CognitiveOS interface
+* Kernel Layer → Kernel Core (scheduler / process / syscalls)
+* Cognition Layer → Cognitive Pipeline
+* Execution Layer → Syscall Execution
+* API Layer → CognitiveOS
 
 (see ARVIS_STANDARD_V1.md) 
 

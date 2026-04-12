@@ -13,18 +13,18 @@
 
 ARVIS is a deterministic Cognitive Operating System built as a discrete-time, scheduler-orchestrated cognitive system :
 
-- a runtime orchestration layer (scheduler)
+- a kernel core (scheduler, processes, syscalls, interrupts)
 - a closed-loop cognitive pipeline
 - a canonical `CognitiveState` kernel
 - a stable Intermediate Representation (IR)
 - a reflexive self-observation layer
 - a timeline-backed traceability system
-- a runtime execution layer (tools, adapters, external actions)
+- a syscall-based execution layer (tools, adapters, external actions)
 
 The system enforces a strict separation between:
 
 - cognition (deterministic pipeline)
-- execution (runtime execution layer, tools and side effects)
+- execution (kernel + syscalls, side-effect layer)
 - orchestration (runtime scheduler)
 - canonical state (CognitiveState)
 - external representation (IR)
@@ -81,6 +81,25 @@ This defines a **closed-loop cognitive system with feedback**.
 → Formal definition:
 - [M0 — System Boundary](docs/math/M0_system_boundary.md)
 - [M1 — Formal System Definition](docs/math/M1_formal_system_definition.md)
+
+---
+
+## ⚙️ Execution Principle (Critical)
+
+All side-effects in ARVIS are executed through a syscall system.
+
+Rules:
+
+- Syscalls are the ONLY authorized execution mechanism
+- Tools are implemented as syscall specializations
+- No execution occurs inside the cognitive pipeline
+- No execution occurs outside the syscall layer
+
+This guarantees:
+
+- deterministic cognition
+- isolated execution
+- replay-safe behavior
 
 ---
 
@@ -324,17 +343,20 @@ ARVIS guarantees **stability constraints**, not decision quality.
 
 ## 🧩 System Architecture
 
-ARVIS is now structured around five major layers:
+ARVIS is structured around a kernel-based cognitive architecture:
 
-### 0. Runtime Orchestration Layer
+### 0. Kernel Core Layer
 - CognitiveScheduler
-- CognitiveProcess lifecycle
-- PipelineExecutor
-- deterministic tick-based execution
+- CognitiveProcess
+- SyscallHandler
+- InterruptBus
 
 This layer controls:
 - when cognition executes
 - how much cognition executes per step
+- when cognition executes
+- how execution is controlled
+- how side-effects are triggered
 
 It does NOT define decision logic.
 
@@ -404,7 +426,7 @@ This preserves:
 
 → [M14 — Cognitive Operating System](docs/math/M14_cognitive_operating_system_(COS)_architecture.md)
 
-### 6. Runtime Execution Layer
+### 6. Syscall Execution Layer
 
 ARVIS includes a dedicated Runtime Layer responsible for executing side-effectful actions after the 
 cognitive pipeline has produced a decision.
@@ -414,6 +436,9 @@ This layer includes:
 - Tool system (ToolRegistry, ToolExecutor)
 - Adapters (LLM, external APIs, etc.)
 - Execution orchestration
+- Syscall system (execution authority)
+- Tool syscalls (specializations)
+- External adapters
 
 Properties:
 
@@ -424,7 +449,7 @@ Properties:
 
 Important:
 
-Tool execution is **not part of cognition**.
+All side-effects are executed via syscalls.
 
 It is an externalized execution phase that preserves:
 
@@ -600,9 +625,9 @@ The full system can be represented as:
                                  │
                                  ▼
                     ┌──────────────────────┐
-                    │   Runtime Layer      │
-                    │ ToolExecutor         │
-                    │ Adapters             │
+                    │      Kernel Core     │
+                    │   Syscall Layer      │
+                    │ Tool syscalls        │
                     └────────────┬────────┘
                                  │
                                  ▼
@@ -642,8 +667,9 @@ The full system can be represented as:
 
 Layer	Responsibility
 Pipeline	cognition (deterministic)
-Decision	admissibility & constraints
-Runtime	execution (side effects)
+Gate	decision admissibility
+Kernel	execution control (scheduler/process)
+Syscalls	side-effect execution
 IR	deterministic external representation
 
 This separation is fundamental to ARVIS:

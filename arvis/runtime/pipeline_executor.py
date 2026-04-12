@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from time import perf_counter
-from typing import Any
+from typing import Any, Optional, cast
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
@@ -12,58 +11,32 @@ from arvis.kernel.pipeline.pipeline_contract import (
     PipelineFinalizeSignal,
     PipelineStageSignal,
 )
-from arvis.runtime.cognitive_process import BudgetConsumption, CognitiveProcess
+from arvis.kernel_core.process import BudgetConsumption, CognitiveProcess
+from arvis.kernel_core.contracts.execution_contract import ProcessExecutionOutcome
 
-
-@dataclass(frozen=True)
-class PipelineExecutionOutcome:
-    result: Any
-    consumption: BudgetConsumption
-    completed: bool
-    stage_name: str | None = None
 
 class PipelineExecutor:
     """
-    Runtime bridge between scheduler and cognitive pipeline.
-
-    In iterative mode:
-    - one scheduler execution = one pipeline stage
-    - finalization is explicit
-    - completion is never inferred from accidental None / object conventions
-
-    EXECUTION INVARIANTS:
-
-    1. completed=True ⇒ pipeline fully finalized
-    2. completed=False ⇒ intermediate step only
-    3. BudgetConsumption is always reported
-    4. finalize_run returning None is an error
-
+    Concrete execution adapter that runs CognitivePipeline behind
+    the kernel-level ProcessExecutor contract.
     """
 
     def __init__(self, pipeline: CognitivePipeline):
         self.pipeline = pipeline
         self.use_iterative = True
 
-    def execute_process(self, process: CognitiveProcess) -> PipelineExecutionOutcome:
+    def execute_process(self, process: CognitiveProcess) -> ProcessExecutionOutcome:
         ctx = process.local_state
         if not isinstance(ctx, CognitivePipelineContext):
             raise TypeError("process.local_state must be a CognitivePipelineContext")
 
         start = perf_counter()
 
-
-        # =====================================================
-        # TEST MODE FALLBACK (no iter_stages)
-        # =====================================================
         if not hasattr(self.pipeline, "iter_stages"):
             return self._run_full_pipeline(ctx, start, "DirectRun")
-        
+
         if not self.use_iterative:
             return self._run_full_pipeline(ctx, start, "NonIterativeRun")
-        
-        # =====================================================
-        # PROCESS EXECUTION
-        # =====================================================
 
         stages = list(self.pipeline.iter_stages())
         if process.total_stage_count is None:
@@ -72,21 +45,19 @@ class PipelineExecutor:
         if not process.pipeline_prepared:
             self.pipeline._prepare_run(ctx)
             process.mark_pipeline_prepared()
-        
-        result: Any
-        completed: bool
-        stage_name: str
 
         if process.has_remaining_stages():
             stage = stages[process.current_stage_index]
-            stage_result = self.pipeline.run_stage(ctx, stage)  # type: ignore[func-returns-value]
+            stage_result = cast(
+                Optional[PipelineStageSignal],
+                self.pipeline.run_stage(ctx, stage),
+            )
             process.advance_stage(stage.__class__.__name__)
+
             if isinstance(stage_result, PipelineStageSignal):
                 completed = stage_result.completed
                 result = stage_result.result
             else:
-                # Backward-compat mode:
-                # old run_stage() implementations usually return None
                 completed = False
                 result = None
 
@@ -100,40 +71,27 @@ class PipelineExecutor:
 
         else:
             finalize_result = self.pipeline.finalize_run(ctx)
-
             result = self._normalize_finalize_result(finalize_result)
             process.mark_pipeline_finalized()
-
             completed = True
             stage_name = "FinalizeRun"
 
         elapsed_ms = max(1, int((perf_counter() - start) * 1000.0))
 
-        consumption = BudgetConsumption(
-            reasoning_steps=1,
-            attention_tokens=1,
-            uncertainty_spent=0.0,
-            elapsed_ms=elapsed_ms,
-            memory_span_used=0,
-        )
-        return PipelineExecutionOutcome(
+        return ProcessExecutionOutcome(
             result=result,
-            consumption=consumption,
+            consumption=BudgetConsumption(
+                reasoning_steps=1,
+                attention_tokens=1,
+                uncertainty_spent=0.0,
+                elapsed_ms=elapsed_ms,
+                memory_span_used=0,
+            ),
             completed=completed,
             stage_name=stage_name,
         )
-    
+
     def _normalize_finalize_result(self, finalize_result: Any) -> Any:
-        """
-        Normalize finalize_run() output to a terminal result.
-
-        Accepted forms:
-        - PipelineFinalizeSignal(result=...)
-        - legacy direct result object (non-null)
-        Rejected:
-        - None
-        """
-
         if isinstance(finalize_result, PipelineFinalizeSignal):
             if not finalize_result.completed:
                 raise RuntimeError(
@@ -149,18 +107,20 @@ class PipelineExecutor:
             raise RuntimeError("Pipeline finalize_run returned None")
 
         return finalize_result
-    
+
     def _run_full_pipeline(
         self,
         ctx: CognitivePipelineContext,
         start: float,
         stage_name: str,
-    ) -> PipelineExecutionOutcome:
+    ) -> ProcessExecutionOutcome:
         result = self.pipeline.run(ctx)
         if result is None:
             raise RuntimeError("Pipeline run(ctx) returned None")
+
         elapsed_ms = max(1, int((perf_counter() - start) * 1000.0))
-        return PipelineExecutionOutcome(
+
+        return ProcessExecutionOutcome(
             result=result,
             consumption=BudgetConsumption(
                 reasoning_steps=1,

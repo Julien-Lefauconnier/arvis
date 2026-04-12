@@ -2,7 +2,7 @@
 
 ## Overview
 
-Describes the full lifecycle of a tool execution.
+Describes the full lifecycle of a tool execution within the Kernel Core and Syscall System.
 
 ---
 
@@ -18,14 +18,21 @@ ActionDecision(tool="my_tool")
 
 ---
 
-### 2. Runtime Phase
+### 2. Kernel Detection Phase
 
-Runtime detects tool:
+The Kernel Core detects executable intent:
 
 ```python
-if action.tool:
-    executor.execute(...)
+if intent.action.tool:
+
+syscall_handler.handle(...)
 ```
+
+Responsibilities:
+
+- validate execution eligibility
+- trigger syscall execution
+- enforce post-decision boundary
 
 ---
 
@@ -38,8 +45,15 @@ Tool receives:
     "decision": ...,
     "context": ...,
     "tool_payload": ...
+    "syscall_context": {...}  # optional runtime metadata
 }
 ```
+
+IMPORTANT:
+
+- Tool is executed ONLY via syscall
+- Tool is NOT aware of pipeline execution
+- Tool operates outside cognition
 
 ---
 
@@ -48,13 +62,13 @@ Tool receives:
 Success:
 
 ```python
-ToolResult(success=True, output=...)
+SyscallResult(success=True, result=...)
 ```
 
 Failure:
 
 ```python
-ToolResult(success=False, error="...")
+SyscallResult(success=False, error="...")
 ```
 
 ---
@@ -62,15 +76,22 @@ ToolResult(success=False, error="...")
 ### 5. Storage
 
 ```python
-ctx.extra["tool_results"]
+ctx.extra["syscall_results"]
 ```
+
+This is the Syscall Journal.
 
 ---
 
 ### 6. State Integration
 
-- CognitiveState.tool_results
-- IR.tools
+- CognitiveState (projection)
+- CognitiveIR.tools (runtime artifacts)
+
+IMPORTANT:
+
+- Results are observable
+- Results MUST NOT influence decision semantics of the same run
 
 ---
 
@@ -82,6 +103,11 @@ Triggered by:
 ctx.extra["retry_tool"] = True
 ```
 
+IMPORTANT:
+
+- Retry decision is made by the pipeline (ToolRetryStage)
+- Execution is still performed via syscall
+
 ---
 
 ### 8. Replay
@@ -89,11 +115,47 @@ ctx.extra["retry_tool"] = True
 - Tool NOT re-executed
 - Only results replayed
 
+Replay uses syscall journal only.
+No tool execution occurs during replay.
+
+Replay relies on:
+
+- deterministic pipeline execution
+- recorded SyscallResults
+
+---
+
+## Execution Boundary
+
+Tool execution is strictly post-pipeline.
+
+The pipeline never executes tools.
+
+All tool executions occur via syscalls triggered by the Kernel Core.
+
+STRICT RULE:
+
+No tool execution is allowed outside the syscall system.
+
 ---
 
 ## Lifecycle Diagram
 
-Decision → Runtime → Tool → Result → State → IR → Replay
+```text
+Decision
+→ Kernel
+→ Syscall (tool.execute)
+→ Tool
+→ SyscallResult
+→ Journal
+→ Pipeline Feedback (next run)
+```
+
+Clarification:
+
+- "Kernel" = execution authority
+- "Syscall" = execution mechanism
+- "Tool" = external capability
 
 ---
 
@@ -104,6 +166,12 @@ Exception	captured
 Timeout	treated as failure
 Invalid tool	rejected
 
+All failures are:
+
+- captured as SyscallResult(success=False)
+- recorded in journal
+- exposed to next pipeline execution
+
 ---
 
 ## Retry Logic
@@ -111,6 +179,11 @@ Invalid tool	rejected
 - bounded retries
 - payload reuse
 - safe conditions only
+
+Retry is governed by:
+
+- pipeline logic (ToolRetryStage)
+- NOT by syscall system
 
 ---
 
@@ -121,6 +194,12 @@ Invalid tool	rejected
 - deterministic cognition
 - isolated execution
 
+Additionally:
+
+- strict separation between cognition and execution
+- replay-safe execution model
+- syscall-only side-effects
+
 ---
 
 ## Future Extensions
@@ -129,6 +208,12 @@ Invalid tool	rejected
 - streaming tools
 - tool chaining
 - tool planning
+
+All extensions MUST:
+
+- remain syscall-mediated
+- preserve determinism constraints
+- preserve replay compatibility
 
 ---
 

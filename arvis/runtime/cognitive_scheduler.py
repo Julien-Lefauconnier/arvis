@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
-from arvis.runtime.cognitive_process import (
+from arvis.runtime.process_hooks import ProcessHookManager
+
+from arvis.kernel_core.process import (
     CognitiveProcess,
     CognitiveProcessId,
     CognitiveProcessStatus,
 )
 from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
-from arvis.runtime.pipeline_executor import PipelineExecutor
+from arvis.kernel_core.contracts.execution_contract import ProcessExecutor
 from arvis.runtime.resource_model import ResourcePressure
 from arvis.runtime.scheduler_decision import SchedulerDecision
 
@@ -47,13 +49,28 @@ class CognitiveScheduler:
     def __init__(
         self,
         runtime_state: CognitiveRuntimeState,
-        pipeline_executor: PipelineExecutor,
+        process_executor: ProcessExecutor | None = None,
         *,
         policy: SchedulingPolicyConfig | None = None,
+        pipeline_executor: ProcessExecutor | None = None,
+        hooks: ProcessHookManager | None = None,
     ) -> None:
+        executor = process_executor if process_executor is not None else pipeline_executor
+
+        if executor is None:
+            raise ValueError("A process executor is required")
+
         self.runtime_state = runtime_state
-        self.pipeline_executor = pipeline_executor
+        self.process_executor = executor  
         self.policy = policy or SchedulingPolicyConfig()
+        self._interrupt_wakeup_pending = False
+        # -----------------------------------------
+        # Hooks are ALWAYS available (never None)
+        # -----------------------------------------
+        if hooks is None:
+            hooks = ProcessHookManager(runtime_state=runtime_state)
+
+        self.hooks = hooks
 
     def enqueue(self, process: CognitiveProcess) -> None:
         self.runtime_state.register_process(process)
@@ -69,6 +86,8 @@ class CognitiveScheduler:
                 "priority": process.priority.normalized(),
             },
         )
+
+        self.hooks.on_enqueued(process)
 
     def suspend(self, process_id: CognitiveProcessId, reason: str = "suspended") -> None:
         process = self.runtime_state.get_process(process_id)
@@ -124,6 +143,18 @@ class CognitiveScheduler:
         state = self.runtime_state.scheduler_state
         state.note_tick()
         self.runtime_state.resource_state.note_tick()
+        self._process_interrupts()
+
+        # Important Do not schedule on interrupt wakeup tick
+        if self._interrupt_wakeup_pending:
+            self._interrupt_wakeup_pending = False
+            return SchedulerDecision(
+                selected_process_id=None,
+                rationale="interrupt wakeup tick",
+                resource_grant=None,
+                score=None,
+            )
+
         self._validate_invariants()
 
         decision = self._select_next_process()
@@ -157,8 +188,10 @@ class CognitiveScheduler:
             },
         )
 
+        self.hooks.on_selected(process, decision.score)
+
         try:
-            outcome = self.pipeline_executor.execute_process(process)
+            outcome = self.process_executor.execute_process(process)
             process.consume(outcome.consumption)
 
             # =====================================================
@@ -177,6 +210,9 @@ class CognitiveScheduler:
                 # -----------------------------
                 if requires_confirmation:
                     self.wait_confirmation(process.process_id)
+
+                    self.hooks.on_waiting_confirmation(process)
+
                     decision.result = result
                     return decision
                 
@@ -185,6 +221,9 @@ class CognitiveScheduler:
                 # -----------------------------
                 if not can_execute:
                     self.block(process.process_id, waiting_on="cannot_execute")
+
+                    self.hooks.on_blocked(process, "cannot_execute")
+
                     decision.result = result
                     return decision
 
@@ -201,6 +240,8 @@ class CognitiveScheduler:
                         "stage_name": outcome.stage_name,
                     },
                 )
+
+                self.hooks.on_completed(process, result)
 
                 decision.result = result
                 return decision
@@ -233,6 +274,7 @@ class CognitiveScheduler:
             process.mark_suspended(reason="budget_exhausted")
             state.suspended_queue.append(process.process_id)
  
+            self.hooks.on_suspended(process, "budget_exhausted")
 
             self.runtime_state.append_event(
                 "process_suspended_budget_exhausted",
@@ -263,6 +305,9 @@ class CognitiveScheduler:
                     "error_type": type(exc).__name__,
                 },
             )
+
+            self.hooks.on_aborted(process, str(exc))
+
             return SchedulerDecision(
                 selected_process_id=process.process_id,
                 rationale=f"execution failed: {type(exc).__name__}",
@@ -338,3 +383,52 @@ class CognitiveScheduler:
     def set_resource_pressure(self, pressure: ResourcePressure) -> None:
         pressure.validate()
         self.runtime_state.resource_state.pressure = pressure
+    
+    # =====================================================
+    # INTERRUPT PROCESSING
+    # =====================================================
+    def _process_interrupts(self) -> None:
+        bus = self.runtime_state.interrupt_bus
+        events = bus.drain()
+
+        if not events:
+            return
+
+        state = self.runtime_state.scheduler_state
+
+        woke_any_process = False
+
+        for event in events:
+            targets = cast(list[CognitiveProcessId], bus.match(event))
+
+            # SYSTEM BROADCAST
+            if event.type.value == "system_signal":
+                targets = [
+                    pid for pid, proc in self.runtime_state.processes.items()
+                    if not proc.is_terminal()
+                ]
+
+            for process_id in targets:
+                if process_id not in self.runtime_state.processes:
+                    continue
+
+                process = self.runtime_state.get_process(process_id)
+
+                if process.status in (
+                    CognitiveProcessStatus.BLOCKED,
+                    CognitiveProcessStatus.WAITING_CONFIRMATION,
+                    CognitiveProcessStatus.SUSPENDED,
+                ):
+                    state.remove_from_all_queues(process_id)
+                    process.mark_ready()
+                    state.ready_queue.append(process_id)
+                    woke_any_process = True
+
+                    self.runtime_state.append_event(
+                        "process_resumed_by_interrupt",
+                        {"process_id": process_id.value},
+                    )
+
+        # prevent execution this tick
+        if woke_any_process:
+            self._interrupt_wakeup_pending = True

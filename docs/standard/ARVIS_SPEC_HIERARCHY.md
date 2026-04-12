@@ -99,25 +99,44 @@ Rules:
 ### Level 5 — Execution Model
 
 * `PIPELINE.md`
-* `TOOL_SYSTEM_V1.md`
+* `KERNEL_CORE.md`
+* `SYSCALL_SPEC.md`
+* `TOOL_SYSTEM_V1.md` (derived layer)
+
 
 Defines:
 
-* deterministic execution stages
-* signal propagation
-* runtime orchestration (scheduler, processes, execution ticks)
-* tool execution system (runtime layer)
+* deterministic cognitive execution (pipeline)
+* kernel-driven execution control (processes, scheduler, interrupts)
+* syscall-based side-effect execution
+* runtime orchestration (tick-based execution model)
 
 Rules:
 
-* MUST remain deterministic
-* MUST define both logical execution (pipeline) and physical execution (runtime scheduler)
-* MUST produce inputs compatible with Gate and IR
-* MUST preserve separation between:
-  - decision (pipeline)
-  - execution (runtime / tools)
-* tool execution MUST NOT influence decision logic in the same run
-* tool results MUST be externalized (ctx.extra / IR)
+* pipeline MUST remain pure and deterministic
+* kernel MUST NOT modify cognitive semantics
+* all side-effects MUST be executed via syscalls
+* syscall results MUST be the canonical execution artifacts
+* execution MUST be replay-safe (no side-effect re-execution)
+
+---
+
+### Syscall Authority Principle (CRITICAL)
+
+All execution of side-effects MUST be performed through syscalls.
+
+Rules:
+
+- Syscalls are the ONLY authorized mechanism for external interactions
+- Tool execution is a specialization of syscalls
+- No execution MUST occur outside the syscall layer
+- SyscallResults MUST be the canonical representation of execution
+
+This ensures:
+
+- deterministic cognition
+- isolated execution
+- replay-safe behavior
 
 ---
 
@@ -137,6 +156,11 @@ Rules:
 - MUST NOT override Gate semantics
 - Projection invalid ⇒ Validity invalid
 - Validity MUST be evaluated before or during Gate evaluation
+
+IMPORTANT:
+
+These layers operate strictly within cognition.
+They MUST NOT depend on runtime execution or syscalls.
 
 ---
 
@@ -195,24 +219,24 @@ It MUST NOT:
 
 #### Tool System Position
 
-The Tool System is part of the Execution Model.
+The Tool System is a specialization layer within the Syscall System.
 
 It is responsible for:
 
-- executing side-effectful actions
-- interfacing with external systems
-- capturing execution results
+- exposing tool-based syscalls
+- mapping tool abstractions to syscalls
+- providing structured execution interfaces
 
 The Tool System operates strictly in the Runtime layer and MUST NOT:
 
 - influence decision semantics
-- modify pipeline outputs during execution
+- bypass syscall execution
 
 Tool execution is:
 
-- observable
+- observable through SyscallResults
 - replay-safe (results only)
-- externally contained
+- fully contained within the syscall layer
 
 ---
 
@@ -273,6 +297,9 @@ In case of conflict between documents:
 6. Informative documents MUST be ignored in conflicts
 7. IR MUST be considered the canonical boundary before response construction. 
     Conversation and linguistic layers MUST NOT override IR semantics.
+8. Syscall Specification overrides all execution-related behavior
+   - No execution mechanism may bypass syscalls
+   - No alternative execution representation is allowed
 
 ---
 
@@ -361,7 +388,7 @@ But:
 | 2     | Gate                          | Decision authority |
 | 3     | IR / Public Objects           | External contract  |
 | 4     | Conversation / Linguistic     | Response layer     |
-| 5     | Pipeline + Runtime + Tools    | Execution model    |
+| 5     | Pipeline + Kernel + Syscalls  | Execution model    |
 | 6     | Projection / Validity         | Constraint inputs  |
 | 7     | Canonical Projection          | Interoperability   |
 | 8     | Compliance                    | Verification       |

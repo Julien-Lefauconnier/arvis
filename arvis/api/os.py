@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
 from typing import Any, Dict, Optional, Callable, cast, List
 
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
@@ -27,13 +28,20 @@ from arvis.runtime import (
     CognitiveRuntimeState,
     CognitiveScheduler,
     PipelineExecutor,
-    CognitiveProcess,
+)
+from arvis.runtime.process_hooks import ProcessHookManager
+from arvis.kernel_core.process import (
+    CognitiveBudget,
+    CognitivePriority,
     CognitiveProcessId,
     CognitiveProcessKind,
     CognitiveProcessStatus,
-    CognitivePriority,
-    CognitiveBudget,
 )
+from arvis.kernel_core.process.process_factory import ProcessFactory
+
+from arvis.kernel_core.syscalls.syscall import Syscall
+from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+
 
 # =====================================================
 # CONFIG
@@ -78,11 +86,20 @@ class CognitiveRuntime:
         self.tool_executor = tool_executor
         self.runtime_state = CognitiveRuntimeState()
 
-        self.pipeline_executor = PipelineExecutor(self.pipeline)
+        self.hooks = ProcessHookManager(runtime_state=self.runtime_state)
+
+        self.process_executor = PipelineExecutor(self.pipeline)
 
         self.scheduler = CognitiveScheduler(
             runtime_state=self.runtime_state,
-            pipeline_executor=self.pipeline_executor,
+            process_executor=self.process_executor,
+            hooks=self.hooks,
+        )
+
+        self.syscall_handler = SyscallHandler(
+            runtime_state=self.runtime_state,
+            scheduler=self.scheduler,
+            tool_executor=self.tool_executor,
         )
 
     def execute(self, ctx: CognitivePipelineContext) -> Any:
@@ -92,7 +109,7 @@ class CognitiveRuntime:
         # -----------------------------------------
         # CREATE PROCESS
         # -----------------------------------------
-        process = CognitiveProcess(
+        process = ProcessFactory.create(
             process_id=CognitiveProcessId(
                 f"proc::{ctx.user_id}::{len(self.runtime_state.processes)}"
             ),
@@ -100,12 +117,12 @@ class CognitiveRuntime:
             status=CognitiveProcessStatus.READY,
             priority=CognitivePriority(50.0),
             budget=CognitiveBudget(
-                reasoning_steps = 2 * len(list(self.pipeline.iter_stages())),
+                reasoning_steps=2 * len(list(self.pipeline.iter_stages())),
                 time_slice_ms=100,
             ),
-            local_state=ctx,
             created_tick=self.runtime_state.scheduler_state.tick_count,
             user_id=ctx.user_id,
+            local_state=ctx,
         )
 
         # -----------------------------------------
@@ -136,7 +153,7 @@ class CognitiveRuntime:
                 break
 
             if proc.status == CognitiveProcessStatus.ABORTED:
-                error = getattr(proc, "error", None)
+                error = proc.last_error or "unknown_error"
                 raise RuntimeError(f"Process aborted: {error}")
 
             if proc.status == CognitiveProcessStatus.WAITING_CONFIRMATION:
@@ -158,13 +175,37 @@ class CognitiveRuntime:
         # TOOL EXECUTION
         # -------------------------------------------------
         action = getattr(result, "action_decision", None)
+        effective_result = result
+
+        # -------------------------------------------------
+        # FORCE EXECUTION (TEST / DEBUG MODE)
+        # -------------------------------------------------
+        force_tool = ctx.extra.get("force_tool")
+        force_execution = ctx.extra.get("_force_execution", False)
+
+        if action and force_tool and action.tool == force_tool and force_execution:
+            forced_action = SimpleNamespace(**dict(action.__dict__))
+            forced_action.allowed = True
+            forced_action.requires_confirmation = False
+            forced_action.can_execute = True
+
+            effective_result = SimpleNamespace(**dict(result.__dict__))
+            effective_result.action_decision = forced_action
+
+            action = forced_action
 
         if action and getattr(action, "tool", None) and getattr(action, "allowed", False):
-            if self.tool_executor:
-                try:
-                    self.tool_executor.execute(result, ctx)
-                except Exception:
-                    ctx.extra.setdefault("errors", []).append("tool_execution_failure")
+            syscall_result = self.syscall_handler.handle(
+                Syscall(
+                    name="tool.execute",
+                    args={
+                        "result": effective_result,
+                        "ctx": ctx,
+                    },
+                )
+            )
+            if not syscall_result.success:
+                ctx.extra.setdefault("errors", []).append("tool_execution_failure")
 
         return RuntimeExecutionResult(
             result=result,
@@ -358,6 +399,14 @@ class CognitiveOS:
         result = execution.result
 
         if self.config.enable_trace:
+            if state is None:
+                raise RuntimeError(
+                    "Trace mode requires a CognitiveState, but execution returned none. "
+                    "Use enable_trace=False for fake executors/tests, or ensure the pipeline "
+                    "builds ctx.cognitive_state."
+                )
+
+        if self.config.enable_trace:
             return CognitiveResultView.from_state(
                 state,
                 result
@@ -393,6 +442,10 @@ class CognitiveOS:
         )
 
         execution = self.runtime.execute(ctx)
+        if execution.state is None:
+            raise RuntimeError(
+                "IR export requires a CognitiveState, but execution returned none."
+            )
         return build_ir_view(execution.state)
 
     # =====================================================

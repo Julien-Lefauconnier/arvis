@@ -5,7 +5,7 @@
 ARVIS is a **Cognitive Operating System**.
 
 It does not generate answers directly.
-It **controls how decisions and responses are allowed to exist**.
+It **controls how decisions are allowed to exist and how execution is safely performed**.
 
 ---
 
@@ -89,11 +89,11 @@ Example:
 
 ## How It Works (Conceptually)
 
-Every input is processed through a **deterministic cognitive pipeline**, orchestrated by a runtime execution layer.
+Every input is processed through a deterministic cognitive pipeline, orchestrated by a Kernel Core.
 
 At a high level:
 
-1. Create a cognitive process in the runtime
+1. Create a cognitive process in the Kernel Core
 2. Execute the pipeline (possibly iteratively)
 3. Normalize them into a canonical `CognitiveState`
 4. Compute trace, timeline, and IR projections
@@ -123,7 +123,12 @@ This enables:
 Important:
 
 - the pipeline defines *what* happens
-- the scheduler defines *when and how* it happens
+- the Kernel Core defines *when and how* it happens
+
+Execution is split into two phases:
+
+1. Cognitive phase (pipeline, pure)
+2. Execution phase (syscalls, side-effects)
 
 ---
 
@@ -152,6 +157,11 @@ Example strategies:
 - INFORMATIONAL
 - ACTION
 
+IMPORTANT:
+
+Response generation is independent from execution.
+Side-effects are handled separately via syscalls.
+
 ---
 
 ### LLM Integration (Controlled)
@@ -172,6 +182,9 @@ Always under:
 
 - a predefined ResponsePlan
 - a constrained LinguisticAct
+
+LLMs NEVER trigger execution.
+All execution must go through the Kernel Core and syscall system.
 
 ---
 
@@ -246,6 +259,8 @@ also:
 - scheduling is deterministic
 - processes can be replayed
 
+and side-effects are fully recorded via syscalls
+
 ---
 
 ## Memory (Emerging Layer)
@@ -262,6 +277,7 @@ Memory can:
 - constrain actions
 - inject contextual signals
 
+Memory access MAY be implemented via syscalls when it involves external storage.
 
 ---
 
@@ -309,6 +325,8 @@ Think of ARVIS as:
 Like an OS controls how programs execute,
 ARVIS controls how reasoning and decisions are allowed to happen — and how responses are safely produced.
 
+and how execution is safely mediated through syscalls.
+
 ---
 
 ## Cognitive OS Interface
@@ -318,7 +336,7 @@ ARVIS exposes a **Cognitive Operating System interface**.
 This interface:
 
 - hides internal pipeline complexity
-- hides runtime scheduling and process management
+- hides kernel scheduling and process management
 - provides a stable contract
 - enables integration with external systems
 
@@ -345,6 +363,12 @@ It allows:
 - replay of decisions
 - LLM interaction
 - system interoperability
+
+IR is the canonical boundary between:
+
+- cognition (pipeline)
+- execution (syscalls)
+- response (conversation layer)
 
 ---
 
