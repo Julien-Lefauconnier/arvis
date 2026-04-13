@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any, Dict, Optional, Callable, cast, List
+import json
+from hashlib import sha256
+
 
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
@@ -226,6 +229,8 @@ class CognitiveResultView:
     trace_view: Optional[DecisionTraceView] = None
     timeline: Optional[Any] = None
     timeline_view: Optional[TimelineView] = None
+    timeline_commitment: Optional[str] = None
+    global_commitment: Optional[str] = None
     _ir: Optional[Dict[str, Any]] = None
     reflexive: Optional[Dict[str, Any]] = None
 
@@ -235,13 +240,53 @@ class CognitiveResultView:
         trace = getattr(result, "trace", None)
         timeline_journal = state.timeline
         
+        ir_payload = build_ir_view(state)
+
+        try:
+            ir_bytes = json.dumps(
+                ir_payload,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+            ).encode("utf-8")
+
+            ir_hash = sha256(ir_bytes).hexdigest()
+        except Exception:
+            ir_hash = None
+        
+
         # -----------------------------------------
         #  SAFE TIMELINE HANDLING
         # -----------------------------------------
         if not isinstance(timeline_journal, SignalJournal):
             timeline_snapshot = None
+            timeline_commitment = None
         else:
             timeline_snapshot = signal_journal_to_timeline_snapshot(timeline_journal)
+            try:
+                from veramem_kernel.journals.timeline.timeline_commitment import (
+                    TimelineCommitment,
+                )
+
+                commitment = TimelineCommitment.from_snapshot(timeline_snapshot)
+                timeline_commitment = commitment.commitment
+            except Exception:
+                # safety fallback (never crash API)
+                timeline_commitment = None
+        
+        # -----------------------------------------
+        # GLOBAL COMMITMENT (timeline + IR)
+        # -----------------------------------------
+        if timeline_commitment and ir_hash:
+            try:
+                global_commitment = sha256(
+                    (timeline_commitment + ir_hash).encode("utf-8")
+                ).hexdigest()
+            except Exception:
+                global_commitment = None
+        else:
+            global_commitment = None
+        
 
         # reflexive snapshot (safe)
         reflexive_payload = None
@@ -273,7 +318,9 @@ class CognitiveResultView:
                 if timeline_snapshot is not None
                 else None
             ),
-            _ir=build_ir_view(state),
+            timeline_commitment=timeline_commitment,
+            global_commitment=global_commitment,
+            _ir=ir_payload,
             reflexive=reflexive_payload,
         )
 
@@ -296,6 +343,8 @@ class CognitiveResultView:
             },
             "has_trace": self.trace is not None,
             "has_timeline": self.timeline is not None,
+            "timeline_commitment": self.timeline_commitment,
+            "global_commitment": self.global_commitment,
             "trace": self.trace_view.to_dict() if self.trace_view else None,
             "timeline": self.timeline_view.to_dict() if self.timeline_view else None,
         }
@@ -452,7 +501,12 @@ class CognitiveOS:
     #  REPLAY API
     # =====================================================
 
-    def replay(self, ir: Dict[str, Any]) -> CognitiveResultView:
+    def replay(
+        self,
+        ir: Dict[str, Any],
+        *,
+        expected_global_commitment: Optional[str] = None,
+    ) -> CognitiveResultView:
 
         parsed = CognitiveIR.from_dict(ir)
         engine = ReplayEngine()
@@ -462,9 +516,40 @@ class CognitiveOS:
         if state is None:
             raise RuntimeError("Replay result missing cognitive_state")
 
-        return CognitiveResultView.from_state(
+        replay_view = CognitiveResultView.from_state(
             state,
             result
+        )
+
+        # -------------------------------------------------
+        # VERIFIED REPLAY (optional)
+        # -------------------------------------------------
+        if expected_global_commitment is not None:
+            replay_commitment = replay_view.global_commitment
+
+            if replay_commitment is None:
+                raise RuntimeError(
+                    "Replay verification failed: replay global_commitment is missing"
+                )
+
+            if replay_commitment != expected_global_commitment:
+                raise RuntimeError(
+                    "Replay verification failed: global_commitment mismatch "
+                    f"(expected={expected_global_commitment}, got={replay_commitment})"
+                )
+
+        return replay_view
+
+    def replay_verified(
+        self,
+        ir: Dict[str, Any],
+        *,
+        expected_global_commitment: Optional[str] = None,
+        ) -> CognitiveResultView:
+
+        return self.replay(
+            ir,
+            expected_global_commitment=expected_global_commitment,
         )
 
     # =====================================================

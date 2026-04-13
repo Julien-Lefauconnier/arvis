@@ -13,9 +13,22 @@ def ir_to_canonical(ir: CognitiveIR) -> list[CanonicalSignal]:
     signals: list[CanonicalSignal] = []
     emitted_codes: set[str] = set()
 
+    logical_counter: int = 0
+
     def emit(code: str) -> None:
+        nonlocal logical_counter
+
         if code not in emitted_codes:
-            signals.append(SignalFactory.create(code))
+            logical_counter += 1
+
+            ts = logical_counter * 1e-6
+
+            signals.append(
+                SignalFactory.create(
+                    code,
+                    timestamp=ts,
+                )
+            )
             emitted_codes.add(code)
 
     for rule in ALL_RULES:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from typing import Any, Dict
 from arvis.api.ir_canonical import hash_ir
 
@@ -34,7 +35,13 @@ def build_ir_view(obj: Any) -> Dict[str, Any]:
         "meta": {},
     }
 
-    ir["meta"]["canonical_hash"] = hash_ir(ir)
+    # -----------------------------------------
+    # Compute hash on IR WITHOUT canonical_hash
+    # -----------------------------------------
+    ir_for_hash = copy.deepcopy(ir)
+    ir_for_hash["meta"].pop("canonical_hash", None)
+
+    ir["meta"]["canonical_hash"] = hash_ir(ir_for_hash)
 
     return ir
 

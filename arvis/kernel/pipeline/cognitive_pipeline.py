@@ -6,8 +6,9 @@ from datetime import datetime, timezone
 from dataclasses import replace
 import os
 import warnings
-from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
 from typing import Any, cast, Protocol, Dict, Iterable, Iterator
+from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
+
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.kernel.pipeline.cognitive_pipeline_result import CognitivePipelineResult

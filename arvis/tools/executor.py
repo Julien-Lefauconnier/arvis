@@ -1,7 +1,6 @@
 # arvis/tools/executor.py
 
-import time
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.tool_result import ToolResult
@@ -11,37 +10,15 @@ class ToolExecutor:
     def __init__(self, registry: ToolRegistry) -> None:
         self.registry = registry
 
-    def execute(
+    def execute_authorized(
         self,
-        arg1: Union[str, Any],
-        arg2: Optional[Any] = None,
-    ) -> Optional[Any]:
+        result: Any,
+        ctx: Any,
+    ) -> Optional[ToolResult]:
         """
-        Dual mode:
-        - execute(tool_name, payload)
-        - execute(result, ctx)
+        Authorized runtime execution only.
+        Must be called from syscall layer.
         """
-
-        # -------------------------
-        # MODE 1 — direct call
-        # -------------------------
-        if isinstance(arg1, str):
-            tool_name_direct = arg1
-
-            if isinstance(arg2, dict):
-                payload_direct: Dict[str, Any] = arg2
-            else:
-                payload_direct = {}
-
-            tool = self.registry.get(tool_name_direct)
-            tool.validate(payload_direct)
-            return tool.execute(payload_direct)
-
-        # -------------------------
-        # MODE 2 — runtime
-        # -------------------------
-        result = arg1
-        ctx = arg2
 
         if result is None or ctx is None:
             return None
@@ -64,44 +41,42 @@ class ToolExecutor:
 
         try:
             tool = self.registry.get(tool_name)
-            start = time.time()
+            if tool is None:
+                return ToolResult(
+                    tool_name=tool_name,
+                    success=False,
+                    error="unknown_tool",
+                )
 
             tool.validate(payload_runtime)
             output = tool.execute(payload_runtime)
 
-            latency = (time.time() - start) * 1000
 
-            tool_result = ToolResult(
+            return ToolResult(
                 tool_name=tool_name,
                 success=True,
                 output=output,
-                latency_ms=latency if hasattr(ToolResult, "latency_ms") else None,
+                latency_ms=None,
             )
 
-            ctx.extra.setdefault("tool_results", []).append(tool_result)
-            ctx.extra["last_tool_result"] = tool_result
-            ctx.extra.setdefault("tool_payloads", []).append({
-                "tool": tool_name,
-                "payload": payload_runtime.get("tool_payload", {}),
-            })
-
-            return tool_result
-
         except Exception as e:
-            tool_result = ToolResult(
+            setattr(ctx, "_tool_failure", True)
+
+            return ToolResult(
                 tool_name=tool_name,
                 success=False,
                 error=str(e),
                 latency_ms=None,
             )
 
-            ctx.extra.setdefault("tool_results", []).append(tool_result)
-            ctx.extra["last_tool_result"] = tool_result
-            ctx.extra.setdefault("tool_payloads", []).append({
-                "tool": tool_name,
-                "payload": payload_runtime.get("tool_payload", {}),
-            })
+    def execute(self, arg1: Any, arg2: Optional[Any] = None) -> Optional[ToolResult]:
+        """
+        Backward-compatible entrypoint.
+        Direct production execution is forbidden.
+        """
+        if isinstance(arg1, str):
+            raise RuntimeError(
+                "direct_tool_execution_forbidden: use syscall authority via SyscallHandler"
+            )
 
-            setattr(ctx, "_tool_failure", True)
-
-            return tool_result
+        return self.execute_authorized(arg1, arg2)

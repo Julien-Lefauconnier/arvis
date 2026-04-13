@@ -12,6 +12,12 @@ from arvis.kernel_core.interrupts.interrupt_bus import CognitiveInterruptBus
 from veramem_kernel.signals.signal_journal import SignalJournal
 from veramem_kernel.api.signals import CanonicalSignal
 from arvis.adapters.kernel.signals.signal_factory import SignalFactory
+from arvis.adapters.kernel.timeline_from_signals import (
+    signal_journal_to_timeline_snapshot,
+)
+from veramem_kernel.journals.timeline.timeline_commitment import (
+    TimelineCommitment,
+)
 
 @dataclass
 class CognitiveRuntimeState:
@@ -23,6 +29,7 @@ class CognitiveRuntimeState:
     timeline: Any = field(default_factory=SignalJournal)
     _local_counter: int = 0
     _last_tick: int = -1
+    _last_ts_local: float = 0.0
     interrupt_bus: CognitiveInterruptBus = field(default_factory=CognitiveInterruptBus)
     
 
@@ -55,6 +62,8 @@ class CognitiveRuntimeState:
         "scheduler_selected": "decision_emitted",
         "process_preempted": "early_warning_detected",
         "hook_error": "ghost_signal",
+        "syscall_succeeded": "decision_emitted",
+        "syscall_failed": "ghost_signal",
     }
 
     def _map_runtime_event(
@@ -79,11 +88,18 @@ class CognitiveRuntimeState:
 
         ts = float(current_tick) + (self._local_counter * 1e-6)
 
+        # SAFETY: enforce monotonicity vs factory
+        if ts <= self._last_ts_local:
+            ts = self._last_ts_local + 1e-6
+
+        self._last_ts_local = ts
+
         signal = SignalFactory.create(
             code,
             subject_ref=f"process:{payload.get('process_id', 'unknown')}",
             temporal_anchor=f"tick:{self.scheduler_state.tick_count}",
             timestamp=ts,
+            signal_id=payload.get("causal_id"),
         )
 
         return signal
@@ -93,3 +109,14 @@ class CognitiveRuntimeState:
             p for p in self.processes.values()
             if p.status.value == "running"
         ]
+    
+    # -----------------------------------------------------
+    # Timeline commitment (Veramem-backed)
+    # -----------------------------------------------------
+    def compute_timeline_commitment(self) -> str:
+        if not isinstance(self.timeline, SignalJournal):
+            raise RuntimeError("Timeline is not a SignalJournal")
+
+        snapshot = signal_journal_to_timeline_snapshot(self.timeline)
+        commitment = TimelineCommitment.from_snapshot(snapshot)
+        return commitment.commitment

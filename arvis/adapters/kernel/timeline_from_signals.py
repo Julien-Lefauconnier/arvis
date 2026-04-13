@@ -17,7 +17,9 @@ def signal_journal_to_timeline_snapshot(journal: SignalJournal) -> TimelineSnaps
 
 
 def _signal_to_timeline_entry(signal: object, *, lamport: int) -> TimelineEntry:
-    signal_id = getattr(signal, "signal_id", f"timeline-entry-{lamport}")
+    signal_id = getattr(signal, "signal_id", None)
+    if signal_id is None:
+        raise RuntimeError("Signal without signal_id is forbidden for timeline projection")
     timestamp = getattr(signal, "timestamp", None)
     if not isinstance(timestamp, datetime):
         # fallback = stable, not "now"

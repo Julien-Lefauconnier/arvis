@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import ClassVar, Dict, Protocol, Iterable
-from uuid import uuid4
 from datetime import datetime, timedelta, timezone
 
 from veramem_kernel.api.signals import CanonicalSignal
@@ -46,6 +45,7 @@ class SignalFactory:
         subject_ref: str = "timeline:entry:ir",
         temporal_anchor: str = "t0",
         timestamp: int | float | None = None,
+        signal_id: str | None = None,
     ) -> CanonicalSignal:
         cls._bootstrap()
 
@@ -56,8 +56,15 @@ class SignalFactory:
         state = cls._select_state(spec)
         origin = cls._select_origin(spec)
 
+        if signal_id is None:
+            signal_id = cls._build_internal_signal_id(
+                code,
+                subject_ref,
+                temporal_anchor,
+            )
+
         signal = CanonicalSignal(
-            signal_id=f"sig-{uuid4()}",
+            signal_id=signal_id,
             key=spec.key,
             state=state,
             subject_ref=subject_ref,
@@ -67,7 +74,9 @@ class SignalFactory:
         )
 
         if timestamp is None:
-            ts = next(cls._fallback_counter) * 1e-6
+            raise RuntimeError(
+                "SignalFactory requires explicit timestamp (runtime-controlled)"
+            )
         else:
             ts = float(timestamp)
 
@@ -94,3 +103,25 @@ class SignalFactory:
         if "arvis" in spec.origin_allowed:
             return "arvis"
         return next(iter(spec.origin_allowed))
+    
+    @staticmethod
+    def _build_signal_id(code: str, subject_ref: str, temporal_anchor: str) -> str:
+        return f"signal:{code}:{subject_ref}:{temporal_anchor}"
+    
+    @classmethod
+    def _build_internal_signal_id(
+        cls,
+        code: str,
+        subject_ref: str,
+        temporal_anchor: str,
+    ) -> str:
+        """
+        Deterministic fallback for non-causal signals.
+
+        Important:
+        - must remain deterministic
+        - must NOT use randomness
+        - must be monotonic-safe
+        """
+        idx = next(cls._fallback_counter)
+        return f"signal:{code}:{subject_ref}:{temporal_anchor}:{idx}"

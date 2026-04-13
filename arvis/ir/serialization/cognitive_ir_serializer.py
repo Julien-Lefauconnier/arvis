@@ -122,7 +122,8 @@ class CognitiveIRSerializer:
         input_data = clean_data.get("input")
         if isinstance(input_data, dict):
             input_obj = type("IRInput", (), {})()
-            input_obj.metadata = input_data
+            for k, v in input_data.items():
+                setattr(input_obj, k, v)
         else:
             input_obj = input_data
 
