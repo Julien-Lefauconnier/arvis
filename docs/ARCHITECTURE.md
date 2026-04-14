@@ -41,13 +41,14 @@ It is a **cognitive execution system** where:
 ARVIS is implemented as a deterministic system with the following architectural domains:
 
 0. kernel core (process / scheduler / syscalls / interrupts)
-1. cognitive execution (pipeline)
-2. runtime execution (side-effects via syscalls)
-3. canonical state
-4. public contract / IR 
-5. reflexive observation
-6. conversation & response layer
-7. interoperability / canonical projection
+1. kernel services (domain services: VFS, ZIP, memory, etc.)
+2. cognitive execution (pipeline)
+3. runtime execution (side-effects via syscalls)
+4. canonical state
+5. public contract / IR 
+6. reflexive observation
+7. conversation & response layer
+8. interoperability / canonical projection
 
 ---
 
@@ -123,6 +124,45 @@ It enforces:
 - syscall-based side-effect execution
 
 The Kernel Core is the only layer allowed to trigger execution and side-effects.
+
+---
+
+## Kernel Services Layer
+
+The Kernel Services Layer contains all domain-specific logic used by syscalls.
+
+It is accessed exclusively via:
+
+```python
+KernelServiceRegistry
+```
+
+### Responsibilities
+
+- implement business logic (VFS, ZIP ingestion, memory, etc.)
+- encapsulate stateful operations
+- provide deterministic service interfaces
+
+### Properties
+
+- explicitly injected into the kernel
+- no global state
+- partially available (services may be None)
+- fully testable via stubs
+
+### Separation of Concerns
+
+| Layer    | Responsibility      |
+| -------- | ------------------- |
+| Syscalls | execution interface |
+| Services | domain logic        |
+
+
+This ensures:
+
+- clean architecture
+- test isolation
+- deterministic behavior
 
 ---
 

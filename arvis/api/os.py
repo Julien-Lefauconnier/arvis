@@ -44,6 +44,7 @@ from arvis.kernel_core.process.process_factory import ProcessFactory
 
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 
 
 # =====================================================
@@ -99,10 +100,16 @@ class CognitiveRuntime:
             hooks=self.hooks,
         )
 
+        self.services = KernelServiceRegistry(
+            tool_executor=self.tool_executor,
+            vfs_service=None,
+            zip_ingest_service=None,
+        )
+
         self.syscall_handler = SyscallHandler(
             runtime_state=self.runtime_state,
             scheduler=self.scheduler,
-            tool_executor=self.tool_executor,
+            services=self.services,
         )
 
     def execute(self, ctx: CognitivePipelineContext) -> Any:

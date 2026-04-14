@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
-# Import built-in syscall modules so decorators execute at package import time.
-from arvis.kernel_core.syscalls.syscalls import tool_syscalls
+from . import interrupt_syscalls
+from . import memory_syscalls
+from . import process_syscalls
+from . import tool_syscalls
+from . import vfs_syscalls
 
 __all__ = [
+    "interrupt_syscalls",
+    "memory_syscalls",
+    "process_syscalls",
     "tool_syscalls",
+    "vfs_syscalls",
 ]

@@ -101,6 +101,29 @@ This guarantees:
 - isolated execution
 - replay-safe behavior
 
+### Kernel Services Layer (NEW)
+
+The syscall system operates on top of an explicit **Kernel Service Layer**.
+
+All domain logic is implemented inside services and injected via:
+
+```python
+KernelServiceRegistry
+```
+
+Properties:
+
+- syscalls are thin orchestration wrappers
+- business logic lives in services (VFS, ZIP, memory, etc.)
+- services are explicitly injected (no global state)
+- services may be partially available (graceful degradation)
+
+This enforces:
+
+- strict separation between execution interface (syscalls) and domain logic (services)
+- testability via service stubs
+- deterministic and observable execution boundaries
+
 ---
 
 ## 🔍 Cognitive State Kernel

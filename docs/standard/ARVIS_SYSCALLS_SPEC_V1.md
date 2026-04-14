@@ -105,6 +105,7 @@ Responsibilities:
 - execute safely
 - normalize output
 - record execution result
+- provide access to kernel services via ServiceRegistry
 
 ---
 
@@ -225,6 +226,54 @@ Each entry contains:
 
 ---
 
+## Kernel Service Registry
+
+ The Syscall System relies on a centralized service container:
+
+```python
+KernelServiceRegistry
+```
+
+This registry provides access to all kernel-level services used by syscalls.
+
+Example services:
+
+- VFSService
+- ZipIngestService
+- MemoryService (future)
+- Tool adapters
+
+---
+
+### Purpose
+
+The service registry ensures:
+
+- explicit dependency injection
+- isolation of syscall logic from service construction
+- testability via service substitution (stubs/mocks)
+
+---
+
+### Access Pattern
+
+Syscalls access services via the handler:
+
+```python
+def my_syscall(handler, ...):
+    service = handler.services.my_service
+```
+
+---
+
+### Properties
+
+- services are optional (may be None)
+- syscalls must handle missing services explicitly
+- no global state access is allowed
+
+---
+
 ## Properties
 
 The syscall journal guarantees:
@@ -287,12 +336,15 @@ Syscalls MUST:
 - be explicitly triggered
 - be fully observable
 - produce structured results
+- access external services ONLY via KernelServiceRegistry
 
 Syscalls MUST NOT:
 
 - be implicit
 - modify cognitive reasoning
 - inject decisions
+- instantiate services directly
+- access global singletons
 
 ---
 
@@ -341,6 +393,35 @@ Constraints:
 - must be deterministic
 - must return SyscallResult
 - must be side-effect isolated
+
+---
+
+## Testability Model
+
+The Service Registry enables controlled testing of syscalls.
+
+Tests can inject stub services:
+
+```python
+handler = SyscallHandler(
+    services=KernelServiceRegistry(
+        vfs_service=StubVFSService(),
+        zip_ingest_service=StubZipService(),
+    )
+)
+```
+
+This allows:
+
+- deterministic unit testing
+- isolation of syscall behavior
+- validation of orchestration logic
+
+---
+
+Important:
+
+Stubs must expose all attributes used by the syscall (including sub-services such as planners or executors).
 
 ---
 

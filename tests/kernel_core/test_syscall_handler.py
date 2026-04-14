@@ -1,11 +1,11 @@
 # tests/kernel_core/test_syscall_handler.py
 
-from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
-
-from arvis.tools.registry import ToolRegistry
-from arvis.tools.executor import ToolExecutor
+from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 from arvis.tools.base import BaseTool
+from arvis.tools.executor import ToolExecutor
+from arvis.tools.registry import ToolRegistry
 
 
 class DummyTool(BaseTool):
@@ -19,10 +19,12 @@ class DummyTool(BaseTool):
 def test_syscall_journal():
     ctx = type("Ctx", (), {"extra": {}})()
 
+    services = KernelServiceRegistry()
+
     handler = SyscallHandler(
         runtime_state=None,
         scheduler=None,
-        tool_executor=None,
+        services=services,
     )
 
     syscall = Syscall(
@@ -33,10 +35,9 @@ def test_syscall_journal():
     result = handler.handle(syscall)
 
     assert result.success is False
-
     assert "syscall_results" in ctx.extra
-    entry = ctx.extra["syscall_results"][0]
 
+    entry = ctx.extra["syscall_results"][0]
     assert entry["syscall"] == "unknown.test"
     assert entry["success"] is False
     assert "syscall_id" in entry
@@ -46,15 +47,15 @@ def test_syscall_journal():
 
 def test_tool_execute_syscall():
     registry = ToolRegistry()
-
     registry.register(DummyTool())
-
     executor = ToolExecutor(registry)
+
+    services = KernelServiceRegistry(tool_executor=executor)
 
     handler = SyscallHandler(
         runtime_state=None,
         scheduler=None,
-        tool_executor=executor,
+        services=services,
     )
 
     ctx = type("Ctx", (), {"extra": {}})()
@@ -75,7 +76,6 @@ def test_tool_execute_syscall():
     )
 
     result = handler.handle(syscall)
-    print(type(result.result))
 
     assert result.success is True
     assert result.result is not None
@@ -98,13 +98,14 @@ def test_tool_execute_syscall_failure():
 
     registry = ToolRegistry()
     registry.register(FailingTool())
-
     executor = ToolExecutor(registry)
+
+    services = KernelServiceRegistry(tool_executor=executor)
 
     handler = SyscallHandler(
         runtime_state=None,
         scheduler=None,
-        tool_executor=executor,
+        services=services,
     )
 
     ctx = type("Ctx", (), {"extra": {}})()

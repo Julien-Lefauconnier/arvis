@@ -11,12 +11,18 @@ from arvis.kernel_core.syscalls.syscall_registry import register_syscall
 
 @runtime_checkable
 class ToolExecutorLike(Protocol):
-    def execute(self, result: Any, ctx: Any) -> Any: ...
+    def execute(self, result: Any, ctx: Any) -> Any:
+        ...
+
+
+class ServiceRegistryLike(Protocol):
+    tool_executor: Optional[ToolExecutorLike]
 
 
 class SyscallHandlerLike(Protocol):
-    tool_executor: Optional[ToolExecutorLike]
+    services: ServiceRegistryLike
     runtime_state: Optional[Any]
+
 
 def _compute_artifact_timestamp(
     handler: SyscallHandlerLike,
@@ -24,10 +30,11 @@ def _compute_artifact_timestamp(
 ) -> float:
     """
     Kernel-controlled timestamp derivation.
+
     Priority:
-    1. explicit tick (syscall arg)
+    1. explicit tick syscall arg
     2. runtime scheduler tick
-    3. fallback = 0.0 (tests / no runtime)
+    3. fallback = 0.0
     """
     tick = kwargs.get("tick")
     if tick is not None:
@@ -47,16 +54,16 @@ def tool_execute(
     ctx: Any,
     **kwargs: Any,
 ) -> SyscallResult:
+    tool_executor = handler.services.tool_executor
 
-    if handler.tool_executor is None:
+    if tool_executor is None:
         return SyscallResult(
             success=False,
             error="no_tool_executor",
         )
 
     try:
-        tool_result = handler.tool_executor.execute(result, ctx)
-
+        tool_result = tool_executor.execute(result, ctx)
     except Exception as exc:
         return SyscallResult(
             success=False,
@@ -69,18 +76,12 @@ def tool_execute(
             error="no_tool_execution",
         )
 
-    # -------------------------
-    # NORMALISATION → Artifact
-    # -------------------------
-
-    # STRICT normalization layer
     if hasattr(tool_result, "success"):
         success = bool(getattr(tool_result, "success"))
         output = getattr(tool_result, "output", None)
         error = getattr(tool_result, "error", None)
         tool_name = getattr(tool_result, "tool_name", None)
     else:
-        # legacy fallback (dict or raw output)
         success = True
         output = tool_result
         error = None
@@ -108,5 +109,3 @@ def tool_execute(
         result=artifact,
         error=artifact.error,
     )
-
-    

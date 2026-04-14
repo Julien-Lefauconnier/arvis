@@ -6,13 +6,16 @@ import inspect
 from typing import Any, Optional, Protocol
 
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
+from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
-from arvis.kernel_core.syscalls.syscall_registry import get_syscall, SyscallFn
+from arvis.kernel_core.syscalls.syscall_registry import SyscallFn, get_syscall
 
 
 class RuntimeStateLike(Protocol):
     scheduler_state: Any
-    def append_event(self, name: str, payload: dict[str, Any]) -> None: ...
+
+    def append_event(self, name: str, payload: dict[str, Any]) -> None:
+        ...
 
 
 class PipelineContextLike(Protocol):
@@ -24,12 +27,11 @@ class SyscallHandler:
         self,
         runtime_state: Optional[RuntimeStateLike],
         scheduler: Any,
-        tool_executor: Optional[Any] = None,
+        services: Optional[KernelServiceRegistry] = None,
     ) -> None:
         self.runtime_state = runtime_state
         self.scheduler = scheduler
-        self.tool_executor = tool_executor
-        # deterministic sequencing
+        self.services = services or KernelServiceRegistry()
         self._local_counter: int = 0
         self._last_tick: int = -1
 
@@ -38,15 +40,12 @@ class SyscallHandler:
         fn: Optional[SyscallFn] = get_syscall(syscall.name)
         started_tick = self._get_tick()
 
-        # reset local counter if new tick
         if started_tick != self._last_tick:
             self._local_counter = 0
             self._last_tick = started_tick
 
-        # increment for this syscall
         self._local_counter += 1
-        
-        # HARDENING: explicit syscall existence check
+
         if fn is None:
             missing_result = SyscallResult(
                 success=False,
@@ -59,21 +58,21 @@ class SyscallHandler:
                 started_tick=started_tick,
             )
             return missing_result
-        
+
         sig = inspect.signature(fn)
         try:
             sig.bind(self, **syscall.args)
-        except TypeError as e:
+        except TypeError as exc:
             error_result = SyscallResult(
                 success=False,
-                error=f"invalid_syscall_args:{str(e)}",
+                error=f"invalid_syscall_args:{str(exc)}",
             )
             self._journal(
-               ctx=ctx,
-               syscall=syscall,
-               result=error_result,
-               started_tick=started_tick,
-           )
+                ctx=ctx,
+                syscall=syscall,
+                result=error_result,
+                started_tick=started_tick,
+            )
             return error_result
 
         causal_id = self._build_syscall_id(
@@ -90,10 +89,10 @@ class SyscallHandler:
                     "causal_id": causal_id,
                 },
             )
-        except Exception as e:
+        except Exception as exc:
             error_result = SyscallResult(
                 success=False,
-                error=f"{type(e).__name__}:{str(e)}",
+                error=f"{type(exc).__name__}:{str(exc)}",
             )
             self._journal(
                 ctx=ctx,
@@ -102,8 +101,7 @@ class SyscallHandler:
                 started_tick=started_tick,
             )
             return error_result
-        
-        # HARDENING: enforce SyscallResult contract
+
         if not isinstance(syscall_result, SyscallResult):
             syscall_result = SyscallResult(
                 success=False,
@@ -179,8 +177,18 @@ class SyscallHandler:
     def _default_replay_policy(self, syscall_name: str) -> str:
         if syscall_name == "tool.execute":
             return "journal_only_replay"
+
+        if syscall_name.startswith("vfs.") and syscall_name not in {
+            "vfs.list",
+            "vfs.tree",
+            "vfs.zip.analyze",
+        }:
+            return "journal_only_replay"
+
+        if syscall_name in {"vfs.list", "vfs.tree", "vfs.zip.analyze"}:
+            return "recompute"
+
         return "unknown"
-    
 
     def _get_tick(self) -> int:
         if self.runtime_state is None:
@@ -189,7 +197,7 @@ class SyscallHandler:
 
     def _compute_elapsed_ticks(self, started_tick: int, end_tick: int) -> float:
         return float(end_tick - started_tick)
-    
+
     def _build_syscall_id(
         self,
         syscall: Syscall,
@@ -198,7 +206,7 @@ class SyscallHandler:
     ) -> str:
         process_id = syscall.args.get("process_id", "none")
         return f"syscall:{syscall.name}:{process_id}:{tick}:{seq}"
-    
+
     def _append_syscall_runtime_event(self, entry: dict[str, Any]) -> None:
         if self.runtime_state is None:
             return
