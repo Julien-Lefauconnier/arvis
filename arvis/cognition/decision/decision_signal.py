@@ -30,3 +30,4 @@ class DecisionSignal:
     conflicts: List[ConflictSignal] = field(default_factory=list)
 
     context_hints: Dict[str, Any] = field(default_factory=dict)
+    memory_influence: dict[str, Any] = field(default_factory=dict)

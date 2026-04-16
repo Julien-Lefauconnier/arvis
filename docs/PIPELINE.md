@@ -91,6 +91,15 @@ STRICT RULE:
 
    No stage may produce a final decision.
 
+ABSOLUTE RULE:
+
+No stage may:
+
+- trigger syscalls
+- access external systems
+- mutate memory
+- produce side-effects of any kind
+
 ---
 
 ### Finalization
@@ -110,6 +119,18 @@ Forbidden:
 
 - stage-level completion
 - implicit decision emission
+
+CRITICAL:
+
+finalize_run() is the ONLY allowed terminal point of the pipeline.
+
+It MUST:
+
+- construct the final CognitiveState
+- generate the Intermediate Representation (IR)
+- produce a non-null executable intent
+
+No other component may emit a terminal decision.
 
 ---
 
@@ -163,7 +184,11 @@ Responsibilities:
 
 IMPORTANT:
 
-   Tool execution is handled by the Kernel via syscalls, NOT by the pipeline.
+Tool execution is strictly external to the pipeline.
+
+- tools are executed ONLY via syscalls
+- syscalls occur ONLY after finalize_run()
+- tool results are re-injected in the next pipeline run
 
 ---
 
@@ -184,9 +209,26 @@ Outputs:
 
 Integrates:
 
-- memory
-- conversation
-- timeline
+- memory snapshot (read-only projection)
+- conversation context
+- timeline signals
+
+---
+
+### Memory Model
+
+Memory is NOT queried dynamically.
+
+Instead:
+
+- memory is projected into the pipeline as a **deterministic snapshot**
+- the pipeline consumes memory as input, not as a service
+
+Forbidden:
+
+- dynamic memory queries
+- repository access
+- syscall invocation
 
 ---
 
@@ -303,12 +345,19 @@ Handles:
 
 ---
 
-### 15. Execution Stage
+### 15. Execution Eligibility Stage
 
 Determines:
 
-- can_execute
-- requires_confirmation
+- execution eligibility
+- confirmation requirements
+- constraint compliance
+
+IMPORTANT:
+
+This stage does NOT trigger execution.
+
+It only determines whether execution would be allowed.
 
 ---
 
@@ -333,7 +382,24 @@ Outputs:
 The pipeline produces:
 
 - a validated cognitive intent
-- a fully populated cognitive context (ctx)
+- a canonical CognitiveState
+- an Intermediate Representation (IR)
+
+The IR is the canonical output of cognition.
+
+---
+
+### Output Contract
+
+```text
+ctx → finalize_run() → CognitiveState → IR
+```
+
+The IR defines:
+
+- the decision structure
+- execution eligibility
+- response constraints
 
 It does NOT:
 
@@ -352,6 +418,15 @@ STRICT SEPARATION:
 | Kernel Core | Execution      |
 | Syscalls    | Side-effects   |
 
+CRITICAL:
+
+The pipeline cannot:
+
+- call the Kernel
+- trigger syscalls
+- influence execution timing
+
+It produces cognition only.
 
 ---
 
@@ -359,11 +434,23 @@ STRICT SEPARATION:
 
 After pipeline completion:
 
-- CognitiveState is finalized
+- finalize_run() produces CognitiveState + IR
 - DecisionTrace is built
-- IR is generated
-- Observability is computed
-- Syscalls MAY be triggered by the Kernel
+- IR is passed to Kernel
+- Kernel MAY trigger syscalls (post-decision)
+- Observability is computed (read-only)
+
+---
+
+## Execution Boundary Reminder
+
+```text
+Pipeline → finalize_run → IR → Kernel → Syscalls
+```
+
+The pipeline ends BEFORE any side-effect occurs.
+
+This boundary is strict and enforced by the Kernel.
 
 ---
 
@@ -429,3 +516,7 @@ The ARVIS pipeline is:
 Execution is:
 
    delegated to the Kernel Core
+
+The pipeline never interacts with reality.
+
+It only determines what would be allowed to happen.

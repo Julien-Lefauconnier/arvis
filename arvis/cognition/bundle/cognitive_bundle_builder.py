@@ -1,7 +1,7 @@
 # arvis/cognition/bundle/cognitive_bundle_builder.py
 
 from datetime import datetime, timezone
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Dict, Any
 
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.cognition.bundle.cognitive_bundle_invariants import assert_cognitive_bundle_invariants
@@ -32,8 +32,30 @@ class CognitiveBundleBuilder:
         timeline: Sequence[TimelineEntry],
         memory_long: Optional[MemoryLongSnapshot] = None,
         retrieval_snapshot: Optional[CognitiveRetrievalSnapshot] = None,
+        memory: Optional[Dict[str, Any]] = None,
         generated_at: Optional[datetime] = None,
     ) -> CognitiveBundleSnapshot:
+        
+        # -----------------------------------------------------
+        # Memory projection → normalized features
+        # -----------------------------------------------------
+        memory_features: Dict[str, Any] = {}
+
+        if memory:
+            try:
+                memory_features = {
+                    "has_constraints": bool(memory.get("has_constraints", False)),
+                    "memory_pressure": float(memory.get("memory_pressure", 0.0) or 0.0),
+                    "preference_count": int(len(memory.get("preferences", {}))),
+                }
+            except Exception:
+                memory_features = {}
+
+        if introspection is None:
+            introspection = IntrospectionSnapshot()
+
+        if explanation is None:
+            explanation = ExplanationSnapshot()
 
         bundle = CognitiveBundleSnapshot(
             decision_result=decision_result,
@@ -42,8 +64,9 @@ class CognitiveBundleBuilder:
             timeline=timeline,
             memory_long=memory_long,
             retrieval_snapshot=retrieval_snapshot,
-            context_hints=decision_result.context_hints,
+            context_hints=getattr(decision_result, "context_hints", {}),
             generated_at=generated_at or datetime.now(timezone.utc),
+            memory_features=memory_features,
         )
 
         assert_cognitive_bundle_invariants(bundle)

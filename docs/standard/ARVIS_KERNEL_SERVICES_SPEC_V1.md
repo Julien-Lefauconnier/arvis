@@ -10,13 +10,23 @@ It acts as the internal backbone of the Kernel Core, enabling controlled interac
 
 ## Core Principle
 
-> All services MUST be accessed through the KernelServiceRegistry.
+> All services MUST be accessed through the KernelServiceRegistry  
+> and MUST enforce domain-level policies and invariants.
 
 This ensures:
 - deterministic behavior
 - explicit dependency injection
 - testability
 - no hidden coupling
+
+Services are not simple utilities.
+
+They are the **authoritative enforcement layer** for:
+
+- domain constraints
+- access control
+- mutation validity
+- system invariants
 
 ---
 
@@ -34,6 +44,7 @@ Central container for all services:
 KernelServiceRegistry(
     vfs_service: Optional[VFSService],
     zip_ingest_service: Optional[ZipIngestService],
+    memory_service: Optional[MemoryService],
 )
 ```
 
@@ -57,6 +68,12 @@ Rules:
 - Always check for None
 - Never instantiate services inside syscalls
 
+Syscalls MUST NOT:
+
+- bypass services
+- access storage directly
+- embed domain logic
+
 ---
 
 ## Service Types
@@ -68,7 +85,8 @@ Examples:
 
 Responsibilities:
 - business logic
-- state manipulation
+- controlled state transitions
+- enforcement of domain invariants
 - orchestration of subcomponents
 
 ---
@@ -88,12 +106,69 @@ Properties:
 
 ---
 
+### MemoryService
+
+The MemoryService is responsible for:
+
+- controlled memory mutations
+- policy enforcement (scope, consent, retention)
+- validation of memory writes and revocations
+
+It is the ONLY component allowed to:
+
+- persist memory
+- modify long-term storage
+
+IMPORTANT:
+
+The pipeline NEVER accesses MemoryService directly.
+
+Memory is injected into cognition via snapshots.
+
+---
+
 ## Lifecycle
 
 Services are:
+
 - created at kernel initialization
 - injected into registry
-- shared across syscalls
+- reused across syscalls
+
+---
+
+### State Model
+
+Services may be:
+
+- stateless (pure logic)
+- stateful (managing controlled persistence)
+
+Stateful services MUST:
+
+- enforce strict mutation policies
+- remain deterministic given same inputs
+
+---
+
+## Execution Role
+
+Kernel Services operate strictly in the execution phase:
+
+```text
+Pipeline → finalize_run → IR → Kernel → Syscalls → Services
+```
+
+They:
+
+- execute validated operations
+- enforce domain constraints
+- interact with external systems
+
+They do NOT:
+
+- initiate execution
+- participate in scheduling
 
 ---
 
@@ -127,6 +202,23 @@ Services MUST NOT:
 - depend on global state
 - mutate registry
 - perform hidden I/O
+- expose repositories directly
+- allow direct persistence access
+- bypass validation layers
+
+---
+
+## Separation from Cognition
+
+Kernel Services are strictly outside cognition.
+
+They:
+
+- do NOT participate in reasoning
+- do NOT influence decision logic
+- do NOT inject semantics into the pipeline
+
+They only execute validated operations AFTER decision.
 
 ---
 
@@ -137,6 +229,9 @@ Services MUST NOT:
 3. Test-First Design
 4. Clear Separation of Concerns
 5. Deterministic Execution
+6. Policy Enforcement First
+7. No Direct Data Access
+8. Post-Decision Execution Only
 
 ---
 
@@ -145,3 +240,7 @@ Services MUST NOT:
 The Kernel Services Layer is:
 
 a structured dependency system ensuring safe, testable, and deterministic execution of all kernel-level operations.
+
+Kernel Services do not decide what should happen.
+
+They enforce what is allowed to happen.

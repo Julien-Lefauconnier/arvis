@@ -86,6 +86,43 @@ class ControlStage:
             ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.0})()
 
         # -----------------------------------------
+        # 6.5 MEMORY-AWARE MODULATION (OS layer)
+        # -----------------------------------------
+        try:
+            bundle = getattr(ctx, "bundle", None)
+            memory_features = getattr(bundle, "memory_features", {}) if bundle else {}
+
+            memory_pressure = float(memory_features.get("memory_pressure", 0.0))
+            has_constraints = bool(memory_features.get("has_constraints", False))
+
+            # ---------------------------------
+            # pressure → reduce exploration
+            # ---------------------------------
+            if memory_pressure > 0.7:
+                epsilon *= 0.5
+                ctx.memory_mode = "constrained"
+
+            elif memory_pressure > 0.3:
+                epsilon *= 0.8
+                ctx.memory_mode = "moderate"
+
+            else:
+                ctx.memory_mode = "free"
+
+            # ---------------------------------
+            # constraints → enforce safety bias
+            # ---------------------------------
+            if has_constraints:
+                epsilon *= 0.7
+                ctx.memory_constraints_active = True
+            else:
+                ctx.memory_constraints_active = False
+
+        except Exception:
+            ctx.memory_mode = None
+            ctx.memory_constraints_active = False
+
+        # -----------------------------------------
         # 7. EXPLORATION
         # -----------------------------------------
         exploration_snapshot = pipeline.exploration.compute(
@@ -142,6 +179,13 @@ class ControlStage:
         else:
             ctx.adaptive_control = None
 
+
+        confidence = getattr(ctx, "regime_confidence", None)
+
+        if confidence is None:
+            confidence = 0.0  # safe fallback
+
+
         # -----------------------------------------
         # 9. SNAPSHOT
         # -----------------------------------------
@@ -153,7 +197,7 @@ class ControlStage:
             exploration=exploration_snapshot,
             drift={
                 "score": float(ctx.drift_score),
-                "confidence": ctx.regime_confidence,
+                "confidence": float(confidence),
             },
             regime=regime_control,
             calibration=None,

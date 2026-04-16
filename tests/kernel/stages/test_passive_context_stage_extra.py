@@ -231,3 +231,63 @@ def test_extra_auto_created():
     PassiveContextStage().run(pipeline, ctx)
 
     assert isinstance(ctx.extra, dict)
+
+
+# ============================================================
+# 11. SNAPSHOT INJECTION
+# ============================================================
+
+def test_memory_snapshot_injection():
+    ctx = DummyCtx()
+    ctx.memory_snapshot = {"records": ["a"]}
+
+    pipeline = DummyPipeline()
+
+    PassiveContextStage().run(pipeline, ctx)
+
+    assert ctx.memory_snapshot["records"] == ["a"]
+
+# ============================================================
+# 12. PROJECTION FALLBACK
+# ============================================================
+
+def test_memory_projection_from_long_memory():
+    ctx = DummyCtx()
+    ctx.long_memory = {"preferences": {"lang": "fr"}}
+
+    pipeline = DummyPipeline()
+
+    PassiveContextStage().run(pipeline, ctx)
+
+    assert ctx.memory_projection["preferences"]["lang"] == "fr"
+
+
+# ============================================================
+# 13. PROJECTION PRIORITY
+# ============================================================
+
+def test_memory_projection_priority():
+    ctx = DummyCtx()
+    ctx.memory_projection = {"p": 1}
+    ctx.long_memory = {"p": 2}
+
+    pipeline = DummyPipeline()
+
+    PassiveContextStage().run(pipeline, ctx)
+
+    assert ctx.memory_projection["p"] == 1
+
+# ============================================================
+# 14. SNAPSHOT PRIORITY
+# ============================================================
+
+def test_memory_snapshot_priority_over_projection():
+    ctx = DummyCtx()
+    ctx.memory_snapshot = {"records": ["snap"]}
+    ctx.memory_projection = {"records": ["proj"]}
+
+    pipeline = DummyPipeline()
+
+    PassiveContextStage().run(pipeline, ctx)
+
+    assert ctx.memory_snapshot["records"] == ["snap"]

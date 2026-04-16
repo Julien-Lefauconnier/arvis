@@ -33,7 +33,7 @@ def test_decision_stage_populates_ir_decision() -> None:
     stage = DecisionStage()
     stage.run(pipeline, ctx)
 
-    assert ctx.decision_result is result
+    assert ctx.decision_result.reason == "informational_query"
     assert ctx.ir_decision is not None
     assert ctx.ir_decision.decision_kind == "informational"
     assert ctx.control_runtime == "runtime-for-user-1"

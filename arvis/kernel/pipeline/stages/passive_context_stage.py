@@ -29,6 +29,38 @@ class PassiveContextStage:
             ctx.extra = {}
 
         # -----------------------------------------------------
+        # MEMORY INJECTION (PASSIVE, KERNEL-COMPAT)
+        # -----------------------------------------------------
+        try:
+            # Case 1 — snapshot déjà injecté (preferred path)
+            snapshot = getattr(ctx, "memory_snapshot", None)
+
+            # Case 2 — projection déjà fournie (external injection)
+            projection = getattr(ctx, "memory_projection", None)
+
+            # Case 3 — fallback legacy (long_memory)
+            if snapshot is None and projection is None:
+                legacy = getattr(ctx, "long_memory", None)
+                if isinstance(legacy, dict) and legacy:
+                    ctx.memory_projection = legacy
+                    projection = legacy
+
+            # Normalize projection for downstream stages
+            if projection is not None:
+                ctx.memory_projection = projection
+
+                # Optional: keep legacy compatibility
+                if not getattr(ctx, "long_memory", None):
+                    ctx.long_memory = projection
+
+            # Snapshot always wins over projection
+            if snapshot is not None:
+                ctx.memory_snapshot = snapshot
+
+        except Exception:
+            ctx.extra.setdefault("errors", []).append("memory_injection_failure")
+
+        # -----------------------------------------------------
         # GOVERNANCE (PASSIVE)
         # -----------------------------------------------------
         try:

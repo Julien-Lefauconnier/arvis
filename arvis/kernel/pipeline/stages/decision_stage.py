@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any
 from arvis.adapters.ir.decision_adapter import DecisionIRAdapter
+from arvis.cognition.decision.decision_result import DecisionResult
 
 class DecisionStage:
     """
@@ -17,7 +18,28 @@ class DecisionStage:
     """
 
     def run(self, pipeline: Any, ctx: Any) -> None:
-        decision_result = pipeline.decision.evaluate(ctx)
+        raw_result = pipeline.decision.evaluate(ctx)
+
+        # -----------------------------------------------------
+        # Normalize → always DecisionResult (ZK-safe)
+        # -----------------------------------------------------
+        if isinstance(raw_result, DecisionResult):
+            decision_result = raw_result
+        else:
+            # backward compatibility (SimpleNamespace / dict / etc.)
+            decision_result = DecisionResult(
+                reason=getattr(raw_result, "reason", "unknown"),
+            )
+
+        # -----------------------------------------------------
+        # Ensure memory_influence is always present (ZK-safe)
+        # -----------------------------------------------------
+        if not hasattr(decision_result, "memory_influence"):
+            decision_result = replace(
+                decision_result,
+                memory_influence={}
+            )
+
         ctx.decision_result = decision_result
         # -----------------------------------------
         # TOOL RETRY INJECTION (post-decision override)
@@ -33,13 +55,13 @@ class DecisionStage:
                     payloads = ctx.extra.get("tool_payloads", [])
                     last_payload = payloads[-1]["payload"] if payloads else {}
 
-                    ctx.decision_result = replace(
-                        ctx.decision_result,
-                        tool=last_tool,
-                        tool_payload=last_payload,
-                    )
+                    ctx.extra["tool_override"] = {
+                        "tool": last_tool,
+                        "payload": last_payload,
+                    }
+
         try:
-            ctx.ir_decision = DecisionIRAdapter.from_result(decision_result)
+            ctx.ir_decision = DecisionIRAdapter.from_result(ctx.decision_result)
         except Exception:
             ctx.extra.setdefault("errors", []).append("decision_ir_adapter_failure")
 

@@ -741,6 +741,8 @@ class GateStage:
             assessment.global_safe,
         )
 
+        verdict = self._apply_memory_policy(ctx, verdict)
+
         # =========================================
         # Π-BASED GATE (Cognitive override layer)
         # =========================================
@@ -1323,3 +1325,74 @@ class GateStage:
             if (composite.delta_w is not None and assessment.recovery_detected)
             else None,
         )
+
+
+    def _apply_memory_policy(
+        self,
+        ctx: Any,
+        verdict: LyapunovVerdict,
+    ) -> LyapunovVerdict:
+
+        try:
+            bundle = getattr(ctx, "bundle", None)
+            memory_features = getattr(bundle, "memory_features", {}) if bundle else {}
+
+            memory_pressure = float(memory_features.get("memory_pressure", 0.0))
+            has_constraints = bool(memory_features.get("has_constraints", False))
+
+            reasons = ctx.extra.setdefault("fusion_reasons", [])
+
+            # -----------------------------------------
+            # HARD MEMORY PRESSURE
+            # -----------------------------------------
+            if memory_pressure > 0.8:
+                if "memory_pressure_hard" not in reasons:
+                    reasons.append("memory_pressure_hard")
+
+                _record_verdict_transition(
+                    ctx,
+                    stage="memory_hard_block",
+                    before=verdict,
+                    after=LyapunovVerdict.ABSTAIN,
+                    reason="memory_pressure_high",
+                )
+                return LyapunovVerdict.ABSTAIN
+
+            # -----------------------------------------
+            # MODERATE MEMORY PRESSURE
+            # -----------------------------------------
+            if memory_pressure > 0.5:
+                if verdict == LyapunovVerdict.ALLOW:
+                    if "memory_pressure_moderate" not in reasons:
+                        reasons.append("memory_pressure_moderate")
+
+                    _record_verdict_transition(
+                        ctx,
+                        stage="memory_soft_constraint",
+                        before=verdict,
+                        after=LyapunovVerdict.REQUIRE_CONFIRMATION,
+                        reason="memory_pressure_moderate",
+                    )
+                    verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
+
+            # -----------------------------------------
+            # CONSTRAINTS
+            # -----------------------------------------
+            if has_constraints:
+                if verdict == LyapunovVerdict.ALLOW:
+                    if "memory_constraints" not in reasons:
+                        reasons.append("memory_constraints")
+
+                    _record_verdict_transition(
+                        ctx,
+                        stage="memory_constraints_enforcement",
+                        before=verdict,
+                        after=LyapunovVerdict.REQUIRE_CONFIRMATION,
+                        reason="memory_constraints",
+                    )
+                    verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
+
+        except Exception:
+            pass
+
+        return verdict

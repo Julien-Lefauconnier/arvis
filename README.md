@@ -84,6 +84,44 @@ This defines a **closed-loop cognitive system with feedback**.
 
 ---
 
+## 🧩 Kernel Subsystems 
+
+ARVIS is structured as a **Cognitive OS kernel composed of explicit subsystems**.
+
+The core kernel subsystems are:
+
+- Process & Scheduler (execution orchestration)
+- Syscalls (execution boundary)
+- VFS (structured namespace and logical storage)
+- Memory (long-term cognitive constraints and preferences)
+
+### Memory Subsystem 
+
+The Memory Subsystem introduces:
+
+- deterministic long-term memory
+- policy-controlled access
+- snapshot-based execution model
+- syscall-based interaction
+- replay-safe memory semantics
+
+Memory is NOT a free-form context or database.
+
+It is a **kernel-managed resource** with strict guarantees:
+
+- memory is accessed through deterministic snapshots
+- snapshots are read-only during execution
+- memory influence is policy-filtered
+- memory is never directly exposed to IR
+
+This ensures:
+
+- deterministic cognition
+- ZKCS compliance (no hidden knowledge leakage)
+- replay-safe execution
+
+---
+
 ## ⚙️ Execution Principle (Critical)
 
 All side-effects in ARVIS are executed through a syscall system.
@@ -351,6 +389,7 @@ Full projection remains a **target architecture**.
 - reproducible & traceable
 - deterministic IR generation and hashing
 - replayable cognitive execution
+- memory-safe cognition (no hidden memory leakage)
 
 ---
 
@@ -373,6 +412,7 @@ ARVIS is structured around a kernel-based cognitive architecture:
 - CognitiveProcess
 - SyscallHandler
 - InterruptBus
+- Kernel Memory Subsystem (deterministic long-term memory)
 
 This layer controls:
 - when cognition executes
@@ -817,6 +857,31 @@ Optional extensions (implementation-dependent):
 - adaptive snapshot
 - tools (runtime execution results)
 
+### Memory and IR
+
+The IR does not expose memory directly.
+
+Memory influences the IR through:
+
+- constraints
+- preferences
+- policy-approved signals
+
+The IR MUST NOT contain:
+
+- raw memory entries
+- memory values
+- repository-level data
+
+Memory is injected into cognition through a deterministic snapshot,
+but only its effects are visible in the IR.
+
+This ensures:
+
+- ZKCS compliance
+- deterministic replay
+- audit safety
+
 ### Key Guarantees
 
 - identical input → identical IR
@@ -999,6 +1064,23 @@ ARVIS follows a **Zero-Knowledge compatible architecture (ZKCS)**:
 - runtime side-effects are isolated
 - IR contains no hidden internal state
 - observability is controlled and explicit
+
+### Memory Safety 
+
+Memory is a restricted kernel resource.
+
+ARVIS enforces:
+
+- no direct memory exposure in IR
+- no raw memory payload in conversation or outputs
+- memory influence is projection-only (constraints and preferences)
+- memory snapshots are immutable during execution
+
+This guarantees that:
+
+- memory cannot introduce hidden knowledge
+- cognition remains ZKCS-compliant
+- all memory influence is explicit and auditable
 
 ---
 

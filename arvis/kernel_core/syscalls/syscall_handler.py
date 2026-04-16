@@ -35,6 +35,13 @@ class SyscallHandler:
         self._local_counter: int = 0
         self._last_tick: int = -1
 
+        # Backward-compatible convenience aliases
+        self.tool_executor = self.services.tool_executor
+        self.vfs_service = self.services.vfs_service
+        self.zip_ingest_service = self.services.zip_ingest_service
+        self.memory_service = self.services.memory_service
+        self.memory_policy_service = self.services.memory_policy_service
+
     def handle(self, syscall: Syscall) -> SyscallResult:
         ctx: Optional[PipelineContextLike] = syscall.args.get("ctx")
         fn: Optional[SyscallFn] = get_syscall(syscall.name)
@@ -148,6 +155,23 @@ class SyscallHandler:
             "tick_end": end_tick,
         }
 
+        # -----------------------------------------
+        # MEMORY JOURNAL ENRICHMENT (ZK-safe)
+        # -----------------------------------------
+        if syscall.name.startswith("memory."):
+            namespace = syscall.args.get("namespace")
+            key = syscall.args.get("key")
+            user_id = syscall.args.get("user_id")
+
+            if namespace is not None:
+                entry["memory_namespace"] = namespace
+
+            if key is not None:
+                entry["memory_key"] = key
+
+            if user_id is not None:
+                entry["memory_user_id"] = user_id
+
         process_id = syscall.args.get("process_id")
         tick = syscall.args.get("tick")
 
@@ -161,6 +185,21 @@ class SyscallHandler:
             entry["artifact"] = result.result.to_dict()
             entry["artifact_timestamp"] = result.result.timestamp
             entry["artifact"]["causal_id"] = entry["syscall_id"]
+        
+        # -----------------------------------------
+        # MEMORY SNAPSHOT — ZK-safe logging
+        # -----------------------------------------
+        if syscall.name == "memory.snapshot" and isinstance(result.result, dict):
+            snapshot = result.result
+
+            entry["memory_snapshot_meta"] = {
+                "total": snapshot.get("total"),
+                "active": snapshot.get("active"),
+            }
+
+        # -----------------------------------------
+        # DEFAULT RESULT LOGGING
+        # -----------------------------------------
         elif result.result is not None:
             entry["result"] = result.result
 
@@ -187,6 +226,23 @@ class SyscallHandler:
 
         if syscall_name in {"vfs.list", "vfs.tree", "vfs.zip.analyze"}:
             return "recompute"
+        
+        # -----------------------------------------
+        # MEMORY SYSCALLS — explicit replay policy
+        # -----------------------------------------
+        if syscall_name in {
+            "memory.get",
+            "memory.list",
+            "memory.snapshot",
+        }:
+            return "journal_only_replay"
+
+        if syscall_name in {
+            "memory.put",
+            "memory.delete",
+            "memory.revoke",
+        }:
+            return "journal_only_replay"
 
         return "unknown"
 

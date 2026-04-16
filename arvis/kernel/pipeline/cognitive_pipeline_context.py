@@ -59,6 +59,9 @@ class CognitivePipelineContext:
     previous_bundle: Optional[Any] = None
     previous_budget: Optional[Any] = None
 
+    memory_snapshot: Optional[Any] = None
+    memory_projection: Optional[dict[str, Any]] = None
+
     # -------------------------
     # Decision layer
     # -------------------------
@@ -241,4 +244,6 @@ class CognitivePipelineContext:
     # Gate overrides
     # -------------------------
     gate_overrides: Optional[GateOverrides] = None
+
+    
     

@@ -23,6 +23,10 @@ The syscall layer enforces:
 - explicit execution boundaries
 - full traceability of all side-effects
 
+Syscalls do not participate in cognition.
+
+They execute only what cognition has already validated as safe.
+
 ---
 
 ## Position in Architecture
@@ -38,6 +42,15 @@ Syscall System
     ↓
 External Effects (tools, memory, adapters)
 ```
+
+IMPORTANT:
+
+Syscalls are ONLY executed after:
+
+- pipeline completion
+- decision validation via finalize_run()
+
+No syscall may be triggered during pipeline stage execution.
 
 ---
 
@@ -106,6 +119,8 @@ Responsibilities:
 - normalize output
 - record execution result
 - provide access to kernel services via ServiceRegistry
+- enforce post-decision execution boundary
+- prevent cognitive-stage invocation
 
 ---
 
@@ -149,7 +164,7 @@ Output:
 Properties:
 
 - tools are external to cognition
-- execution occurs AFTER pipeline completion
+- execution occurs AFTER decision validation (post-finalize_run)
 - failures are captured, not thrown
 
 Example:
@@ -180,18 +195,45 @@ Examples:
 
 ### 3. Memory Syscalls
 
-Used for memory interaction:
+Memory syscalls are **strictly limited to mutation operations**.
 
-- read memory
-- write memory
-- query long-term storage
+ARVIS enforces a **snapshot-based memory model**, where:
 
-IMPORTANT:
+- memory is READ through pipeline snapshots
+- memory is MUTATED only via syscalls
 
-Memory syscalls MUST:
+Allowed operations:
 
-- respect memory policies
-- remain deterministic (given same state)
+- memory.write
+- memory.revoke
+
+Forbidden:
+
+- direct memory read syscalls
+- direct repository queries
+
+---
+
+### Memory Execution Model
+
+```text
+Decision → Syscall(memory.write) → KernelService → Repository
+```
+
+---
+
+### Properties:
+
+- mutation occurs AFTER decision validation
+- mutation is fully observable
+- mutation is replay-safe (not re-executed during replay)
+
+---
+
+### Key Principle
+
+    Memory is not queried at runtime.
+    It is projected into cognition and mutated after decision.
 
 ---
 
@@ -220,7 +262,25 @@ Each entry contains:
     "syscall": str,
     "success": bool,
     "result": Optional[Any],
-    "error": Optional[str]
+    "error": Optional[str],
+
+    # extended observability
+    "timestamp": float,
+    "process_id": Optional[str],
+
+    # memory-specific (if applicable)
+    "memory_mutation": Optional[dict]
+}
+```
+
+Where memory_mutation may include:
+
+```python
+{
+    "operation": "write" | "revoke",
+    "entry_id": str,
+    "scope": str,
+    "policy_applied": bool
 }
 ```
 
@@ -242,6 +302,16 @@ Example services:
 - ZipIngestService
 - MemoryService (future)
 - Tool adapters
+
+CRITICAL:
+
+Syscalls MUST NOT:
+
+- access repositories directly
+- bypass service-layer policies
+- embed business logic
+
+All domain logic MUST reside in kernel services.
 
 ---
 
@@ -297,6 +367,12 @@ Important:
 - side-effects are NOT re-executed during replay
 - only journal is used
 
+For memory syscalls:
+
+- mutations MUST be deterministic given input + state
+- replay MUST NOT reapply mutations
+- journal is the single source of truth during replay
+
 ---
 
 ## Error Handling
@@ -348,12 +424,32 @@ Syscalls MUST NOT:
 
 ---
 
+## Execution Boundary Contract
+
+The syscall system enforces a strict boundary:
+
+| Phase             | Allowed |
+|------------------|--------|
+| Pipeline stages   | ❌ NO syscalls |
+| finalize_run()    | ❌ NO syscalls |
+| Post-decision     | ✅ syscalls allowed |
+
+---
+
+This guarantees:
+
+- no side-effects during cognition
+- no hidden execution paths
+- full determinism of the cognitive process
+
+---
+
 ## Security Model
 
 The syscall layer enforces:
 
 - controlled execution boundaries
-- explicit authorization via pipeline
+- policy-enforced authorization via kernel services
 - isolation from cognitive logic
 
 Future extensions:

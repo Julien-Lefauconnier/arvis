@@ -112,6 +112,47 @@ These defaults MUST be explicitly defined and consistent across implementations.
 
 ---
 
+## 2.6 Memory Influence Model
+
+Memory is a kernel-managed subsystem.
+
+During execution:
+
+- a deterministic memory snapshot is constructed
+- the snapshot is injected into the pipeline context (read-only)
+- cognition is influenced by this snapshot
+
+However, the IR does not expose memory directly.
+
+Instead, memory influences the IR through:
+
+- constraint shaping
+- preference shaping
+- context enrichment
+
+The IR MUST only contain memory-derived projections, not memory itself.
+
+This ensures:
+
+- Zero-Knowledge Cognitive System (ZKCS) compliance
+- deterministic replay
+- audit safety
+
+Memory exposure is therefore:
+
+```text
+Memory Repository
+    ↓
+Policy Filtering
+    ↓
+Memory Snapshot (internal)
+    ↓
+Cognitive Processing
+    ↓
+IR (filtered influence only)
+
+---
+
 ## 3. Canonical IR Structure (v1)
 
 The normative IR object is:
@@ -169,9 +210,27 @@ MUST include:
 - user_id
 - session_id (if available)
 - conversation_mode (if applicable)
-- memory constraints / preferences
+- memory-derived constraints and preferences (normalized, projection-safe)
 - execution context hints
 - additional deterministic context fields (normalized)
+
+IMPORTANT:
+
+The IR context MUST NOT contain raw memory entries.
+
+Memory is a kernel-managed subsystem and is accessed during execution through a memory snapshot.
+
+Only the following may appear in IR context:
+
+- normalized constraints derived from memory
+- preference signals derived from memory
+- policy-approved memory influence
+
+The IR MUST NOT expose:
+
+- raw memory entries
+- memory values or content
+- repository-level data structures
 
 ### 5.3 Decision
 
@@ -323,6 +382,8 @@ The IR MUST satisfy:
 - reason_codes reflect triggered conditions
 - normalized IR is idempotent
 - the IR MUST preserve all semantically relevant information produced by the pipeline
+- memory influence MUST be projection-safe and ZKCS-compliant
+- IR MUST NOT leak raw memory content
 
 ---
 
@@ -341,6 +402,22 @@ Replay MUST produce:
 - identical IR after normalization
 - independence from runtime execution order
 - independence from scheduler behavior
+
+### Memory Replay Semantics
+
+Memory is time-dependent and must not be recomputed during replay.
+
+Therefore:
+
+- the memory snapshot used during execution MUST be considered part of the execution context
+- replay MUST rely on journaled memory exposure
+- replay MUST NOT recompute memory state dynamically
+
+This ensures:
+
+- strict determinism
+- audit reproducibility
+- temporal consistency of memory influence
 
 ---
 
@@ -389,6 +466,8 @@ The system MUST NOT:
 - generate non-deterministic ordering
 - include hidden runtime state
 - mutate IR after hashing
+- expose raw memory entries in IR
+- recompute memory during replay
 
 ---
 

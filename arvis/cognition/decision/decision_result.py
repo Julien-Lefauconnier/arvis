@@ -29,6 +29,11 @@ class DecisionResult:
 
     context_hints: Dict[str, Any] = field(default_factory=dict)
 
+    # -----------------------------------------------------
+    # Memory influence (ZK-safe projection)
+    # -----------------------------------------------------
+    memory_influence: Dict[str, Any] = field(default_factory=dict)
+
     @classmethod
     def empty(cls) -> "DecisionResult":
         """

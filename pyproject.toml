@@ -37,7 +37,7 @@ classifiers = [
 dependencies = [
   "jsonschema>=4.0",
   "pyyaml>=6.0",
-  "veramem-kernel[crypto]==1.1.9"
+  "veramem-kernel[crypto]==1.2.0"
 ]
 
 [project.optional-dependencies]

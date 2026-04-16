@@ -52,3 +52,4 @@ class DecisionTrace:
     pending_actions: Optional[Any] = None
     events: Optional[Any] = None
     coherence_policy: Optional[Any] = None
+    memory_influence: Optional[dict[str, Any]] = None

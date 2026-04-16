@@ -52,6 +52,22 @@ ARVIS is implemented as a deterministic system with the following architectural 
 
 ---
 
+## Kernel Resources
+
+ARVIS defines explicit kernel-managed resources:
+
+- Processes (execution units)
+- VFS (structured data namespace)
+- Memory (cognitive continuity and constraints)
+
+These resources are:
+
+- accessed via syscalls
+- mediated through kernel services
+- strictly controlled by the Kernel Core
+
+---
+
 ### Execution Flow
 
 ```text
@@ -136,6 +152,12 @@ It is accessed exclusively via:
 ```python
 KernelServiceRegistry
 ```
+
+Core kernel services include:
+
+- VFS Service
+- ZIP Ingest Service
+- Memory Service
 
 ### Responsibilities
 
@@ -305,7 +327,7 @@ Maps CognitiveIR (+ authorized context) → response strategy
 
 2. Memory Integration
 
-- injects memory signals
+- applies memory-derived constraints and preferences
 - constrains actions
 - influences strategy selection
 
@@ -356,25 +378,117 @@ This guarantees:
 
 ---
 
-## Memory System
+## Kernel Memory Subsystem
 
-ARVIS includes a structured memory subsystem.
+ARVIS includes a **kernelized memory subsystem**, implemented as part of the Kernel Core.
 
-Components:
+Memory is a **first-class kernel resource**, equivalent in architectural role to:
 
-- long-term memory registry
-- memory policy gates
-- memory projection into cognition and conversation
+- VFS (structured namespace)
+- Syscalls (execution boundary)
 
-Memory can:
-- inject contextual signals
-- constrain decisions
-- constrain response strategies (without introducing new semantics)
+It provides:
 
-Memory is integrated at:
+- deterministic long-term memory storage
+- policy-controlled access
+- snapshot-based execution semantics
+- syscall-based mutation
 
-- pipeline level (state construction)
-- conversation level (response shaping)
+---
+
+### Memory Architecture
+
+The memory subsystem follows a strict execution pipeline:
+
+```text
+Repository → Policy → Projection → Snapshot
+```
+
+Where:
+
+- Repository = storage layer (no policy)
+- Policy = filtering (revoked / expired / visibility)
+- Projection = execution view
+- Snapshot = deterministic, immutable representation
+
+---
+
+### Kernel Integration
+
+Memory is exposed through:
+
+```python
+KernelServiceRegistry.memory_service
+```
+
+All memory access MUST go through the memory service.
+
+- Direct repository access is forbidden.
+
+---
+
+### Pipeline Integration
+
+Memory is injected into the pipeline as a read-only snapshot:
+
+```text
+CognitivePipelineContext.long_memory_snapshot
+```
+
+Constraints:
+
+- snapshot is immutable during execution
+- no stage may mutate memory
+- memory influences decision but does not redefine cognition
+
+---
+
+### IR Exposure
+
+Memory is NOT exposed directly in IR.
+
+Only derived constraints are allowed:
+
+```json
+{
+  "long_memory_constraints": [...],
+  "long_memory_preferences": {...}
+}
+```
+
+---
+
+### Key Principle
+
+  Memory constrains cognition.
+  It does NOT introduce new semantics.
+
+
+---
+
+### Mutation Model
+
+Memory mutations occur exclusively via syscalls:
+
+- memory.write
+- memory.revoke
+
+They are:
+
+- post-decision
+- replay-safe
+- fully observable
+
+---
+
+### Summary
+
+Memory in ARVIS is:
+
+- deterministic
+- policy-controlled
+- snapshot-based
+- kernel-managed
 
 ---
 
@@ -609,6 +723,9 @@ Scheduler
 > ARVIS is not a layered architecture.
 > It is a **closed-loop cognitive dynamical system implemented as a pipeline**.
 
+> Memory is not a passive data store.
+> It is a kernel-governed constraint system influencing cognition under strict policy control.
+
 ---
 
 ## Logical Components (Functional View)
@@ -627,7 +744,7 @@ Although implemented as a pipeline, ARVIS can be decomposed into functional role
 ### 1. State Construction
 
 * Bundle Stage
-* Context + memory aggregation
+* Context + memory snapshot integration (read-only)
 
 → produces an **explicit cognitive state**
 

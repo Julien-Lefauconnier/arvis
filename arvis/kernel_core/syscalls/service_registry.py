@@ -18,3 +18,5 @@ class KernelServiceRegistry:
     tool_executor: Optional[Any] = None
     vfs_service: Optional[Any] = None
     zip_ingest_service: Optional[Any] = None
+    memory_service: Optional[Any] = None
+    memory_policy_service: Optional[Any] = None

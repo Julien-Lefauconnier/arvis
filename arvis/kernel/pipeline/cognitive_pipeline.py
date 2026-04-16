@@ -262,9 +262,17 @@ class CognitivePipeline:
         if getattr(ctx, "ir_context", None) is not None:
             return
 
-        long_memory = getattr(ctx, "long_memory", {}) or {}
-        constraints = tuple(long_memory.get("constraints", []) or [])
-        preferences = long_memory.get("preferences", {}) or {}
+        memory_view = (
+            getattr(ctx, "memory_projection", None)
+            or getattr(ctx, "long_memory", {})
+            or {}
+        )
+
+        constraints = tuple(memory_view.get("constraints", []) or [])
+        preferences = memory_view.get("preferences", {}) or {}
+
+        memory_projection = getattr(ctx, "memory_projection", None) or {}
+
         conversation_mode = None
 
         conversation_context = getattr(ctx, "conversation_context", None)
@@ -276,6 +284,13 @@ class CognitivePipeline:
 
         if conversation_mode is not None:
             conversation_mode = str(getattr(conversation_mode, "value", conversation_mode))
+        
+        memory_present = bool(memory_projection)
+        memory_pressure = float(memory_projection.get("memory_pressure", 0.0) or 0.0)
+        memory_has_constraints = bool(memory_projection.get("has_constraints", False))
+        memory_constraint_count = len(tuple(memory_projection.get("constraints", []) or ()))
+        memory_has_language_pref = bool(memory_projection.get("has_language_pref", False))
+        memory_has_timezone = bool(memory_projection.get("has_timezone", False))
 
         ctx.ir_context = CognitiveContextIR(
             user_id=ctx.user_id,
@@ -283,7 +298,18 @@ class CognitivePipeline:
             conversation_mode=conversation_mode,
             long_memory_constraints=constraints,
             long_memory_preferences=preferences,
-            extra={},
+            memory_present=memory_present,
+            memory_pressure=memory_pressure,
+            memory_has_constraints=memory_has_constraints,
+            memory_constraint_count=memory_constraint_count,
+            memory_has_language_pref=memory_has_language_pref,
+            memory_has_timezone=memory_has_timezone,
+            extra={
+                "memory_pressure": memory_pressure,
+                "has_constraints": memory_has_constraints,
+                "has_timezone": memory_has_timezone,
+                "has_language_pref": memory_has_language_pref,
+            }
         )
     
     def _refresh_ir_context_extra(self, ctx: CognitivePipelineContext) -> None:
@@ -602,6 +628,7 @@ class CognitivePipeline:
             pending_actions=ctx.pending_actions,
             events=ctx.events,
             coherence_policy=ctx.coherence_policy,
+            memory_influence=getattr(ctx.decision_result, "memory_influence", None),
         )
 
         ctx.trace = trace

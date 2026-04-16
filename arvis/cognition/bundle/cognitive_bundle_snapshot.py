@@ -40,5 +40,10 @@ class CognitiveBundleSnapshot:
 
     generated_at: datetime = field(default_factory=utcnow)
 
+    # -----------------------------------------------------
+    # Derived memory influence (ZKCS-safe)
+    # -----------------------------------------------------
+    memory_features: Dict[str, Any] = field(default_factory=dict)
+
     # Declarative context hints (MemoryLong-driven)
     context_hints: Dict[str, Any] = field(default_factory=dict)
