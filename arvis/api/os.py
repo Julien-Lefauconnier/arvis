@@ -145,9 +145,8 @@ class CognitiveRuntime:
         # -----------------------------------------
         result = None
 
-        for _ in range(100):  # safety guard
+        for _ in range(100):
             decision = self.scheduler.tick()
-
             selected_id = decision.selected_process_id
 
             if selected_id is None:
@@ -155,27 +154,8 @@ class CognitiveRuntime:
 
             proc = self.runtime_state.get_process(selected_id)
 
-            # -----------------------------------------
-            # TERMINAL STATE → source of truth
-            # -----------------------------------------
-            if proc.status == CognitiveProcessStatus.COMPLETED:
-                result = proc.last_result
-                break
-
-            if proc.status == CognitiveProcessStatus.ABORTED:
-                error = proc.last_error or "unknown_error"
-                raise RuntimeError(f"Process aborted: {error}")
-
-            if proc.status == CognitiveProcessStatus.WAITING_CONFIRMATION:
-                result = proc.last_result
-                break
-
-            if decision.result is not None:
-                result = decision.result
-                break
-
-            if proc.last_result is not None:
-                result = proc.last_result
+            if self._is_exit_process_state(proc):
+                result = self._extract_exit_result(proc, decision)
                 break
 
         if result is None:
@@ -211,6 +191,7 @@ class CognitiveRuntime:
                     args={
                         "result": effective_result,
                         "ctx": ctx,
+                        "process_id": process.process_id.value,
                     },
                 )
             )
@@ -221,6 +202,36 @@ class CognitiveRuntime:
             result=result,
             state=ctx.cognitive_state,
         )
+    
+
+    def _is_exit_process_state(self, proc: Any) -> bool:
+        return proc.status in (
+            CognitiveProcessStatus.COMPLETED,
+            CognitiveProcessStatus.WAITING_CONFIRMATION,
+            CognitiveProcessStatus.BLOCKED,
+            CognitiveProcessStatus.ABORTED,
+        )
+
+    def _extract_exit_result(self, proc: Any, decision: Any) -> Any:
+        if proc.status == CognitiveProcessStatus.ABORTED:
+            error = proc.last_error or "unknown_error"
+            raise RuntimeError(f"Process aborted: {error}")
+
+        if proc.status in (
+            CognitiveProcessStatus.COMPLETED,
+            CognitiveProcessStatus.WAITING_CONFIRMATION,
+            CognitiveProcessStatus.BLOCKED,
+        ):
+            if proc.last_result is None:
+                raise RuntimeError(
+                    f"Process exited in state {proc.status.value} without result"
+                )
+            return proc.last_result
+
+        if getattr(decision, "result", None) is not None:
+            return decision.result
+
+        raise RuntimeError("Execution exited without resolvable result")
 
 
 # =====================================================

@@ -9,14 +9,17 @@ class RuntimeStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
 
         try:
-            runtime = ctx.control_runtime
+            runtime = getattr(ctx, "control_runtime", None)
+            if runtime is None:
+                getter = getattr(pipeline, "_get_control_runtime", None)
+                if callable(getter):
+                    runtime = getter(ctx.user_id)
+                    ctx.control_runtime = runtime
 
-            runtime.last_risk = float(ctx.collapse_risk)
-            runtime.inertia_risk = float(ctx.collapse_risk)
-
-            runtime.last_action = str(
-                getattr(ctx.action_decision, "mode", None)
-            )
+            if runtime is not None:
+                runtime.last_risk = float(ctx.collapse_risk)
+                runtime.inertia_risk = float(ctx.collapse_risk)
+                runtime.last_action = str(getattr(ctx.action_decision, "mode", None))
 
         except Exception:
             pass

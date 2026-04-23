@@ -245,5 +245,7 @@ class CognitivePipelineContext:
     # -------------------------
     gate_overrides: Optional[GateOverrides] = None
 
-    
-    
+    # -------------------------
+    # Runtime
+    # -------------------------
+    control_runtime: Optional[Any] = None

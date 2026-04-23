@@ -269,10 +269,24 @@ class CognitiveProcess:
     # -------------------------
 
     def is_terminal(self) -> bool:
+        # backward compatibility alias
+        return self.is_final()
+    
+    def is_final(self) -> bool:
         return self.status in (
             CognitiveProcessStatus.COMPLETED,
             CognitiveProcessStatus.ABORTED,
         )
+
+    def is_parked(self) -> bool:
+        return self.status in (
+            CognitiveProcessStatus.BLOCKED,
+            CognitiveProcessStatus.WAITING_CONFIRMATION,
+            CognitiveProcessStatus.SUSPENDED,
+        )
+
+    def is_schedulable(self) -> bool:
+        return self.status == CognitiveProcessStatus.READY and self.has_budget()
 
     def mark_running(self, tick: int, score: Optional[float] = None) -> None:
         ProcessTransitionManager.transition(self, CognitiveProcessStatus.RUNNING)

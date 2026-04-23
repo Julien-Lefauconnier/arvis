@@ -35,6 +35,8 @@ class CognitiveRuntimeState:
 
     def register_process(self, process: CognitiveProcess) -> None:
         process.validate()
+        if process.process_id in self.processes:
+            raise ValueError(f"Duplicate process id: {process.process_id.value}")
         self.processes[process.process_id] = process
         self.resource_state.note_process_seen()
 

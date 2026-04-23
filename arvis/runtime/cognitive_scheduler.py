@@ -35,14 +35,18 @@ class CognitiveScheduler:
     SCHEDULER INVARIANTS :
 
         1. At most one RUNNING process at any time
-        2. Terminal states are:
-        - COMPLETED
-        - WAITING_CONFIRMATION
-        - ABORTED
-        These states MUST NOT be re-enqueued
-        3. READY queue contains only executable processes
-        4. One tick = one execution step
-        5. outcome.completed=True is the ONLY valid finalization trigger
+        2. Final states:
+            - COMPLETED
+            - ABORTED
+
+            Parked states (non schedulable, resumable):
+            - BLOCKED
+            - WAITING_CONFIRMATION
+            - SUSPENDED
+        3. Only READY processes are schedulable.
+        4. One tick = one execution step.
+        4. outcome.completed=True is the only valid pipeline finalization trigger.
+        
 
     """
 
@@ -73,11 +77,15 @@ class CognitiveScheduler:
         self.hooks = hooks
 
     def enqueue(self, process: CognitiveProcess) -> None:
+        if process.is_final():
+            raise ValueError(
+                f"Cannot enqueue final process: {process.process_id.value} [{process.status.value}]"
+            )
         self.runtime_state.register_process(process)
         state = self.runtime_state.scheduler_state
         state.remove_from_all_queues(process.process_id)
         process.mark_ready()
-        state.ready_queue.append(process.process_id)
+        state.append_unique(state.ready_queue, process.process_id)
         self.runtime_state.append_event(
             "process_enqueued",
             {
@@ -96,7 +104,7 @@ class CognitiveScheduler:
         if state.active_process_id == process_id:
             state.active_process_id = None
         process.mark_suspended(reason=reason)
-        state.suspended_queue.append(process_id)
+        state.append_unique(state.suspended_queue, process_id)
         self.runtime_state.append_event(
             "process_suspended",
             {"process_id": process_id.value, "reason": reason},
@@ -109,7 +117,7 @@ class CognitiveScheduler:
         if state.active_process_id == process_id:
             state.active_process_id = None
         process.mark_blocked(waiting_on=waiting_on)
-        state.blocked_queue.append(process_id)
+        state.append_unique(state.blocked_queue, process_id)
         self.runtime_state.append_event(
             "process_blocked",
             {"process_id": process_id.value, "waiting_on": waiting_on},
@@ -122,7 +130,7 @@ class CognitiveScheduler:
         if state.active_process_id == process_id:
             state.active_process_id = None
         process.mark_waiting_confirmation()
-        state.waiting_confirmation_queue.append(process_id)
+        state.append_unique(state.waiting_confirmation_queue, process_id)
         self.runtime_state.append_event(
             "process_waiting_confirmation",
             {"process_id": process_id.value},
@@ -133,7 +141,7 @@ class CognitiveScheduler:
         state = self.runtime_state.scheduler_state
         state.remove_from_all_queues(process_id)
         process.mark_ready()
-        state.ready_queue.append(process_id)
+        state.append_unique(state.ready_queue, process_id)
         self.runtime_state.append_event(
             "process_resumed",
             {"process_id": process_id.value},
@@ -232,7 +240,7 @@ class CognitiveScheduler:
                 # -----------------------------
                 process.mark_completed(result=result)
                 state.active_process_id = None
-                state.completed_queue.append(process.process_id)
+                state.append_unique(state.completed_queue, process.process_id)
                 self.runtime_state.append_event(
                     "process_completed",
                     {
@@ -255,7 +263,7 @@ class CognitiveScheduler:
             if process.has_budget():
                 process.last_result = None
                 process.mark_ready()
-                state.ready_queue.append(process.process_id)
+                state.append_unique(state.ready_queue, process.process_id)
 
                 self.runtime_state.append_event(
                     "process_preempted",
@@ -272,7 +280,7 @@ class CognitiveScheduler:
             # Budget exhausted BEFORE completion
             # -----------------------------
             process.mark_suspended(reason="budget_exhausted")
-            state.suspended_queue.append(process.process_id)
+            state.append_unique(state.suspended_queue, process.process_id)
  
             self.hooks.on_suspended(process, "budget_exhausted")
 
@@ -296,7 +304,7 @@ class CognitiveScheduler:
             # ----------------------------------------
             process.mark_aborted(error=str(exc))
             state.active_process_id = None
-            state.aborted_queue.append(process.process_id)
+            state.append_unique(state.aborted_queue, process.process_id)
             self.runtime_state.append_event(
                 "process_aborted",
                 {
@@ -330,9 +338,7 @@ class CognitiveScheduler:
 
         for process_id in state.ready_queue:
             process = self.runtime_state.get_process(process_id)
-            if process.status != CognitiveProcessStatus.READY:
-                continue
-            if not process.has_budget():
+            if not process.is_schedulable():
                 continue
 
             score = self._score(process)
@@ -405,7 +411,7 @@ class CognitiveScheduler:
             if event.type.value == "system_signal":
                 targets = [
                     pid for pid, proc in self.runtime_state.processes.items()
-                    if not proc.is_terminal()
+                    if not proc.is_final()
                 ]
 
             for process_id in targets:
@@ -421,7 +427,7 @@ class CognitiveScheduler:
                 ):
                     state.remove_from_all_queues(process_id)
                     process.mark_ready()
-                    state.ready_queue.append(process_id)
+                    state.append_unique(state.ready_queue, process_id)
                     woke_any_process = True
 
                     self.runtime_state.append_event(

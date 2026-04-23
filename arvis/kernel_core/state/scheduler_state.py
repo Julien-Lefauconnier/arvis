@@ -38,8 +38,13 @@ class SchedulerState:
             self.completed_queue,
             self.aborted_queue,
         ):
-            if process_id in queue:
+            while process_id in queue:
                 queue.remove(process_id)
+
+    def append_unique(self, queue: list[CognitiveProcessId], process_id: CognitiveProcessId) -> None:
+        if process_id not in queue:
+            queue.append(process_id)
+
 
     # -----------------------------------------------------
     # INVARIANTS
