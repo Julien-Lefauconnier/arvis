@@ -5,7 +5,7 @@
 ARVIS is a **Cognitive Operating System**.
 
 It does not generate answers directly.
-It **controls how decisions are allowed to exist and how execution is safely performed**.
+It **controls how decisions are allowed to exist, how cognition is evaluated, and how execution is safely orchestrated**.
 
 ---
 
@@ -21,7 +21,8 @@ ARVIS replaces it with:
 
 ```text
 input 
-→ constrained cognition 
+→ runtime orchestration
+→ constrained cognition
 → validated decision 
 → controlled response
 ```
@@ -37,9 +38,9 @@ It must pass through:
 
 Then, if allowed:
 
-a response strategy is selected
-a response plan is constructed
-the response is realized (template or LLM)
+- a response strategy is selected
+- a response plan is constructed
+- the response is realized (template or LLM)
 
 ---
 
@@ -75,7 +76,7 @@ Instead of optimizing outputs, ARVIS enforces:
 * **when decisions are allowed**
 * **under which conditions execution is safe**
 
-ARVIS can interoperate with external systems through adapter layers.
+ARVIS can interoperate with external systems through adapter layers and IR boundaries.
 
 These adapters allow:
 - signal translation
@@ -89,15 +90,17 @@ Example:
 
 ## How It Works (Conceptually)
 
-Every input is processed through a deterministic cognitive pipeline, orchestrated by a Kernel Core.
+Every input is processed through a deterministic runtime + pipeline architecture.
 
 At a high level:
 
-1. Create a cognitive process in the Kernel Core
-2. Execute the pipeline (possibly iteratively)
-3. Normalize them into a canonical `CognitiveState`
-4. Compute trace, timeline, and IR projections
-5. Expose safe self-observation through the reflexive layer
+1. Receive input through CognitiveOS
+2. Build execution context
+3. Delegate orchestration to CognitiveRuntime
+4. Execute CognitivePipeline
+5. Build canonical CognitiveState
+6. Export CognitiveResultView / IR / trace
+7. Expose safe self-observation through the reflexive layer
 
 If the system is:
 
@@ -122,13 +125,34 @@ This enables:
 
 Important:
 
-- the pipeline defines *what* happens
-- the Kernel Core defines *when and how* it happens
+- the pipeline defines *what cognition means*
+- CognitiveRuntime defines *how execution is orchestrated*
+- the Kernel Core defines *system authority and scheduling boundaries*
 
 Execution is split into two phases:
 
 1. Cognitive phase (pipeline, pure)
-2. Execution phase (syscalls, side-effects)
+2. Execution phase (tools / syscalls / side-effects)
+
+---
+
+## Public API Layer
+
+ARVIS exposes a stable façade:
+
+python +from arvis.api import CognitiveOS +
+
+This façade is intentionally thin.
+
+It provides:
+
+- run(...)
+- run_ir(...)
+- replay(...)
+- inspect(...)
+- tool registration
+
+Internal mechanics are delegated to runtime and pipeline layers.
 
 ---
 
@@ -184,7 +208,7 @@ Always under:
 - a constrained LinguisticAct
 
 LLMs NEVER trigger execution.
-All execution must go through the Kernel Core and syscall system.
+All execution must go through runtime / kernel boundaries and syscall systems.
 
 ---
 
@@ -223,6 +247,7 @@ This holds even with:
 
 - iterative execution
 - scheduling
+- replay verification
 
 ---
 
@@ -263,7 +288,7 @@ and side-effects are fully recorded via syscalls
 
 ---
 
-## Memory (Emerging Layer)
+## Memory Layer
 
 ARVIS includes a structured memory system:
 
@@ -277,7 +302,8 @@ Memory can:
 - constrain actions
 - inject contextual signals
 
-Memory access MAY be implemented via syscalls when it involves external storage.
+Memory snapshots may influence cognition.
+Mutable storage boundaries remain externalized through controlled services/syscalls.
 
 ---
 
@@ -340,11 +366,7 @@ This interface:
 - provides a stable contract
 - enables integration with external systems
 
-Main entrypoint:
-
-```python
-from arvis.api import CognitiveOS
-```
+Main entrypoint: `CognitiveOS`
 
 ---
 
@@ -361,14 +383,30 @@ The IR is:
 It allows:
 
 - replay of decisions
+- commitment verification
 - LLM interaction
 - system interoperability
 
 IR is the canonical boundary between:
 
 - cognition (pipeline)
+- orchestration (runtime)
 - execution (syscalls)
 - response (conversation layer)
+
+---
+
+## Internal Modularity
+
+ARVIS internals are now organized into explicit modules:
+
+- runtime services
+- pipeline services
+- result / trace factories
+- public views
+- replay components
+
+This improves maintainability while preserving deterministic behavior.
 
 ---
 

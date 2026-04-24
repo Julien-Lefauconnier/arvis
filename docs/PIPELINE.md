@@ -2,7 +2,8 @@
 
 ## Overview
 
-The ARVIS Cognitive Pipeline is a **deterministic, stage-based cognitive system**.
+The ARVIS Cognitive Pipeline is a **deterministic, stage-based cognitive system**
+implemented through a modular service architecture.
 
 It transforms input into a **stability-constrained, validated cognitive intent**.
 
@@ -22,7 +23,8 @@ It is a **pure cognitive protocol** enforcing:
 > The pipeline defines cognition.  
 > It does NOT control execution.
 
-Execution is handled exclusively by the **Kernel Core**.
+Execution orchestration is handled by the **Kernel Core** and `CognitiveRuntime`.
+The pipeline remains responsible only for cognitive semantics.
 
 ---
 
@@ -73,6 +75,38 @@ Key properties:
 - pipeline is logically atomic
 - execution is physically iterative
 - preemption does NOT affect final result
+
+---
+
+## Runtime Integration
+
+The public execution path is:
+
+```text
+CognitiveOS
+  → CognitiveRuntime
+  → CognitivePipeline
+  → pipeline services / factories
+  → CognitiveResultView / IR
+```
+
+`CognitiveRuntime` is responsible for orchestration.
+
+It:
+
+- receives a `CognitivePipelineContext`
+- manages runtime execution boundaries
+- delegates cognitive work to the pipeline
+- returns a state/result execution envelope
+
+It does NOT:
+
+- define cognitive semantics
+- alter stage logic
+- make decisions
+- bypass pipeline finalization
+
+This preserves the separation between runtime orchestration and cognitive logic.
 
 ---
 
@@ -131,6 +165,47 @@ It MUST:
 - produce a non-null executable intent
 
 No other component may emit a terminal decision.
+
+---
+
+## Modular Pipeline Architecture
+
+`CognitivePipeline` is now a façade over explicit pipeline services and factories.
+
+The pipeline implementation is decomposed into dedicated modules under:
+
+```text
+arvis/kernel/pipeline/services/
+arvis/kernel/pipeline/factories/
+```
+
+Service responsibilities include:
+
+- bootstrap and context initialization
+- input preparation
+- IR bootstrap
+- stage registry construction
+- stage execution
+- iteration lifecycle
+- runtime compatibility
+- replay execution
+- observability
+- finalization
+- error handling
+- execution synchronization
+
+Factories include:
+
+- `PipelineResultFactory`
+- `PipelineTraceFactory`
+
+This structure keeps the pipeline deterministic while making each responsibility
+isolated, testable, and replaceable.
+
+Important:
+
+> `cognitive_pipeline.py` remains the orchestration façade.
+> Pipeline services implement the specialized internal mechanics.
 
 ---
 
@@ -345,7 +420,7 @@ Handles:
 
 ---
 
-### 15. Execution Eligibility Stage
+### 15. Execution Stage
 
 Determines:
 
@@ -384,6 +459,7 @@ The pipeline produces:
 - a validated cognitive intent
 - a canonical CognitiveState
 - an Intermediate Representation (IR)
+- a normalized result view through the public API layer
 
 The IR is the canonical output of cognition.
 
@@ -392,7 +468,7 @@ The IR is the canonical output of cognition.
 ### Output Contract
 
 ```text
-ctx → finalize_run() → CognitiveState → IR
+ctx → finalize_run() → CognitiveState → PipelineResult → CognitiveResultView / IR
 ```
 
 The IR defines:
@@ -434,9 +510,10 @@ It produces cognition only.
 
 After pipeline completion:
 
-- finalize_run() produces CognitiveState + IR
-- DecisionTrace is built
-- IR is passed to Kernel
+- finalize_run() produces a terminal pipeline result
+- CognitiveState is exposed through the result envelope
+- DecisionTrace is built through pipeline trace factories
+- IR is exported through the API / IR services
 - Kernel MAY trigger syscalls (post-decision)
 - Observability is computed (read-only)
 
@@ -445,7 +522,7 @@ After pipeline completion:
 ## Execution Boundary Reminder
 
 ```text
-Pipeline → finalize_run → IR → Kernel → Syscalls
+CognitiveRuntime → Pipeline → finalize_run → Result / IR → Kernel → Syscalls
 ```
 
 The pipeline ends BEFORE any side-effect occurs.
@@ -505,6 +582,16 @@ All reasoning is:
 
 ---
 
+### 6. Façade over Internals
+
+The public pipeline object should stay thin.
+
+Specialized mechanics belong in services and factories, not in the façade.
+
+This keeps the pipeline readable while preserving deterministic behavior.
+
+---
+
 ## Summary
 
 The ARVIS pipeline is:
@@ -515,8 +602,10 @@ The ARVIS pipeline is:
 
 Execution is:
 
-   delegated to the Kernel Core
+   orchestrated by CognitiveRuntime and the Kernel Core
 
 The pipeline never interacts with reality.
 
 It only determines what would be allowed to happen.
+
+Its implementation is now modular, service-driven, and replay-aware.

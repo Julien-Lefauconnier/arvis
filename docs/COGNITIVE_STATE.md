@@ -10,11 +10,14 @@ It is:
 - normalized
 - contract-validated
 - complete (no semantic loss from execution context)
+- stable across runtime refactors
 
 IMPORTANT:
 
 > The Cognitive State is NOT the pipeline output.
 > It is a **post-processed canonical aggregation** of the full cognitive context.
+
+It converts transient runtime artifacts into a deterministic internal truth model.
 
 ---
 
@@ -29,6 +32,7 @@ Pipeline execution
 → Context aggregation
 → CognitiveStateBuilder
 → CognitiveStateContract validation
+→ Canonical state attached to result context
 ```
 
 In implementation:
@@ -37,6 +41,9 @@ In implementation:
 ctx.cognitive_state = CognitiveStateBuilder.from_context(ctx)
 CognitiveStateContract.validate(ctx.cognitive_state)
 ```
+
+The builder is responsible for normalization and field aggregation.  
+The contract is responsible for admissibility and integrity.
 
 ---
 
@@ -47,12 +54,15 @@ The Cognitive State is the central canonical bridge between:
 - cognitive execution (pipeline)
 - observability and stability metrics
 - IR export layer
+- replay verification
+- reflexive inspection
 
 It ensures that:
 
 - all signals are normalized
 - all values are bounded and valid
 - no implicit state remains in the system
+- downstream layers consume one stable contract instead of scattered runtime fields
 
 ---
 
@@ -65,6 +75,7 @@ The Cognitive State aggregates:
 - decision result
 - confirmation state
 - execution feasibility
+- gate verdict metadata
 
 ### 2. Stability & Risk Signals
 
@@ -72,12 +83,14 @@ The Cognitive State aggregates:
 - stability projection
 - predictive signals
 - risk indicators
+- validity envelope status
 
 ### 3. Control State
 
 - control snapshot
 - exploration parameters
 - regime
+- adaptive modulation state
 
 ### 4. Observability Outputs
 
@@ -85,11 +98,19 @@ The Cognitive State aggregates:
 - multi-horizon projections
 - global stability
 - symbolic state
+- trend / drift summaries
 
 ### 5. Execution Context
 - executable intent
 - action decision
 - pending actions
+- action admissibility state
+
+### 6. Timeline / Trace Anchors
+
+- execution identifiers
+- deterministic commitments
+- replay references
 
 ---
 
@@ -102,6 +123,7 @@ The Cognitive State guarantees:
 - explicit signal representation
 - no hidden computation state
 - compatibility with contract validation
+- stable semantics across implementations
 
 ---
 
@@ -119,11 +141,14 @@ This enforces:
 - signal bounds
 - structural integrity
 - absence of invalid values
+- no NaN / corrupted numeric states
+- required field consistency
 
 If validation fails:
 
 - the state is discarded
 - the system falls back safely
+- invalid state is never exported downstream
 
 ---
 
@@ -144,12 +169,15 @@ StateIRAdapter.from_state(ctx.cognitive_state)
 | CognitiveState | internal canonical state        |
 | IR             | external machine representation |
 
-
 The IR:
 
 - may omit internal fields
 - may reorganize structure
 - is optimized for portability
+- is versioned independently from runtime internals
+
+The Cognitive State exists for correctness.  
+The IR exists for interoperability.
 
 ---
 
@@ -163,6 +191,8 @@ The Cognitive State enforces:
 - no out-of-bound values
 - consistency with pipeline outputs
 - consistency with observability projections
+- consistency with contract schemas
+- deterministic rebuild under identical inputs
 
 ---
 
@@ -179,6 +209,8 @@ CognitiveState
 → External systems
 ```
 
+All downstream representations must derive from this layer, never bypass it.
+
 ---
 
 ## Important Distinction
@@ -189,7 +221,29 @@ The Cognitive State is NOT:
 - a response
 - a signal registry
 - a user-facing object
+- a mutable working memory store
+- a transport contract
 
 It is:
 
     the canonical internal snapshot of cognition after validation and stabilization.
+
+---
+
+## Why It Exists
+
+Without a canonical state, systems drift into:
+
+- duplicated runtime fields
+- hidden coupling
+- inconsistent exports
+- replay ambiguity
+- brittle integrations
+
+ARVIS uses CognitiveState to prevent those failure modes.
+
+---
+
+## One-Line Summary
+
+Pipeline execution computes cognition. CognitiveState freezes it into canonical truth.

@@ -1,153 +1,309 @@
-# Observability & Reflexive Interface
+# Reflexive Layer
 
-## Definition
+## Overview
 
-ARVIS provides a **read-only observability and reflexive interface** allowing safe introspection of the cognitive system.
+ARVIS provides an explicit **Reflexive Layer**: a deterministic, read-only system for safe introspection, observability, explanation, and compliance-oriented self-description.
 
-This layer is:
+This layer exists **after cognition** and never participates in decision formation.
 
-- deterministic
-- non-causal
-- post-execution
-- safe for external exposure
+It enables ARVIS to inspect, explain, and expose its own structure without compromising determinism.
 
-IMPORTANT:
+---
 
-> This layer does NOT perform cognition.
-> It only exposes structured projections of the system state.
+## Core Principle
+
+> Reflexive systems observe cognition.  
+> They do not perform cognition.
+
+The Reflexive Layer has:
+
+- no decision authority
+- no side effects
+- no mutation privileges
+- no hidden execution path
+- no access escalation
+
+It is strictly observational.
 
 ---
 
 ## Architectural Position
 
-This layer operates AFTER pipeline execution:
+The Reflexive Layer operates after finalized cognitive execution.
 
 ```text
-Pipeline
-→ Observability
+Input
+→ Kernel / Runtime
+→ Cognitive Pipeline
 → CognitiveState
 → IR
-→ Reflexive Interface (read-only)
+→ Trace / Timeline
+→ Reflexive Layer
+→ Safe External Views
+```
+
+It consumes canonical outputs and produces safe introspection artifacts.
+
+---
+
+## Why It Exists
+
+Most AI systems expose only:
+
+- raw logs
+- opaque probabilities
+- post-hoc explanations
+- unstructured traces
+
+ARVIS instead exposes structured reflexive artifacts.
+
+This enables:
+
+- trustworthy introspection
+- deterministic explainability
+- operator visibility
+- compliance evidence
+- replay-aware diagnostics
+
+---
+
+## Main Components
+
+### 1. Reflexive Snapshots
+
+Canonical read-only snapshots describing the system after execution.
+
+Examples:
+
+- active architecture profile
+- runtime mode
+- exposed capabilities
+- execution context summary
+- safety posture
+
+Implemented through:
+
+```text
+reflexive/snapshot/
 ```
 
 ---
 
-## Components
+### 2. Introspection Services
 
-### 1. Observability Layer (Core)
+Structured introspection of specific domains.
 
-Implemented via:
+Available domains include:
 
-```python
-obs = ObservabilityBuilder.build(ctx)
+- architecture introspection
+- cognition introspection
+- runtime introspection
+- uncertainty introspection
+- math / stability introspection
+- world-model introspection
+- decision introspection
+- counterfactual introspection
+
+Implemented through:
+
+```text
+reflexive/introspection/
 ```
 
-Provides:
-
-- predictive modeling
-- multi-horizon projections
-- global stability
-- system tension
-- symbolic state
-
 ---
 
-### 2. Stability Projection & Statistics
+### 3. Capability Registry
 
-Derived from:
+ARVIS can expose what it is capable of doing in a deterministic and declarative form.
 
-- StabilityStateProjector
-- StabilityStatistics
+Examples:
 
-Provides:
+- supports replay
+- supports IR export
+- supports timeline commitments
+- supports tool execution
+- supports reflexive rendering
 
-- projected stability
-- statistical interpretation
+Implemented through:
 
----
-
-### 3. Decision Trace (Primary Reflexive Artifact)
-
-```python
-DecisionTrace(...)
+```text
+reflexive/capabilities/
 ```
 
-This is the main reflexive output.
-
-Contains:
-
-- decision flow
-- stability state
-- conflict state
-- predictive state
-- symbolic state
+This allows external systems to inspect capability posture safely.
 
 ---
 
-### 4. Cognitive State (Canonical Snapshot)
+### 4. Timeline Reflexive Views
 
-Represents:
+ARVIS can inspect execution history through safe timeline projections.
 
-- normalized system state
-- validated signals
-- full cognitive snapshot
+Examples:
 
----
+- temporal comparisons
+- execution deltas
+- behavioral trends
+- stability evolution
+- historical summaries
 
-5. Intermediate Representation (IR)
-
-Provides:
-
-- portable reflexive view
-- replay capability
-- external introspection
-
--
-
-## What Happened to "Reflexive Layer"?
-
-The original reflexive layer has been decomposed into concrete systems:
-
-| Old Concept        | New Implementation     |
-| ------------------ | ---------------------- |
-| reflexive snapshot | CognitiveState         |
-| introspection      | Observability          |
-| explanation        | DecisionTrace          |
-| compliance         | CognitiveStateContract |
-| external exposure  | IR                     |
+Implemented through the veramem-kernel dependance
 
 ---
 
-## Guarantees
+### 5. Compliance & Attestation
 
-This layer ensures:
+The Reflexive Layer can emit compliance-oriented evidence describing system behavior.
 
-- no side effects
-- no influence on decisions
-- deterministic outputs
-- full traceability
+Examples:
+
+deterministic execution support
+traceability support
+replay support
+decision boundary guarantees
+architectural separation guarantees
+
+Implemented through:
+
+```text
+reflexive/compliance/
+```
 
 ---
 
-## Design Principle
+### 6. Reflexive Rendering
 
-ARVIS does not expose internal state directly.
+Structured introspection outputs can be transformed into readable views.
 
-It exposes:
+Examples:
 
-    structured, validated, and safe projections of cognition
+- perator dashboards
+- machine-readable snapshots
+- audit summaries
+- explainability reports
+
+Implemented through:
+
+```text
+reflexive/rendering/
+```
 
 ---
 
-## Summary
+## What the Reflexive Layer Reads
 
-The reflexive capability of ARVIS is no longer a single layer.
+The Reflexive Layer may consume:
 
-It is a distributed, deterministic observation system composed of:
-
-- Observability
 - CognitiveState
-- DecisionTrace
 - IR
+- DecisionTrace
+- Timeline entries
+- Capability registries
+- Runtime metadata
+- Stability summaries
 
-Together, they form the Reflexive Interface of the Cognitive OS.
+All inputs are post-execution artifacts.
+
+---
+
+## What It Must Never Do
+
+The Reflexive Layer MUST NOT:
+
+- change decisions
+- re-run cognition silently
+- mutate memory
+- call tools autonomously
+- inject hidden context
+- override gate verdicts
+- alter IR semantics
+
+---
+
+## Determinism Guarantees
+
+Given identical finalized cognition and identical configuration, reflexive outputs must remain deterministic.
+
+This includes:
+
+- snapshots
+- explanations
+- capability views
+- rendered summaries
+- compliance attestations
+
+---
+
+## Relation to CognitiveState
+
+| Layer           | Role                           |
+| --------------- | ------------------------------ |
+| CognitiveState  | internal canonical truth       |
+| Reflexive Layer | safe self-observation of truth |
+
+The Reflexive Layer may read the CognitiveState but does not define it.
+
+---
+
+## Relation to IR
+
+| Layer           | Role                                 |
+| --------------- | ------------------------------------ |
+| IR              | portable machine contract            |
+| Reflexive Layer | introspection and explanation system |
+
+IR is the external execution artifact.
+Reflexive outputs are higher-level structured views derived from canonical artifacts.
+
+This is complementary, not redundant.
+
+---
+
+## Relation to Timeline
+
+The timeline records execution commitments and history.
+
+The Reflexive Layer interprets timeline history into:
+
+- comparisons
+- trends
+- summaries
+- temporal diagnostics
+
+---
+
+## Security Model
+
+The Reflexive Layer follows strict safety constraints:
+
+- read-only by design
+- no authority escalation
+- no hidden cognition path
+- no raw memory leakage
+- deterministic outputs only
+
+---
+
+## Why This Matters
+
+ARVIS is not only able to decide under constraints.
+
+It is also able to explain how it decided, what it can do, and how it evolved, without becoming non-deterministic.
+
+That combination is rare.
+
+---
+
+## Example Mental Model
+
+```text
+Pipeline computes cognition
+State stabilizes cognition
+IR exports cognition
+Reflexive Layer explains cognition
+```
+
+---
+
+## One-Line Summary
+
+**The Reflexive Layer allows ARVIS to observe itself safely, deterministically, and without altering cognition.**

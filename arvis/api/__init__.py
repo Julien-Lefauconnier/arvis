@@ -1,4 +1,4 @@
-# arvis/api/_init__.py
+# arvis/api/__init__.py
 """
 Public API surface for ARVIS Cognitive OS.
 """
@@ -6,7 +6,8 @@ Public API surface for ARVIS Cognitive OS.
 # -----------------------------------------------------
 # Core OS
 # -----------------------------------------------------
-from .os import CognitiveOS, CognitiveResultView, CognitiveOSConfig
+from .os import CognitiveOS, CognitiveOSConfig
+from .views.cognitive_result_view import CognitiveResultView
 from .trace import DecisionTraceView
 from .timeline import TimelineView
 from .version import API_VERSION, API_FINGERPRINT

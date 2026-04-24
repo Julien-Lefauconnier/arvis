@@ -7,13 +7,28 @@ ARVIS is a **deterministic Cognitive Operating System with a kernel-based archit
 It is implemented around:
 
 - a **Kernel Core Layer** (processes, scheduler, syscalls, interrupts)
-- a **deterministic cognitive pipeline** (decision system)
+- a **runtime orchestration layer** (`CognitiveRuntime`)
+- a **modular deterministic cognitive pipeline** (decision system)
 - a **canonical state system**
 - a **reflexive self-observation layer**
 
-ARVIS behaves as a **cognitive execution kernel**:
+```text
+Kernel Core
+   ↓
+Runtime Orchestration
+   ↓
+Cognitive Pipeline
+   ↓
+Canonical State / IR
+   ↓
+Conversation / Response
+   ↓
+Syscalls / Side Effects
+   ↓
+Timeline / Reflexive / Projection
+```
 
-> cognition is constructed, evaluated, regulated, and only then allowed to produce a validated intent.
+ARVIS behaves as a **cognitive execution kernel**:
 
 It enforces:
 
@@ -21,11 +36,10 @@ It enforces:
 * stability-constrained decision-making
 * full traceability of execution
 
-ARVIS is not a model architecture.
-
-It is a **cognitive execution system** where:
-
 > cognition is constructed, evaluated, regulated, and only then allowed to produce a validated intent (which may result in an action).
+
+ARVIS is not a model architecture.  
+It is a **cognitive execution system**.
 
 ---
 
@@ -42,13 +56,22 @@ ARVIS is implemented as a deterministic system with the following architectural 
 
 0. kernel core (process / scheduler / syscalls / interrupts)
 1. kernel services (domain services: VFS, ZIP, memory, etc.)
-2. cognitive execution (pipeline)
-3. runtime execution (side-effects via syscalls)
-4. canonical state
-5. public contract / IR 
-6. reflexive observation
-7. conversation & response layer
-8. interoperability / canonical projection
+2. runtime orchestration (`CognitiveRuntime`)
+3. cognitive execution (pipeline services)
+4. runtime execution (side-effects via syscalls)
+5. canonical state
+6. public contract / IR 
+7. reflexive observation
+8. conversation & response layer
+9. interoperability / canonical projection
+
+These domains are intentionally separated so that:
+
+- cognition remains deterministic
+- execution remains observable
+- memory remains policy-controlled
+- external integrations remain non-authoritative
+- replay remains verifiable
 
 ---
 
@@ -75,7 +98,7 @@ Input
   → Process creation (Kernel)
   → Scheduler selection
   → Pipeline execution (stage-by-stage)
-  → Canonical CognitiveState
+  → Canonical CognitiveState / PipelineResult
   → Decision (validated / abstained)
   → Intermediate Representation (IR)
   → Conversation Layer
@@ -90,6 +113,12 @@ Input
 
 IMPORTANT:
 The IR defines the canonical boundary between cognition and response construction.
+
+This boundary is critical:
+
+- cognition ends before rendering begins
+- side-effects occur after decision validation
+- replay can reconstruct decisions independently of execution
 
 ---
 
@@ -131,6 +160,7 @@ It enforces:
 - deterministic scheduling
 - safe preemption
 - strict execution boundaries
+- isolation of side-effects
 
 ### Execution Model
 
@@ -185,6 +215,7 @@ This ensures:
 - clean architecture
 - test isolation
 - deterministic behavior
+- graceful degradation when optional services are unavailable
 
 ---
 
@@ -205,7 +236,7 @@ Core components:
 - `CognitiveScheduler`
 - `CognitiveProcess`
 - `CognitiveRuntimeState`
-- `PipelineExecutor`
+- `CognitiveRuntime`
 - `ResourcePressure`
 
 Execution model:
@@ -220,6 +251,8 @@ Important:
 > The runtime does NOT define cognition.
 > It only orchestrates execution.
 
+This means scheduler behavior can evolve independently from decision semantics.
+
 This creates a strict separation:
 
 - runtime → execution control
@@ -230,8 +263,10 @@ Execution flow detail:
 ```text
 tick:
   → select process
-  → PipelineExecutor.execute_process()
-      → run_stage OR finalize_run
+  → CognitiveRuntime.execute(ctx)
+      → scheduler/process orchestration
+      → pipeline execution service
+      → result finalization
   → update process state
 ```
 
@@ -241,9 +276,9 @@ tick:
 
 The pipeline remains the **execution core**, but it is no longer the whole system.
 
-Its outputs are normalized into a **canonical CognitiveState** and may then be
-
-exported through IR or observed through reflexive services.
+Its outputs are normalized into a **canonical CognitiveState** and a public
+CognitiveResultView, then exported through **IR** or observed through reflexive
+services.
 
 The pipeline is executed under the control of the Kernel Core.
 
@@ -252,11 +287,46 @@ It may run:
 - as a full execution (single step)
 - or incrementally across multiple scheduler ticks
 
+The pipeline implementation is now decomposed into explicit services:
+
+- bootstrap services
+- input preparation services
+- stage registry services
+- stage execution services
+- iteration services
+- lifecycle services
+- replay services
+- IR services
+- observability services
+- result and trace factories
+
+This decomposition keeps CognitivePipeline as the orchestration façade while
+moving specialized responsibilities into dedicated, testable modules.
+
+Benefits:
+
+- lower coupling
+- easier testing
+- clearer ownership boundaries
+- faster future refactors
+
 ---
 
 ### Pipeline Execution Contract 
 
-The pipeline is executed under a strict runtime contract:
+The pipeline is executed under a strict runtime contract.
+
+The public execution path is:
+
+```text
+CognitiveOS
+ CognitiveRuntime
+ CognitivePipeline
+ Pipeline services
+ CognitiveResultView / IR
+```
+
+The lower-level execution contract remains:
 
 - execution is stage-by-stage (iterative)
 - only one stage is executed per scheduler tick
@@ -266,7 +336,7 @@ The pipeline is executed under a strict runtime contract:
 The execution flow is:
 
 ```text
-Scheduler → PipelineExecutor → run_stage() → ... → finalize_run()
+Scheduler / Runtime → Pipeline services → run_stage() → ... → finalize_run()
 ```
 
 Rules:
@@ -280,6 +350,7 @@ This ensures:
 - deterministic execution
 - safe preemption
 - no implicit decision leakage
+- identical semantics between iterative and full execution
 
 ---
 
@@ -293,6 +364,46 @@ This layer defines the stable internal state contract of ARVIS:
 - StateIRAdapter
 
 It is the bridge between execution and external interoperability.
+
+The canonical state transforms transient runtime artifacts into a stable internal truth model.
+
+---
+
+## Public API Layer
+
+The public API layer exposes the stable entrypoint:
+
+```python
+CognitiveOS
+```
+
+CognitiveOS is now intentionally thin.
+
+It is responsible for:
+
+- tool registration
+- public execution methods
+- IR export
+- replay entrypoints
+- result inspection
+- multi-input execution
+
+Internal execution logic is delegated to:
+
+```python
+CognitiveOSInternals
+CognitiveRuntime
+CognitiveResultView
+```
+
+This preserves a stable public contract while keeping runtime, replay, IR,
+formatting, and trace construction outside the public façade.
+
+Important:
+
+> api/os.py is a public façade, not the runtime implementation.
+
+This allows internal refactors without breaking public integrations.
 
 ---
 
@@ -349,6 +460,8 @@ IMPORTANT:
 > This layer does NOT perform cognition.  
 > It transforms validated cognition into a safe communicable form.
 
+This separation allows language generation to change without changing decisions.
+
 ---
 
 ## Realization Layer
@@ -376,6 +489,8 @@ This guarantees:
 
 > generation is always constrained by cognition
 
+LLMs are optional realizers, never authorities.
+
 ---
 
 ## Kernel Memory Subsystem
@@ -393,6 +508,8 @@ It provides:
 - policy-controlled access
 - snapshot-based execution semantics
 - syscall-based mutation
+
+Memory is a governed kernel resource, not a free-form context store.
 
 ---
 
@@ -463,6 +580,7 @@ Only derived constraints are allowed:
   Memory constrains cognition.
   It does NOT introduce new semantics.
 
+This preserves determinism and prevents hidden knowledge injection.
 
 ---
 
@@ -507,6 +625,8 @@ It includes:
 
 This layer does not perform cognition. It observes and exposes structure safely.
 
+It exists for transparency, debugging, compliance, and operator trust.
+
 ---
 
 ## Syscall Execution Layer
@@ -544,7 +664,7 @@ It operates strictly after the decision pipeline.
 Clarification:
 
 - Kernel Scheduling Layer → controls WHEN cognition runs
-- Pipeline Executor → controls HOW cognition runs
+- Pipeline services → control HOW cognition runs
 - Syscall Execution Layer → executes actions AFTER cognition
 
 These three layers are strictly separated.
@@ -562,6 +682,7 @@ This layer is:
 - strictly post-decision
 - fully observable
 - replay-safe (no re-execution)
+- replaceable without affecting cognition
 
 ---
 
@@ -646,6 +767,8 @@ This guarantees that:
 > cognition remains inside ARVIS,
 > while canonical truth validation remains external.
 
+This is the foundation of ARVIS ↔ Veramem interoperability.
+
 ---
 
 ### Pipeline Structure
@@ -653,10 +776,12 @@ This guarantees that:
 The system executes a fixed sequence of stages:
 
 Tool Interaction Stages:
+
 0. ToolFeedback Stage
 1. ToolRetry Stage
 
 Core Cognitive Stages:
+
 2. Decision Stage
 3. Passive Context Stage
 4. Bundle Stage
@@ -676,11 +801,14 @@ Core Cognitive Stages:
 18. Intent Stage
 
 Execution Boundary:
+
 19. Syscall Execution (non-cognitive layer)
 
-(runtime execution handled outside pipeline)
+Runtime execution is handled outside the pipeline by CognitiveRuntime.
 
-(see `cognitive_pipeline.py`) 
+Pipeline orchestration is exposed by cognitive_pipeline.py, while the
+implementation is delegated to kernel/pipeline/services/ and
+kernel/pipeline/factories/
 
 ---
 
@@ -690,8 +818,8 @@ ARVIS implements a **closed-loop control system**:
 
 ```text
 Scheduler
-→ PipelineExecutor
-→ Pipeline (stages)
+→ CognitiveRuntime
+→ Pipeline services / stages
 → Control
 → Gate
 → Control Feedback
@@ -716,6 +844,8 @@ Scheduler
   * updates control based on Gate outcome
   * closes the feedback loop
 
+This architecture makes ARVIS a regulated dynamical system rather than a static inference pipeline.
+
 ---
 
 ## Key Insight
@@ -726,6 +856,9 @@ Scheduler
 > Memory is not a passive data store.
 > It is a kernel-governed constraint system influencing cognition under strict policy control.
 
+> Execution is not cognition.
+> Generation is not reasoning.
+
 ---
 
 ## Logical Components (Functional View)
@@ -735,6 +868,7 @@ Although implemented as a pipeline, ARVIS can be decomposed into functional role
 ### 0. Execution Orchestration
 
 * CognitiveScheduler
+* CognitiveRuntime
 * Process lifecycle management
 
 → ensures deterministic execution ordering
@@ -800,8 +934,8 @@ Although implemented as a pipeline, ARVIS can be decomposed into functional role
 ### 6. System Update
 
 * Runtime orchestration (scheduler state)
-* Pipeline execution progression (stage index, lifecycle)
-* Runtime execution (side-effects)
+* Pipeline service progression (stage index, lifecycle)
+* Runtime execution and syscall boundaries
 * timeline integration
 
 → updates internal state and timeline after execution
@@ -821,6 +955,8 @@ This layer is:
 * read-only
 * non-causal (does not influence decisions)
 
+It enables metrics, forecasting, debugging, and audits without contaminating cognition.
+
 ---
 
 ## Trace & Replay
@@ -835,6 +971,7 @@ Properties:
 * deterministic
 * replayable
 * auditable
+* hash-verifiable
 
 ---
 
@@ -852,6 +989,8 @@ This includes:
 - scheduler decisions
 - process transitions
 - pipeline execution steps
+- replay commitment verification
+- IR export
 
 ---
 
@@ -871,6 +1010,7 @@ Pipeline → Result → IR → Canonical Projection → API
 - serializable
 - model-agnostic
 - replayable
+- stable across internal refactors
 
 ### Role
 
@@ -880,6 +1020,13 @@ The IR provides:
 - a decoupling layer between cognition and execution
 - a bridge for external integrations (LLM, APIs, replay systems)
 
+IR can be produced through:
+
+```python
+CognitiveOS.run_ir(...)
+CognitiveResultView.to_ir()
+```
+
 IMPORTANT:
 
 IR is the canonical internal representation of ARVIS.
@@ -888,6 +1035,8 @@ IR is the canonical internal representation of ARVIS.
 - CanonicalSignals are constrained, registry-bound, and external
 
 The Kernel Adapter is responsible for transforming IR into canonical signals.
+
+IR is the long-term contract surface of ARVIS.
 
 ---
 
@@ -902,6 +1051,12 @@ The system enforces:
 * full decision traceability
 * strict separation between cognition and canonical projection
 * no policy or decision logic outside the cognitive pipeline
+* public API façade separated from runtime internals
+* pipeline orchestration separated from pipeline services
+* replay verification separated from replay execution
+* cognition separated from language realization
+* cognition separated from tool execution
+* canonical state separated from runtime artifacts
 
 ---
 
@@ -911,7 +1066,8 @@ ARVIS architecture aligns with the Cognitive OS standard:
 
 * Kernel Layer → Kernel Core (scheduler / process / syscalls)
 * Cognition Layer → Cognitive Pipeline
-* Execution Layer → Syscall Execution
+* Runtime Layer → CognitiveRuntime
+* Execution Layer → Syscall Execution / ToolExecutor
 * API Layer → CognitiveOS
 
 (see ARVIS_STANDARD_V1.md) 
@@ -931,3 +1087,10 @@ ARVIS is:
 It is not a passive architecture.
 
 It is an **active stability-enforcing system**.
+
+It is designed for:
+
+- auditable AI systems
+- deterministic tool-use systems
+- replayable cognitive runtimes
+- safety-constrained autonomous architectures
