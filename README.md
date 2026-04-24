@@ -1,15 +1,22 @@
 # ARVIS
 
-**A Deterministic Cognitive Operating System**
+**A Deterministic Cognitive Runtime for Reliable AI Systems**
+
+*OS-inspired architecture for governed reasoning, replayable cognition, and controlled execution.*
+*Public cognitive runtime technology derived from commercial AI infrastructure work.*
 
 > Not a model. Not an agent framework. Not prompt engineering.
 > ARVIS is a systems-grade cognitive runtime for governed reasoning, deterministic decision formation, replayable cognition, and controlled execution.
 
+> ARVIS is the public extraction of core runtime technology developed alongside Veramem, a private platform focused on memory, governed cognition, and trusted AI systems.
+ 
 ---
 
 ## Why This Exists
 
 Modern AI systems are powerful, but structurally fragile.
+
+As AI systems move into enterprise, regulated, and mission-critical environments, reproducibility and governance become mandatory—not optional.
 
 Most rely on:
 
@@ -43,6 +50,25 @@ They must become **allowed to exist**.
 
 ---
 
+## Real-World Provenance
+
+ARVIS did not emerge as a theoretical exercise.
+
+It was developed alongside real engineering work on Veramem, an AI memory infrastructure focused on:
+
+- persistent private memory
+- secure retrieval systems
+- governed cognition workflows
+- traceable AI execution
+- enterprise-grade trust boundaries
+
+ARVIS represents the generalized cognitive runtime principles extracted from those real-world constraints.
+
+Veramem is product execution.
+ARVIS is the public systems layer.
+
+---
+
 ## What ARVIS Is
 
 ARVIS is a full software system composed of explicit subsystems:
@@ -70,6 +96,20 @@ Repository scale:
 ```
 
 This is infrastructure-grade cognition engineering.
+
+---
+
+## Who This Is For
+
+ARVIS is relevant for teams building:
+
+* enterprise copilots
+* regulated AI systems
+* financial decision engines
+* legal reasoning systems
+* secure autonomous workflows
+* long-memory AI products
+* auditable agent infrastructure
 
 ---
 
@@ -367,6 +407,21 @@ Within validated operating assumptions:
 
 ---
 
+## Commercial Relevance
+
+ARVIS is designed for environments where failure, opacity, or irreproducibility carry real cost:
+
+* finance
+* legal operations
+* healthcare workflows
+* industrial automation
+* enterprise copilots
+* secure internal AI systems
+
+In these domains, reasoning must be inspectable—not merely impressive.
+
+---
+
 ## Why It Matters
 
 Critical systems increasingly need reasoning engines that are:
@@ -402,6 +457,8 @@ print(result.summary())
 
 ## Documentation
 
+Start here:
+
 * `docs/OVERVIEW.md`
 * `docs/ARCHITECTURE.md`
 * `docs/PIPELINE.md`
@@ -423,7 +480,7 @@ ARVIS governs whether outputs are allowed to exist.
 
 ## Final Statement
 
-ARVIS treats cognition as systems engineering.
+ARVIS turns reasoning systems into software infrastructure.
 
 * explicit constraints
 * explicit state
