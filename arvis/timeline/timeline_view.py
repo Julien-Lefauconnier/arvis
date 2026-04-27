@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Tuple, Iterator
 
 from .timeline_entry import TimelineEntry
+from .timeline_view_types import TimelineViewRole
 
 
 @dataclass(frozen=True)
@@ -18,13 +19,13 @@ class TimelineView:
     - Deterministic ordering
     """
 
-    role: str
+    role: TimelineViewRole
     entries: Tuple[TimelineEntry, ...]
 
     def __post_init__(self) -> None:
 
-        if not isinstance(self.role, str):
-            raise ValueError("TimelineView.role must be str")
+        if not isinstance(self.role, TimelineViewRole):
+            raise ValueError("TimelineView.role must be TimelineViewRole")
 
         if not self.role:
             raise ValueError("TimelineView.role must not be empty")

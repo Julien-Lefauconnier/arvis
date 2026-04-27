@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Sequence
 
-from veramem_kernel.journals.timeline.timeline_types import TimelineEntryType
+from arvis.timeline.timeline_types import TimelineEntryType
 
 
 @dataclass(frozen=True)

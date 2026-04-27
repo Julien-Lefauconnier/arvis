@@ -10,8 +10,8 @@ from arvis.cognition.introspection.introspection_snapshot import IntrospectionSn
 from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
 from arvis.cognition.retrieval.cognitive_retrieval_snapshot import CognitiveRetrievalSnapshot
 from arvis.memory.memory_long_snapshot import MemoryLongSnapshot
-from veramem_kernel.api.timeline import TimelineEntry
-from veramem_kernel.api.timeline import TimelineSnapshot
+from arvis.timeline.timeline_entry import TimelineEntry
+from arvis.timeline.timeline_snapshot import TimelineSnapshot
 
 class CognitiveBundleBuilder:
     """

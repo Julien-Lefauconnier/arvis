@@ -1,23 +1,38 @@
 # arvis/api/__init__.py
 """
-Public API surface for ARVIS Cognitive OS.
+Public API surface for ARVIS.
+
+This module defines the supported stable public contract.
+Only symbols listed in __all__ are considered public API.
 """
 
 # -----------------------------------------------------
-# Core OS
+# Core Runtime
 # -----------------------------------------------------
 from .os import CognitiveOS, CognitiveOSConfig
 from .views.cognitive_result_view import CognitiveResultView
 from .trace import DecisionTraceView
 from .timeline import TimelineView
-from .version import API_VERSION, API_FINGERPRINT
-
+from .stability import StabilityView
 
 # -----------------------------------------------------
-# Explicit Public Contracts (STANDARD)
+# Versioning / Contract Fingerprints
 # -----------------------------------------------------
+from .version import (
+    PACKAGE_VERSION,
+    API_VERSION,
+    PUBLIC_API_FINGERPRINT,
+)
 
-# cognition
+# -----------------------------------------------------
+# IR Helpers
+# -----------------------------------------------------
+from .ir import build_ir_view
+from .ir_canonical import canonicalize_ir, hash_ir
+
+# -----------------------------------------------------
+# Cognition
+# -----------------------------------------------------
 from arvis.cognition.bundle.cognitive_bundle_builder import CognitiveBundleBuilder
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.cognition.state.cognitive_state import CognitiveState
@@ -25,24 +40,32 @@ from arvis.cognition.coherence.change_budget import ChangeBudget
 from arvis.cognition.policy.cognitive_policy_result import CognitivePolicyResult
 from arvis.cognition.policy.cognitive_signal_snapshot import CognitiveSignalSnapshot
 
-# memory
+# -----------------------------------------------------
+# Memory
+# -----------------------------------------------------
 from arvis.memory.memory_intent import MemoryIntent
 from arvis.memory.memory_gate import MemoryGate
 from arvis.memory.memory_long_snapshot import MemoryLongSnapshot
 from arvis.memory.memory_long_entry import MemoryLongType
 
-# reasoning
+# -----------------------------------------------------
+# Reasoning
+# -----------------------------------------------------
 from arvis.reasoning.reasoning_intent import (
     ReasoningIntent,
     ReasoningIntentType,
 )
 
-# uncertainty
+# -----------------------------------------------------
+# Uncertainty
+# -----------------------------------------------------
 from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
 from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
 from arvis.uncertainty.uncertainty_frame_registry import UncertaintyFrameRegistry
 
-# math / lyapunov
+# -----------------------------------------------------
+# Math
+# -----------------------------------------------------
 from arvis.math.lyapunov.lyapunov import (
     LyapunovState,
     LyapunovWeights,
@@ -50,32 +73,23 @@ from arvis.math.lyapunov.lyapunov import (
     lyapunov_delta,
 )
 
-# math utils
 from arvis.math.core.normalization import (
     clamp,
     clamp01,
     normalize_weights,
 )
 
-# risk
 from arvis.math.risk.risk_bound import (
     HoeffdingRiskBound,
     RiskBoundSnapshot,
 )
 
-# control
+# -----------------------------------------------------
+# Control / Stability
+# -----------------------------------------------------
 from arvis.control.control_inertia import ControlInertia
-
-# stability
 from arvis.stability.stability_observer import StabilityObserver
 from arvis.stability.stability_snapshot import StabilitySnapshot
-from arvis.api.stability import StabilityView
-
-
-# IR
-from .ir import build_ir_view
-from .ir_canonical import canonicalize_ir, hash_ir
-
 
 # -----------------------------------------------------
 # Adapters
@@ -89,24 +103,27 @@ from arvis.tools.base import BaseTool
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 
-
 # -----------------------------------------------------
-# PUBLIC SURFACE (CONTRACT)
+# Public Contract
 # -----------------------------------------------------
 __all__ = [
-    # OS
+    # Core Runtime
     "CognitiveOS",
-    "CognitiveResultView",
     "CognitiveOSConfig",
-
-    # Views (API layer)
+    "CognitiveResultView",
     "DecisionTraceView",
     "TimelineView",
     "StabilityView",
 
     # Versioning
+    "PACKAGE_VERSION",
     "API_VERSION",
-    "API_FINGERPRINT",
+    "PUBLIC_API_FINGERPRINT",
+
+    # IR
+    "build_ir_view",
+    "canonicalize_ir",
+    "hash_ir",
 
     # Cognition
     "CognitiveBundleBuilder",
@@ -131,32 +148,21 @@ __all__ = [
     "UncertaintyFrame",
     "UncertaintyFrameRegistry",
 
-    # Math / Lyapunov
+    # Math
     "LyapunovState",
     "LyapunovWeights",
     "lyapunov_value",
     "lyapunov_delta",
-
-    # Math utils
     "clamp",
     "clamp01",
     "normalize_weights",
-
-    # Risk
     "HoeffdingRiskBound",
     "RiskBoundSnapshot",
 
-    # Control
+    # Control / Stability
     "ControlInertia",
-
-    # Stability
     "StabilityObserver",
     "StabilitySnapshot",
-
-    # IR 
-    "build_ir_view",
-    "canonicalize_ir",
-    "hash_ir",
 
     # Adapters
     "BaseLLMAdapter",

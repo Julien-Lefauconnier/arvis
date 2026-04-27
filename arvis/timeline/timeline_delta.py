@@ -211,5 +211,3 @@ class TimelineDelta:
     # --------------------------------------------------
     def size(self) -> int:
         return len(self.entries)
-
-    

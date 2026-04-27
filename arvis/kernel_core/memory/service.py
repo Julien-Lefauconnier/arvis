@@ -15,10 +15,10 @@ from arvis.kernel_core.memory.exceptions import (
 from arvis.kernel_core.memory.models import MemoryRecord, MemoryValue
 from arvis.kernel_core.memory.repository import MemoryRepository
 
-from veramem_kernel.journals.observation_long.observation_long_writer import (
+from arvis.kernel_core.memory.observation_long_writer import (
     ObservationLongWriter,
 )
-from veramem_kernel.journals.observation_long.observation_long_event import (
+from arvis.kernel_core.memory.observation_long_event import (
     ObservationLongEvent,
 )
 

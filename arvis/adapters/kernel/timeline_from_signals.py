@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from veramem_kernel.signals.signal_journal import SignalJournal
-from veramem_kernel.api.timeline import TimelineEntry, TimelineSnapshot
-from veramem_kernel.journals.timeline.timeline_entry import TimelineEntryNature
-from veramem_kernel.journals.timeline.timeline_types import TimelineEntryType
+from arvis.signals.signal_journal import SignalJournal
+from arvis.timeline.timeline_entry import TimelineEntry
+from arvis.timeline.timeline_snapshot import TimelineSnapshot
+from arvis.timeline.timeline_entry import TimelineEntryNature
+from arvis.timeline.timeline_types import TimelineEntryType
 
 
 def signal_journal_to_timeline_snapshot(journal: SignalJournal) -> TimelineSnapshot:

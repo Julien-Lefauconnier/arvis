@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from veramem_kernel.api.signals import CanonicalSignal
+from arvis.api.signals import CanonicalSignal
 
 from arvis.adapters.kernel.rules import ALL_RULES
 from arvis.adapters.kernel.signals.signal_factory import SignalFactory

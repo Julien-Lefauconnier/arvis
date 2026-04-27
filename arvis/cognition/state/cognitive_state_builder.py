@@ -14,7 +14,7 @@ from arvis.cognition.state.cognitive_state import (
 )
 
 from arvis.adapters.ir.state_adapter import StateIRAdapter
-from veramem_kernel.signals.signal_journal import SignalJournal
+from arvis.signals.signal_journal import SignalJournal
 
 
 class CognitiveStateBuilder:
@@ -36,7 +36,7 @@ class CognitiveStateBuilder:
         if isinstance(timeline_obj, SignalJournal):
             timeline = timeline_obj
         else:
-            timeline = SignalJournal()  # type: ignore
+            timeline = SignalJournal()
 
         # -----------------------------------------
         # IR BRIDGE

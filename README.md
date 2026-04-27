@@ -1,44 +1,41 @@
 # ARVIS
 
-**A Deterministic Cognitive Runtime for Reliable AI Systems**
+**The Cognitive Operating System for Governed AI Systems**
 
-*OS-inspired architecture for governed reasoning, replayable cognition, and controlled execution.*
-*Public cognitive runtime technology derived from commercial AI infrastructure work.*
+ARVIS is a deterministic runtime layer that treats reasoning as **critical infrastructure**.
 
-> Not a model. Not an agent framework. Not prompt engineering.
-> ARVIS is a systems-grade cognitive runtime for governed reasoning, deterministic decision formation, replayable cognition, and controlled execution.
+It provides governed cognition, replayable decisions, inspectable state transitions, controlled execution, explicit uncertainty handling, and verifiable audit trails.
 
-> ARVIS is the public extraction of core runtime technology developed alongside Veramem, a private platform focused on memory, governed cognition, and trusted AI systems.
- 
+> Not a model.
+> Not an agent wrapper.
+> Not prompt engineering.
+> **ARVIS is the systems layer reliable AI should run on.**
+
 ---
 
-## Why This Exists
+## Why ARVIS Exists
 
-Modern AI systems are powerful, but structurally fragile.
-
-As AI systems move into enterprise, regulated, and mission-critical environments, reproducibility and governance become mandatory—not optional.
-
-Most rely on:
+Most AI systems still follow:
 
 ```text
 input → model → output
 ```
 
-This creates systems that may be useful, but are often:
+Useful for many tasks — but weak when systems must be:
 
-* non-replayable
-* weakly auditable
-* difficult to certify
-* unstable under pressure
-* opaque in failure modes
-* unsafe when connected to tools
+* reproducible
+* auditable
+* policy-constrained
+* stable under pressure
+* safe with tools
+* trustworthy in production
 
-ARVIS was built from the opposite premise:
+ARVIS starts from a different premise:
 
 ```text
 input
-→ deterministic cognition
-→ admissibility constraints
+→ governed cognition
+→ admissibility controls
 → canonical state
 → verifiable IR
 → authorized execution
@@ -46,412 +43,190 @@ input
 ```
 
 Outputs are not assumed valid.
-They must become **allowed to exist**.
+
+**They must become allowed to exist.**
 
 ---
 
-## Real-World Provenance
+## Quick Start
 
-ARVIS did not emerge as a theoretical exercise.
-
-It was developed alongside real engineering work on Veramem, an AI memory infrastructure focused on:
-
-- persistent private memory
-- secure retrieval systems
-- governed cognition workflows
-- traceable AI execution
-- enterprise-grade trust boundaries
-
-ARVIS represents the generalized cognitive runtime principles extracted from those real-world constraints.
-
-Veramem is product execution.
-ARVIS is the public systems layer.
-
----
-
-## What ARVIS Is
-
-ARVIS is a full software system composed of explicit subsystems:
-
-* Kernel Core
-* Runtime Scheduler
-* Deterministic Cognitive Pipeline
-* Gate / Admissibility Engine
-* Syscall Execution Layer
-* Memory Subsystem
-* Virtual File System (VFS)
-* Canonical CognitiveState Layer
-* Intermediate Representation (IR)
-* Replay Engine
-* Reflexive Self-Observation Layer
-* Timeline / Hashchain Integrity Layer
-* Mathematical Stability Engine
-* Compliance & Adversarial Test Infrastructure
-
-Repository scale:
-
-```text
-198 directories
-917 files
+```bash
+pip install arvis
 ```
 
-This is infrastructure-grade cognition engineering.
+```python
+from arvis import CognitiveOS
+
+os = CognitiveOS()
+
+result = os.run(
+    user_id="demo",
+    cognitive_input={
+        "risk": 0.92,
+        "action": "wire_transfer",
+    },
+)
+
+print(result.summary())
+```
+
+Example outcome:
+
+```text
+Status        : BLOCKED
+Approval Need : YES
+Commitment    : 8642d95cfdb73c16...
+```
 
 ---
 
-## Who This Is For
+## What ARVIS Enables
 
-ARVIS is relevant for teams building:
+ARVIS is designed for teams building:
 
 * enterprise copilots
-* regulated AI systems
-* financial decision engines
-* legal reasoning systems
-* secure autonomous workflows
-* long-memory AI products
-* auditable agent infrastructure
+* regulated AI workflows
+* financial decision systems
+* legal / compliance systems
+* secure internal AI tools
+* autonomous workflows with controls
+* long-memory assistants
+* high-trust AI infrastructure
+
+In these environments, output quality alone is not enough.
+
+Systems must be:
+
+* explainable
+* reproducible
+* governable
+* observable
+* safe under uncertainty
 
 ---
 
-## Core Design Law
+## Core Capabilities
 
-```text
-Cognition must remain deterministic.
-Execution must remain isolated.
-State must remain inspectable.
-History must remain verifiable.
-```
+### Deterministic Cognition
+
+Same input + same state + same policy = same result.
+
+### Replayable Decisions
+
+Runs can be replayed and verified.
+
+### Governed Outputs
+
+Unsafe or invalid decisions can be blocked before execution.
+
+### Controlled Tool Use
+
+External tools and side-effects run behind authorization boundaries.
+
+### Explicit Uncertainty
+
+Risk, ambiguity, conflict, and instability become system signals.
+
+### Canonical IR
+
+Every run can emit a structured machine-auditable representation.
+
+### Timeline Integrity
+
+Decisions can be linked to verifiable commitments.
+
+### Runtime Observability
+
+Internal cognition remains inspectable in production.
 
 ---
 
-## Architecture Overview
+## Architecture Snapshot
 
 ```text
 Scheduler Tick
   → Select Process
-  → Execute Stage Budget
-  → Advance Pipeline
-  → finalize_run()
-  → CognitiveState
-  → IR
-  → Kernel Authorization
-  → Syscalls (optional)
+  → Run Cognitive Pipeline
+  → Build Cognitive State
+  → Policy / Admissibility Gate
+  → Export IR
+  → Optional Authorized Execution
   → Timeline Commit
 ```
 
-### Separation of Concerns
+---
+
+## Separation of Concerns
 
 | Layer     | Responsibility             |
 | --------- | -------------------------- |
 | Pipeline  | Cognition                  |
 | Gate      | Decision admissibility     |
 | Runtime   | Scheduling / orchestration |
-| Syscalls  | Side-effects               |
-| IR        | Canonical export           |
-| Reflexive | Read-only self-observation |
+| Memory    | Governed state influence   |
+| IR        | Structured export          |
+| Execution | Side-effects / tools       |
 | Timeline  | Integrity / commitments    |
-
-This separation is strict.
-
----
-
-## Kernel Core
-
-ARVIS includes operating-system style primitives:
-
-* processes
-* priorities
-* budgets
-* interrupts
-* fairness scheduling
-* execution contracts
-* runtime transitions
-* syscall dispatching
-
-Reasoning is treated as schedulable work.
+| Reflexive | Read-only self-observation |
 
 ---
 
-## Deterministic Cognitive Pipeline
+## Why Teams Choose ARVIS
 
-Stage-based cognition with explicit transitions:
+Because modern AI systems increasingly need:
 
-```text
-ToolFeedback → ToolRetry → Decision → Context → Bundle
-→ Conflict → Core → Regime → Temporal → Control
-→ Projection → Gate → Confirmation → Execution Eligibility
-→ Action → Intent
-```
+* controls before execution
+* replay after incidents
+* audit trails for regulators
+* safe tool usage
+* deterministic workflows
+* bounded autonomy
+* trustable infrastructure
 
-Properties:
-
-* deterministic
-* side-effect free
-* replay-safe
-* stage-budget compatible
-* preemption-safe
-
-No stage can emit a terminal decision.
-Only `finalize_run()` can.
+ARVIS addresses these requirements natively.
 
 ---
 
-## Pipeline Refactor (Modern Internal Architecture)
-
-The pipeline now uses a thin façade over services and factories:
-
-```text
-arvis/kernel/pipeline/
-  cognitive_pipeline.py
-  services/
-  factories/
-  stages/
-```
-
-Examples:
-
-* bootstrap services
-* lifecycle services
-* execution services
-* replay services
-* observability services
-* IR services
-* finalize services
-* result factories
-* trace factories
-
-Benefits:
-
-* maintainability
-* explicit responsibilities
-* easier verification
-* scalable growth path
-* cleaner dependency graph
-
----
-
-## Canonical CognitiveState
-
-All reasoning converges into a normalized state kernel.
-
-Properties:
-
-* deterministic
-* serializable
-* contract validated
-* stable across adapters
-* safe for export
-
-This is the canonical internal truth of a run.
-
----
-
-## Intermediate Representation (IR)
-
-Every run may emit a deterministic IR.
-
-```text
-finalize_run()
-→ build
-→ normalize
-→ validate
-→ serialize
-→ hash
-→ envelope
-```
-
-Properties:
-
-* deterministic
-* versioned
-* replayable
-* machine-auditable
-* integration-ready
-* model-independent
-
-Use cases:
-
-* compliance evidence
-* debugging
-* replay verification
-* structured prompting
-* external system interoperability
-
----
-
-## Timeline Integrity (Veramem Kernel Integration)
-
-ARVIS integrates with **Veramem Kernel** as an external canonical signal / commitment layer.
-
-```text
-Cognitive IR
-→ Canonical Signals
-→ Timeline Entries
-→ Hashchain Integrity
-```
-
-This enables:
-
-* verifiable history
-* portable traceability
-* external observability
-* audit-grade commitments
-* cross-system trust boundaries
-
-Meaning: cognition can be proven after execution.
-
----
-
-## Mathematical Foundation
-
-ARVIS is backed by formal control and stability concepts.
-
-Implemented / modeled domains include:
-
-* Lyapunov stability
-* switching systems
-* adaptive contraction estimates
-* bounded disturbances
-* validity envelopes
-* projection certification
-* closed-loop regulation
-* multi-horizon forecasting
-* risk fusion
-* confidence modulation
-
-ARVIS does not claim infinite correctness.
-It claims governed behavior inside validated domains.
-
-See `docs/math/`.
-
----
-
-## Memory Subsystem
-
-Memory is a kernel resource—not hidden prompt context.
-
-Properties:
-
-* snapshot-based
-* policy gated
-* immutable during runs
-* replay-safe
-* no raw leakage into IR
-
-This supports Zero-Knowledge Cognitive System principles.
-
----
-
-## Reflexive Layer
-
-Structured self-observation without hidden authority.
-
-Capabilities:
-
-* capability snapshots
-* architecture introspection
-* uncertainty views
-* timeline explanations
-* compliance attestations
-* runtime introspection
-
-Reflexive mode observes. It does not secretly decide.
-
----
-
-## Validation Depth
+## Validation
 
 ARVIS is tested like infrastructure.
 
-Includes:
+Current suite includes:
 
 * unit tests
 * integration tests
-* adversarial tests
-* fuzz tests
+* replay verification
 * determinism tests
-* replay corruption tests
+* adversarial scenarios
 * scheduler fairness tests
-* preemption tests
-* hashchain tests
-* projection robustness tests
-* mathematical invariant tests
-
-This project validates behavior—not only demos behavior.
+* hashchain integrity tests
+* mathematical invariants
+* robustness tests
 
 ---
 
-## What ARVIS Guarantees
+## Examples
 
-Within validated operating assumptions:
-
-* deterministic cognition
-* explicit decision boundaries
-* replayability
-* isolated side-effects
-* stable IR generation
-* auditable transitions
-* policy-governed memory influence
-* scheduler-safe semantics
-* timeline-verifiable outputs
-
----
-
-## What ARVIS Does Not Guarantee
-
-* universal truth
-* perfect reasoning
-* optimality in all environments
-* guarantees outside assumptions
-* magical intelligence from prompts
-
----
-
-## Commercial Relevance
-
-ARVIS is designed for environments where failure, opacity, or irreproducibility carry real cost:
-
-* finance
-* legal operations
-* healthcare workflows
-* industrial automation
-* enterprise copilots
-* secure internal AI systems
-
-In these domains, reasoning must be inspectable—not merely impressive.
-
----
-
-## Why It Matters
-
-Critical systems increasingly need reasoning engines that are:
-
-* inspectable
-* governable
-* reproducible
-* externally attestable
-* safe under uncertainty
-
-ARVIS is built for that future.
-
----
-
-## Quickstart
+Run ready-to-use examples:
 
 ```bash
-git clone https://github.com/Julien-Lefauconnier/arvis.git
-cd arvis
-pip install -e .
-pytest
+python examples/01_gate_refusal.py
 ```
 
-```python
-from arvis.api import CognitiveOS
+Included examples:
 
-os = CognitiveOS()
-result = os.run(user_id="demo", cognitive_input={})
-print(result.summary())
-```
+1. Gate refusal
+2. Deterministic replay
+3. IR export
+4. Human approval
+5. Tool governance
+6. Finance risk screening
+7. Governed memory context
+8. Timeline audit trail
+9. Batch decision engine
+10. Runtime inspection
+
+See: `examples/README.md`
 
 ---
 
@@ -460,12 +235,33 @@ print(result.summary())
 Start here:
 
 * `docs/OVERVIEW.md`
+* `docs/WHY_ARVIS.md`
 * `docs/ARCHITECTURE.md`
 * `docs/PIPELINE.md`
 * `docs/IR.md`
 * `docs/REFLEXIVE.md`
-* `docs/math/`
 * `docs/standard/`
+* `docs/math/`
+
+---
+
+## What ARVIS Does Not Claim
+
+ARVIS does **not** promise:
+
+* universal truth
+* AGI magic
+* perfect reasoning
+* correctness outside assumptions
+* optimality in all environments
+
+ARVIS is about **trustworthy operation under constraints**.
+
+---
+
+## Project Status
+
+**Beta** — actively developed with a validation-first engineering approach.
 
 ---
 
@@ -480,7 +276,7 @@ ARVIS governs whether outputs are allowed to exist.
 
 ## Final Statement
 
-ARVIS turns reasoning systems into software infrastructure.
+ARVIS turns reasoning systems into software infrastructure:
 
 * explicit constraints
 * explicit state
@@ -488,4 +284,4 @@ ARVIS turns reasoning systems into software infrastructure.
 * explicit accountability
 * explicit history
 
-Because important intelligence systems should behave like infrastructure—not improvisation.
+Because important intelligence systems should behave like infrastructure — not improvisation.

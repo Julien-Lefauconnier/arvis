@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Any
 
-from veramem_kernel.signals.signal_journal import SignalJournal
+from arvis.signals.signal_journal import SignalJournal
 
 
 # ------------------------

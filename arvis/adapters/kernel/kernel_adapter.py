@@ -3,8 +3,8 @@
 from typing import List
 
 
-from veramem_kernel.signals.signal_journal import get_signal_journal
-from veramem_kernel.api.signals import Signal
+from arvis.signals.signal_journal import get_signal_journal
+from arvis.api.signals import Signal
 
 from .mappers.ir_to_canonical import ir_to_canonical
 from .canonical_to_event import canonical_to_event

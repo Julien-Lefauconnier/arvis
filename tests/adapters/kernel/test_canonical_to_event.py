@@ -1,7 +1,7 @@
 # tests/adapters/kernel/test_canonical_to_event.py
 
 from arvis.adapters.kernel.kernel_adapter import KernelAdapter
-from veramem_kernel.invariants.signal.signal_invariants import (
+from arvis.signals.signal_invariants import (
     assert_signal_has_timestamp,
     assert_signal_payload_exists,
 )
