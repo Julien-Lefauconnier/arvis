@@ -1,7 +1,7 @@
 [project]
 name = "arvis"
 version = "0.1.0"
-description = "ARVIS — a deterministic Cognitive OS enforcing stability-constrained decision systems"
+description = "Cognitive Operating System kernel for trustworthy AI systems"
 readme = "README.md"
 requires-python = ">=3.10"
 
@@ -13,17 +13,18 @@ license = { file = "LICENSE" }
 
 keywords = [
   "ai",
-  "cognitive-systems",
-  "stability",
-  "lyapunov",
+  "cognitive-os",
+  "agentic-ai",
   "reasoning",
   "uncertainty",
   "memory",
-  "kernel"
+  "governance",
+  "ai-safety"
 ]
 
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3",
@@ -37,10 +38,12 @@ classifiers = [
 dependencies = [
   "jsonschema>=4.0",
   "pyyaml>=6.0",
-  "veramem-kernel[crypto]==1.2.0"
 ]
 
 [project.optional-dependencies]
+compat = [
+  "veramem-kernel[crypto]==1.2.0"
+  ]
 dev = [
     "mypy",
     "ruff",
@@ -54,7 +57,9 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/Julien-Lefauconnier/arvis"
 Repository = "https://github.com/Julien-Lefauconnier/arvis"
-Documentation = "https://github.com/Julien-Lefauconnier/arvis/docs"
+Documentation = "https://github.com/Julien-Lefauconnier/arvis/tree/main/docs"
+Issues = "https://github.com/Julien-Lefauconnier/arvis/issues"
+Changelog = "https://github.com/Julien-Lefauconnier/arvis/releases"
 
 [tool.setuptools.packages.find]
 include = ["arvis*"]
