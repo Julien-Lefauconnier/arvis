@@ -1,480 +1,456 @@
 # ARVIS Intermediate Representation (IR)
 
-## Version
+## Executive Summary
 
-Current version: `arvis-ir.v1`
+The **Intermediate Representation (IR)** is the portable machine contract of ARVIS.
 
-The version identifies the public machine contract, not internal implementation details.
+It transforms an internal governed decision into a deterministic, replayable, verifiable artifact.
 
----
-
-## Definition
-
-The IR is the **canonical, deterministic machine representation** of a cognitive execution in ARVIS.
-
-It is not a raw export.
-
-It is a **normalized, validated, and hashed representation** of the cognitive process.
-
-IMPORTANT:
-
-The IR is NOT a signal system.
-
-It is an **expressive, information-complete representation** of cognition.
-
-It is designed for:
-
-- traceability
-- replay
-- auditability
-- structured interpretation
-- long-term compatibility
-- downstream automation
-
-It is NOT constrained by external canonical signal registries.
-
-IMPORTANT:
-
-The IR represents **cognitive evaluation**, not the final user response.
-
-- It contains validated intent, state, and decision signals
-- It does NOT contain conversational realization or generated outputs
-
-Response generation occurs in the Conversation & Realization layers.
-
-The IR is where cognition becomes portable.
-
----
-
-## IR Construction Pipeline
-
-The IR is built through a canonical pipeline:
+Think of it as:
 
 ```text
-CognitiveIRBuilder
-→ CognitiveIRNormalizer
-→ CognitiveIRValidator
-→ CognitiveIRSerializer
-→ CognitiveIRHasher
-→ CognitiveIREnvelope
+Decision Intelligence → Portable Truth
 ```
 
-Implementation note:
-
-- builder = semantic aggregation
-- normalizer = canonical ordering
-- validator = schema / consistency checks
-- serializer = stable representation
-- hasher = commitment layer
-- envelope = transport wrapper
-
-This ensures:
-
-- deterministic structure
-- order-invariant normalization
-- validation before exposure
-- stable hashing
-- replayability
-
-Construction precondition:
-
-- pipeline execution must be finalized
-- the terminal result must be non-null
-- the cognitive context must be in a valid post-pipeline state
-
-IR construction from partial or non-finalized execution is invalid.
-
-No intermediate pipeline state may be treated as canonical IR.
+The IR is how ARVIS outputs cognition without exposing internal implementation details.
 
 ---
 
-## Top-level structure (simplified view)
+## Why IR Exists
 
-The IR is represented by the CognitiveIR object:
+Most AI systems only return:
+
+- text
+- probabilities
+- logs
+- opaque outputs
+
+That is insufficient for serious systems.
+
+ARVIS introduces IR so decisions can be:
+
+- replayed
+- audited
+- versioned
+- verified
+- transported
+- integrated into other systems
+
+---
+
+## Core Principle
+
+  If a decision matters, it must exist as a structured artifact.
+
+---
+
+## What IR Is
+
+The ARVIS IR is:
+
+- deterministic
+- machine-readable
+- replay-ready
+- hashable
+- stable across refactors
+- independent from language generation
+
+It represents:
+
+- input context
+- governed decision
+- gate outcome
+- reasoning metadata
+- commitments
+- optional observability state
+
+---
+
+## What IR Is Not
+
+IR is not:
+
+- chatbot output
+- prompt text
+- UI response
+- random debug logs
+- hidden internal memory dump
+
+It is a governed contract.
+
+---
+
+## Conceptual Flow
+
+```text
+Input
+ ↓
+Cognitive Pipeline
+ ↓
+Decision Validation
+ ↓
+IR Construction
+ ↓
+Replay / Audit / Integration
+```
+
+---
+
+## Example Usage
 
 ```python
-CognitiveIR(
-    input=...,
-    context=...,
-    decision=...,
-    state=...,
-    gate=...,
-    stability=...,
-    adaptive=...,
-)
-```
+from arvis import CognitiveOS
 
-Exact fields may evolve under compatibility rules while preserving semantics.
+os = CognitiveOS()
+
+ir = os.run_ir(
+    user_id="demo",
+    cognitive_input={"action": "approve_invoice", "risk": 0.22},
+)
+
+print(ir)
+```
 
 ---
 
-## Core Components
+## Typical IR Shape
 
-### 1. Input (CognitiveInputIR)
+```json
+{
+  "version": "1.0.0",
+  "fingerprint": "...",
+  "input": {...},
+  "context": {...},
+  "decision": {...},
+  "gate": {...},
+  "state": {...},
+  "global_commitment": "..."
+}
+```
 
-Represents the originating input.
+Exact fields may evolve under compatibility rules.
 
-Fields:
+---
 
-- input_id
-- actor_id
-- surface_kind
-- intent_hint
-- metadata
+## Major Components
 
-Purpose:
-- provenance
-- identity of originating request
-- deterministic replay anchoring
+### 1. Version Layer
 
-### 2. Context (CognitiveContextIR)
+Tracks contract version.
 
-Represents execution context.
-
-Fields:
-
-- user_id
-- session_id
-- conversation_mode
-- long_memory_constraints
-- long_memory_preferences
-- extra
-
-Purpose:
-- bounded execution context
-- memory-derived constraints
-- non-cognitive metadata required for interpretation
-
-### 3. Decision (CognitiveDecisionIR)
-
-Represents structured decision semantics.
-
-Fields include:
-
-- decision_id
-- decision_kind
-- memory_intent
-- reason_codes
-- proposed_actions
-- gaps
-- conflicts
-- reasoning_intents
-- uncertainty_frames
-- knowledge
-- context_hints
+```json
+{
+  "version": "1.0.0"
+}
+```
 
 Purpose:
-- explain what cognition concluded
-- expose why it concluded it
-- preserve structured decision semantics
 
-### 4. State (CognitiveStateIR)
+- compatibility
+- migrations
+- contract governance
 
-Represents the canonical cognitive state.
+---
 
-Derived from:
+### 2. Input Section
 
-- CognitiveStateBuilder
-- CognitiveStateContract
+Captures the governed originating request.
 
-Contains normalized signals such as:
+Examples:
 
-- stability
-- control state
+- action request
+- query
+- transaction proposal
+- tool invocation candidate
+
+```json
+{
+  "input": {
+    "action": "wire_transfer",
+    "risk": 0.91
+  }
+}
+```
+
+---
+
+### 3. Context Section
+
+Bounded execution context.
+
+May include:
+
+- user id
+- memory constraints
+- session hints
+- governance metadata
+
+Not uncontrolled hidden state.
+
+---
+
+### 4. Decision Section
+
+Represents what ARVIS concluded.
+
+Examples:
+
+- allow
+- deny
+- review
+- confirm
+- abstain
+
+May include reason codes.
+
+```json
+{
+  "decision": {
+    "status": "REVIEW"
+  }
+}
+```
+
+---
+
+### 5. Gate Section
+
+Critical safety boundary.
+
+Explains whether cognition passed admissibility checks.
+
+Examples:
+
+- stability insufficient
+- risk too high
+- uncertainty elevated
+- human approval required
+
+---
+
+### 6. State Section
+
+Optional structured runtime state.
+
+May include:
+
+- confidence
 - regime
-- risk indicators
+- control indicators
+- stability snapshots
+
+Useful for diagnostics and regulated environments.
+
+---
+
+### 7. Commitment Layer
+
+Cryptographic-style deterministic fingerprint.
+
+```json
+{
+  "global_commitment": "8642d95cfdb73c16..."
+}
+```
 
 Purpose:
-- expose normalized internal state
-- support audits and diagnostics
-- preserve control/stability context
 
-### 5. Gate (CognitiveGateIR)
-
-Represents the stability validation outcome.
-
-Fields:
-
-- verdict (ALLOW / REQUIRE_CONFIRMATION / ABSTAIN)
-- bundle_id
-- reason_codes
-
-Purpose:
-- expose admissibility result
-- explain enforcement outcome
-- prove that unsafe cognition was filtered
+- tamper evidence
+- equality checks
+- replay verification
 
 ---
 
-## Optional Extensions
+## Determinism
 
-For any fixed configuration, inclusion or exclusion of these sections MUST remain deterministic.
+One of the strongest ARVIS properties.
 
-Optional does NOT mean arbitrary:
-- identical finalized cognition + identical configuration → identical IR structure
+Same governed input + same context:
 
-Depending on deterministic system configuration, IR may include:
-
-### Projection
-
-- projection certificate
-- domain validity
-
-### Validity
-
-- validity envelope
-
-### Stability
-
-- projected stability state
-- stability statistics
-
-### Adaptive
-- adaptive control snapshot
-
-Optional sections must remain deterministic under the same finalized cognition and configuration.
-
----
-
-## Normalization
-
-The IR is normalized before validation:
-
-- reason codes are sorted
-- actions are ordered
-- conflicts and gaps are canonicalized
-- context hints are sorted
-
-This guarantees:
-
-  - identical semantic IR → identical normalized IR
-
-Normalization removes accidental differences, not semantic differences.
----
-
-## Validation
-
-The IR is validated before serialization.
-
-Validation enforces:
-
-- schema integrity
-- field consistency
-- type correctness
-- version compatibility
-- absence of malformed values
-
----
-
-## Serialization
-
-The IR is serialized into a deterministic representation:
-
-```python
-serialized = to_canonical_dict(...)
+```text
+same IR
+same commitment
+same replay result
 ```
 
-Key ordering and canonical formatting must remain stable.
-
----
-
-## Hashing
-
-A stable hash is computed:
+example :
 
 ```python
-hash_value = CognitiveIRHasher.hash(ir)
+r1 = os.run("u1", payload)
+r2 = os.replay(r1.to_ir())
 ```
-
-Guarantees:
-
-- identical IR → identical hash
-- normalization ensures hash stability
-- supports timeline commitments and tamper evidence
-
----
-
-## Envelope
-
-The IR can be wrapped into a canonical envelope:
-
-```python
-CognitiveIREnvelope(
-    ir=...,
-    serialized=...,
-    hash=...
-)
-```
-
-The envelope is the portable contract.
-
-Typical uses:
-
-- storage
-- transport
-- external verification
-- replay packages
-
----
-
-## Invariants
-
-The IR guarantees:
-
-- Determinism
-- No hidden state
-- Construction ONLY from finalized cognitive execution
-- No derivation from partial pipeline state
-- Deterministic transformation from finalized cognitive context
-- Stable normalization
-- Stable hashing
-- Replay consistency
-- Information completeness (no semantic loss from finalized pipeline output)
-
-For avoidance of doubt:
-
-- intermediate stage outputs are not canonical IR inputs
-- scheduler preemption does not change final IR semantics
-- runtime orchestration order must not affect finalized IR content
-- language realization changes must not alter IR content
 
 ---
 
 ## Replay
 
-The IR can be used to replay execution:
+IR enables deterministic replay.
+
+Use cases:
+
+- incidents
+- compliance review
+- dispute resolution
+- regression testing
+- simulation
 
 ```python
-pipeline.run_from_ir(ir)
+result = os.replay(ir)
 ```
 
-Replay mode:
+---
 
+## Why This Matters
+
+Without IR:
+
+```text
+AI said something.
+No one knows why.
+```
+
+With IR:
+
+```text
+Decision made.
+Reason governed.
+Commitment recorded.
+Replay possible.
+```
+
+---
+
+## IR vs Logs
+
+### Logs
+
+- noisy
+- inconsistent
+- environment-dependent
+
+### IR
+
+- canonical
+- stable
+- machine-consumable
 - deterministic
-- side-effect minimized (but may depend on runtime configuration)
-- used for validation and auditing
-- useful for regression testing
+
+IR is stronger than logs.
+
+---
+
+## IR vs API Response Text
+
+### Response Text
+
+Human-facing explanation.
+
+### IR
+
+Machine-facing truth artifact.
+
+These should remain separate.
+
+---
+
+## IR vs LLM Outputs
+
+LLM outputs are language artifacts.
+
+IR is a governance artifact.
+
+ARVIS can use language models, but IR remains independent of them.
+
+---
+
+## Enterprise Use Cases
+
+### Finance
+
+- trade approvals
+- replayable risk screening
+- audit evidence
+
+### Healthcare
+
+- triage governance trails
+- approval checkpoints
+
+### Internal Automation
+
+- invoice approvals
+- HR workflows
+- CRM updates
+
+### Agent Systems
+
+- portable state handoff
+- governed tool actions
+
+---
+
+## Example
+
+### Request
+
+```json
+{
+  "action": "delete_customer_account",
+  "risk": 0.55
+}
+```
+
+### IR Outcome
+
+```text
+Decision: REVIEW
+Approval Required: YES
+Commitment: stable
+Replay Ready: YES
+```
 
 ---
 
 ## Compatibility Rules
 
-### Minor updates
+### Minor Versions
 
-- new fields allowed
-- no change to existing semantics
-- additive evolution only
+Allowed:
 
-### Major updates
+- additive fields
+- richer metadata
+- optional sections
 
-- version bump required
-- breaking changes documented
-- migration path recommended
+### Major Versions
 
----
+Required when:
 
-### Use Cases
-
-- deterministic replay
-- audit and compliance
-- system interoperability
-- LLM structured prompting
-- trace verification
-- debugging
-- regression snapshots
-- contract testing
-
-NOTE:
-
-For interoperability with **external signal-based systems** (e.g. Veramem Kernel),
-the IR MUST be transformed through a dedicated projection layer:
-
-→ Kernel Adapter (Canonical Projection Layer)
-
-This transformation:
-
-- is deterministic
-- is rule-based
-- is lossy (information may be reduced to match canonical constraints)
-- does NOT belong to the IR itself
-
-IR remains richer than any projected external signal form.
+- semantics change
+- breaking structure changes
+- replay assumptions change
 
 ---
 
-## Design Principle
+## Design Philosophy
 
-The IR is the canonical machine contract of ARVIS.
+ARVIS treats decisions like financial transactions:
 
-It is the boundary between:
-
-- finalized cognition
-- downstream response construction
-- external machine consumers
-
-It is NOT:
-
-- a conversational response
-- a stage-level artifact
-- a runtime scheduling artifact
-
-It connects:
-
-- the internal CognitiveState
-- the pipeline execution
-- external consumers
-
-- replay systems
-- audit systems
-- interoperability layers
-
-It is:
-
-  stable, deterministic, and machine-verifiable
+They should leave structured records.
 
 ---
 
----
+## Mental Model
 
-## IR vs Canonical Signals (CRITICAL DISTINCTION)
-
-ARVIS distinguishes between:
-
-### IR (Intermediate Representation)
-
-- expressive
-- complete
-- information-rich
-- internal canonical contract
-- replay-oriented
-
-### Canonical Signals (External Systems)
-
-- constrained
-- registry-bound
-- reduced representation
-- interoperability-focused
-- compliance / transport oriented
-
-The transformation:
+Think of IR as:
 
 ```text
-IR → Canonical Signals
+PDF for documents
+Git commit for code
+IR for governed cognition
 ```
-
-is:
-
-- deterministic
-- rule-based
-- external to the IR specification
-
-This ensures:
-
-- IR remains stable and expressive
-- external integrations remain compatible with strict canonical systems
 
 ---
 
 ## One-Line Summary
 
-**CognitiveState is internal truth. IR is portable truth. Canonical Signals are projected truth.**
+  Internal reasoning becomes trusted portable truth through IR.

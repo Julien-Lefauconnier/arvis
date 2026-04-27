@@ -2,417 +2,417 @@
 
 ## What is ARVIS?
 
-ARVIS is a **Cognitive Operating System**.
+ARVIS is a **Cognitive Operating System** for building trustworthy AI systems.
 
-It does not generate answers directly.
-It **controls how decisions are allowed to exist, how cognition is evaluated, and how execution is safely orchestrated**.
+It does not start from:
+
+```text
+How do we generate an answer?
+```
+
+It starts from:
+
+```text
+Should a decision exist at all?
+Under which constraints?
+Can it be verified?
+Can it be replayed?
+Can it be trusted?
+```
+
+ARVIS governs cognition before execution.
 
 ---
 
-## The Core Idea
+## The Problem With Most AI Systems
 
-Most AI systems follow this pattern:
+Most systems still follow this pattern:
 
 ```text
 input → model → output
 ```
 
-ARVIS replaces it with:
+That is powerful, but often insufficient for production environments.
+
+Typical failure modes:
+
+- non-deterministic behavior
+- difficult audits
+- unstable decision policies
+- hidden reasoning paths
+- unsafe tool execution
+- weak governance under uncertainty
+- impossible post-incident replay
+
+This becomes unacceptable in domains like:
+
+- finance
+- defense
+- healthcare
+- operations
+- infrastructure
+- regulated workflows
+- autonomous systems
+
+---
+
+## The ARVIS Model
+
+ARVIS replaces direct generation with governed cognition:
 
 ```text
-input 
+input
 → runtime orchestration
-→ constrained cognition
-→ validated decision 
-→ controlled response
+→ constrained reasoning
+→ risk & uncertainty evaluation
+→ decision gate
+→ controlled execution
+→ traceable result
 ```
 
 A decision is not automatically produced.
 
-It must pass through:
-
-* structured reasoning
-* conflict evaluation
-* stability constraints
-* execution gating
-
-Then, if allowed:
-
-- a response strategy is selected
-- a response plan is constructed
-- the response is realized (template or LLM)
+It must first satisfy system constraints.
 
 ---
 
-## Why ARVIS Exists
+## Core Principle
 
-Modern AI systems are powerful, but structurally fragile.
+    Intelligence alone is not enough.
+    It must be constrained, stable, inspectable, and replayable.
 
-They:
+ARVIS does not try to be “more creative”.
 
-* rely on untyped numerical values
-* lack deterministic execution
-* cannot guarantee stability
-* are difficult to audit or reproduce
-
-This creates systems that:
-
-* behave inconsistently
-* degrade silently
-* cannot be trusted in critical environments
+ARVIS makes cognition operationally reliable.
 
 ---
 
-## What ARVIS Changes
+What ARVIS Actually Does
 
-ARVIS introduces a different paradigm:
+For every request, ARVIS can evaluate:
 
-> Intelligence is not enough.
-> It must be **constrained, verifiable, and stable**.
+- risk
+- uncertainty
+- conflict pressure
+- stability conditions
+- execution safety
+- memory influence
+- runtime constraints
+- authorization boundaries
 
-Instead of optimizing outputs, ARVIS enforces:
+Then it can choose to:
 
-* **how reasoning is structured**
-* **when decisions are allowed**
-* **under which conditions execution is safe**
-
-ARVIS can interoperate with external systems through adapter layers and IR boundaries.
-
-These adapters allow:
-- signal translation
-- external kernel integration
-- modular extension of the system
-
-Example:
-- Veramem Kernel integration via canonical signals
-
----
-
-## How It Works (Conceptually)
-
-Every input is processed through a deterministic runtime + pipeline architecture.
-
-At a high level:
-
-1. Receive input through CognitiveOS
-2. Build execution context
-3. Delegate orchestration to CognitiveRuntime
-4. Execute CognitivePipeline
-5. Build canonical CognitiveState
-6. Export CognitiveResultView / IR / trace
-7. Expose safe self-observation through the reflexive layer
-
-If the system is:
-
-* unstable → no decision
-* too risky → no decision
-* uncertain → confirmation required
+- allow
+- deny
+- abstain
+- require human confirmation
+- defer
+- replay
+- inspect
 
 ---
 
-### Execution Model
+## Minimal Example
 
-Execution may occur:
+```python
+from arvis import CognitiveOS
 
-- in a single step (simple case)
-- or across multiple scheduler ticks (iterative execution)
+os = CognitiveOS()
+
+result = os.run(
+    user_id="demo",
+    cognitive_input={
+        "action": "wire_transfer",
+        "risk": 0.92,
+    },
+)
+
+print(result.summary())
+```
+
+Possible outcome:
+
+```text
+Blocked. Human approval required.
+```
+
+---
+
+## Why This Matters
+
+Traditional systems often optimize for output quality.
+
+ARVIS optimizes for:
+
+- safe decisions
+- deterministic behavior
+- governance
+- reproducibility
+- accountability
+
+That makes it suitable where mistakes are expensive.
+
+---
+
+## Determinism by Design
+
+Same input + same context + same rules:
+
+```text
+same decision
+same commitment
+same replay result
+```
 
 This enables:
 
-- bounded execution per step
-- prioritization between processes
+- incident investigation
+- compliance verification
+- regression control
+- stable production behavior
+
+Example:
+
+```python
+r1 = os.run("u1", payload)
+r2 = os.replay(r1.to_ir())
+```
+
+---
+
+## Replayable Decisions
+
+Every governed decision can be exported as IR (Intermediate Representation).
+
+```python
+ir = os.run_ir(...)
+```
+
+IR enables:
+
+- portable records
+- deterministic replay
+- cross-system verification
+- audit storage
+- future simulation layers
+
+This is a major architectural difference versus standard AI wrappers.
+
+---
+
+## Human-in-the-Loop by Default
+
+ARVIS can escalate sensitive actions.
+
+Example:
+
+```text
+delete_customer_account
+```
+
+Instead of auto-executing, ARVIS can require approval.
+
+This makes human oversight a system primitive—not an afterthought.
+
+---
+
+## Tool Governance
+
+External tools are dangerous if unconstrained.
+
+ARVIS treats tools as governed capabilities.
+
+Examples:
+
+- email sending
+- payment execution
+- file deletion
+- customer changes
+- infrastructure actions
+
+Tools can require:
+
+- registration
+- policy approval
+- runtime authorization
+- traceability
+
+---
+
+## Memory With Boundaries
+
+ARVIS supports memory-aware cognition.
+
+Context can influence decisions without becoming uncontrolled hidden state.
+
+Examples:
+
+- prior interactions
+- previous incidents
+- account state
+- historical preferences
+
+Memory remains governed input—not magical implicit behavior.
+
+---
+
+## Runtime + Pipeline Separation
+
+ARVIS separates two critical layers:
+
+### Cognitive Pipeline
+
+Defines how reasoning is evaluated.
+
+### Runtime Layer
+
+Defines how execution is orchestrated.
+
+This separation allows:
+
+- cleaner architecture
 - deterministic scheduling
-
-Important:
-
-- the pipeline defines *what cognition means*
-- CognitiveRuntime defines *how execution is orchestrated*
-- the Kernel Core defines *system authority and scheduling boundaries*
-
-Execution is split into two phases:
-
-1. Cognitive phase (pipeline, pure)
-2. Execution phase (tools / syscalls / side-effects)
+- safer side effects
+- future distributed execution
 
 ---
 
-## Public API Layer
+## Public API
 
-ARVIS exposes a stable façade:
+Simple external interface:
 
-python +from arvis.api import CognitiveOS +
+```python
+from arvis import CognitiveOS
+```
 
-This façade is intentionally thin.
+Core methods:
 
-It provides:
+```python
+run(...)
+run_ir(...)
+replay(...)
+inspect(...)
+run_multi(...)
+register_tool(...)
+```
 
-- run(...)
-- run_ir(...)
-- replay(...)
-- inspect(...)
-- tool registration
-
-Internal mechanics are delegated to runtime and pipeline layers.
-
----
-
-### Response Layer 
-
-ARVIS separates decision from response.
-
-#### Decision layer:
-
-- determines if something is allowed
-
-#### Response layer:
-
-- determines how to express it safely
-
-This is implemented via:
-
-- ResponseStrategyDecision
-- ResponsePlan
-- LinguisticAct
-
-Example strategies:
-
-- ABSTENTION
-- CONFIRMATION
-- INFORMATIONAL
-- ACTION
-
-IMPORTANT:
-
-Response generation is independent from execution.
-Side-effects are handled separately via syscalls.
-
----
-
-### LLM Integration (Controlled)
-
-ARVIS can use LLMs, but never directly.
-
-LLMs are:
-
-- not decision makers
-- not trusted sources of truth
-
-They are used only for:
-
-- controlled realization
-- natural language generation
-
-Always under:
-
-- a predefined ResponsePlan
-- a constrained LinguisticAct
-
-LLMs NEVER trigger execution.
-All execution must go through runtime / kernel boundaries and syscall systems.
+Powerful internals. Clean surface.
 
 ---
 
 ## What Makes ARVIS Different
 
-### 1. Decisions Are Constrained, Not Generated
+### 1. Decisions Are Governed
 
-ARVIS does not try to be “smart”.
+Not merely generated.
 
-It ensures that:
+### 2. Abstention Is Valid
 
-> no unsafe decision can be produced
+If unsafe or unstable, ARVIS can refuse.
 
----
+### 3. Replay Is Native
 
-### 2. Stability Comes First
+Not bolted on later.
 
-Stability is not a metric.
+### 4. Traceability Is Built-In
 
-It is a **hard constraint**.
+Every decision can be inspected.
 
-If stability conditions are not met:
+### 5. Execution Is Controlled
 
-→ the system abstains
+Tools and side effects are bounded.
 
----
+### 6. Production Thinking First
 
-### 3. Deterministic Cognition
-
-Same input, same context → same result
-
-No hidden randomness
-No implicit branching
-
-This holds even with:
-
-- iterative execution
-- scheduling
-- replay verification
+Designed for real systems, not demos.
 
 ---
 
-### 4. Signals Instead of Raw Values
+## Example Use Cases
 
-All critical values are structured signals:
+### Finance
 
-* risk
-* stability
-* conflict
-* uncertainty
+- trade screening
+- approval escalation
+- risk gates
 
-This removes:
+### Enterprise Ops
 
-* arbitrary thresholds
-* ambiguous interpretations
-* uncontrolled numerical behavior
+- governed automation
+- internal tool routing
+- policy enforcement
 
----
+### AI Agents
 
-### 5. Full Traceability
+- safe tool execution
+- memory boundaries
+- deterministic orchestration
 
-Every decision produces a complete trace:
+### Compliance
 
-* what was evaluated
-* why it passed or failed
-* what constraints were applied
+- replayable decisions
+- audit commitments
+- explainable control flow
 
-Nothing is implicit.
+### Personal AI Systems
 
-also:
-
-- execution is traceable
-- scheduling is deterministic
-- processes can be replayed
-
-and side-effects are fully recorded via syscalls
+- persistent memory under rules
+- trusted decision mediation
 
 ---
 
-## Memory Layer
-
-ARVIS includes a structured memory system:
-
-- long-term entries
-- policy gating
-- memory-to-decision influence
-
-Memory can:
-
-- influence strategy selection
-- constrain actions
-- inject contextual signals
-
-Memory snapshots may influence cognition.
-Mutable storage boundaries remain externalized through controlled services/syscalls.
-
----
-
-## What ARVIS Is NOT
+## What ARVIS Is Not
 
 ARVIS is not:
 
-* a machine learning model
-* a prompt engineering framework
-* an agent toolkit
-* a decision heuristic system
+- a chatbot
+- a prompt framework
+- an LLM wrapper
+- a no-code automation toy
+- just another agent toolkit
 
-It does not replace intelligence.
-
-It **constrains intelligence**.
-
----
-
-## What ARVIS Enables
-
-ARVIS makes it possible to build systems that are:
-
-* auditable
-* deterministic
-* stability-aware
-* safe under uncertainty
-* reproducible
-
-This is critical for:
-
-* financial systems
-* autonomous agents
-* safety-critical AI
-* long-term memory systems
-* regulated environments
+It is a governance layer for cognition.
 
 ---
 
 ## Mental Model
 
-Think of ARVIS as:
+Think of ARVIS like this:
 
-> an operating system for cognition
+```text
+Linux governs processes.
+ARVIS governs decisions.
+```
 
-Like an OS controls how programs execute,
-ARVIS controls how reasoning and decisions are allowed to happen — and how responses are safely produced.
-
-and how execution is safely mediated through syscalls.
-
----
-
-## Cognitive OS Interface
-
-ARVIS exposes a **Cognitive Operating System interface**.
-
-This interface:
-
-- hides internal pipeline complexity
-- hides kernel scheduling and process management
-- provides a stable contract
-- enables integration with external systems
-
-Main entrypoint: `CognitiveOS`
+An operating system for cognition.
 
 ---
 
-## Intermediate Representation (IR)
+## Start in 60 Seconds
 
-ARVIS produces a structured **Intermediate Representation (IR)**.
+Install:
 
-The IR is:
+```bash
+pip install arvis
+```
 
-- deterministic
-- portable
-- independent from execution
+Run:
 
-It allows:
+```bash
+python examples/01_gate_refusal.py
+```
 
-- replay of decisions
-- commitment verification
-- LLM interaction
-- system interoperability
+Then explore :
 
-IR is the canonical boundary between:
-
-- cognition (pipeline)
-- orchestration (runtime)
-- execution (syscalls)
-- response (conversation layer)
-
----
-
-## Internal Modularity
-
-ARVIS internals are now organized into explicit modules:
-
-- runtime services
-- pipeline services
-- result / trace factories
-- public views
-- replay components
-
-This improves maintainability while preserving deterministic behavior.
+```bash
+examples/
+docs/IR.md
+docs/ARCHITECTURE.md
+docs/WHY_ARVIS.md
+```
 
 ---
 
 ## In One Sentence
 
-ARVIS is a system where:
-
-> a decision is not produced —
-> it is **allowed to exist under constraints**.
+    ARVIS is the layer that decides whether intelligence is allowed to act.
