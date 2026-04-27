@@ -11,7 +11,7 @@ from arvis.cognition.retrieval.cognitive_retrieval_snapshot import (
     CognitiveRetrievalSnapshot,
 )
 
-from veramem_kernel.api.timeline import TimelineEntry
+from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.memory.memory_long_snapshot import MemoryLongSnapshot
 
 

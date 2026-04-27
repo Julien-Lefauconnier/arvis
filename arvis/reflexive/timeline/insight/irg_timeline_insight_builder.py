@@ -5,7 +5,7 @@ from collections import Counter
 from arvis.reflexive.timeline.insight.irg_timeline_insight import (
     IRGTimelineInsight,
 )
-from veramem_kernel.api.timeline import TimelineView
+from arvis.timeline.timeline_view import TimelineView
 
 
 class IRGTimelineInsightBuilder:

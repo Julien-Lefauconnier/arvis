@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import Sequence
 
-from veramem_kernel.journals.timeline.timeline_types import TimelineEntryType
-from veramem_kernel.journals.timeline.timeline_view_types import TimelineViewRole
+from arvis.timeline.timeline_types import TimelineEntryType
+from arvis.timeline.timeline_view_types import TimelineViewRole
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from uuid import uuid4
-from veramem_kernel.api.signals import SignalEvent, CanonicalSignal
+from arvis.api.signals import SignalEvent, CanonicalSignal
 
 def canonical_to_event(canonical: CanonicalSignal) -> SignalEvent:
     return SignalEvent(

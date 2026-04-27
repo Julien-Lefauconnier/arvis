@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import ClassVar, Dict, Protocol, Iterable
 from datetime import datetime, timedelta, timezone
 
-from veramem_kernel.api.signals import CanonicalSignal
-from veramem_kernel.signals.canonical import CanonicalSignalRegistry
-from veramem_kernel.signals.canonical import CanonicalSignalKey
+from arvis.api.signals import CanonicalSignal
+from arvis.signals.canonical import CanonicalSignalRegistry
+from arvis.signals.canonical import CanonicalSignalKey
 import itertools
 from typing import Iterator
 

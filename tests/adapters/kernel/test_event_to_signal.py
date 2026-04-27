@@ -1,13 +1,11 @@
 # tests/adapters/kernel/test_event_to_signal.py
 
-from veramem_kernel.invariants.signal.canonical.canonical_signal_invariants import (
-    validate_canonical_signal
-)
+from arvis.signals.canonical.canonical_signal_registry import CanonicalSignalRegistry
 from tests.adapters.kernel.fixtures import dummy_ir
 from arvis.adapters.kernel.mappers.ir_to_canonical import ir_to_canonical
 
 
-def test_canonical_signal_is_valid():
+def test_canonical_signal_registered_in_arvis_registry():
     ir = dummy_ir()
 
     canonicals = ir_to_canonical(ir)
@@ -15,7 +13,7 @@ def test_canonical_signal_is_valid():
     assert len(canonicals) > 0
 
     for canonical in canonicals:
-        validate_canonical_signal(canonical)
+        assert CanonicalSignalRegistry.get(canonical.key) is not None
 
 
 def test_ir_produces_expected_categories():

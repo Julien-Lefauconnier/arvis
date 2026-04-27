@@ -41,17 +41,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-compat = [
-  "veramem-kernel[crypto]==1.2.0"
-  ]
 dev = [
-    "mypy",
-    "ruff",
-    "pytest",
-    "pytest-cov",
-    "hypothesis",
-    "pytest-benchmark",
-    "numpy",
+  "mypy",
+  "ruff",
+  "pytest",
+  "pytest-cov",
+  "hypothesis",
+  "pytest-benchmark",
+  "numpy",
 ]
 
 [project.urls]

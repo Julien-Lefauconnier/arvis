@@ -2,7 +2,7 @@
 
 from collections import Counter
 from typing import Sequence
-from veramem_kernel.journals.timeline.timeline_types import TimelineEntryType
+from arvis.timeline.timeline_types import TimelineEntryType
 from arvis.reflexive.timeline.insight.irg_timeline_insight import (
     IRGTimelineInsight,
 )

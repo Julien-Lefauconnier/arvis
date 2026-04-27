@@ -17,7 +17,7 @@ from arvis.api.trace import DecisionTraceView
 from arvis.api.version import API_FINGERPRINT, API_VERSION
 from arvis.cognition.state.cognitive_state import CognitiveState
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
-from veramem_kernel.signals.signal_journal import SignalJournal
+from arvis.signals.signal_journal import SignalJournal
 
 
 @dataclass(frozen=True)
@@ -64,7 +64,7 @@ class CognitiveResultView:
                 timeline_journal
             )
             try:
-                from veramem_kernel.journals.timeline.timeline_commitment import (
+                from arvis.timeline.timeline_commitment import (
                     TimelineCommitment,
                 )
 

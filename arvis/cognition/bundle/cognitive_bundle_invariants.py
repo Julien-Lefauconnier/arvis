@@ -4,8 +4,8 @@ from typing import Sequence
 
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
-from veramem_kernel.api.timeline import TimelineEntry
-from veramem_kernel.journals.timeline.timeline_types import TimelineEntryType
+from arvis.timeline.timeline_entry import TimelineEntry
+from arvis.timeline.timeline_types import TimelineEntryType
 
 
 class CognitiveBundleInvariantError(Exception):

@@ -3,7 +3,7 @@
 from datetime import datetime, timezone, timedelta
 
 from arvis.kernel_core.memory.projection import project_memory
-from veramem_kernel.journals.observation_long.observation_long_event import (
+from arvis.kernel_core.memory.observation_long_event import (
     ObservationLongEvent,
 )
 

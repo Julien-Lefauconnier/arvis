@@ -3,7 +3,7 @@
 from typing import Iterable, Dict, Tuple
 
 from arvis.kernel_core.memory.models import MemoryRecord
-from veramem_kernel.journals.observation_long.observation_long_event import (
+from arvis.kernel_core.memory.observation_long_event import (
     ObservationLongEvent,
 )
 

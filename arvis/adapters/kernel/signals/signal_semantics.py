@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Tuple, Any, Dict
 
-from veramem_kernel.api.signals import Signal
+from arvis.api.signals import Signal
 
 
 class SignalSemantics:

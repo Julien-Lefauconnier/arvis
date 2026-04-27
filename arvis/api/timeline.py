@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from veramem_kernel.api.timeline import TimelineSnapshot, TimelineEntry
+from arvis.timeline.timeline_snapshot import TimelineSnapshot
+from arvis.timeline.timeline_entry import TimelineEntry
 
 # -----------------------------------------------------
 # Entry View
