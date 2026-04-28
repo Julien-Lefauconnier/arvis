@@ -1,9 +1,9 @@
 # arvis/cognition/conversation/conversation_mode.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ConversationMode(str, Enum):
+class ConversationMode(StrEnum):
     """
     Defines the global conversational regime.
 

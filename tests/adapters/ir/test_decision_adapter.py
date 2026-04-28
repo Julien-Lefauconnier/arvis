@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from types import SimpleNamespace
 
 from arvis.adapters.ir.decision_adapter import DecisionIRAdapter
 
 
-class DummyMemoryIntent(str, Enum):
+class DummyMemoryIntent(StrEnum):
     CANDIDATE = "candidate"
 
 

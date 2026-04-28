@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
 @dataclass(frozen=True)
@@ -11,7 +11,7 @@ class CognitiveProcessId:
     value: str
 
 
-class CognitiveProcessStatus(str, Enum):
+class CognitiveProcessStatus(StrEnum):
     READY = "ready"
     RUNNING = "running"
     BLOCKED = "blocked"
@@ -21,7 +21,7 @@ class CognitiveProcessStatus(str, Enum):
     ABORTED = "aborted"
 
 
-class CognitiveProcessKind(str, Enum):
+class CognitiveProcessKind(StrEnum):
     USER_REQUEST = "user_request"
     MEMORY_CONSOLIDATION = "memory_consolidation"
     CONFLICT_RESOLUTION = "conflict_resolution"

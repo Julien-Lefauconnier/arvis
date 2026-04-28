@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class CognitiveInterruptType(str, Enum):
+class CognitiveInterruptType(StrEnum):
     USER_INPUT = "user_input"
     TOOL_RESULT = "tool_result"
     MEMORY_READY = "memory_ready"

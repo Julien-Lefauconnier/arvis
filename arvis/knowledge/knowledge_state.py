@@ -1,9 +1,9 @@
 # arvis/knowledge/knowledge_state.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class KnowledgeState(str, Enum):
+class KnowledgeState(StrEnum):
     """
     Declarative representation of Veramem's knowledge awareness.
 

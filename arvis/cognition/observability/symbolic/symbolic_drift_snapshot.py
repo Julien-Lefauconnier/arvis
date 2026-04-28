@@ -2,10 +2,10 @@
 
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class SymbolicRegime(str, Enum):
+class SymbolicRegime(StrEnum):
     OK = "ok"
     WARNING = "warning"
     DRIFT = "drift"

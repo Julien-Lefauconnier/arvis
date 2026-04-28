@@ -1,7 +1,7 @@
 # arvis/math/lyapunov/lyapunov_gate.py
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.math.control.eps_adaptive import (
@@ -15,7 +15,7 @@ from arvis.math.lyapunov.lyapunov import LyapunovState, V, delta_V
 from .slow_state import SlowState
 
 
-class LyapunovVerdict(str, Enum):
+class LyapunovVerdict(StrEnum):
     ALLOW = "ALLOW"
     REQUIRE_CONFIRMATION = "REQUIRE_CONFIRMATION"
     ABSTAIN = "ABSTAIN"

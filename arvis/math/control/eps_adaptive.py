@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from arvis.math.core.normalization import clamp, clamp01
 
 
-class CognitiveMode(str, Enum):
+class CognitiveMode(StrEnum):
     NORMAL = "NORMAL"
     SAFE = "SAFE"
     CRITICAL = "CRITICAL"

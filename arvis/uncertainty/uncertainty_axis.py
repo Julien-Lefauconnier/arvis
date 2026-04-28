@@ -1,9 +1,9 @@
 # arvis/uncertainty/uncertainty_axis.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class UncertaintyAxis(str, Enum):
+class UncertaintyAxis(StrEnum):
     """
     Declarative dimensions of uncertainty.
 

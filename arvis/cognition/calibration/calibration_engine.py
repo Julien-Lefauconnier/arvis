@@ -1,12 +1,12 @@
 # arvis/cognition/calibration/calibration_engine.py
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from arvis.cognition.policy.cognitive_policy_result import CognitivePolicyResult
 
 
-class CalibrationRegime(str, Enum):
+class CalibrationRegime(StrEnum):
     STABLE = "stable"
     UNSTABLE = "unstable"
     DRIFTING = "drifting"

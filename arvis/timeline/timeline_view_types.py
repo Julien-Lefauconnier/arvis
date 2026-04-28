@@ -1,9 +1,9 @@
 # arvis/timeline/timeline_view_types.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class TimelineViewRole(str, Enum):
+class TimelineViewRole(StrEnum):
     """
     Declarative roles for timeline views.
 

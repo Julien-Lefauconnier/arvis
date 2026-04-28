@@ -1,9 +1,9 @@
 # arvis/cognition/conversation/response_strategy_type.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ResponseStrategyType(str, Enum):
+class ResponseStrategyType(StrEnum):
     """
     High-level conversational response strategy.
 

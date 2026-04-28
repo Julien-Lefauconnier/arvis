@@ -1,8 +1,8 @@
 # arvis/timeline/timeline_types.py
-from enum import Enum
+from enum import StrEnum
 
 
-class TimelineEntryType(str, Enum):
+class TimelineEntryType(StrEnum):
     """
     Declarative types for timeline entries.
 

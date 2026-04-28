@@ -1,9 +1,9 @@
 # arvis/linguistic/acts/act_types.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class LinguisticActType(str, Enum):
+class LinguisticActType(StrEnum):
     INFORMATION = "information"
     DECISION = "decision"
     REFUS = "refus"

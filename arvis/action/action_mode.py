@@ -1,9 +1,9 @@
 # arvis/action/action_mode.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ActionMode(str, Enum):
+class ActionMode(StrEnum):
     """
     Describes how an action is initiated and validated.
 

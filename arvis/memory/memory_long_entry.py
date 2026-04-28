@@ -2,10 +2,10 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 
-class MemoryLongType(str, Enum):
+class MemoryLongType(StrEnum):
     """
     Declarative types of long-term memory.
 

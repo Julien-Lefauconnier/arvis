@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class TheoreticalRegime(str, Enum):
+class TheoreticalRegime(StrEnum):
     STABLE = "stable"
     OSCILLATORY = "oscillatory"
     CRITICAL = "critical"

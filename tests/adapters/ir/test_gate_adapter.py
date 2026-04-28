@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from types import SimpleNamespace
 
 from arvis.adapters.ir.gate_adapter import GateIRAdapter
 from arvis.ir.gate import CognitiveGateVerdictIR
 
 
-class DummyVerdict(str, Enum):
+class DummyVerdict(StrEnum):
     ALLOW = "allow"
     ABSTAIN = "abstain"
 

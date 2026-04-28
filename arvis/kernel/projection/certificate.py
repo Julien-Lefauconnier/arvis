@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectionCertificationLevel(str, Enum):
+class ProjectionCertificationLevel(StrEnum):
     NONE = "NONE"
     BASIC = "BASIC"
     LOCAL = "LOCAL"

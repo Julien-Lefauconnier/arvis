@@ -2,17 +2,17 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 
-class UnderstandingState(str, Enum):
+class UnderstandingState(StrEnum):
     INITIAL = "initial"
     FRAGILE = "fragile"
     ADJUSTING = "adjusting"
     STABLE = "stable"
 
 
-class UnderstandingTrend(str, Enum):
+class UnderstandingTrend(StrEnum):
     UP = "up"
     STABLE = "stable"
     DOWN = "down"

@@ -1,7 +1,7 @@
 # arvis/ir/gate.py
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
 @dataclass(frozen=True)
@@ -14,7 +14,7 @@ class CognitiveGateTraceStepIR:
     stability_impact: float = 0.0
 
 
-class CognitiveGateVerdictIR(str, Enum):
+class CognitiveGateVerdictIR(StrEnum):
     ALLOW = "allow"
     REQUIRE_CONFIRMATION = "require_confirmation"
     ABSTAIN = "abstain"

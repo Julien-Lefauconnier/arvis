@@ -1,10 +1,10 @@
 # arvis/cognition/confirmation/confirmation_result.py
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class ConfirmationStatus(str, Enum):
+class ConfirmationStatus(StrEnum):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     REJECTED = "rejected"

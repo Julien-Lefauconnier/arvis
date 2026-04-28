@@ -3,12 +3,12 @@
 import unicodedata
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 
 from .timeline_types import TimelineEntryType
 
 
-class TimelineEntryNature(str, Enum):
+class TimelineEntryNature(StrEnum):
     """
     Nature of a timeline entry.
 

@@ -1,10 +1,10 @@
 # arvis/cognition/governance/governance_decision.py
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class GovernanceDecisionType(str, Enum):
+class GovernanceDecisionType(StrEnum):
     ACCEPTED = "accepted"
     REFUSED = "refused"
     REVOKED = "revoked"

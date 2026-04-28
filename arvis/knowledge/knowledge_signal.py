@@ -1,9 +1,9 @@
 # arvis/knowledge/knowledge_signal.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class KnowledgeSignal(str, Enum):
+class KnowledgeSignal(StrEnum):
     """
     Declarative signals explaining *why* a given KnowledgeState was reached.
 

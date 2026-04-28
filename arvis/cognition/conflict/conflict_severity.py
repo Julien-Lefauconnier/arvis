@@ -1,9 +1,9 @@
 # arvis/cognition/conflict/conflict_severity.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ConflictSeverity(str, Enum):
+class ConflictSeverity(StrEnum):
     """
     Declarative severity levels for cognitive conflicts.
 

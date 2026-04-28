@@ -1,24 +1,24 @@
 # arvis/reasoning/reasoning_gap.py
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class GapType(str, Enum):
+class GapType(StrEnum):
     UNKNOWN_KNOWLEDGE = "unknown_knowledge"
     UNCERTAIN_KNOWLEDGE = "uncertain_knowledge"
     MISSING_CONTEXT = "missing_context"
     AMBIGUOUS_INTENT = "ambiguous_intent"
 
 
-class GapOrigin(str, Enum):
+class GapOrigin(StrEnum):
     KNOWLEDGE = "knowledge"
     CONTEXT = "context"
     USER = "user"
     SYSTEM = "system"
 
 
-class GapSeverity(str, Enum):
+class GapSeverity(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"

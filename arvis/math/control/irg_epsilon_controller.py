@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from arvis.math.control.eps_adaptive import (
     CognitiveMode,
@@ -19,7 +19,7 @@ from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
 # ============================================================
 
 
-class IRGRegime(str, Enum):
+class IRGRegime(StrEnum):
     STABLE = "STABLE"
     TRANSITION = "TRANSITION"
     UNSTABLE = "UNSTABLE"

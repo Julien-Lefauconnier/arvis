@@ -1,9 +1,9 @@
 # arvis/cognition/conversation/response_realization_mode.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ResponseRealizationMode(str, Enum):
+class ResponseRealizationMode(StrEnum):
     """
     How a response is produced.
     """

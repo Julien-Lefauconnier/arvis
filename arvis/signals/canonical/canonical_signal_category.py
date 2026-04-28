@@ -1,9 +1,9 @@
 # arvis/signals/canonical/canonical_signal_category.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class CanonicalSignalCategory(str, Enum):
+class CanonicalSignalCategory(StrEnum):
     COGNITIVE_STATE = "cognitive_state"
     TEMPORAL_STATE = "temporal_state"
     KNOWLEDGE_STATE = "knowledge_state"
