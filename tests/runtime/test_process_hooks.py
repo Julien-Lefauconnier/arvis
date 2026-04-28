@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 from arvis.api.os import CognitiveOS, CognitiveOSConfig
 
-
 # =====================================================
 # HELPERS
 # =====================================================

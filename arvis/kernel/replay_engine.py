@@ -1,13 +1,14 @@
 # arvis/kernel/replay_engine.py
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, List, Any, Optional
+from typing import Any
 
-from arvis.timeline.timeline_snapshot import TimelineSnapshot
 from arvis.cognition.bundle.cognitive_bundle_builder import CognitiveBundleBuilder
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
-from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.ir.cognitive_ir import CognitiveIR
+from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+from arvis.timeline.timeline_snapshot import TimelineSnapshot
 
 
 @dataclass
@@ -28,8 +29,8 @@ class ReplayEngine:
     def replay(
         self,
         timeline_snapshots: Iterable[TimelineSnapshot],
-    ) -> List[CognitiveBundleSnapshot]:
-        bundles: List[CognitiveBundleSnapshot] = []
+    ) -> list[CognitiveBundleSnapshot]:
+        bundles: list[CognitiveBundleSnapshot] = []
 
         for snap in timeline_snapshots:
             bundle = CognitiveBundleBuilder.from_timeline(snap)
@@ -45,7 +46,7 @@ class ReplayEngine:
         self,
         ir: CognitiveIR,
         *,
-        pipeline: Optional[CognitivePipeline] = None,
+        pipeline: CognitivePipeline | None = None,
     ) -> Any:
         """
         Replay full cognitive execution from IR.
@@ -64,7 +65,7 @@ class ReplayEngine:
         self,
         data: Any,
         *,
-        pipeline: Optional[CognitivePipeline] = None,
+        pipeline: CognitivePipeline | None = None,
     ) -> Any:
         """
         Smart replay dispatcher:

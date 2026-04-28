@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Tuple
 
 from arvis.kernel_core.memory.models import MemoryRecord
 
@@ -20,7 +19,7 @@ class MemorySnapshot:
     """
 
     user_id: str
-    records: Tuple[MemoryRecord, ...]
+    records: tuple[MemoryRecord, ...]
     total_records: int
     active_records: int
     deleted_records: int

@@ -1,5 +1,7 @@
 # tests/cognition/coherence/test_change_budget.py
 
+import pytest
+
 from arvis.cognition.coherence.change_budget import ChangeBudget
 
 
@@ -36,8 +38,5 @@ def test_change_budget_is_immutable():
         timestamp=0,
     )
 
-    try:
+    with pytest.raises(AttributeError):
         budget.current_changes = 10
-        assert False
-    except Exception:
-        assert True

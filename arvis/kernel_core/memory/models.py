@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TypeAlias
 
-
 JsonPrimitive: TypeAlias = str | int | float | bool | None
 JsonValue: TypeAlias = JsonPrimitive | tuple["JsonValue", ...] | dict[str, "JsonValue"]
 MemoryValue: TypeAlias = JsonValue

@@ -3,7 +3,6 @@
 
 from arvis.kernel.pipeline.stages.regime_stage import RegimeStage
 
-
 # ============================================================
 # Helpers
 # ============================================================

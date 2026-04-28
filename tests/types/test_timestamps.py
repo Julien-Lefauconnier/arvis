@@ -1,6 +1,6 @@
 # tests/types/test_timestamps.py
 
-from datetime import timezone
+from datetime import UTC
 
 from arvis.types.timestamps import utcnow
 
@@ -15,7 +15,7 @@ def test_utcnow_returns_datetime():
 def test_utcnow_is_utc():
     ts = utcnow()
 
-    assert ts.tzinfo == timezone.utc
+    assert ts.tzinfo == UTC
 
 
 def test_utcnow_monotonic():

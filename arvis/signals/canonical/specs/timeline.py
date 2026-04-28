@@ -3,12 +3,12 @@
 Canonical Signal Specifications — Timeline Domain — Closed Canonical World
 """
 
+from arvis.signals.canonical.canonical_signal_category import CanonicalSignalCategory
+from arvis.signals.canonical.canonical_signal_key import CanonicalSignalKey
 from arvis.signals.canonical.canonical_signal_registry import (
     CanonicalSignalRegistry,
     CanonicalSignalSpec,
 )
-from arvis.signals.canonical.canonical_signal_category import CanonicalSignalCategory
-from arvis.signals.canonical.canonical_signal_key import CanonicalSignalKey
 
 
 def register_timeline_signals() -> None:

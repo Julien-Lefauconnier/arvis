@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Optional
+from collections.abc import Callable
 
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 
-
 SyscallFn = Callable[..., SyscallResult]
 
-SYSCALL_REGISTRY: Dict[str, SyscallFn] = {}
+SYSCALL_REGISTRY: dict[str, SyscallFn] = {}
 
 
 def register_syscall(name: str) -> Callable[[SyscallFn], SyscallFn]:
@@ -23,5 +22,5 @@ def register_syscall(name: str) -> Callable[[SyscallFn], SyscallFn]:
     return decorator
 
 
-def get_syscall(name: str) -> Optional[SyscallFn]:
+def get_syscall(name: str) -> SyscallFn | None:
     return SYSCALL_REGISTRY.get(name)

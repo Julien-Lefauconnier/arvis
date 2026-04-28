@@ -1,10 +1,10 @@
 # tests/action/test_action_context_integration.py
 
+from arvis.action.action_context import ActionContext
 from arvis.action.action_evaluator import evaluate_action
 from arvis.action.action_template import ActionTemplate
-from arvis.action.action_context import ActionContext
-from arvis.math.signals import RiskSignal
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.signals import RiskSignal
 
 
 def test_strict_mode_forces_validation():

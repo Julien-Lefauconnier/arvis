@@ -2,15 +2,14 @@
 
 import pytest
 
-from arvis.cognition.projection.projection_api import project_observation, ALLOWED_MODES
+from arvis.cognition.projection.projection_api import ALLOWED_MODES, project_observation
 from tests.fixtures.projection_cases import (
-    nominal_case,
-    high_risk_case,
     boundary_case,
-    noisy_case,
+    high_risk_case,
     invalid_case,
+    noisy_case,
+    nominal_case,
 )
-
 
 X_BOUND = 10.0
 Z_BOUND = 10.0

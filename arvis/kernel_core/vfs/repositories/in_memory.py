@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import time
 import uuid
-from typing import Optional
 
 from arvis.kernel_core.vfs.models import VFSItem
 
@@ -20,7 +19,7 @@ class InMemoryVFSRepository:
         bucket = self._user_bucket(user_id)
         return list(bucket.values())
 
-    def get_item(self, user_id: str, item_id: str) -> Optional[VFSItem]:
+    def get_item(self, user_id: str, item_id: str) -> VFSItem | None:
         bucket = self._user_bucket(user_id)
         return bucket.get(item_id)
 
@@ -29,7 +28,7 @@ class InMemoryVFSRepository:
         *,
         user_id: str,
         name: str,
-        parent_id: Optional[str],
+        parent_id: str | None,
     ) -> str:
         bucket = self._user_bucket(user_id)
         item_id = str(uuid.uuid4())
@@ -49,9 +48,9 @@ class InMemoryVFSRepository:
         *,
         user_id: str,
         name: str,
-        parent_id: Optional[str],
-        size: Optional[int],
-        mime: Optional[str],
+        parent_id: str | None,
+        size: int | None,
+        mime: str | None,
     ) -> str:
         bucket = self._user_bucket(user_id)
         item_id = str(uuid.uuid4())
@@ -99,7 +98,7 @@ class InMemoryVFSRepository:
         *,
         user_id: str,
         item_id: str,
-        parent_id: Optional[str],
+        parent_id: str | None,
     ) -> None:
         bucket = self._user_bucket(user_id)
         item = bucket[item_id]

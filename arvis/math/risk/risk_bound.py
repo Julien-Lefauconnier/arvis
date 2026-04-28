@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass
 from math import log, sqrt
-from typing import Deque, Optional
 
 
 @dataclass(frozen=True)
@@ -37,11 +36,11 @@ class HoeffdingRiskBound:
     Deterministic, audit-friendly, ZKCS-compliant.
     """
 
-    def __init__(self, params: Optional[RiskBoundParams] = None):
+    def __init__(self, params: RiskBoundParams | None = None):
         self.params = params or RiskBoundParams()
         if not (0.0 < self.params.delta < 1.0):
             raise ValueError("delta must be in (0,1)")
-        self._events: Deque[int] = deque(maxlen=self.params.window_size)
+        self._events: deque[int] = deque(maxlen=self.params.window_size)
 
     def push(self, violation: bool) -> RiskBoundSnapshot:
         self._events.append(1 if violation else 0)

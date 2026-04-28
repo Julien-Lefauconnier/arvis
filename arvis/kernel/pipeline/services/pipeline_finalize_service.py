@@ -2,33 +2,30 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
 import warnings
+from typing import TYPE_CHECKING, cast
 
+from arvis.adapters.ir.gate_adapter import GateIRAdapter
+from arvis.adapters.ir.state_adapter import StateIRAdapter
+from arvis.cognition.gate.cognitive_gate_result import CognitiveGateResult
+from arvis.cognition.gate.gate_trace_builder import GateTraceBuilder
+from arvis.cognition.gate.reason_code_normalizer import ReasonCodeNormalizer
+from arvis.cognition.state.cognitive_state_builder import CognitiveStateBuilder
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
 from arvis.kernel.pipeline.cognitive_pipeline_result import CognitivePipelineResult
-
-from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
-from arvis.cognition.gate.cognitive_gate_result import CognitiveGateResult
-from arvis.cognition.gate.gate_trace_builder import GateTraceBuilder
-from arvis.cognition.gate.reason_code_normalizer import ReasonCodeNormalizer
-
 from arvis.kernel.pipeline.factories import (
-    PipelineTraceFactory,
     PipelineResultFactory,
+    PipelineTraceFactory,
 )
-
-from arvis.kernel.pipeline.services import (
-    PipelineObservabilityService,
+from arvis.kernel.pipeline.services.pipeline_ir_service import (
     PipelineIRService,
 )
-
-from arvis.cognition.state.cognitive_state_builder import CognitiveStateBuilder
-
-from arvis.adapters.ir.gate_adapter import GateIRAdapter
-from arvis.adapters.ir.state_adapter import StateIRAdapter
+from arvis.kernel.pipeline.services.pipeline_observability_service import (
+    PipelineObservabilityService,
+)
+from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
@@ -37,7 +34,7 @@ if TYPE_CHECKING:
 class PipelineFinalizeService:
     @staticmethod
     def run(
-        pipeline: "CognitivePipeline",
+        pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
     ) -> CognitivePipelineResult:
         if ctx.extra.get("__pipeline_finalized", False):
@@ -61,8 +58,9 @@ class PipelineFinalizeService:
         # -----------------------------------------------------
         if ctx.gate_result is None:
             warnings.warn(
-                "gate_result is None → fallback ABSTAIN (vérifiez gate_stage)",
+                "gate_result is None → fallback ABSTAIN (verify gate_stage)",
                 RuntimeWarning,
+                stacklevel=2,
             )
             ctx.gate_result = LyapunovVerdict.ABSTAIN
 

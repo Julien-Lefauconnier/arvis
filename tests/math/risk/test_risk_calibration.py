@@ -1,10 +1,10 @@
 # tests/math/risk/test_risk_calibration.py
 
 from arvis.math.risk.risk_calibration import (
-    calibrate_risk,
-    probabilistic_or,
-    calibrated_or_fusion,
     DEFAULT_RISK_CALIBRATION,
+    calibrate_risk,
+    calibrated_or_fusion,
+    probabilistic_or,
 )
 
 

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Protocol, Any
-
-from arvis.kernel_core.syscalls.syscall import SyscallResult
-from arvis.kernel_core.syscalls.syscall_registry import register_syscall
+from typing import Any, Protocol
 
 from arvis.kernel_core.process import CognitiveProcessId
+from arvis.kernel_core.syscalls.syscall import SyscallResult
+from arvis.kernel_core.syscalls.syscall_registry import register_syscall
 
 
 class SchedulerLike(Protocol):

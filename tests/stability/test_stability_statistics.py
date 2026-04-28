@@ -7,7 +7,6 @@ from arvis.stability.stability_statistics import (
     StabilityStatsSnapshot,
 )
 
-
 # ============================================================
 # 1. EMPTY BUFFER
 # ============================================================

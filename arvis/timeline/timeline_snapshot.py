@@ -1,13 +1,14 @@
 # arvis/timeline/timeline_snapshot.py
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Iterable, Tuple
-from datetime import datetime, timezone
 
+from collections.abc import Iterable
+from dataclasses import dataclass
+from datetime import UTC, datetime
+
+from .timeline_cursor import TimelineCursor
 from .timeline_entry import TimelineEntry
 from .timeline_hashchain import TimelineHashChain
-from .timeline_cursor import TimelineCursor
 
 
 @dataclass(frozen=True)
@@ -22,7 +23,7 @@ class TimelineSnapshot:
     - distributed systems
     """
 
-    entries: Tuple[TimelineEntry, ...]
+    entries: tuple[TimelineEntry, ...]
     hashchain: TimelineHashChain
 
     @property
@@ -33,7 +34,7 @@ class TimelineSnapshot:
     def build(
         cls,
         entries: Iterable[TimelineEntry],
-    ) -> "TimelineSnapshot":
+    ) -> TimelineSnapshot:
         entries_tuple = tuple(entries)
         chain = TimelineHashChain.build(entries_tuple)
         return cls(entries_tuple, chain)
@@ -48,7 +49,7 @@ class TimelineSnapshot:
 
         if not self.entries:
             return TimelineCursor(
-                timestamp=datetime.fromtimestamp(0, timezone.utc),
+                timestamp=datetime.fromtimestamp(0, UTC),
                 head=None,
                 total_entries=0,
             )
@@ -61,7 +62,7 @@ class TimelineSnapshot:
             total_entries=len(self.entries),
         )
 
-    def append(self, entry: TimelineEntry) -> "TimelineSnapshot":
+    def append(self, entry: TimelineEntry) -> TimelineSnapshot:
         """
         Incremental deterministic extension of the snapshot.
 

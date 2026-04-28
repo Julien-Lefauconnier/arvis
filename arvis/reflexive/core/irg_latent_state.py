@@ -1,7 +1,6 @@
 # arvis/reflexive/core/irg_latent_state.py
 
 from dataclasses import dataclass
-from typing import Tuple
 
 
 @dataclass(frozen=True)
@@ -19,7 +18,7 @@ class IRGLatentState:
     regime_persistence: float = 0.0
     uncertainty_drift: float = 0.0
 
-    def as_vector(self) -> Tuple[float, float, float, float]:
+    def as_vector(self) -> tuple[float, float, float, float]:
         return (
             self.stability_memory,
             self.structural_risk,

@@ -1,25 +1,25 @@
 # arvis/kernel/pipeline/stages/__init__.py
 
+from .action_stage import ActionStage
+from .bundle_stage import BundleStage
+from .confirmation_stage import ConfirmationStage
+from .conflict_modulation_stage import ConflictModulationStage
+from .conflict_stage import ConflictStage
+from .control_feedback_stage import ControlFeedbackStage
+from .control_stage import ControlStage
+from .core_stage import CoreStage
+from .decision_stage import DecisionStage
+from .execution_stage import ExecutionStage
+from .gate_stage import GateStage
+from .intent_stage import IntentStage
+from .passive_context_stage import PassiveContextStage
+from .projection_stage import ProjectionStage
+from .regime_stage import RegimeStage
+from .runtime_stage import RuntimeStage
+from .structural_risk_stage import StructuralRiskStage
+from .temporal_stage import TemporalStage
 from .tool_feedback_stage import ToolFeedbackStage
 from .tool_retry_stage import ToolRetryStage
-from .decision_stage import DecisionStage
-from .passive_context_stage import PassiveContextStage
-from .bundle_stage import BundleStage
-from .conflict_stage import ConflictStage
-from .core_stage import CoreStage
-from .temporal_stage import TemporalStage
-from .regime_stage import RegimeStage
-from .conflict_modulation_stage import ConflictModulationStage
-from .control_stage import ControlStage
-from .projection_stage import ProjectionStage
-from .gate_stage import GateStage
-from .control_feedback_stage import ControlFeedbackStage
-from .structural_risk_stage import StructuralRiskStage
-from .confirmation_stage import ConfirmationStage
-from .execution_stage import ExecutionStage
-from .action_stage import ActionStage
-from .intent_stage import IntentStage
-from .runtime_stage import RuntimeStage
 
 __all__ = [
     "ToolFeedbackStage",

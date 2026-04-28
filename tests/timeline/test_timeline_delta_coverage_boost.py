@@ -1,21 +1,20 @@
 # tests/timeline/test_timeline_delta_coverage_boost.py
 
+from datetime import UTC, datetime
+
 import pytest
 
+from arvis.timeline.timeline_cursor import TimelineCursor
 from arvis.timeline.timeline_delta import (
     TimelineDelta,
+    TimelineDeltaDecodeError,
+    TimelineDeltaError,
     _pack_frames,
     _unpack_frames,
-    TimelineDeltaDecodeError,
 )
-
 from arvis.timeline.timeline_entry import TimelineEntry
-from arvis.timeline.timeline_cursor import TimelineCursor
 from arvis.timeline.timeline_snapshot import TimelineSnapshot
-from datetime import datetime, timezone
 from arvis.timeline.timeline_types import TimelineEntryType
-from arvis.timeline.timeline_delta import TimelineDeltaError
-
 
 # ============================================================
 # Helpers
@@ -30,7 +29,7 @@ def make_entry(i: int) -> TimelineEntry:
         description=None,
         action_id=None,
         place_id=None,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         device_id="0" * 64,
         lamport=i,
     )
@@ -99,7 +98,7 @@ def test_apply_base_mismatch():
     target = extend_snapshot(base, 2)
     delta = TimelineDelta.from_snapshots(base, target)
 
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, RuntimeError, AttributeError)):
         delta.apply_to(other)
 
 
@@ -112,7 +111,7 @@ def test_apply_with_none_entry():
         total_entries=base.cursor().total_entries + 1,
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, RuntimeError, TypeError)):
         TimelineDelta(
             base=base.cursor(),
             target=target,
@@ -140,7 +139,7 @@ def test_verify_base_mismatch():
     target = extend_snapshot(base, 2)
     delta = TimelineDelta.from_snapshots(base, target)
 
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, RuntimeError, AttributeError)):
         delta.verify_against(other)
 
 
@@ -161,14 +160,14 @@ def test_from_snapshots_rollback():
     base = make_snapshot(3)
     target = make_snapshot(1)
 
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, RuntimeError)):
         TimelineDelta.from_snapshots(base, target)
 
 
 def test_from_snapshots_identical():
     base = make_snapshot(2)
 
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, RuntimeError)):
         TimelineDelta.from_snapshots(base, base)
 
 
@@ -178,7 +177,7 @@ def test_from_snapshots_invalid_entries():
 
     object.__setattr__(target, "entries", [None, None, None])
 
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, TypeError, AttributeError)):
         TimelineDelta.from_snapshots(base, target)
 
 

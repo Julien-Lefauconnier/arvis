@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Iterable, List, Optional
-from datetime import datetime, timezone
+from collections.abc import Iterable
+from datetime import UTC, datetime
 
 from arvis.kernel_core.memory.models import MemoryRecord
 from arvis.memory.memory_long_entry import (
@@ -13,7 +13,7 @@ from arvis.memory.memory_long_entry import (
 
 
 def _to_datetime(ts: int) -> datetime:
-    return datetime.fromtimestamp(ts, tz=timezone.utc)
+    return datetime.fromtimestamp(ts, tz=UTC)
 
 
 def _infer_memory_type(namespace: str, key: str) -> MemoryLongType:
@@ -54,7 +54,7 @@ def _build_value_ref(record: MemoryRecord) -> str:
     return f"{record.record_id}:v{record.version}"
 
 
-def to_memory_long_entry(record: MemoryRecord) -> Optional[MemoryLongEntry]:
+def to_memory_long_entry(record: MemoryRecord) -> MemoryLongEntry | None:
     """
     Kernel → cognition adapter (ZKCS compliant)
     """
@@ -76,8 +76,8 @@ def to_memory_long_entry(record: MemoryRecord) -> Optional[MemoryLongEntry]:
 
 def to_memory_long_entries(
     records: Iterable[MemoryRecord],
-) -> List[MemoryLongEntry]:
-    entries: List[MemoryLongEntry] = []
+) -> list[MemoryLongEntry]:
+    entries: list[MemoryLongEntry] = []
 
     for record in records:
         entry = to_memory_long_entry(record)

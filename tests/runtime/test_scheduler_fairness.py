@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
-from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
-from arvis.runtime.cognitive_scheduler import CognitiveScheduler
 from arvis.kernel_core.process import (
     BudgetConsumption,
     CognitiveBudget,
@@ -16,6 +14,8 @@ from arvis.kernel_core.process import (
     CognitiveProcessKind,
     CognitiveProcessStatus,
 )
+from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
+from arvis.runtime.cognitive_scheduler import CognitiveScheduler
 
 
 @dataclass

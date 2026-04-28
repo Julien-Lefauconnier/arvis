@@ -2,22 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
-from .projected_state import ProjectedState
 from .pi_types import (
     PiState,
-    XState,
-    ZState,
-    ZDecisionState,
-    ZGateState,
-    ZControlState,
-    ZDynamicState,
     QState,
     WState,
+    XState,
+    ZControlState,
+    ZDecisionState,
+    ZDynamicState,
+    ZGateState,
+    ZState,
 )
+from .projected_state import ProjectedState
 
-Number = Union[int, float]
+Number = int | float
 
 
 class PiImpl:
@@ -31,10 +31,10 @@ class PiImpl:
     """
 
     def project(self, ctx: Any) -> ProjectedState:
-        state_signals: Dict[str, float] = {}
-        risk_signals: Dict[str, float] = {}
-        control_signals: Dict[str, float] = {}
-        trace_features: Dict[str, float] = {}
+        state_signals: dict[str, float] = {}
+        risk_signals: dict[str, float] = {}
+        control_signals: dict[str, float] = {}
+        trace_features: dict[str, float] = {}
 
         system_tension = getattr(ctx, "system_tension", None)
         state_signals["system_tension"] = self._coerce(system_tension, 0.0)
@@ -68,13 +68,13 @@ class PiImpl:
             metadata=metadata,
         )
 
-    def project_previous(self, ctx: Any) -> Optional[Dict[str, float]]:
+    def project_previous(self, ctx: Any) -> dict[str, float] | None:
         """
         Return the previous flat projection view when available.
         """
         previous = getattr(ctx, "projection_view", None)
         if isinstance(previous, dict):
-            out: Dict[str, float] = {}
+            out: dict[str, float] = {}
             for key, value in previous.items():
                 if isinstance(value, (int, float)):
                     out[str(key)] = float(value)

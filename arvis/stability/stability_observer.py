@@ -1,6 +1,7 @@
 # arvis/stability/stability_observer.py
 
 from typing import Protocol, runtime_checkable
+
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 
 

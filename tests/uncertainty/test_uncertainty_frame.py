@@ -2,8 +2,8 @@
 
 import pytest
 
-from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
 from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
+from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
 
 
 def test_uncertainty_frame_creation():
@@ -38,5 +38,5 @@ def test_uncertainty_frame_is_frozen():
         axes={UncertaintyAxis.DOMAIN_SPECIFIC},
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(AttributeError):
         frame.label = "Modified"

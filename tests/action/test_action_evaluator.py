@@ -2,8 +2,8 @@
 
 from arvis.action.action_evaluator import evaluate_action
 from arvis.action.action_template import ActionTemplate
-from arvis.math.signals import RiskSignal
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.signals import RiskSignal
 
 
 def test_high_risk_write_is_blocked():

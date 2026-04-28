@@ -5,6 +5,9 @@ from __future__ import annotations
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+
+# Important: import module so syscall decorators execute.
+from arvis.kernel_core.syscalls.syscalls import vfs_syscalls  # noqa: F401
 from arvis.kernel_core.vfs.models import VFSItem
 from arvis.kernel_core.vfs.repositories.in_memory import InMemoryVFSRepository
 from arvis.kernel_core.vfs.service import VFSService
@@ -16,10 +19,6 @@ from arvis.kernel_core.vfs.zip.models import (
     ZipNode,
 )
 from arvis.kernel_core.vfs.zip.service import ZipIngestDecision
-
-# Important: import module so syscall decorators execute.
-from arvis.kernel_core.syscalls.syscalls import vfs_syscalls  # noqa: F401
-
 
 USER_ID = "user-1"
 

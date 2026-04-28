@@ -1,13 +1,13 @@
 # arvis/memory/memory_long_policy_gate.py
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from arvis.memory.memory_long_entry import (
     MemoryLongEntry,
 )
 from arvis.memory.memory_long_registry import (
-    MemoryLongRegistry,
     DEFAULT_MEMORY_LONG_REGISTRY,
+    MemoryLongRegistry,
 )
 
 
@@ -66,7 +66,7 @@ class MemoryLongPolicyGate:
         # TTL bounded (no uncontrolled persistence)
         # -------------------------------------------------
         if entry.expires_at is not None:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             max_allowed = now + timedelta(days=self.MAX_TTL_DAYS)
 
             if entry.expires_at > max_allowed:

@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from arvis.kernel_core.vfs.exceptions import (
     VFSCycleError,
     VFSFolderNotEmptyError,
+    VFSInvalidNameError,
     VFSItemNotFoundError,
     VFSNameConflictError,
     VFSParentNotFolderError,
     VFSParentNotFoundError,
-    VFSInvalidNameError,
 )
 from arvis.kernel_core.vfs.models import VFSItem
 from arvis.kernel_core.vfs.repository import VFSRepository
@@ -35,7 +33,7 @@ class VFSService:
         *,
         user_id: str,
         name: str,
-        parent_id: Optional[str],
+        parent_id: str | None,
     ) -> VFSItem:
         normalized_name = self._normalize_name(name)
         items = self.repo.list_items(user_id)
@@ -72,9 +70,9 @@ class VFSService:
         *,
         user_id: str,
         name: str,
-        parent_id: Optional[str],
-        size: Optional[int],
-        mime: Optional[str] = None,
+        parent_id: str | None,
+        size: int | None,
+        mime: str | None = None,
     ) -> VFSItem:
         normalized_name = self._normalize_name(name)
         items = self.repo.list_items(user_id)
@@ -170,7 +168,7 @@ class VFSService:
         *,
         user_id: str,
         item_id: str,
-        parent_id: Optional[str],
+        parent_id: str | None,
     ) -> VFSItem:
         items = self.repo.list_items(user_id)
         item = self._find_item(items, item_id)
@@ -221,7 +219,7 @@ class VFSService:
     def _validate_parent(
         self,
         items: list[VFSItem],
-        parent_id: Optional[str],
+        parent_id: str | None,
     ) -> None:
         if parent_id is None:
             return
@@ -237,9 +235,9 @@ class VFSService:
         self,
         *,
         items: list[VFSItem],
-        parent_id: Optional[str],
+        parent_id: str | None,
         display_name: str,
-        exclude_item_id: Optional[str] = None,
+        exclude_item_id: str | None = None,
     ) -> None:
         for item in items:
             if exclude_item_id is not None and item.item_id == exclude_item_id:

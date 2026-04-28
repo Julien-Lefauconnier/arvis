@@ -1,11 +1,12 @@
 # tests/contracts/test_no_float_leakage.py
 
 import inspect
+
 import arvis.math.signals as signals
 
 
 def test_no_direct_float_usage_in_signals():
-    for name, obj in inspect.getmembers(signals):
+    for _name, obj in inspect.getmembers(signals):
         if inspect.ismodule(obj):
             source = inspect.getsource(obj)
 

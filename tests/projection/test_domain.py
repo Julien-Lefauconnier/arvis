@@ -1,6 +1,6 @@
 # tests/projection/test_domain.py
 
-from arvis.kernel.projection.domain import ProjectionDomain, NumericBounds
+from arvis.kernel.projection.domain import NumericBounds, ProjectionDomain
 
 
 def test_domain_valid():

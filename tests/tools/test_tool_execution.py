@@ -2,9 +2,9 @@
 
 import pytest
 
-from arvis.tools.registry import ToolRegistry
-from arvis.tools.executor import ToolExecutor
 from arvis.tools.base import BaseTool
+from arvis.tools.executor import ToolExecutor
+from arvis.tools.registry import ToolRegistry
 
 
 class DummyTool(BaseTool):

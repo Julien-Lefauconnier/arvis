@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from arvis.kernel_core.vfs.models import VFSItem
 from arvis.kernel_core.vfs.service import VFSService
 from arvis.kernel_core.vfs.zip.models import (
@@ -26,12 +24,12 @@ class ZipCollisionService:
         *,
         zip_root: ZipNode,
         user_id: str,
-        target_parent_id: Optional[str],
+        target_parent_id: str | None,
     ) -> ZipCollisionReport:
         vfs_items = self.vfs.list_items(user_id)
 
         items_by_id: dict[str, VFSItem] = {item.item_id: item for item in vfs_items}
-        children_by_parent_and_name: dict[Optional[str], dict[str, VFSItem]] = {}
+        children_by_parent_and_name: dict[str | None, dict[str, VFSItem]] = {}
 
         for item in vfs_items:
             children_by_parent_and_name.setdefault(item.parent_id, {})[
@@ -40,7 +38,7 @@ class ZipCollisionService:
 
         collisions: list[ZipCollision] = []
 
-        def walk(zip_node: ZipNode, parent_vfs_id: Optional[str]) -> None:
+        def walk(zip_node: ZipNode, parent_vfs_id: str | None) -> None:
             if zip_node.parent is None:
                 for child in zip_node.children:
                     walk(child, parent_vfs_id)

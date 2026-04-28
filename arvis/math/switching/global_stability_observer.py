@@ -2,37 +2,37 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional, Any
 from collections import deque
+from dataclasses import dataclass
+from typing import Any
 
-from arvis.math.switching.switching_params import kappa_eff
 from arvis.math.adaptive.adaptive_kappa_eff import AdaptiveKappaEffEstimator
 from arvis.math.adaptive.adaptive_runtime_observer import AdaptiveRuntimeObserver
+from arvis.math.switching.switching_params import kappa_eff
 
 
 @dataclass
 class GlobalStabilityMetrics:
-    W_current: Optional[float]
-    W_bound: Optional[float]
-    ratio: Optional[float]
+    W_current: float | None
+    W_bound: float | None
+    ratio: float | None
     tau_d: float
     switches: int
     time: int
     kappa_eff: float
     safe: bool
-    adaptive_kappa_eff: Optional[float] = None
-    adaptive_margin: Optional[float] = None
-    adaptive_regime: Optional[str] = None
-    kappa_gap: Optional[float] = None
+    adaptive_kappa_eff: float | None = None
+    adaptive_margin: float | None = None
+    adaptive_regime: str | None = None
+    kappa_gap: float | None = None
     kappa_violation: bool = False
 
 
 class GlobalStabilityObserver:
     def __init__(self, window_size: int = 10) -> None:
         self.t = 0
-        self.W0: Optional[float] = None
-        self._prev_W: Optional[float] = None
+        self.W0: float | None = None
+        self._prev_W: float | None = None
         self.window_size = max(2, int(window_size))
 
         # Sliding window for local exponential bound
@@ -90,7 +90,7 @@ class GlobalStabilityObserver:
             pass
 
         # Local anchor over the current window
-        W_anchor: Optional[float] = None
+        W_anchor: float | None = None
         N_local = 0
         dt_local = 0
 

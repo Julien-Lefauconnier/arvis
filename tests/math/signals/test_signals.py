@@ -3,16 +3,15 @@
 import pytest
 
 from arvis.math.signals import (
-    RiskSignal,
-    UncertaintySignal,
-    DriftSignal,
-    StabilitySignal,
     ConfidenceSignal,
-    ForecastSignal,
-    SymbolicDriftSignal,
     ConflictSignal,
+    DriftSignal,
+    ForecastSignal,
+    RiskSignal,
+    StabilitySignal,
+    SymbolicDriftSignal,
+    UncertaintySignal,
 )
-
 
 # ---------------------------------------------------------
 # RiskSignal
@@ -67,7 +66,7 @@ def test_drift_signal_float():
 def test_signals_are_immutable():
     r = RiskSignal(0.5)
 
-    with pytest.raises(Exception):
+    with pytest.raises(AttributeError):
         r.value = 0.1
 
 

@@ -1,6 +1,6 @@
 # tests/projection/test_certificate.py
 
-from arvis.kernel.projection.domain import ProjectionDomain, NumericBounds
+from arvis.kernel.projection.domain import NumericBounds, ProjectionDomain
 from arvis.kernel.projection.validator import ProjectionValidator
 
 

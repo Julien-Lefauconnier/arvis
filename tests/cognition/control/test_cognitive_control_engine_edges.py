@@ -2,14 +2,13 @@
 
 
 from arvis.cognition.control.cognitive_control_engine import (
-    CognitiveControlEngine,
     CognitiveControlDeps,
+    CognitiveControlEngine,
 )
 from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
+from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.math.lyapunov.lyapunov import LyapunovState
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
-from arvis.math.control.eps_adaptive import CognitiveMode
-
 
 # --------------------------------------------------
 # Dummy core variations

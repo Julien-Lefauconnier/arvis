@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-
-from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.adapters.ir.state_adapter import StateIRAdapter
 from arvis.cognition.state.cognitive_state import (
-    CognitiveState,
-    CognitiveStability,
-    CognitiveRisk,
     CognitiveControl,
     CognitiveDynamics,
     CognitiveProjection,
+    CognitiveRisk,
+    CognitiveStability,
+    CognitiveState,
 )
-
-from arvis.adapters.ir.state_adapter import StateIRAdapter
+from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.signals.signal_journal import SignalJournal
 
 
@@ -23,7 +21,7 @@ class CognitiveStateBuilder:
     """
 
     @staticmethod
-    def from_context(ctx: "CognitivePipelineContext") -> CognitiveState:
+    def from_context(ctx: CognitivePipelineContext) -> CognitiveState:
         ir = StateIRAdapter.from_context(ctx)
         risk = ir.collapse_risk
 

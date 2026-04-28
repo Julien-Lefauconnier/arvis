@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from arvis.ir.cognitive_ir import CognitiveIR
@@ -33,11 +33,11 @@ class CognitiveIREnvelope:
         *,
         created_at: datetime | None = None,
         version: str = "arvis.ir.envelope.v1",
-    ) -> "CognitiveIREnvelope":
+    ) -> CognitiveIREnvelope:
         return cls(
             ir=ir,
             serialized=serialized,
             hash=hash_value,
-            created_at=created_at or datetime.now(timezone.utc),
+            created_at=created_at or datetime.now(UTC),
             version=version,
         )

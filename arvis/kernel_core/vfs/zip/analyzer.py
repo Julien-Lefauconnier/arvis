@@ -9,7 +9,6 @@ from arvis.kernel_core.vfs.zip.guard import ZipGuard
 from arvis.kernel_core.vfs.zip.models import ZipNode
 from arvis.kernel_core.vfs.zip.reader import ZipSafeReader
 
-
 SUPPORTED_EXTENSIONS = {
     ".pdf",
     ".txt",

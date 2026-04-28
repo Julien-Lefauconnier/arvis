@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class PipelineRuntimeService:
     @staticmethod
     def get_control_runtime(
-        pipeline: "CognitivePipeline",
+        pipeline: CognitivePipeline,
         user_id: str,
     ) -> CognitiveControlRuntime:
         runtime = pipeline.control_runtimes.get(user_id)

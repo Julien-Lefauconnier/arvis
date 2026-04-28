@@ -1,14 +1,15 @@
 # arvis/reflexive/timeline/aggregation/irg_timeline_insight_aggregator.py
 
 from collections import Counter
-from typing import Sequence
-from arvis.timeline.timeline_types import TimelineEntryType
-from arvis.reflexive.timeline.insight.irg_timeline_insight import (
-    IRGTimelineInsight,
-)
+from collections.abc import Sequence
+
 from arvis.reflexive.timeline.aggregation.irg_timeline_insight_aggregate import (
     IRGTimelineInsightAggregate,
 )
+from arvis.reflexive.timeline.insight.irg_timeline_insight import (
+    IRGTimelineInsight,
+)
+from arvis.timeline.timeline_types import TimelineEntryType
 
 
 class IRGTimelineInsightAggregator:

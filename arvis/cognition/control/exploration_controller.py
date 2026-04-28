@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from arvis.cognition.control.exploration_snapshot import ExplorationSnapshot
-from arvis.math.signals import RiskSignal, DriftSignal
+from arvis.math.signals import DriftSignal, RiskSignal
 
 
 class ExplorationController:

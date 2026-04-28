@@ -1,7 +1,7 @@
 # tests/kernel/test_immutability_contracts.py
 
-import inspect
 import dataclasses
+import inspect
 
 
 def iter_classes(module):
@@ -13,9 +13,9 @@ def iter_classes(module):
 
 
 def test_dataclasses_are_frozen():
-    import arvis.timeline
     import arvis.cognition
     import arvis.memory
+    import arvis.timeline
 
     modules = [
         arvis.timeline,

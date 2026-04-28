@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
+from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+from arvis.kernel_core.syscalls.syscall_registry import get_syscall, register_syscall
 from arvis.kernel_core.syscalls.syscalls import (
     interrupt_syscalls as _interrupt_syscalls,
 )
@@ -17,10 +20,6 @@ from arvis.kernel_core.syscalls.syscalls import (
 from arvis.kernel_core.syscalls.syscalls import (
     vfs_syscalls as _vfs_syscalls,
 )
-
-from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
-from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
-from arvis.kernel_core.syscalls.syscall_registry import get_syscall, register_syscall
 
 __all__ = [
     "Syscall",

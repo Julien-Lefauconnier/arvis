@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from typing import Any
+
+from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
+from arvis.math.adaptive.adaptive_control_policy import AdaptiveControlPolicy
+from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.signals import UncertaintySignal
-from arvis.math.control.eps_adaptive import CognitiveMode
-from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
 from arvis.uncertainty.uncertainty_to_intent_mapper import map_uncertainty_to_intent
-from arvis.math.adaptive.adaptive_control_policy import AdaptiveControlPolicy
 
 
 class ControlStage:

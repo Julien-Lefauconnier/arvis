@@ -2,44 +2,44 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol, Dict, Iterable, Iterator
+from collections.abc import Iterable, Iterator
+from typing import Any, Protocol
 
-from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
-from arvis.kernel.pipeline.cognitive_pipeline_result import CognitivePipelineResult
 from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
 from arvis.ir.cognitive_ir import CognitiveIR
-from arvis.math.switching.switching_params import SwitchingParams
+from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.pipeline.cognitive_pipeline_result import CognitivePipelineResult
 from arvis.kernel.pipeline.services.pipeline_bootstrap_service import (
     PipelineBootstrapService,
-)
-from arvis.kernel.pipeline.services.pipeline_preparation_service import (
-    PipelinePreparationService,
-)
-from arvis.kernel.pipeline.services.pipeline_execution_sync_service import (
-    PipelineExecutionSyncService,
-)
-from arvis.kernel.pipeline.services.pipeline_stage_registry_service import (
-    PipelineStageRegistryService,
 )
 from arvis.kernel.pipeline.services.pipeline_compatibility_service import (
     PipelineCompatibilityService,
 )
-from arvis.kernel.pipeline.services.pipeline_lifecycle_service import (
-    PipelineLifecycleService,
-)
-from arvis.kernel.pipeline.services.pipeline_runtime_service import (
-    PipelineRuntimeService,
-)
 from arvis.kernel.pipeline.services.pipeline_execution_service import (
     PipelineExecutionService,
+)
+from arvis.kernel.pipeline.services.pipeline_execution_sync_service import (
+    PipelineExecutionSyncService,
 )
 from arvis.kernel.pipeline.services.pipeline_iteration_service import (
     PipelineIterationService,
 )
+from arvis.kernel.pipeline.services.pipeline_lifecycle_service import (
+    PipelineLifecycleService,
+)
+from arvis.kernel.pipeline.services.pipeline_preparation_service import (
+    PipelinePreparationService,
+)
+from arvis.kernel.pipeline.services.pipeline_runtime_service import (
+    PipelineRuntimeService,
+)
 from arvis.kernel.pipeline.services.pipeline_stage_execution_service import (
     PipelineStageExecutionService,
 )
-
+from arvis.kernel.pipeline.services.pipeline_stage_registry_service import (
+    PipelineStageRegistryService,
+)
+from arvis.math.switching.switching_params import SwitchingParams
 
 DEFAULT_SWITCHING_PARAMS = SwitchingParams(
     alpha=0.15,
@@ -52,7 +52,7 @@ DEFAULT_SWITCHING_PARAMS = SwitchingParams(
 
 class PipelineStage(Protocol):
     def run(
-        self, pipeline: "CognitivePipeline", ctx: CognitivePipelineContext
+        self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext
     ) -> None: ...
 
 
@@ -192,7 +192,7 @@ class CognitivePipeline:
     # -----------------------------------------------------
     # PUBLIC API (safe wrapper)
     # -----------------------------------------------------
-    def run_from_input(self, input_data: Dict[str, Any]) -> CognitivePipelineResult:
+    def run_from_input(self, input_data: dict[str, Any]) -> CognitivePipelineResult:
         """
         Public entrypoint for external callers.
         Converts raw input into a pipeline context.

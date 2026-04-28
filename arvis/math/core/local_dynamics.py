@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from typing import Deque, Dict, Optional
 
 
 @dataclass(frozen=True)
 class LocalDynamicsSample:
     delta_v: float
-    features: Dict[str, float]
+    features: dict[str, float]
 
 
 class LocalCognitiveDynamics:
@@ -31,17 +30,17 @@ class LocalCognitiveDynamics:
         if min_samples <= 0:
             raise ValueError("min_samples must be > 0")
 
-        self._history: Deque[LocalDynamicsSample] = deque(maxlen=window)
+        self._history: deque[LocalDynamicsSample] = deque(maxlen=window)
         self._min_samples = min_samples
 
-    def push(self, delta_v: float, features: Dict[str, float]) -> None:
+    def push(self, delta_v: float, features: dict[str, float]) -> None:
         # defensive copy: avoid external mutation of dict
         self._history.append(LocalDynamicsSample(float(delta_v), dict(features)))
 
     def size(self) -> int:
         return len(self._history)
 
-    def estimate_sensitivity(self) -> Optional[Dict[str, float]]:
+    def estimate_sensitivity(self) -> dict[str, float] | None:
         """
         Returns a naive empirical sensitivity:
           sens[k] = mean(|delta_v| * |feature_k|) over window
@@ -55,7 +54,7 @@ class LocalCognitiveDynamics:
         if len(self._history) < self._min_samples:
             return None
 
-        accum: Dict[str, float] = {}
+        accum: dict[str, float] = {}
         n = len(self._history)
 
         for sample in self._history:

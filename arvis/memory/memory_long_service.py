@@ -1,11 +1,11 @@
 # arvis/memory/memory_long_service.py
 
-from typing import List, Dict, Iterable, Optional
+from collections.abc import Iterable
 from datetime import datetime
 
+from arvis.memory.memory_long_entry import MemoryLongEntry
 from arvis.memory.memory_long_repository import MemoryLongRepository
 from arvis.memory.memory_long_snapshot import MemoryLongSnapshot
-from arvis.memory.memory_long_entry import MemoryLongEntry
 
 
 class MemoryLongService:
@@ -34,7 +34,7 @@ class MemoryLongService:
         self,
         *,
         user_id: str,
-        now: Optional[datetime] = None,
+        now: datetime | None = None,
     ) -> MemoryLongSnapshot:
         """
         Build a snapshot of active long-term memory for a user.
@@ -52,8 +52,8 @@ class MemoryLongService:
         self,
         *,
         user_ids: Iterable[str],
-        now: Optional[datetime] = None,
-    ) -> Dict[str, MemoryLongSnapshot]:
+        now: datetime | None = None,
+    ) -> dict[str, MemoryLongSnapshot]:
         """
         Batch snapshot generation.
 
@@ -65,7 +65,7 @@ class MemoryLongService:
 
         raw = self.repository.list_active_entries_batch(user_ids=user_ids)
 
-        snapshots: Dict[str, MemoryLongSnapshot] = {}
+        snapshots: dict[str, MemoryLongSnapshot] = {}
 
         for user_id, entries in raw.items():
             snapshots[user_id] = self._build_snapshot(entries)
@@ -78,7 +78,7 @@ class MemoryLongService:
 
     def _build_snapshot(
         self,
-        entries: List[MemoryLongEntry],
+        entries: list[MemoryLongEntry],
     ) -> MemoryLongSnapshot:
         """
         ZKCS-safe snapshot builder.

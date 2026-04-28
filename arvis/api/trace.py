@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -16,21 +16,21 @@ class DecisionTraceView:
     user_id: str
 
     # Core
-    decision: Optional[str]
-    intent: Optional[str]
+    decision: str | None
+    intent: str | None
 
     # Gate
-    gate_verdict: Optional[str]
+    gate_verdict: str | None
 
     # Confirmation
     confirmation_required: bool
-    confirmation_granted: Optional[bool]
+    confirmation_granted: bool | None
 
     # Observability
-    stability: Optional[Any]
-    predictive: Optional[Any]
-    symbolic: Optional[Any]
-    system_tension: Optional[Any]
+    stability: Any | None
+    predictive: Any | None
+    symbolic: Any | None
+    system_tension: Any | None
 
     # Meta
     has_conflict: bool
@@ -42,7 +42,7 @@ class DecisionTraceView:
     # -----------------------------------------------------
 
     @staticmethod
-    def from_trace(trace: Any) -> "DecisionTraceView":
+    def from_trace(trace: Any) -> DecisionTraceView:
         return DecisionTraceView(
             timestamp=str(getattr(trace, "timestamp", "")),
             user_id=str(getattr(trace, "user_id", "")),
@@ -69,7 +69,7 @@ class DecisionTraceView:
     # SERIALIZATION
     # -----------------------------------------------------
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "timestamp": self.timestamp,
             "user_id": self.user_id,

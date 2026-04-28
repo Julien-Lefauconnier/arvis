@@ -1,16 +1,17 @@
 # arvis/math/lyapunov/lyapunov_gate.py
 
-from enum import Enum
 from dataclasses import dataclass, field
+from enum import Enum
 
-from arvis.math.lyapunov.lyapunov import LyapunovState, delta_V, V
+from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.math.control.eps_adaptive import (
-    EpsAdaptiveParams,
     CognitiveMode,
+    EpsAdaptiveParams,
     adaptive_eps,
 )
 from arvis.math.core.normalization import clamp01
-from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
+from arvis.math.lyapunov.lyapunov import LyapunovState, V, delta_V
+
 from .slow_state import SlowState
 
 
@@ -37,15 +38,17 @@ class LyapunovGateParams:
     pos_dv_penalty: float = 0.25  # 0 => off
 
 
-def lyapunov_gate(  # noqa: C901
+def lyapunov_gate(
     previous: LyapunovState,
     current: LyapunovState,
-    params: LyapunovGateParams = LyapunovGateParams(),
+    params: LyapunovGateParams | None = None,
     prev_slow: SlowState | None = None,
     current_slow: SlowState | None = None,
     prev_symbolic: SymbolicState | None = None,
     current_symbolic: SymbolicState | None = None,
 ) -> LyapunovVerdict:
+    if params is None:
+        params = LyapunovGateParams()
     # Local fast Lyapunov gate only.
     # Composite / temporal policy is handled upstream in gate_stage.
     if isinstance(current, float):

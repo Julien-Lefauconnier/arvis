@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from arvis.kernel.projection.pi_types import PiState
 from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR
+from arvis.kernel.projection.pi_types import PiState
 
 
 class PiBasedGate:

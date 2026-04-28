@@ -1,12 +1,12 @@
 # tests/cognition/test_cognitive_state.py
 
 from arvis.cognition.state.cognitive_state import (
-    CognitiveState,
-    CognitiveStability,
-    CognitiveRisk,
     CognitiveControl,
     CognitiveDynamics,
     CognitiveProjection,
+    CognitiveRisk,
+    CognitiveStability,
+    CognitiveState,
 )
 
 

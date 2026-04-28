@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from arvis.signals.signal_journal import SignalJournal
-from arvis.timeline.timeline_entry import TimelineEntry
+from arvis.timeline.timeline_entry import TimelineEntry, TimelineEntryNature
 from arvis.timeline.timeline_snapshot import TimelineSnapshot
-from arvis.timeline.timeline_entry import TimelineEntryNature
 from arvis.timeline.timeline_types import TimelineEntryType
 
 
@@ -28,7 +27,7 @@ def _signal_to_timeline_entry(signal: object, *, lamport: int) -> TimelineEntry:
     timestamp = getattr(signal, "timestamp", None)
     if not isinstance(timestamp, datetime):
         # fallback = stable, not "now"
-        timestamp = datetime.fromtimestamp(0, tz=timezone.utc)
+        timestamp = datetime.fromtimestamp(0, tz=UTC)
 
     origin = getattr(signal, "origin", None) or "signal"
 

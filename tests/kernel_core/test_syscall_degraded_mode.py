@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
-from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 
 
 def make_ctx():

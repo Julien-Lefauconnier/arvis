@@ -1,8 +1,8 @@
 # tests/conversation/test_runtime_models.py
 
+from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
 from arvis.conversation.conversation_context import ConversationContext
 from arvis.conversation.conversation_state import ConversationState
-from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
 
 
 def test_runtime_conversation_state_is_mutable():

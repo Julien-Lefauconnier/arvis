@@ -1,11 +1,10 @@
 # arvis/conversation/conversation_predictor.py
 
-from arvis.conversation.response_strategy_type import (
-    ResponseStrategyType,
-)
-
 from arvis.conversation.conversation_energy_model import (
     ConversationEnergyModel,
+)
+from arvis.conversation.response_strategy_type import (
+    ResponseStrategyType,
 )
 
 

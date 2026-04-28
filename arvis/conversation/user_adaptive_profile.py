@@ -1,7 +1,5 @@
 # arvis/conversation/user_adaptive_profile.py
 
-from typing import Dict
-
 
 class UserAdaptiveProfile:
     """
@@ -14,7 +12,7 @@ class UserAdaptiveProfile:
     """
 
     def __init__(self) -> None:
-        self.weights: Dict[str, float] = {
+        self.weights: dict[str, float] = {
             "collapse": 0.5,
             "uncertainty": 0.3,
             "pressure": 0.2,

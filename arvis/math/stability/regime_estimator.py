@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from typing import Deque, Optional
 
 
 @dataclass(frozen=True)
@@ -32,10 +31,10 @@ class CognitiveRegimeEstimator:
         if min_samples <= 0:
             raise ValueError("min_samples must be > 0")
 
-        self._history: Deque[float] = deque(maxlen=window)
+        self._history: deque[float] = deque(maxlen=window)
         self._min_samples = min_samples
 
-    def push(self, delta_v: float) -> Optional[RegimeSnapshot]:
+    def push(self, delta_v: float) -> RegimeSnapshot | None:
         self._history.append(float(delta_v))
 
         if len(self._history) < self._min_samples:

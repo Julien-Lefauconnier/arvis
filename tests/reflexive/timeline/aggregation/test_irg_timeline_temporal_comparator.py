@@ -1,6 +1,6 @@
 # tests/reflexive/timeline/aggregation/test_irg_timeline_temporal_comparator.py
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_comparator import (
     IRGTimelineTemporalComparator,
@@ -9,7 +9,6 @@ from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_snapshot import 
     IRGTimelineTemporalSnapshot,
 )
 from arvis.timeline.timeline_types import TimelineEntryType
-
 
 # --------------------------------------------------
 # Helpers
@@ -27,7 +26,7 @@ def make_snapshot(
         observed_views=views or [],
         dominant_entry_types=types or [],
         confidence=confidence,
-        observed_at=ts or datetime.now(timezone.utc),
+        observed_at=ts or datetime.now(UTC),
     )
 
 

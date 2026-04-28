@@ -2,7 +2,6 @@
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 
-
 _pipeline = CognitivePipeline()
 
 

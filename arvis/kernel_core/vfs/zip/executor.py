@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 from arvis.kernel_core.vfs.service import VFSService
 from arvis.kernel_core.vfs.zip.models import ZipNode
@@ -35,7 +35,7 @@ class ZipExecutor:
     def __init__(
         self,
         vfs_service: VFSService,
-        content_importer: Optional[ContentImporter] = None,
+        content_importer: ContentImporter | None = None,
     ) -> None:
         self.vfs = vfs_service
         self.content_importer = content_importer
@@ -46,7 +46,7 @@ class ZipExecutor:
         zip_root: ZipNode,
         zip_path: str,
         user_id: str,
-        target_parent_id: Optional[str],
+        target_parent_id: str | None,
         keep_zip: bool = False,
     ) -> dict[str, Any]:
         created_count = 0
@@ -55,7 +55,7 @@ class ZipExecutor:
 
         with ZipSafeReader(zip_path) as reader:
 
-            def create_tree(node: ZipNode, parent_vfs_id: Optional[str]) -> None:
+            def create_tree(node: ZipNode, parent_vfs_id: str | None) -> None:
                 nonlocal created_count
 
                 if node.parent is not None:
@@ -121,7 +121,7 @@ class ZipExecutor:
             skipped_files.append({"name": zip_node.name, "reason": "missing_zip_path"})
             return
 
-        tmp_path: Optional[str] = None
+        tmp_path: str | None = None
 
         try:
             with reader.open_file(zip_node.zip_path) as raw:

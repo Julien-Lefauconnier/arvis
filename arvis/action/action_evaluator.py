@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.action.action_context import ActionContext
 from arvis.math.signals import RiskSignal
 
-from .action_template import ActionTemplate
 from .action_decision import ActionDecision
 from .action_mapper import map_verdict_to_action
-from arvis.action.action_context import ActionContext
+from .action_template import ActionTemplate
 
 
 def evaluate_action(

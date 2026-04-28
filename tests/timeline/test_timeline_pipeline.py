@@ -1,10 +1,9 @@
 # tests/timeline/test_timeline_pipeline.py
 
-from tests.timeline.helpers import make_entries
-
-from arvis.timeline.timeline_snapshot import TimelineSnapshot
 from arvis.timeline.timeline_delta import TimelineDelta
 from arvis.timeline.timeline_hashchain import TimelineHashChain
+from arvis.timeline.timeline_snapshot import TimelineSnapshot
+from tests.timeline.helpers import make_entries
 
 
 def test_full_timeline_pipeline():

@@ -1,11 +1,10 @@
 # arvis/cognition/conflict/conflict_impact.py
 
-from typing import List
 
 from .conflict_policy_result import ConflictPolicyResult
 
 
-def compute_conflict_pressure(conflicts: List[ConflictPolicyResult]) -> float:
+def compute_conflict_pressure(conflicts: list[ConflictPolicyResult]) -> float:
     """
     Computes a normalized conflict pressure signal.
 

@@ -1,7 +1,6 @@
 # tests/cognition/test_cognitive_gate_result.py
 
-from arvis.cognition.gate import CognitiveGateResult
-from arvis.cognition.gate import CognitiveGateVerdict
+from arvis.cognition.gate import CognitiveGateResult, CognitiveGateVerdict
 from arvis.cognition.gate.gate_decision_trace import (
     GateDecisionTrace,
     GateDecisionTraceStep,

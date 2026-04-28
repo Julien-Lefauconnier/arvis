@@ -3,21 +3,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from arvis.kernel_core.process.budget import BudgetConsumption, CognitiveBudget
 from arvis.kernel_core.process.priority import CognitivePriority
+from arvis.kernel_core.process.process_descriptor import ProcessDescriptor
+from arvis.kernel_core.process.process_execution_state import ProcessExecutionState
+from arvis.kernel_core.process.process_interrupt_state import ProcessInterruptState
+from arvis.kernel_core.process.process_runtime_state import ProcessRuntimeState
 from arvis.kernel_core.process.transitions import ProcessTransitionManager
 from arvis.kernel_core.process.types import (
     CognitiveProcessId,
-    CognitiveProcessStatus,
     CognitiveProcessKind,
+    CognitiveProcessStatus,
 )
-
-from arvis.kernel_core.process.process_descriptor import ProcessDescriptor
-from arvis.kernel_core.process.process_runtime_state import ProcessRuntimeState
-from arvis.kernel_core.process.process_execution_state import ProcessExecutionState
-from arvis.kernel_core.process.process_interrupt_state import ProcessInterruptState
 
 
 @dataclass(init=False)
@@ -136,11 +135,11 @@ class CognitiveProcess:
         return self.descriptor.created_tick
 
     @property
-    def user_id(self) -> Optional[str]:
+    def user_id(self) -> str | None:
         return self.descriptor.user_id
 
     @property
-    def parent_process_id(self) -> Optional[CognitiveProcessId]:
+    def parent_process_id(self) -> CognitiveProcessId | None:
         return self.descriptor.parent_process_id
 
     @property
@@ -158,11 +157,11 @@ class CognitiveProcess:
         self.runtime.status = value
 
     @property
-    def waiting_on(self) -> Optional[str]:
+    def waiting_on(self) -> str | None:
         return self.runtime.waiting_on
 
     @waiting_on.setter
-    def waiting_on(self, value: Optional[str]) -> None:
+    def waiting_on(self, value: str | None) -> None:
         self.runtime.waiting_on = value
 
     # execution
@@ -184,11 +183,11 @@ class CognitiveProcess:
         self.execution.stage_history = value
 
     @property
-    def total_stage_count(self) -> Optional[int]:
+    def total_stage_count(self) -> int | None:
         return self.execution.total_stage_count
 
     @total_stage_count.setter
-    def total_stage_count(self, value: Optional[int]) -> None:
+    def total_stage_count(self, value: int | None) -> None:
         self.execution.total_stage_count = value
 
     @property
@@ -281,7 +280,7 @@ class CognitiveProcess:
     def is_schedulable(self) -> bool:
         return self.status == CognitiveProcessStatus.READY and self.has_budget()
 
-    def mark_running(self, tick: int, score: Optional[float] = None) -> None:
+    def mark_running(self, tick: int, score: float | None = None) -> None:
         ProcessTransitionManager.transition(self, CognitiveProcessStatus.RUNNING)
         self.runtime.last_run_tick = tick
         self.runtime.run_count += 1
@@ -370,27 +369,27 @@ class CognitiveProcess:
         self.runtime.last_result = value
 
     @property
-    def last_error(self) -> Optional[str]:
+    def last_error(self) -> str | None:
         return self.runtime.last_error
 
     @last_error.setter
-    def last_error(self, value: Optional[str]) -> None:
+    def last_error(self, value: str | None) -> None:
         self.runtime.last_error = value
 
     @property
-    def error(self) -> Optional[str]:
+    def error(self) -> str | None:
         return self.runtime.last_error
 
     @error.setter
-    def error(self, value: Optional[str]) -> None:
+    def error(self, value: str | None) -> None:
         self.runtime.last_error = value
 
     @property
-    def last_score(self) -> Optional[float]:
+    def last_score(self) -> float | None:
         return self.runtime.last_score
 
     @last_score.setter
-    def last_score(self, value: Optional[float]) -> None:
+    def last_score(self, value: float | None) -> None:
         self.runtime.last_score = value
 
     @property
@@ -402,9 +401,9 @@ class CognitiveProcess:
         self.runtime.run_count = value
 
     @property
-    def last_run_tick(self) -> Optional[int]:
+    def last_run_tick(self) -> int | None:
         return self.runtime.last_run_tick
 
     @last_run_tick.setter
-    def last_run_tick(self, value: Optional[int]) -> None:
+    def last_run_tick(self, value: int | None) -> None:
         self.runtime.last_run_tick = value

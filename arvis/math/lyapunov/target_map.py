@@ -1,7 +1,9 @@
 # arvis/math/lyapunov/target_map.py
 
 from __future__ import annotations
+
 import numpy as np
+
 from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.math.lyapunov.lyapunov import LyapunovState
 

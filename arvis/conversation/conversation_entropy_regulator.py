@@ -1,11 +1,11 @@
 # arvis/conversation/conversation_entropy_regulator.py
 
+import math
+
 from arvis.conversation.conversation_state import ConversationState
 from arvis.conversation.response_strategy_type import (
     ResponseStrategyType,
 )
-
-import math
 
 
 class ConversationEntropyRegulator:

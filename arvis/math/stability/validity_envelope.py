@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -14,8 +13,8 @@ class ValidityEnvelope:
     exponential_safe: bool
     kappa_safe: bool
     adaptive_available: bool
-    adaptive_band: Optional[str]
-    reason: Optional[str] = None
+    adaptive_band: str | None
+    reason: str | None = None
 
 
 def build_validity_envelope(
@@ -25,7 +24,7 @@ def build_validity_envelope(
     exponential_safe: bool,
     kappa_safe: bool,
     adaptive_available: bool,
-    adaptive_band: Optional[str],
+    adaptive_band: str | None,
 ) -> ValidityEnvelope:
     if not projection_available:
         return ValidityEnvelope(

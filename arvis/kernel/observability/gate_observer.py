@@ -1,7 +1,9 @@
 # arvis/kernel/observability/gate_observer.py
 
 from __future__ import annotations
-from typing import Any, Optional, Dict
+
+from typing import Any
+
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 
 
@@ -21,22 +23,22 @@ class GateObserver:
         *,
         pre_verdict: Any,
         final_verdict: Any,
-        delta_w: Optional[float],
-        w_prev: Optional[float],
-        w_current: Optional[float],
-        adaptive_metrics: Optional[AdaptiveSnapshot],
+        delta_w: float | None,
+        w_prev: float | None,
+        w_current: float | None,
+        adaptive_metrics: AdaptiveSnapshot | None,
         switching_safe: bool,
         global_safe: bool,
         envelope: Any,
         confidence_inputs: Any,
         system_confidence: float,
-        switching_metrics: Dict[str, Any],
-        stability_certificate: Dict[str, Any],
+        switching_metrics: dict[str, Any],
+        stability_certificate: dict[str, Any],
         hard_block: bool,
-        hard_reason: Optional[str],
-        w_ratio: Optional[float],
+        hard_reason: str | None,
+        w_ratio: float | None,
         recovery_detected: bool,
-        recovery_magnitude: Optional[float],
+        recovery_magnitude: float | None,
     ) -> None:
         ctx.extra["system_confidence"] = float(system_confidence)
         ctx.extra.setdefault("confidence_flags", [])
@@ -81,7 +83,7 @@ class GateObserver:
                 else None
             ),
             "margin": (
-                float(getattr(projection_certificate, "margin_to_boundary"))
+                float(projection_certificate.margin_to_boundary)
                 if projection_certificate is not None
                 and getattr(projection_certificate, "margin_to_boundary", None)
                 is not None
@@ -177,7 +179,7 @@ class GateObserver:
         # -----------------------------------------
         # disturbance_signals
         # -----------------------------------------
-        disturbance: Dict[str, Optional[float | bool]] = {
+        disturbance: dict[str, float | bool | None] = {
             "projection_disturbance": None,
             "switching_disturbance": None,
             "adaptive_warning": False,

@@ -1,14 +1,13 @@
 # arvis/math/decision/fusion_policy.py
 
 from __future__ import annotations
-from typing import Optional
 
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
 def fusion_policy(
     fast_verdict: LyapunovVerdict,
-    delta_w: Optional[float],
+    delta_w: float | None,
     switching_safe: bool,
     use_composite: bool = True,
 ) -> LyapunovVerdict:

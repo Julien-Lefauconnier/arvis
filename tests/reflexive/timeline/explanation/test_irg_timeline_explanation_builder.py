@@ -4,7 +4,6 @@ from arvis.reflexive.timeline.explanation.irg_timeline_explanation_builder impor
     IRGTimelineExplanationBuilder,
 )
 
-
 # --------------------------------------------------
 # Fake objects (ZK-safe mocks)
 # --------------------------------------------------

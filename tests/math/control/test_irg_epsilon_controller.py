@@ -1,7 +1,7 @@
 # tests/math/control/test_irg_epsilon_controller.py
 
+from arvis.math.control.eps_adaptive import CognitiveMode, EpsAdaptiveParams
 from arvis.math.control.irg_epsilon_controller import IRGEpsilonController, IRGRegime
-from arvis.math.control.eps_adaptive import EpsAdaptiveParams, CognitiveMode
 from arvis.math.signals import RiskSignal
 
 

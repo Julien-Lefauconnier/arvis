@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
-
 
 MemoryAction = str  # "read" | "write" | "delete" | "list"
 
@@ -20,9 +18,9 @@ class MemoryAccessRequest:
 
     actor_user_id: str
     owner_user_id: str
-    namespace: Optional[str]
+    namespace: str | None
     action: MemoryAction
-    key: Optional[str] = None
+    key: str | None = None
 
 
 @dataclass(frozen=True)
@@ -32,7 +30,7 @@ class MemoryPolicyDecision:
     """
 
     allowed: bool
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 class MemoryPolicyService:

@@ -1,14 +1,15 @@
 # arvis/math/stability/hybrid_risk_observer.py
 
 from __future__ import annotations
-from dataclasses import dataclass
-import math
-from typing import Optional, ClassVar
 
-from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
-from arvis.math.lyapunov.slow_state import SlowState
-from arvis.math.lyapunov.lyapunov import LyapunovState
+import math
+from dataclasses import dataclass
+from typing import ClassVar
+
 from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
+from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
+from arvis.math.lyapunov.lyapunov import LyapunovState
+from arvis.math.lyapunov.slow_state import SlowState
 
 
 def _clamp01(x: float) -> float:
@@ -39,8 +40,8 @@ class HybridRiskSnapshot:
     delta: float
     mode_hint: str
     early_warning: bool
-    w_composite: Optional[float] = None
-    delta_w: Optional[float] = None
+    w_composite: float | None = None
+    delta_w: float | None = None
 
     @property
     def v_total(self) -> float:
@@ -81,7 +82,7 @@ class HybridRiskObserver:
         mean_edge_weight: float,
         max_edge_weight: float,
         spectral_proxy: float,
-        params: Optional[HybridRiskParams] = None,
+        params: HybridRiskParams | None = None,
     ) -> float:
         if params is None:
             params = HybridRiskParams()
@@ -108,16 +109,18 @@ class HybridRiskObserver:
         *,
         v_numeric: float,
         v_symbolic: float,
-        prev_v_total: Optional[float] = None,
-        prev_collapse_risk: Optional[float] = None,
-        current_fast: Optional[LyapunovState] = None,
-        current_slow: Optional[SlowState] = None,
-        current_symbolic: Optional[SymbolicState] = None,
-        prev_fast: Optional[LyapunovState] = None,
-        prev_slow: Optional[SlowState] = None,
-        prev_symbolic: Optional[SymbolicState] = None,
-        params: HybridRiskParams = HybridRiskParams(),
+        prev_v_total: float | None = None,
+        prev_collapse_risk: float | None = None,
+        current_fast: LyapunovState | None = None,
+        current_slow: SlowState | None = None,
+        current_symbolic: SymbolicState | None = None,
+        prev_fast: LyapunovState | None = None,
+        prev_slow: SlowState | None = None,
+        prev_symbolic: SymbolicState | None = None,
+        params: HybridRiskParams | None = None,
     ) -> HybridRiskSnapshot:
+        if params is None:
+            params = HybridRiskParams()
         v_numeric = _clamp01(float(v_numeric))
         v_symbolic = _clamp01(float(v_symbolic))
 

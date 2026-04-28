@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Any
 
 from arvis.runtime.cognitive_process import CognitiveBudget, CognitiveProcessId
 
 
 @dataclass
 class SchedulerDecision:
-    selected_process_id: Optional[CognitiveProcessId]
+    selected_process_id: CognitiveProcessId | None
     rationale: str
-    resource_grant: Optional[CognitiveBudget] = None
-    preempted_process_id: Optional[CognitiveProcessId] = None
-    score: Optional[float] = None
+    resource_grant: CognitiveBudget | None = None
+    preempted_process_id: CognitiveProcessId | None = None
+    score: float | None = None
     result: Any | None = None
 
     @property

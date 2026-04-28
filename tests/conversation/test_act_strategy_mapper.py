@@ -1,8 +1,8 @@
 # tests/conversation/test_act_strategy_mapper.py
 
+from arvis.cognition.conversation.response_strategy_type import ResponseStrategyType
 from arvis.conversation.act_strategy_mapper import map_act_to_strategy
 from arvis.linguistic.acts.act_types import LinguisticActType
-from arvis.cognition.conversation.response_strategy_type import ResponseStrategyType
 
 
 def test_abstention_mapping():

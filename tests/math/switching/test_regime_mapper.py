@@ -3,7 +3,6 @@
 from arvis.math.switching.regime_mapper import map_regime
 from arvis.math.switching.regime_state import TheoreticalRegime
 
-
 # ============================================================
 # 1. EACH REGIME
 # ============================================================

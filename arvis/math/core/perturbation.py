@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -22,7 +22,7 @@ class PerturbationSnapshot:
         return self.magnitude > threshold
 
 
-def compute_perturbation(ctx: Any) -> Optional[PerturbationSnapshot]:
+def compute_perturbation(ctx: Any) -> PerturbationSnapshot | None:
     try:
         uncertainty = float(getattr(ctx, "uncertainty", 0.0) or 0.0)
         drift = float(getattr(ctx, "drift_score", 0.0) or 0.0)

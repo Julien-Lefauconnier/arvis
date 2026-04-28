@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from arvis.math.signals.base import BaseSignal
+
 from arvis.math.core.normalization import clamp01
+from arvis.math.signals.base import BaseSignal
 
 
 @dataclass(frozen=True)

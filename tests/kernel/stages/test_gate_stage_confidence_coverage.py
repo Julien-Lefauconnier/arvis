@@ -1,9 +1,9 @@
 # tests/kernel/stages/test_gate_stage_confidence_coverage.py
 
 
+from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.control.eps_adaptive import CognitiveMode
-from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
 
 
 class DummyCtx:

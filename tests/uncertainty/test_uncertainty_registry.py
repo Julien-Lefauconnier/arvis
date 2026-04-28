@@ -1,7 +1,7 @@
 # tests/uncertainty/test_uncertainty_registry.py
 
-from arvis.uncertainty.uncertainty_frame_registry import UncertaintyFrameRegistry
 from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
+from arvis.uncertainty.uncertainty_frame_registry import UncertaintyFrameRegistry
 
 
 def test_registry_contains_frames():

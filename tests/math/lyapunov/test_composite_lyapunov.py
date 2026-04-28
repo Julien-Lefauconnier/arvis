@@ -1,12 +1,12 @@
 # tests/math/lyapunov/test_composite_lyapunov.py
 
 import pytest
-from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
-from arvis.math.lyapunov.slow_state import SlowState
-from arvis.math.lyapunov.lyapunov import LyapunovState
+
 from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
+from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
+from arvis.math.lyapunov.lyapunov import LyapunovState, lyapunov_value
+from arvis.math.lyapunov.slow_state import SlowState
 from arvis.math.lyapunov.target_map import target_map
-from arvis.math.lyapunov.lyapunov import lyapunov_value
 
 
 @pytest.fixture

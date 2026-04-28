@@ -1,8 +1,7 @@
 # arvis/signals/signal_journal.py
 
-from typing import List
-from threading import Lock
 from _thread import LockType
+from threading import Lock
 
 from arvis.signals.signal import Signal
 
@@ -25,7 +24,7 @@ class SignalJournal:
     """
 
     def __init__(self) -> None:
-        self._signals: List[Signal] = []
+        self._signals: list[Signal] = []
         self._lock: LockType = Lock()
 
     # ------------------------------------------------------------------
@@ -50,7 +49,7 @@ class SignalJournal:
     # Read API
     # ------------------------------------------------------------------
 
-    def list_signals(self) -> List[Signal]:
+    def list_signals(self) -> list[Signal]:
         """
         Return all recorded signals.
 
@@ -87,7 +86,7 @@ def get_signal_journal() -> SignalJournal:
     return _DEFAULT_SIGNAL_JOURNAL
 
 
-def list_signals() -> List[Signal]:
+def list_signals() -> list[Signal]:
     """
     Convenience function for inspection layers.
     """

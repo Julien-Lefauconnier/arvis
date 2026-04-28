@@ -1,7 +1,7 @@
 # arvis/context/context_hint_policy_gate.py
 
 from dataclasses import dataclass
-from typing import Dict, Any, FrozenSet
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -10,7 +10,7 @@ class ContextHintPolicyGate:
     ZKCS-safe governance gate for context hints.
     """
 
-    ALLOWED_KEYS: FrozenSet[str] = frozenset(
+    ALLOWED_KEYS: frozenset[str] = frozenset(
         {
             "preferred_language",
             "timezone",
@@ -18,8 +18,8 @@ class ContextHintPolicyGate:
     )
 
     @classmethod
-    def validate(cls, hints: Dict[str, Any]) -> Dict[str, Any]:
-        safe: Dict[str, Any] = {}
+    def validate(cls, hints: dict[str, Any]) -> dict[str, Any]:
+        safe: dict[str, Any] = {}
 
         for key, value in hints.items():
             if key not in cls.ALLOWED_KEYS:

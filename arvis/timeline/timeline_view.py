@@ -1,7 +1,7 @@
 # arvis/timeline/timeline_view.py
 
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Tuple, Iterator
 
 from .timeline_entry import TimelineEntry
 from .timeline_view_types import TimelineViewRole
@@ -20,7 +20,7 @@ class TimelineView:
     """
 
     role: TimelineViewRole
-    entries: Tuple[TimelineEntry, ...]
+    entries: tuple[TimelineEntry, ...]
 
     def __post_init__(self) -> None:
         if not isinstance(self.role, TimelineViewRole):

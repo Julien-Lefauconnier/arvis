@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import SimpleNamespace
-from typing import Any, Dict, Optional
+from typing import Any
 
 from arvis.cognition.state.cognitive_state import CognitiveState
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
@@ -35,15 +35,15 @@ from arvis.runtime.process_hooks import ProcessHookManager
 @dataclass(frozen=True)
 class RuntimeExecutionResult:
     result: Any
-    state: Optional[CognitiveState]
+    state: CognitiveState | None
 
 
 class CognitiveRuntime:
     def __init__(
         self,
         pipeline: CognitivePipeline,
-        adapters: Optional[Dict[str, Any]] = None,
-        tool_executor: Optional[Any] = None,
+        adapters: dict[str, Any] | None = None,
+        tool_executor: Any | None = None,
     ) -> None:
         self.pipeline = pipeline
         self.adapters = adapters or {}

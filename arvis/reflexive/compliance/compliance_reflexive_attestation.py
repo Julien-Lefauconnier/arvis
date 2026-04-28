@@ -1,7 +1,7 @@
 # arvis/reflexive/compliance/compliance_reflexive_attestation.py
 
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,7 @@ class ComplianceReflexiveAttestation:
 
     @classmethod
     def from_explanation(
-        cls, explanation_dict: Dict[str, Any]
+        cls, explanation_dict: dict[str, Any]
     ) -> "ComplianceReflexiveAttestation":
         """
         Extract attestation data from a reflexive explanation.
@@ -39,7 +39,7 @@ class ComplianceReflexiveAttestation:
             immutability=bool(att.get("immutability")),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "fingerprint": self.fingerprint,
             "scope": self.scope,

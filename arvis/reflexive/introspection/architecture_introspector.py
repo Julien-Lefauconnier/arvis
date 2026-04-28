@@ -1,6 +1,6 @@
 # arvis/reflexive/introspection/architecture_introspector.py
 
-from typing import Dict, Any, List
+from typing import Any
 
 from arvis.reflexive.architecture.arvis_system_architecture import (
     ArvisSystemArchitecture,
@@ -8,10 +8,10 @@ from arvis.reflexive.architecture.arvis_system_architecture import (
 
 
 class ArchitectureIntrospector:
-    def describe(self) -> Dict[str, Any]:
+    def describe(self) -> dict[str, Any]:
         layers = ArvisSystemArchitecture.layers()
 
-        structured_layers: List[Dict[str, Any]] = [
+        structured_layers: list[dict[str, Any]] = [
             {
                 "name": layer.name,
                 "description": layer.description,

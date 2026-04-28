@@ -1,7 +1,6 @@
 # arvis/cognition/observability/symbolic_state.py
 
 from dataclasses import dataclass
-from typing import Dict
 
 
 @dataclass(frozen=True)
@@ -12,7 +11,7 @@ class SymbolicState:
     gate_verdict: str
     conversation_mode: str
 
-    conflict_histogram: Dict[str, int]
+    conflict_histogram: dict[str, int]
     conflict_severity: float
 
     override_count: int

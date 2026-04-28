@@ -1,7 +1,7 @@
 # arvis/linguistic/generation/generation_frame.py
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+
 from arvis.linguistic.acts.act_types import LinguisticActType
 
 
@@ -20,4 +20,4 @@ class LinguisticGenerationFrame:
     verbosity: str = "minimal"
     allow_speculation: bool = False
     constraints: list[str] | None = None
-    preferences: Optional[Dict[str, object]] = None
+    preferences: dict[str, object] | None = None

@@ -1,19 +1,18 @@
 # tests/kernel/test_cognitive_pipeline.py
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
-from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
-from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
-from arvis.math.signals import RiskSignal, UncertaintySignal, DriftSignal
-from arvis.timeline.timeline_entry import TimelineEntry, TimelineEntryNature
-from arvis.timeline.timeline_types import TimelineEntryType
 from arvis.cognition.confirmation.confirmation_result import (
     ConfirmationResult,
     ConfirmationStatus,
 )
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
-
+from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
+from arvis.timeline.timeline_entry import TimelineEntry, TimelineEntryNature
+from arvis.timeline.timeline_types import TimelineEntryType
 
 # ---------------------------------------------------------
 # Helpers / Mocks
@@ -147,7 +146,7 @@ def test_temporal_layer_modulates_risk():
     ctx.timeline = [
         TimelineEntry(
             entry_id="entry-conflict-1",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             type=TimelineEntryType.SYSTEM_NOTICE,
             title="Conflict notice",
             description="conflict detected",

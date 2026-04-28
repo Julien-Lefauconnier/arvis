@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from hashlib import sha256
 from json import dumps
-from typing import Any, Mapping
+from typing import Any
 
 from arvis.ir.state import CognitiveRiskIR, CognitiveStateIR
 

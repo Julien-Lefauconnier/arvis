@@ -1,11 +1,10 @@
 # arvis/conversation/conversation_stability_signals.py
 
-from arvis.conversation.conversation_state import ConversationState
-
-from arvis.math.stability.regime_estimator import CognitiveRegimeEstimator
 from arvis.conversation.conversation_composite_stability import (
     ConversationCompositeStability,
 )
+from arvis.conversation.conversation_state import ConversationState
+from arvis.math.stability.regime_estimator import CognitiveRegimeEstimator
 
 
 class ConversationStabilitySignalsBuilder:

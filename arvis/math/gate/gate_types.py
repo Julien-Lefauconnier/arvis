@@ -1,25 +1,26 @@
 # arvis/math/gate/gate_types.py
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any
+
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
 @dataclass
 class GateKernelInputs:
     # Lyapunov
-    prev_lyap: Optional[Any]
-    cur_lyap: Optional[Any]
+    prev_lyap: Any | None
+    cur_lyap: Any | None
 
     # Slow / symbolic
-    slow_prev: Optional[Any]
-    slow_cur: Optional[Any]
-    symbolic_prev: Optional[Any]
-    symbolic_cur: Optional[Any]
+    slow_prev: Any | None
+    slow_cur: Any | None
+    symbolic_prev: Any | None
+    symbolic_cur: Any | None
 
     # Stability signals
     collapse_risk: float
-    stable: Optional[bool]
+    stable: bool | None
 
     # Switching
     switching_safe: bool
@@ -28,12 +29,12 @@ class GateKernelInputs:
     global_safe: bool
 
     # Metrics
-    delta_w: Optional[float]
-    w_prev: Optional[float]
-    w_current: Optional[float]
+    delta_w: float | None
+    w_prev: float | None
+    w_current: float | None
 
     # Adaptive
-    adaptive_margin: Optional[float]
+    adaptive_margin: float | None
     adaptive_available: bool
 
     # Runtime
@@ -54,4 +55,4 @@ class GateKernelResult:
     reasons: list[str]
 
     # Certificate
-    certificate: Dict[str, bool]
+    certificate: dict[str, bool]

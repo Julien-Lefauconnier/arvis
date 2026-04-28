@@ -1,6 +1,5 @@
 # arvis/linguistic/lexicon/resolvers/lexicon_resolver.py
 
-from arvis.linguistic.lexicon.lexicon_snapshot import LexiconSnapshot
 from arvis.linguistic.lexicon.core.minimal_v0 import (
     build_minimal_lexicon_v0,
 )
@@ -13,7 +12,7 @@ from arvis.linguistic.lexicon.domains.legal_v0 import (
 from arvis.linguistic.lexicon.domains.security_v0 import (
     build_security_lexicon_v0,
 )
-
+from arvis.linguistic.lexicon.lexicon_snapshot import LexiconSnapshot
 
 _DOMAIN_BUILDERS = {
     "finance": build_finance_lexicon_v0,

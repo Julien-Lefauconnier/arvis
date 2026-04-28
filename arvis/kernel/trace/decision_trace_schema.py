@@ -1,11 +1,11 @@
 # arvis/kernel/trace/decision_trace_schema.py
 
-from typing import Any, Dict
+from typing import Any
 
 TRACE_VERSION = "1.0"
 
 
-def serialize_trace(trace: Any) -> Dict[str, Any]:
+def serialize_trace(trace: Any) -> dict[str, Any]:
     return {
         "version": TRACE_VERSION,
         "timestamp": trace.timestamp.isoformat(),

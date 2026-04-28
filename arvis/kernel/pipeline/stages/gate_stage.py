@@ -2,44 +2,46 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Optional
-from typing import cast
 import logging
-from arvis.kernel.gate.pi_gate import PiBasedGate
+from dataclasses import dataclass
+from typing import Any, cast
 
-from arvis.math.lyapunov.lyapunov_gate import (
-    LyapunovVerdict,
-)
-from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
-from arvis.math.switching.switching_params import switching_condition
-from arvis.math.switching.switching_params import switching_lhs, kappa_eff
-from arvis.math.stability.global_guard import GlobalStabilityGuard
-from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
+from arvis.kernel.gate.pi_gate import PiBasedGate
+from arvis.kernel.observability.gate_observer import GateObserver
+from arvis.kernel.pipeline.gate_overrides import GateOverrides
+from arvis.math.adaptive.adaptive_runtime_observer import AdaptiveRuntimeObserver
+from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.confidence.system_confidence import (
     SystemConfidenceInputs,
     compute_system_confidence,
 )
-from arvis.math.adaptive.adaptive_runtime_observer import AdaptiveRuntimeObserver
-from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
-from arvis.math.stability.validity_envelope import build_validity_envelope
-from arvis.math.gate.gate_types import GateKernelInputs
-from arvis.math.gate.gate_policy import apply_gate_policy
 from arvis.math.gate.gate_adapter import ensure_lyapunov_state
 from arvis.math.gate.gate_entry import run_gate_kernel
 from arvis.math.gate.gate_fusion import run_fusion
-from arvis.kernel.observability.gate_observer import GateObserver
-from arvis.kernel.pipeline.gate_overrides import GateOverrides
+from arvis.math.gate.gate_policy import apply_gate_policy
+from arvis.math.gate.gate_types import GateKernelInputs
+from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
+from arvis.math.lyapunov.lyapunov_gate import (
+    LyapunovVerdict,
+)
+from arvis.math.stability.global_guard import GlobalStabilityGuard
+from arvis.math.stability.validity_envelope import build_validity_envelope
+from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
+from arvis.math.switching.switching_params import (
+    kappa_eff,
+    switching_condition,
+    switching_lhs,
+)
 
 
 @dataclass
 class StabilityEnvelope:
-    delta_w: Optional[float]
+    delta_w: float | None
     global_safe: bool
     switching_safe: bool
-    w_bound_ratio: Optional[float]
+    w_bound_ratio: float | None
     hard_block: bool
-    hard_reason: Optional[str]
+    hard_reason: str | None
 
 
 def _record_verdict_transition(
@@ -128,19 +130,19 @@ class CompositeMetrics:
     cur_slow: Any
     prev_symbolic: Any
     cur_symbolic: Any
-    delta_w: Optional[float]
-    w_prev: Optional[float]
-    w_current: Optional[float]
+    delta_w: float | None
+    w_prev: float | None
+    w_current: float | None
 
 
 @dataclass
 class StabilityAssessment:
     global_safe: bool
     switching_safe: bool
-    w_ratio: Optional[float]
-    adaptive_metrics: Optional[AdaptiveSnapshot]
+    w_ratio: float | None
+    adaptive_metrics: AdaptiveSnapshot | None
     recovery_detected: bool
-    composite_recommendation: Optional[str]
+    composite_recommendation: str | None
     switching_metrics: dict[str, Any]
     envelope: StabilityEnvelope
     confidence_inputs: SystemConfidenceInputs
@@ -289,9 +291,9 @@ class GateStage:
         prev_symbolic = getattr(ctx, "symbolic_state_prev", None)
         cur_symbolic = getattr(ctx, "symbolic_state", None)
 
-        delta_w: Optional[float] = None
-        w_prev: Optional[float] = None
-        w_current: Optional[float] = None
+        delta_w: float | None = None
+        w_prev: float | None = None
+        w_current: float | None = None
 
         try:
             if ctx.cur_lyap is not None:
@@ -344,10 +346,10 @@ class GateStage:
         self,
         pipeline: Any,
         ctx: Any,
-        w_prev: Optional[float],
-        w_current: Optional[float],
-    ) -> Optional[AdaptiveSnapshot]:
-        adaptive_metrics: Optional[AdaptiveSnapshot] = None
+        w_prev: float | None,
+        w_current: float | None,
+    ) -> AdaptiveSnapshot | None:
+        adaptive_metrics: AdaptiveSnapshot | None = None
         try:
             if (
                 w_prev is not None
@@ -378,7 +380,7 @@ class GateStage:
 
         return adaptive_metrics
 
-    def _compute_global_stability(self, ctx: Any, delta_w: Optional[float]) -> bool:
+    def _compute_global_stability(self, ctx: Any, delta_w: float | None) -> bool:
         history = list(getattr(ctx, "delta_w_history", []))
         if delta_w is not None:
             history.append(float(delta_w))
@@ -397,9 +399,9 @@ class GateStage:
     def _detect_recovery(
         self,
         ctx: Any,
-        delta_w: Optional[float],
-        w_prev: Optional[float],
-        w_current: Optional[float],
+        delta_w: float | None,
+        w_prev: float | None,
+        w_current: float | None,
     ) -> bool:
         recovery_detected = False
         try:
@@ -425,9 +427,9 @@ class GateStage:
     def _compute_composite_recommendation(
         self,
         pipeline: Any,
-        delta_w: Optional[float],
-        w_current: Optional[float],
-    ) -> Optional[str]:
+        delta_w: float | None,
+        w_current: float | None,
+    ) -> str | None:
         composite_recommendation = None
         try:
             if delta_w is not None and w_current is not None:
@@ -455,7 +457,7 @@ class GateStage:
         ctx: Any,
         prev_slow: Any,
         cur_slow: Any,
-        delta_w: Optional[float],
+        delta_w: float | None,
     ) -> None:
         try:
             if prev_slow is None or cur_slow is None:
@@ -499,7 +501,7 @@ class GateStage:
         ctx.switching_safe = switching_safe
         return switching_safe
 
-    def _compute_exponential_bound(self, ctx: Any) -> Optional[float]:
+    def _compute_exponential_bound(self, ctx: Any) -> float | None:
         w_ratio = None
         try:
             metrics = getattr(ctx, "global_stability_metrics", None)
@@ -521,9 +523,9 @@ class GateStage:
         ctx: Any,
         global_safe: bool,
         switching_safe: bool,
-        w_ratio: Optional[float],
+        w_ratio: float | None,
         w_bound_tol: float,
-        delta_w: Optional[float],
+        delta_w: float | None,
     ) -> StabilityEnvelope:
         reasons = []
         if not global_safe:
@@ -576,7 +578,7 @@ class GateStage:
     def _compute_system_confidence(
         self,
         ctx: Any,
-        delta_w: Optional[float],
+        delta_w: float | None,
         global_safe: bool,
         switching_safe: bool,
     ) -> tuple[SystemConfidenceInputs, float]:
@@ -838,7 +840,7 @@ class GateStage:
         self,
         ctx: Any,
         kernel_result: Any,
-        adaptive_metrics: Optional[AdaptiveSnapshot],
+        adaptive_metrics: AdaptiveSnapshot | None,
     ) -> None:
         mapped_reasons = []
         for r in kernel_result.reasons:
@@ -863,7 +865,7 @@ class GateStage:
         self,
         ctx: Any,
         pre_verdict: LyapunovVerdict,
-        adaptive_metrics: Optional[AdaptiveSnapshot],
+        adaptive_metrics: AdaptiveSnapshot | None,
     ) -> None:
         try:
             if adaptive_metrics is None or adaptive_metrics.margin is None:
@@ -899,7 +901,7 @@ class GateStage:
         self,
         ctx: Any,
         pre_verdict: LyapunovVerdict,
-        adaptive_metrics: Optional[AdaptiveSnapshot],
+        adaptive_metrics: AdaptiveSnapshot | None,
     ) -> LyapunovVerdict:
         if ctx.extra.pop("_kappa_margin_forced_confirmation", False):
             return LyapunovVerdict.REQUIRE_CONFIRMATION
@@ -916,10 +918,10 @@ class GateStage:
         ctx: Any,
         pre_verdict: LyapunovVerdict,
         kernel_result: Any,
-        delta_w: Optional[float],
+        delta_w: float | None,
         switching_safe: bool,
         global_safe: bool,
-        adaptive_metrics: Optional[AdaptiveSnapshot],
+        adaptive_metrics: AdaptiveSnapshot | None,
     ) -> LyapunovVerdict:
         try:
             fusion = run_fusion(
@@ -982,7 +984,7 @@ class GateStage:
         verdict: LyapunovVerdict,
         recovery_detected: bool,
         kernel_result: Any,
-        adaptive_metrics: Optional[AdaptiveSnapshot],
+        adaptive_metrics: AdaptiveSnapshot | None,
     ) -> LyapunovVerdict:
         if recovery_detected or kernel_result.recovery_detected:
             if verdict == LyapunovVerdict.ABSTAIN:
@@ -1018,9 +1020,9 @@ class GateStage:
         self,
         ctx: Any,
         switching_safe: bool,
-        w_ratio: Optional[float],
+        w_ratio: float | None,
         w_bound_tol: float,
-        adaptive_metrics: Optional[AdaptiveSnapshot],
+        adaptive_metrics: AdaptiveSnapshot | None,
     ) -> None:
         try:
             metrics = getattr(ctx, "global_stability_metrics", None)
@@ -1049,8 +1051,8 @@ class GateStage:
     def _write_mid_traces(
         self,
         ctx: Any,
-        w_current: Optional[float],
-        delta_w: Optional[float],
+        w_current: float | None,
+        delta_w: float | None,
         pre_verdict: LyapunovVerdict,
         verdict: LyapunovVerdict,
     ) -> None:
@@ -1124,7 +1126,7 @@ class GateStage:
         ctx: Any,
         verdict: LyapunovVerdict,
         overrides: GateOverrides,
-        delta_w: Optional[float],
+        delta_w: float | None,
         global_safe: bool,
         switching_safe: bool,
     ) -> LyapunovVerdict:
@@ -1310,7 +1312,7 @@ class GateStage:
         self,
         ctx: Any,
         verdict: LyapunovVerdict,
-        adaptive_metrics: Optional[AdaptiveSnapshot],
+        adaptive_metrics: AdaptiveSnapshot | None,
     ) -> LyapunovVerdict:
         if adaptive_metrics and adaptive_metrics.is_unstable:
             _record_verdict_transition(

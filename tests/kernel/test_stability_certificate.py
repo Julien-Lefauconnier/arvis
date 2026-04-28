@@ -21,7 +21,7 @@ def test_stability_certificate_consistency(pipeline, ctx):
     cert = ctx.stability_certificate
 
     # global flag must match context
-    assert cert["global"] == getattr(ctx, "global_stability_safe")
+    assert cert["global"] == ctx.global_stability_safe
 
     # switching flag must match context
-    assert cert["switching"] == getattr(ctx, "switching_safe")
+    assert cert["switching"] == ctx.switching_safe

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from arvis.ir.cognitive_ir import CognitiveIR
-from arvis.ir.gate import CognitiveGateIR
 from arvis.ir.decision import CognitiveDecisionIR
+from arvis.ir.gate import CognitiveGateIR
 
 
 class CognitiveIRNormalizer:

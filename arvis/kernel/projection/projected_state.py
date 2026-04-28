@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Dict, Mapping
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -16,19 +17,19 @@ class ProjectedState:
     pipeline context, designed to feed certification (Π_cert).
     """
 
-    state_signals: Dict[str, float] = field(default_factory=dict)
-    risk_signals: Dict[str, float] = field(default_factory=dict)
-    control_signals: Dict[str, float] = field(default_factory=dict)
-    trace_features: Dict[str, float] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    state_signals: dict[str, float] = field(default_factory=dict)
+    risk_signals: dict[str, float] = field(default_factory=dict)
+    control_signals: dict[str, float] = field(default_factory=dict)
+    trace_features: dict[str, float] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_projection_view(self) -> Dict[str, float]:
+    def to_projection_view(self) -> dict[str, float]:
         """
         Flat numeric view used by the certification layer.
 
         Names are prefixed to keep the projected space explicit and stable.
         """
-        projection: Dict[str, float] = {}
+        projection: dict[str, float] = {}
 
         def _inject(prefix: str, values: Mapping[str, float]) -> None:
             for key, value in values.items():

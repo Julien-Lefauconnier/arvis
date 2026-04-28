@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from arvis.ir.cognitive_ir import CognitiveIR
 
@@ -19,7 +19,7 @@ class CognitiveIRBuilder:
         - no side effects
         """
 
-        tool_results: Optional[List[Dict[str, Any]]] = None
+        tool_results: list[dict[str, Any]] | None = None
 
         extra = getattr(ctx, "extra", None)
         if isinstance(extra, dict):

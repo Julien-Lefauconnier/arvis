@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+
 from arvis.math.switching.regime_mapper import map_regime
 
 

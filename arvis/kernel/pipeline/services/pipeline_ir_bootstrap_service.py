@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any
 
+from arvis.ir.context import CognitiveContextIR
+from arvis.ir.input import CognitiveInputIR
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
-from arvis.ir.input import CognitiveInputIR
-from arvis.ir.context import CognitiveContextIR
 
 
 class PipelineIRBootstrapService:

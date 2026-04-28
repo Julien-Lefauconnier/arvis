@@ -2,7 +2,6 @@
 
 from collections import deque
 from dataclasses import dataclass
-from typing import Deque
 
 
 @dataclass(frozen=True)
@@ -23,7 +22,7 @@ class StabilityStatistics:
 
     def __init__(self, window: int = 500):
         self.window = window
-        self._buffer: Deque[float] = deque(maxlen=window)
+        self._buffer: deque[float] = deque(maxlen=window)
 
     def push(self, delta_v: float) -> None:
         self._buffer.append(delta_v)

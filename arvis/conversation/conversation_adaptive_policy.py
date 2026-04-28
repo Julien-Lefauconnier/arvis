@@ -1,8 +1,8 @@
 # arvis/conversation/conversation_adaptive_policy.py
 
-from arvis.conversation.response_strategy_type import ResponseStrategyType
-from arvis.conversation.conversation_state import ConversationState
 from arvis.conversation.conversation_policy_base import ConversationPolicy
+from arvis.conversation.conversation_state import ConversationState
+from arvis.conversation.response_strategy_type import ResponseStrategyType
 
 
 class AdaptiveThresholdPolicy(ConversationPolicy):

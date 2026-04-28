@@ -1,9 +1,8 @@
 # tests/reflexive/timeline/explanation/test_reflexive_timeline_exposure_explanation.py
 
-from arvis.reflexive.timeline.explanation.reflexive_timeline_exposure_explanation import (
+from arvis.reflexive.timeline.explanation import (
     ReflexiveTimelineExposureExplanation,
 )
-
 
 # --------------------------------------------------
 # Helpers

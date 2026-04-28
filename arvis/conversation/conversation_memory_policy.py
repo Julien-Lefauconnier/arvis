@@ -1,7 +1,7 @@
 # arvis/conversation/conversation_memory_policy.py
 
-from arvis.conversation.response_strategy_type import ResponseStrategyType
 from arvis.conversation.conversation_state import ConversationState
+from arvis.conversation.response_strategy_type import ResponseStrategyType
 
 
 class ConversationMemoryPolicy:

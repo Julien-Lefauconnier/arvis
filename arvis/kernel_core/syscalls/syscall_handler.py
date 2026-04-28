@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
@@ -24,9 +24,9 @@ class PipelineContextLike(Protocol):
 class SyscallHandler:
     def __init__(
         self,
-        runtime_state: Optional[RuntimeStateLike],
+        runtime_state: RuntimeStateLike | None,
         scheduler: Any,
-        services: Optional[KernelServiceRegistry] = None,
+        services: KernelServiceRegistry | None = None,
     ) -> None:
         self.runtime_state = runtime_state
         self.scheduler = scheduler
@@ -42,8 +42,8 @@ class SyscallHandler:
         self.memory_policy_service = self.services.memory_policy_service
 
     def handle(self, syscall: Syscall) -> SyscallResult:
-        ctx: Optional[PipelineContextLike] = syscall.args.get("ctx")
-        fn: Optional[SyscallFn] = get_syscall(syscall.name)
+        ctx: PipelineContextLike | None = syscall.args.get("ctx")
+        fn: SyscallFn | None = get_syscall(syscall.name)
         started_tick = self._get_tick()
 
         if started_tick != self._last_tick:
@@ -124,7 +124,7 @@ class SyscallHandler:
 
     def _journal(
         self,
-        ctx: Optional[PipelineContextLike],
+        ctx: PipelineContextLike | None,
         syscall: Syscall,
         result: SyscallResult,
         started_tick: int,

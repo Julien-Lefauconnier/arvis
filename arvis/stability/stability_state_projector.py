@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
+from arvis.math.core.normalization import budget_ratio01, clamp01
 from arvis.math.lyapunov.lyapunov import LyapunovState
-from arvis.math.core.normalization import clamp01, budget_ratio01
 
 
 class StabilityStateProjector:

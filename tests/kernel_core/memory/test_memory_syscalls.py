@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-
+from arvis.kernel_core.memory.policy import MemoryPolicyService
+from arvis.kernel_core.memory.repositories.in_memory import InMemoryMemoryRepository
+from arvis.kernel_core.memory.service import MemoryService
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 
-from arvis.kernel_core.memory.repositories.in_memory import InMemoryMemoryRepository
-from arvis.kernel_core.memory.service import MemoryService
-from arvis.kernel_core.memory.policy import MemoryPolicyService
-
 # Important: force syscall registration
 from arvis.kernel_core.syscalls.syscalls import memory_syscalls  # noqa: F401
-
 
 USER_ID = "user-1"
 

@@ -35,7 +35,7 @@ class ChangeBudget:
         drift = clamp01(drift)
         return (self.consumption + drift) <= self.budget + 1e-12
 
-    def consume(self, drift: float) -> "ChangeBudget":
+    def consume(self, drift: float) -> ChangeBudget:
         drift = clamp01(drift)
         return ChangeBudget(
             budget=self.budget,

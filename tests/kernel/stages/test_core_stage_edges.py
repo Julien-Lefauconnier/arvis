@@ -4,7 +4,6 @@
 from arvis.kernel.pipeline.stages.core_stage import CoreStage
 from arvis.math.lyapunov.lyapunov import LyapunovState
 
-
 # ============================================================
 # Helpers
 # ============================================================

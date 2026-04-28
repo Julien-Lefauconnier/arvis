@@ -1,15 +1,19 @@
 # arvis/adapters/llm/llm_executor.py
 
+from __future__ import annotations
+
 from typing import Any
 
+from arvis.adapters.llm.contracts.request import LLMRequest
+from arvis.adapters.llm.governance.policy import LLMGovernancePolicy
+from arvis.adapters.registry import get_llm_adapter
 from arvis.conversation.response_plan import ResponsePlan
 from arvis.conversation.response_realization_mode import ResponseRealizationMode
+from arvis.linguistic.acts.act_types import LinguisticActType
+from arvis.linguistic.acts.linguistic_act import LinguisticAct
 from arvis.linguistic.realization.realization_service import (
     LinguisticRealizationService,
 )
-from arvis.linguistic.acts.linguistic_act import LinguisticAct
-from arvis.linguistic.acts.act_types import LinguisticActType
-from arvis.adapters.registry import get_llm_adapter
 
 
 class LLMExecutor:
@@ -34,9 +38,23 @@ class LLMExecutor:
             if not plan.prompt:
                 raise RuntimeError("Missing prompt for LLM execution.")
 
-            response = adapter.generate(
+            policy = None
+            if ctx is not None:
+                extra = getattr(ctx, "extra", {})
+                raw_policy = extra.get("llm_policy")
+                if isinstance(raw_policy, LLMGovernancePolicy):
+                    policy = raw_policy
+
+            request = LLMRequest(
                 prompt=plan.prompt,
-                temperature=0.0,
+                metadata={"source": "response_plan"},
+            )
+
+            if policy is None:
+                raise RuntimeError("Missing LLM governance policy.")
+
+            response = adapter.generate(
+                request,
             )
 
             content = getattr(response, "content", None)

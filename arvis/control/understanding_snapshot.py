@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
 from enum import Enum
 
 
@@ -26,11 +25,11 @@ class UnderstandingSnapshot:
     """
 
     state: UnderstandingState
-    trend: Optional[UnderstandingTrend] = None
+    trend: UnderstandingTrend | None = None
 
-    active_uncertainties: List[str] = field(default_factory=list)
-    active_conflicts: List[str] = field(default_factory=list)
-    active_reasoning_intents: List[str] = field(default_factory=list)
+    active_uncertainties: list[str] = field(default_factory=list)
+    active_conflicts: list[str] = field(default_factory=list)
+    active_reasoning_intents: list[str] = field(default_factory=list)
 
-    notes: Optional[str] = None
-    created_at: Optional[datetime] = None
+    notes: str | None = None
+    created_at: datetime | None = None

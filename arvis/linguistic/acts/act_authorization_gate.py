@@ -1,9 +1,9 @@
 # arvis/linguistic/acts/act_authorization_gate.py
 
-from arvis.linguistic.acts.linguistic_act import LinguisticAct
-from arvis.linguistic.acts.act_types import LinguisticActType
-from arvis.linguistic.acts.mode_act_policy import MODE_ACT_POLICY
 from arvis.cognition.conversation.conversation_mode import ConversationMode
+from arvis.linguistic.acts.act_types import LinguisticActType
+from arvis.linguistic.acts.linguistic_act import LinguisticAct
+from arvis.linguistic.acts.mode_act_policy import MODE_ACT_POLICY
 
 
 class LinguisticActAuthorizationGate:

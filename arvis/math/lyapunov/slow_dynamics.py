@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 from arvis.math.lyapunov.slow_state import SlowState
-from typing import Iterable
 
 
 def update_slow_state(
@@ -12,5 +13,5 @@ def update_slow_state(
     eta: float = 0.05,
 ) -> SlowState:
     prev = z_prev.as_vector()
-    new = [(1.0 - eta) * p + eta * t for p, t in zip(prev, T_x)]
+    new = [(1.0 - eta) * p + eta * t for p, t in zip(prev, T_x, strict=True)]
     return SlowState(*new)

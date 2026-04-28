@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvis.cognition.introspection.introspection_snapshot import IntrospectionSnapshot
 from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
+from arvis.cognition.introspection.introspection_snapshot import IntrospectionSnapshot
 
 
 class BundleStage:

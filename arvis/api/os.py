@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, List
+from typing import Any
 
 from arvis.api.os_internals import CognitiveOSInternals
-from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.api.views.cognitive_result_view import CognitiveResultView
+from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
@@ -20,7 +20,7 @@ from arvis.tools.spec import ToolSpec
 class CognitiveOSConfig:
     enable_trace: bool = True
     strict_mode: bool = False
-    adapter_registry: Optional[Dict[str, Any]] = None
+    adapter_registry: dict[str, Any] | None = None
     runtime_mode: str = "local"
 
 
@@ -30,9 +30,9 @@ class CognitiveOSConfig:
 class CognitiveOS(CognitiveOSInternals):
     def __init__(
         self,
-        config: Optional[CognitiveOSConfig] = None,
+        config: CognitiveOSConfig | None = None,
         *,
-        pipeline: Optional[CognitivePipeline] = None,
+        pipeline: CognitivePipeline | None = None,
     ):
         self.config = config or CognitiveOSConfig()
         self.tool_registry = ToolRegistry()
@@ -49,10 +49,10 @@ class CognitiveOS(CognitiveOSInternals):
     def list_tools(self) -> list[str]:
         return self.tool_registry.list()
 
-    def get_tool_spec(self, name: str) -> Optional[ToolSpec]:
+    def get_tool_spec(self, name: str) -> ToolSpec | None:
         return self.tool_registry.get_spec(name)
 
-    def list_tool_specs(self) -> Dict[str, ToolSpec]:
+    def list_tool_specs(self) -> dict[str, ToolSpec]:
         return self.tool_registry.list_specs()
 
     # -------------------------------------------------
@@ -66,8 +66,8 @@ class CognitiveOS(CognitiveOSInternals):
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
-        extra: Optional[Dict[str, Any]] = None,
-    ) -> CognitiveResultView | Dict[str, Any]:
+        extra: dict[str, Any] | None = None,
+    ) -> CognitiveResultView | dict[str, Any]:
         result = self._run_single(
             user_id=user_id,
             cognitive_input=cognitive_input,
@@ -89,8 +89,8 @@ class CognitiveOS(CognitiveOSInternals):
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
-        extra: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        extra: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         return self._build_ir_from_input(
             user_id=user_id,
             cognitive_input=cognitive_input,
@@ -105,9 +105,9 @@ class CognitiveOS(CognitiveOSInternals):
     # -------------------------------------------------
     def replay(
         self,
-        ir: Dict[str, Any],
+        ir: dict[str, Any],
         *,
-        expected_global_commitment: Optional[str] = None,
+        expected_global_commitment: str | None = None,
     ) -> CognitiveResultView:
         return self._verified_replay_view(
             ir,
@@ -116,9 +116,9 @@ class CognitiveOS(CognitiveOSInternals):
 
     def replay_verified(
         self,
-        ir: Dict[str, Any],
+        ir: dict[str, Any],
         *,
-        expected_global_commitment: Optional[str] = None,
+        expected_global_commitment: str | None = None,
     ) -> CognitiveResultView:
         return self.replay(
             ir,
@@ -128,7 +128,7 @@ class CognitiveOS(CognitiveOSInternals):
     # -------------------------------------------------
     # Inspection
     # -------------------------------------------------
-    def inspect(self, result: CognitiveResultView) -> Dict[str, Any]:
+    def inspect(self, result: CognitiveResultView) -> dict[str, Any]:
         return {
             "summary": result.summary(),
             "trace": result.trace_view.to_dict() if result.trace_view else None,
@@ -148,10 +148,10 @@ class CognitiveOS(CognitiveOSInternals):
     # -------------------------------------------------
     def run_multi(
         self,
-        inputs: List[Any],
+        inputs: list[Any],
         *,
         user_id: str = "multi",
-    ) -> List[CognitiveResultView | Dict[str, Any]]:
+    ) -> list[CognitiveResultView | dict[str, Any]]:
         return self._run_batch(
             inputs=inputs,
             user_id=user_id,

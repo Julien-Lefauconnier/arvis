@@ -2,16 +2,14 @@
 
 from datetime import datetime
 
-from arvis.linguistic.acts.linguistic_act import LinguisticAct
+from arvis.conversation.act_strategy_mapper import map_strategy_to_act
+from arvis.conversation.response_strategy_type import ResponseStrategyType
 from arvis.linguistic.acts.act_types import LinguisticActType
+from arvis.linguistic.acts.linguistic_act import LinguisticAct
 from arvis.linguistic.generation.frame_builder import build_generation_frame
 from arvis.linguistic.generation.generation_frame import LinguisticGenerationFrame
 from arvis.linguistic.lexicon.lexicon_entry import LexiconEntry
 from arvis.linguistic.lexicon.lexicon_snapshot import LexiconSnapshot
-
-from arvis.conversation.act_strategy_mapper import map_strategy_to_act
-from arvis.conversation.response_strategy_type import ResponseStrategyType
-
 
 # ---------------------------------------------------------
 # Dummy helpers

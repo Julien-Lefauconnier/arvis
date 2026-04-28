@@ -1,7 +1,6 @@
 # arvis/conversation/conversation_strategy_field.py
 
 from dataclasses import dataclass
-from typing import Dict
 
 from arvis.conversation.response_strategy_type import (
     ResponseStrategyType,
@@ -10,7 +9,7 @@ from arvis.conversation.response_strategy_type import (
 
 @dataclass
 class StrategyField:
-    distribution: Dict[ResponseStrategyType, float]
+    distribution: dict[ResponseStrategyType, float]
 
     @staticmethod
     def uniform() -> "StrategyField":

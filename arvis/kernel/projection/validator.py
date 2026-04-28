@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
-from .domain import ProjectionDomain
 from .certificate import (
     ProjectionCertificate,
     ProjectionCertificationLevel,
 )
+from .domain import ProjectionDomain
 
 
 class ProjectionValidator:
@@ -30,9 +30,9 @@ class ProjectionValidator:
 
     def validate(
         self,
-        projected: Dict[str, Any],
-        previous_projected: Optional[Dict[str, Any]] = None,
-        ctx: Optional[Any] = None,
+        projected: dict[str, Any],
+        previous_projected: dict[str, Any] | None = None,
+        ctx: Any | None = None,
     ) -> ProjectionCertificate:
         domain_valid, checks_detail = self.domain.validate(projected)
         margin = self.domain.margin_to_boundary(projected)

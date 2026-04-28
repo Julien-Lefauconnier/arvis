@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class GapType(str, Enum):
@@ -41,4 +40,4 @@ class ReasoningGap:
     origin: GapOrigin
     severity: GapSeverity
     description: str
-    origin_ref: Optional[str] = None
+    origin_ref: str | None = None

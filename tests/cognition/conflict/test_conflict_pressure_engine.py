@@ -6,7 +6,6 @@ from arvis.cognition.conflict.conflict_pressure_engine import (
     ConflictPressureEngine,
 )
 
-
 # -----------------------------
 # Helpers
 # -----------------------------

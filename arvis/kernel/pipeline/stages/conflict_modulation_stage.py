@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from typing import Any
-from arvis.math.signals import RiskSignal
+
 from arvis.cognition.conflict.conflict_modulation import apply_conflict_to_risk
+from arvis.math.signals import RiskSignal
 
 
 class ConflictModulationStage:

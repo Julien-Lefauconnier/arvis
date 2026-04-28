@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
-from arvis.runtime.process_hooks import ProcessHookManager
-
+from arvis.kernel_core.contracts.execution_contract import ProcessExecutor
 from arvis.kernel_core.process import (
     CognitiveProcess,
     CognitiveProcessId,
     CognitiveProcessStatus,
 )
 from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
-from arvis.kernel_core.contracts.execution_contract import ProcessExecutor
+from arvis.runtime.process_hooks import ProcessHookManager
 from arvis.runtime.resource_model import ResourcePressure
 from arvis.runtime.scheduler_decision import SchedulerDecision
 
@@ -81,7 +80,9 @@ class CognitiveScheduler:
     def enqueue(self, process: CognitiveProcess) -> None:
         if process.is_final():
             raise ValueError(
-                f"Cannot enqueue final process: {process.process_id.value} [{process.status.value}]"
+                "Cannot enqueue final process: "
+                f"{process.process_id.value} "
+                f"[{process.status.value}]"
             )
         self.runtime_state.register_process(process)
         state = self.runtime_state.scheduler_state
@@ -341,8 +342,8 @@ class CognitiveScheduler:
                 score=None,
             )
 
-        best_process: Optional[CognitiveProcess] = None
-        best_score: Optional[float] = None
+        best_process: CognitiveProcess | None = None
+        best_score: float | None = None
 
         for process_id in state.ready_queue:
             process = self.runtime_state.get_process(process_id)

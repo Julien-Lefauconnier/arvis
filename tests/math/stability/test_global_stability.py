@@ -2,8 +2,8 @@
 
 from types import SimpleNamespace
 
-from arvis.math.stability.global_stability import GlobalStabilityFusion
 from arvis.math.lyapunov.lyapunov import LyapunovState
+from arvis.math.stability.global_stability import GlobalStabilityFusion
 from arvis.math.stability.regime_estimator import RegimeSnapshot
 
 

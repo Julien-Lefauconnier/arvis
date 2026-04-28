@@ -3,10 +3,8 @@
 import math
 import random
 
-
-from arvis.cognition.projection.projection_api import project_observation, Observation
+from arvis.cognition.projection.projection_api import Observation, project_observation
 from tests.fixtures.projection_cases import nominal_case
-
 
 # -----------------------------
 # Helpers
@@ -35,13 +33,13 @@ def observation_distance(o1: Observation, o2: Observation) -> float:
 def projection_distance(p1, p2) -> float:
     total = 0.0
 
-    for v1, v2 in zip(p1.x, p2.x):
+    for v1, v2 in zip(p1.x, p2.x, strict=True):
         total += (v1 - v2) ** 2
 
-    for v1, v2 in zip(p1.z, p2.z):
+    for v1, v2 in zip(p1.z, p2.z, strict=True):
         total += (v1 - v2) ** 2
 
-    for v1, v2 in zip(p1.w, p2.w):
+    for v1, v2 in zip(p1.w, p2.w, strict=True):
         total += (v1 - v2) ** 2
 
     # penalize mode changes (discontinuity)

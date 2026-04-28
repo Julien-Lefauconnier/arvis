@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
 from dataclasses import replace
+from typing import Any
 
-from arvis.action.action_resolver import resolve_action
-from arvis.action.action_evaluator import evaluate_action
 from arvis.action.action_context import ActionContext
 from arvis.action.action_decision import ActionDecision
+from arvis.action.action_evaluator import evaluate_action
 from arvis.action.action_mode import ActionMode
+from arvis.action.action_resolver import resolve_action
 
 
 class ActionStage:
@@ -77,11 +77,11 @@ class ActionStage:
         # -----------------------------------------
 
         if force_tool:
-            setattr(ctx.decision_result, "tool", force_tool)
+            ctx.decision_result.tool = force_tool
 
         # optional sync (not required anymore)
         if resolved_tool:
-            setattr(ctx.decision_result, "tool", resolved_tool)
+            ctx.decision_result.tool = resolved_tool
 
         action_decision = evaluate_action(
             verdict=verdict,

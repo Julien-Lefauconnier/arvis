@@ -1,19 +1,18 @@
 # tests/runtime/test_pipeline_iterative.py
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
-from arvis.runtime.pipeline_executor import PipelineExecutor
-
-from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
-from arvis.runtime.cognitive_scheduler import CognitiveScheduler
+from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.runtime.cognitive_process import (
+    CognitiveBudget,
+    CognitivePriority,
     CognitiveProcess,
     CognitiveProcessId,
     CognitiveProcessKind,
     CognitiveProcessStatus,
-    CognitivePriority,
-    CognitiveBudget,
 )
-from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
+from arvis.runtime.cognitive_scheduler import CognitiveScheduler
+from arvis.runtime.pipeline_executor import PipelineExecutor
 
 
 class DummyPipeline:

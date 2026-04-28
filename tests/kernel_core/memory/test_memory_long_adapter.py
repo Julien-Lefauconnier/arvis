@@ -1,6 +1,6 @@
 # tests/kernel_core/memory/test_memory_long_adapter.py
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from arvis.kernel_core.memory.adapters.memory_long_adapter import (
     to_memory_long_entry,
@@ -80,7 +80,7 @@ def test_created_at_is_datetime():
     entry = to_memory_long_entry(record)
 
     assert isinstance(entry.created_at, datetime)
-    assert entry.created_at.tzinfo == timezone.utc
+    assert entry.created_at.tzinfo == UTC
 
 
 # =========================================================

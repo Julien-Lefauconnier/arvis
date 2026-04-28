@@ -1,8 +1,8 @@
 # arvis/reflexive/timeline/aggregation/irg_timeline_temporal_snapshot.py
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Sequence
 
 from arvis.timeline.timeline_types import TimelineEntryType
 

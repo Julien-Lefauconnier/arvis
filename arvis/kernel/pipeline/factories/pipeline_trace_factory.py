@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
+from arvis.cognition.gate.cognitive_gate_result import (
+    CognitiveGateResult,
+)
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
 from arvis.kernel.trace.decision_trace import DecisionTrace
-from arvis.cognition.gate.cognitive_gate_result import (
-    CognitiveGateResult,
-)
 
 
 class PipelineTraceFactory:
@@ -20,7 +20,7 @@ class PipelineTraceFactory:
         normalized_gate_result: CognitiveGateResult,
     ) -> DecisionTrace:
         return DecisionTrace(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id=ctx.user_id,
             gate_result=normalized_gate_result,
             confirmation_request=ctx.confirmation_request,

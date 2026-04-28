@@ -57,7 +57,7 @@ def test_report_immutability():
         issues=(),
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(AttributeError):
         report.is_consistent = False
 
 

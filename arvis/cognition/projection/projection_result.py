@@ -1,7 +1,6 @@
 # arvis/cognition/projection/projection_result.py
 
 from dataclasses import dataclass
-from typing import Tuple
 
 from .projection_diagnostics import ProjectionDiagnostics
 
@@ -14,9 +13,9 @@ class ProjectionResult:
     This is the canonical interface between cognition and math.
     """
 
-    x: Tuple[float, ...]
-    z: Tuple[float, ...]
+    x: tuple[float, ...]
+    z: tuple[float, ...]
     q: str
-    w: Tuple[float, ...]
+    w: tuple[float, ...]
 
     diagnostics: ProjectionDiagnostics

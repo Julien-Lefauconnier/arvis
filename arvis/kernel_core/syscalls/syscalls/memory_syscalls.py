@@ -2,31 +2,31 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
+from arvis.kernel_core.memory.exceptions import MemoryRecordNotFoundError
 from arvis.kernel_core.memory.policy import (
     MemoryAccessRequest,
     MemoryPolicyService,
 )
 from arvis.kernel_core.memory.service import MemoryService
+from arvis.kernel_core.memory.snapshot import MemorySnapshot
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
-from arvis.kernel_core.memory.exceptions import MemoryRecordNotFoundError
-from arvis.kernel_core.memory.snapshot import MemorySnapshot
 
 
 class SyscallHandlerLike(Protocol):
     services: KernelServiceRegistry
 
 
-def _get_memory_service(handler: SyscallHandlerLike) -> Optional[MemoryService]:
+def _get_memory_service(handler: SyscallHandlerLike) -> MemoryService | None:
     return handler.services.memory_service
 
 
 def _get_memory_policy_service(
     handler: SyscallHandlerLike,
-) -> Optional[MemoryPolicyService]:
+) -> MemoryPolicyService | None:
     return handler.services.memory_policy_service
 
 
@@ -39,10 +39,10 @@ def _authorize(
     handler: SyscallHandlerLike,
     actor_user_id: str,
     owner_user_id: str,
-    namespace: Optional[str],
+    namespace: str | None,
     action: str,
-    key: Optional[str] = None,
-) -> Optional[SyscallResult]:
+    key: str | None = None,
+) -> SyscallResult | None:
     policy = _get_memory_policy_service(handler)
     if policy is None:
         return _missing_service_error("no_memory_policy_service")
@@ -97,7 +97,7 @@ def memory_get(
     user_id: str,
     namespace: str,
     key: str,
-    actor_user_id: Optional[str] = None,
+    actor_user_id: str | None = None,
     **_: Any,
 ) -> SyscallResult:
     service = _get_memory_service(handler)
@@ -140,7 +140,7 @@ def memory_put(
     namespace: str,
     key: str,
     value: Any,
-    actor_user_id: Optional[str] = None,
+    actor_user_id: str | None = None,
     **_: Any,
 ) -> SyscallResult:
     service = _get_memory_service(handler)
@@ -177,7 +177,7 @@ def memory_delete(
     user_id: str,
     namespace: str,
     key: str,
-    actor_user_id: Optional[str] = None,
+    actor_user_id: str | None = None,
     **_: Any,
 ) -> SyscallResult:
     service = _get_memory_service(handler)
@@ -222,8 +222,8 @@ def memory_delete(
 def memory_list(
     handler: SyscallHandlerLike,
     user_id: str,
-    namespace: Optional[str] = None,
-    actor_user_id: Optional[str] = None,
+    namespace: str | None = None,
+    actor_user_id: str | None = None,
     **_: Any,
 ) -> SyscallResult:
     service = _get_memory_service(handler)
@@ -258,8 +258,8 @@ def memory_list(
 def memory_snapshot(
     handler: SyscallHandlerLike,
     user_id: str,
-    namespace: Optional[str] = None,
-    actor_user_id: Optional[str] = None,
+    namespace: str | None = None,
+    actor_user_id: str | None = None,
     **_: Any,
 ) -> SyscallResult:
     service = _get_memory_service(handler)

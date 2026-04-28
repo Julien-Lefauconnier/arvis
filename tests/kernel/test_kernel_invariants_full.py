@@ -4,7 +4,6 @@ import pytest
 
 from arvis.kernel.kernel_invariants import assert_kernel_invariants
 
-
 # -----------------------------
 # Dummy bundle
 # -----------------------------

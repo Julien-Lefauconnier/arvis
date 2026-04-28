@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional, Set
 from time import time
+from typing import Any
 
 from arvis.cognition.coherence.change_budget import ChangeBudget
 from arvis.cognition.coherence.coherence_limits import (
-    DEFAULT_STEP_CAP,
     DEFAULT_MAX_CHANGES,
+    DEFAULT_STEP_CAP,
 )
 
 
@@ -23,12 +23,12 @@ class CoherenceSignature:
     """
 
     reason: str
-    proposed_action_ids: Set[str]
+    proposed_action_ids: set[str]
     memory_intent: str
-    conflict_types: Set[str]
+    conflict_types: set[str]
     knowledge_state: str
-    uncertainty_frame_ids: Set[str]
-    context_hint_keys: Set[str]
+    uncertainty_frame_ids: set[str]
+    context_hint_keys: set[str]
 
 
 class CoherenceObserver:
@@ -53,7 +53,7 @@ class CoherenceObserver:
 
         # Actions: store by action_id if available, else stringify
         proposed_actions = getattr(decision, "proposed_actions", None) or []
-        action_ids: Set[str] = set()
+        action_ids: set[str] = set()
         for a in proposed_actions:
             aid = getattr(a, "action_id", None)
             action_ids.add(str(aid if aid is not None else a))
@@ -63,7 +63,7 @@ class CoherenceObserver:
 
         # Conflicts: store by conflict.type if available
         conflicts = getattr(decision, "conflicts", None) or []
-        conflict_types: Set[str] = set()
+        conflict_types: set[str] = set()
         for c in conflicts:
             ctype = getattr(c, "type", None)
             conflict_types.add(str(ctype if ctype is not None else c))
@@ -76,7 +76,7 @@ class CoherenceObserver:
 
         # Uncertainty frames: store by frame_id if available
         frames = getattr(decision, "uncertainty_frames", None) or []
-        frame_ids: Set[str] = set()
+        frame_ids: set[str] = set()
         for f in frames:
             fid = getattr(f, "frame_id", None)
             frame_ids.add(str(fid if fid is not None else f))
@@ -129,12 +129,12 @@ class CoherenceObserver:
     @staticmethod
     def update_budget(
         *,
-        previous_bundle: Optional[Any],
+        previous_bundle: Any | None,
         current_bundle: Any,
-        previous_budget: Optional[ChangeBudget] = None,
+        previous_budget: ChangeBudget | None = None,
         max_changes: int = DEFAULT_MAX_CHANGES,
         step_cap: int = DEFAULT_STEP_CAP,
-        timestamp: Optional[int] = None,
+        timestamp: int | None = None,
     ) -> ChangeBudget:
         """
         Compute distance between bundles and increment ChangeBudget.

@@ -7,7 +7,6 @@ Version 1.1.7 — Extended with explicit allowed_states and subject_kinds valida
 """
 
 from dataclasses import dataclass, field
-from typing import FrozenSet
 
 from .canonical_signal_key import CanonicalSignalKey
 
@@ -28,12 +27,12 @@ class CanonicalSignalSpec:
     key: CanonicalSignalKey
 
     # Explicit finite sets — extracted from private stack
-    states_allowed: FrozenSet[str] = field(default_factory=frozenset)
-    subject_kinds: FrozenSet[str] = field(default_factory=frozenset)
+    states_allowed: frozenset[str] = field(default_factory=frozenset)
+    subject_kinds: frozenset[str] = field(default_factory=frozenset)
 
     # Existing fields
     supersession_allowed: bool = False
-    origin_allowed: FrozenSet[str] = field(default_factory=frozenset)
+    origin_allowed: frozenset[str] = field(default_factory=frozenset)
 
     def __post_init__(self) -> None:
         """

@@ -1,13 +1,14 @@
 # tests/timeline/test_timeline_window.py
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
-from datetime import datetime, timezone, timedelta
 
 from arvis.timeline.timeline_window import TimelineWindow
 
 
 def test_window_creation():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     w = TimelineWindow(after=now)
 
@@ -16,7 +17,7 @@ def test_window_creation():
 
 
 def test_window_valid_range():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     later = now + timedelta(seconds=10)
 
     w = TimelineWindow(after=now, before=later)
@@ -26,7 +27,7 @@ def test_window_valid_range():
 
 
 def test_window_invalid_range():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     earlier = now - timedelta(seconds=10)
 
     with pytest.raises(ValueError):
@@ -34,7 +35,7 @@ def test_window_invalid_range():
 
 
 def test_window_to_dict():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     later = now + timedelta(seconds=5)
 
     w = TimelineWindow(after=now, before=later)
@@ -46,7 +47,7 @@ def test_window_to_dict():
 
 
 def test_window_to_dict_partial():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     w = TimelineWindow(after=now)
 
@@ -57,7 +58,7 @@ def test_window_to_dict_partial():
 
 
 def test_window_ordering():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     w1 = TimelineWindow(after=now)
     w2 = TimelineWindow(after=now + timedelta(seconds=5))
@@ -66,7 +67,7 @@ def test_window_ordering():
 
 
 def test_window_ordering_none_after():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     w1 = TimelineWindow()
     w2 = TimelineWindow(after=now)
@@ -77,5 +78,5 @@ def test_window_ordering_none_after():
 def test_window_immutable():
     w = TimelineWindow()
 
-    with pytest.raises(Exception):
-        w.after = datetime.now(timezone.utc)
+    with pytest.raises(AttributeError):
+        w.after = datetime.now(UTC)

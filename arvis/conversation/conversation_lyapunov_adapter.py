@@ -3,7 +3,6 @@
 from arvis.conversation.conversation_state import (
     ConversationState,
 )
-
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 

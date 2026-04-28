@@ -1,28 +1,26 @@
 # tests/math/signals/test_coercion_full.py
 
 
-from arvis.math.signals.coercion import (
-    to_float,
-    to_risk,
-    to_uncertainty,
-    to_drift,
-    to_stability,
-    to_confidence,
-    to_forecast,
-    to_symbolic_drift,
-)
-
 from arvis.math.signals import (
-    RiskSignal,
-    UncertaintySignal,
-    DriftSignal,
-    StabilitySignal,
     ConfidenceSignal,
-    ForecastSignal,
-    SymbolicDriftSignal,
     ConflictSignal,
+    DriftSignal,
+    ForecastSignal,
+    RiskSignal,
+    StabilitySignal,
+    SymbolicDriftSignal,
+    UncertaintySignal,
 )
-
+from arvis.math.signals.coercion import (
+    to_confidence,
+    to_drift,
+    to_float,
+    to_forecast,
+    to_risk,
+    to_stability,
+    to_symbolic_drift,
+    to_uncertainty,
+)
 
 # ============================================================
 # to_float

@@ -1,7 +1,7 @@
 # arvis/signals/canonical/canonical_signal.py
 
 from dataclasses import dataclass
-from typing import Optional
+
 from .canonical_signal_key import CanonicalSignalKey
 from .canonical_signal_registry import CanonicalSignalRegistry
 
@@ -14,7 +14,7 @@ class CanonicalSignal:
     subject_ref: str
     temporal_anchor: str
     origin: str
-    supersedes: Optional[str] = None
+    supersedes: str | None = None
 
     def __post_init__(self) -> None:
         spec = CanonicalSignalRegistry.get(self.key)

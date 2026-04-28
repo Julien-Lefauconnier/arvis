@@ -1,7 +1,7 @@
 # tests/math/predictive/test_trajectory_observer.py
 
-from arvis.math.predictive.trajectory_observer import TrajectoryObserver
 from arvis.math.lyapunov.lyapunov import LyapunovState
+from arvis.math.predictive.trajectory_observer import TrajectoryObserver
 
 
 def make_state(v):

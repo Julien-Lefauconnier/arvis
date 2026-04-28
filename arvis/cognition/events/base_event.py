@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -19,4 +19,4 @@ class BaseEvent:
     type: str
     user_id: str
     timestamp: datetime
-    payload: Dict[str, Any]
+    payload: dict[str, Any]

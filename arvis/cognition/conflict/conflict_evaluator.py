@@ -1,9 +1,9 @@
 # arvis/cognition/conflict/conflict_evaluator.py
 
-from typing import Callable, List
+from collections.abc import Callable
 
-from .conflict_signal import ConflictSignal
 from .conflict_policy_result import ConflictPolicyResult
+from .conflict_signal import ConflictSignal
 
 
 class ConflictEvaluator:
@@ -17,10 +17,10 @@ class ConflictEvaluator:
 
     def __init__(
         self,
-        rules: List[
+        rules: list[
             Callable[
-                [List[ConflictPolicyResult], ConflictSignal],
-                List[ConflictPolicyResult],
+                [list[ConflictPolicyResult], ConflictSignal],
+                list[ConflictPolicyResult],
             ]
         ],
     ):
@@ -29,9 +29,9 @@ class ConflictEvaluator:
     def apply(
         self,
         *,
-        targets: List[str],
-        conflicts: List[ConflictSignal],
-    ) -> List[ConflictPolicyResult]:
+        targets: list[str],
+        conflicts: list[ConflictSignal],
+    ) -> list[ConflictPolicyResult]:
         results = [ConflictPolicyResult(target_id=t) for t in targets]
 
         for conflict in conflicts:

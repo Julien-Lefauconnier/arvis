@@ -10,7 +10,6 @@ from arvis.conversation.conversation_stability_signals import (
 )
 from arvis.conversation.conversation_state import ConversationState
 
-
 # --------------------------------------------------
 # Fixtures
 # --------------------------------------------------

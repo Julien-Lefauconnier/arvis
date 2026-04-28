@@ -1,6 +1,7 @@
 # arvis/reflexive/timeline/explanation/reflexive_timeline_exposure_explanation.py
 
-from typing import Iterable, Any, Dict, cast
+from collections.abc import Iterable
+from typing import Any, cast
 
 from arvis.reflexive.compliance.reflexive_explanation import (
     ReflexiveExplanation,
@@ -20,7 +21,7 @@ class ReflexiveTimelineExposureExplanation:
         roles: Iterable[Any],
         *,
         has_any_public_view: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         normalized_roles: list[str] = []
 
         for role in roles:
@@ -34,11 +35,11 @@ class ReflexiveTimelineExposureExplanation:
         explanation = cast(Any, ReflexiveExplanation.default())
 
         if not unique_roles and not has_any_public_view:
-            return cast(Dict[str, Any], explanation.without_timeline().to_dict())
+            return cast(dict[str, Any], explanation.without_timeline().to_dict())
 
         if not unique_roles and has_any_public_view:
             return cast(
-                Dict[str, Any],
+                dict[str, Any],
                 explanation.with_additional_limitations(
                     ["Non-factual public views are exposed"]
                 ).to_dict(),
@@ -53,4 +54,4 @@ class ReflexiveTimelineExposureExplanation:
                 ["Some exposed views are not factual"]
             )
 
-        return cast(Dict[str, Any], explanation.to_dict())
+        return cast(dict[str, Any], explanation.to_dict())

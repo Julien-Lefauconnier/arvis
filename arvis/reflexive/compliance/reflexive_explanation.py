@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Dict, Any
+from typing import Any
 
 
 class ReflexiveExplanation:
@@ -20,32 +20,32 @@ class ReflexiveExplanation:
         *,
         has_timeline: bool = True,
         public: bool = False,
-        limitations: List[str] | None = None,
+        limitations: list[str] | None = None,
     ):
         self.has_timeline = has_timeline
         self.public = public
-        self.limitations: List[str] = limitations or []
+        self.limitations: list[str] = limitations or []
 
     # ------------------------------------------------------------------
     # Factory
     # ------------------------------------------------------------------
 
     @classmethod
-    def default(cls) -> "ReflexiveExplanation":
+    def default(cls) -> ReflexiveExplanation:
         return cls()
 
     # ------------------------------------------------------------------
     # Mutators (fluent style)
     # ------------------------------------------------------------------
 
-    def without_timeline(self) -> "ReflexiveExplanation":
+    def without_timeline(self) -> ReflexiveExplanation:
         return ReflexiveExplanation(
             has_timeline=False,
             public=self.public,
             limitations=list(self.limitations),
         )
 
-    def with_public_timeline(self) -> "ReflexiveExplanation":
+    def with_public_timeline(self) -> ReflexiveExplanation:
         return ReflexiveExplanation(
             has_timeline=self.has_timeline,
             public=True,
@@ -54,8 +54,8 @@ class ReflexiveExplanation:
 
     def with_additional_limitations(
         self,
-        limits: List[str],
-    ) -> "ReflexiveExplanation":
+        limits: list[str],
+    ) -> ReflexiveExplanation:
         return ReflexiveExplanation(
             has_timeline=self.has_timeline,
             public=self.public,
@@ -66,7 +66,7 @@ class ReflexiveExplanation:
     # Serialization
     # ------------------------------------------------------------------
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "has_timeline": self.has_timeline,
             "public": self.public,

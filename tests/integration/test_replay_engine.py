@@ -1,9 +1,8 @@
 # tests/integration/test_replay_engine.py
 
 from arvis.kernel.replay_engine import ReplayEngine
-from arvis.timeline.timeline_snapshot import TimelineSnapshot
 from arvis.timeline.timeline_hashchain import TimelineHashChain
-
+from arvis.timeline.timeline_snapshot import TimelineSnapshot
 from tests.timeline.helpers import make_entries
 
 

@@ -1,7 +1,7 @@
 # arvis/cognition/conflict/conflict_policy_result.py
 
 from dataclasses import dataclass, field
-from typing import Dict, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -11,4 +11,4 @@ class ConflictPolicyResult:
     """
 
     target_id: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)

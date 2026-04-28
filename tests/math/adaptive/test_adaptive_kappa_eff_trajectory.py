@@ -9,7 +9,7 @@ def test_adaptive_kappa_tracks_stable_decay_trajectory():
     W_values = [10.0, 9.0, 8.1, 7.29, 6.561]
     snaps = []
 
-    for prev, nxt in zip(W_values[:-1], W_values[1:]):
+    for prev, nxt in zip(W_values[:-1], W_values[1:], strict=True):
         snaps.append(est.update(W_prev=prev, W_next=nxt))
 
     assert all(s.is_available for s in snaps)
@@ -24,7 +24,7 @@ def test_adaptive_kappa_detects_unstable_growth_trajectory():
     W_values = [10.0, 11.0, 12.1, 13.31]
     snaps = []
 
-    for prev, nxt in zip(W_values[:-1], W_values[1:]):
+    for prev, nxt in zip(W_values[:-1], W_values[1:], strict=True):
         snaps.append(est.update(W_prev=prev, W_next=nxt))
 
     assert all(s.is_available for s in snaps)

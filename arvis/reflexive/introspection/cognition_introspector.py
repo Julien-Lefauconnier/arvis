@@ -1,6 +1,6 @@
 # arvis/reflexive/introspection/cognition_introspector.py
 
-from typing import Dict, Any
+from typing import Any
 
 from arvis.reflexive.architecture.arvis_system_architecture import (
     ArvisSystemArchitecture,
@@ -12,7 +12,7 @@ class CognitionIntrospector:
     Exposes a structured explanation of ARVIS cognition layer.
     """
 
-    def describe(self) -> Dict[str, Any]:
+    def describe(self) -> dict[str, Any]:
         layers = ArvisSystemArchitecture.layers()
 
         cognition_layer = next(

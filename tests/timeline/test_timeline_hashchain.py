@@ -1,9 +1,9 @@
 # tests/timeline/test_timeline_hashchain.py
 
 import pytest
-from arvis.timeline.timeline_hashchain import hash_entry, TimelineHashChain
-from tests.timeline.helpers import make_entry
-from tests.timeline.helpers import make_entries
+
+from arvis.timeline.timeline_hashchain import TimelineHashChain, hash_entry
+from tests.timeline.helpers import make_entries, make_entry
 
 
 def test_hash_entry_deterministic():

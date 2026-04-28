@@ -1,8 +1,8 @@
 # arvis/math/switching/switching_params.py
 
-from dataclasses import dataclass
 import math
-from typing import Optional, Protocol
+from dataclasses import dataclass
+from typing import Protocol
 
 
 class SwitchingRuntime(Protocol):
@@ -24,9 +24,7 @@ def kappa_eff(params: SwitchingParams) -> float:
     return params.alpha - params.gamma_z * params.eta * params.L_T
 
 
-def switching_lhs(
-    runtime: Optional[SwitchingRuntime], params: SwitchingParams
-) -> float:
+def switching_lhs(runtime: SwitchingRuntime | None, params: SwitchingParams) -> float:
     if runtime is None:
         return float("-inf")
 
@@ -43,6 +41,6 @@ def switching_lhs(
 
 
 def switching_condition(
-    runtime: Optional[SwitchingRuntime], params: SwitchingParams
+    runtime: SwitchingRuntime | None, params: SwitchingParams
 ) -> bool:
     return switching_lhs(runtime, params) < 0

@@ -1,18 +1,18 @@
 # tests/runtime/test_interrupts.py
 
 
-from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
-from arvis.runtime.cognitive_scheduler import CognitiveScheduler
+from arvis.kernel_core.interrupts.interrupt import CognitiveInterrupt
+from arvis.kernel_core.interrupts.interrupt_type import CognitiveInterruptType
 from arvis.kernel_core.process import (
     CognitiveProcess,
     CognitiveProcessId,
     CognitiveProcessKind,
     CognitiveProcessStatus,
 )
-from arvis.kernel_core.process.priority import CognitivePriority
 from arvis.kernel_core.process.budget import CognitiveBudget
-from arvis.kernel_core.interrupts.interrupt import CognitiveInterrupt
-from arvis.kernel_core.interrupts.interrupt_type import CognitiveInterruptType
+from arvis.kernel_core.process.priority import CognitivePriority
+from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
+from arvis.runtime.cognitive_scheduler import CognitiveScheduler
 
 
 class DummyExecutor:

@@ -1,13 +1,14 @@
 # arvis/conversation/conversation_context.py
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
-from arvis.conversation.user_adaptive_profile import UserAdaptiveProfile
-from arvis.conversation.conversation_state import ConversationState
 from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
-from arvis.linguistic.acts.linguistic_act import LinguisticAct
+from arvis.conversation.conversation_state import ConversationState
 from arvis.conversation.response_strategy_type import ResponseStrategyType
+from arvis.conversation.user_adaptive_profile import UserAdaptiveProfile
+from arvis.linguistic.acts.linguistic_act import LinguisticAct
 
 
 @dataclass

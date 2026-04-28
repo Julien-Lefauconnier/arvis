@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from typing import Any
+
 from arvis.adapters.ir.decision_adapter import DecisionIRAdapter
 from arvis.cognition.decision.decision_result import DecisionResult
 

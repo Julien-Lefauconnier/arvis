@@ -1,7 +1,7 @@
 # arvis/reflexive/explanation/timeline/irg_timeline_explanation.py
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence, Optional
 
 
 @dataclass(frozen=True)
@@ -18,4 +18,4 @@ class IRGTimelineExplanation:
 
     summary: str
     signals: Sequence[str]
-    stability: Optional[str] = None
+    stability: str | None = None

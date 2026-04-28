@@ -5,12 +5,12 @@ Canonical Signal Specifications — Validation Domain
 Universal validation / gate vocabulary for cognitive systems.
 """
 
+from arvis.signals.canonical.canonical_signal_category import CanonicalSignalCategory
+from arvis.signals.canonical.canonical_signal_key import CanonicalSignalKey
 from arvis.signals.canonical.canonical_signal_registry import (
     CanonicalSignalRegistry,
     CanonicalSignalSpec,
 )
-from arvis.signals.canonical.canonical_signal_category import CanonicalSignalCategory
-from arvis.signals.canonical.canonical_signal_key import CanonicalSignalKey
 
 
 def register_validation_signals() -> None:

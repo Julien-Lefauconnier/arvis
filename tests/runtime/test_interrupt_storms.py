@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
-from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
-from arvis.runtime.cognitive_scheduler import CognitiveScheduler
 from arvis.kernel_core.interrupts.interrupt import CognitiveInterrupt
 from arvis.kernel_core.interrupts.interrupt_type import CognitiveInterruptType
 from arvis.kernel_core.process import (
@@ -15,6 +13,8 @@ from arvis.kernel_core.process import (
     CognitiveProcessKind,
     CognitiveProcessStatus,
 )
+from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
+from arvis.runtime.cognitive_scheduler import CognitiveScheduler
 
 
 class StubExecutor:

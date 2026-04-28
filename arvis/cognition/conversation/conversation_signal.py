@@ -1,7 +1,6 @@
 # arvis/cognition/conversation/conversation_signal.py
 
 from dataclasses import dataclass
-from typing import Optional
 
 from .response_strategy_type import ResponseStrategyType
 
@@ -17,6 +16,6 @@ class ConversationSignal:
     - no orchestration
     """
 
-    strategy: Optional[ResponseStrategyType]
+    strategy: ResponseStrategyType | None
     turn_count: int
     momentum: float

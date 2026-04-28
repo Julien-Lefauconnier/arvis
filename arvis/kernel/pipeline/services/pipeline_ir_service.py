@@ -2,29 +2,27 @@
 
 from __future__ import annotations
 
-from arvis.kernel.pipeline.cognitive_pipeline_context import (
-    CognitivePipelineContext,
-)
-
-from arvis.adapters.ir.projection_adapter import ProjectionIRAdapter
-from arvis.adapters.ir.validity_adapter import ValidityIRAdapter
-from arvis.adapters.ir.stability_adapter import StabilityIRAdapter
 from arvis.adapters.ir.adaptive_adapter import AdaptiveIRAdapter
 from arvis.adapters.ir.cognitive_ir_builder import CognitiveIRBuilder
-
+from arvis.adapters.ir.projection_adapter import ProjectionIRAdapter
+from arvis.adapters.ir.stability_adapter import StabilityIRAdapter
+from arvis.adapters.ir.validity_adapter import ValidityIRAdapter
+from arvis.ir.envelope import CognitiveIREnvelope
 from arvis.ir.normalization.cognitive_ir_normalizer import (
     CognitiveIRNormalizer,
-)
-from arvis.ir.validation.cognitive_ir_validator import (
-    CognitiveIRValidator,
-)
-from arvis.ir.serialization.cognitive_ir_serializer import (
-    CognitiveIRSerializer,
 )
 from arvis.ir.serialization.cognitive_ir_hasher import (
     CognitiveIRHasher,
 )
-from arvis.ir.envelope import CognitiveIREnvelope
+from arvis.ir.serialization.cognitive_ir_serializer import (
+    CognitiveIRSerializer,
+)
+from arvis.ir.validation.cognitive_ir_validator import (
+    CognitiveIRValidator,
+)
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 
 
 class PipelineIRService:

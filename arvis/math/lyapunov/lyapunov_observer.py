@@ -1,22 +1,19 @@
 # arvis/math//lyapunov/lyapunov_observer.py
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any
 
-
+from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.math.lyapunov.lyapunov import LyapunovState, V
+from arvis.math.lyapunov.lyapunov_gate import (
+    LyapunovGateParams,
+    LyapunovVerdict,
+    lyapunov_gate,
+)
+from arvis.stability.stability_observer import StabilityObserver, StabilitySnapshot
 from arvis.stability.stability_state_projector import (
     StabilityStateProjector as LyapunovStateBuilder,
 )
-
-from arvis.math.lyapunov.lyapunov_gate import (
-    lyapunov_gate,
-    LyapunovGateParams,
-    LyapunovVerdict,
-)
-from arvis.stability.stability_observer import StabilityObserver
-from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
-from arvis.stability.stability_observer import StabilitySnapshot
 
 
 @dataclass
@@ -43,9 +40,9 @@ class LyapunovObserver(StabilityObserver):
     - contract compliant
     """
 
-    def __init__(self, params: Optional[LyapunovGateParams] = None):
+    def __init__(self, params: LyapunovGateParams | None = None):
         self.params = params or LyapunovGateParams()
-        self._last_state: Optional[LyapunovState] = None
+        self._last_state: LyapunovState | None = None
 
     # --------------------------------------------------
     # PURE MATH API (used in unit tests)
@@ -102,7 +99,7 @@ class LyapunovObserver(StabilityObserver):
         """Useful for tests or session reset."""
         self._last_state = None
 
-    def to_dict(self, obs: LyapunovObservation) -> Dict[str, Any]:
+    def to_dict(self, obs: LyapunovObservation) -> dict[str, Any]:
         return {
             "v_prev": obs.v_prev,
             "v_new": obs.v_new,

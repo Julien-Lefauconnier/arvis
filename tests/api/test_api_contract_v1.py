@@ -1,10 +1,8 @@
 # tests/api/test_api_contract_v1.py
 
 
-from arvis.api import CognitiveOS
+from arvis.api import API_VERSION, CognitiveOS, CognitiveOSConfig
 from arvis.api.version import compute_api_fingerprint
-from arvis.api import API_VERSION
-from arvis.api import CognitiveOSConfig
 
 
 def test_api_contract_shape():

@@ -1,10 +1,9 @@
 # tests/conversation/test_memory_integration.py
 
+from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
 from arvis.conversation.conversation_orchestrator import ConversationOrchestrator
 from arvis.memory.memory_long_projector import MemoryLongContextProjector
-
 from tests.conversation.test_act_strategy_pipeline import build_context
-from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
 
 
 def test_memory_injection_into_signals():

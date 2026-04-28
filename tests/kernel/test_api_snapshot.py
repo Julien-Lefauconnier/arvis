@@ -2,7 +2,6 @@
 
 import arvis
 
-
 EXPECTED_API_MIN = {
     "CognitiveBundleSnapshot",
     "CognitivePolicyResult",

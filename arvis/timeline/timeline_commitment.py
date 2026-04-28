@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 
 from .timeline_snapshot import TimelineSnapshot
 
@@ -54,7 +54,7 @@ class TimelineCommitment:
     commitment: str
 
     @classmethod
-    def from_snapshot(cls, snap: TimelineSnapshot) -> "TimelineCommitment":
+    def from_snapshot(cls, snap: TimelineSnapshot) -> TimelineCommitment:
         cur = snap.cursor()
 
         raw = _canonical_bytes(
@@ -84,7 +84,7 @@ class TimelineCommitment:
         )
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "TimelineCommitment":
+    def from_bytes(cls, data: bytes) -> TimelineCommitment:
         try:
             obj = json.loads(data.decode("utf-8"))
         except Exception as e:

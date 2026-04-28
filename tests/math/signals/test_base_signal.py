@@ -4,7 +4,6 @@ import pytest
 
 from arvis.math.signals.base import BaseSignal
 
-
 # ============================================================
 # Helper
 # ============================================================
@@ -127,5 +126,5 @@ def test_signal_to_signal_comparison():
 def test_immutable():
     s = BaseSignal(0.5)
 
-    with pytest.raises(Exception):
+    with pytest.raises(AttributeError):
         s.value = 0.2

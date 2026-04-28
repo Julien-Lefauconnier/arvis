@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from typing import Any
-from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
+from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
 def apply_gate_policy(

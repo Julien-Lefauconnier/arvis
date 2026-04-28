@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal, Optional
+from typing import Literal
 
 from arvis.kernel_core.vfs.models import VFSItem
 
@@ -23,16 +23,16 @@ class ZipNode:
 
     name: str
     node_type: ZipNodeType
-    parent: Optional["ZipNode"] = None
-    children: list["ZipNode"] = field(default_factory=list)
+    parent: ZipNode | None = None
+    children: list[ZipNode] = field(default_factory=list)
 
-    size: Optional[int] = None
-    extension: Optional[str] = None
-    supported: Optional[bool] = None
-    reason: Optional[str] = None
+    size: int | None = None
+    extension: str | None = None
+    supported: bool | None = None
+    reason: str | None = None
 
     # Relative path inside the ZIP archive.
-    zip_path: Optional[str] = None
+    zip_path: str | None = None
 
     def is_file(self) -> bool:
         return self.node_type == "file"
@@ -40,13 +40,13 @@ class ZipNode:
     def is_folder(self) -> bool:
         return self.node_type == "folder"
 
-    def add_child(self, child: "ZipNode") -> None:
+    def add_child(self, child: ZipNode) -> None:
         if not self.is_folder():
             raise ValueError("cannot add child to a file node")
         child.parent = self
         self.children.append(child)
 
-    def iter_tree(self) -> list["ZipNode"]:
+    def iter_tree(self) -> list[ZipNode]:
         nodes = [self]
         for child in self.children:
             nodes.extend(child.iter_tree())
@@ -54,7 +54,7 @@ class ZipNode:
 
     def full_path_debug(self) -> str:
         parts: list[str] = []
-        node: Optional[ZipNode] = self
+        node: ZipNode | None = self
         while node is not None:
             parts.append(node.name)
             node = node.parent
@@ -77,7 +77,7 @@ class ZipCollisionReport:
 @dataclass(frozen=True)
 class ZipImportPlanEntry:
     action: ZipImportAction
-    new_name: Optional[str] = None
+    new_name: str | None = None
 
 
 @dataclass(frozen=True)

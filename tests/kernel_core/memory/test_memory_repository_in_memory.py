@@ -7,7 +7,6 @@ from arvis.kernel_core.memory.repositories.in_memory import (
     InMemoryMemoryRepository,
 )
 
-
 USER_ID = "user-1"
 
 

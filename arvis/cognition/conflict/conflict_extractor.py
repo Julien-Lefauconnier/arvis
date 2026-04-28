@@ -1,17 +1,17 @@
 # arvis/cognition/conflict/conflict_extractor.py
 
-from typing import Any, List
+from typing import Any
 
-from .conflict_type import REASON_MISMATCH
 from .conflict_signal import ConflictSignal
+from .conflict_type import REASON_MISMATCH
 
 
-def extract_conflicts_from_bundle(bundle: Any) -> List[ConflictSignal]:
+def extract_conflicts_from_bundle(bundle: Any) -> list[ConflictSignal]:
     """
     Minimal conflict extraction (safe baseline).
     """
 
-    conflicts: List[ConflictSignal] = []
+    conflicts: list[ConflictSignal] = []
 
     # Exemple simple : incohérence décision / explication
     decision_reason = getattr(bundle, "decision_reason", None)

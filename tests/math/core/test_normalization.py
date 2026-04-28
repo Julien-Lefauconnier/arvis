@@ -1,5 +1,6 @@
 # tests/math/core/test_normalization.py
 
+import pytest
 
 from arvis.math.core.normalization import clamp, clamp01
 
@@ -66,11 +67,8 @@ def test_normalize_weights_edge():
 def test_weighted_sum_mismatch():
     from arvis.math.core.normalization import weighted_sum01
 
-    try:
+    with pytest.raises(ValueError):
         weighted_sum01([0.1], [0.1, 0.2])
-        assert False
-    except ValueError:
-        assert True
 
 
 def test_budget_ratio_edge():

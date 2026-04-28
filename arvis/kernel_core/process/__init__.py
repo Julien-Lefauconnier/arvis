@@ -2,14 +2,12 @@
 
 from arvis.kernel_core.process.budget import BudgetConsumption, CognitiveBudget
 from arvis.kernel_core.process.priority import CognitivePriority
-
+from arvis.kernel_core.process.process import CognitiveProcess
 from arvis.kernel_core.process.types import (
     CognitiveProcessId,
-    CognitiveProcessStatus,
     CognitiveProcessKind,
+    CognitiveProcessStatus,
 )
-
-from arvis.kernel_core.process.process import CognitiveProcess
 
 __all__ = [
     "BudgetConsumption",

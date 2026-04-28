@@ -1,6 +1,6 @@
 # arvis/cognition/bundle/cognitive_bundle_invariants.py
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot

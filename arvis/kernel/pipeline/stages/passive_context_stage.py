@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvis.cognition.conversation.conversation_signal import ConversationSignal
 from arvis.cognition.coherence.change_budget import ChangeBudget
+from arvis.cognition.conversation.conversation_signal import ConversationSignal
 
 
 class PassiveContextStage:

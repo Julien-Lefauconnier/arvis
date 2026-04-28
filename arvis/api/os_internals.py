@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from arvis.api.ir import build_ir_view
 from arvis.api.runtime.cognitive_runtime import CognitiveRuntime
@@ -29,7 +29,7 @@ class CognitiveOSInternals:
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
-        extra: Optional[Dict[str, Any]] = None,
+        extra: dict[str, Any] | None = None,
     ) -> CognitivePipelineContext:
         return CognitivePipelineContext(
             user_id=user_id,
@@ -48,8 +48,8 @@ class CognitiveOSInternals:
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
-        extra: Optional[Dict[str, Any]] = None,
-    ) -> tuple[Optional[CognitiveState], Any]:
+        extra: dict[str, Any] | None = None,
+    ) -> tuple[CognitiveState | None, Any]:
         execution = self.runtime.execute(
             self._build_context(
                 user_id=user_id,
@@ -71,9 +71,9 @@ class CognitiveOSInternals:
 
     def _format_run_output(
         self,
-        state: Optional[CognitiveState],
+        state: CognitiveState | None,
         result: Any,
-    ) -> CognitiveResultView | Dict[str, Any]:
+    ) -> CognitiveResultView | dict[str, Any]:
         # legacy mode explicite
         if not self.config.enable_trace:
             return {
@@ -99,8 +99,8 @@ class CognitiveOSInternals:
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
-        extra: Optional[Dict[str, Any]] = None,
-    ) -> CognitiveResultView | Dict[str, Any]:
+        extra: dict[str, Any] | None = None,
+    ) -> CognitiveResultView | dict[str, Any]:
         state, result = self._execute(
             user_id=user_id,
             cognitive_input=cognitive_input,
@@ -113,10 +113,10 @@ class CognitiveOSInternals:
 
     def _run_batch(
         self,
-        inputs: List[Any],
+        inputs: list[Any],
         *,
         user_id: str,
-    ) -> List[CognitiveResultView | Dict[str, Any]]:
+    ) -> list[CognitiveResultView | dict[str, Any]]:
         return [
             self._run_single(
                 user_id=user_id,
@@ -128,7 +128,7 @@ class CognitiveOSInternals:
     def _export_ir(
         self,
         state: CognitiveState,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return build_ir_view(state)
 
     def _build_ir_from_input(
@@ -139,8 +139,8 @@ class CognitiveOSInternals:
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
-        extra: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        extra: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         state, _ = self._execute(
             user_id=user_id,
             cognitive_input=cognitive_input,
@@ -160,7 +160,7 @@ class CognitiveOSInternals:
 
     def _replay_ir(
         self,
-        ir: Dict[str, Any],
+        ir: dict[str, Any],
     ) -> Any:
         parsed = CognitiveIR.from_dict(ir)
         engine = ReplayEngine()
@@ -171,7 +171,7 @@ class CognitiveOSInternals:
 
     def _replay_view(
         self,
-        ir: Dict[str, Any],
+        ir: dict[str, Any],
     ) -> CognitiveResultView:
         result = self._replay_ir(ir)
         state = getattr(result, "cognitive_state", None)
@@ -190,7 +190,7 @@ class CognitiveOSInternals:
         self,
         replay_view: CognitiveResultView,
         *,
-        expected_global_commitment: Optional[str] = None,
+        expected_global_commitment: str | None = None,
     ) -> CognitiveResultView:
         self._verify_replay_commitment(
             replay_view,
@@ -200,9 +200,9 @@ class CognitiveOSInternals:
 
     def _verified_replay_view(
         self,
-        ir: Dict[str, Any],
+        ir: dict[str, Any],
         *,
-        expected_global_commitment: Optional[str] = None,
+        expected_global_commitment: str | None = None,
     ) -> CognitiveResultView:
         return self._verify_replay_view(
             self._replay_view(ir),
@@ -212,7 +212,7 @@ class CognitiveOSInternals:
     def _verify_replay_commitment(
         self,
         replay_view: CognitiveResultView,
-        expected_global_commitment: Optional[str],
+        expected_global_commitment: str | None,
     ) -> None:
         if expected_global_commitment is None:
             return
@@ -233,7 +233,7 @@ class CognitiveOSInternals:
 
     def _build_trace_result(
         self,
-        state: Optional[CognitiveState],
+        state: CognitiveState | None,
         result: Any,
     ) -> CognitiveResultView:
         typed_state = self._require_state(
@@ -253,7 +253,7 @@ class CognitiveOSInternals:
 
     def _require_state(
         self,
-        state: Optional[CognitiveState],
+        state: CognitiveState | None,
         *,
         message: str = (
             "IR export requires a CognitiveState, but execution returned none."

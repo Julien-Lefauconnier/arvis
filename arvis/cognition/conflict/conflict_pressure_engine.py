@@ -1,6 +1,7 @@
 # arvis/cognition/conflict/conflict_pressure_engine.py
 
-from typing import Any, List
+from typing import Any
+
 from arvis.math.signals.conflict import ConflictSignal
 
 
@@ -9,7 +10,7 @@ class ConflictPressureEngine:
     Pure, stateless engine computing structured conflict pressure.
     """
 
-    def compute(self, conflicts: List[Any]) -> ConflictSignal:
+    def compute(self, conflicts: list[Any]) -> ConflictSignal:
         score = 0.0
         epistemic = 0.0
         decisional = 0.0

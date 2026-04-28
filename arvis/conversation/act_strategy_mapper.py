@@ -1,7 +1,7 @@
 # arvis/conversation/act_strategy_mapper.py
 
-from arvis.linguistic.acts.act_types import LinguisticActType
 from arvis.conversation.response_strategy_type import ResponseStrategyType
+from arvis.linguistic.acts.act_types import LinguisticActType
 from arvis.linguistic.acts.linguistic_act import LinguisticAct
 
 

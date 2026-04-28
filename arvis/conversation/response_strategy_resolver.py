@@ -1,10 +1,9 @@
 # arvis/conversation/response_strategy_resolver.py
 
+from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
+from arvis.conversation.conversation_state import ConversationState
 from arvis.conversation.response_strategy_decision import ResponseStrategyDecision
 from arvis.conversation.response_strategy_type import ResponseStrategyType
-from arvis.conversation.conversation_state import ConversationState
-
-from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
 
 
 class ResponseStrategyResolver:

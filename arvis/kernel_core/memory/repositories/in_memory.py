@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
 import time
 
 from arvis.kernel_core.memory.models import MemoryRecord
@@ -27,7 +26,7 @@ class InMemoryMemoryRepository(MemoryRepository):
         self,
         *,
         user_id: str,
-        namespace: Optional[str] = None,
+        namespace: str | None = None,
     ) -> list[MemoryRecord]:
         user_bucket = self._user_bucket(user_id)
 
@@ -56,7 +55,7 @@ class InMemoryMemoryRepository(MemoryRepository):
         user_id: str,
         namespace: str,
         key: str,
-    ) -> Optional[MemoryRecord]:
+    ) -> MemoryRecord | None:
         user_bucket = self._user_bucket(user_id)
         namespace_bucket = user_bucket.get(namespace)
         if namespace_bucket is None:

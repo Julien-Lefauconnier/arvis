@@ -3,39 +3,38 @@ from __future__ import annotations
 
 import os
 import warnings
-from typing import Any, TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
-
-from arvis.cognition.decision.decision_evaluator import (
-    DecisionEvaluator,
-)
+from arvis.action.action_policy import ActionPolicy
 from arvis.cognition.bundle.cognitive_bundle_builder import (
     CognitiveBundleBuilder,
 )
-from arvis.cognition.core.cognitive_core_engine import (
-    CognitiveCoreEngine,
+from arvis.cognition.coherence.coherence_observer import (
+    CoherenceObserver,
 )
-from arvis.cognition.control.mode_hysteresis import (
-    ModeHysteresis,
+from arvis.cognition.coherence.coherence_policy import (
+    CoherencePolicy,
 )
-from arvis.cognition.control.exploration_controller import (
-    ExplorationController,
+from arvis.cognition.conflict.conflict_evaluator import (
+    ConflictEvaluator,
 )
-from arvis.cognition.control.regime_policy import (
-    CognitiveRegimePolicy,
+from arvis.cognition.conflict.conflict_pressure_engine import (
+    ConflictPressureEngine,
+)
+from arvis.cognition.conflict.default_rules import (
+    default_conflict_rules,
 )
 from arvis.cognition.control.cognitive_control_runtime import (
     CognitiveControlRuntime,
 )
-from arvis.math.stability.regime_estimator import (
-    CognitiveRegimeEstimator,
+from arvis.cognition.control.exploration_controller import (
+    ExplorationController,
 )
-from arvis.math.control.irg_epsilon_controller import (
-    IRGEpsilonController,
+from arvis.cognition.control.mode_hysteresis import (
+    ModeHysteresis,
 )
-from arvis.math.control.eps_adaptive import (
-    EpsAdaptiveParams,
+from arvis.cognition.control.regime_policy import (
+    CognitiveRegimePolicy,
 )
 from arvis.cognition.control.temporal_pressure import (
     TemporalPressure,
@@ -43,67 +42,64 @@ from arvis.cognition.control.temporal_pressure import (
 from arvis.cognition.control.temporal_regulation import (
     TemporalRegulation,
 )
-from arvis.action.action_policy import ActionPolicy
-from arvis.cognition.conflict.conflict_evaluator import (
-    ConflictEvaluator,
+from arvis.cognition.core.cognitive_core_engine import (
+    CognitiveCoreEngine,
 )
-from arvis.cognition.conflict.default_rules import (
-    default_conflict_rules,
+from arvis.cognition.decision.decision_evaluator import (
+    DecisionEvaluator,
 )
 from arvis.cognition.observability.observability_builder import (
     ObservabilityBuilder,
 )
-from arvis.cognition.conflict.conflict_pressure_engine import (
-    ConflictPressureEngine,
+from arvis.kernel.pipeline.stages import (
+    ActionStage,
+    BundleStage,
+    ConfirmationStage,
+    ConflictModulationStage,
+    ConflictStage,
+    ControlFeedbackStage,
+    ControlStage,
+    CoreStage,
+    DecisionStage,
+    ExecutionStage,
+    GateStage,
+    IntentStage,
+    PassiveContextStage,
+    ProjectionStage,
+    RegimeStage,
+    RuntimeStage,
+    StructuralRiskStage,
+    TemporalStage,
+    ToolFeedbackStage,
+    ToolRetryStage,
 )
-from arvis.cognition.coherence.coherence_policy import (
-    CoherencePolicy,
+from arvis.kernel.projection.domain import (
+    NumericBounds,
+    ProjectionDomain,
 )
-from arvis.cognition.coherence.coherence_observer import (
-    CoherenceObserver,
-)
-
-from arvis.math.switching.global_stability_observer import (
-    GlobalStabilityObserver,
-)
-from arvis.math.lyapunov.quadratic_lyapunov import (
-    make_default_quadratic_family,
+from arvis.kernel.projection.pi_impl import PiImpl
+from arvis.kernel.projection.validator import (
+    ProjectionValidator,
 )
 from arvis.math.adaptive.adaptive_kappa_eff import (
     AdaptiveKappaEffEstimator,
 )
-
-from arvis.kernel.projection.domain import (
-    ProjectionDomain,
-    NumericBounds,
+from arvis.math.control.eps_adaptive import (
+    EpsAdaptiveParams,
 )
-from arvis.kernel.projection.validator import (
-    ProjectionValidator,
+from arvis.math.control.irg_epsilon_controller import (
+    IRGEpsilonController,
 )
-from arvis.kernel.projection.pi_impl import PiImpl
+from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
+from arvis.math.lyapunov.quadratic_lyapunov import (
+    make_default_quadratic_family,
+)
 from arvis.math.projection.pi_operator import PiOperator
-
-from arvis.kernel.pipeline.stages import (
-    ToolFeedbackStage,
-    ToolRetryStage,
-    DecisionStage,
-    PassiveContextStage,
-    BundleStage,
-    ConflictStage,
-    CoreStage,
-    RegimeStage,
-    TemporalStage,
-    ConflictModulationStage,
-    ControlStage,
-    ProjectionStage,
-    GateStage,
-    ControlFeedbackStage,
-    StructuralRiskStage,
-    ConfirmationStage,
-    ExecutionStage,
-    ActionStage,
-    IntentStage,
-    RuntimeStage,
+from arvis.math.stability.regime_estimator import (
+    CognitiveRegimeEstimator,
+)
+from arvis.math.switching.global_stability_observer import (
+    GlobalStabilityObserver,
 )
 
 if TYPE_CHECKING:
@@ -115,7 +111,7 @@ if TYPE_CHECKING:
 class PipelineBootstrapService:
     @staticmethod
     def run(
-        pipeline: "CognitivePipeline",
+        pipeline: CognitivePipeline,
         core_model: Any | None,
     ) -> None:
         strict_mode = (
@@ -140,7 +136,11 @@ class PipelineBootstrapService:
             )
             if strict_mode:
                 raise RuntimeError(msg)
-            warnings.warn(msg, RuntimeWarning)
+            warnings.warn(
+                msg,
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
         pipeline.decision = DecisionEvaluator()
         pipeline.bundle_builder = CognitiveBundleBuilder()

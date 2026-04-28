@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Literal
 
 VFSItemType = Literal["file", "folder"]
 
@@ -13,10 +13,10 @@ class VFSItem:
     item_id: str
     display_name: str
     item_type: VFSItemType
-    parent_id: Optional[str]
-    mime: Optional[str] = None
-    file_size: Optional[int] = None
-    created_at: Optional[int] = None
+    parent_id: str | None
+    mime: str | None = None
+    file_size: int | None = None
+    created_at: int | None = None
 
     def is_file(self) -> bool:
         return self.item_type == "file"

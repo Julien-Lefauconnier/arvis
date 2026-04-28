@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class GovernanceDecisionType(str, Enum):
@@ -20,4 +19,4 @@ class GovernanceDecision:
     suggestion_id: str
     decision: GovernanceDecisionType
     decided_by: str
-    reason: Optional[str] = None
+    reason: str | None = None

@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List
 
 
 @dataclass(frozen=True)
@@ -12,12 +11,12 @@ class ControlPreferences:
     """
 
     user_id: str
-    place_id: Optional[str]
+    place_id: str | None
 
-    always_require_validation_for: List[str]
-    never_allow_actions: List[str]
+    always_require_validation_for: list[str]
+    never_allow_actions: list[str]
 
     created_at: datetime
     updated_at: datetime
 
-    allowed_action_modes: Optional[List[str]] = None
+    allowed_action_modes: list[str] | None = None

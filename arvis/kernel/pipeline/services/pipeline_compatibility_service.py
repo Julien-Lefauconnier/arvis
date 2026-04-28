@@ -18,18 +18,17 @@ if TYPE_CHECKING:
 class PipelineCompatibilityService:
     @staticmethod
     def safe_run(
-        pipeline: "CognitivePipeline",
-        stage: "PipelineStage",
+        pipeline: CognitivePipeline,
+        stage: PipelineStage,
         ctx: CognitivePipelineContext,
     ) -> None:
-        pipeline_error_service = pipeline  # keep pipeline typed context
-        pipeline_error_service
+        _pipeline = pipeline  # keep typed context for static analyzers
         from arvis.kernel.pipeline.services.pipeline_error_service import (
             PipelineErrorService,
         )
 
         PipelineErrorService.safe_stage_run(
-            pipeline,
+            _pipeline,
             stage,
             ctx,
         )

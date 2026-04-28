@@ -19,7 +19,7 @@ class VFSTreeNode:
     """
 
     item: VFSItem
-    children: list["VFSTreeNode"] = field(default_factory=list)
+    children: list[VFSTreeNode] = field(default_factory=list)
 
 
 def build_vfs_tree(items: list[VFSItem]) -> list[VFSTreeNode]:

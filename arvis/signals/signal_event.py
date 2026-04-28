@@ -1,9 +1,9 @@
 # arvis/signal/signal_event.py
 
+import unicodedata
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Dict, Any
-import unicodedata
+from typing import Any
 
 
 def _norm_ascii(s: str, *, field: str, max_len: int = 256) -> str:
@@ -38,10 +38,10 @@ class SignalEvent:
     signal_type: str  # e.g. "knowledge", "memory_long", "normative"
     source: str  # e.g. "user", "system", "observer", "llm"
 
-    user_ref: Optional[str] = None
-    place_ref: Optional[str] = None
+    user_ref: str | None = None
+    place_ref: str | None = None
 
-    payload: Optional[Dict[str, Any]] = None
+    payload: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if self.created_at is None:

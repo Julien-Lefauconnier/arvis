@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Iterable, List
+from collections.abc import Iterable
 
 from .observation_long_event import ObservationLongEvent
 from .observation_long_journal import ObservationLongJournal
@@ -22,7 +22,7 @@ class ObservationLongJournalInMemory(ObservationLongJournal):
     """
 
     def __init__(self) -> None:
-        self._events: dict[str, List[ObservationLongEvent]] = defaultdict(list)
+        self._events: dict[str, list[ObservationLongEvent]] = defaultdict(list)
 
     def append(self, event: ObservationLongEvent) -> None:
         self._events[event.user_id].append(event)

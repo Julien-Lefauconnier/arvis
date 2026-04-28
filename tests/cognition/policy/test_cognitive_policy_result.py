@@ -1,5 +1,7 @@
 # tests/cognition/policy/test_cognitive_policy_result.py
 
+import pytest
+
 from arvis.cognition.policy import CognitivePolicyResult
 
 
@@ -30,8 +32,5 @@ def test_policy_result_to_dict():
 def test_policy_result_immutable():
     r = CognitivePolicyResult("a", "b", "c", "d")
 
-    try:
+    with pytest.raises(AttributeError):
         r.policy_name = "x"
-        assert False
-    except Exception:
-        assert True

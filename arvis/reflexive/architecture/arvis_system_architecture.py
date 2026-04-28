@@ -1,19 +1,18 @@
 # arvis/reflexive/architecture/arvis_system_architecture.py
 
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass(frozen=True)
 class SystemLayer:
     name: str
     description: str
-    modules: List[str]
+    modules: list[str]
 
 
 class ArvisSystemArchitecture:
     @staticmethod
-    def layers() -> List[SystemLayer]:
+    def layers() -> list[SystemLayer]:
         return [
             SystemLayer(
                 name="cognition",

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Dict
+from typing import Any
 
 
-def canonicalize_ir(ir: Dict[str, Any]) -> str:
+def canonicalize_ir(ir: dict[str, Any]) -> str:
     """
     Canonical JSON serialization for ARVIS IR.
 
@@ -24,7 +24,7 @@ def canonicalize_ir(ir: Dict[str, Any]) -> str:
     )
 
 
-def hash_ir(ir: Dict[str, Any]) -> str:
+def hash_ir(ir: dict[str, Any]) -> str:
     """
     Stable SHA-256 hash of canonical IR.
     """

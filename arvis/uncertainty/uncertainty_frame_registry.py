@@ -1,7 +1,7 @@
 # arvis/uncertainty/uncertainty_frame_registry.py
 
-from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
 from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
+from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
 
 
 class UncertaintyFrameRegistry:

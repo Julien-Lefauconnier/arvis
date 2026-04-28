@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 class PipelineErrorService:
     @staticmethod
     def safe_stage_run(
-        pipeline: "CognitivePipeline",
-        stage: "PipelineStage",
+        pipeline: CognitivePipeline,
+        stage: PipelineStage,
         ctx: CognitivePipelineContext,
     ) -> None:
         try:

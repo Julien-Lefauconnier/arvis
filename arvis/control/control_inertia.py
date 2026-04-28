@@ -1,7 +1,6 @@
 # arvis/control/control_inertia.py
 
 from dataclasses import dataclass
-from typing import Dict
 
 
 @dataclass
@@ -34,9 +33,9 @@ class RegimeInertiaController:
         self.abstain_exit = abstain_exit
         self.persistence_steps = persistence_steps
 
-        self._state: Dict[str, str] = {}
-        self._risk: Dict[str, float] = {}
-        self._count: Dict[str, int] = {}
+        self._state: dict[str, str] = {}
+        self._risk: dict[str, float] = {}
+        self._count: dict[str, int] = {}
 
     def update(
         self,

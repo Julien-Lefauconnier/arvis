@@ -1,11 +1,11 @@
 # arvis/cognition/state/cognitive_state.py
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional, Any
+from typing import Any
 
 from arvis.signals.signal_journal import SignalJournal
-
 
 # ------------------------
 # Sub-blocks
@@ -15,8 +15,8 @@ from arvis.signals.signal_journal import SignalJournal
 @dataclass(frozen=True)
 class CognitiveStability:
     dv: float
-    regime: Optional[str]
-    stable: Optional[bool]
+    regime: str | None
+    stable: bool | None
 
 
 @dataclass(frozen=True)
@@ -36,14 +36,14 @@ class CognitiveControl:
 
 @dataclass(frozen=True)
 class CognitiveDynamics:
-    system_tension: Optional[float]
-    drift: Optional[float]
+    system_tension: float | None
+    drift: float | None
 
 
 @dataclass(frozen=True)
 class CognitiveProjection:
-    valid: Optional[bool]
-    margin: Optional[float]
+    valid: bool | None
+    margin: float | None
 
 
 # ------------------------
@@ -65,25 +65,25 @@ class CognitiveState:
     risk: CognitiveRisk
     control: CognitiveControl
     dynamics: CognitiveDynamics
-    projection: Optional[CognitiveProjection]
+    projection: CognitiveProjection | None
 
     # ------------------------
     # Predictive
     # ------------------------
-    world_prediction: Optional[Any]
-    forecast: Optional[Any]
+    world_prediction: Any | None
+    forecast: Any | None
 
     # ------------------------
     # Reflexive / IRG
     # ------------------------
-    irg: Optional[Any]
+    irg: Any | None
 
     # ------------------------
     # Core outputs
     # ------------------------
-    decision: Optional[Any] = None
-    trace: Optional[Any] = None
-    timeline: Optional[SignalJournal] = None
+    decision: Any | None = None
+    trace: Any | None = None
+    timeline: SignalJournal | None = None
 
     # ------------------------
     # Tools
@@ -93,12 +93,12 @@ class CognitiveState:
     # ------------------------
     # IR BRIDGE
     # ------------------------
-    ir_input: Optional[Any] = None
-    ir_context: Optional[Any] = None
+    ir_input: Any | None = None
+    ir_context: Any | None = None
 
     # ------------------------
     # IR EXTENSION
     # ------------------------
-    ir_decision: Optional[Any] = None
-    ir_state: Optional[Any] = None
-    ir_gate: Optional[Any] = None
+    ir_decision: Any | None = None
+    ir_state: Any | None = None
+    ir_gate: Any | None = None

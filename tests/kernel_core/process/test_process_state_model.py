@@ -5,13 +5,13 @@ from __future__ import annotations
 import pytest
 
 from arvis.kernel_core.process import (
+    BudgetConsumption,
     CognitiveBudget,
     CognitivePriority,
     CognitiveProcess,
     CognitiveProcessId,
     CognitiveProcessKind,
     CognitiveProcessStatus,
-    BudgetConsumption,
 )
 from arvis.kernel_core.process.transitions import InvalidTransitionError
 

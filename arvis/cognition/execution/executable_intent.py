@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -31,4 +31,4 @@ class ExecutableIntent:
     decided_at: datetime
 
     # optional safe context for realization
-    linguistic_context: Optional[Dict[str, Any]] = None
+    linguistic_context: dict[str, Any] | None = None

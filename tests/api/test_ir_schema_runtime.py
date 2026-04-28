@@ -1,6 +1,7 @@
 # tests/api/test_ir_schema_runtime.py
 
 import json
+
 from jsonschema import validate
 
 from arvis.api import CognitiveOS

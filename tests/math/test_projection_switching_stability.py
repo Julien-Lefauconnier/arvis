@@ -5,7 +5,7 @@ import random
 import pytest
 
 from arvis.cognition.projection.projection_api import Observation, project_observation
-from tests.fixtures.projection_cases import nominal_case, boundary_case
+from tests.fixtures.projection_cases import boundary_case, nominal_case
 
 
 def perturb_observation(obs: Observation, epsilon: float) -> Observation:

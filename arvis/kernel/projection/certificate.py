@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Optional
 
 
 class ProjectionCertificationLevel(str, Enum):
@@ -27,13 +26,13 @@ class ProjectionCertificate:
 
     # runtime metrics
     margin_to_boundary: float
-    local_lipschitz_estimate: Optional[float]
-    noise_gain_estimate: Optional[float]
+    local_lipschitz_estimate: float | None
+    noise_gain_estimate: float | None
 
     certification_level: ProjectionCertificationLevel
 
     # debug / trace
-    checks_detail: Dict[str, bool]
+    checks_detail: dict[str, bool]
 
     @property
     def is_projection_safe(self) -> bool:

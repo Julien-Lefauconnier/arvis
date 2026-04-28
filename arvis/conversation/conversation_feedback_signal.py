@@ -1,6 +1,6 @@
 # arvis/conversation/conversation_feedback_signal.py
 
-from typing import Any, Dict
+from typing import Any
 
 
 class ConversationFeedbackSignal:
@@ -14,7 +14,7 @@ class ConversationFeedbackSignal:
     """
 
     @staticmethod
-    def build(state: Any) -> Dict[str, Any]:
+    def build(state: Any) -> dict[str, Any]:
         signals = state.signals or {}
 
         strategy = getattr(state, "last_strategy", None)

@@ -6,12 +6,7 @@ This module exposes the public mathematical API of ARVIS.
 """
 
 # Lyapunov dynamics
-from .lyapunov.lyapunov import (
-    LyapunovState,
-    LyapunovWeights,
-    lyapunov_value,
-    lyapunov_delta,
-)
+from .core.change_budget import ChangeBudget
 
 # Core utilities
 from .core.normalization import (
@@ -19,8 +14,12 @@ from .core.normalization import (
     clamp01,
     normalize_weights,
 )
-
-from .core.change_budget import ChangeBudget
+from .lyapunov.lyapunov import (
+    LyapunovState,
+    LyapunovWeights,
+    lyapunov_delta,
+    lyapunov_value,
+)
 
 # Risk estimation
 from .risk.risk_bound import (

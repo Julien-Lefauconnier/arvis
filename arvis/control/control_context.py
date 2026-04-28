@@ -1,7 +1,7 @@
 # arvis/control/control_context.py
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -15,19 +15,19 @@ class ControlContext:
     """
 
     # Search
-    search_weights: Optional[Dict[str, float]] = None
-    search_strategy: Optional[str] = None
+    search_weights: dict[str, float] | None = None
+    search_strategy: str | None = None
 
     # Memory
-    memory_policy: Optional[str] = None
-    memory_write_enabled: Optional[bool] = None
+    memory_policy: str | None = None
+    memory_write_enabled: bool | None = None
 
     # AI behavior
-    llm_temperature: Optional[float] = None
-    llm_creativity: Optional[str] = None
+    llm_temperature: float | None = None
+    llm_creativity: str | None = None
 
     # Validation
-    require_user_validation: Optional[bool] = None
+    require_user_validation: bool | None = None
 
     # Extension
-    extras: Dict[str, Any] = field(default_factory=dict)
+    extras: dict[str, Any] = field(default_factory=dict)

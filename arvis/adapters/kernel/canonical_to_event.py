@@ -1,14 +1,15 @@
 # arvis/adapters/kernel/canonical_to_event.py
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
-from arvis.api.signals import SignalEvent, CanonicalSignal
+
+from arvis.api.signals import CanonicalSignal, SignalEvent
 
 
 def canonical_to_event(canonical: CanonicalSignal) -> SignalEvent:
     return SignalEvent(
         event_id=f"evt-{uuid4()}",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         signal_type=canonical.key.code,
         source=canonical.origin,
         payload={

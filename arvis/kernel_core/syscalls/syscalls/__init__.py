@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from . import interrupt_syscalls
-from . import memory_syscalls
-from . import process_syscalls
-from . import tool_syscalls
-from . import vfs_syscalls
+from . import (
+    interrupt_syscalls,
+    memory_syscalls,
+    process_syscalls,
+    tool_syscalls,
+    vfs_syscalls,
+)
 
 __all__ = [
     "interrupt_syscalls",

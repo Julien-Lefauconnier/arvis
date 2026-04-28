@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, Dict
+from typing import Any
+
 from arvis.api.ir_canonical import hash_ir
 
 IR_VERSION = "arvis-ir.v1"
 IR_FINGERPRINT = "stable"
 
 
-def build_ir_view(obj: Any) -> Dict[str, Any]:
+def build_ir_view(obj: Any) -> dict[str, Any]:
     if obj is None:
         raise ValueError("IR source is None")
 

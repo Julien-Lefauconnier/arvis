@@ -4,7 +4,6 @@ import pytest
 
 from arvis.timeline.timeline_view import TimelineView
 from arvis.timeline.timeline_view_types import TimelineViewRole
-
 from tests.timeline.helpers import make_entries
 
 
@@ -94,7 +93,7 @@ def test_view_immutable():
         entries=entries,
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(AttributeError):
         view.role = TimelineViewRole.EXPOSED
 
 

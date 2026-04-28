@@ -1,10 +1,8 @@
 # arvis/cognition/projection/projection_diagnostics.py
 
 from dataclasses import dataclass, field
-from typing import Tuple, Dict, Union
 
-
-Scalar = Union[float, int, bool, str]
+Scalar = float | int | bool | str
 
 
 @dataclass(frozen=True)
@@ -17,10 +15,10 @@ class ProjectionDiagnostics:
 
     # Domain validity
     is_admissible: bool
-    admissibility_violations: Tuple[str, ...]
+    admissibility_violations: tuple[str, ...]
 
     # Normalization
-    normalization_warnings: Tuple[str, ...]
+    normalization_warnings: tuple[str, ...]
 
     # Switching diagnostics
     mode_boundary_margin: float | None
@@ -34,4 +32,4 @@ class ProjectionDiagnostics:
     w_norm: float
 
     # Extra debug / extensibility
-    extra: Dict[str, Scalar] = field(default_factory=dict)
+    extra: dict[str, Scalar] = field(default_factory=dict)

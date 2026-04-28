@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Any
+from typing import Any
 
 
 class PiOperator:
@@ -11,7 +11,7 @@ class PiOperator:
     Projects a state into a safe / stable domain.
     """
 
-    def project(self, state: Dict[str, float], ctx: Any = None) -> Dict[str, float]:
+    def project(self, state: dict[str, float], ctx: Any = None) -> dict[str, float]:
         if state is None:
             return {}
 

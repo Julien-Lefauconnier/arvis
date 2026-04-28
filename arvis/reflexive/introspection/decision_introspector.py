@@ -1,6 +1,6 @@
 # arvis/reflexive/introspection/decision_introspector.py
 
-from typing import Dict, Any
+from typing import Any
 
 
 class DecisionIntrospector:
@@ -8,7 +8,7 @@ class DecisionIntrospector:
     Explains the decision engine.
     """
 
-    def describe(self) -> Dict[str, Any]:
+    def describe(self) -> dict[str, Any]:
         return {
             "name": "decision_engine",
             "description": (

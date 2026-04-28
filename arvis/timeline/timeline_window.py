@@ -1,7 +1,6 @@
 # arvis/timeline/timeline_window.py
 
 from dataclasses import dataclass
-from typing import Optional, Dict
 from datetime import datetime
 
 
@@ -20,8 +19,8 @@ class TimelineWindow:
     - zero-knowledge
     """
 
-    after: Optional[datetime] = None
-    before: Optional[datetime] = None
+    after: datetime | None = None
+    before: datetime | None = None
 
     def __post_init__(self) -> None:
         if self.after and self.before:
@@ -31,7 +30,7 @@ class TimelineWindow:
                     "'after' must be strictly earlier than 'before'."
                 )
 
-    def to_dict(self) -> Dict[str, Optional[str]]:
+    def to_dict(self) -> dict[str, str | None]:
         """
         Declarative serialization for ports / adapters.
         """

@@ -1,10 +1,9 @@
 # arvis/cognition/conflict/conflict_hint.py
 
 from dataclasses import dataclass
-from typing import Optional
 
-from .conflict_type import ConflictType
 from .conflict_severity import ConflictSeverity
+from .conflict_type import ConflictType
 
 
 @dataclass(frozen=True)
@@ -16,4 +15,4 @@ class ConflictHint:
     conflict_type: ConflictType
     message: str
     severity: ConflictSeverity
-    recommendation: Optional[str] = None
+    recommendation: str | None = None

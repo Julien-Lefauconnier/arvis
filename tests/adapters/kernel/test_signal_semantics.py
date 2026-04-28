@@ -27,7 +27,6 @@ def test_metadata_is_not_deterministic():
     signals_1 = adapter.ingest_ir(ir)
     signals_2 = adapter.ingest_ir(ir)
 
-    # IDs différents attendus
     ids_1 = [s.signal_id for s in signals_1]
     ids_2 = [s.signal_id for s in signals_2]
 
@@ -42,6 +41,6 @@ def test_fingerprint_ignores_runtime_metadata():
     signals_1 = adapter.ingest_ir(ir)
     signals_2 = adapter.ingest_ir(ir)
 
-    for s1, s2 in zip(signals_1, signals_2):
-        assert s1.signal_id != s2.signal_id  # runtime
+    for s1, s2 in zip(signals_1, signals_2, strict=True):
+        assert s1.signal_id != s2.signal_id
         assert SignalSemantics.fingerprint(s1) == SignalSemantics.fingerprint(s2)

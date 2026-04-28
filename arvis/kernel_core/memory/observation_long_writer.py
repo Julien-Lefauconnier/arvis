@@ -7,11 +7,11 @@ from dataclasses import dataclass
 from arvis.kernel_core.memory.observation_long_event import (
     ObservationLongEvent,
 )
-from arvis.kernel_core.memory.observation_long_journal import (
-    ObservationLongJournal,
-)
 from arvis.kernel_core.memory.observation_long_invariants import (
     validate_observation_long_event,
+)
+from arvis.kernel_core.memory.observation_long_journal import (
+    ObservationLongJournal,
 )
 
 

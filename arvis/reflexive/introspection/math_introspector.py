@@ -1,6 +1,6 @@
 # arvis/reflexive/introspection/math_introspector.py
 
-from typing import Dict, Any
+from typing import Any
 
 
 class MathIntrospector:
@@ -8,7 +8,7 @@ class MathIntrospector:
     Explains the mathematical stability layer of ARVIS.
     """
 
-    def describe(self) -> Dict[str, Any]:
+    def describe(self) -> dict[str, Any]:
         return {
             "name": "stability_system",
             "description": (

@@ -1,7 +1,7 @@
 # tests/uncertainty/test_uncertainty_axis.py
 
-from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
 from arvis.math.signals.uncertainty import UncertaintySignal
+from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
 
 
 def test_uncertainty_axis_values():

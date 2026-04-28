@@ -2,9 +2,9 @@
 
 from arvis.math.lyapunov.lyapunov import LyapunovState
 from arvis.math.lyapunov.lyapunov_gate import (
-    lyapunov_gate,
     LyapunovGateParams,
     LyapunovVerdict,
+    lyapunov_gate,
 )
 
 

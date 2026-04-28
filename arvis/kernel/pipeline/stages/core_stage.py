@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
+
 import numpy as np
 
-from arvis.math.signals import RiskSignal, DriftSignal
-from arvis.math.lyapunov.lyapunov import LyapunovState
-from arvis.math.lyapunov.lyapunov import lyapunov_value
-from arvis.math.lyapunov.slow_state import SlowState
-from arvis.math.lyapunov.quadratic_projection import project_operational_to_quadratic
-from arvis.math.lyapunov.quadratic_lyapunov import QuadraticLyapunovSnapshot
 from arvis.math.core.fast_dynamics import FastDynamicsSnapshot
 from arvis.math.core.perturbation import compute_perturbation
-from arvis.math.lyapunov.target_map import target_map
+from arvis.math.lyapunov.lyapunov import LyapunovState, lyapunov_value
+from arvis.math.lyapunov.quadratic_lyapunov import QuadraticLyapunovSnapshot
+from arvis.math.lyapunov.quadratic_projection import project_operational_to_quadratic
 from arvis.math.lyapunov.slow_dynamics import update_slow_state
+from arvis.math.lyapunov.slow_state import SlowState
+from arvis.math.lyapunov.target_map import target_map
+from arvis.math.signals import DriftSignal, RiskSignal
 
 
 class CoreStage:
@@ -57,7 +57,7 @@ class CoreStage:
             core_snapshot, "cur_lyap", None
         )
 
-        def _normalize_lyap(x: Any) -> Optional[LyapunovState]:
+        def _normalize_lyap(x: Any) -> LyapunovState | None:
             if x is None:
                 return None
             if isinstance(x, LyapunovState):

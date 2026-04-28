@@ -1,15 +1,13 @@
 # tests/ir/test_ir_normalization.py
 
-from arvis.ir.normalization.cognitive_ir_normalizer import CognitiveIRNormalizer
-from arvis.ir.serialization.cognitive_ir_hasher import CognitiveIRHasher
-from arvis.ir.serialization.cognitive_ir_serializer import CognitiveIRSerializer
-
-from arvis.ir.input import CognitiveInputIR
+from arvis.ir.cognitive_ir import CognitiveIR
 from arvis.ir.context import CognitiveContextIR
 from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR
-from arvis.ir.cognitive_ir import CognitiveIR
-
+from arvis.ir.input import CognitiveInputIR
+from arvis.ir.normalization.cognitive_ir_normalizer import CognitiveIRNormalizer
+from arvis.ir.serialization.cognitive_ir_hasher import CognitiveIRHasher
+from arvis.ir.serialization.cognitive_ir_serializer import CognitiveIRSerializer
 
 # -----------------------------------------
 # Helpers

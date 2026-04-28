@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+
 from arvis.timeline.timeline_view_types import TimelineViewRole
 
 

@@ -1,7 +1,5 @@
 # arvis/conversation/conversation_energy_model.py
 
-from typing import Dict, Optional
-
 
 class ConversationEnergyModel:
     """
@@ -15,7 +13,7 @@ class ConversationEnergyModel:
     # --------------------------------------------------
     # DYNAMIC WEIGHTS (adaptive, normalized)
     # --------------------------------------------------
-    _dynamic_weights: Dict[str, float] = {
+    _dynamic_weights: dict[str, float] = {
         "collapse": 0.4,
         "uncertainty": 0.25,
         "pressure": 0.15,
@@ -33,7 +31,7 @@ class ConversationEnergyModel:
         has_constraints: bool | None = None,
         delta_v: float | None = None,
         delta_w: float | None = None,
-        dynamic_weights: Optional[Dict[str, float]] = None,
+        dynamic_weights: dict[str, float] | None = None,
     ) -> float:
         collapse = collapse_risk if collapse_risk is not None else 0.0
         uncertainty_val = uncertainty if uncertainty is not None else 0.0

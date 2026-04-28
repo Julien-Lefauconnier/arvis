@@ -1,7 +1,6 @@
 # arvis/math/adaptive/adaptive_snapshot.py
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -12,8 +11,8 @@ class AdaptiveSnapshot:
     This replaces all dict-based adaptive payloads.
     """
 
-    kappa_eff: Optional[float]
-    margin: Optional[float]
+    kappa_eff: float | None
+    margin: float | None
     regime: str  # "stable", "critical", "unstable", "unavailable"
     available: bool
 

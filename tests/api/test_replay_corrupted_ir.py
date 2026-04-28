@@ -18,7 +18,7 @@ def test_replay_rejects_missing_context():
     assert ir is not None
     ir.pop("context", None)
 
-    with pytest.raises(Exception):
+    with pytest.raises((TypeError, ValueError, RuntimeError, AttributeError)):
         os.replay(ir)
 
 
@@ -31,7 +31,7 @@ def test_replay_rejects_missing_input():
     assert ir is not None
     ir.pop("input", None)
 
-    with pytest.raises(Exception):
+    with pytest.raises((TypeError, ValueError, RuntimeError, AttributeError)):
         os.replay(ir)
 
 
@@ -44,5 +44,5 @@ def test_replay_rejects_structurally_corrupted_ir():
     assert ir is not None
     ir["context"] = "not-a-dict"
 
-    with pytest.raises(Exception):
+    with pytest.raises((TypeError, ValueError, RuntimeError, AttributeError)):
         os.replay(ir)

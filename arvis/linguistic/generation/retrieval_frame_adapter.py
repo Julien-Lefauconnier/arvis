@@ -1,10 +1,10 @@
 # arvis/linguistic/generation/retrieval_frame_adapter.py
 
-from arvis.linguistic.generation.generation_frame import (
-    LinguisticGenerationFrame,
-)
 from arvis.cognition.retrieval.cognitive_retrieval_snapshot import (
     CognitiveRetrievalSnapshot,
+)
+from arvis.linguistic.generation.generation_frame import (
+    LinguisticGenerationFrame,
 )
 
 

@@ -4,7 +4,6 @@ import pytest
 
 from arvis.math.stability.regime_estimator import CognitiveRegimeEstimator
 
-
 # ============================================================
 # 1. INIT VALIDATION
 # ============================================================

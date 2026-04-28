@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 from .knowledge_snapshot import KnowledgeSnapshot
 
@@ -20,6 +19,6 @@ class KnowledgeEvent:
 
     event_id: str
     snapshot: KnowledgeSnapshot
-    user_id: Optional[str]
-    place_id: Optional[str]
+    user_id: str | None
+    place_id: str | None
     created_at: datetime

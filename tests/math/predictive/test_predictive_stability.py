@@ -1,7 +1,7 @@
 # tests/math/predictive/test_predictive_stability.py
 
-from arvis.math.predictive.predictive_stability import PredictiveStabilityObserver
 from arvis.math.lyapunov.lyapunov import LyapunovState
+from arvis.math.predictive.predictive_stability import PredictiveStabilityObserver
 
 
 def make_state(v):

@@ -1,6 +1,6 @@
 # arvis/reflexive/introspection/capability_introspector.py
 
-from typing import Dict, Any, List
+from typing import Any
 
 from arvis.reflexive.capabilities.capability_snapshot_builder import (
     build_capability_snapshot,
@@ -8,10 +8,10 @@ from arvis.reflexive.capabilities.capability_snapshot_builder import (
 
 
 class CapabilityIntrospector:
-    def describe(self) -> Dict[str, Any]:
+    def describe(self) -> dict[str, Any]:
         snapshot = build_capability_snapshot()
 
-        capabilities: List[Dict[str, str]] = [
+        capabilities: list[dict[str, str]] = [
             {
                 "key": c.key,
                 "description": c.description,

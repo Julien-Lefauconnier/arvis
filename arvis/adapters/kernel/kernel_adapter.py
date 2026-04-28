@@ -1,15 +1,13 @@
 # arvis/adapters/kernel/kernel_adapter.py
 
-from typing import List
 
-
-from arvis.signals.signal_journal import get_signal_journal
 from arvis.api.signals import Signal
+from arvis.ir.cognitive_ir import CognitiveIR
+from arvis.signals.signal_journal import get_signal_journal
 
-from .mappers.ir_to_canonical import ir_to_canonical
 from .canonical_to_event import canonical_to_event
 from .event_to_signal import event_to_signal
-from arvis.ir.cognitive_ir import CognitiveIR
+from .mappers.ir_to_canonical import ir_to_canonical
 
 
 class KernelAdapter:
@@ -33,10 +31,10 @@ class KernelAdapter:
         self.journal = get_signal_journal()
         self.deterministic_mode = deterministic_mode
 
-    def ingest_ir(self, ir: CognitiveIR) -> List[Signal]:
+    def ingest_ir(self, ir: CognitiveIR) -> list[Signal]:
         canonicals = ir_to_canonical(ir)
 
-        signals: List[Signal] = []
+        signals: list[Signal] = []
         for c in canonicals:
             event = canonical_to_event(c)
             signal = event_to_signal(event)

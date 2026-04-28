@@ -1,6 +1,6 @@
 # arvis/tools/executor.py
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.tool_result import ToolResult
@@ -14,7 +14,7 @@ class ToolExecutor:
         self,
         result: Any,
         ctx: Any,
-    ) -> Optional[ToolResult]:
+    ) -> ToolResult | None:
         """
         Authorized runtime execution only.
         Must be called from syscall layer.
@@ -33,7 +33,7 @@ class ToolExecutor:
 
         tool_name: str = tool_name_raw
 
-        payload_runtime: Dict[str, Any] = {
+        payload_runtime: dict[str, Any] = {
             "decision": decision,
             "context": ctx,
             "tool_payload": getattr(decision, "tool_payload", {}) or {},
@@ -59,7 +59,7 @@ class ToolExecutor:
             )
 
         except Exception as e:
-            setattr(ctx, "_tool_failure", True)
+            ctx._tool_failure = True
 
             return ToolResult(
                 tool_name=tool_name,
@@ -68,14 +68,15 @@ class ToolExecutor:
                 latency_ms=None,
             )
 
-    def execute(self, arg1: Any, arg2: Optional[Any] = None) -> Optional[ToolResult]:
+    def execute(self, arg1: Any, arg2: Any | None = None) -> ToolResult | None:
         """
         Backward-compatible entrypoint.
         Direct production execution is forbidden.
         """
         if isinstance(arg1, str):
             raise RuntimeError(
-                "direct_tool_execution_forbidden: use syscall authority via SyscallHandler"
+                "direct_tool_execution_forbidden: "
+                "use syscall authority via SyscallHandler"
             )
 
         return self.execute_authorized(arg1, arg2)

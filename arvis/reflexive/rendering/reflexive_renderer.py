@@ -1,7 +1,8 @@
 # arvis/reflexive/rendering/reflexive_renderer.py
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Any, Dict
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -15,12 +16,12 @@ class ReflexiveRenderer:
     - no inference
     """
 
-    render_fn: Callable[[Any], Dict[str, Any]]
+    render_fn: Callable[[Any], dict[str, Any]]
 
-    def apply(self, snapshot: Any) -> Dict[str, Any]:
+    def apply(self, snapshot: Any) -> dict[str, Any]:
         return self.render_fn(snapshot)
 
     # Alias de compatibilité (tests + legacy)
-    def render(self, snapshot: Any) -> Dict[str, Any]:
-        result: Dict[str, Any] = self.render_fn(snapshot)
+    def render(self, snapshot: Any) -> dict[str, Any]:
+        result: dict[str, Any] = self.render_fn(snapshot)
         return result

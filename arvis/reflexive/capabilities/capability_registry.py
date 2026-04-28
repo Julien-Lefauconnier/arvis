@@ -1,6 +1,6 @@
 # arvis/reflexive/capabilities/capability_registry.py
 
-from typing import List
+
 from arvis.reflexive.capabilities.capability import Capability
 
 
@@ -10,7 +10,7 @@ class CapabilityRegistry:
     """
 
     @staticmethod
-    def list_capabilities() -> List[Capability]:
+    def list_capabilities() -> list[Capability]:
         return [
             Capability(
                 key="reflexive_snapshot",

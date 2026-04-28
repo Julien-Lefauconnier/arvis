@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import json
-from dataclasses import is_dataclass, asdict, fields
-from typing import Any, Dict
+from dataclasses import asdict, fields, is_dataclass
+from typing import Any
 
 
 class CognitiveIRSerializer:
@@ -62,7 +62,7 @@ class CognitiveIRSerializer:
     # PUBLIC: canonical dict (IMPORTANT)
     # -----------------------------------------
     @classmethod
-    def to_canonical_dict(cls, ir: Any) -> Dict[str, Any]:
+    def to_canonical_dict(cls, ir: Any) -> dict[str, Any]:
         raw = cls.to_dict(ir)
         canonical = cls.canonicalize(raw)
 
@@ -95,13 +95,13 @@ class CognitiveIRSerializer:
     # PUBLIC: dict → CognitiveIR (REQUIRED FOR REPLAY)
     # -----------------------------------------
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> Any:
+    def from_dict(cls, data: dict[str, Any]) -> Any:
         from arvis.ir.cognitive_ir import CognitiveIR
 
         # -----------------------------------------
         # Remove API-level fields
         # -----------------------------------------
-        clean_data: Dict[str, Any] = {
+        clean_data: dict[str, Any] = {
             k: v for k, v in data.items() if k not in ("version", "fingerprint", "meta")
         }
 
@@ -126,7 +126,7 @@ class CognitiveIRSerializer:
         # -----------------------------------------
         allowed_fields = {f.name for f in fields(CognitiveIR)}
 
-        init_data: Dict[str, Any] = {}
+        init_data: dict[str, Any] = {}
 
         for key in allowed_fields:
             if key == "context":

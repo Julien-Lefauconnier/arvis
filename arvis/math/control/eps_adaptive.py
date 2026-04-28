@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from arvis.math.core.normalization import clamp01, clamp
+from arvis.math.core.normalization import clamp, clamp01
 
 
 class CognitiveMode(str, Enum):
@@ -51,7 +51,7 @@ class EpsAdaptiveParams:
     critical_factor: float = 0.25
     exploration_factor: float = 1.2
 
-    def clamped(self) -> "EpsAdaptiveParams":
+    def clamped(self) -> EpsAdaptiveParams:
         # keep everything sane + deterministic
         return EpsAdaptiveParams(
             enabled=bool(self.enabled),

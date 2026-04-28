@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -12,5 +12,5 @@ class OnboardingState:
     """
 
     user_id: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     initialized_at: datetime

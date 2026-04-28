@@ -1,6 +1,6 @@
 # arvis/kernel_core/memory/projection.py
 
-from typing import Iterable, Dict, Tuple
+from collections.abc import Iterable
 
 from arvis.kernel_core.memory.models import MemoryRecord
 from arvis.kernel_core.memory.observation_long_event import (
@@ -10,7 +10,7 @@ from arvis.kernel_core.memory.observation_long_event import (
 
 def project_memory(
     events: Iterable["ObservationLongEvent"],
-) -> Dict[Tuple[str, str, str], MemoryRecord]:
+) -> dict[tuple[str, str, str], MemoryRecord]:
     """
     Pure projection:
     ObservationLongEvent -> MemoryRecord state
@@ -21,7 +21,7 @@ def project_memory(
     - immutable state reconstruction
     """
 
-    state: Dict[Tuple[str, str, str], MemoryRecord] = {}
+    state: dict[tuple[str, str, str], MemoryRecord] = {}
 
     for evt in events:
         if evt.source_type != "memory":

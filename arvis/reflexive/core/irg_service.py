@@ -1,7 +1,9 @@
 # arivs/reflexive/core/irg_service.py
 
 from __future__ import annotations
+
 from typing import Any, cast
+
 import numpy as np
 
 from .irg_latent_state import IRGLatentState

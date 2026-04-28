@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from arvis.timeline.timeline_snapshot import TimelineSnapshot
 from arvis.timeline.timeline_entry import TimelineEntry
+from arvis.timeline.timeline_snapshot import TimelineSnapshot
 
 # -----------------------------------------------------
 # Entry View
@@ -19,13 +19,13 @@ class TimelineEntryView:
     timestamp: str
     type: str
     title: str
-    description: Optional[str]
-    action_id: Optional[str]
-    place_id: Optional[str]
+    description: str | None
+    action_id: str | None
+    place_id: str | None
     nature: str
 
     @staticmethod
-    def from_entry(entry: TimelineEntry) -> "TimelineEntryView":
+    def from_entry(entry: TimelineEntry) -> TimelineEntryView:
         return TimelineEntryView(
             entry_id=entry.entry_id,
             timestamp=entry.timestamp.isoformat(),
@@ -49,12 +49,12 @@ class TimelineView:
     Public projection of a TimelineSnapshot.
     """
 
-    entries: List[TimelineEntryView]
-    head: Optional[str]
+    entries: list[TimelineEntryView]
+    head: str | None
     total_entries: int
 
     @staticmethod
-    def from_snapshot(snapshot: TimelineSnapshot) -> "TimelineView":
+    def from_snapshot(snapshot: TimelineSnapshot) -> TimelineView:
         entries = [TimelineEntryView.from_entry(e) for e in snapshot.entries]
 
         return TimelineView(
@@ -67,7 +67,7 @@ class TimelineView:
     # SERIALIZATION
     # -----------------------------------------------------
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "head": self.head,
             "total_entries": self.total_entries,

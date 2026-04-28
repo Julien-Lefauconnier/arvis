@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
+from datetime import UTC, datetime
 from typing import Any
+
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationStatus
 from arvis.cognition.conflict.conflict_confirmation import (
@@ -144,9 +144,7 @@ class ConfirmationStage:
 
         if needs_confirmation and ctx.confirmation_result is None:
             confirmation_request = ConfirmationRequest(
-                request_id=(
-                    f"confirm:{ctx.user_id}:{datetime.now(timezone.utc).timestamp()}"
-                ),
+                request_id=(f"confirm:{ctx.user_id}:{datetime.now(UTC).timestamp()}"),
                 target_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
                 reason="lyapunov_guard",
             )

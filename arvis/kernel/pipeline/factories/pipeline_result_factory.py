@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from arvis.kernel.pipeline.cognitive_pipeline_result import (
-    CognitivePipelineResult,
+from arvis.kernel.execution.execution_gate_status import (
+    ExecutionGateStatus,
 )
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
-from arvis.kernel.execution.execution_gate_status import (
-    ExecutionGateStatus,
+from arvis.kernel.pipeline.cognitive_pipeline_result import (
+    CognitivePipelineResult,
 )
 
 

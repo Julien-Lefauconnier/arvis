@@ -1,7 +1,7 @@
 # arvis/reflexive/timeline/aggregation/irg_timeline_temporal_memory_view.py
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_diff import (
     IRGTimelineTemporalDiff,

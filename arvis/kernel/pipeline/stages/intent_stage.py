@@ -7,12 +7,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
+from arvis.adapters.registry import get_llm_adapter
 from arvis.cognition.execution.executable_intent import ExecutableIntent
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
-from arvis.adapters.registry import get_llm_adapter
 
 
 class IntentStage:
@@ -54,7 +54,7 @@ class IntentStage:
             allow_rag=True,
             max_top_k=5,
             provider="default",
-            decided_at=datetime.now(timezone.utc),
+            decided_at=datetime.now(UTC),
             linguistic_context=None,
         )
 

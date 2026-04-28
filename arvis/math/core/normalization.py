@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from math import exp, isfinite, tanh
-from typing import Iterable
-
 
 EPS = 1e-12
 
@@ -101,7 +100,7 @@ def weighted_sum01(values01: Iterable[float], weights: Iterable[float]) -> float
     if len(vals) != len(ws):
         raise ValueError("values and weights must have same length")
     s = 0.0
-    for v, w in zip(vals, ws):
+    for v, w in zip(vals, ws, strict=True):
         s += v * w
     return clamp01(s)
 

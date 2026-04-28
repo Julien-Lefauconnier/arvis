@@ -5,7 +5,6 @@ from types import SimpleNamespace
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
-
 # --------------------------------------------------
 # Helpers
 # --------------------------------------------------

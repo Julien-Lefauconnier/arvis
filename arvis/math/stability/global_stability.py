@@ -1,14 +1,13 @@
 # arvis/math/stability/global_stability.py
 
 from dataclasses import dataclass
-from typing import Optional
 
-from arvis.math.lyapunov.lyapunov import V, LyapunovState
+from arvis.math.core.normalization import clamp01
+from arvis.math.lyapunov.lyapunov import LyapunovState, V
+from arvis.math.lyapunov.probabilistic_lyapunov import ProbLyapunovSnapshot
 from arvis.math.predictive.predictive_stability import PredictiveSnapshot
 from arvis.math.predictive.trajectory_observer import TrajectorySnapshot
-from arvis.math.lyapunov.probabilistic_lyapunov import ProbLyapunovSnapshot
 from arvis.math.stability.regime_estimator import RegimeSnapshot
-from arvis.math.core.normalization import clamp01
 
 
 @dataclass(frozen=True)
@@ -24,12 +23,12 @@ class GlobalStabilityParams:
 @dataclass(frozen=True)
 class GlobalStabilitySnapshot:
     global_risk: float
-    regime: Optional[str]
+    regime: str | None
     verdict: str
 
 
 class GlobalStabilityFusion:
-    def __init__(self, params: Optional[GlobalStabilityParams] = None):
+    def __init__(self, params: GlobalStabilityParams | None = None):
         self.params = params or GlobalStabilityParams()
 
     def compute(
@@ -38,7 +37,7 @@ class GlobalStabilityFusion:
         predictive: PredictiveSnapshot,
         trajectory: TrajectorySnapshot,
         probabilistic: ProbLyapunovSnapshot,
-        regime: Optional[RegimeSnapshot],
+        regime: RegimeSnapshot | None,
     ) -> GlobalStabilitySnapshot:
         instant_v = V(state)
 
@@ -47,7 +46,8 @@ class GlobalStabilityFusion:
         # -------------------------
         # Confidence gate (early UCB)
         # -------------------------
-        # In very early steps, probabilistic UCB can be overly conservative due to uncertainty.
+        # In very early steps, probabilistic UCB can be overly conservative
+        # due to uncertainty.
         # Cap it to avoid immediate false positives (esp. chaotic sim).
         prob_ucb = float(probabilistic.ucb_v)
 
@@ -56,14 +56,16 @@ class GlobalStabilityFusion:
         if steps > 0 and steps < 40:
             prob_ucb *= 0.6
 
-        # Hard cap in very early phase to prevent shock-path false positives (chaos test)
+        # Hard cap in very early phase to prevent
+        # shock-path false positives (chaos test)
         if steps > 0 and steps < 25:
             prob_ucb = min(prob_ucb, 0.80)
 
         # -------------------------
         # Directional risk (drift)
         # -------------------------
-        # Drift is often invisible if you only look at level. Use slope magnitude as a risk proxy.
+        # Drift is often invisible if you only look at level.
+        # Use slope magnitude as a risk proxy.
         # Scale factor chosen to expose slow adversarial drift in integration tests.
         slope = float(predictive.slope)
         pos_slope = max(0.0, slope)
@@ -100,8 +102,7 @@ class GlobalStabilityFusion:
         global_risk = max(
             base,
             0.8 * peak,
-            0.9
-            * directional_risk,  # makes slow drift visible without requiring high absolute level
+            0.9 * directional_risk,  # expose slow drift
         )
 
         # hard peak pass-through only once we have enough history

@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from typing import Deque, List, Optional
 
-from arvis.math.lyapunov.lyapunov import LyapunovState, V
 from arvis.math.core.normalization import clamp01
+from arvis.math.lyapunov.lyapunov import LyapunovState, V
 
 
 @dataclass(frozen=True)
@@ -42,7 +41,7 @@ class PredictiveSnapshot:
     last_v: float
     slope: float
     predicted_v: float
-    time_to_critical: Optional[int]
+    time_to_critical: int | None
     verdict: str
 
 
@@ -62,7 +61,7 @@ class PredictiveStabilityObserver:
         self.params = params or PredictiveStabilityParams()
         # Store only V-values (ZKCS-safe numeric summaries).
         # Keeping LyapunovState in the public signature for compatibility.
-        self._values: Deque[float] = deque(maxlen=self.params.window_size)
+        self._values: deque[float] = deque(maxlen=self.params.window_size)
 
     def push(self, state: LyapunovState) -> PredictiveSnapshot:
         v = clamp01(V(state))
@@ -91,7 +90,7 @@ class PredictiveStabilityObserver:
             )
 
         # signed deltas over the window
-        deltas: List[float] = []
+        deltas: list[float] = []
         try:
             for i in range(1, len(self._values)):
                 deltas.append(float(self._values[i] - self._values[i - 1]))
@@ -109,7 +108,7 @@ class PredictiveStabilityObserver:
         predicted_v = clamp01(last_v + slope * float(self.params.horizon))
 
         # time-to-critical (steps), only meaningful if slope > 0
-        ttc: Optional[int] = None
+        ttc: int | None = None
         if slope > 0.0:
             target = float(self.params.ttc_target_v)
             # if already beyond, ttc = 0

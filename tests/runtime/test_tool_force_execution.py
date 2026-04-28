@@ -27,7 +27,9 @@ def test_force_tool_execution_triggers_syscall():
     )
 
     # Force path only matters when a matching tool action exists.
-    # This test checks that the run remains stable and syscall journal, if present, is coherent.
+    # This test checks that the run remains stable
+    # and syscall journal, if present,
+    # is coherent.
     assert result is not None
 
 

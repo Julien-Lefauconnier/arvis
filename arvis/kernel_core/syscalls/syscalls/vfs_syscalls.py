@@ -4,12 +4,11 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
+from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
-from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
-
 from arvis.kernel_core.vfs.exceptions import (
     VFSCycleError,
     VFSFolderNotEmptyError,
@@ -22,7 +21,6 @@ from arvis.kernel_core.vfs.exceptions import (
 from arvis.kernel_core.vfs.models import VFSItem
 from arvis.kernel_core.vfs.service import VFSService
 from arvis.kernel_core.vfs.tree import VFSTreeNode, build_vfs_tree
-
 from arvis.kernel_core.vfs.zip.exceptions import ZipConflictError, ZipRejectedError
 from arvis.kernel_core.vfs.zip.models import (
     ZipCollision,
@@ -31,7 +29,6 @@ from arvis.kernel_core.vfs.zip.models import (
     ZipNode,
 )
 from arvis.kernel_core.vfs.zip.service import ZipIngestDecision, ZipIngestService
-
 
 # =====================================================
 # PROTOCOL
@@ -47,11 +44,11 @@ class SyscallHandlerLike(Protocol):
 # =====================================================
 
 
-def _get_vfs(handler: SyscallHandlerLike) -> Optional[VFSService]:
+def _get_vfs(handler: SyscallHandlerLike) -> VFSService | None:
     return handler.services.vfs_service
 
 
-def _get_zip(handler: SyscallHandlerLike) -> Optional[ZipIngestService]:
+def _get_zip(handler: SyscallHandlerLike) -> ZipIngestService | None:
     return handler.services.zip_ingest_service
 
 
@@ -213,7 +210,7 @@ def vfs_create_folder(
     handler: SyscallHandlerLike,
     user_id: str,
     name: str,
-    parent_id: Optional[str] = None,
+    parent_id: str | None = None,
     **_: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
@@ -233,9 +230,9 @@ def vfs_create_file(
     handler: SyscallHandlerLike,
     user_id: str,
     name: str,
-    parent_id: Optional[str] = None,
-    size: Optional[int] = None,
-    mime: Optional[str] = None,
+    parent_id: str | None = None,
+    size: int | None = None,
+    mime: str | None = None,
     **_: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
@@ -300,7 +297,7 @@ def vfs_move_item(
     handler: SyscallHandlerLike,
     user_id: str,
     item_id: str,
-    parent_id: Optional[str] = None,
+    parent_id: str | None = None,
     **_: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
@@ -325,7 +322,7 @@ def vfs_zip_analyze(
     handler: SyscallHandlerLike,
     zip_path: str,
     user_id: str,
-    target_parent_id: Optional[str] = None,
+    target_parent_id: str | None = None,
     **_: Any,
 ) -> SyscallResult:
     zip_service = _get_zip(handler)
@@ -346,9 +343,9 @@ def vfs_zip_execute(
     handler: SyscallHandlerLike,
     zip_path: str,
     user_id: str,
-    target_parent_id: Optional[str] = None,
+    target_parent_id: str | None = None,
     keep_zip: bool = False,
-    plan: Optional[ZipImportPlan] = None,
+    plan: ZipImportPlan | None = None,
     **_: Any,
 ) -> SyscallResult:
     zip_service = _get_zip(handler)

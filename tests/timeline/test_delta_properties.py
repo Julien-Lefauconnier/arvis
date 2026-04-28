@@ -1,12 +1,12 @@
 # tests/timeline/test_delta_properties.py
 
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
-from tests.timeline.helpers import make_entries
-
-from arvis.timeline.timeline_snapshot import TimelineSnapshot
 from arvis.timeline.timeline_delta import TimelineDelta
 from arvis.timeline.timeline_hashchain import TimelineHashChain
+from arvis.timeline.timeline_snapshot import TimelineSnapshot
+from tests.timeline.helpers import make_entries
 
 
 @given(st.integers(min_value=2, max_value=20))

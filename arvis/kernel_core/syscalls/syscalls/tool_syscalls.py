@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import SyscallResult
@@ -15,17 +15,17 @@ class ToolExecutorLike(Protocol):
 
 
 class ServiceRegistryLike(Protocol):
-    tool_executor: Optional[ToolExecutorLike]
+    tool_executor: ToolExecutorLike | None
 
 
 class SyscallHandlerLike(Protocol):
     services: ServiceRegistryLike
-    runtime_state: Optional[Any]
+    runtime_state: Any | None
 
 
 def _compute_artifact_timestamp(
     handler: SyscallHandlerLike,
-    kwargs: Dict[str, Any],
+    kwargs: dict[str, Any],
 ) -> float:
     """
     Kernel-controlled timestamp derivation.
@@ -76,7 +76,7 @@ def tool_execute(
         )
 
     if hasattr(tool_result, "success"):
-        success = bool(getattr(tool_result, "success"))
+        success = bool(tool_result.success)
         output = getattr(tool_result, "output", None)
         error = getattr(tool_result, "error", None)
         tool_name = getattr(tool_result, "tool_name", None)

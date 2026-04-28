@@ -3,21 +3,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 from arvis.kernel_core.process import CognitiveProcessId
 
 
 @dataclass
 class SchedulerState:
-    ready_queue: List[CognitiveProcessId] = field(default_factory=list)
-    blocked_queue: List[CognitiveProcessId] = field(default_factory=list)
-    suspended_queue: List[CognitiveProcessId] = field(default_factory=list)
-    waiting_confirmation_queue: List[CognitiveProcessId] = field(default_factory=list)
-    completed_queue: List[CognitiveProcessId] = field(default_factory=list)
-    aborted_queue: List[CognitiveProcessId] = field(default_factory=list)
+    ready_queue: list[CognitiveProcessId] = field(default_factory=list)
+    blocked_queue: list[CognitiveProcessId] = field(default_factory=list)
+    suspended_queue: list[CognitiveProcessId] = field(default_factory=list)
+    waiting_confirmation_queue: list[CognitiveProcessId] = field(default_factory=list)
+    completed_queue: list[CognitiveProcessId] = field(default_factory=list)
+    aborted_queue: list[CognitiveProcessId] = field(default_factory=list)
 
-    active_process_id: Optional[CognitiveProcessId] = None
+    active_process_id: CognitiveProcessId | None = None
     tick_count: int = 0
 
     # -----------------------------------------------------

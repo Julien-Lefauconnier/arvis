@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Optional
+from collections.abc import Iterable
 from datetime import datetime
-from arvis.kernel_core.memory.snapshot import MemorySnapshot
 
 from arvis.kernel_core.memory.exceptions import (
     MemoryInvalidKeyError,
@@ -13,14 +12,14 @@ from arvis.kernel_core.memory.exceptions import (
     MemoryRecordNotFoundError,
 )
 from arvis.kernel_core.memory.models import MemoryRecord, MemoryValue
-from arvis.kernel_core.memory.repository import MemoryRepository
-
-from arvis.kernel_core.memory.observation_long_writer import (
-    ObservationLongWriter,
-)
 from arvis.kernel_core.memory.observation_long_event import (
     ObservationLongEvent,
 )
+from arvis.kernel_core.memory.observation_long_writer import (
+    ObservationLongWriter,
+)
+from arvis.kernel_core.memory.repository import MemoryRepository
+from arvis.kernel_core.memory.snapshot import MemorySnapshot
 
 
 class MemoryService:
@@ -36,7 +35,7 @@ class MemoryService:
     def __init__(
         self,
         repo: MemoryRepository,
-        writer: Optional[ObservationLongWriter] = None,
+        writer: ObservationLongWriter | None = None,
     ) -> None:
         self.repo = repo
         self.writer = writer
@@ -45,7 +44,7 @@ class MemoryService:
         self,
         *,
         user_id: str,
-        namespace: Optional[str] = None,
+        namespace: str | None = None,
     ) -> list[MemoryRecord]:
         normalized_namespace = None
         if namespace is not None:
@@ -245,7 +244,7 @@ class MemoryService:
         self,
         *,
         user_id: str,
-        namespace: Optional[str] = None,
+        namespace: str | None = None,
     ) -> MemorySnapshot:
         normalized_namespace = None
         if namespace is not None:

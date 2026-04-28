@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
-from typing import Any, Dict, List
 from copy import deepcopy
+from dataclasses import dataclass
+from typing import Any
 
 from arvis.reflexive.core.reflexive_mode import ReflexiveMode
 
@@ -23,24 +23,22 @@ class ReflexiveAttestation:
     immutability: bool
     deterministic: bool
     mode: ReflexiveMode
-    exposed_views: List[str]
+    exposed_views: list[str]
     fingerprint: str
 
     @classmethod
     def from_rendered_payload(
         cls,
-        rendered_payload: Dict[str, Any],
-    ) -> "ReflexiveAttestation":
+        rendered_payload: dict[str, Any],
+    ) -> ReflexiveAttestation:
         if not isinstance(rendered_payload, dict):
             raise TypeError("rendered_payload must be a dict")
 
         payload = deepcopy(rendered_payload)
 
-        # --- mode is captured (but excluded from fingerprint) ---
         mode_value = payload.get("mode")
         mode = ReflexiveMode(mode_value)
 
-        # --- exposed_views must be explicit (B17.3) ---
         if "exposed_views" not in payload:
             raise ValueError("rendered_payload must declare exposed_views")
 
@@ -50,7 +48,8 @@ class ReflexiveAttestation:
 
         exposed_views = sorted(exposed_views_raw)
 
-        # --- timeline_views may contain more than what is exposed -> do NOT attest extra views ---
+        # timeline_views may contain more than exposed views:
+        # do not attest hidden / extra views.
         timeline_views_all = payload.get("timeline_views", {})
         if not isinstance(timeline_views_all, dict):
             raise TypeError("timeline_views must be a dict")
@@ -59,12 +58,9 @@ class ReflexiveAttestation:
             k: v for k, v in timeline_views_all.items() if k in exposed_views
         }
 
-        # remove non-attested fields
         payload.pop("generated_at", None)
         payload.pop("mode", None)
         payload.pop("exposed_views", None)
-
-        # IMPORTANT: ensure the fingerprint uses ONLY exposed timeline views
         payload.pop("timeline_views", None)
 
         fingerprint_source = {
@@ -87,7 +83,7 @@ class ReflexiveAttestation:
         )
 
     @staticmethod
-    def _compute_fingerprint(source: Dict[str, Any]) -> str:
+    def _compute_fingerprint(source: dict[str, Any]) -> str:
         serialized = json.dumps(
             source,
             sort_keys=True,
@@ -96,7 +92,7 @@ class ReflexiveAttestation:
         )
         return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "type": self.type,
             "scope": self.scope,

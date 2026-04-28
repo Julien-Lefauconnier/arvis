@@ -1,7 +1,6 @@
 # arvis/reasoning/gap_to_intent_mapper.py
-from typing import List
 
-from arvis.reasoning.reasoning_gap import ReasoningGap, GapType
+from arvis.reasoning.reasoning_gap import GapType, ReasoningGap
 from arvis.reasoning.reasoning_intent import ReasoningIntent, ReasoningIntentType
 
 
@@ -16,7 +15,7 @@ class GapToIntentMapper:
     """
 
     @staticmethod
-    def map(gap: ReasoningGap) -> List[ReasoningIntent]:
+    def map(gap: ReasoningGap) -> list[ReasoningIntent]:
         if gap.gap_type == GapType.MISSING_CONTEXT:
             return [
                 ReasoningIntent(

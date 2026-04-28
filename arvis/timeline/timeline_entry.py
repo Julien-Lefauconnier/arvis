@@ -1,9 +1,8 @@
 # arvis/timeline/timeline_entry.py
 
-from dataclasses import dataclass
 import unicodedata
-from datetime import datetime, timezone
-from typing import Optional
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import Enum
 
 from .timeline_types import TimelineEntryType
@@ -29,11 +28,11 @@ class TimelineEntry:
     created_at: datetime
     type: TimelineEntryType
     title: str
-    description: Optional[str]
-    action_id: Optional[str]
-    place_id: Optional[str]
+    description: str | None
+    action_id: str | None
+    place_id: str | None
     # 🧭 Declarative traceability reference
-    origin_ref: Optional[str] = None
+    origin_ref: str | None = None
     # 🧩 Entry nature (EVENT / STATE)
     nature: TimelineEntryNature = TimelineEntryNature.EVENT
     device_id: str = "0" * 64
@@ -65,7 +64,7 @@ class TimelineEntry:
                 "TimelineEntry.created_at must be timezone-aware (UTC required)"
             )
 
-        if self.created_at.tzinfo != timezone.utc:
+        if self.created_at.tzinfo != UTC:
             raise ValueError("TimelineEntry.created_at must be in UTC")
 
         if len(self.entry_id) > 256:
@@ -121,12 +120,12 @@ class TimelineEntry:
         entry_id: str,
         type: TimelineEntryType,
         title: str,
-        description: Optional[str],
-        action_id: Optional[str],
-        place_id: Optional[str] = None,
-        origin_ref: Optional[str] = None,
+        description: str | None,
+        action_id: str | None,
+        place_id: str | None = None,
+        origin_ref: str | None = None,
         nature: TimelineEntryNature = TimelineEntryNature.EVENT,
-        created_at: Optional[datetime] = None,
+        created_at: datetime | None = None,
         device_id: str = "0" * 64,
         lamport: int = 0,
     ) -> "TimelineEntry":
@@ -138,7 +137,7 @@ class TimelineEntry:
         """
         return cls(
             entry_id=entry_id,
-            created_at=created_at or datetime.now(timezone.utc),
+            created_at=created_at or datetime.now(UTC),
             type=type,
             title=title,
             description=description,

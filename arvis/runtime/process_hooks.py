@@ -1,7 +1,8 @@
 # arvis/runtime/process_hooks.py
 
 from __future__ import annotations
-from typing import Protocol, Any, Optional
+
+from typing import Any, Protocol
 
 from arvis.kernel_core.process.process import CognitiveProcess
 
@@ -9,7 +10,7 @@ from arvis.kernel_core.process.process import CognitiveProcess
 class ProcessHook(Protocol):
     def on_process_enqueued(self, process: CognitiveProcess) -> None: ...
     def on_process_selected(
-        self, process: CognitiveProcess, score: Optional[float]
+        self, process: CognitiveProcess, score: float | None
     ) -> None: ...
     def on_process_completed(self, process: CognitiveProcess, result: Any) -> None: ...
     def on_process_aborted(self, process: CognitiveProcess, error: str) -> None: ...
@@ -19,7 +20,7 @@ class ProcessHook(Protocol):
 
 
 class ProcessHookManager:
-    def __init__(self, runtime_state: Optional[Any] = None) -> None:
+    def __init__(self, runtime_state: Any | None = None) -> None:
         self._hooks: list[ProcessHook] = []
         self.runtime_state = runtime_state
 
@@ -33,7 +34,7 @@ class ProcessHookManager:
             except Exception as e:
                 self._emit_error("on_process_enqueued", process, e)
 
-    def on_selected(self, process: CognitiveProcess, score: Optional[float]) -> None:
+    def on_selected(self, process: CognitiveProcess, score: float | None) -> None:
         for h in self._hooks:
             try:
                 h.on_process_selected(process, score)

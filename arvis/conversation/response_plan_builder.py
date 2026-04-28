@@ -1,8 +1,8 @@
 # arvis/conversation/response_plan_builder.py
 
-from arvis.conversation.response_strategy_decision import ResponseStrategyDecision
 from arvis.conversation.response_plan import ResponsePlan
 from arvis.conversation.response_realization_mode import ResponseRealizationMode
+from arvis.conversation.response_strategy_decision import ResponseStrategyDecision
 from arvis.conversation.response_strategy_type import ResponseStrategyType
 from arvis.linguistic.acts.act_types import LinguisticActType
 from arvis.linguistic.acts.linguistic_act import LinguisticAct

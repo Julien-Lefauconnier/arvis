@@ -1,9 +1,13 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "arvis"
 version = "0.1.0"
 description = "Cognitive Operating System kernel for trustworthy AI systems"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 authors = [
   { name="Julien Lefauconnier", email="jlefauconnier@proton.me" }
@@ -48,7 +52,14 @@ dev = [
   "pytest-cov",
   "hypothesis",
   "pytest-benchmark",
+  "pytest-asyncio",
   "numpy",
+]
+openai = ["openai>=1.0"]
+llm = [
+  "openai>=1.0",
+  "anthropic",
+  "ollama",
 ]
 
 [project.urls]
@@ -60,3 +71,37 @@ Changelog = "https://github.com/Julien-Lefauconnier/arvis/releases"
 
 [tool.setuptools.packages.find]
 include = ["arvis*"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+show_error_codes = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = [
+  "openai", "openai.*",
+  "anthropic", "anthropic.*",
+  "ollama", "ollama.*"
+]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+  "B",
+  "UP",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra"
+filterwarnings = ["error"]

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Mapping, Any
+from datetime import UTC, datetime
+from typing import Any
 
 from arvis.kernel_core.memory.observation_long_event import (
     ObservationLongEvent,
@@ -34,7 +35,7 @@ class ObservationLongBuilder:
             user_id=self.user_id,
             source_type=self.source_type,
             payload=dict(self.payload),
-            observed_at=datetime.now(timezone.utc),
+            observed_at=datetime.now(UTC),
         )
 
         validate_observation_long_event(event)

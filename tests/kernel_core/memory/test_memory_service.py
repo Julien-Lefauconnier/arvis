@@ -17,7 +17,6 @@ from arvis.kernel_core.memory.repositories.in_memory import (
 )
 from arvis.kernel_core.memory.service import MemoryService
 
-
 USER_ID = "user-1"
 
 

@@ -4,9 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from arvis.kernel.pipeline.stages.control_feedback_stage import ControlFeedbackStage
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
-
+from arvis.kernel.pipeline.stages.control_feedback_stage import ControlFeedbackStage
 
 # --------------------------------------------------
 # Dummy control result

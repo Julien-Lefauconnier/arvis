@@ -1,12 +1,10 @@
 # arvis/knowledge/knowledge_snapshot.py
 
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import List, Optional
-from datetime import timezone
+from datetime import UTC, datetime
 
-from arvis.knowledge.knowledge_state import KnowledgeState
 from arvis.knowledge.knowledge_signal import KnowledgeSignal
+from arvis.knowledge.knowledge_state import KnowledgeState
 
 
 @dataclass(frozen=True)
@@ -17,7 +15,7 @@ class KnowledgeSnapshot:
     """
 
     state: KnowledgeState
-    signals: List[KnowledgeSignal]
-    scope: Optional[str] = None
+    signals: list[KnowledgeSignal]
+    scope: str | None = None
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))

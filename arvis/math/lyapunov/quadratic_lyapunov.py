@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+
 import numpy as np
 
 
@@ -23,7 +23,7 @@ class QuadraticLyapunovState:
 class QuadraticLyapunovSnapshot:
     regime: str
     value: float
-    delta: Optional[float]
+    delta: float | None
     dimension: int
 
 
@@ -41,7 +41,7 @@ class QuadraticLyapunovFamily:
         V_q(x) = x^T P_q x
     """
 
-    def __init__(self, matrices: Dict[str, np.ndarray]):
+    def __init__(self, matrices: dict[str, np.ndarray]):
         self._matrices = {
             str(k): np.asarray(v, dtype=float) for k, v in matrices.items()
         }

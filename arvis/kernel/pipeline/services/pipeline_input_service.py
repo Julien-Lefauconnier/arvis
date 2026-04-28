@@ -7,7 +7,6 @@ from typing import Any
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
-
 from arvis.kernel.pipeline.services.pipeline_ir_bootstrap_service import (
     PipelineIRBootstrapService,
 )

@@ -1,8 +1,8 @@
 # tests/contracts/test_epsilon_bounds.py
 
 
+from arvis.math.control.eps_adaptive import CognitiveMode, EpsAdaptiveParams
 from arvis.math.control.irg_epsilon_controller import IRGEpsilonController
-from arvis.math.control.eps_adaptive import EpsAdaptiveParams, CognitiveMode
 
 
 def test_epsilon_is_bounded():

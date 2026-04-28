@@ -2,8 +2,9 @@
 
 
 def test_decision_trace_is_immutable():
-    from arvis.kernel.trace.decision_trace import DecisionTrace
     from datetime import datetime
+
+    from arvis.kernel.trace.decision_trace import DecisionTrace
 
     trace = DecisionTrace(
         timestamp=datetime.utcnow(),
@@ -13,5 +14,5 @@ def test_decision_trace_is_immutable():
 
     import pytest
 
-    with pytest.raises(Exception):
+    with pytest.raises(AttributeError):
         trace.user_id = "hack"

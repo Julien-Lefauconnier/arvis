@@ -1,7 +1,6 @@
 # arvis/cognition/confirmation/confirmation_flow.py
 
 from dataclasses import dataclass
-from typing import Optional
 
 from .confirmation_request import ConfirmationRequest
 from .confirmation_result import ConfirmationResult, ConfirmationStatus
@@ -14,7 +13,7 @@ class ConfirmationFlowState:
     """
 
     request: ConfirmationRequest
-    result: Optional[ConfirmationResult] = None
+    result: ConfirmationResult | None = None
 
     @property
     def status(self) -> ConfirmationStatus:

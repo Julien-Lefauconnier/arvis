@@ -1,14 +1,13 @@
 # tests/uncertainty/test_uncertainty_to_intent_mapper.py
 
 
+from arvis.reasoning.reasoning_intent import ReasoningIntentType
+from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
+from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
 from arvis.uncertainty.uncertainty_to_intent_mapper import (
     UncertaintyToIntentMapper,
     map_uncertainty_to_intent,
 )
-from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
-from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
-from arvis.reasoning.reasoning_intent import ReasoningIntentType
-
 
 # ============================================================
 # Helper

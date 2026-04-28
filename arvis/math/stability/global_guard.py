@@ -1,8 +1,8 @@
 # arvis/math/stability/global_guard.py
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -21,7 +21,7 @@ class GlobalStabilityGuard:
 
     def check(
         self,
-        deltas: List[float],
+        deltas: list[float],
     ) -> bool:
         """
         Returns True if globally stable.

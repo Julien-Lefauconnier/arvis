@@ -1,6 +1,6 @@
 # arvis/reflexive/introspection/world_model_introspector.py
 
-from typing import Dict, Any
+from typing import Any
 
 
 class WorldModelIntrospector:
@@ -8,7 +8,7 @@ class WorldModelIntrospector:
     Explains the predictive world model layer.
     """
 
-    def describe(self) -> Dict[str, Any]:
+    def describe(self) -> dict[str, Any]:
         return {
             "name": "world_model",
             "description": (

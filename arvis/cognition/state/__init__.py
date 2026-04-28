@@ -8,12 +8,12 @@ by the ARVIS kernel.
 """
 
 from .cognitive_state import (
-    CognitiveState,
-    CognitiveRisk,
-    CognitiveStability,
     CognitiveControl,
     CognitiveDynamics,
     CognitiveProjection,
+    CognitiveRisk,
+    CognitiveStability,
+    CognitiveState,
 )
 
 __all__ = [

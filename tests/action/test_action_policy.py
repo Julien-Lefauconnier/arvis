@@ -1,7 +1,7 @@
 # tests/action/test_action_policy.py
 
-from arvis.action.action_policy import ActionPolicy
 from arvis.action.action_decision import ActionDecision
+from arvis.action.action_policy import ActionPolicy
 from arvis.math.signals import RiskSignal
 
 

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast, Protocol
+from typing import TYPE_CHECKING, Protocol, cast
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
-
 from arvis.stability.stability_state_projector import StabilityStateProjector
 from arvis.stability.stability_statistics import (
     StabilityStatistics,
@@ -21,7 +20,7 @@ if TYPE_CHECKING:
 class RefreshableStage(Protocol):
     def refresh(
         self,
-        pipeline: "CognitivePipeline",
+        pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
     ) -> None: ...
 
@@ -29,7 +28,7 @@ class RefreshableStage(Protocol):
 class PipelineObservabilityService:
     @staticmethod
     def run(
-        pipeline: "CognitivePipeline",
+        pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
     ) -> None:
         obs = pipeline.observability.build(ctx)

@@ -1,8 +1,6 @@
 # arvis/kernel/projection/pi_types.py
 
 from dataclasses import dataclass
-from typing import Optional
-
 
 # =========================
 # X STATE (slow)
@@ -28,7 +26,7 @@ class XState:
 
 @dataclass(frozen=True)
 class ZDecisionState:
-    decision_kind: Optional[str]
+    decision_kind: str | None
     actionability_score: float
     confidence_score: float
 
@@ -51,7 +49,7 @@ class ZControlState:
 
 @dataclass(frozen=True)
 class ZDynamicState:
-    regime: Optional[str]
+    regime: str | None
     temporal_pressure: float
     recent_delta_norm: float
     runtime_instability: float
@@ -72,10 +70,10 @@ class ZState:
 
 @dataclass(frozen=True)
 class QState:
-    regime_mode: Optional[str]
-    gate_mode: Optional[str]
-    conversation_mode: Optional[str]
-    execution_mode: Optional[str]
+    regime_mode: str | None
+    gate_mode: str | None
+    conversation_mode: str | None
+    execution_mode: str | None
     switching_safe: bool
 
 

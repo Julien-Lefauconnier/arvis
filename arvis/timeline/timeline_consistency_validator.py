@@ -1,20 +1,21 @@
 # arvis/timeline/timeline_consistency_validator.py
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Tuple, Dict, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
 class TimelineConsistencyIssue:
     code: str
     message: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
 
 
 @dataclass(frozen=True)
 class TimelineConsistencyReport:
     is_consistent: bool
-    issues: Tuple[TimelineConsistencyIssue, ...]
+    issues: tuple[TimelineConsistencyIssue, ...]
 
 
 class TimelineConsistencyValidator:

@@ -1,7 +1,7 @@
 # arvis/conversation/conversation_state.py
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from arvis.cognition.conversation.response_strategy_type import ResponseStrategyType
 from arvis.conversation.user_adaptive_profile import UserAdaptiveProfile
@@ -25,7 +25,7 @@ class ConversationState:
     strategy_distribution: dict[ResponseStrategyType, float] = field(
         default_factory=dict
     )
-    user_profile: Optional[UserAdaptiveProfile] = None
+    user_profile: UserAdaptiveProfile | None = None
 
     def update_strategy(
         self,

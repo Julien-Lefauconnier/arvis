@@ -2,11 +2,10 @@
 
 from collections import deque
 from dataclasses import dataclass
-from typing import Deque, Optional
 
-from arvis.math.lyapunov.lyapunov import LyapunovState, V
-from arvis.math.core.normalization import clamp01
 from arvis.math.control.beta_adaptive import BetaAdaptiveController
+from arvis.math.core.normalization import clamp01
+from arvis.math.lyapunov.lyapunov import LyapunovState, V
 from arvis.math.stability.regime_estimator import RegimeSnapshot
 
 
@@ -35,17 +34,17 @@ class ProbabilisticLyapunovObserver:
 
     def __init__(
         self,
-        params: Optional[ProbLyapunovParams] = None,
-        beta_controller: Optional[BetaAdaptiveController] = None,
+        params: ProbLyapunovParams | None = None,
+        beta_controller: BetaAdaptiveController | None = None,
     ):
         self.params = params or ProbLyapunovParams()
         self.beta_controller = beta_controller or BetaAdaptiveController()
-        self._values: Deque[float] = deque(maxlen=self.params.window_size)
+        self._values: deque[float] = deque(maxlen=self.params.window_size)
 
     def push(
         self,
         state: LyapunovState,
-        regime: Optional[RegimeSnapshot] = None,
+        regime: RegimeSnapshot | None = None,
         drift: float = 0.0,
     ) -> ProbLyapunovSnapshot:
         v = clamp01(V(state))

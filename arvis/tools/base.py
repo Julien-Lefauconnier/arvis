@@ -1,7 +1,7 @@
 # arvis/tools/base.py
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any
 
 from arvis.tools.spec import ToolSpec
 
@@ -26,7 +26,7 @@ class BaseTool(ABC):
             return self.spec.name
         return self.name
 
-    def validate(self, input_data: Dict[str, Any]) -> None:
+    def validate(self, input_data: dict[str, Any]) -> None:
         """
         Optional validation hook.
         Raise Exception if invalid.
@@ -34,5 +34,5 @@ class BaseTool(ABC):
         return None
 
     @abstractmethod
-    def execute(self, input_data: Dict[str, Any]) -> Any:
+    def execute(self, input_data: dict[str, Any]) -> Any:
         pass

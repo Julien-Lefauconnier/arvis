@@ -3,15 +3,15 @@
 from arvis.conversation.conversation_adaptive_controller import (
     ConversationAdaptiveController,
 )
+from arvis.conversation.conversation_adaptive_policy import AdaptiveThresholdPolicy
 from arvis.conversation.conversation_energy_model import ConversationEnergyModel
-from arvis.conversation.conversation_stability_signals import (
-    ConversationStabilitySignalsBuilder,
-)
 from arvis.conversation.conversation_regime_controller import (
     ConversationRegimeController,
 )
+from arvis.conversation.conversation_stability_signals import (
+    ConversationStabilitySignalsBuilder,
+)
 from arvis.conversation.response_strategy_type import ResponseStrategyType
-from arvis.conversation.conversation_adaptive_policy import AdaptiveThresholdPolicy
 
 
 class DummyState:

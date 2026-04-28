@@ -1,10 +1,10 @@
 # arvis/kernel_core/memory/observation_long_event.py
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional
 import hashlib
 import json
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any
 
 from arvis.kernel_core.memory.observation_long_invariants import (
     validate_observation_long_event,
@@ -16,9 +16,9 @@ class ObservationLongEvent:
     observed_at: datetime
     user_id: str
     source_type: str
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
 
-    event_id: Optional[str] = None
+    event_id: str | None = None
 
     def __post_init__(self) -> None:
         # 1. Generate ID first
@@ -54,11 +54,11 @@ class ObservationLongEvent:
         *,
         user_id: str,
         source_type: str,
-        payload: Dict[str, Any],
-        observed_at: Optional[datetime] = None,
+        payload: dict[str, Any],
+        observed_at: datetime | None = None,
     ) -> "ObservationLongEvent":
         if observed_at is None:
-            observed_at = datetime.now(timezone.utc)
+            observed_at = datetime.now(UTC)
 
         raw = {
             "user_id": user_id,

@@ -1,10 +1,10 @@
 # arvis/reflexive/introspection/runtime_introspector.py
 
-from typing import Dict, Any
+from typing import Any
 
 
 class RuntimeIntrospector:
-    def snapshot(self) -> Dict[str, Any]:
+    def snapshot(self) -> dict[str, Any]:
         return {
             "mode": "reflexive",
             "runtime": "arvis",

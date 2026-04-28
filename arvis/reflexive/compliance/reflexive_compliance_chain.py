@@ -1,7 +1,7 @@
 # arvis/reflexive/compliance/reflexive_compliance_chain.py
 
 from dataclasses import dataclass
-from typing import Dict, Any, Protocol
+from typing import Any, Protocol
 
 from arvis.reflexive.compliance.compliance_reflexive_attestation import (
     ComplianceReflexiveAttestation,
@@ -9,7 +9,7 @@ from arvis.reflexive.compliance.compliance_reflexive_attestation import (
 
 
 class SupportsToDict(Protocol):
-    def to_dict(self) -> Dict[str, Any]: ...
+    def to_dict(self) -> dict[str, Any]: ...
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,7 @@ class ReflexiveComplianceChain:
     snapshot: SupportsToDict
     explanation: Any
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         snapshot_dict = self.snapshot.to_dict()
         explanation_dict = self.explanation.to_dict()
         attestation = ComplianceReflexiveAttestation.from_explanation(explanation_dict)

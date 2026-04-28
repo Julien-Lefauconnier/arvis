@@ -1,7 +1,7 @@
 # arvis/conversation/conversation_memory_bridge.py
 
-from arvis.memory.memory_long_projector import MemoryLongContextProjector
 from arvis.conversation.conversation_context import ConversationContext
+from arvis.memory.memory_long_projector import MemoryLongContextProjector
 from arvis.memory.memory_long_service import MemoryLongService
 
 

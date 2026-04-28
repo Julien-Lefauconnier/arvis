@@ -2,12 +2,11 @@
 
 
 from arvis.cognition.control.cognitive_control_engine import (
-    CognitiveControlEngine,
     CognitiveControlDeps,
+    CognitiveControlEngine,
 )
 from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
 from arvis.math.lyapunov.lyapunov import LyapunovState
-
 
 # ---------------------------------------------------------------------
 # BASE DUMMY

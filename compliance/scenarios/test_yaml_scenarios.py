@@ -2,11 +2,10 @@
 
 import pytest
 
-from compliance.helpers import run_ctx
-from compliance.scenarios.loader import load_scenario
-from compliance.scenarios.builders import build_context_from_yaml
 from arvis.ir.gate import CognitiveGateVerdictIR
-
+from compliance.helpers import run_ctx
+from compliance.scenarios.builders import build_context_from_yaml
+from compliance.scenarios.loader import load_scenario
 
 SCENARIOS = [
     "validity_invalid",

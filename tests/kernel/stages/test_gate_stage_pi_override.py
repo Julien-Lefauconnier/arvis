@@ -5,7 +5,6 @@ from unittest.mock import patch
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
-
 # ============================================================
 # Dummy context minimal compatible GateStage
 # ============================================================

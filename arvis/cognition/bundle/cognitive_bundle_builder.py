@@ -1,15 +1,16 @@
 # arvis/cognition/bundle/cognitive_bundle_builder.py
 
-from datetime import datetime, timezone
-from typing import Optional, Sequence, Dict, Any
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from typing import Any
 
-from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.cognition.bundle.cognitive_bundle_invariants import (
     assert_cognitive_bundle_invariants,
 )
+from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.cognition.decision.decision_result import DecisionResult
-from arvis.cognition.introspection.introspection_snapshot import IntrospectionSnapshot
 from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
+from arvis.cognition.introspection.introspection_snapshot import IntrospectionSnapshot
 from arvis.cognition.retrieval.cognitive_retrieval_snapshot import (
     CognitiveRetrievalSnapshot,
 )
@@ -35,15 +36,15 @@ class CognitiveBundleBuilder:
         introspection: IntrospectionSnapshot,
         explanation: ExplanationSnapshot,
         timeline: Sequence[TimelineEntry],
-        memory_long: Optional[MemoryLongSnapshot] = None,
-        retrieval_snapshot: Optional[CognitiveRetrievalSnapshot] = None,
-        memory: Optional[Dict[str, Any]] = None,
-        generated_at: Optional[datetime] = None,
+        memory_long: MemoryLongSnapshot | None = None,
+        retrieval_snapshot: CognitiveRetrievalSnapshot | None = None,
+        memory: dict[str, Any] | None = None,
+        generated_at: datetime | None = None,
     ) -> CognitiveBundleSnapshot:
         # -----------------------------------------------------
         # Memory projection → normalized features
         # -----------------------------------------------------
-        memory_features: Dict[str, Any] = {}
+        memory_features: dict[str, Any] = {}
 
         if memory:
             try:
@@ -69,7 +70,7 @@ class CognitiveBundleBuilder:
             memory_long=memory_long,
             retrieval_snapshot=retrieval_snapshot,
             context_hints=getattr(decision_result, "context_hints", {}),
-            generated_at=generated_at or datetime.now(timezone.utc),
+            generated_at=generated_at or datetime.now(UTC),
             memory_features=memory_features,
         )
 
@@ -98,11 +99,9 @@ class CognitiveBundleBuilder:
 
         ts = snapshot.entries[-1].created_at if snapshot.entries else None
 
-        introspection = IntrospectionSnapshot(
-            created_at=ts or datetime.now(timezone.utc)
-        )
+        introspection = IntrospectionSnapshot(created_at=ts or datetime.now(UTC))
 
-        explanation = ExplanationSnapshot(created_at=ts or datetime.now(timezone.utc))
+        explanation = ExplanationSnapshot(created_at=ts or datetime.now(UTC))
 
         return cls.build(
             decision_result=decision,

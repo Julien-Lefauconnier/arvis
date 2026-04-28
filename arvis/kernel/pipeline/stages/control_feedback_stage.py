@@ -1,12 +1,13 @@
 # arvis/kernel/pipeline/stages/control_feedback_stage.py
 
 from __future__ import annotations
+
 from typing import Any
 
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
 from arvis.math.control.confidence_control import (
-    apply_confidence_control,
     ConfidenceControlInputs,
+    apply_confidence_control,
 )
 
 

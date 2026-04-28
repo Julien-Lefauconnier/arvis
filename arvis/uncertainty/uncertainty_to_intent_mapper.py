@@ -1,13 +1,12 @@
 # arvis/uncertainty/uncertainty_to_intent_mapper.py
 
-from typing import List
 
-from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
-from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
 from arvis.reasoning.reasoning_intent import (
     ReasoningIntent,
     ReasoningIntentType,
 )
+from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
+from arvis.uncertainty.uncertainty_frame import UncertaintyFrame
 
 
 class UncertaintyToIntentMapper:
@@ -21,8 +20,8 @@ class UncertaintyToIntentMapper:
     """
 
     @staticmethod
-    def map(frame: UncertaintyFrame) -> List[ReasoningIntent]:
-        intents: List[ReasoningIntent] = []
+    def map(frame: UncertaintyFrame) -> list[ReasoningIntent]:
+        intents: list[ReasoningIntent] = []
 
         axes = frame.axes
 
@@ -66,5 +65,5 @@ class UncertaintyToIntentMapper:
 # -----------------------------
 
 
-def map_uncertainty_to_intent(frame: UncertaintyFrame) -> List[ReasoningIntent]:
+def map_uncertainty_to_intent(frame: UncertaintyFrame) -> list[ReasoningIntent]:
     return UncertaintyToIntentMapper.map(frame)

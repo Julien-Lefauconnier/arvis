@@ -1,7 +1,7 @@
 # arvis/math/stability/theorem.py
 
 
-from typing import Mapping
+from collections.abc import Mapping
 
 
 def is_globally_stable(cert: Mapping[str, bool]) -> bool:

@@ -1,7 +1,6 @@
 # arvis/math/control/beta_adaptive.py
 
 from dataclasses import dataclass
-from typing import Optional
 
 from arvis.math.stability.regime_estimator import RegimeSnapshot
 
@@ -19,12 +18,12 @@ class BetaAdaptiveController:
     Deterministic and explainable.
     """
 
-    def __init__(self, params: Optional[BetaAdaptiveParams] = None):
+    def __init__(self, params: BetaAdaptiveParams | None = None):
         self.params = params or BetaAdaptiveParams()
 
     def compute(
         self,
-        regime: Optional[RegimeSnapshot],
+        regime: RegimeSnapshot | None,
         variance: float,
         drift: float,
     ) -> float:

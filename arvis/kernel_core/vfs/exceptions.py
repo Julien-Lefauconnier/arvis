@@ -20,7 +20,10 @@ class VFSParentNotFolderError(VFSError):
 
 
 class VFSNameConflictError(VFSError):
-    """Raised when another item with the same name already exists in the target folder."""
+    """
+    Raised when another item with the same name already exists
+    in the target folder.
+    """
 
 
 class VFSFolderNotEmptyError(VFSError):

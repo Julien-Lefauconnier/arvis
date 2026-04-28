@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
-import json
-from typing import Iterable, List, Dict, Any
+from typing import Any
 
 from .timeline_entry import TimelineEntry
 
@@ -20,7 +21,7 @@ def _dt_iso_utc(dt: datetime) -> str:
     return dt.isoformat()
 
 
-def _canonical_entry_payload(e: TimelineEntry) -> Dict[str, Any]:
+def _canonical_entry_payload(e: TimelineEntry) -> dict[str, Any]:
     # IMPORTANT: explicit list, stable order via json sort_keys=True
     return {
         "entry_id": e.entry_id,
@@ -43,9 +44,9 @@ def hash_entry(e: TimelineEntry) -> str:
     return sha256(raw.encode("utf-8")).hexdigest()
 
 
-def chain_hashes(entries: Iterable[TimelineEntry], *, seed: str = "") -> List[str]:
+def chain_hashes(entries: Iterable[TimelineEntry], *, seed: str = "") -> list[str]:
     prev = seed
-    out: List[str] = []
+    out: list[str] = []
     for e in entries:
         h_e = hash_entry(e)
         prev = sha256((prev + h_e).encode("utf-8")).hexdigest()
@@ -75,7 +76,7 @@ class TimelineHashChain:
     @classmethod
     def build(
         cls, entries: Iterable[TimelineEntry], *, seed: str = ""
-    ) -> "TimelineHashChain":
+    ) -> TimelineHashChain:
         return cls(tuple(chain_hashes(entries, seed=seed)))
 
     def verify(self, entries: Iterable[TimelineEntry], *, seed: str = "") -> None:
@@ -83,7 +84,7 @@ class TimelineHashChain:
         if expected != self.hashes:
             raise ValueError("timeline hashchain verification failed")
 
-    def append(self, entry: TimelineEntry, *, seed: str = "") -> "TimelineHashChain":
+    def append(self, entry: TimelineEntry, *, seed: str = "") -> TimelineHashChain:
         """
         Deterministic incremental extension of the hashchain.
 

@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 
 class MemoryLongType(str, Enum):
@@ -39,10 +38,10 @@ class MemoryLongEntry:
     created_at: datetime
 
     source: str
-    notes: Optional[str] = None
+    notes: str | None = None
 
     # opaque reference (hash / pointer)
-    value_ref: Optional[str] = None
+    value_ref: str | None = None
 
-    expires_at: Optional[datetime] = None
-    revoked_at: Optional[datetime] = None
+    expires_at: datetime | None = None
+    revoked_at: datetime | None = None

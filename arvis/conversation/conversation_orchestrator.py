@@ -3,60 +3,60 @@
 import logging
 from typing import cast
 
-from arvis.conversation.conversation_context import ConversationContext
-from arvis.conversation.response_strategy_resolver import ResponseStrategyResolver
-from arvis.conversation.conversation_strategy_dynamics import (
-    ConversationStrategyDynamics,
+from arvis.conversation.act_strategy_mapper import map_act_to_strategy
+from arvis.conversation.conversation_adaptive_controller import (
+    ConversationAdaptiveController,
+    _StateProtocol,
 )
+from arvis.conversation.conversation_adversarial_detector import (
+    ConversationAdversarialDetector,
+)
+from arvis.conversation.conversation_attractor_model import ConversationAttractorModel
+from arvis.conversation.conversation_cognitive_bridge import (
+    ConversationCognitiveBridge,
+    _ConversationContextProtocol,
+)
+from arvis.conversation.conversation_coherence_metric import ConversationCoherenceMetric
+from arvis.conversation.conversation_collapse_guard import ConversationCollapseGuard
+from arvis.conversation.conversation_context import ConversationContext
+from arvis.conversation.conversation_entropy_regulator import (
+    ConversationEntropyRegulator,
+)
+from arvis.conversation.conversation_feedback_signal import ConversationFeedbackSignal
+from arvis.conversation.conversation_future_simulator import ConversationFutureSimulator
+from arvis.conversation.conversation_global_stability_adapter import (
+    ConversationGlobalStabilityAdapter,
+)
+from arvis.conversation.conversation_lyapunov_adapter import ConversationLyapunovAdapter
+from arvis.conversation.conversation_memory_bridge import ConversationMemoryBridge
 from arvis.conversation.conversation_policy_engine import ConversationPolicyEngine
-from arvis.conversation.response_plan_builder import ResponsePlanBuilder
-from arvis.conversation.response_strategy_decision import ResponseStrategyDecision
+from arvis.conversation.conversation_predictive_strategy import (
+    ConversationPredictiveStrategy,
+)
+from arvis.conversation.conversation_regime_controller import (
+    ConversationRegimeController,
+)
 from arvis.conversation.conversation_stability_controller import (
     ConversationStabilityController,
 )
 from arvis.conversation.conversation_stability_signals import (
     ConversationStabilitySignalsBuilder,
 )
-from arvis.conversation.conversation_lyapunov_adapter import ConversationLyapunovAdapter
-from arvis.conversation.conversation_global_stability_adapter import (
-    ConversationGlobalStabilityAdapter,
+from arvis.conversation.conversation_strategy_dynamics import (
+    ConversationStrategyDynamics,
 )
-from arvis.conversation.conversation_collapse_guard import ConversationCollapseGuard
-from arvis.conversation.response_strategy_type import ResponseStrategyType
-from arvis.conversation.conversation_regime_controller import (
-    ConversationRegimeController,
-)
-from arvis.conversation.conversation_future_simulator import ConversationFutureSimulator
-from arvis.conversation.conversation_adversarial_detector import (
-    ConversationAdversarialDetector,
-)
-from arvis.conversation.conversation_coherence_metric import ConversationCoherenceMetric
 from arvis.conversation.conversation_trajectory_controller import (
     ConversationTrajectoryController,
 )
-from arvis.conversation.conversation_attractor_model import ConversationAttractorModel
-from arvis.conversation.conversation_entropy_regulator import (
-    ConversationEntropyRegulator,
-)
-from arvis.conversation.conversation_cognitive_bridge import ConversationCognitiveBridge
 from arvis.conversation.conversation_world_prediction_bridge import (
     ConversationWorldPredictionBridge,
 )
-from arvis.conversation.conversation_predictive_strategy import (
-    ConversationPredictiveStrategy,
-)
-from arvis.conversation.conversation_memory_bridge import ConversationMemoryBridge
-from arvis.linguistic.acts.gate_mapping import map_gate_verdict_to_act
-from arvis.conversation.act_strategy_mapper import map_act_to_strategy
-from arvis.conversation.conversation_feedback_signal import ConversationFeedbackSignal
-from arvis.conversation.conversation_adaptive_controller import (
-    ConversationAdaptiveController,
-)
 from arvis.conversation.response_plan import ResponsePlan
-from arvis.conversation.conversation_adaptive_controller import _StateProtocol
-from arvis.conversation.conversation_cognitive_bridge import (
-    _ConversationContextProtocol,
-)
+from arvis.conversation.response_plan_builder import ResponsePlanBuilder
+from arvis.conversation.response_strategy_decision import ResponseStrategyDecision
+from arvis.conversation.response_strategy_resolver import ResponseStrategyResolver
+from arvis.conversation.response_strategy_type import ResponseStrategyType
+from arvis.linguistic.acts.gate_mapping import map_gate_verdict_to_act
 
 _log = logging.getLogger(__name__)
 

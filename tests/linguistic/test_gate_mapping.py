@@ -2,9 +2,9 @@
 
 import pytest
 
-from arvis.linguistic.acts.gate_mapping import map_gate_verdict_to_act
-from arvis.linguistic.acts.act_types import LinguisticActType
 from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
+from arvis.linguistic.acts.act_types import LinguisticActType
+from arvis.linguistic.acts.gate_mapping import map_gate_verdict_to_act
 
 
 def test_gate_abstain_maps_to_abstention():

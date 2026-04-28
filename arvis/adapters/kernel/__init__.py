@@ -1,8 +1,8 @@
 # arvis/adapters/kernel/__init__.py
 
 from arvis.signals.canonical.canonical_signal_registry import (
-    register_all_canonical_signals,
     CanonicalSignalRegistry,
+    register_all_canonical_signals,
 )
 
 # Guard to avoid duplicate registration

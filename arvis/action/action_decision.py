@@ -1,7 +1,7 @@
 # arvis/action/action_decision.py
 
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Any
 
 from .action_mode import ActionMode
 
@@ -19,8 +19,8 @@ class ActionDecision:
 
     allowed: bool
     requires_user_validation: bool = False
-    denied_reason: Optional[str] = None
+    denied_reason: str | None = None
     audit_required: bool = False
-    tool: Optional[str] = None
-    tool_payload: Optional[dict[str, Any]] = None
+    tool: str | None = None
+    tool_payload: dict[str, Any] | None = None
     action_mode: ActionMode = ActionMode.ASSISTED

@@ -13,7 +13,6 @@ from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
 from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.timeline.timeline_types import TimelineEntryType
 
-
 FORBIDDEN_TIMELINE_TYPES = {
     TimelineEntryType.ACTION_PROPOSED,
     TimelineEntryType.ACTION_VALIDATED,

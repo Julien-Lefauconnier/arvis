@@ -6,7 +6,7 @@ def test_api_modules_importable():
 
 
 def test_signals_are_importable():
-    from arvis.math.signals import RiskSignal, UncertaintySignal, DriftSignal
+    from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
 
     r = RiskSignal(0.1)
     u = UncertaintySignal(0.2)

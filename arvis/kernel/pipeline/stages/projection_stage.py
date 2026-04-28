@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class ProjectionStage:
@@ -52,7 +52,7 @@ class ProjectionStage:
             # Π_impl
             # -----------------------------------------
             projected_state = pipeline.pi_impl.project(ctx)
-            projection_view: Dict[str, float] = projected_state.to_projection_view()
+            projection_view: dict[str, float] = projected_state.to_projection_view()
 
             # -----------------------------------------
             # SAFETY FALLBACK (kernel invariant)
@@ -63,7 +63,7 @@ class ProjectionStage:
             # -----------------------------------------
             # RAW SNAPSHOT (observability)
             # -----------------------------------------
-            projection_view_raw: Dict[str, float] = dict(projection_view)
+            projection_view_raw: dict[str, float] = dict(projection_view)
 
             # -----------------------------------------
             # Π_op (optional)
@@ -74,7 +74,7 @@ class ProjectionStage:
             # -----------------------------------------
             # Previous projection (for Lipschitz)
             # -----------------------------------------
-            previous_projected: Optional[Dict[str, float]] = (
+            previous_projected: dict[str, float] | None = (
                 pipeline.pi_impl.project_previous(ctx)
             )
 

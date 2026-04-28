@@ -1,8 +1,8 @@
 # tests/kernel/stages/test_decision_stage_memory.py
 
-from arvis.kernel.pipeline.stages.decision_stage import DecisionStage
-from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.cognition.decision.decision_result import DecisionResult
+from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.pipeline.stages.decision_stage import DecisionStage
 
 
 class DummyPipeline:

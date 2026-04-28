@@ -1,10 +1,10 @@
 # tests/conversation/test_memory_policy.py
 
+from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
 from arvis.conversation.conversation_memory_policy import ConversationMemoryPolicy
 from arvis.conversation.conversation_state import ConversationState
-from arvis.conversation.response_strategy_type import ResponseStrategyType
 from arvis.conversation.response_strategy_resolver import ResponseStrategyResolver
-from arvis.cognition.gate.cognitive_gate_verdict import CognitiveGateVerdict
+from arvis.conversation.response_strategy_type import ResponseStrategyType
 
 
 def test_memory_policy_keeps_strategy_without_constraints():

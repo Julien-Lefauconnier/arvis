@@ -2,13 +2,11 @@
 
 import pytest
 
-from arvis.kernel.projection.pi_impl import PiImpl
-from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
-
 from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR
-from arvis.ir.state import CognitiveStateIR, CognitiveRiskIR
-
+from arvis.ir.state import CognitiveRiskIR, CognitiveStateIR
+from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.projection.pi_impl import PiImpl
 
 # ============================================================
 # 🔧 FIXTURE : minimal realistic pipeline context

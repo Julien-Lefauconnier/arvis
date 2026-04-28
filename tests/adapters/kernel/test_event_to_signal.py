@@ -1,8 +1,8 @@
 # tests/adapters/kernel/test_event_to_signal.py
 
+from arvis.adapters.kernel.mappers.ir_to_canonical import ir_to_canonical
 from arvis.signals.canonical.canonical_signal_registry import CanonicalSignalRegistry
 from tests.adapters.kernel.fixtures import dummy_ir
-from arvis.adapters.kernel.mappers.ir_to_canonical import ir_to_canonical
 
 
 def test_canonical_signal_registered_in_arvis_registry():

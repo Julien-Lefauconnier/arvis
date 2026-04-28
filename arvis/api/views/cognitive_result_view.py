@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-from pprint import pformat
+from collections.abc import Callable
 from dataclasses import dataclass
 from hashlib import sha256
-from typing import Any, Callable, Dict, Optional, cast
+from pprint import pformat
+from typing import Any, cast
 
 from arvis.adapters.kernel.timeline_from_signals import (
     signal_journal_to_timeline_snapshot,
@@ -25,21 +26,21 @@ from arvis.signals.signal_journal import SignalJournal
 class CognitiveResultView:
     decision: Any
     stability: Any
-    stability_view: Optional[StabilityView]
+    stability_view: StabilityView | None
     trace: Any
-    trace_view: Optional[DecisionTraceView] = None
-    timeline: Optional[Any] = None
-    timeline_view: Optional[TimelineView] = None
-    timeline_commitment: Optional[str] = None
-    global_commitment: Optional[str] = None
-    _ir: Optional[Dict[str, Any]] = None
-    reflexive: Optional[Dict[str, Any]] = None
+    trace_view: DecisionTraceView | None = None
+    timeline: Any | None = None
+    timeline_view: TimelineView | None = None
+    timeline_commitment: str | None = None
+    global_commitment: str | None = None
+    _ir: dict[str, Any] | None = None
+    reflexive: dict[str, Any] | None = None
 
     @staticmethod
     def from_state(
         state: CognitiveState,
         result: Any,
-    ) -> "CognitiveResultView":
+    ) -> CognitiveResultView:
         stability = getattr(result, "stability", None)
         trace = getattr(result, "trace", None)
         timeline_journal = state.timeline
@@ -115,7 +116,7 @@ class CognitiveResultView:
             reflexive=reflexive_payload,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "version": API_VERSION,
             "fingerprint": API_FINGERPRINT,
@@ -137,10 +138,10 @@ class CognitiveResultView:
             "timeline": (self.timeline_view.to_dict() if self.timeline_view else None),
         }
 
-    def to_ir(self) -> Optional[Dict[str, Any]]:
+    def to_ir(self) -> dict[str, Any] | None:
         return self._ir
 
-    def quickstart_payload(self) -> Dict[str, Any]:
+    def quickstart_payload(self) -> dict[str, Any]:
         """
         Compact structured payload intended for examples,
         onboarding, demos, and README snippets.

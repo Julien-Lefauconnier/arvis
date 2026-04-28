@@ -1,7 +1,7 @@
 # arvis/memory/memory_long_repository.py
 
 from abc import ABC, abstractmethod
-from typing import List, Iterable
+from collections.abc import Iterable
 from datetime import datetime
 
 from arvis.memory.memory_long_entry import (
@@ -21,7 +21,7 @@ class MemoryLongRepository(ABC):
     """
 
     @abstractmethod
-    def list_entries(self, *, user_id: str) -> List[MemoryLongRecord]:
+    def list_entries(self, *, user_id: str) -> list[MemoryLongRecord]:
         """
         Return all entries (raw).
 
@@ -38,7 +38,7 @@ class MemoryLongRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def list_active_entries(self, *, user_id: str) -> List[MemoryLongEntry]:
+    def list_active_entries(self, *, user_id: str) -> list[MemoryLongEntry]:
         """
         Return ACTIVE entries only.
 
@@ -55,7 +55,7 @@ class MemoryLongRepository(ABC):
         self,
         *,
         user_ids: Iterable[str],
-    ) -> dict[str, List[MemoryLongEntry]]:
+    ) -> dict[str, list[MemoryLongEntry]]:
         """
         Batch read for scalability (multi-user inference / async pipelines).
 

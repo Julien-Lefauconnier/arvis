@@ -1,7 +1,7 @@
 # arvis/cognition/conflict/conflict_signal.py
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .conflict_type import ConflictType
 
@@ -13,4 +13,4 @@ class ConflictSignal:
     """
 
     type: ConflictType
-    payload: Optional[Dict[str, Any]] = None
+    payload: dict[str, Any] | None = None

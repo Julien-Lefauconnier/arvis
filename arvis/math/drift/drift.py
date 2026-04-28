@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Set
+from collections.abc import Iterable
 from math import isfinite
 
 from arvis.math.core.normalization import clamp01
@@ -23,7 +23,7 @@ def l1_distance01(x: Iterable[float], y: Iterable[float]) -> float:
         return 0.0
 
     s = 0.0
-    for a, b in zip(xs, ys):
+    for a, b in zip(xs, ys, strict=True):
         if not (isfinite(a) and isfinite(b)):
             continue
         s += abs(a - b)
@@ -31,7 +31,7 @@ def l1_distance01(x: Iterable[float], y: Iterable[float]) -> float:
     return clamp01(s / len(xs))
 
 
-def jaccard_distance(a: Set[str], b: Set[str]) -> float:
+def jaccard_distance(a: set[str], b: set[str]) -> float:
     """
     Jaccard distance for symbolic sets.
     """
@@ -51,8 +51,8 @@ def hybrid_drift(
     *,
     continuous_a: Iterable[float],
     continuous_b: Iterable[float],
-    symbolic_a: Set[str],
-    symbolic_b: Set[str],
+    symbolic_a: set[str],
+    symbolic_b: set[str],
     alpha: float = 0.5,
 ) -> float:
     """

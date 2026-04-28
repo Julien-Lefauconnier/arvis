@@ -1,10 +1,10 @@
 # arvis/conversation/conversation_fast_path.py
 
+from arvis.conversation.conversation_context import ConversationContext
 from arvis.linguistic.acts.act_types import LinguisticActType
 from arvis.linguistic.realization.default_templates import (
     DEFAULT_REALIZATION_TEMPLATES,
 )
-from arvis.conversation.conversation_context import ConversationContext
 
 
 class ConversationFastPath:

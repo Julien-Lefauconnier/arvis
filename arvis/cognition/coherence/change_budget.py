@@ -1,7 +1,6 @@
 # arvis/cognition/coherence/change_budget.py
 
-from dataclasses import dataclass, asdict
-from typing import Dict
+from dataclasses import asdict, dataclass
 
 
 @dataclass(frozen=True)
@@ -20,5 +19,5 @@ class ChangeBudget:
     current_changes: int
     timestamp: int
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         return asdict(self)

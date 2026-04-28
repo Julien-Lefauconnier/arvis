@@ -20,7 +20,7 @@ class LyapunovWeights:
     w_uncertainty: float = 0.25
     w_governance: float = 0.25
 
-    def normalized(self) -> "LyapunovWeights":
+    def normalized(self) -> LyapunovWeights:
         wb = max(0.0, float(self.w_budget))
         wr = max(0.0, float(self.w_risk))
         wu = max(0.0, float(self.w_uncertainty))
@@ -52,7 +52,7 @@ class LyapunovState:
     governance: float
 
     @staticmethod
-    def from_scalar(x: float) -> "LyapunovState":
+    def from_scalar(x: float) -> LyapunovState:
         """
         Fallback constructor when only a scalar Lyapunov value is available.
         Distributes value conservatively across all dimensions.
@@ -65,7 +65,7 @@ class LyapunovState:
             governance=x,
         )
 
-    def clamped(self) -> "LyapunovState":
+    def clamped(self) -> LyapunovState:
         return LyapunovState(
             budget_used=clamp01(self.budget_used),
             risk=clamp01(self.risk),

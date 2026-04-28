@@ -1,7 +1,8 @@
 # tests/reflexive/test_import_all_reflexive.py
 
-import pkgutil
 import importlib
+import pkgutil
+
 import arvis.reflexive
 
 

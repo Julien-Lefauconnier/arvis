@@ -1,12 +1,12 @@
 # arvis/cognition/core/cognitive_core_engine.py
 
-from typing import Any, Optional
+from typing import Any
 
 from arvis.cognition.core.cognitive_core_result import CognitiveCoreResult
 
 
 class CognitiveCoreEngine:
-    def __init__(self, core_model: Optional[Any]) -> None:
+    def __init__(self, core_model: Any | None) -> None:
         self.core_model = core_model
 
     def process(self, bundle: Any) -> CognitiveCoreResult:

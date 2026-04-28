@@ -1,10 +1,10 @@
 # arvis/reflexive/timeline/aggregation/irg_timeline_temporal_comparator.py
 
-from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_snapshot import (
-    IRGTimelineTemporalSnapshot,
-)
 from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_diff import (
     IRGTimelineTemporalDiff,
+)
+from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_snapshot import (
+    IRGTimelineTemporalSnapshot,
 )
 
 

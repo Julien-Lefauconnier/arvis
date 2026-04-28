@@ -50,7 +50,7 @@ def test_adaptive_kappa_is_defined_on_projection_trajectory():
     W_values = [_compute_W(comp, obs) for obs in trajectory]
 
     snapshots = []
-    for prev, nxt in zip(W_values[:-1], W_values[1:]):
+    for prev, nxt in zip(W_values[:-1], W_values[1:], strict=True):
         snapshots.append(est.update(W_prev=prev, W_next=nxt))
 
     assert len(snapshots) > 0
@@ -73,7 +73,7 @@ def test_adaptive_kappa_on_projection_trajectory_produces_valid_margin():
     trajectory = _generate_projection_trajectory(nominal_case(), steps=60, noise=0.01)
     W_values = [_compute_W(comp, obs) for obs in trajectory]
 
-    for prev, nxt in zip(W_values[:-1], W_values[1:]):
+    for prev, nxt in zip(W_values[:-1], W_values[1:], strict=True):
         est.update(W_prev=prev, W_next=nxt)
 
     margin = est.adaptive_switching_margin(J=1.1, tau_d=12.0)
@@ -91,7 +91,7 @@ def test_adaptive_kappa_on_projection_trajectory_remains_bounded_under_stronger_
     W_values = [_compute_W(comp, obs) for obs in trajectory]
 
     kappas = []
-    for prev, nxt in zip(W_values[:-1], W_values[1:]):
+    for prev, nxt in zip(W_values[:-1], W_values[1:], strict=True):
         snap = est.update(W_prev=prev, W_next=nxt)
         if snap.is_available and snap.kappa_smoothed is not None:
             kappas.append(snap.kappa_smoothed)
@@ -110,7 +110,7 @@ def test_adaptive_kappa_regime_is_never_unknown_when_available():
 
     valid_regimes = {"stable", "marginal", "unstable", "unavailable"}
 
-    for prev, nxt in zip(W_values[:-1], W_values[1:]):
+    for prev, nxt in zip(W_values[:-1], W_values[1:], strict=True):
         snap = est.update(W_prev=prev, W_next=nxt)
         assert snap.regime in valid_regimes
         if snap.is_available:

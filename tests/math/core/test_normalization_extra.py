@@ -1,13 +1,14 @@
 # tests/math/core/test_normalization_extra.py
 
 import math
+
 import pytest
 
 from arvis.math.core.normalization import (
-    affine01,
-    weighted_sum01,
-    budget_ratio01,
     NormalizedSignals,
+    affine01,
+    budget_ratio01,
+    weighted_sum01,
 )
 
 

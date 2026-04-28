@@ -1,19 +1,18 @@
 # tests/timeline/test_timeline_delta.py
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 import pytest
 
 from arvis.timeline.timeline_delta import (
     TimelineDelta,
-    TimelineDeltaError,
-    TimelineDeltaEmptyError,
     TimelineDeltaBaseMismatch,
+    TimelineDeltaEmptyError,
+    TimelineDeltaError,
 )
-
-from arvis.timeline.timeline_snapshot import TimelineSnapshot
 from arvis.timeline.timeline_entry import TimelineEntry
+from arvis.timeline.timeline_snapshot import TimelineSnapshot
 from arvis.timeline.timeline_types import TimelineEntryType
-
 
 # ---------------------------------------------------------
 # helpers
@@ -27,7 +26,7 @@ def make_entry(i: int) -> TimelineEntry:
         title=f"entry {i}",
         description=None,
         action_id=None,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
 
 

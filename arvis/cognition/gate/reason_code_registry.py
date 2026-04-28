@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Set
-
 
 class ReasonCodeRegistry:
     """
@@ -18,7 +16,7 @@ class ReasonCodeRegistry:
     # -----------------------------------------
     # Canonical allowed reason codes
     # -----------------------------------------
-    _CODES: Set[str] = {
+    _CODES: set[str] = {
         # --- Global stability ---
         "global_instability_confirmed",
         "global_instability_abstained",
@@ -50,5 +48,5 @@ class ReasonCodeRegistry:
         return code in cls._CODES
 
     @classmethod
-    def all(cls) -> Set[str]:
+    def all(cls) -> set[str]:
         return set(cls._CODES)

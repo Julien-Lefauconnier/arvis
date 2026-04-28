@@ -1,6 +1,7 @@
 # tests/timeline/test_timeline_entry.py
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
+
 import pytest
 
 from arvis.timeline.timeline_entry import TimelineEntry, TimelineEntryNature
@@ -10,7 +11,7 @@ from arvis.timeline.timeline_types import TimelineEntryType
 def make_entry(**kwargs):
     base = dict(
         entry_id="entry12345",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         type=TimelineEntryType.SYSTEM_NOTICE,
         title="Test entry",
         description="test description",
@@ -140,4 +141,4 @@ def test_unsafe_constructor():
     )
 
     assert e.entry_id == "entry12345"
-    assert e.created_at.tzinfo == timezone.utc
+    assert e.created_at.tzinfo == UTC

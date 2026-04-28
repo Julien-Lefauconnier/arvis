@@ -2,26 +2,25 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
-
 from arvis.math.control.eps_adaptive import CognitiveMode, EpsAdaptiveParams
 from arvis.math.control.irg_epsilon_controller import (
     IRGEpsilonController,
     IRGEpsilonParams,
 )
+from arvis.math.core.normalization import clamp01
+from arvis.math.lyapunov.lyapunov import V
 from arvis.math.lyapunov.lyapunov_gate import (
     LyapunovGateParams,
     LyapunovVerdict,
     lyapunov_gate,
 )
-from arvis.math.lyapunov.lyapunov import V
-from arvis.math.core.normalization import clamp01
-
-from arvis.math.signals.coercion import to_float, to_risk, to_drift, to_uncertainty
+from arvis.math.signals.coercion import to_drift, to_float, to_risk, to_uncertainty
 
 
 @runtime_checkable

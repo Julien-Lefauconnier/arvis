@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Iterable, Tuple
+from collections.abc import Iterable
 
 from .reason_code_registry import ReasonCodeRegistry
 
@@ -51,7 +51,7 @@ class ReasonCodeNormalizer:
     # Public API
     # -----------------------------------------
     @classmethod
-    def normalize(cls, codes: Iterable[str]) -> Tuple[str, ...]:
+    def normalize(cls, codes: Iterable[str]) -> tuple[str, ...]:
         """
         Normalize a collection of reason codes.
 

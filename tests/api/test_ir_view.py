@@ -1,7 +1,7 @@
 # tests/api/test_ir_view.py
 
-from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.api.ir import build_ir_view
+from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 
 
 def test_ir_view_is_present():

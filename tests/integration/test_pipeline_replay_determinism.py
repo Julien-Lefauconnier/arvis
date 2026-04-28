@@ -1,5 +1,7 @@
 # tests/integration/test_pipeline_replay_determinism.py
 
+import pytest
+
 from arvis.api import CognitiveOS
 
 
@@ -53,14 +55,11 @@ def test_os_replay_detects_global_commitment_mismatch():
     os = CognitiveOS()
 
     original = os.run(user_id="user-1", cognitive_input={"input_id": "test"})
-
     ir = original.to_ir()
+
     assert ir is not None
 
     bad_commitment = "0" * 64
 
-    try:
+    with pytest.raises(RuntimeError, match="global_commitment mismatch"):
         os.replay(ir, expected_global_commitment=bad_commitment)
-        assert False, "expected replay verification failure"
-    except RuntimeError as exc:
-        assert "global_commitment mismatch" in str(exc)

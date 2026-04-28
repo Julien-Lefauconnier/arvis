@@ -1,11 +1,11 @@
 # tests/kernel_core/memory/test_memory_projection.py
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
-from arvis.kernel_core.memory.projection import project_memory
 from arvis.kernel_core.memory.observation_long_event import (
     ObservationLongEvent,
 )
+from arvis.kernel_core.memory.projection import project_memory
 
 
 def _ts(dt: datetime) -> int:
@@ -52,7 +52,7 @@ def _evt(
 
 
 def test_projection_put_creates_record():
-    t0 = datetime.now(timezone.utc)
+    t0 = datetime.now(UTC)
 
     events = [
         _evt(
@@ -83,7 +83,7 @@ def test_projection_put_creates_record():
 
 
 def test_projection_preserves_created_at_on_update():
-    t0 = datetime.now(timezone.utc)
+    t0 = datetime.now(UTC)
     t1 = t0 + timedelta(seconds=10)
 
     events = [
@@ -119,7 +119,7 @@ def test_projection_preserves_created_at_on_update():
 
 
 def test_projection_delete_marks_record_deleted():
-    t0 = datetime.now(timezone.utc)
+    t0 = datetime.now(UTC)
     t1 = t0 + timedelta(seconds=5)
 
     events = [
@@ -154,7 +154,7 @@ def test_projection_delete_marks_record_deleted():
 
 
 def test_projection_delete_nonexistent_is_noop():
-    t0 = datetime.now(timezone.utc)
+    t0 = datetime.now(UTC)
 
     events = [
         _evt(
@@ -177,7 +177,7 @@ def test_projection_delete_nonexistent_is_noop():
 
 
 def test_projection_record_id_stable_across_updates():
-    t0 = datetime.now(timezone.utc)
+    t0 = datetime.now(UTC)
     t1 = t0 + timedelta(seconds=10)
 
     events = [
@@ -211,7 +211,7 @@ def test_projection_record_id_stable_across_updates():
 
 
 def test_projection_is_deterministic():
-    t0 = datetime.now(timezone.utc)
+    t0 = datetime.now(UTC)
     t1 = t0 + timedelta(seconds=10)
 
     events = [
@@ -245,7 +245,7 @@ def test_projection_is_deterministic():
 
 
 def test_projection_isolates_multiple_keys():
-    t0 = datetime.now(timezone.utc)
+    t0 = datetime.now(UTC)
 
     events = [
         _evt(

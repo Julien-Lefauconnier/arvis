@@ -1,6 +1,5 @@
 # arvis/cognition/calibration/calibration_engine.py
 
-from typing import List, Optional
 from dataclasses import dataclass
 from enum import Enum
 
@@ -18,8 +17,8 @@ class CalibrationRegime(str, Enum):
 class CalibrationSnapshot:
     contraction_rate: float
     instability_rate: float
-    drift_score: Optional[float]
-    collapse_risk: Optional[float]
+    drift_score: float | None
+    collapse_risk: float | None
     regime: CalibrationRegime
 
 
@@ -35,13 +34,13 @@ class CalibrationEngine:
     def evaluate(
         self,
         *,
-        contraction_rate: Optional[float],
-        instability_rate: Optional[float],
-        drift_score: Optional[float] = None,
-        collapse_risk: Optional[float] = None,
+        contraction_rate: float | None,
+        instability_rate: float | None,
+        drift_score: float | None = None,
+        collapse_risk: float | None = None,
     ) -> tuple[
-        Optional[CalibrationSnapshot],
-        Optional[List[CognitivePolicyResult]],
+        CalibrationSnapshot | None,
+        list[CognitivePolicyResult] | None,
     ]:
         if contraction_rate is None or instability_rate is None:
             return None, None
@@ -70,7 +69,7 @@ class CalibrationEngine:
         # -------------------------
         # Optional policy emission
         # -------------------------
-        policies: List[CognitivePolicyResult] = []
+        policies: list[CognitivePolicyResult] = []
 
         if regime == CalibrationRegime.UNSTABLE:
             policies.append(

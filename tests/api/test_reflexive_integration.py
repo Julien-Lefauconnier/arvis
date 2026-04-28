@@ -4,7 +4,6 @@ import pytest
 
 from arvis.api.os import CognitiveOS
 
-
 # -----------------------------------------------------
 # BASIC INTEGRATION
 # -----------------------------------------------------
@@ -12,17 +11,13 @@ from arvis.api.os import CognitiveOS
 
 def test_os_result_contains_reflexive_field():
     os = CognitiveOS()
-
     result = os.run(user_id="u1", cognitive_input="hello")
-
     assert hasattr(result, "reflexive")
 
 
 def test_reflexive_payload_optional():
     os = CognitiveOS()
-
     result = os.run(user_id="u1", cognitive_input="test")
-
     # Reflexive may be None depending on pipeline state
     assert result.reflexive is None or isinstance(result.reflexive, dict)
 
@@ -34,9 +29,7 @@ def test_reflexive_payload_optional():
 
 def test_reflexive_payload_structure_if_present():
     os = CognitiveOS()
-
     result = os.run(user_id="u1", cognitive_input="test")
-
     r = result.reflexive
 
     if r is None:
@@ -55,9 +48,7 @@ def test_reflexive_payload_structure_if_present():
 
 def test_reflexive_attestation_if_present():
     os = CognitiveOS()
-
     result = os.run(user_id="u1", cognitive_input="test")
-
     r = result.reflexive
 
     if r is None:
@@ -74,9 +65,7 @@ def test_reflexive_attestation_if_present():
 
 def test_to_dict_does_not_include_reflexive():
     os = CognitiveOS()
-
     result = os.run(user_id="u1", cognitive_input="test")
-
     d = result.to_dict()
 
     # Reflexive must NOT be exposed in public JSON

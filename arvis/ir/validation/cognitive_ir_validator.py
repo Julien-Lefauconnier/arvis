@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from arvis.ir.cognitive_ir import CognitiveIR
-from arvis.ir.gate import CognitiveGateVerdictIR, CognitiveGateIR
+from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR
 
 
 class CognitiveIRValidationError(Exception):

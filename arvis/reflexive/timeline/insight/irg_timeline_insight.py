@@ -1,7 +1,7 @@
 # arvis/reflexive/timeline/insight/irg_timeline_insight.py
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from arvis.timeline.timeline_types import TimelineEntryType
 from arvis.timeline.timeline_view_types import TimelineViewRole

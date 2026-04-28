@@ -1,12 +1,13 @@
 # arvis/conversation/conversation_regime_controller.py
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
+from arvis.conversation.conversation_energy_model import ConversationEnergyModel
+from arvis.conversation.conversation_predictor import ConversationPredictor
 from arvis.conversation.response_strategy_type import (
     ResponseStrategyType,
 )
-from arvis.conversation.conversation_energy_model import ConversationEnergyModel
-from arvis.conversation.conversation_predictor import ConversationPredictor
 
 
 class ConversationRegimeController:

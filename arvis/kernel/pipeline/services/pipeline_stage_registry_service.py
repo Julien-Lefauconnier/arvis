@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline import (
@@ -14,8 +15,8 @@ if TYPE_CHECKING:
 class PipelineStageRegistryService:
     @staticmethod
     def iter_stages(
-        pipeline: "CognitivePipeline",
-    ) -> Iterable["PipelineStage"]:
+        pipeline: CognitivePipeline,
+    ) -> Iterable[PipelineStage]:
         return [
             pipeline.tool_feedback_stage,
             pipeline.tool_retry_stage,

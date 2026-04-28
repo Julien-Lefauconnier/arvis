@@ -1,11 +1,10 @@
 # arvis/cognition/coherence/coherence_policy.py
 
-from typing import Optional
 
 from arvis.cognition.coherence.change_budget import ChangeBudget
 from arvis.cognition.policy import (
-    CognitiveSignalSnapshot,
     CognitivePolicyResult,
+    CognitiveSignalSnapshot,
 )
 
 
@@ -25,7 +24,7 @@ class CoherencePolicy:
         self,
         snapshot: CognitiveSignalSnapshot,
         budget: ChangeBudget,
-    ) -> Optional[CognitivePolicyResult]:
+    ) -> CognitivePolicyResult | None:
         """
         Evaluate coherence constraints and optionally produce
         a declarative stability warning.

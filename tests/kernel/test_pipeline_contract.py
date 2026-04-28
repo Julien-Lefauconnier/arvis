@@ -2,8 +2,7 @@
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
-
-from arvis.math.signals import RiskSignal, UncertaintySignal, DriftSignal
+from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
 
 
 class DummyCoreModel:

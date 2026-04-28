@@ -1,7 +1,6 @@
 # arvis/memory/memory_long_registry.py
 
 from dataclasses import dataclass
-from typing import Set, Dict, Optional
 
 
 @dataclass(frozen=True)
@@ -14,10 +13,10 @@ class MemoryLongRegistry:
     - keys must be declared in advance
     """
 
-    allowed_keys: Set[str]
+    allowed_keys: set[str]
 
     # Optional whitelist for safe declarative plain values
-    allowed_plain_values: Dict[str, Set[str]] | None = None
+    allowed_plain_values: dict[str, set[str]] | None = None
 
     def is_allowed(self, key: str) -> bool:
         return key in self.allowed_keys
@@ -26,7 +25,7 @@ class MemoryLongRegistry:
         self,
         *,
         key: str,
-        value: Optional[str],
+        value: str | None,
     ) -> bool:
         """
         ZKCS rule:

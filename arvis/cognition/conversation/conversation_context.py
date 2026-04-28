@@ -1,7 +1,6 @@
 # arvis/cognition/conversation/conversation_context.py
 
 from dataclasses import dataclass
-from typing import Optional
 
 from .conversation_state import ConversationState
 from .response_strategy_type import ResponseStrategyType
@@ -20,17 +19,17 @@ class ConversationContext:
     prompt: str
 
     # abstracted act (string instead of object)
-    act: Optional[str]
+    act: str | None
 
     # gate verdict simplified
-    gate_verdict: Optional[str]
+    gate_verdict: str | None
 
     state: ConversationState
 
     has_decision: bool = False
-    intent_type: Optional[str] = None
+    intent_type: str | None = None
 
-    proposed_strategy: Optional[ResponseStrategyType] = None
+    proposed_strategy: ResponseStrategyType | None = None
 
     # Control integration
-    control_state: Optional[object] = None
+    control_state: object | None = None

@@ -2,9 +2,10 @@
 
 from dataclasses import dataclass
 
-from .cognitive_gate_verdict import CognitiveGateVerdict
-from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.cognition.gate.gate_decision_trace import GateDecisionTrace
+from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+
+from .cognitive_gate_verdict import CognitiveGateVerdict
 
 
 @dataclass(frozen=True)

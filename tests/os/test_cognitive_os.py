@@ -4,7 +4,6 @@
 from arvis.api.os import CognitiveOS, CognitiveOSConfig
 from arvis.ir.cognitive_ir import CognitiveIR
 
-
 # =====================================================
 # BASIC RUN
 # =====================================================

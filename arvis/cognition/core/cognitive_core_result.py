@@ -1,7 +1,7 @@
 # arvis/cognition/core/cognitive_core_result.py
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -14,12 +14,12 @@ class CognitiveCoreResult:
     dv: float
 
     # Optional structured outputs
-    core_snapshot: Optional[Any] = None
-    reflexive_state: Optional[Any] = None
+    core_snapshot: Any | None = None
+    reflexive_state: Any | None = None
 
     # Kernel-usable projections
-    prev_lyap: Optional[Any] = None
-    cur_lyap: Optional[Any] = None
+    prev_lyap: Any | None = None
+    cur_lyap: Any | None = None
     drift_score: float = 0.0
-    regime: Optional[str] = None
-    stable: Optional[bool] = None
+    regime: str | None = None
+    stable: bool | None = None

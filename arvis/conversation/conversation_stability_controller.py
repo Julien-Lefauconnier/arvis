@@ -1,11 +1,10 @@
 # arvis/conversation/conversation_stability_controller.py
 
-from arvis.conversation.response_strategy_type import ResponseStrategyType
 from arvis.conversation.conversation_state import ConversationState
-
+from arvis.conversation.response_strategy_type import ResponseStrategyType
 from arvis.math.drift.drift_detector import DriftDetector
-from arvis.math.stability.regime_estimator import CognitiveRegimeEstimator
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.stability.regime_estimator import CognitiveRegimeEstimator
 
 
 class ConversationStabilityController:

@@ -17,9 +17,9 @@ if TYPE_CHECKING:
 class PipelineStageExecutionService:
     @staticmethod
     def run_stage(
-        pipeline: "CognitivePipeline",
-        ctx: "CognitivePipelineContext",
-        stage: "PipelineStage",
+        pipeline: CognitivePipeline,
+        ctx: CognitivePipelineContext,
+        stage: PipelineStage,
     ) -> None:
         from arvis.kernel.pipeline.services.pipeline_runner_service import (
             PipelineRunnerService,

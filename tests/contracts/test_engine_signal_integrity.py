@@ -1,7 +1,7 @@
 # tests/contracts/test_engine_signal_integrity.py
 
-from arvis.math.signals import RiskSignal, DriftSignal, UncertaintySignal
-from arvis.math.signals.coercion import to_risk, to_drift, to_uncertainty
+from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
+from arvis.math.signals.coercion import to_drift, to_risk, to_uncertainty
 
 
 def test_engine_signal_types():

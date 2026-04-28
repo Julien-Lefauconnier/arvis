@@ -1,13 +1,13 @@
 # arvis/tools/tool_result.py
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
 class ToolResult:
     tool_name: str
     success: bool
-    output: Optional[Any] = None
-    error: Optional[str] = None
-    latency_ms: Optional[float] = None
+    output: Any | None = None
+    error: str | None = None
+    latency_ms: float | None = None

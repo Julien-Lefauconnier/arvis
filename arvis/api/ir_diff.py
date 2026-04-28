@@ -1,10 +1,11 @@
 # arvis/api/ir_diff.py
 
 from __future__ import annotations
-from typing import Any, Dict, Tuple
+
+from typing import Any
 
 
-def diff_ir(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Tuple[Any, Any]]:
+def diff_ir(old: dict[str, Any], new: dict[str, Any]) -> dict[str, tuple[Any, Any]]:
     """
     Compute a structural diff between two IR objects.
 
@@ -14,7 +15,7 @@ def diff_ir(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Tuple[Any, An
         }
     """
 
-    diffs: Dict[str, Tuple[Any, Any]] = {}
+    diffs: dict[str, tuple[Any, Any]] = {}
 
     def _walk(o: Any, n: Any, path: str) -> None:
         if type(o) is not type(n):

@@ -25,8 +25,8 @@ class PipelineExecutionService:
 
     @staticmethod
     def run(
-        pipeline: "CognitivePipeline",
-        ctx: "CognitivePipelineContext",
+        pipeline: CognitivePipeline,
+        ctx: CognitivePipelineContext,
     ) -> CognitivePipelineResult:
         PipelineRunnerService.run_all(pipeline, ctx)
 

@@ -1,13 +1,12 @@
 # tests/contracts/test_cognitive_state_contract.py
 
 from arvis.cognition.state.cognitive_state import (
-    CognitiveState,
-    CognitiveStability,
-    CognitiveRisk,
     CognitiveControl,
     CognitiveDynamics,
+    CognitiveRisk,
+    CognitiveStability,
+    CognitiveState,
 )
-
 from arvis.contracts.cognitive_state_contract import CognitiveStateContract
 
 

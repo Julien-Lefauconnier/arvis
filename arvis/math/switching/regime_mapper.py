@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from arvis.math.switching.regime_state import TheoreticalRegime, RegimeState
+from arvis.math.switching.regime_state import RegimeState, TheoreticalRegime
 
 
 def map_regime(name: str | None, confidence: float = 0.0) -> RegimeState:

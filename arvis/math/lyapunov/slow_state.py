@@ -1,7 +1,9 @@
 # arvis/math/lyapunov/slow_state.py
 
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 import numpy as np
 
 from arvis.reflexive.core.irg_latent_state import IRGLatentState
@@ -31,7 +33,7 @@ class SlowState:
         )
 
     @classmethod
-    def from_irg(cls, irg: IRGLatentState) -> "SlowState":
+    def from_irg(cls, irg: IRGLatentState) -> SlowState:
         return cls(
             stability_memory=irg.stability_memory,
             structural_risk=irg.structural_risk,
@@ -40,5 +42,5 @@ class SlowState:
         )
 
     @staticmethod
-    def zero() -> "SlowState":
+    def zero() -> SlowState:
         return SlowState(0.0, 0.0, 0.0, 0.0)

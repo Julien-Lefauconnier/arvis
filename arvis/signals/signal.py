@@ -1,11 +1,11 @@
 # arvis/signals/signal.py
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Any, Optional
-from uuid import uuid4
-import unicodedata
 import inspect
+import unicodedata
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any
+from uuid import uuid4
 
 
 @dataclass(frozen=True)
@@ -30,7 +30,7 @@ class Signal:
     payload: Any
 
     # Optional, opaque origin reference (e.g. "http", "cli", "sensor")
-    origin: Optional[str] = None
+    origin: str | None = None
 
     def __post_init__(self) -> None:
         """
@@ -95,9 +95,9 @@ class Signal:
         cls,
         *,
         payload: Any,
-        origin: Optional[str] = None,
-        timestamp: Optional[datetime] = None,
-        signal_id: Optional[str] = None,
+        origin: str | None = None,
+        timestamp: datetime | None = None,
+        signal_id: str | None = None,
     ) -> "Signal":
         """
         Unsafe constructor for tests or adapters.
@@ -107,7 +107,7 @@ class Signal:
         """
         return cls(
             signal_id=signal_id or str(uuid4()),
-            timestamp=timestamp or datetime.now(timezone.utc),
+            timestamp=timestamp or datetime.now(UTC),
             payload=payload,
             origin=origin,
         )

@@ -1,7 +1,6 @@
 # arvis/cognition/coherence/stability_constraint.py
 
 from dataclasses import dataclass
-from typing import Optional
 
 from arvis.cognition.coherence.change_budget import ChangeBudget
 
@@ -60,7 +59,7 @@ class StabilityConstraint:
     def should_abstain(
         budget: ChangeBudget,
         *,
-        hard_threshold: Optional[int] = None,
+        hard_threshold: int | None = None,
     ) -> bool:
         """
         Optional helper if you later couple stability to the gate.

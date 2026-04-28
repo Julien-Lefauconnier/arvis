@@ -1,14 +1,15 @@
 # tests/timeline/test_timeline_delta_edges.py
 
+from datetime import UTC, datetime
+
 import pytest
 
+from arvis.timeline.timeline_cursor import TimelineCursor
 from arvis.timeline.timeline_delta import (
     TimelineDelta,
-    TimelineDeltaError,
     TimelineDeltaBaseMismatch,
+    TimelineDeltaError,
 )
-from arvis.timeline.timeline_cursor import TimelineCursor
-from datetime import datetime, timezone
 
 
 class DummyEntry:
@@ -31,7 +32,7 @@ class DummySnap:
 
 def make_cursor(n):
     return TimelineCursor(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         head="a" * 64 if n > 0 else None,
         total_entries=n,
     )
@@ -74,5 +75,5 @@ def test_verify_target_mismatch():
     # snapshot volontairement incohérent
     bad_snapshot = DummySnap(make_cursor(999))
 
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, RuntimeError)):
         delta.verify_against(bad_snapshot)

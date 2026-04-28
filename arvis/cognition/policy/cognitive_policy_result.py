@@ -1,7 +1,6 @@
 # arvis/cognition/policy/cognitive_policy_result.py
 
-from dataclasses import dataclass, asdict
-from typing import Dict
+from dataclasses import asdict, dataclass
 
 
 @dataclass(frozen=True)
@@ -21,5 +20,5 @@ class CognitivePolicyResult:
     suggestion_type: str
     rationale: str
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         return asdict(self)

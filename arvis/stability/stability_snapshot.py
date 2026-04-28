@@ -1,7 +1,7 @@
 # arvis/stability/stability_snapshot.py
 
 from dataclasses import dataclass
-from typing import List, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,7 @@ class StabilitySnapshot:
     collapse_risk: float
     last_v: float
 
-    reasons: List[str]
+    reasons: list[str]
 
     @staticmethod
     def from_global(snapshot: Any) -> "StabilitySnapshot":

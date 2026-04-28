@@ -1,11 +1,10 @@
 # arvis/cognition/projection/projection_api.py
 
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Any
 
-from .projection_result import ProjectionResult
 from .projection_diagnostics import ProjectionDiagnostics
-
+from .projection_result import ProjectionResult
 
 # -----------------------------
 # Observation contract
@@ -14,9 +13,9 @@ from .projection_diagnostics import ProjectionDiagnostics
 
 @dataclass(frozen=True)
 class Observation:
-    numeric_signals: Dict[str, float]
-    structured_signals: Dict[str, Any]
-    external_signals: Dict[str, Any]
+    numeric_signals: dict[str, float]
+    structured_signals: dict[str, Any]
+    external_signals: dict[str, Any]
 
 
 # -----------------------------

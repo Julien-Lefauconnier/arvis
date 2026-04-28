@@ -1,5 +1,6 @@
 # arvis/runtime/__init__.py
 
+from arvis.kernel_core.state.scheduler_state import SchedulerState
 from arvis.runtime.cognitive_process import (
     CognitiveBudget,
     CognitivePriority,
@@ -13,7 +14,6 @@ from arvis.runtime.cognitive_scheduler import CognitiveScheduler, SchedulingPoli
 from arvis.runtime.pipeline_executor import PipelineExecutor
 from arvis.runtime.resource_model import ResourcePressure, ResourceState
 from arvis.runtime.scheduler_decision import SchedulerDecision
-from arvis.kernel_core.state.scheduler_state import SchedulerState
 
 __all__ = [
     "CognitiveBudget",

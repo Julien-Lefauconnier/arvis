@@ -1,12 +1,12 @@
 # arvis/cognition/explanation/explanation_snapshot.py
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List
+from datetime import UTC, datetime
+from typing import Any
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass(frozen=True)
@@ -20,11 +20,11 @@ class ExplanationSnapshot:
     - zero-knowledge compatible
     """
 
-    items: List[Any] = field(default_factory=list)
+    items: list[Any] = field(default_factory=list)
 
-    stability: Dict[str, Any] = field(default_factory=dict)
-    lyapunov: Dict[str, Any] = field(default_factory=dict)
-    trajectory: Dict[str, Any] = field(default_factory=dict)
+    stability: dict[str, Any] = field(default_factory=dict)
+    lyapunov: dict[str, Any] = field(default_factory=dict)
+    trajectory: dict[str, Any] = field(default_factory=dict)
 
     created_at: datetime = field(default_factory=utcnow)
 

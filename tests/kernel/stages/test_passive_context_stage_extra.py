@@ -3,7 +3,6 @@
 
 from arvis.kernel.pipeline.stages.passive_context_stage import PassiveContextStage
 
-
 # ============================================================
 # Helpers
 # ============================================================

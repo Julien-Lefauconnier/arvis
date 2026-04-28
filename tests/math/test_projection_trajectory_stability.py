@@ -3,15 +3,14 @@
 import math
 import random
 
-
-from arvis.cognition.projection.projection_api import project_observation, Observation
+from arvis.cognition.projection.projection_api import Observation, project_observation
 from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
+from tests.fixtures.projection_cases import nominal_case
 from tests.math.test_projection_real_lyapunov_compatibility import (
     _fast_state_from_projection,
     _slow_state_from_projection,
     _symbolic_state_from_mode,
 )
-from tests.fixtures.projection_cases import nominal_case
 
 
 def generate_trajectory(base_obs, steps=50, noise=0.02):

@@ -1,16 +1,15 @@
 # compliance/scenarios/builders.py
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
-from arvis.math.gate.gate_adapter import ensure_lyapunov_state
 from arvis.kernel.projection.certificate import (
     ProjectionCertificate,
     ProjectionCertificationLevel,
 )
-
+from arvis.math.gate.gate_adapter import ensure_lyapunov_state
 from tests.fixtures.projection_cases import (
-    nominal_case,
-    invalid_case,
     high_risk_case,
+    invalid_case,
+    nominal_case,
 )
 
 

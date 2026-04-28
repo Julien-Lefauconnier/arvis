@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from time import perf_counter
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
@@ -11,8 +11,8 @@ from arvis.kernel.pipeline.pipeline_contract import (
     PipelineFinalizeSignal,
     PipelineStageSignal,
 )
-from arvis.kernel_core.process import BudgetConsumption, CognitiveProcess
 from arvis.kernel_core.contracts.execution_contract import ProcessExecutionOutcome
+from arvis.kernel_core.process import BudgetConsumption, CognitiveProcess
 
 
 class PipelineExecutor:
@@ -49,7 +49,7 @@ class PipelineExecutor:
         if process.has_remaining_stages():
             stage = stages[process.current_stage_index]
             stage_result = cast(
-                Optional[PipelineStageSignal],
+                PipelineStageSignal | None,
                 self.pipeline.run_stage(ctx, stage),
             )
             process.advance_stage(stage.__class__.__name__)

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import inspect
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any
-from importlib.metadata import version, PackageNotFoundError
-
 
 # -----------------------------------------------------
 # Installed package version

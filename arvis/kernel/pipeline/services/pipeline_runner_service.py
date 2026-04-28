@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator
+from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
@@ -18,9 +19,9 @@ if TYPE_CHECKING:
 class PipelineRunnerService:
     @staticmethod
     def run_stage(
-        pipeline: "CognitivePipeline",
+        pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
-        stage: "PipelineStage",
+        stage: PipelineStage,
     ) -> None:
         pipeline._prepare_run(ctx)
         pipeline._safe_run(stage, ctx)
@@ -30,7 +31,7 @@ class PipelineRunnerService:
 
     @staticmethod
     def run_all(
-        pipeline: "CognitivePipeline",
+        pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
     ) -> None:
         pipeline._prepare_run(ctx)
@@ -44,9 +45,9 @@ class PipelineRunnerService:
 
     @staticmethod
     def run_iter(
-        pipeline: "CognitivePipeline",
+        pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
-    ) -> Iterator["PipelineStage"]:
+    ) -> Iterator[PipelineStage]:
         pipeline._prepare_run(ctx)
 
         for stage in pipeline.iter_stages():

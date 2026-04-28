@@ -1,6 +1,6 @@
 # arvis/reflexive/core/reflexive_mode_registry.py
 
-from typing import Any, Optional
+from typing import Any
 
 from arvis.reflexive.core.reflexive_mode import ReflexiveMode
 
@@ -18,8 +18,8 @@ class ReflexiveModeRegistry:
     def resolve(
         cls,
         *,
-        snapshot: Optional[Any],
-        compliance_chain: Optional[Any] = None,
+        snapshot: Any | None,
+        compliance_chain: Any | None = None,
     ) -> ReflexiveMode:
         if compliance_chain is not None:
             return ReflexiveMode.COMPLIANCE_CHAIN_READY

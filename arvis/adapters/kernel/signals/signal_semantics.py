@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Tuple, Any, Dict
+from typing import Any
 
 from arvis.api.signals import Signal
 
@@ -25,8 +25,8 @@ class SignalSemantics:
     """
 
     @staticmethod
-    def fingerprint(signal: Signal) -> Tuple[str, Any, Tuple[Any, Any, Any]]:
-        payload: Dict[str, Any] = signal.payload
+    def fingerprint(signal: Signal) -> tuple[str, Any, tuple[Any, Any, Any]]:
+        payload: dict[str, Any] = signal.payload
 
         signal_type = payload["type"]
 
@@ -37,7 +37,7 @@ class SignalSemantics:
         )
 
     @staticmethod
-    def _normalize_payload(payload: Dict[str, Any]) -> Tuple[Any, Any, Any]:
+    def _normalize_payload(payload: dict[str, Any]) -> tuple[Any, Any, Any]:
         return (
             payload.get("state"),
             payload.get("subject_ref"),

@@ -1,7 +1,9 @@
 # arvis/cognition/control/regime_control_snapshot.py
 
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from arvis.math.core.normalization import clamp
 
 

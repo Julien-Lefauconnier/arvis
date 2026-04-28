@@ -1,8 +1,8 @@
 # tests/math/control/test_confidence_control.py
 
 from arvis.math.control.confidence_control import (
-    apply_confidence_control,
     ConfidenceControlInputs,
+    apply_confidence_control,
 )
 
 

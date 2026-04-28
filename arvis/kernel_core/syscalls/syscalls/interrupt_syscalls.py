@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Protocol, Any
+from typing import Any, Protocol
 
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall

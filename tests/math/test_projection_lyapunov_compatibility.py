@@ -6,12 +6,11 @@ import pytest
 
 from arvis.cognition.projection.projection_api import project_observation
 from tests.fixtures.projection_cases import (
-    nominal_case,
-    high_risk_case,
     boundary_case,
+    high_risk_case,
     noisy_case,
+    nominal_case,
 )
-
 
 # ----------------------------------------
 # Dummy Lyapunov (aligned with current core)
@@ -56,7 +55,7 @@ def test_lyapunov_continuity_under_small_perturbation():
     eps = 0.01
     variations = []
 
-    for i in range(50):
+    for _i in range(50):
         perturbed = base_obs.__class__(
             numeric_signals={
                 k: float(v) + eps for k, v in base_obs.numeric_signals.items()

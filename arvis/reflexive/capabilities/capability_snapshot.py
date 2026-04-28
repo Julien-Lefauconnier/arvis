@@ -1,7 +1,7 @@
 # arvis/reflexive/capabilities/capability_snapshot.py
 
 from dataclasses import dataclass
-from typing import Tuple, Dict, Any
+from typing import Any
 
 from arvis.reflexive.capabilities.capability import Capability
 
@@ -10,9 +10,9 @@ from arvis.reflexive.capabilities.capability import Capability
 class CapabilitySnapshot:
     version: str
     generated_from: str
-    capabilities: Tuple[Capability, ...]
+    capabilities: tuple[Capability, ...]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "version": self.version,
             "generated_from": self.generated_from,

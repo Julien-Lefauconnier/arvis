@@ -1,12 +1,11 @@
 # arvis/cognition/introspection/introspection_snapshot.py
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass(frozen=True)
@@ -20,11 +19,11 @@ class IntrospectionSnapshot:
     - no decision
     """
 
-    active_limits: List[str] = field(default_factory=list)
-    active_constraints: List[str] = field(default_factory=list)
-    unavailable_capabilities: List[str] = field(default_factory=list)
+    active_limits: list[str] = field(default_factory=list)
+    active_constraints: list[str] = field(default_factory=list)
+    unavailable_capabilities: list[str] = field(default_factory=list)
 
-    notes: Optional[str] = None
+    notes: str | None = None
 
     created_at: datetime = field(default_factory=utcnow)
 

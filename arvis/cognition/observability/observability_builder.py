@@ -1,20 +1,18 @@
 # arvis/cognition/observability/observability_builder.py
 
-from typing import Any, Dict
+from typing import Any
 
-from arvis.cognition.observability.predictive_snapshot import PredictiveSnapshot
-from arvis.cognition.observability.multi_horizon_snapshot import MultiHorizonSnapshot
 from arvis.cognition.observability.global_forecast_snapshot import (
     GlobalForecastSnapshot,
 )
 from arvis.cognition.observability.global_stability_snapshot import (
     GlobalStabilitySnapshot,
 )
+from arvis.cognition.observability.multi_horizon_snapshot import MultiHorizonSnapshot
+from arvis.cognition.observability.predictive_snapshot import PredictiveSnapshot
 from arvis.cognition.observability.stability_stats_snapshot import (
     StabilityStatsSnapshot,
 )
-
-from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.cognition.observability.symbolic.symbolic_drift_snapshot import (
     SymbolicDriftSnapshot,
     SymbolicRegime,
@@ -22,6 +20,7 @@ from arvis.cognition.observability.symbolic.symbolic_drift_snapshot import (
 from arvis.cognition.observability.symbolic.symbolic_feature_snapshot import (
     SymbolicFeatureSnapshot,
 )
+from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.math.signals.system_tension import SystemTensionSignal
 from arvis.stability.stability_snapshot import StabilitySnapshot
 
@@ -32,7 +31,7 @@ class ObservabilityBuilder:
     No side effects.
     """
 
-    def build(self, ctx: Any) -> Dict[str, Any]:
+    def build(self, ctx: Any) -> dict[str, Any]:
         conflict_pressure = getattr(ctx, "conflict_pressure", None)
         conflict_level = self._signal(conflict_pressure)
         collapse = self._signal(ctx.collapse_risk)
@@ -142,7 +141,7 @@ class ObservabilityBuilder:
             spectral_proxy=0.0,
         )
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "predictive": predictive,
             "multi": multi,
             "forecast": forecast,

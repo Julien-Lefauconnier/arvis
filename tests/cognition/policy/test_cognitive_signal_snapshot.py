@@ -1,5 +1,7 @@
 # tests/cognition/policy/test_cognitive_signal_snapshot.py
 
+import pytest
+
 from arvis.cognition.policy import CognitiveSignalSnapshot
 
 
@@ -30,8 +32,5 @@ def test_signal_snapshot_to_dict():
 def test_signal_snapshot_immutable():
     s = CognitiveSignalSnapshot("a", "b", "c", 1)
 
-    try:
+    with pytest.raises(AttributeError):
         s.timestamp = 10
-        assert False
-    except Exception:
-        assert True

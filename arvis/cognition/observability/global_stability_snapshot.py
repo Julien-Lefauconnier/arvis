@@ -1,7 +1,6 @@
 # arvis/cognition/observability/global_stability_snapshot.py
 
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass(frozen=True)
@@ -18,4 +17,4 @@ class GlobalStabilitySnapshot:
     collapse_risk: float
     last_v: float
 
-    reasons: List[str]
+    reasons: list[str]

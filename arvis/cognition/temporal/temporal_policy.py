@@ -1,12 +1,11 @@
 # arvis/cognition/temporal/temporal_policy.py
 
-from typing import Optional
 
-from arvis.cognition.temporal.temporal_context import TemporalContext
 from arvis.cognition.policy import (
-    CognitiveSignalSnapshot,
     CognitivePolicyResult,
+    CognitiveSignalSnapshot,
 )
+from arvis.cognition.temporal.temporal_context import TemporalContext
 
 
 class TemporalPolicy:
@@ -26,7 +25,7 @@ class TemporalPolicy:
         self,
         snapshot: CognitiveSignalSnapshot,
         context: TemporalContext,
-    ) -> Optional[CognitivePolicyResult]:
+    ) -> CognitivePolicyResult | None:
         """
         Evaluate temporal constraints and optionally produce
         a declarative policy suggestion.

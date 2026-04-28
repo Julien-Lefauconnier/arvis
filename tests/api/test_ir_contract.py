@@ -2,7 +2,7 @@
 
 import json
 
-from arvis.api.ir import build_ir_view, IR_VERSION
+from arvis.api.ir import IR_VERSION, build_ir_view
 
 
 def test_ir_has_required_fields(dummy_pipeline_result):

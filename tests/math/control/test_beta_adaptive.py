@@ -7,7 +7,6 @@ from arvis.math.control.beta_adaptive import (
 )
 from arvis.math.stability.regime_estimator import RegimeSnapshot
 
-
 # ============================================================
 # Helper
 # ============================================================

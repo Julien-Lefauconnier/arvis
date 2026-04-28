@@ -1,10 +1,11 @@
 # tests/timeline/test_hashchain_edge_cases.py
 
-import pytest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from arvis.timeline.timeline_hashchain import TimelineHashChain
+import pytest
+
 from arvis.timeline.timeline_entry import TimelineEntry
+from arvis.timeline.timeline_hashchain import TimelineHashChain
 from arvis.timeline.timeline_types import TimelineEntryType
 
 
@@ -16,7 +17,7 @@ def make_entry(i: int) -> TimelineEntry:
         description=None,
         action_id=None,
         place_id=None,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         device_id="0" * 64,
         lamport=i,
     )

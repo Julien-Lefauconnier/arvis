@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Optional, Protocol
+from typing import Protocol
 
 from arvis.kernel_core.memory.models import MemoryRecord
 
@@ -12,7 +12,7 @@ class MemoryRepository(Protocol):
         self,
         *,
         user_id: str,
-        namespace: Optional[str] = None,
+        namespace: str | None = None,
     ) -> list[MemoryRecord]: ...
 
     def get_record(
@@ -21,7 +21,7 @@ class MemoryRepository(Protocol):
         user_id: str,
         namespace: str,
         key: str,
-    ) -> Optional[MemoryRecord]: ...
+    ) -> MemoryRecord | None: ...
 
     def upsert_record(
         self,

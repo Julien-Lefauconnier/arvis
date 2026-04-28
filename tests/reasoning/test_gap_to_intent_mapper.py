@@ -2,9 +2,8 @@
 
 
 from arvis.reasoning.gap_to_intent_mapper import GapToIntentMapper
-from arvis.reasoning.reasoning_gap import ReasoningGap, GapType
+from arvis.reasoning.reasoning_gap import GapType, ReasoningGap
 from arvis.reasoning.reasoning_intent import ReasoningIntentType
-
 
 # ============================================================
 # Helper

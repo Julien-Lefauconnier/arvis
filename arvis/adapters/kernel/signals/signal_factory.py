@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import ClassVar, Dict, Protocol, Iterable
-from datetime import datetime, timedelta, timezone
+import itertools
+from collections.abc import Iterable, Iterator
+from datetime import UTC, datetime, timedelta
+from typing import ClassVar, Protocol
 
 from arvis.api.signals import CanonicalSignal
-from arvis.signals.canonical import CanonicalSignalRegistry
-from arvis.signals.canonical import CanonicalSignalKey
-import itertools
-from typing import Iterator
+from arvis.signals.canonical import CanonicalSignalKey, CanonicalSignalRegistry
 
 
 class _SignalSpecProtocol(Protocol):
@@ -24,7 +23,7 @@ class _SignalSpecProtocol(Protocol):
 
 
 class SignalFactory:
-    _spec_by_code: ClassVar[Dict[str, _SignalSpecProtocol]] = {}
+    _spec_by_code: ClassVar[dict[str, _SignalSpecProtocol]] = {}
     _fallback_counter: ClassVar[Iterator[int]] = itertools.count()
     _last_ts: ClassVar[float] = 0.0
 
@@ -84,7 +83,7 @@ class SignalFactory:
 
         cls._last_ts = ts
 
-        dt = datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=ts)
+        dt = datetime(1970, 1, 1, tzinfo=UTC) + timedelta(seconds=ts)
 
         object.__setattr__(signal, "timestamp", dt)
 

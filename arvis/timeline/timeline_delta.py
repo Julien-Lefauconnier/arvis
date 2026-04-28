@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Tuple, List
 
-from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.timeline.timeline_cursor import TimelineCursor
+from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.timeline.timeline_snapshot import TimelineSnapshot
-
 
 # ============================================================
 # Errors
@@ -40,7 +38,7 @@ class TimelineDeltaDecodeError(TimelineDeltaError):
 # ============================================================
 
 
-def _pack_frames(frames: List[bytes]) -> bytes:
+def _pack_frames(frames: list[bytes]) -> bytes:
     out = bytearray()
     for f in frames:
         out += len(f).to_bytes(4, "big")
@@ -48,8 +46,8 @@ def _pack_frames(frames: List[bytes]) -> bytes:
     return bytes(out)
 
 
-def _unpack_frames(blob: bytes) -> List[bytes]:
-    out: List[bytes] = []
+def _unpack_frames(blob: bytes) -> list[bytes]:
+    out: list[bytes] = []
     i = 0
     n = len(blob)
     while i < n:
@@ -87,7 +85,7 @@ class TimelineDelta:
 
     base: TimelineCursor
     target: TimelineCursor
-    entries: Tuple[TimelineEntry, ...]
+    entries: tuple[TimelineEntry, ...]
 
     def __post_init__(self) -> None:
         if self.entries is None:
@@ -156,7 +154,7 @@ class TimelineDelta:
         cls,
         base: TimelineSnapshot,
         target: TimelineSnapshot,
-    ) -> "TimelineDelta":
+    ) -> TimelineDelta:
         """
         Build an append-only delta between two snapshots.
 

@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, Iterable, Tuple
+from collections.abc import Iterable
 
 # tests + core share the exact same parameters.
-DEFAULT_RISK_CALIBRATION: Dict[str, Tuple[float, float]] = {
+DEFAULT_RISK_CALIBRATION: dict[str, tuple[float, float]] = {
     "mh": (0.55, 6.0),
     "wm": (0.60, 6.0),
     "forecast": (0.50, 4.0),
@@ -85,9 +85,9 @@ def probabilistic_or(probs: Iterable[float]) -> float:
 
 
 def calibrated_or_fusion(
-    sources: Iterable[Tuple[str, float]],
+    sources: Iterable[tuple[str, float]],
     *,
-    calibration: Dict[str, Tuple[float, float]],
+    calibration: dict[str, tuple[float, float]],
 ) -> float:
     """
     sources: iterable of (name, raw_risk)

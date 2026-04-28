@@ -1,7 +1,7 @@
 # # tests/kernel/test_pi_gate.py
 
-from arvis.kernel.projection.pi_impl import PiImpl
 from arvis.kernel.gate.pi_gate import PiBasedGate
+from arvis.kernel.projection.pi_impl import PiImpl
 
 
 def test_pi_gate_allow(minimal_ctx):

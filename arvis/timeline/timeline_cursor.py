@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 
 @dataclass(frozen=True)
 class TimelineCursor:
     timestamp: datetime
-    head: Optional[str] = None
+    head: str | None = None
     total_entries: int = 0
 
     def __post_init__(self) -> None:
@@ -62,7 +62,7 @@ class TimelineCursor:
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "TimelineCursor":
+    def from_dict(cls, payload: dict[str, Any]) -> TimelineCursor:
         ts = datetime.fromisoformat(payload["timestamp"])
 
         if ts.tzinfo is None or ts.tzinfo.utcoffset(ts) != timedelta(0):
@@ -75,5 +75,5 @@ class TimelineCursor:
         )
 
     @classmethod
-    def now(cls) -> "TimelineCursor":
-        return cls(timestamp=datetime.now(timezone.utc))
+    def now(cls) -> TimelineCursor:
+        return cls(timestamp=datetime.now(UTC))

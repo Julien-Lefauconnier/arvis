@@ -1,7 +1,6 @@
 # arvis/reasoning/reasoning_intent.py
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional
 
 
 class ReasoningIntentType(Enum):
@@ -30,4 +29,4 @@ class ReasoningIntent:
     intent_type: ReasoningIntentType
     reason: str
     # 🧭 Declarative traceability (what triggered this intent)
-    source_ref: Optional[str] = None
+    source_ref: str | None = None

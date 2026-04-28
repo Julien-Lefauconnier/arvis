@@ -1,6 +1,7 @@
 # arvis/reflexive/irg_timeline_mapper.py
 
 from typing import Any
+
 from arvis.reflexive.timeline.irg_timeline_view import IRGTimelineView
 
 

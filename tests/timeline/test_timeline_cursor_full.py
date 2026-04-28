@@ -1,10 +1,10 @@
 # tests/timeline/test_timeline_cursor_full.py
 
+from datetime import UTC, datetime, timedelta, timezone
+
 import pytest
-from datetime import datetime, timezone, timedelta
 
 from arvis.timeline.timeline_cursor import TimelineCursor
-
 
 # ============================================================
 # Helpers
@@ -14,7 +14,7 @@ VALID_HASH = "a" * 64
 
 
 def utc_now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 # ============================================================

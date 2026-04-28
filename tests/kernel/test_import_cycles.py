@@ -4,7 +4,6 @@ import ast
 import pathlib
 from collections import defaultdict
 
-
 ROOT = pathlib.Path(__file__).resolve().parents[2] / "arvis"
 
 

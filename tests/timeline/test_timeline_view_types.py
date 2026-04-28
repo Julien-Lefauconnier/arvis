@@ -2,7 +2,6 @@
 
 from arvis.timeline.timeline_view_types import TimelineViewRole
 
-
 # --------------------------------------------------
 # Basic enum behavior
 # --------------------------------------------------

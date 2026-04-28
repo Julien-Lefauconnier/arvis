@@ -1,14 +1,13 @@
 # arvis/linguistic/generation/frame_builder.py
 
-from typing import Any, Dict, Optional
+from typing import Any
 
+from arvis.linguistic.acts.act_types import LinguisticActType
+from arvis.linguistic.acts.linguistic_act import LinguisticAct
 from arvis.linguistic.generation.generation_frame import (
     LinguisticGenerationFrame,
 )
-from arvis.linguistic.acts.linguistic_act import LinguisticAct
 from arvis.linguistic.lexicon.lexicon_snapshot import LexiconSnapshot
-from arvis.linguistic.acts.act_types import LinguisticActType
-
 
 # Canonical expressions associated with each linguistic act
 # These are protected tokens that must NOT leak across acts
@@ -25,7 +24,7 @@ def build_generation_frame(
     *,
     act: LinguisticAct,
     lexicon: LexiconSnapshot,
-    state: Optional[Any] = None,
+    state: Any | None = None,
 ) -> LinguisticGenerationFrame:
     """
     Build a constrained linguistic generation frame.
@@ -62,7 +61,7 @@ def build_generation_frame(
     # --------------------------------------------
     # Adaptive behavior (state-driven)
     # --------------------------------------------
-    signals: Dict[str, Any] = {}
+    signals: dict[str, Any] = {}
 
     if state is not None and hasattr(state, "signals"):
         raw_signals = state.signals

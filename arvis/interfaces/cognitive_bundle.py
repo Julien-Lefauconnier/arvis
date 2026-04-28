@@ -1,10 +1,11 @@
 # arvis/interfaces/cognitive_bundle.py
 
-from typing import Protocol, Sequence, Dict, Any, Optional
+from collections.abc import Sequence
 from datetime import datetime
+from typing import Any, Protocol
 
-from arvis.cognition.decision.decision_result import DecisionResult
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
+from arvis.cognition.decision.decision_result import DecisionResult
 
 
 class CognitiveBundle(Protocol):
@@ -26,20 +27,20 @@ class CognitiveBundle(Protocol):
 
     # core cognition
     @property
-    def decision(self) -> Optional[DecisionResult]: ...
+    def decision(self) -> DecisionResult | None: ...
 
     @property
-    def control(self) -> Optional[CognitiveControlSnapshot]: ...
+    def control(self) -> CognitiveControlSnapshot | None: ...
 
     # context
     @property
     def timeline(self) -> Sequence[Any]: ...
 
     @property
-    def context_hints(self) -> Dict[str, Any]: ...
+    def context_hints(self) -> dict[str, Any]: ...
 
     @property
-    def memory_long(self) -> Optional[Any]: ...
+    def memory_long(self) -> Any | None: ...
 
     # observability
     @property

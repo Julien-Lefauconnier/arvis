@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import zipfile
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import PurePosixPath
-from typing import Optional, Type, BinaryIO, Iterator, cast
 from types import TracebackType
+from typing import BinaryIO, cast
 
 
 @dataclass(frozen=True)
@@ -70,13 +71,13 @@ class ZipSafeReader:
     def close(self) -> None:
         self._zip.close()
 
-    def __enter__(self) -> "ZipSafeReader":
+    def __enter__(self) -> ZipSafeReader:
         return self
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc: Optional[BaseException],
-        tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
     ) -> None:
         self.close()

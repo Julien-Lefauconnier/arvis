@@ -2,8 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Dict, Any
-
+from typing import Any
 
 from arvis.reflexive.core.reflexive_mode_registry import (
     ReflexiveModeRegistry,
@@ -13,13 +12,13 @@ from arvis.reflexive.core.reflexive_mode_registry import (
 @dataclass(frozen=True)
 class ReflexiveSnapshot:
     capabilities: Any
-    cognitive_state: Optional[Any]
-    timeline_views: Dict[str, Any]
-    introspection: Optional[Any]
+    cognitive_state: Any | None
+    timeline_views: dict[str, Any]
+    introspection: Any | None
     generated_at: datetime
-    attestation: Optional[Any] = None
-    timeline_explanation: Optional[Any] = None
-    irg_explanation: Optional[Any] = None
+    attestation: Any | None = None
+    timeline_explanation: Any | None = None
+    irg_explanation: Any | None = None
 
     def _is_public_role(self, role: Any) -> bool:
         if role is None:
@@ -27,7 +26,7 @@ class ReflexiveSnapshot:
         role_value = getattr(role, "value", role)
         return role_value in {"public", "exposed", "user_visible", "trace_factuelle"}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         mode = ReflexiveModeRegistry.resolve(
             snapshot=self,
         )
@@ -65,6 +64,6 @@ class ReflexiveSnapshot:
 
         return value
 
-    def _build_explanation(self) -> Dict[str, Any]:
+    def _build_explanation(self) -> dict[str, Any]:
         # Deprecated: explanation now built upstream in builder
         return {}

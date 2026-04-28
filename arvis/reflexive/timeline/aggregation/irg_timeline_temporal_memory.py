@@ -1,16 +1,16 @@
 # arvis/reflexive/timeline/aggregation/irg_timeline_temporal_memory.py
 
 from collections import deque
-from typing import Deque, Iterable, Optional
+from collections.abc import Iterable
 
-from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_snapshot import (
-    IRGTimelineTemporalSnapshot,
-)
 from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_comparator import (
     IRGTimelineTemporalComparator,
 )
 from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_diff import (
     IRGTimelineTemporalDiff,
+)
+from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_snapshot import (
+    IRGTimelineTemporalSnapshot,
 )
 
 
@@ -25,17 +25,17 @@ class IRGTimelineTemporalMemory:
     """
 
     def __init__(self, *, maxlen: int = 10):
-        self._snapshots: Deque[IRGTimelineTemporalSnapshot] = deque(maxlen=maxlen)
+        self._snapshots: deque[IRGTimelineTemporalSnapshot] = deque(maxlen=maxlen)
 
     def append(self, snapshot: IRGTimelineTemporalSnapshot) -> None:
         self._snapshots.append(snapshot)
 
-    def latest(self) -> Optional[IRGTimelineTemporalSnapshot]:
+    def latest(self) -> IRGTimelineTemporalSnapshot | None:
         if not self._snapshots:
             return None
         return self._snapshots[-1]
 
-    def previous(self) -> Optional[IRGTimelineTemporalSnapshot]:
+    def previous(self) -> IRGTimelineTemporalSnapshot | None:
         if len(self._snapshots) < 2:
             return None
         return self._snapshots[-2]

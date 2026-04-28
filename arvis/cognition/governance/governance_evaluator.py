@@ -1,6 +1,5 @@
 # arvis/cognition/governance/governance_evaluator.py
 
-from typing import Optional
 
 from .governance_decision import GovernanceDecision
 from .governance_suggestion import GovernanceSuggestion
@@ -17,8 +16,8 @@ class GovernanceEvaluator:
         self,
         *,
         suggestion: GovernanceSuggestion,
-        decision: Optional[GovernanceDecision],
-    ) -> Optional[GovernanceDecision]:
+        decision: GovernanceDecision | None,
+    ) -> GovernanceDecision | None:
         if decision is None:
             return None
 

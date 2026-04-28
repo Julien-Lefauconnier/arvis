@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from arvis.ir.gate import (
     CognitiveGateIR,
-    CognitiveGateVerdictIR,
     CognitiveGateTraceStepIR,
+    CognitiveGateVerdictIR,
 )
 
 

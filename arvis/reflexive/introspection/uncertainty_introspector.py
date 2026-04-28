@@ -1,6 +1,6 @@
 # arvis/reflexive/introspection/uncertainty_introspector.py
 
-from typing import Dict, Any, List, cast
+from typing import Any, cast
 
 from arvis.uncertainty.uncertainty_frame_registry import (
     UncertaintyFrameRegistry,
@@ -8,10 +8,10 @@ from arvis.uncertainty.uncertainty_frame_registry import (
 
 
 class UncertaintyIntrospector:
-    def describe(self) -> Dict[str, Any]:
-        raw_frames = cast(List[Any], UncertaintyFrameRegistry.all())
+    def describe(self) -> dict[str, Any]:
+        raw_frames = cast(list[Any], UncertaintyFrameRegistry.all())
 
-        frames: List[Dict[str, Any]] = [
+        frames: list[dict[str, Any]] = [
             {
                 "id": getattr(f, "frame_id", None),
                 "label": getattr(f, "label", None),

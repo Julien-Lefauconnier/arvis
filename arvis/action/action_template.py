@@ -1,7 +1,6 @@
 # arvis/action/action_template.py
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -26,4 +25,4 @@ class ActionTemplate:
     risk_level: str = "low"
     reversible: bool = True
 
-    user_facing_label: Optional[str] = None
+    user_facing_label: str | None = None

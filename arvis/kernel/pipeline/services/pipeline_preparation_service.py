@@ -7,16 +7,14 @@ from typing import TYPE_CHECKING
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
-from arvis.math.switching.switching_runtime import (
-    SwitchingRuntime,
+from arvis.kernel.pipeline.services.pipeline_ir_bootstrap_service import (
+    PipelineIRBootstrapService,
 )
 from arvis.math.switching.switching_params import (
     SwitchingParams,
 )
-
-
-from arvis.kernel.pipeline.services.pipeline_ir_bootstrap_service import (
-    PipelineIRBootstrapService,
+from arvis.math.switching.switching_runtime import (
+    SwitchingRuntime,
 )
 
 if TYPE_CHECKING:
@@ -36,7 +34,7 @@ class PipelinePreparationService:
 
     @staticmethod
     def run(
-        pipeline: "CognitivePipeline",
+        pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
     ) -> None:
         if ctx.extra.get(

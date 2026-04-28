@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -30,24 +31,24 @@ class ProjectionDomain:
     """
 
     # --- numeric bounds projected---
-    bounds: Dict[str, NumericBounds] = field(default_factory=dict)
+    bounds: dict[str, NumericBounds] = field(default_factory=dict)
 
     # --- payload size --- (ex: text, tokens, etc.)
-    max_payload_size: Optional[int] = None
+    max_payload_size: int | None = None
 
     # --- custom validator ---
-    custom_validator: Optional[Callable[[Dict[str, Any]], bool]] = None
+    custom_validator: Callable[[dict[str, Any]], bool] | None = None
 
     # tolérance globale (bruit, etc.)
     epsilon: float = 1e-6
 
-    def validate(self, projected: Dict[str, Any]) -> Tuple[bool, Dict[str, bool]]:
+    def validate(self, projected: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
         """
         Retourne:
         - validité globale
         - détails par contrainte
         """
-        checks: Dict[str, bool] = {}
+        checks: dict[str, bool] = {}
 
         # --- numeric bounds ---
         for key, bounds in self.bounds.items():
@@ -77,7 +78,7 @@ class ProjectionDomain:
         is_valid = all(checks.values()) if checks else True
         return is_valid, checks
 
-    def margin_to_boundary(self, projected: Dict[str, Any]) -> float:
+    def margin_to_boundary(self, projected: dict[str, Any]) -> float:
         """
         Approximation conservative de la distance à la frontière du domaine.
         """

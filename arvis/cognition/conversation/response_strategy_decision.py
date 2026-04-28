@@ -1,7 +1,7 @@
 # arvis/cognition/conversation/response_strategy_decision.py
 
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any
 
 from .response_strategy_type import ResponseStrategyType
 
@@ -21,4 +21,4 @@ class ResponseStrategyDecision:
     reason: str
 
     confidence: float = 1.0
-    signals: Dict[str, Any] = field(default_factory=dict)
+    signals: dict[str, Any] = field(default_factory=dict)

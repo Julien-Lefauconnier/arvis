@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from typing import Deque, Dict, List
 
 from arvis.kernel_core.interrupts.interrupt import CognitiveInterrupt
 from arvis.kernel_core.interrupts.interrupt_type import CognitiveInterruptType
@@ -19,8 +18,8 @@ class CognitiveInterruptBus:
     """
 
     def __init__(self) -> None:
-        self._queue: Deque[CognitiveInterrupt] = deque()
-        self._subscribers: Dict[CognitiveInterruptType, List[str]] = defaultdict(list)
+        self._queue: deque[CognitiveInterrupt] = deque()
+        self._subscribers: dict[CognitiveInterruptType, list[str]] = defaultdict(list)
 
     def emit(self, interrupt: CognitiveInterrupt) -> None:
         self._queue.append(interrupt)
@@ -41,12 +40,12 @@ class CognitiveInterruptBus:
         if process_id in self._subscribers[interrupt_type]:
             self._subscribers[interrupt_type].remove(process_id)
 
-    def drain(self) -> List[CognitiveInterrupt]:
+    def drain(self) -> list[CognitiveInterrupt]:
         events = list(self._queue)
         self._queue.clear()
         return events
 
-    def match(self, interrupt: CognitiveInterrupt) -> List[str]:
+    def match(self, interrupt: CognitiveInterrupt) -> list[str]:
         """
         Returns process_ids that should be woken up.
         """

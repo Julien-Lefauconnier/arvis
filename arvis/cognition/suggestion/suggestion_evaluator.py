@@ -1,16 +1,15 @@
 # arvis/cognition/suggestion/suggestion_evaluator.py
 
-from typing import List
 
 from arvis.cognition.decision.decision_signal import DecisionSignal
 from arvis.cognition.suggestion.suggestion_signal import SuggestionSignal
 from arvis.reasoning.reasoning_gap import GapType
-from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
 from arvis.reasoning.reasoning_intent import ReasoningIntentType
+from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
 
 
 class SuggestionEvaluator:
-    def evaluate(self, decision: DecisionSignal) -> List[SuggestionSignal]:
+    def evaluate(self, decision: DecisionSignal) -> list[SuggestionSignal]:
         suggestions = []
 
         # Gaps

@@ -1,7 +1,7 @@
 # tests/timeline/test_hashchain_large.py
 
-from tests.timeline.helpers import make_entries
 from arvis.timeline.timeline_hashchain import TimelineHashChain
+from tests.timeline.helpers import make_entries
 
 
 def test_hashchain_large():

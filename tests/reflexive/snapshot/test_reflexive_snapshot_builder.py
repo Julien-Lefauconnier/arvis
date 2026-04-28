@@ -1,11 +1,10 @@
 # tests/reflexive/snapshot/test_reflexive_snapshot_builder.py
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from arvis.reflexive.snapshot.reflexive_snapshot_builder import (
     ReflexiveSnapshotBuilder,
 )
-
 
 # --------------------------------------------------
 # Helpers
@@ -56,11 +55,11 @@ def test_generated_at_default_is_set():
     )
 
     assert snapshot.generated_at is not None
-    assert snapshot.generated_at.tzinfo == timezone.utc
+    assert snapshot.generated_at.tzinfo == UTC
 
 
 def test_generated_at_override():
-    ts = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    ts = datetime(2020, 1, 1, tzinfo=UTC)
 
     snapshot = ReflexiveSnapshotBuilder.build(
         capabilities={},

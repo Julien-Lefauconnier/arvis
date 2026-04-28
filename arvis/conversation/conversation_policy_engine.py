@@ -2,11 +2,11 @@
 
 from typing import Protocol
 
-from arvis.conversation.response_strategy_type import ResponseStrategyType
-from arvis.conversation.conversation_state import ConversationState
-from arvis.conversation.strategy_stability_controller import StrategyStabilityController
-from arvis.conversation.conversation_memory_policy import ConversationMemoryPolicy
 from arvis.conversation.conversation_adaptive_policy import AdaptiveThresholdPolicy
+from arvis.conversation.conversation_memory_policy import ConversationMemoryPolicy
+from arvis.conversation.conversation_state import ConversationState
+from arvis.conversation.response_strategy_type import ResponseStrategyType
+from arvis.conversation.strategy_stability_controller import StrategyStabilityController
 
 
 class _PolicyProtocol(Protocol):

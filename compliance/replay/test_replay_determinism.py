@@ -1,6 +1,6 @@
 # compliance/replay/test_replay_determinism.py
 
-from compliance.helpers import run_ctx, replay_from_ir
+from compliance.helpers import replay_from_ir, run_ctx
 from compliance.scenarios.builders import build_nominal_context
 
 

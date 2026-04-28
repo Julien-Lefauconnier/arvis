@@ -5,7 +5,6 @@ from arvis.action.action_mapper import map_verdict_to_action
 from arvis.action.action_mode import ActionMode
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
-
 # ---------------------------------------------------------
 # 1. ABSTAIN → blocked action
 # ---------------------------------------------------------

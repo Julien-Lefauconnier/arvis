@@ -2,24 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Optional, Any, List
-
-from arvis.math.lyapunov.lyapunov_gate import (
-    lyapunov_gate,
-    LyapunovVerdict,
-    LyapunovGateParams,
-)
+from typing import Any
 
 from arvis.math.control.eps_adaptive import CognitiveMode
+from arvis.math.lyapunov.lyapunov_gate import (
+    LyapunovGateParams,
+    LyapunovVerdict,
+    lyapunov_gate,
+)
+
 from .gate_types import GateKernelInputs, GateKernelResult
 
 
 def _detect_recovery(
-    delta_w: Optional[float],
-    w_prev: Optional[float],
-    w_current: Optional[float],
-    prev_lyap: Optional[Any],
-    cur_lyap: Optional[Any],
+    delta_w: float | None,
+    w_prev: float | None,
+    w_current: float | None,
+    prev_lyap: Any | None,
+    cur_lyap: Any | None,
 ) -> bool:
     try:
         if delta_w is not None and delta_w < 0:
@@ -36,7 +36,7 @@ def _detect_recovery(
 
 
 def compute_gate_kernel(inputs: GateKernelInputs) -> GateKernelResult:
-    reasons: List[str] = []
+    reasons: list[str] = []
 
     # -----------------------------------------
     # Recovery detection

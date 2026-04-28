@@ -2,10 +2,9 @@
 
 from collections import deque
 from dataclasses import dataclass
-from typing import Deque
 
-from arvis.math.lyapunov.lyapunov import LyapunovState, V, delta_V
 from arvis.math.core.normalization import clamp01
+from arvis.math.lyapunov.lyapunov import LyapunovState, V, delta_V
 
 
 @dataclass
@@ -40,7 +39,7 @@ class TrajectoryObserver:
 
     def __init__(self, params: TrajectoryParams | None = None):
         self.params = params or TrajectoryParams()
-        self._states: Deque[LyapunovState] = deque(maxlen=self.params.window_size)
+        self._states: deque[LyapunovState] = deque(maxlen=self.params.window_size)
 
     def push(self, state: LyapunovState) -> TrajectorySnapshot:
         self._states.append(state)

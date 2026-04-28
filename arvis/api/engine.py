@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, cast
+from typing import Any, cast
+
+from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 
 from .os import CognitiveOS, CognitiveOSConfig
-from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 
 
 class ArvisEngine:
@@ -23,9 +24,9 @@ class ArvisEngine:
 
     def __init__(
         self,
-        config: Optional[CognitiveOSConfig] = None,
+        config: CognitiveOSConfig | None = None,
         *,
-        pipeline: Optional[CognitivePipeline] = None,
+        pipeline: CognitivePipeline | None = None,
         **kwargs: Any,
     ) -> None:
         if config is None:

@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from arvis.kernel_core.vfs.service import VFSService
 from arvis.kernel_core.vfs.zip.analyzer import ZipAnalyzer
 from arvis.kernel_core.vfs.zip.collision import ZipCollisionService
-from arvis.kernel_core.vfs.zip.executor import ZipExecutor
 from arvis.kernel_core.vfs.zip.exceptions import (
     ZipConflictError,
     ZipRejectedError,
 )
+from arvis.kernel_core.vfs.zip.executor import ZipExecutor
 from arvis.kernel_core.vfs.zip.models import (
     ZipCollisionReport,
     ZipImportPlan,
@@ -28,9 +27,9 @@ class ZipIngestDecision:
     """
 
     status: str  # "ready" | "conflict" | "rejected"
-    zip_root: Optional[ZipNode] = None
-    collisions: Optional[ZipCollisionReport] = None
-    reason: Optional[str] = None
+    zip_root: ZipNode | None = None
+    collisions: ZipCollisionReport | None = None
+    reason: str | None = None
 
 
 class ZipIngestService:
@@ -62,7 +61,7 @@ class ZipIngestService:
         *,
         zip_path: str,
         user_id: str,
-        target_parent_id: Optional[str],
+        target_parent_id: str | None,
     ) -> ZipIngestDecision:
         try:
             zip_root = self.analyzer.analyze(zip_path)
@@ -97,9 +96,9 @@ class ZipIngestService:
         zip_root: ZipNode,
         zip_path: str,
         user_id: str,
-        target_parent_id: Optional[str],
+        target_parent_id: str | None,
         keep_zip: bool = False,
-        plan: Optional[ZipImportPlan] = None,
+        plan: ZipImportPlan | None = None,
     ) -> dict[str, object]:
         if plan is not None:
             zip_root = self.planner.apply_plan(
@@ -120,9 +119,9 @@ class ZipIngestService:
         *,
         zip_path: str,
         user_id: str,
-        target_parent_id: Optional[str],
+        target_parent_id: str | None,
         keep_zip: bool = False,
-        plan: Optional[ZipImportPlan] = None,
+        plan: ZipImportPlan | None = None,
     ) -> dict[str, object]:
         decision = self.analyze_and_validate(
             zip_path=zip_path,

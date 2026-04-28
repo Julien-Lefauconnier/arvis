@@ -1,6 +1,6 @@
 # arvis/reflexive/timeline/aggregation/irg_timeline_temporal_aggregator.py
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from arvis.reflexive.timeline.aggregation.irg_timeline_insight_aggregate import (
     IRGTimelineInsightAggregate,
@@ -27,7 +27,7 @@ class IRGTimelineTemporalAggregator:
         observed_at: datetime | None = None,
     ) -> IRGTimelineTemporalSnapshot:
         return IRGTimelineTemporalSnapshot(
-            observed_at=observed_at or datetime.now(timezone.utc),
+            observed_at=observed_at or datetime.now(UTC),
             observed_views=aggregate.observed_views,
             dominant_entry_types=aggregate.dominant_entry_types,
             confidence=aggregate.confidence,

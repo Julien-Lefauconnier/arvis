@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -15,8 +15,8 @@ class KernelServiceRegistry:
     as new subsystems are added.
     """
 
-    tool_executor: Optional[Any] = None
-    vfs_service: Optional[Any] = None
-    zip_ingest_service: Optional[Any] = None
-    memory_service: Optional[Any] = None
-    memory_policy_service: Optional[Any] = None
+    tool_executor: Any | None = None
+    vfs_service: Any | None = None
+    zip_ingest_service: Any | None = None
+    memory_service: Any | None = None
+    memory_policy_service: Any | None = None

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class ExecutionArtifact:
@@ -12,16 +12,16 @@ class ExecutionArtifact:
         artifact_type: str,
         syscall: str,
         status: str,
-        output: Optional[Any] = None,
-        error: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        output: Any | None = None,
+        error: str | None = None,
+        metadata: dict[str, Any] | None = None,
         replay_policy: str = "unknown",
-        process_id: Optional[str] = None,
-        tick: Optional[int] = None,
-        timestamp: Optional[float] = None,
-        causal_id: Optional[str] = None,
+        process_id: str | None = None,
+        tick: int | None = None,
+        timestamp: float | None = None,
+        causal_id: str | None = None,
     ) -> None:
-        self.metadata: Dict[str, Any] = metadata or {}
+        self.metadata: dict[str, Any] = metadata or {}
 
         self.id: str = causal_id or self._build_id(
             syscall=syscall,
@@ -45,15 +45,15 @@ class ExecutionArtifact:
         if self.status == "error" and not error:
             raise ValueError("error artifact must have error message")
 
-        self.output: Optional[Any] = output
-        self.error: Optional[str] = error
+        self.output: Any | None = output
+        self.error: str | None = error
 
         self.metadata = self.metadata
 
         self.replay_policy: str = replay_policy
 
-        self.process_id: Optional[str] = process_id
-        self.tick: Optional[int] = tick
+        self.process_id: str | None = process_id
+        self.tick: int | None = tick
 
         if timestamp is None:
             raise RuntimeError(
@@ -70,9 +70,9 @@ class ExecutionArtifact:
     def _build_id(
         *,
         syscall: str,
-        process_id: Optional[str],
-        tick: Optional[int],
-        seq: Optional[int],
+        process_id: str | None,
+        tick: int | None,
+        seq: int | None,
     ) -> str:
         return f"artifact:{syscall}:{process_id or 'none'}:{tick or 0}:{seq or 0}"
 
@@ -84,7 +84,7 @@ class ExecutionArtifact:
     def success(self) -> bool:
         return self.status == "success"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "causal_id": self.id,

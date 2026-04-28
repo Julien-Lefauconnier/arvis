@@ -1,14 +1,14 @@
 # arvis/api/reflexive.py
 
-from typing import Any, Optional, Dict
+from typing import Any
 
-from arvis.reflexive.snapshot.reflexive_snapshot_service import ReflexiveSnapshotService
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
+from arvis.reflexive.snapshot.reflexive_snapshot_service import ReflexiveSnapshotService
 
 
 def get_reflexive_snapshot(
     state: Any,
-    context: Optional[Dict[str, Any]] = None,
+    context: dict[str, Any] | None = None,
 ) -> ReflexiveSnapshot:
     """
     Point d’entrée officiel de la réflexivité ARVIS.

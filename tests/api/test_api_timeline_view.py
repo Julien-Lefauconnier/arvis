@@ -1,9 +1,9 @@
 # tests/api/test_timeline_view.py
 
+from arvis.api.os import CognitiveOS
 from arvis.api.timeline import TimelineView
 from arvis.timeline.timeline_snapshot import TimelineSnapshot
 from tests.timeline.helpers import make_entries
-from arvis.api.os import CognitiveOS
 
 
 def test_timeline_view_from_snapshot():

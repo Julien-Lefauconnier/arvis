@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Union, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 
 @runtime_checkable
@@ -38,16 +38,16 @@ class BaseSignal:
     # Comparators (critical for migration)
     # -----------------------------------------
 
-    def __lt__(self, other: Union[float, SupportsFloat]) -> bool:
+    def __lt__(self, other: float | SupportsFloat) -> bool:
         return self.value < float(other)
 
-    def __le__(self, other: Union[float, SupportsFloat]) -> bool:
+    def __le__(self, other: float | SupportsFloat) -> bool:
         return self.value <= float(other)
 
-    def __gt__(self, other: Union[float, SupportsFloat]) -> bool:
+    def __gt__(self, other: float | SupportsFloat) -> bool:
         return self.value > float(other)
 
-    def __ge__(self, other: Union[float, SupportsFloat]) -> bool:
+    def __ge__(self, other: float | SupportsFloat) -> bool:
         return self.value >= float(other)
 
     def __eq__(self, other: object) -> bool:

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from arvis.math.adaptive.adaptive_kappa_eff import AdaptiveKappaEffEstimator
+
 from .adaptive_snapshot import AdaptiveSnapshot
 
 
@@ -15,8 +15,8 @@ class AdaptiveRuntimeObserver:
 
     def update(
         self,
-        W_prev: Optional[float],
-        W_next: Optional[float],
+        W_prev: float | None,
+        W_next: float | None,
         J: float,
         tau_d: float,
     ) -> AdaptiveSnapshot:
@@ -33,8 +33,8 @@ class AdaptiveRuntimeObserver:
 
         snap = self.estimator.update(W_prev=W_prev, W_next=W_next)
 
-        kappa_eff: Optional[float] = getattr(snap, "kappa_eff", None)
-        margin: Optional[float] = None
+        kappa_eff: float | None = getattr(snap, "kappa_eff", None)
+        margin: float | None = None
 
         if getattr(snap, "is_available", False) and kappa_eff is not None:
             margin = self.estimator.adaptive_switching_margin(

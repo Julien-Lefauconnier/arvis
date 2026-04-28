@@ -25,10 +25,10 @@ def test_timeline_commitment_deterministic():
 
 
 def test_commitment_changes_with_different_runtime_events():
-    from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
     from arvis.adapters.kernel.timeline_from_signals import (
         signal_journal_to_timeline_snapshot,
     )
+    from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
     from arvis.timeline.timeline_commitment import TimelineCommitment
 
     state = CognitiveRuntimeState()
@@ -185,9 +185,10 @@ def test_global_commitment_changes_with_input():
 
 
 def test_global_commitment_recomputable():
-    from arvis.api import CognitiveOS
     import json
     from hashlib import sha256
+
+    from arvis.api import CognitiveOS
 
     os = CognitiveOS()
 

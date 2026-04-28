@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict, Set
 
 
 @dataclass(frozen=True)
@@ -16,28 +15,28 @@ class ControlState:
     """
 
     user_id: str
-    place_id: Optional[str]
+    place_id: str | None
 
     # Action traces
-    recent_action_ids: List[str]
-    recent_decisions: List[str]
+    recent_action_ids: list[str]
+    recent_decisions: list[str]
 
     # Preferences
-    preferences: Optional[Dict[str, List[str]]]
+    preferences: dict[str, list[str]] | None
 
     # Cognitive signals (abstracted)
-    conflicts: List[str]
-    conflict_hints: List[str]
+    conflicts: list[str]
+    conflict_hints: list[str]
 
-    last_event_at: Optional[datetime]
+    last_event_at: datetime | None
 
     # Reasoning
-    reasoning_intents: List[str] = field(default_factory=list)
+    reasoning_intents: list[str] = field(default_factory=list)
 
     # Action governance
-    allowed_action_modes: Set[str] = field(default_factory=lambda: {"assisted"})
-    pending_actions: List[str] = field(default_factory=list)
-    audit_actions: List[str] = field(default_factory=list)
+    allowed_action_modes: set[str] = field(default_factory=lambda: {"assisted"})
+    pending_actions: list[str] = field(default_factory=list)
+    audit_actions: list[str] = field(default_factory=list)
 
     # Visibility
-    action_visibility: Dict[str, str] = field(default_factory=dict)
+    action_visibility: dict[str, str] = field(default_factory=dict)

@@ -1,7 +1,6 @@
 # arvis/stability/global_forecast_snapshot.py
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -17,5 +16,5 @@ class GlobalForecastSnapshot:
     predicted_mean_delta: float
     slope: float
     collapse_risk: float
-    time_to_critical: Optional[float]
+    time_to_critical: float | None
     early_warning: bool

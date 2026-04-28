@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
-from arvis.runtime.resource_model import ResourceState
-from arvis.kernel_core.process import CognitiveProcess, CognitiveProcessId
-from arvis.kernel_core.state.scheduler_state import SchedulerState
-from arvis.kernel_core.interrupts.interrupt_bus import CognitiveInterruptBus
-from arvis.signals.signal_journal import SignalJournal
-from arvis.api.signals import CanonicalSignal
 from arvis.adapters.kernel.signals.signal_factory import SignalFactory
 from arvis.adapters.kernel.timeline_from_signals import (
     signal_journal_to_timeline_snapshot,
 )
+from arvis.api.signals import CanonicalSignal
+from arvis.kernel_core.interrupts.interrupt_bus import CognitiveInterruptBus
+from arvis.kernel_core.process import CognitiveProcess, CognitiveProcessId
+from arvis.kernel_core.state.scheduler_state import SchedulerState
+from arvis.runtime.resource_model import ResourceState
+from arvis.signals.signal_journal import SignalJournal
 from arvis.timeline.timeline_commitment import (
     TimelineCommitment,
 )
@@ -25,8 +25,8 @@ class CognitiveRuntimeState:
     scheduler_state: SchedulerState = field(default_factory=SchedulerState)
     resource_state: ResourceState = field(default_factory=ResourceState)
     processes: dict[CognitiveProcessId, CognitiveProcess] = field(default_factory=dict)
-    memory_topology: Optional[Any] = None
-    control_state: Optional[Any] = None
+    memory_topology: Any | None = None
+    control_state: Any | None = None
     timeline: Any = field(default_factory=SignalJournal)
     _local_counter: int = 0
     _last_tick: int = -1

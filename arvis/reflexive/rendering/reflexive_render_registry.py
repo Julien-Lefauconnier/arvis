@@ -1,13 +1,13 @@
 # arvis/reflexive/rendering/reflexive_render_registry.py
 
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from arvis.reflexive.core.reflexive_mode import ReflexiveMode
 from arvis.reflexive.rendering.reflexive_renderer import ReflexiveRenderer
 
 
 class ReflexiveRenderRegistry:
-    _REGISTRY: Dict[ReflexiveMode, ReflexiveRenderer] = {}
+    _REGISTRY: dict[ReflexiveMode, ReflexiveRenderer] = {}
 
     @classmethod
     def for_mode(cls, mode: ReflexiveMode) -> ReflexiveRenderer:
@@ -17,8 +17,8 @@ class ReflexiveRenderRegistry:
 
     @staticmethod
     def _observation_only_renderer() -> ReflexiveRenderer:
-        def render(snapshot: Any) -> Dict[str, Any]:
-            data = cast(Dict[str, Any], snapshot.to_dict())
+        def render(snapshot: Any) -> dict[str, Any]:
+            data = cast(dict[str, Any], snapshot.to_dict())
             # SAFE: create filtered copy without mutating attested fields
             filtered = dict(data)
             filtered["timeline_views"] = {}
@@ -31,15 +31,15 @@ class ReflexiveRenderRegistry:
 
     @staticmethod
     def _explanatory_renderer() -> ReflexiveRenderer:
-        def render(snapshot: Any) -> Dict[str, Any]:
-            return cast(Dict[str, Any], snapshot.to_dict())
+        def render(snapshot: Any) -> dict[str, Any]:
+            return cast(dict[str, Any], snapshot.to_dict())
 
         return ReflexiveRenderer(render_fn=render)
 
     @staticmethod
     def _compliance_renderer() -> ReflexiveRenderer:
-        def render(snapshot: Any) -> Dict[str, Any]:
-            data = cast(Dict[str, Any], snapshot.to_dict())
+        def render(snapshot: Any) -> dict[str, Any]:
+            data = cast(dict[str, Any], snapshot.to_dict())
             filtered = dict(data)
             filtered.setdefault("compliance", {})
             if "attestation" in filtered:

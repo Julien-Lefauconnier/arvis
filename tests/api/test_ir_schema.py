@@ -1,6 +1,7 @@
 # tests/api/test_ir_schema.py
 
 import json
+
 from jsonschema import validate
 
 from arvis.api.ir import build_ir_view

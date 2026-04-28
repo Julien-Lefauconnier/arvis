@@ -1,8 +1,7 @@
 # tests/adapters/kernel/test_kernel_adapter_integration.py
 
-
-from tests.adapters.kernel.fixtures import dummy_ir
 from arvis.adapters.kernel.mappers.ir_to_canonical import ir_to_canonical
+from tests.adapters.kernel.fixtures import dummy_ir
 
 
 def test_ir_mapping_is_deterministic():
@@ -13,7 +12,7 @@ def test_ir_mapping_is_deterministic():
 
     assert len(s1) == len(s2)
 
-    for a, b in zip(s1, s2):
+    for a, b in zip(s1, s2, strict=True):
         assert a.key == b.key
         assert a.state == b.state
 

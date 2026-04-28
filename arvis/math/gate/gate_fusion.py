@@ -1,8 +1,10 @@
 # arvis/math/gate/gate_fusion.py
 
 from __future__ import annotations
+
 from typing import Any
-from arvis.math.decision.multiaxial_fusion import multiaxial_fusion, MultiaxialInputs
+
+from arvis.math.decision.multiaxial_fusion import MultiaxialInputs, multiaxial_fusion
 
 
 def run_fusion(

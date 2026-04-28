@@ -1,7 +1,8 @@
 # arvis/reflexive/rendering/reflexive_render_profile.py
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict, Any
+from typing import Any
 
 from arvis.reflexive.snapshot.reflexive_snapshot import (
     ReflexiveSnapshot,
@@ -18,7 +19,7 @@ class ReflexiveRenderProfile:
     - no cognition
     """
 
-    render_fn: Callable[[ReflexiveSnapshot], Dict[str, Any]]
+    render_fn: Callable[[ReflexiveSnapshot], dict[str, Any]]
 
-    def apply(self, snapshot: ReflexiveSnapshot) -> Dict[str, Any]:
+    def apply(self, snapshot: ReflexiveSnapshot) -> dict[str, Any]:
         return self.render_fn(snapshot)

@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from typing import Deque, List, Optional, Tuple
 
-from arvis.math.lyapunov.lyapunov import LyapunovState, V, delta_V
 from arvis.math.core.normalization import clamp01
+from arvis.math.lyapunov.lyapunov import LyapunovState, V, delta_V
 
 
 @dataclass(frozen=True)
@@ -22,7 +21,7 @@ class MultiHorizonPredictiveParams:
     - ttc_target_v: V level defining "critical line" for TTC computation
     """
 
-    horizons: Tuple[int, int, int] = (5, 25, 100)
+    horizons: tuple[int, int, int] = (5, 25, 100)
     window_size: int = 20
 
     warn_pred_v: float = 0.60
@@ -37,7 +36,7 @@ class MultiHorizonPredictiveParams:
 @dataclass(frozen=True)
 class MultiHorizonPredictiveSnapshot:
     window_size: int
-    horizons: Tuple[int, int, int]
+    horizons: tuple[int, int, int]
     last_v: float
     slope: float
 
@@ -45,7 +44,7 @@ class MultiHorizonPredictiveSnapshot:
     medium_v: float
     long_v: float
 
-    time_to_critical: Optional[int]
+    time_to_critical: int | None
     verdict: str
 
     # --- Compatibility with existing fusion code ---
@@ -75,7 +74,7 @@ class MultiHorizonPredictiveObserver:
 
     def __init__(self, params: MultiHorizonPredictiveParams | None = None):
         self.params = params or MultiHorizonPredictiveParams()
-        self._states: Deque[LyapunovState] = deque(maxlen=self.params.window_size)
+        self._states: deque[LyapunovState] = deque(maxlen=self.params.window_size)
 
     def reset(self) -> None:
         self._states.clear()
@@ -101,7 +100,7 @@ class MultiHorizonPredictiveObserver:
             )
 
         # signed deltas over the window
-        deltas: List[float] = [
+        deltas: list[float] = [
             float(delta_V(self._states[i - 1], self._states[i]))
             for i in range(1, len(self._states))
         ]
@@ -128,7 +127,7 @@ class MultiHorizonPredictiveObserver:
             long_v = max(long_v, drift_amp)
 
         # time-to-critical only meaningful if slope > 0
-        ttc: Optional[int] = None
+        ttc: int | None = None
         if slope > 0.0:
             target = float(self.params.ttc_target_v)
             if last_v >= target:

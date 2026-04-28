@@ -1,8 +1,9 @@
 # tests/stability/test_stability_state_projector.py
 
 import pytest
-from arvis.stability.stability_state_projector import StabilityStateProjector
+
 from arvis.math.lyapunov.lyapunov import LyapunovState
+from arvis.stability.stability_state_projector import StabilityStateProjector
 
 
 class Dummy:

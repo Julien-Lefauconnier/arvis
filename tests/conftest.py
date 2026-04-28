@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+
 import pytest
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
@@ -73,7 +74,7 @@ def ctx_with_ir(minimal_ctx):
     """
     from arvis.ir.decision import CognitiveDecisionIR
     from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR
-    from arvis.ir.state import CognitiveStateIR, CognitiveRiskIR
+    from arvis.ir.state import CognitiveRiskIR, CognitiveStateIR
 
     minimal_ctx.ir_decision = CognitiveDecisionIR(
         decision_id="d1",

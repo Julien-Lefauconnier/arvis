@@ -5,12 +5,12 @@ Canonical Signal Specifications — Risk Domain
 Universal risk-state vocabulary for cognitive systems.
 """
 
+from arvis.signals.canonical.canonical_signal_category import CanonicalSignalCategory
+from arvis.signals.canonical.canonical_signal_key import CanonicalSignalKey
 from arvis.signals.canonical.canonical_signal_registry import (
     CanonicalSignalRegistry,
     CanonicalSignalSpec,
 )
-from arvis.signals.canonical.canonical_signal_category import CanonicalSignalCategory
-from arvis.signals.canonical.canonical_signal_key import CanonicalSignalKey
 
 
 def register_risk_signals() -> None:

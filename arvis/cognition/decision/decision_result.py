@@ -1,7 +1,7 @@
 # arvis/cognition/decision/decision_result.py
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 from arvis.memory.memory_intent import MemoryIntent
 from arvis.reasoning.reasoning_intent import ReasoningIntent
@@ -23,16 +23,16 @@ class DecisionResult:
 
     reason: str = ""
 
-    reasoning_intents: List[ReasoningIntent] = field(default_factory=list)
+    reasoning_intents: list[ReasoningIntent] = field(default_factory=list)
 
-    uncertainty_frames: List[UncertaintyFrame] = field(default_factory=list)
+    uncertainty_frames: list[UncertaintyFrame] = field(default_factory=list)
 
-    context_hints: Dict[str, Any] = field(default_factory=dict)
+    context_hints: dict[str, Any] = field(default_factory=dict)
 
     # -----------------------------------------------------
     # Memory influence (ZK-safe projection)
     # -----------------------------------------------------
-    memory_influence: Dict[str, Any] = field(default_factory=dict)
+    memory_influence: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def empty(cls) -> "DecisionResult":

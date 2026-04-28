@@ -3,8 +3,8 @@
 import pytest
 
 from arvis.cognition.bundle.cognitive_bundle_invariants import (
-    assert_cognitive_bundle_invariants,
     CognitiveBundleInvariantError,
+    assert_cognitive_bundle_invariants,
 )
 
 
