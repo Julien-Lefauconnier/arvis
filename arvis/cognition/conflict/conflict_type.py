@@ -16,4 +16,5 @@ class ConflictType:
 
     name: str
 
+
 REASON_MISMATCH = ConflictType("reason_mismatch")

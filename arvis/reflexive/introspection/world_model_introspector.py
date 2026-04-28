@@ -2,6 +2,7 @@
 
 from typing import Dict, Any
 
+
 class WorldModelIntrospector:
     """
     Explains the predictive world model layer.

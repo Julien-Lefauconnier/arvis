@@ -18,10 +18,9 @@ class MemoryLongContextProjector:
     """
 
     def project(self, snapshot: MemoryLongSnapshot) -> dict[str, Any]:
-        
         #  Extract declarative keys only
         keys = {e.key for e in snapshot.active_entries}
-        
+
         #  Declarative-only: preference presence signals
         preferences = {
             "language": "language" in keys,
@@ -29,9 +28,7 @@ class MemoryLongContextProjector:
         }
 
         #  Declarative constraint flags
-        constraints = [
-            k for k in keys if k.startswith("no_")
-        ]
+        constraints = [k for k in keys if k.startswith("no_")]
 
         return {
             "constraints": constraints,

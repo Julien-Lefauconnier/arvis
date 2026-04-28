@@ -10,6 +10,7 @@ from arvis.ir.state import CognitiveRiskIR, CognitiveStateIR
 
 _IR_VERSION = "1.0"
 
+
 def _maybe_get(obj: Any, *names: str) -> Any:
     if obj is None:
         return None
@@ -80,12 +81,12 @@ class StateIRAdapter:
             irg=getattr(state, "irg", None),
             regime=getattr(stability, "regime", None),
             stable=getattr(stability, "stable", None),
-
             system_tension=getattr(dynamics, "system_tension", None),
             drift=getattr(dynamics, "drift", None),
-
             projection_valid=getattr(projection, "valid", None) if projection else None,
-            projection_margin=getattr(projection, "margin", None) if projection else None,
+            projection_margin=getattr(projection, "margin", None)
+            if projection
+            else None,
         )
 
     @staticmethod
@@ -104,7 +105,9 @@ class StateIRAdapter:
             base_risk,
         )
         forecast_risk = _as_float(
-            _maybe_get(getattr(ctx, "predictive_snapshot", None), "forecast_risk", "risk"),
+            _maybe_get(
+                getattr(ctx, "predictive_snapshot", None), "forecast_risk", "risk"
+            ),
             world_risk,
         )
         fused_risk = _as_float(
@@ -115,7 +118,10 @@ class StateIRAdapter:
         control_snapshot = getattr(ctx, "control_snapshot", None)
         epsilon = _as_float(
             _maybe_get(control_snapshot, "epsilon"),
-            _as_float(getattr(ctx, "_effective_epsilon", None), _as_float(getattr(ctx, "_epsilon", None), 0.0)),
+            _as_float(
+                getattr(ctx, "_effective_epsilon", None),
+                _as_float(getattr(ctx, "_epsilon", None), 0.0),
+            ),
         )
         fused_risk = min(max(fused_risk, 0.0), 1.0)
         epsilon = min(max(epsilon, 0.0), 1.0)
@@ -127,7 +133,10 @@ class StateIRAdapter:
 
         dv = _as_float(
             getattr(ctx, "_dv", None),
-            _as_float(getattr(ctx, "drift_score", None), _as_float(getattr(ctx, "delta_w", None), 0.0)),
+            _as_float(
+                getattr(ctx, "drift_score", None),
+                _as_float(getattr(ctx, "delta_w", None), 0.0),
+            ),
         )
 
         extra = getattr(ctx, "extra", {}) or {}
@@ -171,10 +180,8 @@ class StateIRAdapter:
             irg=getattr(ctx, "irg", None) or getattr(ctx, "introspection", None),
             regime=getattr(ctx, "regime", None),
             stable=getattr(ctx, "stable", None),
-
             system_tension=getattr(ctx, "system_tension", None),
             drift=getattr(ctx, "drift_score", None),
-
             projection_valid=getattr(ctx, "projection_domain_valid", None),
             projection_margin=getattr(ctx, "projection_margin", None),
         )

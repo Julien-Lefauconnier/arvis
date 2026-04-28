@@ -39,7 +39,9 @@ def test_zip_analyzer_builds_tree(tmp_path, monkeypatch) -> None:
     assert "b.md" in names
 
 
-def test_zip_analyzer_marks_supported_and_unsupported_files(tmp_path, monkeypatch) -> None:
+def test_zip_analyzer_marks_supported_and_unsupported_files(
+    tmp_path, monkeypatch
+) -> None:
     monkeypatch.setenv("ENV", "test")
 
     zip_path = _make_zip(

@@ -4,10 +4,9 @@ from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
 from arvis.math.lyapunov.lyapunov import LyapunovState
 from arvis.math.switching.switching_runtime import SwitchingRuntime
 
+
 # COMPOSITE
 def test_delta_w_sign_consistency():
-
-
     comp = CompositeLyapunov()
 
     fast_prev = LyapunovState(0.8, 0.8, 0.8, 0.8)
@@ -25,7 +24,6 @@ def test_delta_w_sign_consistency():
 
 # RUNTIME
 def test_switching_runtime_counts_switches():
-
     rt = SwitchingRuntime()
 
     rt.update("A")

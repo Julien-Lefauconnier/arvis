@@ -88,7 +88,6 @@ class ResponseStrategyResolver:
 
         # Confirmation required
         if gate_verdict == CognitiveGateVerdict.REQUIRE_CONFIRMATION:
-
             # -------------------------------------------------
             # Conversational questions should not be blocked
             # by confirmation unless an action is requested
@@ -105,7 +104,7 @@ class ResponseStrategyResolver:
                 reason="confirmation_required",
                 signals=signals,
             )
-        
+
         # -------------------------------------------------
         # SOCIAL CONVERSATION (greetings, acknowledgements)
         # -------------------------------------------------

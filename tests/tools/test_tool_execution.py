@@ -29,6 +29,7 @@ def test_tool_called_from_runtime():
 
     class DummyTool(BaseTool):
         name = "dummy"
+
         def execute(self, input_data):
             input_data["context"].extra["called"] = True
 

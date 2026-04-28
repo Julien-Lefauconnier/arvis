@@ -26,7 +26,6 @@ class IRGTimelineTemporalAggregator:
         *,
         observed_at: datetime | None = None,
     ) -> IRGTimelineTemporalSnapshot:
-
         return IRGTimelineTemporalSnapshot(
             observed_at=observed_at or datetime.now(timezone.utc),
             observed_views=aggregate.observed_views,

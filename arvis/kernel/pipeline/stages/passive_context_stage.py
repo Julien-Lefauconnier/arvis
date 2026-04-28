@@ -23,7 +23,6 @@ class PassiveContextStage:
     """
 
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         # ensure extra dict exists
         if not hasattr(ctx, "extra") or ctx.extra is None:
             ctx.extra = {}

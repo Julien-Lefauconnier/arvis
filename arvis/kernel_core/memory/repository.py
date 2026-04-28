@@ -13,8 +13,7 @@ class MemoryRepository(Protocol):
         *,
         user_id: str,
         namespace: Optional[str] = None,
-    ) -> list[MemoryRecord]:
-        ...
+    ) -> list[MemoryRecord]: ...
 
     def get_record(
         self,
@@ -22,15 +21,13 @@ class MemoryRepository(Protocol):
         user_id: str,
         namespace: str,
         key: str,
-    ) -> Optional[MemoryRecord]:
-        ...
+    ) -> Optional[MemoryRecord]: ...
 
     def upsert_record(
         self,
         *,
         record: MemoryRecord,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def delete_record(
         self,
@@ -38,5 +35,4 @@ class MemoryRepository(Protocol):
         user_id: str,
         namespace: str,
         key: str,
-    ) -> None:
-        ...
+    ) -> None: ...

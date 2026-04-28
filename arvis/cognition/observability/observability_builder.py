@@ -4,13 +4,24 @@ from typing import Any, Dict
 
 from arvis.cognition.observability.predictive_snapshot import PredictiveSnapshot
 from arvis.cognition.observability.multi_horizon_snapshot import MultiHorizonSnapshot
-from arvis.cognition.observability.global_forecast_snapshot import GlobalForecastSnapshot
-from arvis.cognition.observability.global_stability_snapshot import GlobalStabilitySnapshot
-from arvis.cognition.observability.stability_stats_snapshot import StabilityStatsSnapshot
+from arvis.cognition.observability.global_forecast_snapshot import (
+    GlobalForecastSnapshot,
+)
+from arvis.cognition.observability.global_stability_snapshot import (
+    GlobalStabilitySnapshot,
+)
+from arvis.cognition.observability.stability_stats_snapshot import (
+    StabilityStatsSnapshot,
+)
 
 from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
-from arvis.cognition.observability.symbolic.symbolic_drift_snapshot import SymbolicDriftSnapshot, SymbolicRegime
-from arvis.cognition.observability.symbolic.symbolic_feature_snapshot import SymbolicFeatureSnapshot
+from arvis.cognition.observability.symbolic.symbolic_drift_snapshot import (
+    SymbolicDriftSnapshot,
+    SymbolicRegime,
+)
+from arvis.cognition.observability.symbolic.symbolic_feature_snapshot import (
+    SymbolicFeatureSnapshot,
+)
 from arvis.math.signals.system_tension import SystemTensionSignal
 from arvis.stability.stability_snapshot import StabilitySnapshot
 
@@ -22,7 +33,6 @@ class ObservabilityBuilder:
     """
 
     def build(self, ctx: Any) -> Dict[str, Any]:
-
         conflict_pressure = getattr(ctx, "conflict_pressure", None)
         conflict_level = self._signal(conflict_pressure)
         collapse = self._signal(ctx.collapse_risk)
@@ -33,6 +43,7 @@ class ObservabilityBuilder:
             drift=drift,
             conflict=conflict_level,
         )
+
         # -------------------------
         # Predictive
         # -------------------------
@@ -76,11 +87,9 @@ class ObservabilityBuilder:
             collapse_risk=collapse,
             last_v=_lyap_scalar(ctx.cur_lyap),
             reasons=(
-                (
-                    ["high_system_tension", tension.dominant_axis()]
-                    if tension.is_high()
-                    else []
-                )
+                ["high_system_tension", tension.dominant_axis()]
+                if tension.is_high()
+                else []
             ),
         )
 
@@ -97,7 +106,9 @@ class ObservabilityBuilder:
         # Symbolic
         # -------------------------
         symbolic_state = SymbolicState(
-            intent_type=str(getattr(getattr(ctx, "decision_result", None), "signal", "unknown")),
+            intent_type=str(
+                getattr(getattr(ctx, "decision_result", None), "signal", "unknown")
+            ),
             intent_confidence=1.0,
             gate_verdict=str(ctx.gate_result),
             conversation_mode="unknown",
@@ -109,7 +120,9 @@ class ObservabilityBuilder:
 
         symbolic_drift = SymbolicDriftSnapshot(
             drift_score=self._signal(ctx.drift_score),
-            regime=SymbolicRegime.OK if self._signal(ctx.collapse_risk) < 0.5 else SymbolicRegime.WARNING,
+            regime=SymbolicRegime.OK
+            if self._signal(ctx.collapse_risk) < 0.5
+            else SymbolicRegime.WARNING,
             intent_switch=False,
             gate_switch=False,
             confidence_delta=0.0,
@@ -141,7 +154,7 @@ class ObservabilityBuilder:
             "system_tension": tension,
         }
         return result
-    
+
     def _signal(self, x: Any, default: float = 0.0) -> float:
         if x is None:
             return default

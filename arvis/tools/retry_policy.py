@@ -13,7 +13,6 @@ class ToolRetryPolicy:
     """
 
     def evaluate(self, ctx: Any) -> None:
-
         if not getattr(ctx, "_tool_failure", False):
             return
 

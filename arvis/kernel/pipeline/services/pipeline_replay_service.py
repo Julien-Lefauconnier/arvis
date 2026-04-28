@@ -13,16 +13,11 @@ class PipelineReplayService:
     def build_context(
         ir: CognitiveIR,
     ) -> CognitivePipelineContext:
-
         if ir.context is None:
-            raise ValueError(
-                "Cannot replay from IR without context"
-            )
+            raise ValueError("Cannot replay from IR without context")
 
         if ir.input is None:
-            raise ValueError(
-                "Cannot replay from IR without input"
-            )
+            raise ValueError("Cannot replay from IR without input")
 
         ctx = CognitivePipelineContext(
             user_id=ir.context.user_id,

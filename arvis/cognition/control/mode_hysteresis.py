@@ -28,12 +28,11 @@ class ModeHysteresis:
         self._state: dict[str, CognitiveMode] = {}
 
     def update(self, user_id: str, risk: float | RiskSignal | None) -> CognitiveMode:
-
         if isinstance(risk, RiskSignal):
             risk = float(risk)
         else:
             risk = float(risk or 0.0)
-            
+
         prev = self._state.get(user_id, CognitiveMode.NORMAL)
         p = self._params
 

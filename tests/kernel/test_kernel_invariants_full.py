@@ -9,6 +9,7 @@ from arvis.kernel.kernel_invariants import assert_kernel_invariants
 # Dummy bundle
 # -----------------------------
 
+
 class Bundle:
     def __init__(self, stability_score, reasoning_gap=None, reasoning_intent=None):
         self.stability_score = stability_score
@@ -19,6 +20,7 @@ class Bundle:
 # -----------------------------
 # Nominal cases
 # -----------------------------
+
 
 def test_valid_bundle_no_gap():
     b = Bundle(stability_score=0.5)
@@ -39,6 +41,7 @@ def test_valid_bundle_with_gap_and_intent():
 # -----------------------------
 # Stability bounds
 # -----------------------------
+
 
 def test_stability_lower_bound():
     b = Bundle(stability_score=0.0)
@@ -69,6 +72,7 @@ def test_stability_above_one():
 # -----------------------------
 # Reasoning invariant
 # -----------------------------
+
 
 def test_gap_without_intent_fails():
     b = Bundle(

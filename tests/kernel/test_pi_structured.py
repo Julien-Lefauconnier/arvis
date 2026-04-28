@@ -14,6 +14,7 @@ from arvis.ir.state import CognitiveStateIR, CognitiveRiskIR
 # 🔧 FIXTURE : minimal realistic pipeline context
 # ============================================================
 
+
 @pytest.fixture
 def minimal_ctx():
     return CognitivePipelineContext(
@@ -66,6 +67,7 @@ def ctx_with_ir(minimal_ctx):
 # ✅ TEST 1 : Determinism (critical)
 # ============================================================
 
+
 def test_pi_structured_deterministic(ctx_with_ir):
     pi = PiImpl()
 
@@ -78,6 +80,7 @@ def test_pi_structured_deterministic(ctx_with_ir):
 # ============================================================
 # ✅ TEST 2 : Structure integrity
 # ============================================================
+
 
 def test_pi_structured_has_all_components(ctx_with_ir):
     pi = PiImpl()
@@ -92,6 +95,7 @@ def test_pi_structured_has_all_components(ctx_with_ir):
 # ============================================================
 # ✅ TEST 3 : Value ranges (stability sanity)
 # ============================================================
+
 
 def test_pi_value_ranges(ctx_with_ir):
     pi = PiImpl()
@@ -109,6 +113,7 @@ def test_pi_value_ranges(ctx_with_ir):
 # ============================================================
 # ✅ TEST 4 : Gate coherence
 # ============================================================
+
 
 def test_gate_consistency(ctx_with_ir):
     pi = PiImpl()
@@ -128,6 +133,7 @@ def test_gate_consistency(ctx_with_ir):
 # ✅ TEST 5 : Sensitivity to uncertainty
 # ============================================================
 
+
 def test_uncertainty_impacts_confidence(minimal_ctx):
     pi = PiImpl()
 
@@ -143,6 +149,7 @@ def test_uncertainty_impacts_confidence(minimal_ctx):
 # ============================================================
 # ✅ TEST 6 : Stability signal propagation
 # ============================================================
+
 
 def test_system_tension_propagation(minimal_ctx):
     pi = PiImpl()
@@ -161,6 +168,7 @@ def test_system_tension_propagation(minimal_ctx):
 # ✅ TEST 7 : Drift affects stability
 # ============================================================
 
+
 def test_drift_affects_symbolic_stability(minimal_ctx):
     pi = PiImpl()
 
@@ -176,6 +184,7 @@ def test_drift_affects_symbolic_stability(minimal_ctx):
 # ============================================================
 # ✅ TEST 8 : Projection residual logic
 # ============================================================
+
 
 def test_projection_residual_behavior(ctx_with_ir):
     pi = PiImpl()
@@ -193,6 +202,7 @@ def test_projection_residual_behavior(ctx_with_ir):
 # ✅ TEST 9 : Switching safety propagation
 # ============================================================
 
+
 def test_switching_flag_propagation(minimal_ctx):
     pi = PiImpl()
 
@@ -209,6 +219,7 @@ def test_switching_flag_propagation(minimal_ctx):
 # ============================================================
 # ✅ TEST 10 : Robustness to missing IR
 # ============================================================
+
 
 def test_no_ir_does_not_crash(minimal_ctx):
     pi = PiImpl()

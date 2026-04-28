@@ -1,7 +1,7 @@
 # tests/kernel/test_api_surface.py
 
-def test_api_modules_importable():
 
+def test_api_modules_importable():
     pass
 
 

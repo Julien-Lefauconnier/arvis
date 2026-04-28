@@ -73,10 +73,19 @@ class CognitiveOSInternals:
         self,
         state: Optional[CognitiveState],
         result: Any,
-    ) -> Any:
-        if self.config.enable_trace:
+    ) -> CognitiveResultView | Dict[str, Any]:
+        # legacy mode explicite
+        if not self.config.enable_trace:
+            return {
+                "action": getattr(result, "action_decision", None),
+                "can_execute": getattr(result, "can_execute", None),
+            }
+
+        # trace mode normal
+        if state is not None:
             return self._build_trace_result(state, result)
 
+        # fallback fake executors/tests
         return {
             "action": getattr(result, "action_decision", None),
             "can_execute": getattr(result, "can_execute", None),
@@ -91,7 +100,7 @@ class CognitiveOSInternals:
         timeline: Any = None,
         confirmation_result: Any = None,
         extra: Optional[Dict[str, Any]] = None,
-    ) -> Any:
+    ) -> CognitiveResultView | Dict[str, Any]:
         state, result = self._execute(
             user_id=user_id,
             cognitive_input=cognitive_input,
@@ -107,7 +116,7 @@ class CognitiveOSInternals:
         inputs: List[Any],
         *,
         user_id: str,
-    ) -> List[CognitiveResultView]:
+    ) -> List[CognitiveResultView | Dict[str, Any]]:
         return [
             self._run_single(
                 user_id=user_id,
@@ -144,8 +153,7 @@ class CognitiveOSInternals:
             self._require_state(
                 state,
                 message=(
-                    "IR export requires a CognitiveState, "
-                    "but execution returned none."
+                    "IR export requires a CognitiveState, but execution returned none."
                 ),
             ),
         )
@@ -248,8 +256,7 @@ class CognitiveOSInternals:
         state: Optional[CognitiveState],
         *,
         message: str = (
-            "IR export requires a CognitiveState, "
-            "but execution returned none."
+            "IR export requires a CognitiveState, but execution returned none."
         ),
     ) -> CognitiveState:
         if state is None:

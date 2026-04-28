@@ -13,7 +13,6 @@ class TimelineCursor:
     total_entries: int = 0
 
     def __post_init__(self) -> None:
-
         if self.timestamp is None:
             raise ValueError("TimelineCursor.timestamp must not be None")
 
@@ -51,7 +50,9 @@ class TimelineCursor:
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
-            "timestamp": self.timestamp.isoformat() if self.timestamp is not None else "",
+            "timestamp": self.timestamp.isoformat()
+            if self.timestamp is not None
+            else "",
         }
 
         if self.head is not None:
@@ -62,7 +63,6 @@ class TimelineCursor:
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "TimelineCursor":
-
         ts = datetime.fromisoformat(payload["timestamp"])
 
         if ts.tzinfo is None or ts.tzinfo.utcoffset(ts) != timedelta(0):

@@ -28,7 +28,7 @@ class SignalSemantics:
     def fingerprint(signal: Signal) -> Tuple[str, Any, Tuple[Any, Any, Any]]:
         payload: Dict[str, Any] = signal.payload
 
-        signal_type = payload["type"] 
+        signal_type = payload["type"]
 
         return (
             signal.origin or "unknown",

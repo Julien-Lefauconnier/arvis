@@ -49,17 +49,14 @@ class CognitiveStateBuilder:
 
         return CognitiveState(
             bundle_id=ir.bundle_id,
-
             decision=getattr(ctx, "action_decision", None),
             trace=getattr(ctx, "trace", None),
             timeline=timeline,
-
             stability=CognitiveStability(
                 dv=ir.dv,
                 regime=getattr(ir, "regime", None),
                 stable=getattr(ir, "stable", None),
             ),
-
             risk=CognitiveRisk(
                 mh_risk=risk.mh_risk,
                 world_risk=risk.world_risk,
@@ -68,16 +65,13 @@ class CognitiveStateBuilder:
                 smoothed_risk=risk.smoothed_risk,
                 early_warning=ir.early_warning,
             ),
-
             control=CognitiveControl(
                 epsilon=ir.epsilon,
             ),
-
             dynamics=CognitiveDynamics(
                 system_tension=getattr(ir, "system_tension", None),
                 drift=getattr(ir, "drift", None),
             ),
-
             projection=(
                 CognitiveProjection(
                     valid=getattr(ir, "projection_valid", None),
@@ -86,10 +80,8 @@ class CognitiveStateBuilder:
                 if getattr(ir, "projection_valid", None) is not None
                 else None
             ),
-            
             world_prediction=ir.world_prediction,
             forecast=ir.forecast,
-
             irg=ir.irg,
             # -----------------------------------------
             #  IR ATTACHMENT

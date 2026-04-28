@@ -19,6 +19,7 @@ from .pi_types import (
 
 Number = Union[int, float]
 
+
 class PiImpl:
     """
     Runtime implementation of Π_impl.
@@ -28,6 +29,7 @@ class PiImpl:
     - normalize them into a deterministic projected state
     - remain conservative and fail-soft
     """
+
     def project(self, ctx: Any) -> ProjectedState:
         state_signals: Dict[str, float] = {}
         risk_signals: Dict[str, float] = {}
@@ -54,7 +56,8 @@ class PiImpl:
 
         metadata = {
             "source": "PiImpl",
-            "has_observability_snapshot": getattr(ctx, "predictive_snapshot", None) is not None,
+            "has_observability_snapshot": getattr(ctx, "predictive_snapshot", None)
+            is not None,
         }
 
         return ProjectedState(
@@ -77,7 +80,7 @@ class PiImpl:
                     out[str(key)] = float(value)
             return out
         return None
-    
+
     def _coerce(self, value: Any, default: Number = 0.0) -> float:
         if isinstance(value, (int, float)):
             return float(value)
@@ -100,13 +103,9 @@ class PiImpl:
         tension = self._coerce(getattr(ctx, "system_tension", None), 0.0)
         drift = self._coerce(getattr(ctx, "drift_score", None), 0.0)
 
-        conflict_pressure = self._coerce(
-            getattr(ctx, "collapse_risk", None), 0.0
-        )
+        conflict_pressure = self._coerce(getattr(ctx, "collapse_risk", None), 0.0)
 
-        uncertainty = self._coerce(
-            getattr(ctx, "uncertainty", None), 0.0
-        )
+        uncertainty = self._coerce(getattr(ctx, "uncertainty", None), 0.0)
 
         decision_commitment = 0.5
         if ir_decision:

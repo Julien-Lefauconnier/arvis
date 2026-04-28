@@ -18,7 +18,6 @@ def make_state(v):
 
 
 def test_gate_allows_small_change():
-
     prev = make_state(0.1)
     cur = make_state(0.11)
 
@@ -31,7 +30,6 @@ def test_gate_allows_small_change():
 
 
 def test_gate_abstain_when_high_V():
-
     prev = make_state(0.9)
     cur = make_state(0.9)
 

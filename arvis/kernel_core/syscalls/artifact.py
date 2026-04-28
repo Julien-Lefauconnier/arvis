@@ -37,7 +37,7 @@ class ExecutionArtifact:
         # HARDENING: enforce valid status
         if self.status not in ("success", "error"):
             raise ValueError(f"invalid artifact status: {self.status}")
-        
+
         # HARDENING: enforce consistency
         if self.status == "success" and error is not None:
             raise ValueError("success artifact cannot have error")
@@ -56,11 +56,12 @@ class ExecutionArtifact:
         self.tick: Optional[int] = tick
 
         if timestamp is None:
-            raise RuntimeError("artifact requires explicit timestamp (kernel-controlled)")
+            raise RuntimeError(
+                "artifact requires explicit timestamp (kernel-controlled)"
+            )
 
         self.timestamp: float = float(timestamp)
 
-    
     # -------------------------
     # deterministic id
     # -------------------------

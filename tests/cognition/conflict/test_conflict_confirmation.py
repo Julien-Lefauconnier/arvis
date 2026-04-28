@@ -1,6 +1,8 @@
 # tests/cognition/conflict/test_conflict_confirmation.py
 
-from arvis.cognition.conflict.conflict_confirmation import requires_conflict_confirmation
+from arvis.cognition.conflict.conflict_confirmation import (
+    requires_conflict_confirmation,
+)
 
 
 def test_no_conflict_no_confirmation():

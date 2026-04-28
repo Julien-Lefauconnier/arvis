@@ -26,7 +26,6 @@ class AdaptiveControlConfig:
 
 
 class AdaptiveControlPolicy:
-
     def __init__(self, config: AdaptiveControlConfig | None = None) -> None:
         self.config = config or AdaptiveControlConfig()
 
@@ -36,7 +35,6 @@ class AdaptiveControlPolicy:
         margin: float | None,
         regime: str | None,
     ) -> AdaptiveControlOutput:
-
         # fallback safe
         if kappa_eff is None or margin is None or regime is None:
             return AdaptiveControlOutput(
@@ -82,9 +80,7 @@ class AdaptiveControlPolicy:
             self.config.max_conservatism - self.config.min_conservatism
         )
 
-        risk = self.config.min_risk + k * (
-            self.config.max_risk - self.config.min_risk
-        )
+        risk = self.config.min_risk + k * (self.config.max_risk - self.config.min_risk)
 
         return AdaptiveControlOutput(
             exploration_scale=exploration,

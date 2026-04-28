@@ -53,12 +53,7 @@ print("-" * 46)
 
 for row in rows:
     idx, req, risk, status, commit = row
-    print(
-        f"{idx}. {req:<8} "
-        f"Risk={risk:<4} "
-        f"{status:<9} "
-        f"{commit}"
-    )
+    print(f"{idx}. {req:<8} Risk={risk:<4} {status:<9} {commit}")
 
 print()
 print("Approved     :", approved)

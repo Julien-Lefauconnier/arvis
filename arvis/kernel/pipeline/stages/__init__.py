@@ -21,8 +21,25 @@ from .action_stage import ActionStage
 from .intent_stage import IntentStage
 from .runtime_stage import RuntimeStage
 
-__all__ = ["ToolFeedbackStage", "ToolRetryStage", "DecisionStage", "PassiveContextStage", "BundleStage", 
-           "ConflictStage", "CoreStage", "TemporalStage", "RegimeStage", "ConflictModulationStage",
-            "ControlStage", "ProjectionStage", "GateStage", "ControlFeedbackStage", 
-            "StructuralRiskStage", "ConfirmationStage","ExecutionStage", "ActionStage", 
-            "IntentStage", "RuntimeStage" ]
+__all__ = [
+    "ToolFeedbackStage",
+    "ToolRetryStage",
+    "DecisionStage",
+    "PassiveContextStage",
+    "BundleStage",
+    "ConflictStage",
+    "CoreStage",
+    "TemporalStage",
+    "RegimeStage",
+    "ConflictModulationStage",
+    "ControlStage",
+    "ProjectionStage",
+    "GateStage",
+    "ControlFeedbackStage",
+    "StructuralRiskStage",
+    "ConfirmationStage",
+    "ExecutionStage",
+    "ActionStage",
+    "IntentStage",
+    "RuntimeStage",
+]

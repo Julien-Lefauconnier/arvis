@@ -29,7 +29,9 @@ class IntentStage:
 
         self._debug(ctx, "\n[INTENT DEBUG] START")
         self._debug(ctx, "[INTENT DEBUG] verdict:", verdict)
-        self._debug(ctx, "[INTENT DEBUG] _can_execute:", getattr(ctx, "_can_execute", None))
+        self._debug(
+            ctx, "[INTENT DEBUG] _can_execute:", getattr(ctx, "_can_execute", None)
+        )
         self._debug(
             ctx,
             "[INTENT DEBUG] _requires_confirmation:",
@@ -48,9 +50,7 @@ class IntentStage:
         ctx.executable_intent = ExecutableIntent(
             bundle_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
             user_id=ctx.user_id,
-            intent_signature=str(
-                getattr(ctx.decision_result, "reason", "opaque")
-            ),
+            intent_signature=str(getattr(ctx.decision_result, "reason", "opaque")),
             allow_rag=True,
             max_top_k=5,
             provider="default",
@@ -87,9 +87,7 @@ Keep it structured and concise.
                     temperature=0.2,
                 )
 
-                ctx.extra.setdefault("llm", {})[
-                    "intent_enrichment"
-                ] = response.content
+                ctx.extra.setdefault("llm", {})["intent_enrichment"] = response.content
 
             except Exception as e:
                 ctx.extra.setdefault("errors", []).append(

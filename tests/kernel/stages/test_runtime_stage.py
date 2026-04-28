@@ -8,6 +8,7 @@ from arvis.kernel.pipeline.stages.runtime_stage import RuntimeStage
 # Helpers
 # ============================================================
 
+
 class DummyRuntime:
     def __init__(self):
         self.last_risk = None
@@ -51,6 +52,7 @@ class DummyPipeline:
 # 1. FULL HAPPY PATH
 # ============================================================
 
+
 def test_runtime_full():
     ctx = DummyCtx()
     ctx.control_runtime = DummyRuntime()
@@ -79,6 +81,7 @@ def test_runtime_full():
 # 2. RUNTIME BLOCK EXCEPTION
 # ============================================================
 
+
 def test_runtime_exception():
     ctx = DummyCtx()
 
@@ -97,6 +100,7 @@ def test_runtime_exception():
 # 3. SWITCHING NOT CALLED (missing runtime)
 # ============================================================
 
+
 def test_switching_missing_runtime():
     ctx = DummyCtx()
     ctx.regime = "stable"
@@ -112,6 +116,7 @@ def test_switching_missing_runtime():
 # 4. SWITCHING NOT CALLED (missing regime)
 # ============================================================
 
+
 def test_switching_missing_regime():
     ctx = DummyCtx()
     ctx.switching_runtime = DummySwitchingRuntime()
@@ -126,6 +131,7 @@ def test_switching_missing_regime():
 # ============================================================
 # 5. SWITCHING EXCEPTION
 # ============================================================
+
 
 def test_switching_exception():
     class BrokenSwitch:
@@ -145,6 +151,7 @@ def test_switching_exception():
 # 6. OBSERVER NONE
 # ============================================================
 
+
 def test_observer_none():
     ctx = DummyCtx()
 
@@ -159,6 +166,7 @@ def test_observer_none():
 # ============================================================
 # 7. OBSERVER EXCEPTION
 # ============================================================
+
 
 def test_observer_exception():
     ctx = DummyCtx()

@@ -18,7 +18,9 @@ from tests.fixtures.projection_cases import (
 )
 
 
-def _pad_or_truncate(values: tuple[float, ...], size: int, fill: float = 0.0) -> tuple[float, ...]:
+def _pad_or_truncate(
+    values: tuple[float, ...], size: int, fill: float = 0.0
+) -> tuple[float, ...]:
     seq = tuple(float(v) for v in values)
     if len(seq) >= size:
         return seq[:size]
@@ -98,7 +100,9 @@ def comp() -> CompositeLyapunov:
         noisy_case,
     ],
 )
-def test_real_composite_lyapunov_is_finite_and_defined(case_fn, comp: CompositeLyapunov):
+def test_real_composite_lyapunov_is_finite_and_defined(
+    case_fn, comp: CompositeLyapunov
+):
     obs = case_fn()
     proj = project_observation(obs)
 
@@ -113,7 +117,9 @@ def test_real_composite_lyapunov_is_finite_and_defined(case_fn, comp: CompositeL
     assert W >= 0.0
 
 
-def test_real_composite_lyapunov_remains_defined_on_invalid_input(comp: CompositeLyapunov):
+def test_real_composite_lyapunov_remains_defined_on_invalid_input(
+    comp: CompositeLyapunov,
+):
     obs = Observation(
         numeric_signals={"risk": "invalid"},
         structured_signals={},
@@ -133,7 +139,9 @@ def test_real_composite_lyapunov_remains_defined_on_invalid_input(comp: Composit
     assert W >= 0.0
 
 
-def test_real_composite_lyapunov_equals_fast_energy_on_target_manifold(comp: CompositeLyapunov):
+def test_real_composite_lyapunov_equals_fast_energy_on_target_manifold(
+    comp: CompositeLyapunov,
+):
     """
     Sanity check against the true ARVIS structure:
     if slow == target_map(symbolic, fast), then the mismatch term is zero and
@@ -153,10 +161,14 @@ def test_real_composite_lyapunov_equals_fast_energy_on_target_manifold(comp: Com
     assert abs(W - V) < 1e-6
 
 
-def test_real_composite_delta_W_is_finite_under_small_perturbation(comp: CompositeLyapunov):
+def test_real_composite_delta_W_is_finite_under_small_perturbation(
+    comp: CompositeLyapunov,
+):
     base_obs = nominal_case()
     next_obs = Observation(
-        numeric_signals={k: float(v) + 0.01 for k, v in base_obs.numeric_signals.items()},
+        numeric_signals={
+            k: float(v) + 0.01 for k, v in base_obs.numeric_signals.items()
+        },
         structured_signals=base_obs.structured_signals,
         external_signals=base_obs.external_signals,
     )
@@ -186,7 +198,9 @@ def test_real_composite_delta_W_is_finite_under_small_perturbation(comp: Composi
     assert not math.isinf(delta)
 
 
-def test_real_composite_lyapunov_varies_smoothly_under_small_perturbation(comp: CompositeLyapunov):
+def test_real_composite_lyapunov_varies_smoothly_under_small_perturbation(
+    comp: CompositeLyapunov,
+):
     base_obs = nominal_case()
     base_proj = project_observation(base_obs)
 
@@ -200,7 +214,9 @@ def test_real_composite_lyapunov_varies_smoothly_under_small_perturbation(comp: 
 
     for eps in (0.001, 0.005, 0.01):
         perturbed = Observation(
-            numeric_signals={k: float(v) + eps for k, v in base_obs.numeric_signals.items()},
+            numeric_signals={
+                k: float(v) + eps for k, v in base_obs.numeric_signals.items()
+            },
             structured_signals=base_obs.structured_signals,
             external_signals=base_obs.external_signals,
         )

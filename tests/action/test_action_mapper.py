@@ -10,6 +10,7 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 # 1. ABSTAIN → blocked action
 # ---------------------------------------------------------
 
+
 def test_map_verdict_abstain():
     decision = map_verdict_to_action(LyapunovVerdict.ABSTAIN)
 
@@ -23,6 +24,7 @@ def test_map_verdict_abstain():
 # ---------------------------------------------------------
 # 2. REQUIRE_CONFIRMATION → assisted action
 # ---------------------------------------------------------
+
 
 def test_map_verdict_requires_confirmation():
     decision = map_verdict_to_action(LyapunovVerdict.REQUIRE_CONFIRMATION)
@@ -38,6 +40,7 @@ def test_map_verdict_requires_confirmation():
 # 3. ALLOW → automatic action
 # ---------------------------------------------------------
 
+
 def test_map_verdict_allow():
     decision = map_verdict_to_action(LyapunovVerdict.ALLOW)
 
@@ -52,6 +55,7 @@ def test_map_verdict_allow():
 # 4. Determinism (important invariant)
 # ---------------------------------------------------------
 
+
 def test_mapper_is_deterministic():
     decision_1 = map_verdict_to_action(LyapunovVerdict.ALLOW)
     decision_2 = map_verdict_to_action(LyapunovVerdict.ALLOW)
@@ -62,6 +66,7 @@ def test_mapper_is_deterministic():
 # ---------------------------------------------------------
 # 5. No exception on unknown input (defensive safety)
 # ---------------------------------------------------------
+
 
 def test_mapper_handles_unknown_input_gracefully():
     class FakeVerdict:

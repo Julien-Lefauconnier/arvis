@@ -28,7 +28,6 @@ class BetaAdaptiveController:
         variance: float,
         drift: float,
     ) -> float:
-
         # base
         beta = self.params.beta_min
 

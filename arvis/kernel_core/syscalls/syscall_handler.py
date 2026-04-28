@@ -14,8 +14,7 @@ from arvis.kernel_core.syscalls.syscall_registry import SyscallFn, get_syscall
 class RuntimeStateLike(Protocol):
     scheduler_state: Any
 
-    def append_event(self, name: str, payload: dict[str, Any]) -> None:
-        ...
+    def append_event(self, name: str, payload: dict[str, Any]) -> None: ...
 
 
 class PipelineContextLike(Protocol):
@@ -185,7 +184,7 @@ class SyscallHandler:
             entry["artifact"] = result.result.to_dict()
             entry["artifact_timestamp"] = result.result.timestamp
             entry["artifact"]["causal_id"] = entry["syscall_id"]
-        
+
         # -----------------------------------------
         # MEMORY SNAPSHOT — ZK-safe logging
         # -----------------------------------------
@@ -226,7 +225,7 @@ class SyscallHandler:
 
         if syscall_name in {"vfs.list", "vfs.tree", "vfs.zip.analyze"}:
             return "recompute"
-        
+
         # -----------------------------------------
         # MEMORY SYSCALLS — explicit replay policy
         # -----------------------------------------

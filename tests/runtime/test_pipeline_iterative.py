@@ -15,16 +15,17 @@ from arvis.runtime.cognitive_process import (
 )
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 
+
 class DummyPipeline:
     def run(self, ctx):
         class Result:
             can_execute = True
             requires_confirmation = False
+
         return Result()
 
+
 def test_iter_stages_order_matches_pipeline():
-
-
     pipeline = CognitivePipeline()
 
     stages = list(pipeline.iter_stages())
@@ -35,8 +36,6 @@ def test_iter_stages_order_matches_pipeline():
 
 
 def test_run_iter_executes_all_stages_without_error():
-
-
     pipeline = CognitivePipeline()
     ctx = CognitivePipelineContext(user_id="u1", cognitive_input={})
 
@@ -49,7 +48,6 @@ def test_run_iter_executes_all_stages_without_error():
 
 
 def test_iterative_and_classic_pipeline_do_not_crash():
-
     pipeline = CognitivePipeline()
 
     ctx1 = CognitivePipelineContext(user_id="u1", cognitive_input={})
@@ -65,12 +63,13 @@ def test_iterative_and_classic_pipeline_do_not_crash():
 
 
 def test_scheduler_with_iterative_executor():
-
     runtime_state = CognitiveRuntimeState()
     executor = PipelineExecutor(pipeline=DummyPipeline())
     executor.use_iterative = True
 
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, pipeline_executor=executor)
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, pipeline_executor=executor
+    )
 
     process = CognitiveProcess(
         process_id=CognitiveProcessId("p1"),

@@ -6,14 +6,11 @@ from arvis.api.version import compute_api_fingerprint
 from arvis.api import API_VERSION
 from arvis.api import CognitiveOSConfig
 
-def test_api_contract_shape():
 
+def test_api_contract_shape():
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="test_user",
-        cognitive_input="hello"
-    )
+    result = os.run(user_id="test_user", cognitive_input="hello")
 
     data = result.to_dict()
 
@@ -33,7 +30,6 @@ def test_api_version_locked():
 
 
 def test_api_fingerprint_stable():
-
     f1 = compute_api_fingerprint()
     f2 = compute_api_fingerprint()
 
@@ -42,15 +38,10 @@ def test_api_fingerprint_stable():
     assert len(f1) == 64
 
 
-
 def test_result_view_consistency():
-
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input="test"
-    )
+    result = os.run(user_id="u1", cognitive_input="test")
 
     d1 = result.to_dict()
     d2 = result.to_dict()
@@ -59,13 +50,9 @@ def test_result_view_consistency():
 
 
 def test_summary_does_not_crash():
-
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input="test"
-    )
+    result = os.run(user_id="u1", cognitive_input="test")
 
     summary = result.summary()
 
@@ -73,7 +60,6 @@ def test_summary_does_not_crash():
 
 
 def test_timeline_optional():
-
     os = CognitiveOS()
 
     result = os.run(
@@ -88,14 +74,10 @@ def test_timeline_optional():
 
 
 def test_disable_trace_mode():
-
     os = CognitiveOS(config=CognitiveOSConfig(enable_trace=False))
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input="test"
-    )
+    result = os.run(user_id="u1", cognitive_input="test")
 
     assert isinstance(result, dict)
     assert "action" in result
-
+    assert "can_execute" in result

@@ -9,6 +9,7 @@ from arvis.math.stability.regime_estimator import CognitiveRegimeEstimator
 # 1. INIT VALIDATION
 # ============================================================
 
+
 def test_invalid_window():
     with pytest.raises(ValueError):
         CognitiveRegimeEstimator(window=0)
@@ -23,6 +24,7 @@ def test_invalid_min_samples():
 # 2. NOT ENOUGH SAMPLES
 # ============================================================
 
+
 def test_not_enough_samples():
     est = CognitiveRegimeEstimator(min_samples=5)
 
@@ -34,6 +36,7 @@ def test_not_enough_samples():
 # 3. STABLE REGIME
 # contraction > 0.9 AND var < 0.01
 # ============================================================
+
 
 def test_stable_regime():
     est = CognitiveRegimeEstimator(min_samples=5)
@@ -49,6 +52,7 @@ def test_stable_regime():
 # 4. OSCILLATORY REGIME
 # contraction > 0.7 AND var < 0.1
 # ============================================================
+
 
 def test_oscillatory_regime():
     est = CognitiveRegimeEstimator(min_samples=5)
@@ -67,6 +71,7 @@ def test_oscillatory_regime():
 # contraction > 0.5
 # ============================================================
 
+
 def test_critical_regime():
     est = CognitiveRegimeEstimator(min_samples=5)
 
@@ -83,6 +88,7 @@ def test_critical_regime():
 # 6. CHAOTIC REGIME
 # var > 0.2
 # ============================================================
+
 
 def test_chaotic_regime():
     est = CognitiveRegimeEstimator(min_samples=5)
@@ -101,6 +107,7 @@ def test_chaotic_regime():
 # fallback case
 # ============================================================
 
+
 def test_transition_regime():
     est = CognitiveRegimeEstimator(min_samples=5)
 
@@ -116,6 +123,7 @@ def test_transition_regime():
 # ============================================================
 # 8. TYPE SAFETY (float coercion)
 # ============================================================
+
 
 def test_push_casts_to_float():
     est = CognitiveRegimeEstimator(min_samples=3)

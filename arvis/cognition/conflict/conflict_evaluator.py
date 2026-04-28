@@ -32,11 +32,7 @@ class ConflictEvaluator:
         targets: List[str],
         conflicts: List[ConflictSignal],
     ) -> List[ConflictPolicyResult]:
-
-        results = [
-            ConflictPolicyResult(target_id=t)
-            for t in targets
-        ]
+        results = [ConflictPolicyResult(target_id=t) for t in targets]
 
         for conflict in conflicts:
             for rule in self._rules:

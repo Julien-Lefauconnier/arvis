@@ -15,7 +15,6 @@ class ConversationWorldPredictionBridge:
         context: ConversationContext,
         cognitive_snapshot: Any,
     ) -> None:
-
         if cognitive_snapshot is None:
             return
 

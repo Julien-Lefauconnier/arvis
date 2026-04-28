@@ -3,14 +3,12 @@
 from typing import Dict, Any, List
 
 from arvis.reflexive.architecture.arvis_system_architecture import (
-    ArvisSystemArchitecture
+    ArvisSystemArchitecture,
 )
 
 
 class ArchitectureIntrospector:
-
     def describe(self) -> Dict[str, Any]:
-
         layers = ArvisSystemArchitecture.layers()
 
         structured_layers: List[Dict[str, Any]] = [

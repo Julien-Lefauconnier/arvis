@@ -20,9 +20,7 @@ class PipelineRuntimeService:
         pipeline: "CognitivePipeline",
         user_id: str,
     ) -> CognitiveControlRuntime:
-        runtime = pipeline.control_runtimes.get(
-            user_id
-        )
+        runtime = pipeline.control_runtimes.get(user_id)
         if runtime is None:
             runtime = CognitiveControlRuntime()
             pipeline.control_runtimes[user_id] = runtime

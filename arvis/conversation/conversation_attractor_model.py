@@ -6,8 +6,10 @@ from arvis.conversation.response_strategy_type import (
     ResponseStrategyType,
 )
 
+
 class _StateProtocol(Protocol):
     signals: dict[str, Any]
+
 
 class ConversationAttractorModel:
     """
@@ -23,7 +25,6 @@ class ConversationAttractorModel:
         coherence: float | None,
         state: _StateProtocol | None = None,
     ) -> ResponseStrategyType:
-        
         # --------------------------------------------
         # MEMORY SIGNALS
         # --------------------------------------------
@@ -40,7 +41,7 @@ class ConversationAttractorModel:
 
         if coherence is not None and coherence < 0.3:
             return ResponseStrategyType.CONFIRMATION
-        
+
         # --------------------------------------------
         # MEMORY-DRIVEN ATTRACTOR SHIFT
         # --------------------------------------------

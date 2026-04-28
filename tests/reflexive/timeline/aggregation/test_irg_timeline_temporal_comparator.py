@@ -15,6 +15,7 @@ from arvis.timeline.timeline_types import TimelineEntryType
 # Helpers
 # --------------------------------------------------
 
+
 def make_snapshot(
     *,
     views=None,
@@ -33,6 +34,7 @@ def make_snapshot(
 # --------------------------------------------------
 # No change → stable
 # --------------------------------------------------
+
 
 def test_no_change_is_stable():
     s1 = make_snapshot(
@@ -59,6 +61,7 @@ def test_no_change_is_stable():
 # Views diff
 # --------------------------------------------------
 
+
 def test_views_added_and_removed():
     s1 = make_snapshot(views=["a", "b"])
     s2 = make_snapshot(views=["b", "c"])
@@ -74,10 +77,9 @@ def test_views_added_and_removed():
 # Entry types diff
 # --------------------------------------------------
 
+
 def test_entry_types_added_and_removed():
-    s1 = make_snapshot(
-        types=[TimelineEntryType.CONFLICT]
-    )
+    s1 = make_snapshot(types=[TimelineEntryType.CONFLICT])
     s2 = make_snapshot(
         types=[
             TimelineEntryType.CONFLICT,
@@ -95,6 +97,7 @@ def test_entry_types_added_and_removed():
 # --------------------------------------------------
 # Confidence delta
 # --------------------------------------------------
+
 
 def test_confidence_delta_computation():
     s1 = make_snapshot(confidence=0.5)
@@ -119,13 +122,12 @@ def test_confidence_rounding():
 # Stability threshold
 # --------------------------------------------------
 
+
 def test_confidence_within_epsilon_is_stable():
     s1 = make_snapshot(confidence=0.5)
     s2 = make_snapshot(confidence=0.53)
 
-    diff = IRGTimelineTemporalComparator.compare(
-        s1, s2, confidence_epsilon=0.05
-    )
+    diff = IRGTimelineTemporalComparator.compare(s1, s2, confidence_epsilon=0.05)
 
     assert diff.is_stable is True
 
@@ -134,9 +136,7 @@ def test_confidence_outside_epsilon_is_not_stable():
     s1 = make_snapshot(confidence=0.5)
     s2 = make_snapshot(confidence=0.6)
 
-    diff = IRGTimelineTemporalComparator.compare(
-        s1, s2, confidence_epsilon=0.05
-    )
+    diff = IRGTimelineTemporalComparator.compare(s1, s2, confidence_epsilon=0.05)
 
     assert diff.is_stable is False
 
@@ -144,6 +144,7 @@ def test_confidence_outside_epsilon_is_not_stable():
 # --------------------------------------------------
 # Combined instability
 # --------------------------------------------------
+
 
 def test_combined_changes_force_instability():
     s1 = make_snapshot(
@@ -169,6 +170,7 @@ def test_combined_changes_force_instability():
 # --------------------------------------------------
 # Sorting guarantees
 # --------------------------------------------------
+
 
 def test_views_are_sorted():
     s1 = make_snapshot(views=["z"])
@@ -197,6 +199,7 @@ def test_types_sorted_by_value():
 # --------------------------------------------------
 # Timestamp formatting
 # --------------------------------------------------
+
 
 def test_timestamps_are_iso_strings():
     s1 = make_snapshot()

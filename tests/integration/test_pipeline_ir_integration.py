@@ -75,7 +75,9 @@ def test_pipeline_run_from_input_exports_ir(monkeypatch) -> None:
         pipeline.control_stage,
         "run",
         lambda _p, ctx: (
-            setattr(ctx, "control_snapshot", SimpleNamespace(epsilon=0.4, smoothed_risk=0.3)),
+            setattr(
+                ctx, "control_snapshot", SimpleNamespace(epsilon=0.4, smoothed_risk=0.3)
+            ),
             setattr(ctx, "_epsilon", 0.4),
             setattr(ctx, "_effective_epsilon", 0.4),
         ),

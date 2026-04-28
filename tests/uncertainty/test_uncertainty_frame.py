@@ -7,7 +7,6 @@ from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
 
 
 def test_uncertainty_frame_creation():
-
     frame = UncertaintyFrame(
         frame_id="TEST",
         label="Test frame",
@@ -20,7 +19,6 @@ def test_uncertainty_frame_creation():
 
 
 def test_uncertainty_frame_axes_type():
-
     frame = UncertaintyFrame(
         frame_id="TEST",
         label="Test frame",
@@ -33,7 +31,6 @@ def test_uncertainty_frame_axes_type():
 
 
 def test_uncertainty_frame_is_frozen():
-
     frame = UncertaintyFrame(
         frame_id="TEST",
         label="Test frame",

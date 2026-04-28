@@ -70,7 +70,10 @@ def test_gate_observer_exports_projection_trace():
     assert ctx.extra["fusion_trace"]["projection"]["lyapunov_compatible"] is False
 
     assert "projection" in ctx.extra["theoretical_trace"]
-    assert ctx.extra["theoretical_trace"]["projection"]["raw_view"]["state.system_tension"] == 5.0
+    assert (
+        ctx.extra["theoretical_trace"]["projection"]["raw_view"]["state.system_tension"]
+        == 5.0
+    )
 
 
 def test_gate_observer_marks_projection_disturbance_flag():

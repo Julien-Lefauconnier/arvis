@@ -12,7 +12,6 @@ from arvis.math.predictive.trajectory_observer import TrajectorySnapshot
 
 
 def test_hybrid_risk_output_bounds():
-
     snap = HybridRiskObserver.fuse(
         v_numeric=0.2,
         v_symbolic=0.4,
@@ -26,7 +25,6 @@ def test_hybrid_risk_output_bounds():
 
 
 def test_multi_horizon_output_bounds():
-
     obs = MultiHorizonStabilityObserver()
 
     snap = obs.evaluate(
@@ -40,7 +38,6 @@ def test_multi_horizon_output_bounds():
 
 
 def test_global_stability_output_bounds():
-
     fusion = GlobalStabilityFusion()
 
     state = LyapunovState(

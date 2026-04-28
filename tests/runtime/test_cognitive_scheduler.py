@@ -33,7 +33,9 @@ class DummyPipeline:
 def test_scheduler_executes_highest_priority_process():
     runtime_state = CognitiveRuntimeState()
     executor = PipelineExecutor(pipeline=DummyPipeline())  # type: ignore[arg-type]
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, pipeline_executor=executor)
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, pipeline_executor=executor
+    )
 
     p1 = CognitiveProcess(
         process_id=CognitiveProcessId("p1"),
@@ -81,7 +83,9 @@ def test_scheduler_waits_confirmation_when_pipeline_requires_it():
 
     runtime_state = CognitiveRuntimeState()
     executor = PipelineExecutor(pipeline=ConfirmationPipeline())  # type: ignore[arg-type]
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, pipeline_executor=executor)
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, pipeline_executor=executor
+    )
 
     process = CognitiveProcess(
         process_id=CognitiveProcessId("p-confirm"),
@@ -111,7 +115,6 @@ def test_scheduler_waits_confirmation_when_pipeline_requires_it():
 
 
 def test_scheduler_budget_exhausted_without_completion_sets_no_result():
-
     @dataclass
     class DummyOutcome:
         completed: bool
@@ -163,9 +166,7 @@ def test_scheduler_budget_exhausted_without_completion_sets_no_result():
     assert CognitiveProcessId("p1") in runtime_state.scheduler_state.suspended_queue
 
 
-
 def test_scheduler_preempts_incomplete_process_when_budget_remains():
-
     @dataclass
     class DummyOutcome:
         completed: bool
@@ -217,14 +218,16 @@ def test_scheduler_preempts_incomplete_process_when_budget_remains():
     assert CognitiveProcessId("p-preempt") in runtime_state.scheduler_state.ready_queue
 
 
-
 def test_executor_raises_if_finalize_returns_none():
     class BadPipeline:
         def iter_stages(self):
             return []
 
-        def _prepare_run(self, ctx): pass
-        def finalize_run(self, ctx): return None
+        def _prepare_run(self, ctx):
+            pass
+
+        def finalize_run(self, ctx):
+            return None
 
     executor = PipelineExecutor(BadPipeline())
 
@@ -240,5 +243,6 @@ def test_executor_raises_if_finalize_returns_none():
     )
 
     import pytest
+
     with pytest.raises(RuntimeError):
         executor.execute_process(process)

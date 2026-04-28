@@ -1,5 +1,6 @@
 # tests/kernel/gate/test_confidence_control_integration.py
 
+
 def test_confidence_flags_present(pipeline, ctx):
     ctx.delta_w_history = [10.0, 10.0, 10.0]
 

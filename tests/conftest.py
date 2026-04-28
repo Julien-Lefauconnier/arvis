@@ -20,10 +20,7 @@ def pipeline():
 @pytest.fixture
 def ctx():
     return CognitivePipelineContext(
-        user_id="test-user",
-        cognitive_input={
-            "query": "test"
-        }
+        user_id="test-user", cognitive_input={"query": "test"}
     )
 
 

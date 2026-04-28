@@ -57,5 +57,5 @@ class ConversationStrategyDynamics:
             if state.signals.get("memory_pressure", 0) > 0:
                 return proposed_strategy
             return last
-        
+
         return proposed_strategy

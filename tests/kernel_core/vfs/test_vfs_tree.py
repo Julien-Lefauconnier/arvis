@@ -116,7 +116,9 @@ def test_build_vfs_tree_is_deterministic_for_roots() -> None:
 
 def test_build_vfs_tree_is_deterministic_for_children() -> None:
     items = [
-        VFSItem(item_id="root", display_name="root", item_type="folder", parent_id=None),
+        VFSItem(
+            item_id="root", display_name="root", item_type="folder", parent_id=None
+        ),
         VFSItem(item_id="3", display_name="b.txt", item_type="file", parent_id="root"),
         VFSItem(item_id="2", display_name="a.txt", item_type="file", parent_id="root"),
         VFSItem(item_id="1", display_name="docs", item_type="folder", parent_id="root"),

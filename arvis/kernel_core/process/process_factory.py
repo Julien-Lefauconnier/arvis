@@ -37,7 +37,6 @@ class ProcessFactory:
         metadata: Optional[dict[str, Any]] = None,
         local_state: Any = None,
     ) -> CognitiveProcess:
-
         descriptor = ProcessDescriptor(
             process_id=process_id,
             kind=kind,

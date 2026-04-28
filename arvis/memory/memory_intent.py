@@ -2,6 +2,7 @@
 
 from enum import Enum
 
+
 class MemoryIntent(Enum):
     NONE = "none"
     CANDIDATE = "candidate"

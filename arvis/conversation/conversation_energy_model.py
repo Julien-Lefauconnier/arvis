@@ -2,6 +2,7 @@
 
 from typing import Dict, Optional
 
+
 class ConversationEnergyModel:
     """
     Aggregates multiple cognitive signals into a single
@@ -21,7 +22,7 @@ class ConversationEnergyModel:
         "memory": 0.1,
         "constraint": 0.1,
     }
-    
+
     @staticmethod
     def compute_energy(
         *,
@@ -34,7 +35,6 @@ class ConversationEnergyModel:
         delta_w: float | None = None,
         dynamic_weights: Optional[Dict[str, float]] = None,
     ) -> float:
-
         collapse = collapse_risk if collapse_risk is not None else 0.0
         uncertainty_val = uncertainty if uncertainty is not None else 0.0
         pressure = temporal_pressure if temporal_pressure is not None else 0.0

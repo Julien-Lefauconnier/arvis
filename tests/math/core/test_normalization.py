@@ -21,6 +21,7 @@ def test_clamp01():
     assert clamp01(-1) == 0
     assert clamp01(2) == 1
 
+
 def test_clamp_edge_cases():
     from arvis.math.core.normalization import clamp
 

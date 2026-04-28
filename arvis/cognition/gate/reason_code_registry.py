@@ -22,25 +22,20 @@ class ReasonCodeRegistry:
         # --- Global stability ---
         "global_instability_confirmed",
         "global_instability_abstained",
-
         # --- Adaptive ---
         "adaptive_margin_warning",
         "adaptive_instability_veto",
-
         # --- Projection ---
         "projection_invalid",
         "projection_boundary",
         "projection_unsafe",
         "projection_lyapunov_incompatible",
-
         # --- Kappa ---
         "kappa_violation",
         "kappa_margin_warning",
         "kappa_margin_critical",
-
         # --- Recovery ---
         "recovery_override",
-
         # --- Generic ---
         "fusion_fallback",
         "gate_policy_adjustment",

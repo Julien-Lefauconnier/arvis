@@ -45,12 +45,10 @@ def test_growth_gives_unstable_regime():
 
 
 def test_smoothing_behaves_as_expected():
-    est = AdaptiveKappaEffEstimator(
-        AdaptiveKappaConfig(smoothing=0.5)
-    )
+    est = AdaptiveKappaEffEstimator(AdaptiveKappaConfig(smoothing=0.5))
 
-    snap1 = est.update(W_prev=10.0, W_next=8.0)   # raw = 0.2
-    snap2 = est.update(W_prev=8.0, W_next=7.2)    # raw = 0.1
+    snap1 = est.update(W_prev=10.0, W_next=8.0)  # raw = 0.2
+    snap2 = est.update(W_prev=8.0, W_next=7.2)  # raw = 0.1
 
     assert snap1.kappa_smoothed == pytest.approx(0.2)
     assert snap2.kappa_smoothed == pytest.approx(0.15)

@@ -114,17 +114,14 @@ __all__ = [
     "DecisionTraceView",
     "TimelineView",
     "StabilityView",
-
     # Versioning
     "PACKAGE_VERSION",
     "API_VERSION",
     "PUBLIC_API_FINGERPRINT",
-
     # IR
     "build_ir_view",
     "canonicalize_ir",
     "hash_ir",
-
     # Cognition
     "CognitiveBundleBuilder",
     "CognitiveBundleSnapshot",
@@ -132,22 +129,18 @@ __all__ = [
     "ChangeBudget",
     "CognitivePolicyResult",
     "CognitiveSignalSnapshot",
-
     # Memory
     "MemoryIntent",
     "MemoryGate",
     "MemoryLongSnapshot",
     "MemoryLongType",
-
     # Reasoning
     "ReasoningIntent",
     "ReasoningIntentType",
-
     # Uncertainty
     "UncertaintyAxis",
     "UncertaintyFrame",
     "UncertaintyFrameRegistry",
-
     # Math
     "LyapunovState",
     "LyapunovWeights",
@@ -158,16 +151,13 @@ __all__ = [
     "normalize_weights",
     "HoeffdingRiskBound",
     "RiskBoundSnapshot",
-
     # Control / Stability
     "ControlInertia",
     "StabilityObserver",
     "StabilitySnapshot",
-
     # Adapters
     "BaseLLMAdapter",
     "OpenAIAdapter",
-
     # Tools
     "BaseTool",
     "ToolExecutor",

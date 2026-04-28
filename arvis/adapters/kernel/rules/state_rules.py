@@ -20,7 +20,10 @@ class EarlyWarningDetectedRule(CanonicalRule):
         state = getattr(ir, "state", None)
         if state is None:
             return False
-        return bool(getattr(state, "stable", None) is False or getattr(state, "early_warning", False))
+        return bool(
+            getattr(state, "stable", None) is False
+            or getattr(state, "early_warning", False)
+        )
 
     def emit_codes(self, ir: Any) -> Iterable[str]:
         yield "early_warning_detected"

@@ -3,13 +3,18 @@
 from arvis.kernel.pipeline.stages.control_stage import ControlStage
 from arvis.math.control.eps_adaptive import CognitiveMode
 
+
 def test_memory_pressure_reduces_epsilon():
     stage = ControlStage()
 
     class DummyPipeline:
         hysteresis = type("H", (), {"update": lambda *a, **k: CognitiveMode.NORMAL})()
         epsilon_controller = type("E", (), {"compute": lambda *a, **k: 1.0})()
-        regime_policy = type("R", (), {"compute": lambda *a, **k: type("X", (), {"epsilon_multiplier": 1.0})()})()
+        regime_policy = type(
+            "R",
+            (),
+            {"compute": lambda *a, **k: type("X", (), {"epsilon_multiplier": 1.0})()},
+        )()
         exploration = type("X", (), {"compute": lambda *a, **k: None})()
 
     ctx = type("Ctx", (), {})()
@@ -21,12 +26,16 @@ def test_memory_pressure_reduces_epsilon():
     ctx.timeline = []
 
     # 👉 memory pressure HIGH
-    ctx.bundle = type("B", (), {
-        "memory_features": {
-            "memory_pressure": 0.9,
-            "has_constraints": False,
-        }
-    })()
+    ctx.bundle = type(
+        "B",
+        (),
+        {
+            "memory_features": {
+                "memory_pressure": 0.9,
+                "has_constraints": False,
+            }
+        },
+    )()
 
     stage.run(DummyPipeline(), ctx)
 
@@ -40,7 +49,11 @@ def test_memory_constraints_reduce_epsilon():
     class DummyPipeline:
         hysteresis = type("H", (), {"update": lambda *a, **k: CognitiveMode.NORMAL})()
         epsilon_controller = type("E", (), {"compute": lambda *a, **k: 1.0})()
-        regime_policy = type("R", (), {"compute": lambda *a, **k: type("X", (), {"epsilon_multiplier": 1.0})()})()
+        regime_policy = type(
+            "R",
+            (),
+            {"compute": lambda *a, **k: type("X", (), {"epsilon_multiplier": 1.0})()},
+        )()
         exploration = type("X", (), {"compute": lambda *a, **k: None})()
 
     ctx = type("Ctx", (), {})()
@@ -51,12 +64,16 @@ def test_memory_constraints_reduce_epsilon():
     ctx.stable = True
     ctx.timeline = []
 
-    ctx.bundle = type("B", (), {
-        "memory_features": {
-            "memory_pressure": 0.0,
-            "has_constraints": True,
-        }
-    })()
+    ctx.bundle = type(
+        "B",
+        (),
+        {
+            "memory_features": {
+                "memory_pressure": 0.0,
+                "has_constraints": True,
+            }
+        },
+    )()
 
     stage.run(DummyPipeline(), ctx)
 
@@ -70,7 +87,11 @@ def test_no_memory_features_safe_fallback():
     class DummyPipeline:
         hysteresis = type("H", (), {"update": lambda *a, **k: CognitiveMode.NORMAL})()
         epsilon_controller = type("E", (), {"compute": lambda *a, **k: 1.0})()
-        regime_policy = type("R", (), {"compute": lambda *a, **k: type("X", (), {"epsilon_multiplier": 1.0})()})()
+        regime_policy = type(
+            "R",
+            (),
+            {"compute": lambda *a, **k: type("X", (), {"epsilon_multiplier": 1.0})()},
+        )()
         exploration = type("X", (), {"compute": lambda *a, **k: None})()
 
     ctx = type("Ctx", (), {})()
@@ -93,7 +114,11 @@ def test_memory_pressure_moderate_mode():
     class DummyPipeline:
         hysteresis = type("H", (), {"update": lambda *a, **k: CognitiveMode.NORMAL})()
         epsilon_controller = type("E", (), {"compute": lambda *a, **k: 1.0})()
-        regime_policy = type("R", (), {"compute": lambda *a, **k: type("X", (), {"epsilon_multiplier": 1.0})()})()
+        regime_policy = type(
+            "R",
+            (),
+            {"compute": lambda *a, **k: type("X", (), {"epsilon_multiplier": 1.0})()},
+        )()
         exploration = type("X", (), {"compute": lambda *a, **k: None})()
 
     ctx = type("Ctx", (), {})()
@@ -104,15 +129,17 @@ def test_memory_pressure_moderate_mode():
     ctx.stable = True
     ctx.timeline = []
 
-    ctx.bundle = type("B", (), {
-        "memory_features": {
-            "memory_pressure": 0.5,
-            "has_constraints": False,
-        }
-    })()
+    ctx.bundle = type(
+        "B",
+        (),
+        {
+            "memory_features": {
+                "memory_pressure": 0.5,
+                "has_constraints": False,
+            }
+        },
+    )()
 
     stage.run(DummyPipeline(), ctx)
 
     assert ctx.memory_mode == "moderate"
-
-

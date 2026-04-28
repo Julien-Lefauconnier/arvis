@@ -1,13 +1,14 @@
 # arvis/reflexive/introspection/counterfactual_introspector.py
 
 from typing import Dict, Any
+
+
 class CounterfactualIntrospector:
     """
     Explains ARVIS counterfactual reasoning.
     """
 
-    def describe(self)-> Dict[str, Any]:
-
+    def describe(self) -> Dict[str, Any]:
         return {
             "name": "counterfactual_reasoning",
             "description": (

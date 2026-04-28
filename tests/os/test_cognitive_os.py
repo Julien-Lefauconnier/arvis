@@ -9,6 +9,7 @@ from arvis.ir.cognitive_ir import CognitiveIR
 # BASIC RUN
 # =====================================================
 
+
 def test_cognitive_os_run_basic():
     os = CognitiveOS()
 
@@ -24,6 +25,7 @@ def test_cognitive_os_run_basic():
 # =====================================================
 # RESULT STRUCTURE
 # =====================================================
+
 
 def test_cognitive_result_structure():
     os = CognitiveOS()
@@ -42,6 +44,7 @@ def test_cognitive_result_structure():
 # IR EXPORT
 # =====================================================
 
+
 def test_cognitive_os_ir_export():
     os = CognitiveOS()
 
@@ -56,6 +59,7 @@ def test_cognitive_os_ir_export():
 # IR API DIRECT
 # =====================================================
 
+
 def test_cognitive_os_run_ir():
     os = CognitiveOS()
 
@@ -68,6 +72,7 @@ def test_cognitive_os_run_ir():
 # =====================================================
 # IR ROUNDTRIP (CRITICAL)
 # =====================================================
+
 
 def test_cognitive_os_ir_roundtrip():
     os = CognitiveOS()
@@ -89,6 +94,7 @@ def test_cognitive_os_ir_roundtrip():
 # REPLAY API
 # =====================================================
 
+
 def test_cognitive_os_replay():
     os = CognitiveOS()
 
@@ -105,10 +111,9 @@ def test_cognitive_os_replay():
 # RUNTIME ADAPTER INJECTION
 # =====================================================
 
+
 def test_runtime_adapter_injection():
-    config = CognitiveOSConfig(
-        adapter_registry={"llm": "dummy"}
-    )
+    config = CognitiveOSConfig(adapter_registry={"llm": "dummy"})
 
     os = CognitiveOS(config=config)
 
@@ -123,6 +128,7 @@ def test_runtime_adapter_injection():
 # =====================================================
 # MULTI AGENT
 # =====================================================
+
 
 def test_multi_agent_run():
     os = CognitiveOS()
@@ -143,6 +149,7 @@ def test_multi_agent_run():
 # INSPECT API
 # =====================================================
 
+
 def test_inspect_api():
     os = CognitiveOS()
 
@@ -159,6 +166,7 @@ def test_inspect_api():
 # SAFE EXECUTION (NO CRASH)
 # =====================================================
 
+
 def test_no_crash_on_empty_input():
     os = CognitiveOS()
 
@@ -173,6 +181,7 @@ def test_cognitive_os_register_and_list_tools():
 
     class DummyTool(BaseTool):
         name = "dummy"
+
         def execute(self, input_data):
             return {"ok": True}
 

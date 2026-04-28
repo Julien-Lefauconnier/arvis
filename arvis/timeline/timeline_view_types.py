@@ -18,4 +18,5 @@ class TimelineViewRole(str, Enum):
     EXPOSED = "exposed"
     USER_VISIBLE = "user_visible"
 
+
 __all__ = ["TimelineViewRole"]

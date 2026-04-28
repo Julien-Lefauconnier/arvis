@@ -50,6 +50,7 @@ def _evt(
 # BASIC PUT
 # =========================================================
 
+
 def test_projection_put_creates_record():
     t0 = datetime.now(timezone.utc)
 
@@ -79,6 +80,7 @@ def test_projection_put_creates_record():
 # =========================================================
 # CREATED_AT INVARIANT
 # =========================================================
+
 
 def test_projection_preserves_created_at_on_update():
     t0 = datetime.now(timezone.utc)
@@ -115,6 +117,7 @@ def test_projection_preserves_created_at_on_update():
 # DELETE
 # =========================================================
 
+
 def test_projection_delete_marks_record_deleted():
     t0 = datetime.now(timezone.utc)
     t1 = t0 + timedelta(seconds=5)
@@ -149,6 +152,7 @@ def test_projection_delete_marks_record_deleted():
 # DELETE NON-EXISTENT (NO CRASH)
 # =========================================================
 
+
 def test_projection_delete_nonexistent_is_noop():
     t0 = datetime.now(timezone.utc)
 
@@ -170,6 +174,7 @@ def test_projection_delete_nonexistent_is_noop():
 # =========================================================
 # RECORD ID STABILITY
 # =========================================================
+
 
 def test_projection_record_id_stable_across_updates():
     t0 = datetime.now(timezone.utc)
@@ -204,6 +209,7 @@ def test_projection_record_id_stable_across_updates():
 # DETERMINISM
 # =========================================================
 
+
 def test_projection_is_deterministic():
     t0 = datetime.now(timezone.utc)
     t1 = t0 + timedelta(seconds=10)
@@ -236,6 +242,7 @@ def test_projection_is_deterministic():
 # =========================================================
 # MULTI KEYS ISOLATION
 # =========================================================
+
 
 def test_projection_isolates_multiple_keys():
     t0 = datetime.now(timezone.utc)

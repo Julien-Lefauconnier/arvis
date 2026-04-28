@@ -10,7 +10,6 @@ from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
 
 
 def test_cognition_timeline_integration():
-
     timeline = TimelineSnapshot((), TimelineHashChain(()))
 
     bundle = CognitiveBundleSnapshot(

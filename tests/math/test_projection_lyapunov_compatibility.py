@@ -17,6 +17,7 @@ from tests.fixtures.projection_cases import (
 # Dummy Lyapunov (aligned with current core)
 # ----------------------------------------
 
+
 def lyapunov(x, z):
     # Simple proxy: quadratic energy
     return sum(v * v for v in x) + sum(v * v for v in z)
@@ -25,6 +26,7 @@ def lyapunov(x, z):
 # ----------------------------------------
 # Tests
 # ----------------------------------------
+
 
 @pytest.mark.parametrize(
     "case_fn",

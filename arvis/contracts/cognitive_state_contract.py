@@ -13,7 +13,6 @@ class CognitiveStateContract:
 
     @staticmethod
     def validate(state: CognitiveState) -> None:
-
         # -------------------------
         # REQUIRED FIELDS
         # -------------------------

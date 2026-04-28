@@ -4,7 +4,6 @@ from arvis.math.risk.risk_bound import HoeffdingRiskBound
 
 
 def test_hoeffding_bound_positive():
-
     bound = HoeffdingRiskBound()
 
     # simulate events
@@ -16,8 +15,8 @@ def test_hoeffding_bound_positive():
     assert snapshot.p_hat == 0.0
     assert snapshot.p_ucb >= 0.0
 
-def test_hoeffding_detects_risk():
 
+def test_hoeffding_detects_risk():
     bound = HoeffdingRiskBound()
 
     for _ in range(20):

@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from arvis.math.core.normalization import clamp01
+
+
 @dataclass(frozen=True)
 class AdaptiveModeSnapshot:
     """

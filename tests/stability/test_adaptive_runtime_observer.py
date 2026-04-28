@@ -3,6 +3,7 @@
 from arvis.math.adaptive.adaptive_kappa_eff import AdaptiveKappaEffEstimator
 from arvis.math.adaptive.adaptive_runtime_observer import AdaptiveRuntimeObserver
 
+
 def test_adaptive_runtime_observer_basic():
     est = AdaptiveKappaEffEstimator()
     observer = AdaptiveRuntimeObserver(estimator=est)
@@ -28,6 +29,7 @@ def test_adaptive_runtime_observer_basic():
 # Mock estimator
 # --------------------------------------------------
 
+
 class DummySnap:
     def __init__(self, kappa_eff, is_available=True):
         self.kappa_eff = kappa_eff
@@ -51,6 +53,7 @@ class DummyEstimator:
 # 1. Guard path (W_prev None)
 # --------------------------------------------------
 
+
 def test_guard_none_inputs():
     observer = AdaptiveRuntimeObserver(estimator=DummyEstimator())
 
@@ -71,6 +74,7 @@ def test_guard_none_inputs():
 # 2. Guard path (W_prev <= 0)
 # --------------------------------------------------
 
+
 def test_guard_non_positive():
     observer = AdaptiveRuntimeObserver(estimator=DummyEstimator())
 
@@ -88,6 +92,7 @@ def test_guard_non_positive():
 # --------------------------------------------------
 # 3. Snap not available → margin None branch
 # --------------------------------------------------
+
 
 def test_snap_not_available():
     observer = AdaptiveRuntimeObserver(
@@ -110,6 +115,7 @@ def test_snap_not_available():
 # 4. Stable regime (margin < 0)
 # --------------------------------------------------
 
+
 def test_stable_regime():
     observer = AdaptiveRuntimeObserver(
         estimator=DummyEstimator(kappa_eff=0.5, margin=-0.1)
@@ -131,6 +137,7 @@ def test_stable_regime():
 # 5. Critical regime (0 <= margin < 0.1)
 # --------------------------------------------------
 
+
 def test_critical_regime():
     observer = AdaptiveRuntimeObserver(
         estimator=DummyEstimator(kappa_eff=0.5, margin=0.05)
@@ -151,6 +158,7 @@ def test_critical_regime():
 # 6. Unstable regime (margin >= 0.1)
 # --------------------------------------------------
 
+
 def test_unstable_regime():
     observer = AdaptiveRuntimeObserver(
         estimator=DummyEstimator(kappa_eff=0.5, margin=0.2)
@@ -170,6 +178,7 @@ def test_unstable_regime():
 # --------------------------------------------------
 # 7. kappa_eff None → margin never computed
 # --------------------------------------------------
+
 
 def test_kappa_none():
     observer = AdaptiveRuntimeObserver(

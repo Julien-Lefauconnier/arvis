@@ -13,7 +13,7 @@ from arvis.signals.canonical.canonical_signal_key import CanonicalSignalKey
 
 def register_timeline_signals() -> None:
     """Register all timeline-related canonical signals."""
-    
+
     # MEMORY_LONG_PROJECTED
     CanonicalSignalRegistry.register(
         CanonicalSignalSpec(
@@ -23,7 +23,7 @@ def register_timeline_signals() -> None:
             ),
             states_allowed=frozenset(["PROJECTED", "ACTIVE", "SUPERSEDED"]),
             subject_kinds=frozenset(["timeline:entry"]),
-            origin_allowed=frozenset(["timeline"]), 
+            origin_allowed=frozenset(["timeline"]),
         )
     )
 
@@ -36,6 +36,6 @@ def register_timeline_signals() -> None:
             ),
             states_allowed=frozenset(["GHOST"]),
             subject_kinds=frozenset(["timeline:entry"]),
-            origin_allowed=frozenset(["timeline"]), 
+            origin_allowed=frozenset(["timeline"]),
         )
     )

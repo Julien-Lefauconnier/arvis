@@ -51,7 +51,6 @@ class ToolExecutor:
             tool.validate(payload_runtime)
             output = tool.execute(payload_runtime)
 
-
             return ToolResult(
                 tool_name=tool_name,
                 success=True,

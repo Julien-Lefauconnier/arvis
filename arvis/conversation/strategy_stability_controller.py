@@ -24,7 +24,6 @@ class StrategyStabilityController(ConversationPolicy):
         proposed_strategy: ResponseStrategyType,
         state: ConversationState,
     ) -> ResponseStrategyType:
-
         # No previous state → accept proposal
         if state.last_strategy is None:
             return proposed_strategy

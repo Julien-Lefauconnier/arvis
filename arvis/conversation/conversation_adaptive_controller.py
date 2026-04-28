@@ -4,6 +4,7 @@ from typing import Any, Protocol
 
 from arvis.conversation.conversation_energy_model import ConversationEnergyModel
 
+
 class _UserProfileProtocol(Protocol):
     weights: dict[str, float]
     adaptation_count: int
@@ -35,7 +36,6 @@ class ConversationAdaptiveController:
         feedback: dict[str, Any] = signals.get("feedback") or {}
         delta_v = signals.get("delta_v", 0.0)
         energy = signals.get("energy", 0.0)
-
 
         profile = state.user_profile if hasattr(state, "user_profile") else None
 
@@ -89,7 +89,8 @@ class ConversationAdaptiveController:
                     0.7,
                 )
                 weights["uncertainty"] = min(
-                    weights["uncertainty"] + dv * ConversationAdaptiveController.MAX_DELTA,
+                    weights["uncertainty"]
+                    + dv * ConversationAdaptiveController.MAX_DELTA,
                     0.5,
                 )
                 updated = True
@@ -101,7 +102,8 @@ class ConversationAdaptiveController:
                     0.3,
                 )
                 weights["uncertainty"] = max(
-                    weights["uncertainty"] + dv * ConversationAdaptiveController.MAX_DELTA,
+                    weights["uncertainty"]
+                    + dv * ConversationAdaptiveController.MAX_DELTA,
                     0.2,
                 )
                 updated = True
@@ -110,22 +112,32 @@ class ConversationAdaptiveController:
         # Collapse sensitivity increase
         # --------------------------------------------
         if feedback.get("high_collapse_risk"):
-            weights["collapse"] = min(weights["collapse"] + ConversationAdaptiveController.MAX_DELTA, 0.7)
+            weights["collapse"] = min(
+                weights["collapse"] + ConversationAdaptiveController.MAX_DELTA, 0.7
+            )
             updated = True
 
         # --------------------------------------------
         # Uncertainty sensitivity increase
         # --------------------------------------------
         if feedback.get("high_uncertainty"):
-            weights["uncertainty"] = min(weights["uncertainty"] + ConversationAdaptiveController.MAX_DELTA, 0.5)
+            weights["uncertainty"] = min(
+                weights["uncertainty"] + ConversationAdaptiveController.MAX_DELTA, 0.5
+            )
             updated = True
 
         # --------------------------------------------
         # If no instability → relax slightly
         # --------------------------------------------
-        if not feedback.get("high_collapse_risk") and not feedback.get("high_uncertainty"):
-            weights["collapse"] = max(weights["collapse"] - ConversationAdaptiveController.MAX_DELTA, 0.3)
-            weights["uncertainty"] = max(weights["uncertainty"] - ConversationAdaptiveController.MAX_DELTA, 0.2)
+        if not feedback.get("high_collapse_risk") and not feedback.get(
+            "high_uncertainty"
+        ):
+            weights["collapse"] = max(
+                weights["collapse"] - ConversationAdaptiveController.MAX_DELTA, 0.3
+            )
+            weights["uncertainty"] = max(
+                weights["uncertainty"] - ConversationAdaptiveController.MAX_DELTA, 0.2
+            )
             updated = True
 
         # --------------------------------------------
@@ -149,7 +161,7 @@ class ConversationAdaptiveController:
             for k in weights:
                 weights[k] = (1 - alpha) * weights[k] + alpha * target[k]
             # --------------------------------------------
-            # FINAL NORMALIZATION 
+            # FINAL NORMALIZATION
             # --------------------------------------------
             total = sum(weights.values())
             if total > 0:

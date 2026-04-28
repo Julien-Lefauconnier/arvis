@@ -21,6 +21,7 @@ class PredictiveStabilityParams:
     - warn_ttc / critical_ttc: thresholds on time-to-critical (in steps)
       If slope>0 and ttc <= threshold => WARN/CRITICAL (even if pred_v not huge yet)
     """
+
     horizon: int = 10
     window_size: int = 10
 
@@ -66,7 +67,7 @@ class PredictiveStabilityObserver:
     def push(self, state: LyapunovState) -> PredictiveSnapshot:
         v = clamp01(V(state))
         return self.push_value(v)
-    
+
     def push_value(self, v: float) -> PredictiveSnapshot:
         """
         Push a precomputed stability value V in [0,1].
@@ -128,10 +129,14 @@ class PredictiveStabilityObserver:
         verdict = "OK"
 
         # CRITICAL if predicted too high OR time-to-critical very small
-        if predicted_v >= self.params.critical_pred_v or (ttc is not None and ttc <= self.params.critical_ttc):
+        if predicted_v >= self.params.critical_pred_v or (
+            ttc is not None and ttc <= self.params.critical_ttc
+        ):
             verdict = "CRITICAL"
         # WARN if predicted medium OR time-to-critical small-ish
-        elif predicted_v >= self.params.warn_pred_v or (ttc is not None and ttc <= self.params.warn_ttc):
+        elif predicted_v >= self.params.warn_pred_v or (
+            ttc is not None and ttc <= self.params.warn_ttc
+        ):
             verdict = "WARN"
 
         return PredictiveSnapshot(

@@ -40,8 +40,8 @@ def build_kappa_violation_context():
 def build_validity_invalid_context():
     return _ctx(invalid_case())
 
-def build_context_from_yaml(data):
 
+def build_context_from_yaml(data):
     ctx = CognitivePipelineContext(
         user_id="test_user",
         cognitive_input={
@@ -61,14 +61,8 @@ def build_context_from_yaml(data):
 
         # Use the canonical gate adapter so the injected type matches
         # what GateStage / CompositeLyapunov expect.
-        ctx.prev_lyap = (
-            ensure_lyapunov_state(float(prev))
-            if prev is not None else None
-        )
-        ctx.cur_lyap = (
-            ensure_lyapunov_state(float(cur))
-            if cur is not None else None
-        )
+        ctx.prev_lyap = ensure_lyapunov_state(float(prev)) if prev is not None else None
+        ctx.cur_lyap = ensure_lyapunov_state(float(cur)) if cur is not None else None
 
         # Helpful hint for the rest of the pipeline / observability
         if prev is not None and cur is not None:
@@ -93,16 +87,10 @@ def build_context_from_yaml(data):
             lipschitz_ok=bool(proj.get("lipschitz_ok", True)),
             noise_robustness_ok=bool(proj.get("noise_robustness_ok", True)),
             mode_stability_ok=bool(proj.get("mode_stability_ok", True)),
-            lyapunov_compatibility_ok=bool(
-                proj.get("lyapunov_compatibility_ok", True)
-            ),
+            lyapunov_compatibility_ok=bool(proj.get("lyapunov_compatibility_ok", True)),
             margin_to_boundary=float(proj.get("margin_to_boundary", 1.0)),
-            local_lipschitz_estimate=float(
-                proj.get("local_lipschitz_estimate", 1.0)
-            ),
-            noise_gain_estimate=float(
-                proj.get("noise_gain_estimate", 0.0)
-            ),
+            local_lipschitz_estimate=float(proj.get("local_lipschitz_estimate", 1.0)),
+            noise_gain_estimate=float(proj.get("noise_gain_estimate", 0.0)),
             certification_level=level,
             checks_detail=proj.get("checks_detail", {}),
         )
@@ -112,6 +100,7 @@ def build_context_from_yaml(data):
     # -----------------------------------------
     switching = data.get("switching")
     if switching:
+
         class DummyRuntime:
             def dwell_time(self):
                 return float(switching.get("tau_d", 1.0))

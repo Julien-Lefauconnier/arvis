@@ -15,8 +15,8 @@ class _PolicyProtocol(Protocol):
         *,
         proposed_strategy: ResponseStrategyType,
         state: ConversationState,
-    ) -> ResponseStrategyType:
-        ...
+    ) -> ResponseStrategyType: ...
+
 
 class ConversationPolicyEngine:
     """
@@ -54,7 +54,6 @@ class ConversationPolicyEngine:
         proposed_strategy: ResponseStrategyType,
         state: ConversationState,
     ) -> ResponseStrategyType:
-        
         return ConversationPolicyEngine._apply_pipeline(
             strategy=proposed_strategy,
             state=state,

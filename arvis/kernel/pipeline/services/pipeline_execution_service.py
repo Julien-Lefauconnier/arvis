@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 class PipelineExecutionService:
     """Execute the full pipeline lifecycle."""
+
     @staticmethod
     def run(
         pipeline: "CognitivePipeline",

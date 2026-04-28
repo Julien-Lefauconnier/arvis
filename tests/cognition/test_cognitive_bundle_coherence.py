@@ -16,7 +16,6 @@ def _dummy_timeline():
 
 
 def test_cognitive_bundle_coherence():
-
     bundle = CognitiveBundleSnapshot(
         decision_result=DecisionResult(None),
         introspection=IntrospectionSnapshot(),

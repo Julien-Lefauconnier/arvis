@@ -9,7 +9,6 @@ from typing import Optional, Type, BinaryIO, Iterator, cast
 from types import TracebackType
 
 
-
 @dataclass(frozen=True)
 class ZipEntry:
     """
@@ -33,8 +32,7 @@ class ZipSafeReader:
         self.zip_path = zip_path
         self._zip = zipfile.ZipFile(zip_path, mode="r")
         self._entries = {
-            self._normalize_path(info.filename): info
-            for info in self._zip.infolist()
+            self._normalize_path(info.filename): info for info in self._zip.infolist()
         }
 
     def iter_entries(self) -> Iterator[ZipEntry]:

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional
 
+
 class ReasoningIntentType(Enum):
     """
     Declarative types describing what the system

@@ -18,6 +18,7 @@ class CognitiveStateIR:
     """
     Canonical cognitive state snapshot.
     """
+
     version: str = field(default="1.0", init=False)
     state_id: str
     bundle_id: str

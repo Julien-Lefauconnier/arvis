@@ -14,14 +14,19 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 # Dummies
 # -----------------------------
 
+
 class DummyCore:
     def __init__(self):
         self.fused_risk = 0.6
         self.dv = 0.2
-        self.world_prediction = type("WP", (), {
-            "uncertainty": 0.7,
-            "latent": [0.3],
-        })()
+        self.world_prediction = type(
+            "WP",
+            (),
+            {
+                "uncertainty": 0.7,
+                "latent": [0.3],
+            },
+        )()
 
 
 class DummyBudget:
@@ -34,6 +39,7 @@ class DummyBudget:
 # Temporal
 # -----------------------------
 
+
 class DummyPressure:
     def compute(self, user_id):
         return type("X", (), {"pressure": 1.0})()
@@ -41,10 +47,14 @@ class DummyPressure:
 
 class DummyRegulation:
     def compute(self, user_id):
-        return type("X", (), {
-            "risk_multiplier": 0.5,
-            "epsilon_multiplier": 2.0,
-        })()
+        return type(
+            "X",
+            (),
+            {
+                "risk_multiplier": 0.5,
+                "epsilon_multiplier": 2.0,
+            },
+        )()
 
 
 def test_temporal_pressure_and_modulation():
@@ -75,6 +85,7 @@ def test_temporal_pressure_and_modulation():
 # Hysteresis override
 # -----------------------------
 
+
 class DummyHysteresis:
     def update(self, user_id, risk):
         return "safe"
@@ -102,6 +113,7 @@ def test_mode_hysteresis_override():
 # -----------------------------
 # Adaptive controller
 # -----------------------------
+
 
 class DummyAdaptive:
     def compute(self, **kwargs):
@@ -133,6 +145,7 @@ def test_adaptive_controller_forces_abstain():
 # Counterfactual
 # -----------------------------
 
+
 class DummyCF:
     def decide(self, **kwargs):
         return type("X", (), {"best_action": "confirm"})()
@@ -140,9 +153,7 @@ class DummyCF:
 
 def test_counterfactual_confirm():
     engine = CognitiveControlEngine(
-        deps=CognitiveControlDeps(
-            counterfactual_factory=lambda: DummyCF()
-        )
+        deps=CognitiveControlDeps(counterfactual_factory=lambda: DummyCF())
     )
 
     result = engine.compute(
@@ -165,6 +176,7 @@ def test_counterfactual_confirm():
 # -----------------------------
 # Bandit override
 # -----------------------------
+
 
 class DummyBandit:
     def recommend(self, current_risk):
@@ -195,7 +207,11 @@ def test_bandit_override():
         core=core,
         prev_lyap=None,
         cur_lyap=LyapunovState.from_scalar(0.2),
-        irg=type("IRG", (), {"snapshot": lambda self: type("X", (), {"structural_risk": 0.0})()})(),
+        irg=type(
+            "IRG",
+            (),
+            {"snapshot": lambda self: type("X", (), {"structural_risk": 0.0})()},
+        )(),
     )
 
     assert result.lyap_verdict == LyapunovVerdict.ABSTAIN
@@ -204,6 +220,7 @@ def test_bandit_override():
 # -----------------------------
 # Exploration + IRG scaling
 # -----------------------------
+
 
 class DummyExploration:
     def compute(self, **kwargs):
@@ -214,9 +231,7 @@ def test_exploration_scales_budget():
     budget = DummyBudget()
 
     engine = CognitiveControlEngine(
-        deps=CognitiveControlDeps(
-            exploration_controller=DummyExploration()
-        )
+        deps=CognitiveControlDeps(exploration_controller=DummyExploration())
     )
 
     engine.compute(
@@ -227,7 +242,11 @@ def test_exploration_scales_budget():
         core=DummyCore(),
         prev_lyap=None,
         cur_lyap=LyapunovState.from_scalar(0.2),
-        irg=type("IRG", (), {"snapshot": lambda self: type("X", (), {"structural_risk": 0.5})()})(),
+        irg=type(
+            "IRG",
+            (),
+            {"snapshot": lambda self: type("X", (), {"structural_risk": 0.5})()},
+        )(),
     )
 
     assert budget.max_changes <= 10
@@ -237,16 +256,21 @@ def test_exploration_scales_budget():
 # Drift / regime
 # -----------------------------
 
+
 class DummyStats:
     def push(self, *args):
         pass
 
     def snapshot(self, user_id):
-        return type("X", (), {
-            "samples": 50,
-            "contraction_rate": 0.1,
-            "instability_rate": 0.2,
-        })()
+        return type(
+            "X",
+            (),
+            {
+                "samples": 50,
+                "contraction_rate": 0.1,
+                "instability_rate": 0.2,
+            },
+        )()
 
 
 class DummyDrift:
@@ -280,6 +304,7 @@ def test_drift_pipeline():
 # Local dynamics
 # -----------------------------
 
+
 class DummyDynamics:
     def push(self, **kwargs):
         pass
@@ -287,9 +312,7 @@ class DummyDynamics:
 
 def test_local_dynamics():
     engine = CognitiveControlEngine(
-        deps=CognitiveControlDeps(
-            local_dynamics_factory=lambda: DummyDynamics()
-        )
+        deps=CognitiveControlDeps(local_dynamics_factory=lambda: DummyDynamics())
     )
 
     result = engine.compute(
@@ -309,6 +332,7 @@ def test_local_dynamics():
 # -----------------------------
 # Calibration
 # -----------------------------
+
 
 class DummyCalibration:
     def evaluate(self, _):

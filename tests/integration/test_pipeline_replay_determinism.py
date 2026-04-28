@@ -2,10 +2,12 @@
 
 from arvis.api import CognitiveOS
 
+
 def test_pipeline_replay_determinism():
     from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
-    from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
-    
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
     pipeline = CognitivePipeline()
 

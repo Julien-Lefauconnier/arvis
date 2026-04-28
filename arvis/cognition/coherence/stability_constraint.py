@@ -15,6 +15,7 @@ class StabilityConstraintResult:
     - does not enforce
     - suitable for audit / governance / UI
     """
+
     stable: bool
     violation: int
     rationale: str

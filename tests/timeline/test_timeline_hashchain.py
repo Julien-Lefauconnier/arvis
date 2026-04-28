@@ -5,8 +5,8 @@ from arvis.timeline.timeline_hashchain import hash_entry, TimelineHashChain
 from tests.timeline.helpers import make_entry
 from tests.timeline.helpers import make_entries
 
-def test_hash_entry_deterministic():
 
+def test_hash_entry_deterministic():
     e = make_entry(1)
 
     h1 = hash_entry(e)
@@ -14,8 +14,8 @@ def test_hash_entry_deterministic():
 
     assert h1 == h2
 
-def test_hash_entry_changes_on_mutation():
 
+def test_hash_entry_changes_on_mutation():
     e1 = make_entry(1)
     e2 = make_entry(1)
 
@@ -26,7 +26,6 @@ def test_hash_entry_changes_on_mutation():
 
 
 def test_hashchain_deterministic():
-
     entries = make_entries(5)
 
     c1 = TimelineHashChain.build(entries)
@@ -36,7 +35,6 @@ def test_hashchain_deterministic():
 
 
 def test_hashchain_order_sensitive():
-
     entries = make_entries(3)
 
     c1 = TimelineHashChain.build(entries)
@@ -46,7 +44,6 @@ def test_hashchain_order_sensitive():
 
 
 def test_append_equivalent_to_build():
-
     entries = make_entries(4)
 
     chain = TimelineHashChain.build(entries[:3])
@@ -58,7 +55,6 @@ def test_append_equivalent_to_build():
 
 
 def test_hashchain_verify_success():
-
     entries = make_entries(5)
 
     chain = TimelineHashChain.build(entries)
@@ -67,7 +63,6 @@ def test_hashchain_verify_success():
 
 
 def test_hashchain_verify_detects_corruption():
-
     entries = make_entries(4)
 
     chain = TimelineHashChain.build(entries)

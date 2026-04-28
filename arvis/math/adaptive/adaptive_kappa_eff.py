@@ -58,7 +58,9 @@ class AdaptiveKappaEffEstimator:
             self._kappa_smoothed = kappa_clipped
         else:
             rho = self._config.smoothing
-            self._kappa_smoothed = (1.0 - rho) * self._kappa_smoothed + rho * kappa_clipped
+            self._kappa_smoothed = (
+                1.0 - rho
+            ) * self._kappa_smoothed + rho * kappa_clipped
 
         if self._kappa_smoothed <= self._config.unstable_threshold:
             regime = "unstable"

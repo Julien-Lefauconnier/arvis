@@ -12,5 +12,4 @@ class CognitiveKernelContract(Protocol):
     Stateless, pure cognitive transformation.
     """
 
-    def run(self, bundle: CognitiveBundle) -> CognitiveBundle:
-        ...
+    def run(self, bundle: CognitiveBundle) -> CognitiveBundle: ...

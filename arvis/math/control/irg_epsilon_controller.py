@@ -6,7 +6,11 @@ from dataclasses import dataclass
 from enum import Enum
 import math
 
-from arvis.math.control.eps_adaptive import adaptive_eps, EpsAdaptiveParams, CognitiveMode
+from arvis.math.control.eps_adaptive import (
+    adaptive_eps,
+    EpsAdaptiveParams,
+    CognitiveMode,
+)
 from arvis.math.core.normalization import clamp01
 from arvis.math.signals import RiskSignal, UncertaintySignal, DriftSignal
 
@@ -109,7 +113,7 @@ class IRGEpsilonController:
         collapse_risk: RiskSignal,
     ) -> float:
         p = self.irg_params
-       
+
         # coercion
         if not isinstance(collapse_risk, RiskSignal):
             collapse_risk = RiskSignal(collapse_risk)

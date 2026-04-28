@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+
 @dataclass
 class GateOverrides:
     force_safe_projection: bool = False

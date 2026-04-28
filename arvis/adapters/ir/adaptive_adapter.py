@@ -6,7 +6,6 @@ from typing import Any
 
 
 class AdaptiveIRAdapter:
-
     @staticmethod
     def from_adaptive(snapshot: Any) -> dict[str, Any] | None:
         if snapshot is None:

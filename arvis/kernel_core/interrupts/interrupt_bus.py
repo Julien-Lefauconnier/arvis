@@ -20,9 +20,7 @@ class CognitiveInterruptBus:
 
     def __init__(self) -> None:
         self._queue: Deque[CognitiveInterrupt] = deque()
-        self._subscribers: Dict[
-            CognitiveInterruptType, List[str]
-        ] = defaultdict(list)
+        self._subscribers: Dict[CognitiveInterruptType, List[str]] = defaultdict(list)
 
     def emit(self, interrupt: CognitiveInterrupt) -> None:
         self._queue.append(interrupt)

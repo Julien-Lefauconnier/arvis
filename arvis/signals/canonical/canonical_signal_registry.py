@@ -11,6 +11,7 @@ __all__ = [
     "register_all_canonical_signals",
 ]
 
+
 class CanonicalSignalRegistry:
     _registry: Dict[CanonicalSignalKey, CanonicalSignalSpec] = {}
     _frozen: bool = False
@@ -43,7 +44,7 @@ class CanonicalSignalRegistry:
     def all(cls) -> Tuple[CanonicalSignalSpec, ...]:
         with cls._lock:
             return tuple(cls._registry.values())
-    
+
     @classmethod
     def _clear_for_tests(cls) -> None:
         with cls._lock:

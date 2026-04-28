@@ -13,6 +13,7 @@ from arvis.math.lyapunov.lyapunov import LyapunovState
 # BASE DUMMY
 # ---------------------------------------------------------------------
 
+
 class Dummy:
     pass
 
@@ -25,6 +26,7 @@ class DummyIRG:
 # ---------------------------------------------------------------------
 # TEST 1 — MINIMAL RUN
 # ---------------------------------------------------------------------
+
 
 def test_control_engine_minimal_run():
     engine = CognitiveControlEngine(deps=CognitiveControlDeps())
@@ -62,6 +64,7 @@ def test_control_engine_minimal_run():
 # ---------------------------------------------------------------------
 # TEST 2 — TEMPORAL + HYSTERESIS
 # ---------------------------------------------------------------------
+
 
 class DummyPressure:
     def compute(self, user_id):
@@ -133,6 +136,7 @@ def test_control_engine_with_temporal_and_hysteresis():
 # ---------------------------------------------------------------------
 # TEST 3 — INERTIA + COUNTERFACTUAL + BANDIT
 # ---------------------------------------------------------------------
+
 
 class DummyInertia:
     def update(self, user_id, collapse_risk):

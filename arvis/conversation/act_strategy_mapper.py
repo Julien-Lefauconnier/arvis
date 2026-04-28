@@ -6,7 +6,6 @@ from arvis.linguistic.acts.linguistic_act import LinguisticAct
 
 
 def map_act_to_strategy(act: LinguisticActType) -> ResponseStrategyType:
-
     if act == LinguisticActType.ABSTENTION:
         return ResponseStrategyType.ABSTENTION
 

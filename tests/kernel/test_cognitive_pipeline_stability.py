@@ -13,6 +13,7 @@ class IncreasingRiskCore:
             stable = False
             prev_lyap = 0.2
             cur_lyap = 1.2
+
         return Dummy()
 
 
@@ -21,10 +22,10 @@ def test_high_risk_leads_to_block():
     pipeline.core = pipeline.core.__class__(core_model=IncreasingRiskCore())
 
     ctx = CognitivePipelineContext(
-     cognitive_input={},
-     user_id="u",
-     timeline=[],
- )
+        cognitive_input={},
+        user_id="u",
+        timeline=[],
+    )
 
     result = pipeline.run(ctx)
 

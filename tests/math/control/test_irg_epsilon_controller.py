@@ -6,9 +6,7 @@ from arvis.math.signals import RiskSignal
 
 
 def make_controller():
-    return IRGEpsilonController(
-        adaptive_params=EpsAdaptiveParams(enabled=True)
-    )
+    return IRGEpsilonController(adaptive_params=EpsAdaptiveParams(enabled=True))
 
 
 def test_infer_regime_collapse_from_critical_signal():

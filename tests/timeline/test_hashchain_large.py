@@ -5,7 +5,6 @@ from arvis.timeline.timeline_hashchain import TimelineHashChain
 
 
 def test_hashchain_large():
-
     entries = make_entries(1000)
 
     chain = TimelineHashChain.build(entries)

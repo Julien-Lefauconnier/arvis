@@ -7,6 +7,7 @@ from typing import Any
 from arvis.adapters.ir.decision_adapter import DecisionIRAdapter
 from arvis.cognition.decision.decision_result import DecisionResult
 
+
 class DecisionStage:
     """
     Stage 1: decision bootstrap.
@@ -35,17 +36,13 @@ class DecisionStage:
         # Ensure memory_influence is always present (ZK-safe)
         # -----------------------------------------------------
         if not hasattr(decision_result, "memory_influence"):
-            decision_result = replace(
-                decision_result,
-                memory_influence={}
-            )
+            decision_result = replace(decision_result, memory_influence={})
 
         ctx.decision_result = decision_result
         # -----------------------------------------
         # TOOL RETRY INJECTION (post-decision override)
         # -----------------------------------------
         if ctx.extra.get("retry_tool"):
-
             previous_results = ctx.extra.get("tool_results", [])
             if previous_results:
                 last = previous_results[-1]

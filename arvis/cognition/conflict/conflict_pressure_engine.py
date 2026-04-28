@@ -4,7 +4,6 @@ from typing import Any, List
 from arvis.math.signals.conflict import ConflictSignal
 
 
-
 class ConflictPressureEngine:
     """
     Pure, stateless engine computing structured conflict pressure.
@@ -39,6 +38,6 @@ class ConflictPressureEngine:
             temporal=min(1.0, temporal),
             ethical=min(1.0, ethical),
         )
-    
+
     def from_scalar(self, value: float) -> ConflictSignal:
         return ConflictSignal.from_scalar(value)

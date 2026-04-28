@@ -10,6 +10,7 @@ class StabilitySnapshot(Protocol):
     Snapshot générique pour tous les observers de stabilité.
     Permet fusion multi-horizon et audit scientifique.
     """
+
     verdict: str
 
 
@@ -24,5 +25,4 @@ class StabilityObserver(Protocol):
     - compatibles ZKCS
     """
 
-    def observe(self, bundle: CognitiveBundleSnapshot) -> StabilitySnapshot:
-        ...
+    def observe(self, bundle: CognitiveBundleSnapshot) -> StabilitySnapshot: ...

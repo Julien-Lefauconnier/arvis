@@ -123,6 +123,7 @@ class NormalizedSignals:
     Canonical normalized container for ARVIS math layer.
     Everything MUST be in [0,1].
     """
+
     risk: float
     drift: float
     uncertainty: float

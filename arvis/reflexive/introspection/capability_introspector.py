@@ -3,14 +3,12 @@
 from typing import Dict, Any, List
 
 from arvis.reflexive.capabilities.capability_snapshot_builder import (
-    build_capability_snapshot
+    build_capability_snapshot,
 )
 
 
 class CapabilityIntrospector:
-
     def describe(self) -> Dict[str, Any]:
-
         snapshot = build_capability_snapshot()
 
         capabilities: List[Dict[str, str]] = [

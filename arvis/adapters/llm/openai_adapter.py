@@ -8,7 +8,8 @@ from arvis.adapters.llm.base import BaseLLMAdapter, LLMResponse
 
 
 if TYPE_CHECKING:
-    from openai import OpenAI # type: ignore # noqa: F401
+    from openai import OpenAI  # type: ignore # noqa: F401
+
 
 class OpenAIAdapter(BaseLLMAdapter):
     def __init__(
@@ -35,7 +36,6 @@ class OpenAIAdapter(BaseLLMAdapter):
         max_tokens: Optional[int] = None,
         **kwargs: Any,
     ) -> LLMResponse:
-
         messages = []
 
         if system_prompt:

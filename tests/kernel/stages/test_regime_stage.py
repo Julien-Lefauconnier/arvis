@@ -8,6 +8,7 @@ from arvis.kernel.pipeline.stages.regime_stage import RegimeStage
 # Helpers
 # ============================================================
 
+
 class DummySnapshot:
     def __init__(self, regime="stable", confidence=0.8):
         self.regime = regime
@@ -43,6 +44,7 @@ class DummySwitchingRuntime:
 # 1. FULL HAPPY PATH
 # ============================================================
 
+
 def test_full_flow():
     ctx = DummyCtx()
     ctx.drift_score = 0.2
@@ -62,6 +64,7 @@ def test_full_flow():
 # 2. SNAPSHOT NONE → FALLBACK
 # ============================================================
 
+
 def test_snapshot_none():
     ctx = DummyCtx()
     ctx.drift_score = 0.1
@@ -78,6 +81,7 @@ def test_snapshot_none():
 # ============================================================
 # 3. SWITCHING RUNTIME AUTO-CREATION
 # ============================================================
+
 
 def test_runtime_auto_creation(monkeypatch):
     ctx = DummyCtx()
@@ -104,6 +108,7 @@ def test_runtime_auto_creation(monkeypatch):
 # 4. SWITCHING RUNTIME IMPORT FAILURE
 # ============================================================
 
+
 def test_runtime_import_failure(monkeypatch):
     ctx = DummyCtx()
     ctx.drift_score = 0.1
@@ -126,6 +131,7 @@ def test_runtime_import_failure(monkeypatch):
 # 5. MAP_REGIME FAILURE
 # ============================================================
 
+
 def test_map_regime_exception(monkeypatch):
     ctx = DummyCtx()
     ctx.drift_score = 0.1
@@ -147,6 +153,7 @@ def test_map_regime_exception(monkeypatch):
 # 6. SWITCHING UPDATE FAILURE
 # ============================================================
 
+
 def test_switching_update_exception():
     class BrokenRuntime:
         def update(self, *a, **k):
@@ -165,6 +172,7 @@ def test_switching_update_exception():
 # ============================================================
 # 7. NO SWITCHING RUNTIME
 # ============================================================
+
 
 def test_no_switching_runtime_and_no_import(monkeypatch):
     ctx = DummyCtx()

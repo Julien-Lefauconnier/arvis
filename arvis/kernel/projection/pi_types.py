@@ -8,6 +8,7 @@ from typing import Optional
 # X STATE (slow)
 # =========================
 
+
 @dataclass(frozen=True)
 class XState:
     cognitive_load: float
@@ -23,6 +24,7 @@ class XState:
 # =========================
 # Z STATE (fast dynamics)
 # =========================
+
 
 @dataclass(frozen=True)
 class ZDecisionState:
@@ -67,6 +69,7 @@ class ZState:
 # Q STATE (modes)
 # =========================
 
+
 @dataclass(frozen=True)
 class QState:
     regime_mode: Optional[str]
@@ -80,6 +83,7 @@ class QState:
 # W STATE (perturbations)
 # =========================
 
+
 @dataclass(frozen=True)
 class WState:
     uncertainty_pressure: float
@@ -92,6 +96,7 @@ class WState:
 # =========================
 # FINAL Π STATE
 # =========================
+
 
 @dataclass(frozen=True)
 class PiState:

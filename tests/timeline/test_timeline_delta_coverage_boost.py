@@ -21,6 +21,7 @@ from arvis.timeline.timeline_delta import TimelineDeltaError
 # Helpers
 # ============================================================
 
+
 def make_entry(i: int) -> TimelineEntry:
     return TimelineEntry.unsafe(
         entry_id=f"id_{i:08d}",
@@ -49,6 +50,7 @@ def extend_snapshot(base: TimelineSnapshot, n_extra: int) -> TimelineSnapshot:
 # ============================================================
 # Framing
 # ============================================================
+
 
 def test_pack_unpack_roundtrip():
     frames = [b"abc", b"defg", b"123"]
@@ -79,6 +81,7 @@ def test_unpack_invalid_length():
 # Apply
 # ============================================================
 
+
 def test_apply_success():
     base = make_snapshot(1)
     target = extend_snapshot(base, 2)
@@ -105,7 +108,7 @@ def test_apply_with_none_entry():
 
     target = TimelineCursor(
         timestamp=base.cursor().timestamp,
-        head=base.cursor().head,  
+        head=base.cursor().head,
         total_entries=base.cursor().total_entries + 1,
     )
 
@@ -120,6 +123,7 @@ def test_apply_with_none_entry():
 # ============================================================
 # Verify
 # ============================================================
+
 
 def test_verify_success():
     base = make_snapshot(1)
@@ -143,6 +147,7 @@ def test_verify_base_mismatch():
 # ============================================================
 # Builders
 # ============================================================
+
 
 def test_from_snapshots_success():
     base = make_snapshot(1)
@@ -178,7 +183,6 @@ def test_from_snapshots_invalid_entries():
 
 
 def test_apply_target_mismatch():
-
     base = make_snapshot(1)
     target = extend_snapshot(base, 2)
 
@@ -203,12 +207,12 @@ def test_apply_target_mismatch():
 # VERIFY TARGET MISMATCH
 # --------------------------------------------------
 
+
 def test_verify_target_mismatch():
     base = make_snapshot(1)
     target = extend_snapshot(base, 2)
 
     delta = TimelineDelta.from_snapshots(base, target)
-
 
     bad = TimelineDelta(
         base=delta.base,
@@ -216,14 +220,13 @@ def test_verify_target_mismatch():
         entries=delta.entries,
     )
 
-
     object.__setattr__(
         bad,
         "target",
         TimelineCursor(
             timestamp=delta.base.timestamp,
             head=delta.base.head,
-            total_entries=999,  
+            total_entries=999,
         ),
     )
 
@@ -235,8 +238,8 @@ def test_verify_target_mismatch():
 # FROM SNAPSHOTS SLICE FAILURE
 # --------------------------------------------------
 
-def test_from_snapshots_slice_failure(monkeypatch):
 
+def test_from_snapshots_slice_failure(monkeypatch):
     base = make_snapshot(1)
     target = extend_snapshot(base, 2)
 
@@ -253,8 +256,8 @@ def test_from_snapshots_slice_failure(monkeypatch):
 # DELTA NOT TUPLE
 # --------------------------------------------------
 
-def test_entries_not_tuple():
 
+def test_entries_not_tuple():
     base = make_snapshot(1)
     target = extend_snapshot(base, 1)
 
@@ -262,7 +265,7 @@ def test_entries_not_tuple():
         TimelineDelta(
             base=base.cursor(),
             target=target.cursor(),
-            entries=[make_entry(1)],  
+            entries=[make_entry(1)],
         )
 
 
@@ -270,8 +273,8 @@ def test_entries_not_tuple():
 # VERIFY CARDINALITY MISMATCH
 # --------------------------------------------------
 
-def test_verify_cardinality_mismatch():
 
+def test_verify_cardinality_mismatch():
     base = make_snapshot(1)
     target = extend_snapshot(base, 2)
 

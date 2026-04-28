@@ -48,7 +48,6 @@ class ProbabilisticLyapunovObserver:
         regime: Optional[RegimeSnapshot] = None,
         drift: float = 0.0,
     ) -> ProbLyapunovSnapshot:
-
         v = clamp01(V(state))
         self._values.append(v)
 
@@ -67,7 +66,7 @@ class ProbabilisticLyapunovObserver:
 
         mean = sum(values) / len(values)
         var = sum((x - mean) ** 2 for x in values) / len(values)
-        std = var ** 0.5
+        std = var**0.5
 
         beta = self.beta_controller.compute(
             regime=regime,

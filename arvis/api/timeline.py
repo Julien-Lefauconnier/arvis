@@ -12,6 +12,7 @@ from arvis.timeline.timeline_entry import TimelineEntry
 # Entry View
 # -----------------------------------------------------
 
+
 @dataclass(frozen=True)
 class TimelineEntryView:
     entry_id: str
@@ -41,6 +42,7 @@ class TimelineEntryView:
 # Timeline View
 # -----------------------------------------------------
 
+
 @dataclass(frozen=True)
 class TimelineView:
     """
@@ -53,10 +55,7 @@ class TimelineView:
 
     @staticmethod
     def from_snapshot(snapshot: TimelineSnapshot) -> "TimelineView":
-        entries = [
-            TimelineEntryView.from_entry(e)
-            for e in snapshot.entries
-        ]
+        entries = [TimelineEntryView.from_entry(e) for e in snapshot.entries]
 
         return TimelineView(
             entries=entries,

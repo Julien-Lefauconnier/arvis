@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR, CognitiveGateTraceStepIR
-
+from arvis.ir.gate import (
+    CognitiveGateIR,
+    CognitiveGateVerdictIR,
+    CognitiveGateTraceStepIR,
+)
 
 
 def _normalize_verdict(value: object | None) -> CognitiveGateVerdictIR:
@@ -29,6 +32,7 @@ def _normalize_verdict(value: object | None) -> CognitiveGateVerdictIR:
 def _normalize_reason_codes(gate: object) -> tuple[str, ...]:
     return tuple(getattr(gate, "reason_codes", ()) or ())
 
+
 def _map_trace(gate: object) -> tuple[CognitiveGateTraceStepIR, ...]:
     trace = getattr(gate, "decision_trace", None)
     if trace is None:
@@ -50,7 +54,10 @@ def _map_trace(gate: object) -> tuple[CognitiveGateTraceStepIR, ...]:
         for s in steps
     )
 
-def _extract_trace_metrics(gate: object) -> tuple[float | None, float | None, float | None]:
+
+def _extract_trace_metrics(
+    gate: object,
+) -> tuple[float | None, float | None, float | None]:
     trace = getattr(gate, "decision_trace", None)
     if trace is None:
         return None, None, None
@@ -60,6 +67,7 @@ def _extract_trace_metrics(gate: object) -> tuple[float | None, float | None, fl
         getattr(trace, "max_severity", None),
         getattr(trace, "instability_score", None),
     )
+
 
 class GateIRAdapter:
     @staticmethod

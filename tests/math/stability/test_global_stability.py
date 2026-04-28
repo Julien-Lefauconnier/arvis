@@ -8,7 +8,6 @@ from arvis.math.stability.regime_estimator import RegimeSnapshot
 
 
 def test_global_stability_basic():
-
     fusion = GlobalStabilityFusion()
 
     state = LyapunovState(
@@ -31,9 +30,7 @@ def test_global_stability_basic():
         mean_abs_delta=0.05,
     )
 
-    probabilistic = SimpleNamespace(
-        ucb_v=0.2
-    )
+    probabilistic = SimpleNamespace(ucb_v=0.2)
 
     regime = RegimeSnapshot(
         regime="stable",

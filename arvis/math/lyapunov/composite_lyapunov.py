@@ -25,8 +25,9 @@ class CompositeLyapunov:
     - no clamping: W is a genuine energy, not a bounded score
     - delta_W is the true energy variation between two time steps
     """
+
     lambda_mismatch: float = 0.5
-    gamma_z: float = 1.0    
+    gamma_z: float = 1.0
 
     def W(
         self,
@@ -41,7 +42,7 @@ class CompositeLyapunov:
         # --------------------------------------------------
         if slow is None:
             return v_fast
-        
+
         if T_x is None:
             if symbolic is None:
                 # Neutral fallback only when no symbolic anchor is available.
@@ -68,12 +69,13 @@ class CompositeLyapunov:
         symbolic_next: SymbolicState | None = None,
     ) -> float:
         # -----------------------------------------
-        # FAST-ONLY fallback 
+        # FAST-ONLY fallback
         # -----------------------------------------
         if slow_prev is None or slow_next is None:
             v_prev = float(lyapunov_value(fast_prev))
             v_next = float(lyapunov_value(fast_next))
             return v_next - v_prev
+
         def _zero_target(slow: SlowState | None) -> np.ndarray:
             """
             Safe fallback when no symbolic anchor AND slow state is missing.
@@ -119,6 +121,5 @@ class CompositeLyapunov:
         alpha: float = 0.3,
         L_T: float = 1.0,
     ) -> bool:
-
         kappa_eff = float(alpha) - self.gamma_z * float(eta) * float(L_T)
         return kappa_eff > 1e-6

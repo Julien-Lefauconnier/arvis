@@ -8,7 +8,6 @@ ROOT = pathlib.Path(__file__).resolve().parents[2] / "arvis"
 
 
 def test_source_never_imports_tests_package():
-
     for py in ROOT.rglob("*.py"):
         tree = ast.parse(py.read_text(encoding="utf-8"))
 

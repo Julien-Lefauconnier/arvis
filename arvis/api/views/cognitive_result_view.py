@@ -60,17 +60,13 @@ class CognitiveResultView:
             timeline_snapshot = None
             timeline_commitment = None
         else:
-            timeline_snapshot = signal_journal_to_timeline_snapshot(
-                timeline_journal
-            )
+            timeline_snapshot = signal_journal_to_timeline_snapshot(timeline_journal)
             try:
                 from arvis.timeline.timeline_commitment import (
                     TimelineCommitment,
                 )
 
-                commitment = TimelineCommitment.from_snapshot(
-                    timeline_snapshot
-                )
+                commitment = TimelineCommitment.from_snapshot(timeline_snapshot)
                 timeline_commitment = commitment.commitment
             except Exception:
                 timeline_commitment = None
@@ -102,16 +98,10 @@ class CognitiveResultView:
             decision=getattr(result, "action_decision", None),
             stability=stability,
             stability_view=(
-                StabilityView.from_snapshot(stability)
-                if stability
-                else None
+                StabilityView.from_snapshot(stability) if stability else None
             ),
             trace=trace,
-            trace_view=(
-                DecisionTraceView.from_trace(trace)
-                if trace
-                else None
-            ),
+            trace_view=(DecisionTraceView.from_trace(trace) if trace else None),
             timeline=timeline_snapshot,
             timeline_view=(
                 TimelineView.from_snapshot(timeline_snapshot)
@@ -131,35 +121,19 @@ class CognitiveResultView:
             "decision": str(self.decision),
             "stability": {
                 "score": (
-                    self.stability_view.stability_score
-                    if self.stability_view
-                    else None
+                    self.stability_view.stability_score if self.stability_view else None
                 ),
                 "risk": (
-                    self.stability_view.risk_level
-                    if self.stability_view
-                    else None
+                    self.stability_view.risk_level if self.stability_view else None
                 ),
-                "regime": (
-                    self.stability_view.regime
-                    if self.stability_view
-                    else None
-                ),
+                "regime": (self.stability_view.regime if self.stability_view else None),
             },
             "has_trace": self.trace is not None,
             "has_timeline": self.timeline is not None,
             "timeline_commitment": self.timeline_commitment,
             "global_commitment": self.global_commitment,
-            "trace": (
-                self.trace_view.to_dict()
-                if self.trace_view
-                else None
-            ),
-            "timeline": (
-                self.timeline_view.to_dict()
-                if self.timeline_view
-                else None
-            ),
+            "trace": (self.trace_view.to_dict() if self.trace_view else None),
+            "timeline": (self.timeline_view.to_dict() if self.timeline_view else None),
         }
 
     def to_ir(self) -> Optional[Dict[str, Any]]:

@@ -17,7 +17,6 @@ from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_memory import (
 )
 
 
-
 class ReflexiveSnapshotBuilder:
     """
     Reflexive Snapshot Builder
@@ -71,9 +70,7 @@ class ReflexiveSnapshotBuilder:
         # --------------------------------------------------
         irg_explanation = None
         if irg_temporal_memory is not None:
-            irg_explanation = IRGTimelineExplanationBuilder.build(
-                irg_temporal_memory
-            )
+            irg_explanation = IRGTimelineExplanationBuilder.build(irg_temporal_memory)
 
         # --------------------------------------------------
         # Assemble snapshot

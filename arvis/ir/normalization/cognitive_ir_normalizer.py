@@ -8,7 +8,6 @@ from arvis.ir.decision import CognitiveDecisionIR
 
 
 class CognitiveIRNormalizer:
-
     @classmethod
     def normalize(cls, ir: CognitiveIR) -> CognitiveIR:
         """
@@ -41,27 +40,22 @@ class CognitiveIRNormalizer:
                 decision_kind=decision.decision_kind,
                 memory_intent=decision.memory_intent,
                 reason_codes=tuple(sorted(decision.reason_codes)),
-
                 proposed_actions=tuple(
                     sorted(decision.proposed_actions, key=lambda a: a.action_id)
                 ),
-
                 gaps=tuple(
                     sorted(decision.gaps, key=lambda g: (g.gap_type, g.severity))
                 ),
-
                 conflicts=tuple(
-                    sorted(decision.conflicts, key=lambda c: (c.conflict_type, c.severity))
+                    sorted(
+                        decision.conflicts, key=lambda c: (c.conflict_type, c.severity)
+                    )
                 ),
-
                 reasoning_intents=tuple(sorted(decision.reasoning_intents)),
-
                 uncertainty_frames=tuple(
                     sorted(decision.uncertainty_frames, key=lambda u: u.axis)
                 ),
-
                 knowledge=decision.knowledge,
-
                 context_hints=dict(sorted(decision.context_hints.items())),
             )
 

@@ -30,6 +30,7 @@ class EpsAdaptiveParams:
           then multiplied by mode factor (SAFE stricter),
           finally clamped to [eps_min, eps_max].
     """
+
     enabled: bool = False
 
     # Base / clamps

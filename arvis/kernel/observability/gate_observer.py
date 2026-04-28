@@ -74,23 +74,36 @@ class GateObserver:
                 else None
             ),
             "lyapunov_compatible": (
-                bool(getattr(projection_certificate, "lyapunov_compatibility_ok", False))
+                bool(
+                    getattr(projection_certificate, "lyapunov_compatibility_ok", False)
+                )
                 if projection_certificate is not None
                 else None
             ),
             "margin": (
                 float(getattr(projection_certificate, "margin_to_boundary"))
                 if projection_certificate is not None
-                and getattr(projection_certificate, "margin_to_boundary", None) is not None
+                and getattr(projection_certificate, "margin_to_boundary", None)
+                is not None
                 else None
             ),
             "certification_level": (
-                str(getattr(getattr(projection_certificate, "certification_level", None), "value", None))
+                str(
+                    getattr(
+                        getattr(projection_certificate, "certification_level", None),
+                        "value",
+                        None,
+                    )
+                )
                 if projection_certificate is not None
                 else None
             ),
-            "view": dict(projection_view) if isinstance(projection_view, dict) else None,
-            "raw_view": dict(projection_view_raw) if isinstance(projection_view_raw, dict) else None,
+            "view": dict(projection_view)
+            if isinstance(projection_view, dict)
+            else None,
+            "raw_view": dict(projection_view_raw)
+            if isinstance(projection_view_raw, dict)
+            else None,
         }
 
         projection_summary = {
@@ -109,7 +122,6 @@ class GateObserver:
             "pre_verdict": str(pre_verdict),
             "final_verdict": str(final_verdict),
             "delta_w": delta_w,
-
             "global_safe": bool(global_safe),
             "switching_safe": bool(switching_safe),
             "confidence_inputs": {
@@ -141,7 +153,11 @@ class GateObserver:
                 "safe": bool(global_safe),
                 "history_len": len(ctx.delta_w_history),
             },
-            "projection": {**projection_summary, "view": projection_trace["view"], "raw_view": projection_trace["raw_view"]},
+            "projection": {
+                **projection_summary,
+                "view": projection_trace["view"],
+                "raw_view": projection_trace["raw_view"],
+            },
             "envelope": {
                 "hard_block": envelope.hard_block,
                 "reason": envelope.hard_reason,

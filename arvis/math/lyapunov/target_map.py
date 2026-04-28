@@ -5,6 +5,7 @@ import numpy as np
 from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.math.lyapunov.lyapunov import LyapunovState
 
+
 def _fast_vector(fast: LyapunovState) -> np.ndarray:
     return np.array(
         [
@@ -41,10 +42,10 @@ def target_map(
 
     symbolic_target = np.array(
         [
-            confidence,          # attractivity
-            1.0 - conflict,      # coherence
-            override,            # instability injection
-            stability_proxy,     # symbolic stability proxy
+            confidence,  # attractivity
+            1.0 - conflict,  # coherence
+            override,  # instability injection
+            stability_proxy,  # symbolic stability proxy
         ],
         dtype=float,
     )

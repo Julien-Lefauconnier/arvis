@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import math
 
+
 @dataclass
 class EpsilonAdaptiveParams:
     eps_min: float = 1e-4
@@ -26,15 +27,13 @@ class AdaptiveEpsilonPolicy:
             return self.params.eps_max
 
         # exponential contraction
-        eps = (
-            self.params.eps_min
-            + (self.params.eps_max - self.params.eps_min)
-            * math.exp(-self.params.sensitivity * collapse_risk)
-        )
+        eps = self.params.eps_min + (
+            self.params.eps_max - self.params.eps_min
+        ) * math.exp(-self.params.sensitivity * collapse_risk)
 
         # safety clamp
         return max(self.params.eps_min, min(self.params.eps_max, eps))
-    
+
 
 # backward compatibility
 EpsilonAdaptiveController = AdaptiveEpsilonPolicy

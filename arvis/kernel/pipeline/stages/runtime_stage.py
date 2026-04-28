@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
+
 class RuntimeStage:
-
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         try:
             runtime = getattr(ctx, "control_runtime", None)
             if runtime is None:
@@ -23,7 +22,7 @@ class RuntimeStage:
 
         except Exception:
             pass
-        
+
         # -----------------------------------------
         #  Switching runtime
         # -----------------------------------------
@@ -35,9 +34,9 @@ class RuntimeStage:
                 switching_runtime.update(str(regime))
         except Exception:
             pass
-        
+
         # -----------------------------------------
-        # Global stability observer 
+        # Global stability observer
         # -----------------------------------------
         try:
             observer = getattr(pipeline, "global_stability_observer", None)
@@ -46,5 +45,3 @@ class RuntimeStage:
                 ctx.global_stability_metrics = metrics
         except Exception:
             ctx.global_stability_metrics = None
-
-

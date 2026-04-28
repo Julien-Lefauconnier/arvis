@@ -34,7 +34,6 @@ class ProjectionValidator:
         previous_projected: Optional[Dict[str, Any]] = None,
         ctx: Optional[Any] = None,
     ) -> ProjectionCertificate:
-
         domain_valid, checks_detail = self.domain.validate(projected)
         margin = self.domain.margin_to_boundary(projected)
 
@@ -48,7 +47,9 @@ class ProjectionValidator:
         if previous_projected is not None:
             try:
                 delta = sum(
-                    abs(float(projected.get(k, 0)) - float(previous_projected.get(k, 0)))
+                    abs(
+                        float(projected.get(k, 0)) - float(previous_projected.get(k, 0))
+                    )
                     for k in projected
                     if isinstance(projected.get(k), (int, float))
                 )

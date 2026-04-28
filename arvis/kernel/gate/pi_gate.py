@@ -60,7 +60,7 @@ class PiBasedGate:
         # NOTE:
         # margin == 0.0 may mean "no certification available"
         # → do NOT treat as low margin
-        effective_low_margin = (margin < 0.3 and margin > 0.0)
+        effective_low_margin = margin < 0.3 and margin > 0.0
 
         if base_verdict == "allow" and (
             w.uncertainty_pressure > 0.6

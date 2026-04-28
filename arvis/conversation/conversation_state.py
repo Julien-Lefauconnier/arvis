@@ -22,7 +22,9 @@ class ConversationState:
     signals: dict[str, Any] = field(default_factory=dict)
     cognitive_snapshot: Any | None = None
     world_prediction: Any | None = None
-    strategy_distribution: dict[ResponseStrategyType, float] = field(default_factory=dict)
+    strategy_distribution: dict[ResponseStrategyType, float] = field(
+        default_factory=dict
+    )
     user_profile: Optional[UserAdaptiveProfile] = None
 
     def update_strategy(

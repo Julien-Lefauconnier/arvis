@@ -80,9 +80,11 @@ class StubZipIngestService:
 
         return self._execute_result
 
+
 class StubZipPlanner:
     def apply_plan(self, *, zip_root, plan):
         return zip_root
+
 
 def _make_handler(
     *,
@@ -111,6 +113,7 @@ def _find_item_by_name(service: VFSService, name: str) -> VFSItem:
 # ============================================================
 # VFS read syscalls
 # ============================================================
+
 
 def test_vfs_list_syscall_returns_serialized_items() -> None:
     repo = InMemoryVFSRepository()
@@ -229,6 +232,7 @@ def test_vfs_list_syscall_fails_without_service() -> None:
 # ============================================================
 # VFS write syscalls
 # ============================================================
+
 
 def test_vfs_create_folder_syscall_creates_folder() -> None:
     repo = InMemoryVFSRepository()
@@ -555,6 +559,7 @@ def test_vfs_move_item_syscall_maps_cycle_error() -> None:
 # ============================================================
 # ZIP syscalls
 # ============================================================
+
 
 def test_vfs_zip_analyze_syscall_returns_serialized_decision_ready() -> None:
     zip_service = StubZipIngestService()

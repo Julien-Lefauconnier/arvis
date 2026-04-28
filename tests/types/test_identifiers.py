@@ -4,7 +4,6 @@ from arvis.types.identifiers import EntityID, MemoryKey, TimelineID
 
 
 def test_entity_id_is_string():
-
     eid = EntityID("entity-1")
 
     assert isinstance(eid, str)
@@ -12,7 +11,6 @@ def test_entity_id_is_string():
 
 
 def test_memory_key_is_string():
-
     key = MemoryKey("memory-abc")
 
     assert isinstance(key, str)
@@ -20,7 +18,6 @@ def test_memory_key_is_string():
 
 
 def test_timeline_id_is_string():
-
     tid = TimelineID("timeline-42")
 
     assert isinstance(tid, str)

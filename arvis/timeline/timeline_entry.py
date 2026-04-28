@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import unicodedata
-from datetime import datetime,timezone
+from datetime import datetime, timezone
 from typing import Optional
 from enum import Enum
 
@@ -53,7 +53,7 @@ class TimelineEntry:
 
         if not self.entry_id.isascii():
             raise ValueError("TimelineEntry.entry_id must be ASCII.")
-        
+
         if self.created_at is None:
             raise ValueError(
                 "TimelineEntry.created_at must not be None "
@@ -66,19 +66,17 @@ class TimelineEntry:
             )
 
         if self.created_at.tzinfo != timezone.utc:
-            raise ValueError(
-                "TimelineEntry.created_at must be in UTC"
-            )
-        
+            raise ValueError("TimelineEntry.created_at must be in UTC")
+
         if len(self.entry_id) > 256:
             raise ValueError("TimelineEntry.entry_id too long")
-        
+
         if len(self.entry_id) < 8:
             raise ValueError("TimelineEntry.entry_id too short")
 
         if any(ord(c) < 32 for c in self.entry_id):
             raise ValueError("TimelineEntry.entry_id contains control characters")
-        
+
         # --------------------------
         # Device identity (industry standard: SHA256 fingerprint)
         # --------------------------
@@ -99,11 +97,9 @@ class TimelineEntry:
 
         if self.lamport < 0:
             raise ValueError("lamport must be >= 0")
-        
+
         if self.lamport > 2**63:
             raise ValueError("lamport overflow risk")
-
-
 
     @property
     def timestamp(self) -> datetime:
@@ -133,7 +129,6 @@ class TimelineEntry:
         created_at: Optional[datetime] = None,
         device_id: str = "0" * 64,
         lamport: int = 0,
-
     ) -> "TimelineEntry":
         """
         Unsafe constructor for tests and legacy code.
@@ -166,4 +161,3 @@ class TimelineEntry:
         if self.description:
             return self.description
         return self.title
-    

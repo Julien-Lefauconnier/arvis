@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Dict
 
+
 @dataclass
 class ControlInertiaSnapshot:
     mode: str
@@ -42,7 +43,6 @@ class RegimeInertiaController:
         user_id: str,
         collapse_risk: float | None,
     ) -> ControlInertiaSnapshot:
-
         r = float(collapse_risk or 0.0)
 
         # --------------------------------
@@ -86,7 +86,7 @@ class RegimeInertiaController:
             smoothed_risk=smoothed,
             persistence=count,
         )
-    
+
     # -------------------------------------------------
     # Simple smoothing API (used by ChatService)
     # -------------------------------------------------
@@ -110,9 +110,9 @@ class RegimeInertiaController:
             return float(new_value)
 
         return float(
-            self.alpha * float(new_value)
-            + (1.0 - self.alpha) * float(previous_value)
+            self.alpha * float(new_value) + (1.0 - self.alpha) * float(previous_value)
         )
-    
+
+
 # backward compatibility
 ControlInertia = RegimeInertiaController

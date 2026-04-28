@@ -46,7 +46,7 @@ class CognitiveScheduler:
         3. Only READY processes are schedulable.
         4. One tick = one execution step.
         4. outcome.completed=True is the only valid pipeline finalization trigger.
-        
+
 
     """
 
@@ -59,13 +59,15 @@ class CognitiveScheduler:
         pipeline_executor: ProcessExecutor | None = None,
         hooks: ProcessHookManager | None = None,
     ) -> None:
-        executor = process_executor if process_executor is not None else pipeline_executor
+        executor = (
+            process_executor if process_executor is not None else pipeline_executor
+        )
 
         if executor is None:
             raise ValueError("A process executor is required")
 
         self.runtime_state = runtime_state
-        self.process_executor = executor  
+        self.process_executor = executor
         self.policy = policy or SchedulingPolicyConfig()
         self._interrupt_wakeup_pending = False
         # -----------------------------------------
@@ -97,7 +99,9 @@ class CognitiveScheduler:
 
         self.hooks.on_enqueued(process)
 
-    def suspend(self, process_id: CognitiveProcessId, reason: str = "suspended") -> None:
+    def suspend(
+        self, process_id: CognitiveProcessId, reason: str = "suspended"
+    ) -> None:
         process = self.runtime_state.get_process(process_id)
         state = self.runtime_state.scheduler_state
         state.remove_from_all_queues(process_id)
@@ -179,7 +183,10 @@ class CognitiveScheduler:
         if process.status != CognitiveProcessStatus.READY:
             self.runtime_state.append_event(
                 "scheduler_skipped_non_ready_process",
-                {"process_id": process.process_id.value, "status": process.status.value},
+                {
+                    "process_id": process.process_id.value,
+                    "status": process.status.value,
+                },
             )
             return decision
 
@@ -223,7 +230,7 @@ class CognitiveScheduler:
 
                     decision.result = result
                     return decision
-                
+
                 # -----------------------------
                 # Case 2: cannot execute → blocked
                 # -----------------------------
@@ -254,7 +261,6 @@ class CognitiveScheduler:
                 decision.result = result
                 return decision
 
-            
             # =====================================================
             # PREEMPTIVE EXECUTION LOGIC
             # =====================================================
@@ -270,7 +276,9 @@ class CognitiveScheduler:
                     {
                         "process_id": process.process_id.value,
                         "stage_name": getattr(outcome, "stage_name", None),
-                        "next_stage_index": getattr(process, "current_stage_index", None),
+                        "next_stage_index": getattr(
+                            process, "current_stage_index", None
+                        ),
                     },
                 )
 
@@ -281,7 +289,7 @@ class CognitiveScheduler:
             # -----------------------------
             process.mark_suspended(reason="budget_exhausted")
             state.append_unique(state.suspended_queue, process.process_id)
- 
+
             self.hooks.on_suspended(process, "budget_exhausted")
 
             self.runtime_state.append_event(
@@ -384,12 +392,14 @@ class CognitiveScheduler:
             for process in self.runtime_state.processes.values()
             if process.status == CognitiveProcessStatus.RUNNING
         )
-        self.runtime_state.scheduler_state.validate_single_running_invariant(running_count)
+        self.runtime_state.scheduler_state.validate_single_running_invariant(
+            running_count
+        )
 
     def set_resource_pressure(self, pressure: ResourcePressure) -> None:
         pressure.validate()
         self.runtime_state.resource_state.pressure = pressure
-    
+
     # =====================================================
     # INTERRUPT PROCESSING
     # =====================================================
@@ -410,7 +420,8 @@ class CognitiveScheduler:
             # SYSTEM BROADCAST
             if event.type.value == "system_signal":
                 targets = [
-                    pid for pid, proc in self.runtime_state.processes.items()
+                    pid
+                    for pid, proc in self.runtime_state.processes.items()
                     if not proc.is_final()
                 ]
 

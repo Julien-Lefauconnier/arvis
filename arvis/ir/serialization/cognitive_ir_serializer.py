@@ -35,10 +35,7 @@ class CognitiveIRSerializer:
             return [CognitiveIRSerializer.to_dict(x) for x in obj]
 
         if isinstance(obj, dict):
-            return {
-                str(k): CognitiveIRSerializer.to_dict(v)
-                for k, v in obj.items()
-            }
+            return {str(k): CognitiveIRSerializer.to_dict(v) for k, v in obj.items()}
 
         if is_dataclass(obj) and not isinstance(obj, type):
             return CognitiveIRSerializer.to_dict(asdict(obj))
@@ -86,7 +83,6 @@ class CognitiveIRSerializer:
             separators=(",", ":"),
             ensure_ascii=False,
         )
-    
 
     @classmethod
     def serialize(cls, ir: Any) -> str:
@@ -94,7 +90,7 @@ class CognitiveIRSerializer:
         Backward-compatible canonical JSON serialization.
         """
         return cls.to_json(ir)
-    
+
     # -----------------------------------------
     # PUBLIC: dict → CognitiveIR (REQUIRED FOR REPLAY)
     # -----------------------------------------
@@ -106,9 +102,7 @@ class CognitiveIRSerializer:
         # Remove API-level fields
         # -----------------------------------------
         clean_data: Dict[str, Any] = {
-            k: v
-            for k, v in data.items()
-            if k not in ("version", "fingerprint", "meta")
+            k: v for k, v in data.items() if k not in ("version", "fingerprint", "meta")
         }
 
         # -----------------------------------------

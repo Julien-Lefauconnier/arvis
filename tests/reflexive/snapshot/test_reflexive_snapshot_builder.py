@@ -11,6 +11,7 @@ from arvis.reflexive.snapshot.reflexive_snapshot_builder import (
 # Helpers
 # --------------------------------------------------
 
+
 class DummyRole:
     def __init__(self, value, is_public=False):
         self.value = value
@@ -31,6 +32,7 @@ class FakeMemory:
 # Core behavior
 # --------------------------------------------------
 
+
 def test_build_minimal_snapshot():
     snapshot = ReflexiveSnapshotBuilder.build(
         capabilities={},
@@ -45,6 +47,7 @@ def test_build_minimal_snapshot():
 # --------------------------------------------------
 # generated_at behavior
 # --------------------------------------------------
+
 
 def test_generated_at_default_is_set():
     snapshot = ReflexiveSnapshotBuilder.build(
@@ -71,6 +74,7 @@ def test_generated_at_override():
 # --------------------------------------------------
 # Timeline roles extraction
 # --------------------------------------------------
+
 
 def test_roles_are_extracted_from_views():
     views = {
@@ -121,6 +125,7 @@ def test_views_without_role_are_ignored():
 # IRG explanation integration
 # --------------------------------------------------
 
+
 def test_irg_explanation_is_none_when_no_memory():
     snapshot = ReflexiveSnapshotBuilder.build(
         capabilities={},
@@ -147,6 +152,7 @@ def test_irg_explanation_is_built_when_memory_present():
 # --------------------------------------------------
 # Full integration
 # --------------------------------------------------
+
 
 def test_full_snapshot_structure():
     views = {

@@ -26,7 +26,6 @@ class ConversationMemoryPolicy:
         has_constraints = bool(signals.get("has_constraints"))
         memory_pressure = signals.get("memory_pressure", 0)
 
-
         strategy = proposed_strategy
 
         # --------------------------------------------------
@@ -35,7 +34,6 @@ class ConversationMemoryPolicy:
         if has_constraints:
             if strategy == ResponseStrategyType.ACTION:
                 return ResponseStrategyType.CONFIRMATION
-
 
         # --------------------------------------------------
         # 2. MEMORY PRESSURE (progressive regulation)

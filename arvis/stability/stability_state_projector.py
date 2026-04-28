@@ -66,7 +66,7 @@ class StabilityStateProjector:
             uncertainty=uncertainty,
             governance=governance,
         )
-    
+
     # -----------------------------------------------------
     # Snapshot projection (API / pipeline contract)
     # -----------------------------------------------------
@@ -86,6 +86,7 @@ class StabilityStateProjector:
         """
 
         return snapshot
-    
+
+
 # backward compatibility
 LyapunovStateBuilder = StabilityStateProjector

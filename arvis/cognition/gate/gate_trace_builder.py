@@ -12,11 +12,7 @@ class GateTraceBuilder:
 
     @staticmethod
     def _parse_reason(reason: str) -> tuple[str, ...]:
-        return tuple(
-            part.strip()
-            for part in reason.split("|")
-            if part.strip()
-        )
+        return tuple(part.strip() for part in reason.split("|") if part.strip())
 
     @staticmethod
     def _score_reason(reason: str) -> float:

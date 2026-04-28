@@ -23,8 +23,9 @@ class TimelineConsistencyValidator:
     """
 
     @staticmethod
-    def validate(issues: Iterable[TimelineConsistencyIssue]) -> TimelineConsistencyReport:
-
+    def validate(
+        issues: Iterable[TimelineConsistencyIssue],
+    ) -> TimelineConsistencyReport:
         issues = tuple(issues)
 
         return TimelineConsistencyReport(

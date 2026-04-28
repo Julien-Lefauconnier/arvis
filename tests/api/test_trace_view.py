@@ -54,6 +54,7 @@ def test_trace_view_summary():
     assert "Decision" in s
     assert "Gate" in s
 
+
 def test_trace_view_with_confirmation():
     class Confirmation:
         confirmed = True

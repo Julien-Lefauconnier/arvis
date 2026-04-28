@@ -13,6 +13,7 @@ class UncertaintySignal(BaseSignal):
     """
     Normalized uncertainty signal in [0,1].
     """
+
     value: float
 
     def __post_init__(self) -> None:
@@ -20,7 +21,7 @@ class UncertaintySignal(BaseSignal):
 
     def __float__(self) -> float:
         return self.value
-    
+
     def level(self) -> float:
         return self.value
 

@@ -5,7 +5,6 @@ from arvis.tools.base import BaseTool
 
 
 def test_tool_feedback_propagates_to_next_cycle():
-
     class DummyTool(BaseTool):
         name = "dummy"
 
@@ -16,11 +15,7 @@ def test_tool_feedback_propagates_to_next_cycle():
     os.register_tool(DummyTool())
 
     # 🔥 inject directly tool_results (skip pipeline constraints)
-    next_extra = {
-        "tool_results": [
-            {"tool": "dummy", "result": {"ok": True}}
-        ]
-    }
+    next_extra = {"tool_results": [{"tool": "dummy", "result": {"ok": True}}]}
 
     # RUN → feedback stage
     os.run(

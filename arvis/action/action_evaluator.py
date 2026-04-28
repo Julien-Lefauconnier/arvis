@@ -67,13 +67,12 @@ def evaluate_action(
             audit_required=True,
             action_mode=base_decision.action_mode,
         )
-    
+
     # --------------------------------------------------
     # Context overrides (user responsibility)
     # --------------------------------------------------
 
     if context is not None:
-
         # Strict mode → force validation
         if context.responsibility_mode == "strict":
             return ActionDecision(

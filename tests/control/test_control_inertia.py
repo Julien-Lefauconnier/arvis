@@ -4,8 +4,8 @@ from arvis.control.control_inertia import ControlInertia
 
 
 def test_control_inertia_importable():
-
     assert ControlInertia is not None
+
 
 def test_inertia_basic_update():
     inertia = ControlInertia()
@@ -94,6 +94,7 @@ def test_smooth_api_no_previous():
     v = inertia.smooth(new_value=0.7, previous_value=None)
 
     assert v == 0.7
+
 
 def test_inertia_eventual_return_to_normal():
     inertia = ControlInertia(persistence_steps=1)

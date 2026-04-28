@@ -9,6 +9,7 @@ from arvis.reflexive.timeline.explanation.irg_timeline_explanation_builder impor
 # Fake objects (ZK-safe mocks)
 # --------------------------------------------------
 
+
 class FakeDiff:
     def __init__(
         self,
@@ -36,6 +37,7 @@ class FakeMemory:
 # Core behavior
 # --------------------------------------------------
 
+
 def test_no_diffs_returns_default_explanation():
     memory = FakeMemory([])
 
@@ -50,12 +52,9 @@ def test_no_diffs_returns_default_explanation():
 # Stable diffs
 # --------------------------------------------------
 
+
 def test_views_added_generates_signal():
-    memory = FakeMemory(
-        [
-            FakeDiff(views_added=["public_view"])
-        ]
-    )
+    memory = FakeMemory([FakeDiff(views_added=["public_view"])])
 
     result = IRGTimelineExplanationBuilder.build(memory)
 
@@ -64,11 +63,7 @@ def test_views_added_generates_signal():
 
 
 def test_views_removed_generates_signal():
-    memory = FakeMemory(
-        [
-            FakeDiff(views_removed=["old_view"])
-        ]
-    )
+    memory = FakeMemory([FakeDiff(views_removed=["old_view"])])
 
     result = IRGTimelineExplanationBuilder.build(memory)
 
@@ -76,11 +71,7 @@ def test_views_removed_generates_signal():
 
 
 def test_entry_types_added_generates_signal():
-    memory = FakeMemory(
-        [
-            FakeDiff(entry_types_added=["conflict"])
-        ]
-    )
+    memory = FakeMemory([FakeDiff(entry_types_added=["conflict"])])
 
     result = IRGTimelineExplanationBuilder.build(memory)
 
@@ -91,12 +82,9 @@ def test_entry_types_added_generates_signal():
 # Unstable diffs
 # --------------------------------------------------
 
+
 def test_unstable_diff_sets_evolving():
-    memory = FakeMemory(
-        [
-            FakeDiff(is_stable=False)
-        ]
-    )
+    memory = FakeMemory([FakeDiff(is_stable=False)])
 
     result = IRGTimelineExplanationBuilder.build(memory)
 
@@ -107,6 +95,7 @@ def test_unstable_diff_sets_evolving():
 # --------------------------------------------------
 # Mixed diffs
 # --------------------------------------------------
+
 
 def test_mixed_diffs_accumulate_signals():
     memory = FakeMemory(
@@ -139,6 +128,7 @@ def test_mixed_stability_results_in_evolving():
 # Edge cases
 # --------------------------------------------------
 
+
 def test_empty_diff_object():
     memory = FakeMemory([FakeDiff()])
 
@@ -149,11 +139,7 @@ def test_empty_diff_object():
 
 
 def test_multiple_views_added_joined_correctly():
-    memory = FakeMemory(
-        [
-            FakeDiff(views_added=["v1", "v2", "v3"])
-        ]
-    )
+    memory = FakeMemory([FakeDiff(views_added=["v1", "v2", "v3"])])
 
     result = IRGTimelineExplanationBuilder.build(memory)
 

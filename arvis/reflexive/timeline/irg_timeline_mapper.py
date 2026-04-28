@@ -23,4 +23,3 @@ class IRGTimelineMapper:
                 getattr(summary, "has_linguistic_constraints", False)
             ),
         )
-    

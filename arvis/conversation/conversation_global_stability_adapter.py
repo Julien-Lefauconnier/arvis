@@ -15,7 +15,6 @@ class ConversationGlobalStabilityAdapter:
 
     @staticmethod
     def extract_verdict(state: ConversationState) -> str | None:
-
         raw: Any = state.signals.get("global_stability_verdict")
 
         if raw is None:

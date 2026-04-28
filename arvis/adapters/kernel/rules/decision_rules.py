@@ -22,7 +22,6 @@ class ConflictDetectedRule(CanonicalRule):
             return False
         return bool(getattr(decision, "conflicts", ()))
 
-
     def emit_codes(self, ir: Any) -> Iterable[str]:
         yield "conflict_detected"
 
@@ -33,7 +32,6 @@ class UncertaintyDetectedRule(CanonicalRule):
         if decision is None:
             return False
         return bool(getattr(decision, "uncertainty_frames", ()))
-
 
     def emit_codes(self, ir: Any) -> Iterable[str]:
         yield "uncertainty_detected"

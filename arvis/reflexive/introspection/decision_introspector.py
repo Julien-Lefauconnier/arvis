@@ -1,13 +1,14 @@
 # arvis/reflexive/introspection/decision_introspector.py
 
 from typing import Dict, Any
+
+
 class DecisionIntrospector:
     """
     Explains the decision engine.
     """
 
-    def describe(self)-> Dict[str, Any]:
-
+    def describe(self) -> Dict[str, Any]:
         return {
             "name": "decision_engine",
             "description": (

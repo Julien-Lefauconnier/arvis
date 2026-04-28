@@ -3,6 +3,7 @@
 from arvis.conversation.response_strategy_type import ResponseStrategyType
 from arvis.conversation.conversation_state import ConversationState
 
+
 class ConversationTrajectoryController:
     """
     Controls the trajectory of the dialogue over time.
@@ -16,7 +17,6 @@ class ConversationTrajectoryController:
         proposed_strategy: ResponseStrategyType,
         state: ConversationState,
     ) -> ResponseStrategyType:
-
         if state.turn_count < 2:
             return proposed_strategy
 

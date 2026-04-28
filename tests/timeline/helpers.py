@@ -7,7 +7,6 @@ from arvis.timeline.timeline_types import TimelineEntryType
 
 
 def make_entry(i: int) -> TimelineEntry:
-
     return TimelineEntry.unsafe(
         entry_id=f"entry{i:04d}",
         created_at=datetime.now(timezone.utc),

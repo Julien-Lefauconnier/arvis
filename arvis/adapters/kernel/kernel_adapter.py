@@ -13,7 +13,6 @@ from arvis.ir.cognitive_ir import CognitiveIR
 
 
 class KernelAdapter:
-
     def __init__(self, *, deterministic_mode: bool = False) -> None:
         """
         KernelAdapter orchestrates IR → canonical → event → signal projection.

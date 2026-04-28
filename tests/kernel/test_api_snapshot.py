@@ -12,7 +12,6 @@ EXPECTED_API_MIN = {
 
 
 def test_api_snapshot():
-
     current = set(arvis.__all__)
 
     # Ensure critical API surface remains stable

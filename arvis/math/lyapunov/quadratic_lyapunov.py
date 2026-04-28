@@ -12,6 +12,7 @@ class QuadraticLyapunovState:
     """
     Theoretical fast state x_t used for paper-aligned quadratic Lyapunov analysis.
     """
+
     x: np.ndarray
 
     def as_vector(self) -> np.ndarray:
@@ -25,12 +26,14 @@ class QuadraticLyapunovSnapshot:
     delta: Optional[float]
     dimension: int
 
+
 @dataclass(frozen=True)
 class QuadraticComparabilitySnapshot:
     m: float
     M: float
     J: float
     regimes: int
+
 
 class QuadraticLyapunovFamily:
     """
@@ -40,8 +43,7 @@ class QuadraticLyapunovFamily:
 
     def __init__(self, matrices: Dict[str, np.ndarray]):
         self._matrices = {
-            str(k): np.asarray(v, dtype=float)
-            for k, v in matrices.items()
+            str(k): np.asarray(v, dtype=float) for k, v in matrices.items()
         }
 
     def has_regime(self, regime: str) -> bool:
@@ -62,7 +64,7 @@ class QuadraticLyapunovFamily:
         cur_state: QuadraticLyapunovState,
     ) -> float:
         return self.value(regime, cur_state) - self.value(regime, prev_state)
-    
+
     def comparability(self) -> QuadraticComparabilitySnapshot:
         """
         Computes regime comparability constants:

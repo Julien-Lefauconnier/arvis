@@ -8,6 +8,7 @@ from typing import Any, Mapping
 # Sub-components
 # ---------------------------
 
+
 @dataclass(frozen=True)
 class CognitiveActionIR:
     action_id: str
@@ -49,11 +50,14 @@ class CognitiveUncertaintyIR:
 # Main decision object
 # ---------------------------
 
+
 @dataclass(frozen=True)
 class CognitiveDecisionIR:
     decision_id: str
 
-    decision_kind: str  # conversational / informational / action / memory / meta / unknown
+    decision_kind: (
+        str  # conversational / informational / action / memory / meta / unknown
+    )
     memory_intent: str  # none / candidate / explicit / required
 
     reason_codes: tuple[str, ...] = ()

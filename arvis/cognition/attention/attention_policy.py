@@ -21,7 +21,6 @@ class AttentionPolicy:
         snapshot: CognitiveSignalSnapshot,
         context: AttentionContext,
     ) -> Optional[CognitivePolicyResult]:
-
         if context.current_load > context.max_items:
             return CognitivePolicyResult(
                 policy_name=self.POLICY_NAME,

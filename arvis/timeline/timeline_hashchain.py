@@ -9,7 +9,8 @@ import json
 from typing import Iterable, List, Dict, Any
 
 from .timeline_entry import TimelineEntry
-        
+
+
 def _dt_iso_utc(dt: datetime) -> str:
     if dt.tzinfo is None:
         raise ValueError("datetime must be tz-aware")
@@ -32,7 +33,7 @@ def _canonical_entry_payload(e: TimelineEntry) -> Dict[str, Any]:
         "origin_ref": e.origin_ref,
         "nature": str(e.nature.value) if hasattr(e.nature, "value") else str(e.nature),
         "device_id": e.device_id,
-        "lamport": e.lamport,   
+        "lamport": e.lamport,
     }
 
 
@@ -57,9 +58,7 @@ class TimelineHashChain:
     hashes: tuple[str, ...]
 
     def __post_init__(self) -> None:
-
         for h in self.hashes:
-
             if not isinstance(h, str):
                 raise ValueError("hash must be str")
 
@@ -74,7 +73,9 @@ class TimelineHashChain:
         return self.hashes[-1] if self.hashes else None
 
     @classmethod
-    def build(cls, entries: Iterable[TimelineEntry], *, seed: str = "") -> "TimelineHashChain":
+    def build(
+        cls, entries: Iterable[TimelineEntry], *, seed: str = ""
+    ) -> "TimelineHashChain":
         return cls(tuple(chain_hashes(entries, seed=seed)))
 
     def verify(self, entries: Iterable[TimelineEntry], *, seed: str = "") -> None:

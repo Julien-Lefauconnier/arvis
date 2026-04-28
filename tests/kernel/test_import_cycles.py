@@ -54,7 +54,6 @@ def detect_cycle(graph):
 
 
 def test_no_import_cycles():
-
     graph = build_import_graph()
 
     assert not detect_cycle(graph)

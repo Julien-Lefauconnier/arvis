@@ -6,16 +6,27 @@ from arvis.cognition.conversation.response_strategy_type import ResponseStrategy
 
 
 def test_abstention_mapping():
-    assert map_act_to_strategy(LinguisticActType.ABSTENTION) == ResponseStrategyType.ABSTENTION
+    assert (
+        map_act_to_strategy(LinguisticActType.ABSTENTION)
+        == ResponseStrategyType.ABSTENTION
+    )
 
 
 def test_confirmation_mapping():
-    assert map_act_to_strategy(LinguisticActType.REQUEST_CONFIRMATION) == ResponseStrategyType.CONFIRMATION
+    assert (
+        map_act_to_strategy(LinguisticActType.REQUEST_CONFIRMATION)
+        == ResponseStrategyType.CONFIRMATION
+    )
 
 
 def test_decision_mapping():
-    assert map_act_to_strategy(LinguisticActType.DECISION) == ResponseStrategyType.ACTION
+    assert (
+        map_act_to_strategy(LinguisticActType.DECISION) == ResponseStrategyType.ACTION
+    )
 
 
 def test_default_mapping_information():
-    assert map_act_to_strategy(LinguisticActType.INFORMATION) == ResponseStrategyType.INFORMATIONAL
+    assert (
+        map_act_to_strategy(LinguisticActType.INFORMATION)
+        == ResponseStrategyType.INFORMATIONAL
+    )

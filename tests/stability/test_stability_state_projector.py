@@ -4,6 +4,7 @@ import pytest
 from arvis.stability.stability_state_projector import StabilityStateProjector
 from arvis.math.lyapunov.lyapunov import LyapunovState
 
+
 class Dummy:
     pass
 
@@ -77,6 +78,7 @@ def test_project_identity():
 # Helpers
 # ============================================================
 
+
 class DummyBundle:
     def __init__(self, explanation=None, decision_result=None):
         self.explanation = explanation
@@ -98,6 +100,7 @@ class DummyDecision:
 # ============================================================
 # 1. FULL NORMAL CASE
 # ============================================================
+
 
 def test_full_projection():
     bundle = DummyBundle(
@@ -124,6 +127,7 @@ def test_full_projection():
 # 2. MISSING FIELDS → SAFE DEFAULTS
 # ============================================================
 
+
 def test_missing_fields():
     bundle = DummyBundle()
 
@@ -138,6 +142,7 @@ def test_missing_fields():
 # ============================================================
 # 3. CLAMP ≥ 5 → 1.0
 # ============================================================
+
 
 def test_clamping():
     bundle = DummyBundle(
@@ -162,14 +167,13 @@ def test_clamping():
 # 4. EXCEPTION IN BUDGET
 # ============================================================
 
+
 def test_budget_exception(monkeypatch):
     class Broken:
         def get(self, *a, **k):
             raise ValueError
 
-    bundle = DummyBundle(
-        explanation=DummyExplanation(Broken())
-    )
+    bundle = DummyBundle(explanation=DummyExplanation(Broken()))
 
     state = StabilityStateProjector.from_bundle(bundle)
 
@@ -180,15 +184,14 @@ def test_budget_exception(monkeypatch):
 # 5. EXCEPTION IN CONFLICTS
 # ============================================================
 
+
 def test_conflicts_exception():
     class BrokenDecision:
         @property
         def conflicts(self):
             raise ValueError
 
-    bundle = DummyBundle(
-        decision_result=BrokenDecision()
-    )
+    bundle = DummyBundle(decision_result=BrokenDecision())
 
     state = StabilityStateProjector.from_bundle(bundle)
 
@@ -199,15 +202,14 @@ def test_conflicts_exception():
 # 6. EXCEPTION IN UNCERTAINTY
 # ============================================================
 
+
 def test_uncertainty_exception():
     class BrokenDecision:
         @property
         def uncertainty_frames(self):
             raise ValueError
 
-    bundle = DummyBundle(
-        decision_result=BrokenDecision()
-    )
+    bundle = DummyBundle(decision_result=BrokenDecision())
 
     state = StabilityStateProjector.from_bundle(bundle)
 
@@ -218,15 +220,14 @@ def test_uncertainty_exception():
 # 7. EXCEPTION IN GAPS
 # ============================================================
 
+
 def test_gaps_exception():
     class BrokenDecision:
         @property
         def gaps(self):
             raise ValueError
 
-    bundle = DummyBundle(
-        decision_result=BrokenDecision()
-    )
+    bundle = DummyBundle(decision_result=BrokenDecision())
 
     state = StabilityStateProjector.from_bundle(bundle)
 
@@ -236,6 +237,7 @@ def test_gaps_exception():
 # ============================================================
 # 8. PROJECT PASSTHROUGH
 # ============================================================
+
 
 def test_project_passthrough():
     projector = StabilityStateProjector()

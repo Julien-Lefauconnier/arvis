@@ -37,6 +37,7 @@ from arvis.kernel_core.vfs.zip.service import ZipIngestDecision, ZipIngestServic
 # PROTOCOL
 # =====================================================
 
+
 class SyscallHandlerLike(Protocol):
     services: KernelServiceRegistry
 
@@ -44,6 +45,7 @@ class SyscallHandlerLike(Protocol):
 # =====================================================
 # HELPERS
 # =====================================================
+
 
 def _get_vfs(handler: SyscallHandlerLike) -> Optional[VFSService]:
     return handler.services.vfs_service
@@ -60,6 +62,7 @@ def _missing_service_error(service_name: str) -> SyscallResult:
 # =====================================================
 # SERIALIZATION
 # =====================================================
+
 
 def _serialize_vfs_item(item: VFSItem) -> dict[str, Any]:
     return {
@@ -122,7 +125,9 @@ def _serialize_zip_decision(decision: ZipIngestDecision) -> dict[str, Any]:
     return {
         "status": decision.status,
         "reason": decision.reason,
-        "zip_root": _serialize_zip_node(decision.zip_root) if decision.zip_root else None,
+        "zip_root": _serialize_zip_node(decision.zip_root)
+        if decision.zip_root
+        else None,
         "collisions": (
             _serialize_zip_collision_report(decision.collisions)
             if decision.collisions
@@ -134,6 +139,7 @@ def _serialize_zip_decision(decision: ZipIngestDecision) -> dict[str, Any]:
 # =====================================================
 # ERROR MAPPING
 # =====================================================
+
 
 def _map_vfs_error(exc: Exception) -> str:
     if isinstance(exc, VFSItemNotFoundError):
@@ -165,6 +171,7 @@ def _map_zip_error(exc: Exception) -> str:
 # VFS SYSCALLS
 # =====================================================
 
+
 @register_syscall("vfs.list")
 def vfs_list(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResult:
     vfs = _get_vfs(handler)
@@ -176,7 +183,9 @@ def vfs_list(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResu
 
 
 @register_syscall("vfs.get")
-def vfs_get(handler: SyscallHandlerLike, user_id: str, item_id: str, **_: Any) -> SyscallResult:
+def vfs_get(
+    handler: SyscallHandlerLike, user_id: str, item_id: str, **_: Any
+) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
@@ -310,6 +319,7 @@ def vfs_move_item(
 # ZIP SYSCALLS
 # =====================================================
 
+
 @register_syscall("vfs.zip.analyze")
 def vfs_zip_analyze(
     handler: SyscallHandlerLike,
@@ -368,22 +378,18 @@ def _deserialize_zip_node(data: dict[str, Any]) -> ZipNode:
         supported=data.get("supported", True),
         reason=data.get("reason"),
         zip_path=data.get("zip_path"),
-        children=[
-            _deserialize_zip_node(child)
-            for child in data.get("children", [])
-        ],
+        children=[_deserialize_zip_node(child) for child in data.get("children", [])],
     )
 
 
 def _deserialize_zip_plan(data: dict[str, Any]) -> ZipImportPlan:
-    return ZipImportPlan(
-        entries=data.get("entries", [])
-    )
+    return ZipImportPlan(entries=data.get("entries", []))
 
 
 # =====================================================
 # ZIP PLAN SYSCALL
 # =====================================================
+
 
 @register_syscall("vfs.zip.plan")
 def vfs_zip_plan(

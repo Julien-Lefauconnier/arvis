@@ -29,7 +29,7 @@ class DummyValidator:
             is_projection_safe = True
 
         return Cert()
-    
+
 
 def test_projection_stage_applies_pi_operator():
     stage = ProjectionStage()
@@ -40,6 +40,7 @@ def test_projection_stage_applies_pi_operator():
 
         # IMPORTANT : ajoute ton operator ici
         from arvis.math.projection.pi_operator import PiOperator
+
         pi_operator = PiOperator()
 
     class Ctx:
@@ -75,6 +76,7 @@ def test_projection_stage_fallback_still_applies():
         projection_validator = DummyValidator()
 
         from arvis.math.projection.pi_operator import PiOperator
+
         pi_operator = PiOperator()
 
     class Ctx:
@@ -89,7 +91,6 @@ def test_projection_stage_fallback_still_applies():
     assert "state.system_tension" in ctx.projection_view_raw
 
 
-
 def test_projection_stage_passes_previous_projection():
     stage = ProjectionStage()
 
@@ -102,6 +103,7 @@ def test_projection_stage_passes_previous_projection():
         projection_validator = DummyValidator()
 
         from arvis.math.projection.pi_operator import PiOperator
+
         pi_operator = PiOperator()
 
     class Ctx:
@@ -116,7 +118,6 @@ def test_projection_stage_passes_previous_projection():
 
 
 def test_projection_validator_rejects_high_divergence():
-
     class DummyDomain:
         def validate(self, projected):
             return True, {}
@@ -136,7 +137,6 @@ def test_projection_validator_rejects_high_divergence():
 
 
 def test_projection_validator_accepts_stable():
-
     class DummyDomain:
         def validate(self, projected):
             return True, {}
@@ -155,7 +155,6 @@ def test_projection_validator_accepts_stable():
 
 
 def test_projection_validator_prefers_delta_w_over_dv():
-
     class DummyDomain:
         def validate(self, projected):
             return True, {}
@@ -175,7 +174,6 @@ def test_projection_validator_prefers_delta_w_over_dv():
 
 
 def test_projection_validator_rejects_positive_delta_w():
-
     class DummyDomain:
         def validate(self, projected):
             return True, {}

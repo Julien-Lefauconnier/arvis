@@ -4,9 +4,7 @@ from arvis.kernel.projection.domain import ProjectionDomain, NumericBounds
 
 
 def test_domain_valid():
-    domain = ProjectionDomain(
-        bounds={"x": NumericBounds(0, 10)}
-    )
+    domain = ProjectionDomain(bounds={"x": NumericBounds(0, 10)})
 
     projected = {"x": 5}
     valid, checks = domain.validate(projected)
@@ -16,9 +14,7 @@ def test_domain_valid():
 
 
 def test_domain_invalid():
-    domain = ProjectionDomain(
-        bounds={"x": NumericBounds(0, 10)}
-    )
+    domain = ProjectionDomain(bounds={"x": NumericBounds(0, 10)})
 
     projected = {"x": 20}
     valid, checks = domain.validate(projected)

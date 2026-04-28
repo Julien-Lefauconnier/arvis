@@ -16,7 +16,7 @@ from .canonical_signal_key import CanonicalSignalKey
 class CanonicalSignalSpec:
     """
     Immutable specification of a canonical signal.
-    
+
     Defines:
     - The unique key identifying the signal
     - Allowed states (finite set)
@@ -24,12 +24,13 @@ class CanonicalSignalSpec:
     - Supersession rules
     - Allowed origins
     """
+
     key: CanonicalSignalKey
-    
+
     # Explicit finite sets — extracted from private stack
     states_allowed: FrozenSet[str] = field(default_factory=frozenset)
     subject_kinds: FrozenSet[str] = field(default_factory=frozenset)
-    
+
     # Existing fields
     supersession_allowed: bool = False
     origin_allowed: FrozenSet[str] = field(default_factory=frozenset)
@@ -39,10 +40,12 @@ class CanonicalSignalSpec:
         Enforce structural invariants at construction.
         """
         if not self.states_allowed:
-            raise ValueError("states_allowed must not be empty (closed-world invariant)")
-        
+            raise ValueError(
+                "states_allowed must not be empty (closed-world invariant)"
+            )
+
         if not self.subject_kinds:
             raise ValueError("subject_kinds must not be empty (closed-world invariant)")
-        
+
         if not self.origin_allowed:
             raise ValueError("origin_allowed must not be empty (provenance invariant)")

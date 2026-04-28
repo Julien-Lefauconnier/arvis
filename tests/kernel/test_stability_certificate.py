@@ -1,5 +1,6 @@
 # tests/kernel/test_stability_certificate.py
 
+
 def test_pipeline_exposes_stability_certificate(pipeline, ctx):
     pipeline.run(ctx)
 
@@ -24,6 +25,3 @@ def test_stability_certificate_consistency(pipeline, ctx):
 
     # switching flag must match context
     assert cert["switching"] == getattr(ctx, "switching_safe")
-
-
-

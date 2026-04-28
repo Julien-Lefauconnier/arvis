@@ -2,6 +2,7 @@
 
 from enum import Enum
 
+
 class UncertaintyAxis(str, Enum):
     """
     Declarative dimensions of uncertainty.

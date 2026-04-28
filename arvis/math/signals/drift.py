@@ -16,6 +16,7 @@ class DriftSignal(BaseSignal):
     Drift is often signed in theory, but here we normalize
     its magnitude into [0,1] for stability control usage.
     """
+
     value: float
 
     def __post_init__(self) -> None:
@@ -23,7 +24,7 @@ class DriftSignal(BaseSignal):
 
     def __float__(self) -> float:
         return self.value
-    
+
     def level(self) -> float:
         return self.value
 

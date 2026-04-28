@@ -5,9 +5,7 @@ from arvis.kernel.projection.validator import ProjectionValidator
 
 
 def test_certificate_basic_valid():
-    domain = ProjectionDomain(
-        bounds={"x": NumericBounds(0, 10)}
-    )
+    domain = ProjectionDomain(bounds={"x": NumericBounds(0, 10)})
 
     validator = ProjectionValidator(domain)
 
@@ -19,9 +17,7 @@ def test_certificate_basic_valid():
 
 
 def test_certificate_invalid_domain():
-    domain = ProjectionDomain(
-        bounds={"x": NumericBounds(0, 10)}
-    )
+    domain = ProjectionDomain(bounds={"x": NumericBounds(0, 10)})
 
     validator = ProjectionValidator(domain)
 

@@ -17,7 +17,6 @@ class GapToIntentMapper:
 
     @staticmethod
     def map(gap: ReasoningGap) -> List[ReasoningIntent]:
-
         if gap.gap_type == GapType.MISSING_CONTEXT:
             return [
                 ReasoningIntent(

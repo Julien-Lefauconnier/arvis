@@ -39,9 +39,7 @@ class PipelineIRService:
             )
         except Exception:
             ctx.ir_projection = None
-            ctx.extra.setdefault("errors", []).append(
-                "projection_ir_adapter_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("projection_ir_adapter_failure")
 
         # -----------------------------------------
         # Validity IR
@@ -52,9 +50,7 @@ class PipelineIRService:
             )
         except Exception:
             ctx.ir_validity = None
-            ctx.extra.setdefault("errors", []).append(
-                "validity_ir_adapter_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("validity_ir_adapter_failure")
 
         # -----------------------------------------
         # Stability IR
@@ -65,9 +61,7 @@ class PipelineIRService:
             )
         except Exception:
             ctx.ir_stability = None
-            ctx.extra.setdefault("errors", []).append(
-                "stability_ir_adapter_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("stability_ir_adapter_failure")
 
         # -----------------------------------------
         # Adaptive IR
@@ -78,9 +72,7 @@ class PipelineIRService:
             )
         except Exception:
             ctx.ir_adaptive = None
-            ctx.extra.setdefault("errors", []).append(
-                "adaptive_ir_adapter_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("adaptive_ir_adapter_failure")
 
         # -----------------------------------------
         # Build canonical IR
@@ -89,17 +81,13 @@ class PipelineIRService:
             ctx.cognitive_ir = CognitiveIRBuilder.from_context(ctx)
         except Exception:
             ctx.cognitive_ir = None
-            ctx.extra.setdefault("errors", []).append(
-                "cognitive_ir_build_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("cognitive_ir_build_failure")
             return
 
         # -----------------------------------------
         # Normalize
         # -----------------------------------------
-        ctx.cognitive_ir = CognitiveIRNormalizer.normalize(
-            ctx.cognitive_ir
-        )
+        ctx.cognitive_ir = CognitiveIRNormalizer.normalize(ctx.cognitive_ir)
 
         # -----------------------------------------
         # Validate
@@ -107,24 +95,18 @@ class PipelineIRService:
         try:
             CognitiveIRValidator.validate(ctx.cognitive_ir)
         except Exception:
-            ctx.extra.setdefault("errors", []).append(
-                "cognitive_ir_validation_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("cognitive_ir_validation_failure")
             raise
 
         # -----------------------------------------
         # Serialize / hash / envelope
         # -----------------------------------------
         try:
-            ctx.ir_serialized = (
-                CognitiveIRSerializer.to_canonical_dict(
-                    ctx.cognitive_ir
-                )
-            )
-
-            ctx.ir_hash = CognitiveIRHasher.hash(
+            ctx.ir_serialized = CognitiveIRSerializer.to_canonical_dict(
                 ctx.cognitive_ir
             )
+
+            ctx.ir_hash = CognitiveIRHasher.hash(ctx.cognitive_ir)
 
             ctx.ir_envelope = CognitiveIREnvelope.build(
                 ir=ctx.cognitive_ir,
@@ -137,6 +119,4 @@ class PipelineIRService:
             ctx.ir_hash = None
             ctx.ir_envelope = None
 
-            ctx.extra.setdefault("errors", []).append(
-                "ir_serialization_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("ir_serialization_failure")

@@ -26,6 +26,7 @@ def _base_ctx():
 def _base_pipeline():
     class P:
         theoretical_enforcement_mode = "monitor"
+
     return P()
 
 
@@ -170,7 +171,6 @@ def test_switching_instability_flag():
     assert disturbance["switching_disturbance"] is True
 
 
-
 def test_recovery_after_instability():
     stage = GateStage()
     ctx = _base_ctx()
@@ -209,5 +209,3 @@ def test_adaptive_instability_veto():
     stage.run(pipeline, ctx)
 
     assert ctx.gate_result == LyapunovVerdict.ABSTAIN
-
-

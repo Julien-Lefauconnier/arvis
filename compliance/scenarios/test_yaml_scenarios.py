@@ -85,14 +85,19 @@ def test_yaml_scenarios(name):
     # -------------------------
     if "projection" in expected:
         if "available" in expected["projection"]:
-            assert result.ir_projection["available"] == expected["projection"]["available"]
+            assert (
+                result.ir_projection["available"] == expected["projection"]["available"]
+            )
 
     # -------------------------
     # Execution layer assertions
     # -------------------------
     if "execution" in expected:
         if "requires_confirmation" in expected["execution"]:
-            assert result.requires_confirmation == expected["execution"]["requires_confirmation"]
+            assert (
+                result.requires_confirmation
+                == expected["execution"]["requires_confirmation"]
+            )
 
     # -------------------------
     # Consistency checks (gate ↔ execution)

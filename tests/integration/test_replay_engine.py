@@ -8,7 +8,6 @@ from tests.timeline.helpers import make_entries
 
 
 def make_snapshot(n):
-
     entries = make_entries(n)
 
     chain = TimelineHashChain.build(entries)
@@ -17,7 +16,6 @@ def make_snapshot(n):
 
 
 def test_replay_engine_basic():
-
     engine = ReplayEngine()
 
     snapshots = [
@@ -32,7 +30,6 @@ def test_replay_engine_basic():
 
 
 def test_replay_is_deterministic():
-
     engine = ReplayEngine()
 
     snapshots = [
@@ -47,7 +44,6 @@ def test_replay_is_deterministic():
 
 
 def test_replay_preserves_sequence_length():
-
     engine = ReplayEngine()
 
     snapshots = [make_snapshot(i) for i in range(2, 8)]

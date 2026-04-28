@@ -3,15 +3,16 @@
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.api.ir import build_ir_view
 
+
 def test_ir_view_is_present():
     pipeline = CognitivePipeline()
 
-    result = pipeline.run_from_input({
-        "user_id": "u1",
-        "cognitive_input": {},
-    })
-
-    
+    result = pipeline.run_from_input(
+        {
+            "user_id": "u1",
+            "cognitive_input": {},
+        }
+    )
 
     ir = build_ir_view(result)
 
@@ -25,17 +26,19 @@ def test_ir_view_is_present():
 def test_ir_view_is_serializable():
     pipeline = CognitivePipeline()
 
-    result = pipeline.run_from_input({
-        "user_id": "u1",
-        "cognitive_input": {},
-    })
+    result = pipeline.run_from_input(
+        {
+            "user_id": "u1",
+            "cognitive_input": {},
+        }
+    )
 
     ir = build_ir_view(result)
 
     # doit être JSON-safe
     import json
-    json.dumps(ir, default=str)
 
+    json.dumps(ir, default=str)
 
 
 def test_os_exposes_ir_via_method():
@@ -43,10 +46,7 @@ def test_os_exposes_ir_via_method():
 
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input={}
-    )
+    result = os.run(user_id="u1", cognitive_input={})
 
     ir = result.to_ir()
 
@@ -60,13 +60,8 @@ def test_to_dict_does_not_expose_ir():
 
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input={}
-    )
+    result = os.run(user_id="u1", cognitive_input={})
 
     data = result.to_dict()
 
     assert "ir" not in data  # backward compatibility
-
-

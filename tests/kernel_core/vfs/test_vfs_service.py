@@ -116,7 +116,9 @@ def test_create_folder_parent_is_file(service: VFSService, user_id: str) -> None
         )
 
 
-def test_create_folder_name_conflict_with_folder(service: VFSService, user_id: str) -> None:
+def test_create_folder_name_conflict_with_folder(
+    service: VFSService, user_id: str
+) -> None:
     service.create_folder(
         user_id=user_id,
         name="Docs",
@@ -131,7 +133,9 @@ def test_create_folder_name_conflict_with_folder(service: VFSService, user_id: s
         )
 
 
-def test_create_folder_name_conflict_with_file(service: VFSService, user_id: str) -> None:
+def test_create_folder_name_conflict_with_file(
+    service: VFSService, user_id: str
+) -> None:
     service.create_file_item(
         user_id=user_id,
         name="Docs",
@@ -561,7 +565,9 @@ def test_repository_is_user_scoped(service: VFSService) -> None:
     assert len(service.list_items("user-b")) == 1
 
 
-def test_created_items_are_returned_from_repository(service: VFSService, user_id: str) -> None:
+def test_created_items_are_returned_from_repository(
+    service: VFSService, user_id: str
+) -> None:
     folder = service.create_folder(
         user_id=user_id,
         name="Docs",

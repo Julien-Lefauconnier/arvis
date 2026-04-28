@@ -11,7 +11,6 @@ from arvis.timeline.timeline_hashchain import TimelineHashChain
 
 @given(st.integers(min_value=2, max_value=20))
 def test_delta_replay_invariant(n):
-
     entries = make_entries(n)
 
     mid = n // 2

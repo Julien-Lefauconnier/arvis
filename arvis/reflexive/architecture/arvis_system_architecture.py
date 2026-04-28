@@ -12,7 +12,6 @@ class SystemLayer:
 
 
 class ArvisSystemArchitecture:
-
     @staticmethod
     def layers() -> List[SystemLayer]:
         return [

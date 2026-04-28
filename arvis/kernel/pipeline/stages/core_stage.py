@@ -18,9 +18,7 @@ from arvis.math.lyapunov.slow_dynamics import update_slow_state
 
 
 class CoreStage:
-
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         bundle = ctx.bundle
 
         # -----------------------------------------
@@ -28,12 +26,18 @@ class CoreStage:
         # -----------------------------------------
         # The pipeline owns causal history.
         # The core only produces the current state.
-        preserve_injected = bool(getattr(ctx, "extra", {}).get("preserve_injected_lyapunov", False))
+        preserve_injected = bool(
+            getattr(ctx, "extra", {}).get("preserve_injected_lyapunov", False)
+        )
         injected_prev = getattr(ctx, "prev_lyap", None)
         injected_cur = getattr(ctx, "cur_lyap", None)
         prev_slow_before = getattr(ctx, "slow_state", None)
         prev_symbolic_before = getattr(ctx, "symbolic_state", None)
-        prev_lyap_before = injected_prev if preserve_injected and injected_prev is not None else injected_cur
+        prev_lyap_before = (
+            injected_prev
+            if preserve_injected and injected_prev is not None
+            else injected_cur
+        )
 
         # -----------------------------------------
         # 1. Core processing
@@ -43,17 +47,14 @@ class CoreStage:
 
         core_snapshot = getattr(scientific, "core_snapshot", None) or scientific
 
-        ctx.collapse_risk = RiskSignal(
-            getattr(scientific, "collapse_risk", 0.0) or 0.0
-        )
+        ctx.collapse_risk = RiskSignal(getattr(scientific, "collapse_risk", 0.0) or 0.0)
 
         # -----------------------------------------
         # 2. Lyapunov states
         # -----------------------------------------
 
-        new_cur = (
-            getattr(scientific, "cur_lyap", None)
-            or getattr(core_snapshot, "cur_lyap", None)
+        new_cur = getattr(scientific, "cur_lyap", None) or getattr(
+            core_snapshot, "cur_lyap", None
         )
 
         def _normalize_lyap(x: Any) -> Optional[LyapunovState]:
@@ -62,7 +63,6 @@ class CoreStage:
             if isinstance(x, LyapunovState):
                 return x
             return LyapunovState.from_scalar(x)
-
 
         new_cur = _normalize_lyap(new_cur)
 
@@ -144,9 +144,11 @@ class CoreStage:
                 ctx.quadratic_lyap_snapshot = None
         except Exception:
             ctx.quadratic_lyap_snapshot = None
-        
+
         try:
-            ctx.quadratic_comparability = getattr(pipeline, "quadratic_comparability", None)
+            ctx.quadratic_comparability = getattr(
+                pipeline, "quadratic_comparability", None
+            )
         except Exception:
             ctx.quadratic_comparability = None
 
@@ -167,9 +169,8 @@ class CoreStage:
         except Exception:
             ctx._dv = 0.0
 
-        ctx.regime = (
-            getattr(scientific, "regime", None)
-            or getattr(core_snapshot, "regime", None)
+        ctx.regime = getattr(scientific, "regime", None) or getattr(
+            core_snapshot, "regime", None
         )
 
         ctx.stable = (
@@ -183,22 +184,27 @@ class CoreStage:
 
             if reflexive:
                 new_slow = SlowState(
-                    stability_memory=float(reflexive.get("stability_memory", 0.0) or 0.0),
+                    stability_memory=float(
+                        reflexive.get("stability_memory", 0.0) or 0.0
+                    ),
                     structural_risk=float(reflexive.get("structural_risk", 0.0) or 0.0),
-                    regime_persistence=float(reflexive.get("regime_persistence", 0.0) or 0.0),
-                    uncertainty_drift=float(reflexive.get("uncertainty_drift", 0.0) or 0.0),
+                    regime_persistence=float(
+                        reflexive.get("regime_persistence", 0.0) or 0.0
+                    ),
+                    uncertainty_drift=float(
+                        reflexive.get("uncertainty_drift", 0.0) or 0.0
+                    ),
                 )
             else:
                 new_slow = SlowState.zero()
         except Exception:
             new_slow = None
 
-
         # -----------------------------------------
         # 3. Causal export for composite gate
         # -----------------------------------------
         ctx.slow_state_prev = prev_slow_before
-        
+
         # -----------------------------------------
         # Future: slow-fast consistency (paper alignment)
         # Currently disabled (safe mode)
@@ -240,7 +246,7 @@ class CoreStage:
         #     ctx.slow_state = update_slow_state(prev_slow_before, T_x)
 
         ctx.symbolic_state_prev = prev_symbolic_before
-        
+
         # Current symbolic state is not produced by the core here.
         # It may be attached later by observability or another stage.
         # Keep whatever current value already exists, but do not fabricate it.

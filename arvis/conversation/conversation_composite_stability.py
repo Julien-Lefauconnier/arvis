@@ -15,7 +15,6 @@ class ConversationCompositeStability:
         self._lyapunov = CompositeLyapunov()
 
     def compute(self, state: Any) -> float:
-
         fast_prev = state.signals.get("fast_state_prev")
         fast_next = state.signals.get("fast_state")
 

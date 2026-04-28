@@ -13,7 +13,6 @@ from arvis.kernel_core.memory.observation_long_invariants import (
 
 @dataclass(frozen=True)
 class ObservationLongEvent:
-
     observed_at: datetime
     user_id: str
     source_type: str
@@ -22,7 +21,6 @@ class ObservationLongEvent:
     event_id: Optional[str] = None
 
     def __post_init__(self) -> None:
-
         # 1. Generate ID first
         if self.event_id is None:
             raw = {

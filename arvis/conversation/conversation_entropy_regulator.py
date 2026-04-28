@@ -18,7 +18,6 @@ class ConversationEntropyRegulator:
 
     @staticmethod
     def compute_entropy(state: ConversationState) -> float:
-
         weights = getattr(state, "strategy_weights", None)
 
         if not weights:
@@ -27,7 +26,6 @@ class ConversationEntropyRegulator:
         entropy = 0.0
 
         for p in weights.values():
-
             if p > 0:
                 entropy -= p * math.log(p)
 
@@ -39,7 +37,6 @@ class ConversationEntropyRegulator:
         strategy: ResponseStrategyType,
         state: ConversationState,
     ) -> ResponseStrategyType:
-
         entropy = ConversationEntropyRegulator.compute_entropy(state)
 
         state.signals["entropy"] = entropy

@@ -9,7 +9,6 @@ from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
 
 
 class BundleStage:
-
     def run(self, pipeline: Any, ctx: Any) -> None:
         introspection = ctx.introspection or IntrospectionSnapshot()
         explanation = ctx.explanation or ExplanationSnapshot()

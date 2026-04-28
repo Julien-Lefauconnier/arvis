@@ -37,7 +37,9 @@ def make_process(pid: str) -> CognitiveProcess:
 
 def test_interrupt_storm_does_not_duplicate_ready_queue():
     runtime_state = CognitiveRuntimeState()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=StubExecutor())
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=StubExecutor()
+    )
 
     proc = make_process("p1")
     scheduler.enqueue(proc)
@@ -62,7 +64,9 @@ def test_interrupt_storm_does_not_duplicate_ready_queue():
 
 def test_system_signal_wakes_only_non_final_processes():
     runtime_state = CognitiveRuntimeState()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=StubExecutor())
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=StubExecutor()
+    )
 
     blocked = make_process("blocked")
     scheduler.enqueue(blocked)

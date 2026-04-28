@@ -4,8 +4,10 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Any
 
 
-from arvis.math.lyapunov.lyapunov import LyapunovState,V
-from arvis.stability.stability_state_projector import StabilityStateProjector as LyapunovStateBuilder
+from arvis.math.lyapunov.lyapunov import LyapunovState, V
+from arvis.stability.stability_state_projector import (
+    StabilityStateProjector as LyapunovStateBuilder,
+)
 
 from arvis.math.lyapunov.lyapunov_gate import (
     lyapunov_gate,
@@ -53,7 +55,6 @@ class LyapunovObserver(StabilityObserver):
         previous_state: LyapunovState,
         new_state: LyapunovState,
     ) -> LyapunovObservation:
-
         v_prev = V(previous_state)
         v_new = V(new_state)
 
@@ -73,7 +74,6 @@ class LyapunovObserver(StabilityObserver):
         self,
         bundle: CognitiveBundleSnapshot,
     ) -> StabilitySnapshot:
-
         cur_state = LyapunovStateBuilder.from_bundle(bundle)
 
         if self._last_state is None:
@@ -82,7 +82,7 @@ class LyapunovObserver(StabilityObserver):
                 score=float(V(cur_state)),
                 collapse_risk=0.0,
                 verdict=LyapunovVerdict.REQUIRE_CONFIRMATION.value,
-                 delta_v=0.0,
+                delta_v=0.0,
             )
 
         prev_state = self._last_state
@@ -109,4 +109,3 @@ class LyapunovObserver(StabilityObserver):
             "delta": obs.delta,
             "verdict": obs.verdict.value,
         }
-    

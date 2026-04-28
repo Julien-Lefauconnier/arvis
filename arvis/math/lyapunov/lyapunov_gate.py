@@ -4,7 +4,11 @@ from enum import Enum
 from dataclasses import dataclass, field
 
 from arvis.math.lyapunov.lyapunov import LyapunovState, delta_V, V
-from arvis.math.control.eps_adaptive import EpsAdaptiveParams, CognitiveMode, adaptive_eps
+from arvis.math.control.eps_adaptive import (
+    EpsAdaptiveParams,
+    CognitiveMode,
+    adaptive_eps,
+)
 from arvis.math.core.normalization import clamp01
 from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from .slow_state import SlowState
@@ -27,10 +31,10 @@ class LyapunovGateParams:
 
     # ---- Stabilisation intégrale (Phase 1)
     # Damping: plus V est haut, plus on devient strict sur ΔV
-    damping_gamma: float = 0.5   # 0 => off, >0 => stricter when V high
+    damping_gamma: float = 0.5  # 0 => off, >0 => stricter when V high
 
     # Extra penalty when ΔV is positive (instability growth)
-    pos_dv_penalty: float = 0.25 # 0 => off
+    pos_dv_penalty: float = 0.25  # 0 => off
 
 
 def lyapunov_gate(  # noqa: C901
@@ -71,7 +75,6 @@ def lyapunov_gate(  # noqa: C901
             mode=params.mode,
             trust_score=0.0,
         )
-
 
     # 1) damping: stricter when V is high
     gamma = max(0.0, float(params.damping_gamma))

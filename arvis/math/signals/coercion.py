@@ -62,6 +62,7 @@ def to_risk(value: Any, default: float = 0.0) -> RiskSignal:
         return value
     return RiskSignal(to_float(value, default))
 
+
 def to_uncertainty(value: Any, default: float = 0.0) -> UncertaintySignal:
     if isinstance(value, UncertaintySignal):
         return value
@@ -72,6 +73,7 @@ def to_drift(value: Any, default: float = 0.0) -> DriftSignal:
     if isinstance(value, DriftSignal):
         return value
     return DriftSignal(to_float(value, default))
+
 
 def to_stability(value: Any, default: float = 0.0) -> StabilitySignal:
     if isinstance(value, StabilitySignal):

@@ -12,6 +12,7 @@ DEFAULT_RISK_CALIBRATION: Dict[str, Tuple[float, float]] = {
     "forecast": (0.50, 4.0),
 }
 
+
 def clamp01(x: float) -> float:
     try:
         v = float(x)
@@ -75,7 +76,7 @@ def probabilistic_or(probs: Iterable[float]) -> float:
     for p in probs:
         has_any = True
         p = clamp01(p)
-        prod *= (1.0 - p)
+        prod *= 1.0 - p
 
     if not has_any:
         return 0.0

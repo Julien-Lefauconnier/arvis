@@ -17,11 +17,11 @@ def symbolic_empty():
         conflict_histogram={},
         conflict_severity=0.0,
         override_count=0,
-        override_rate=0.0
+        override_rate=0.0,
     )
 
-def test_target_map_no_gate_dependency(symbolic_empty):
 
+def test_target_map_no_gate_dependency(symbolic_empty):
     fast = LyapunovState(0.1, 0.2, 0.3, 0.4)
 
     T = target_map(symbolic_empty, fast=fast)
@@ -30,7 +30,6 @@ def test_target_map_no_gate_dependency(symbolic_empty):
 
 
 def test_target_map_convex_combination(symbolic_empty):
-
     fast = LyapunovState(1.0, 1.0, 1.0, 1.0)
 
     T = target_map(symbolic_empty, fast=fast, rho_fast=0.3)

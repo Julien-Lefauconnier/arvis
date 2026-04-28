@@ -5,9 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Union, Protocol, runtime_checkable
 
+
 @runtime_checkable
 class SupportsFloat(Protocol):
     def __float__(self) -> float: ...
+
 
 @dataclass(frozen=True)
 class BaseSignal:

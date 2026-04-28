@@ -59,8 +59,10 @@ def test_gate_reacts_to_invalid_envelope():
     )
     stage.run(pipeline, ctx)
     assert "validity_projection_unavailable" in ctx.extra.get("fusion_reasons", [])
-    assert ctx.gate_result in {LyapunovVerdict.REQUIRE_CONFIRMATION, LyapunovVerdict.ABSTAIN}
-
+    assert ctx.gate_result in {
+        LyapunovVerdict.REQUIRE_CONFIRMATION,
+        LyapunovVerdict.ABSTAIN,
+    }
 
 
 def test_gate_projection_enforcement_soft_downgrades_allow():
@@ -97,7 +99,10 @@ def test_gate_projection_enforcement_soft_downgrades_allow():
 
     stage.run(pipeline, ctx)
 
-    assert ctx.gate_result in {LyapunovVerdict.REQUIRE_CONFIRMATION, LyapunovVerdict.ABSTAIN}
+    assert ctx.gate_result in {
+        LyapunovVerdict.REQUIRE_CONFIRMATION,
+        LyapunovVerdict.ABSTAIN,
+    }
 
 
 def test_gate_projection_lyapunov_incompatibility_downgrades_allow():
@@ -136,4 +141,7 @@ def test_gate_projection_lyapunov_incompatibility_downgrades_allow():
     stage.run(pipeline, ctx)
 
     assert "projection_lyapunov_incompatible" in ctx.extra.get("fusion_reasons", [])
-    assert ctx.gate_result in {LyapunovVerdict.REQUIRE_CONFIRMATION, LyapunovVerdict.ABSTAIN}
+    assert ctx.gate_result in {
+        LyapunovVerdict.REQUIRE_CONFIRMATION,
+        LyapunovVerdict.ABSTAIN,
+    }

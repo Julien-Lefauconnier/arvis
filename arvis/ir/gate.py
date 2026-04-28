@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
+
 @dataclass(frozen=True)
 class CognitiveGateTraceStepIR:
     stage: str
@@ -18,6 +19,7 @@ class CognitiveGateVerdictIR(str, Enum):
     REQUIRE_CONFIRMATION = "require_confirmation"
     ABSTAIN = "abstain"
 
+
 @dataclass(frozen=True)
 class CognitiveGateIR:
     verdict: CognitiveGateVerdictIR
@@ -29,4 +31,3 @@ class CognitiveGateIR:
     total_severity: float | None = None
     max_severity: float | None = None
     instability_score: float | None = None
-    

@@ -19,8 +19,7 @@ class ContentImporter(Protocol):
         user_id: str,
         vfs_item_id: str,
         zip_node: ZipNode,
-    ) -> Any:
-        ...
+    ) -> Any: ...
 
 
 class ZipExecutor:
@@ -119,9 +118,7 @@ class ZipExecutor:
             return
 
         if zip_node.zip_path is None:
-            skipped_files.append(
-                {"name": zip_node.name, "reason": "missing_zip_path"}
-            )
+            skipped_files.append({"name": zip_node.name, "reason": "missing_zip_path"})
             return
 
         tmp_path: Optional[str] = None

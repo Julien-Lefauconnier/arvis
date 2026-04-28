@@ -7,6 +7,4 @@ from .cognitive_gate_result import CognitiveGateResult
 
 
 class CognitiveGate(Protocol):
-
-    def evaluate(self, bundle: CognitiveBundleSnapshot) -> CognitiveGateResult:
-        ...
+    def evaluate(self, bundle: CognitiveBundleSnapshot) -> CognitiveGateResult: ...

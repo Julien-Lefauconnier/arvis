@@ -12,6 +12,7 @@ def _clamp01(x: float) -> float:
         return 1.0
     return x
 
+
 @dataclass(frozen=True)
 class SystemConfidenceInputs:
     """
@@ -64,6 +65,6 @@ def compute_system_confidence(inputs: SystemConfidenceInputs) -> float:
     if risk > 1.0:
         risk = 1.0
 
-    score *= (1.0 - 0.5 * risk)
+    score *= 1.0 - 0.5 * risk
 
     return _clamp01(float(score))

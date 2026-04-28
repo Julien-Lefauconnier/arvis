@@ -10,9 +10,9 @@ from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 
 
-
 def make_ctx():
     return SimpleNamespace(extra={})
+
 
 class DummyTool(BaseTool):
     name = "dummy"

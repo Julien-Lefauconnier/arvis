@@ -74,7 +74,6 @@ def test_bootstrap_ir_context_keeps_existing_ir_context():
     assert ctx.ir_context is first
 
 
-
 def test_bootstrap_ir_context_exposes_memory_projection_safely():
     pipeline = CognitivePipeline()
 

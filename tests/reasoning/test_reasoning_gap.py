@@ -4,7 +4,6 @@ from arvis.reasoning.reasoning_gap import ReasoningGap
 
 
 def test_reasoning_gap_creation():
-
     gap = ReasoningGap(
         gap_type="missing_information",
         origin="test",

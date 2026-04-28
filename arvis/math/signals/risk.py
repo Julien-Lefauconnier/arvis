@@ -18,6 +18,7 @@ class RiskSignal(BaseSignal):
     - Immutable
     - Semantically distinct from other signals
     """
+
     value: float
 
     def __post_init__(self) -> None:
@@ -25,9 +26,9 @@ class RiskSignal(BaseSignal):
 
     def __float__(self) -> float:
         return self.value
-    
+
     # -----------------------------------------
-    # Semantic helpers 
+    # Semantic helpers
     # -----------------------------------------
 
     def level(self) -> float:
@@ -44,7 +45,7 @@ class RiskSignal(BaseSignal):
 
     def is_critical(self) -> bool:
         return self.value >= 0.85
-    
+
     def is_transition_zone(self) -> bool:
         return 0.3 <= self.value < 0.6
 

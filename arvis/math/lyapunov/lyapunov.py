@@ -14,12 +14,11 @@ class LyapunovWeights:
 
     Ensures sum(w)=1 (or defaults to uniform if degenerate).
     """
+
     w_budget: float = 0.25
     w_risk: float = 0.25
     w_uncertainty: float = 0.25
     w_governance: float = 0.25
-
-
 
     def normalized(self) -> "LyapunovWeights":
         wb = max(0.0, float(self.w_budget))
@@ -46,6 +45,7 @@ class LyapunovState:
 
     All signals must be normalized in [0,1].
     """
+
     budget_used: float
     risk: float
     uncertainty: float

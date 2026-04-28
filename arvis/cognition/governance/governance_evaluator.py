@@ -19,7 +19,6 @@ class GovernanceEvaluator:
         suggestion: GovernanceSuggestion,
         decision: Optional[GovernanceDecision],
     ) -> Optional[GovernanceDecision]:
-
         if decision is None:
             return None
 

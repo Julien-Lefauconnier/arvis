@@ -9,6 +9,7 @@ from .reason_code_registry import ReasonCodeRegistry
 
 STRICT_MODE = os.getenv("ARVIS_REASON_STRICT", "false").lower() == "true"
 
+
 class ReasonCodeNormalizer:
     """
     Normalize reason codes to a canonical spec-aligned vocabulary.
@@ -26,26 +27,21 @@ class ReasonCodeNormalizer:
         # --- Global stability ---
         "global_instability_confirm": "global_instability_confirmed",
         "global_instability_abstain": "global_instability_abstained",
-
         # --- Adaptive ---
         "adaptive_warning": "adaptive_margin_warning",
         "adaptive_instability": "adaptive_instability_veto",
         "adaptive_hard_veto": "adaptive_instability_veto",
-
         # --- Projection ---
         "projection_invalid": "projection_invalid",
         "projection_boundary": "projection_boundary",
         "projection_unsafe": "projection_unsafe",
         "projection_lyapunov_incompatible": "projection_lyapunov_incompatible",
-
         # --- Kappa ---
         "kappa_violation": "kappa_violation",
         "kappa_margin_warning": "kappa_margin_warning",
         "kappa_margin_critical": "kappa_margin_critical",
-
         # --- Recovery ---
         "recovery_post_fusion_override": "recovery_override",
-
         # --- Generic ---
         "fusion_fallback": "fusion_fallback",
         "gate_policy_adjustment": "gate_policy_adjustment",

@@ -9,5 +9,3 @@ class AdaptiveStabilitySnapshot:
     switching_margin: float | None
     regime: str
     is_available: bool
-
-    

@@ -1,8 +1,11 @@
 # tests/kernel/pipeline/test_projection_integration.py
 
+
 def test_projection_integration_basic():
     from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
-    from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
     pipeline = CognitivePipeline()
 

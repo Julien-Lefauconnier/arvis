@@ -8,9 +8,7 @@ from arvis.uncertainty.uncertainty_frame_registry import (
 
 
 class UncertaintyIntrospector:
-
     def describe(self) -> Dict[str, Any]:
-
         raw_frames = cast(List[Any], UncertaintyFrameRegistry.all())
 
         frames: List[Dict[str, Any]] = [

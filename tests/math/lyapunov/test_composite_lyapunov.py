@@ -13,6 +13,7 @@ from arvis.math.lyapunov.lyapunov import lyapunov_value
 def comp():
     return CompositeLyapunov()
 
+
 @pytest.fixture
 def symbolic_empty():
     return SymbolicState(
@@ -23,8 +24,9 @@ def symbolic_empty():
         conflict_histogram={},
         conflict_severity=0.0,
         override_count=0,
-        override_rate=0.0
+        override_rate=0.0,
     )
+
 
 def test_W_positive(comp):
     fast = LyapunovState(0.1, 0.2, 0.3, 0.4)
@@ -46,10 +48,11 @@ def test_delta_W_negative_on_improvement(comp, symbolic_empty):
         slow_prev=slow,
         slow_next=slow,
         symbolic_prev=symbolic_empty,
-        symbolic_next=symbolic_empty
+        symbolic_next=symbolic_empty,
     )
     # Fast improvement should not increase energy if slow is aligned
     assert delta < 1e-6
+
 
 def test_delta_W_positive_on_degradation(comp, symbolic_empty):
     """
@@ -125,7 +128,6 @@ def test_W_with_manual_Tx(comp):
     w = comp.W(fast, slow, symbolic=None, T_x=T_x)
 
     assert w >= 0.0
-
 
 
 def test_small_gain(comp):

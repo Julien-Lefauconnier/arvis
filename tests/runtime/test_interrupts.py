@@ -26,6 +26,7 @@ class DummyExecutor:
                 time_slice_ms=0,
                 memory_span=0,
             )
+
         return Outcome()
 
 
@@ -56,7 +57,6 @@ def test_interrupt_wakes_blocked_process():
 
     # simulate scheduler selecting it
     p.mark_running(tick=0)
-
 
     scheduler.block(p.process_id, "waiting_io")
 

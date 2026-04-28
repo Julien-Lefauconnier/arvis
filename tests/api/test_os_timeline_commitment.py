@@ -1,5 +1,6 @@
 # tests/api/test_os_timeline_commitment.py
 
+
 def test_timeline_commitment_present_and_valid():
     from arvis.api import CognitiveOS
 
@@ -203,8 +204,6 @@ def test_global_commitment_recomputable():
 
     ir_hash = sha256(ir_bytes).hexdigest()
 
-    recomputed = sha256(
-        (result.timeline_commitment + ir_hash).encode()
-    ).hexdigest()
+    recomputed = sha256((result.timeline_commitment + ir_hash).encode()).hexdigest()
 
     assert recomputed == result.global_commitment

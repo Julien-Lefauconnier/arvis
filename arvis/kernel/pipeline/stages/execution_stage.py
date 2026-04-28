@@ -8,21 +8,13 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
 class ExecutionStage:
-
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         verdict = ctx.gate_result
         needs_confirmation = getattr(ctx, "_needs_confirmation", False)
 
-        requires_confirmation = (
-            needs_confirmation
-            and ctx.confirmation_result is None
-        )
+        requires_confirmation = needs_confirmation and ctx.confirmation_result is None
 
-        can_execute = (
-            verdict == LyapunovVerdict.ALLOW
-            and not requires_confirmation
-        )
+        can_execute = verdict == LyapunovVerdict.ALLOW and not requires_confirmation
 
         if can_execute:
             execution_status = ExecutionGateStatus.READY

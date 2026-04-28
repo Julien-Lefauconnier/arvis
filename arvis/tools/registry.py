@@ -11,7 +11,7 @@ class ToolRegistry:
         self._tools: Dict[str, BaseTool] = {}
 
     def register(self, tool: BaseTool) -> None:
-        self._tools[tool.name] = tool  
+        self._tools[tool.name] = tool
 
     def get(self, name: str) -> BaseTool:
         if name not in self._tools:

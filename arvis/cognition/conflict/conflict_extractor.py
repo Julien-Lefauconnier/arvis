@@ -5,6 +5,7 @@ from typing import Any, List
 from .conflict_type import REASON_MISMATCH
 from .conflict_signal import ConflictSignal
 
+
 def extract_conflicts_from_bundle(bundle: Any) -> List[ConflictSignal]:
     """
     Minimal conflict extraction (safe baseline).

@@ -28,9 +28,7 @@ class PipelineLifecycleService:
             PipelineInputService,
         )
 
-        ctx = PipelineInputService.build_context(
-            input_data
-        )
+        ctx = PipelineInputService.build_context(input_data)
         return pipeline.run(ctx)
 
     @staticmethod
@@ -56,7 +54,5 @@ class PipelineLifecycleService:
             PipelineReplayService,
         )
 
-        ctx = PipelineReplayService.build_context(
-            ir
-        )
+        ctx = PipelineReplayService.build_context(ir)
         return pipeline.run(ctx)

@@ -9,6 +9,7 @@ from arvis.kernel_core.syscalls.syscall_registry import register_syscall
 
 from arvis.kernel_core.process import CognitiveProcessId
 
+
 class SchedulerLike(Protocol):
     def enqueue(self, process: Any) -> None: ...
     def suspend(self, process_id: CognitiveProcessId) -> None: ...
@@ -16,7 +17,8 @@ class SchedulerLike(Protocol):
 
 
 class SyscallHandlerLike(Protocol):
-   scheduler: SchedulerLike
+    scheduler: SchedulerLike
+
 
 @register_syscall("process.spawn")
 def process_spawn(

@@ -27,8 +27,6 @@ class ConversationStabilityController:
         lyapunov_verdict: LyapunovVerdict | None = None,
         global_stability_verdict: str | None = None,
     ) -> ResponseStrategyType:
-
-
         if global_stability_verdict == "CRITICAL":
             return ResponseStrategyType.ABSTENTION
 
@@ -72,7 +70,6 @@ class ConversationStabilityController:
         regime = self.regime_estimator.push(delta_v)
 
         if regime is not None:
-
             if regime.regime == "chaotic":
                 return ResponseStrategyType.ABSTENTION
 

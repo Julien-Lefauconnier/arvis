@@ -1,11 +1,18 @@
 # tests/conversation/test_adaptive_controller.py
 
-from arvis.conversation.conversation_adaptive_controller import ConversationAdaptiveController
+from arvis.conversation.conversation_adaptive_controller import (
+    ConversationAdaptiveController,
+)
 from arvis.conversation.conversation_energy_model import ConversationEnergyModel
-from arvis.conversation.conversation_stability_signals import ConversationStabilitySignalsBuilder
-from arvis.conversation.conversation_regime_controller import ConversationRegimeController
+from arvis.conversation.conversation_stability_signals import (
+    ConversationStabilitySignalsBuilder,
+)
+from arvis.conversation.conversation_regime_controller import (
+    ConversationRegimeController,
+)
 from arvis.conversation.response_strategy_type import ResponseStrategyType
 from arvis.conversation.conversation_adaptive_policy import AdaptiveThresholdPolicy
+
 
 class DummyState:
     def __init__(self, signals):
@@ -13,12 +20,14 @@ class DummyState:
 
 
 def test_adaptive_controller_increases_weights_on_instability():
-    state = DummyState({
-        "feedback": {
-            "high_collapse_risk": True,
-            "high_uncertainty": True,
+    state = DummyState(
+        {
+            "feedback": {
+                "high_collapse_risk": True,
+                "high_uncertainty": True,
+            }
         }
-    })
+    )
 
     before = ConversationEnergyModel._dynamic_weights.copy()
 
@@ -31,10 +40,7 @@ def test_adaptive_controller_increases_weights_on_instability():
 
 
 def test_adaptive_controller_relaxes_when_stable():
-    state = DummyState({
-        "feedback": {}
-    })
-
+    state = DummyState({"feedback": {}})
 
     ConversationAdaptiveController.adapt(state)
 
@@ -45,11 +51,7 @@ def test_adaptive_controller_relaxes_when_stable():
 
 
 def test_weights_are_normalized():
-    state = DummyState({
-        "feedback": {
-            "high_collapse_risk": True
-        }
-    })
+    state = DummyState({"feedback": {"high_collapse_risk": True}})
 
     ConversationAdaptiveController.adapt(state)
 
@@ -60,10 +62,7 @@ def test_weights_are_normalized():
 
 
 def test_adaptive_controller_increases_with_positive_delta_v():
-    state = DummyState({
-        "delta_v": 0.5,
-        "feedback": {}
-    })
+    state = DummyState({"delta_v": 0.5, "feedback": {}})
 
     ConversationAdaptiveController.adapt(state)
 
@@ -77,10 +76,7 @@ def test_adaptive_controller_increases_with_positive_delta_v():
 
 
 def test_adaptive_controller_relaxes_with_negative_delta_v():
-    state = DummyState({
-        "delta_v": -0.5,
-        "feedback": {}
-    })
+    state = DummyState({"delta_v": -0.5, "feedback": {}})
 
     before = ConversationEnergyModel._dynamic_weights.copy()
 
@@ -92,10 +88,7 @@ def test_adaptive_controller_relaxes_with_negative_delta_v():
 
 
 def test_adaptive_controller_clamps_delta_v():
-    state = DummyState({
-        "delta_v": 10.0,
-        "feedback": {}
-    })
+    state = DummyState({"delta_v": 10.0, "feedback": {}})
 
     ConversationAdaptiveController.adapt(state)
 
@@ -105,11 +98,7 @@ def test_adaptive_controller_clamps_delta_v():
 
 
 def test_delta_v_influences_distribution():
-    state = DummyState({
-        "delta_v": 0.5,
-        "feedback": {}
-    })
-
+    state = DummyState({"delta_v": 0.5, "feedback": {}})
 
     ConversationAdaptiveController.adapt(state)
 
@@ -120,10 +109,7 @@ def test_delta_v_influences_distribution():
 
 
 def test_adaptive_controller_inertia_limits_variation():
-    state = DummyState({
-        "delta_v": 1.0,
-        "feedback": {}
-    })
+    state = DummyState({"delta_v": 1.0, "feedback": {}})
 
     before = ConversationEnergyModel._dynamic_weights.copy()
 
@@ -137,10 +123,7 @@ def test_adaptive_controller_inertia_limits_variation():
 
 
 def test_adaptive_controller_stabilizes_over_time():
-    state = DummyState({
-        "delta_v": 0.5,
-        "feedback": {}
-    })
+    state = DummyState({"delta_v": 0.5, "feedback": {}})
 
     for _ in range(20):
         ConversationAdaptiveController.adapt(state)
@@ -152,11 +135,7 @@ def test_adaptive_controller_stabilizes_over_time():
 
 
 def test_adaptive_controller_increases_with_high_energy():
-    state = DummyState({
-        "energy": 0.9,
-        "feedback": {}
-    })
-
+    state = DummyState({"energy": 0.9, "feedback": {}})
 
     ConversationAdaptiveController.adapt(state)
 
@@ -166,11 +145,7 @@ def test_adaptive_controller_increases_with_high_energy():
 
 
 def test_adaptive_controller_relaxes_with_low_energy():
-    state = DummyState({
-        "energy": 0.1,
-        "feedback": {}
-    })
-
+    state = DummyState({"energy": 0.1, "feedback": {}})
 
     ConversationAdaptiveController.adapt(state)
 
@@ -180,11 +155,7 @@ def test_adaptive_controller_relaxes_with_low_energy():
 
 
 def test_adaptive_controller_neutral_energy_no_explosion():
-    state = DummyState({
-        "energy": 0.5,
-        "feedback": {}
-    })
-
+    state = DummyState({"energy": 0.5, "feedback": {}})
 
     ConversationAdaptiveController.adapt(state)
 
@@ -221,11 +192,13 @@ def test_energy_increases_with_positive_delta_w():
 
 
 def test_regime_more_conservative_when_delta_w_positive():
-    state = DummyState({
-        "delta_w": 0.5,
-        "memory_pressure": 0,
-        "has_constraints": False,
-    })
+    state = DummyState(
+        {
+            "delta_w": 0.5,
+            "memory_pressure": 0,
+            "has_constraints": False,
+        }
+    )
 
     strategy = ConversationRegimeController.regulate(
         proposed_strategy=ResponseStrategyType.ACTION,
@@ -241,12 +214,14 @@ def test_regime_more_conservative_when_delta_w_positive():
 
 
 def test_instability_increases_conservativeness():
-    state = DummyState({
-        "delta_w": 0.0,
-        "instability": 0.6,  # élevé
-        "memory_pressure": 0,
-        "has_constraints": False,
-    })
+    state = DummyState(
+        {
+            "delta_w": 0.0,
+            "instability": 0.6,  # élevé
+            "memory_pressure": 0,
+            "has_constraints": False,
+        }
+    )
 
     strategy = ConversationRegimeController.regulate(
         proposed_strategy=ResponseStrategyType.ACTION,
@@ -262,12 +237,14 @@ def test_instability_increases_conservativeness():
 
 
 def test_delta_w_override_has_priority_over_instability():
-    state = DummyState({
-        "delta_w": 0.5,  # force override
-        "instability": 0.0,
-        "memory_pressure": 0,
-        "has_constraints": False,
-    })
+    state = DummyState(
+        {
+            "delta_w": 0.5,  # force override
+            "instability": 0.0,
+            "memory_pressure": 0,
+            "has_constraints": False,
+        }
+    )
 
     strategy = ConversationRegimeController.regulate(
         proposed_strategy=ResponseStrategyType.ACTION,
@@ -280,11 +257,12 @@ def test_delta_w_override_has_priority_over_instability():
 
 
 def test_dynamic_thresholds_lower_with_instability():
-
-    state_high = DummyState({
-        "delta_w": 0.0,
-        "instability": 0.7,
-    })
+    state_high = DummyState(
+        {
+            "delta_w": 0.0,
+            "instability": 0.7,
+        }
+    )
 
     # same energy base
 
@@ -301,16 +279,16 @@ def test_dynamic_thresholds_lower_with_instability():
     )
 
 
-
-
 def test_stability_monotonicity_with_instability():
     prev_strategy = None
 
     for instability in [0.0, 0.2, 0.4, 0.6]:
-        state = DummyState({
-            "delta_w": 0.0,
-            "instability": instability,
-        })
+        state = DummyState(
+            {
+                "delta_w": 0.0,
+                "instability": instability,
+            }
+        )
 
         strategy = ConversationRegimeController.regulate(
             proposed_strategy=ResponseStrategyType.ACTION,
@@ -325,14 +303,15 @@ def test_stability_monotonicity_with_instability():
         prev_strategy = strategy
 
 
-
 def test_instability_override_has_priority_over_energy_thresholds():
-    state = DummyState({
-        "delta_w": 0.0,
-        "instability": 0.6,
-        "memory_pressure": 0,
-        "has_constraints": False,
-    })
+    state = DummyState(
+        {
+            "delta_w": 0.0,
+            "instability": 0.6,
+            "memory_pressure": 0,
+            "has_constraints": False,
+        }
+    )
 
     strategy = ConversationRegimeController.regulate(
         proposed_strategy=ResponseStrategyType.ACTION,
@@ -345,11 +324,13 @@ def test_instability_override_has_priority_over_energy_thresholds():
 
 
 def test_memory_increases_structural_conservativeness():
-    state = DummyState({
-        "delta_w": 0.0,
-        "instability": 0.2,
-        "memory_instability": 0.8,
-    })
+    state = DummyState(
+        {
+            "delta_w": 0.0,
+            "instability": 0.2,
+            "memory_instability": 0.8,
+        }
+    )
 
     strategy = ConversationRegimeController.regulate(
         proposed_strategy=ResponseStrategyType.ACTION,
@@ -365,10 +346,12 @@ def test_memory_increases_structural_conservativeness():
 
 
 def test_memory_temporal_accumulation():
-    state = DummyState({
-        "delta_v": 0.0,
-        "memory_instability": 0.0,
-    })
+    state = DummyState(
+        {
+            "delta_v": 0.0,
+            "memory_instability": 0.0,
+        }
+    )
 
     builder = ConversationStabilitySignalsBuilder()
 
@@ -378,6 +361,7 @@ def test_memory_temporal_accumulation():
         builder.update(state)
 
     assert state.signals["memory_instability"] > 0.5
+
 
 def test_memory_hierarchy():
     state = DummyState({"delta_v": 0.0})
@@ -389,7 +373,6 @@ def test_memory_hierarchy():
 
     assert state.signals["memory_short"] >= state.signals["memory_medium"]
     assert state.signals["memory_medium"] >= state.signals["memory_long"]
-
 
 
 def test_memory_long_accumulates():
@@ -420,11 +403,13 @@ def test_memory_decay():
 
 
 def test_adaptive_policy_pushes_to_confirmation():
-    state = DummyState({
-        "instability": 0.3,
-        "memory_instability": 0.6,
-        "delta_w": 0.0,
-    })
+    state = DummyState(
+        {
+            "instability": 0.3,
+            "memory_instability": 0.6,
+            "delta_w": 0.0,
+        }
+    )
 
     policy = AdaptiveThresholdPolicy()
 
@@ -451,11 +436,13 @@ def test_memory_decay_when_stable():
 
 
 def test_structural_memory_drives_delta_w():
-    state = DummyState({
-        "memory_long": 0.8,
-        "memory_medium": 0.6,
-        "memory_instability": 0.2,
-    })
+    state = DummyState(
+        {
+            "memory_long": 0.8,
+            "memory_medium": 0.6,
+            "memory_instability": 0.2,
+        }
+    )
 
     builder = ConversationStabilitySignalsBuilder()
     builder.update(state)
@@ -464,11 +451,13 @@ def test_structural_memory_drives_delta_w():
 
 
 def test_policy_sensitive_to_structural_memory():
-    state = DummyState({
-        "instability": 0.2,
-        "memory_structural": 0.7,
-        "delta_w": 0.0,
-    })
+    state = DummyState(
+        {
+            "instability": 0.2,
+            "memory_structural": 0.7,
+            "delta_w": 0.0,
+        }
+    )
 
     policy = AdaptiveThresholdPolicy()
 
@@ -478,5 +467,3 @@ def test_policy_sensitive_to_structural_memory():
     )
 
     assert result != ResponseStrategyType.ACTION
-
-

@@ -3,7 +3,10 @@
 from arvis.conversation.conversation_state import ConversationState
 
 from arvis.math.stability.regime_estimator import CognitiveRegimeEstimator
-from arvis.conversation.conversation_composite_stability import ConversationCompositeStability
+from arvis.conversation.conversation_composite_stability import (
+    ConversationCompositeStability,
+)
+
 
 class ConversationStabilitySignalsBuilder:
     """
@@ -16,7 +19,6 @@ class ConversationStabilitySignalsBuilder:
         self.composite = ConversationCompositeStability()
 
     def update(self, state: ConversationState) -> None:
-
         delta_v = state.signals.get("delta_v", 0.0)
 
         regime = self.regime_estimator.push(delta_v)
@@ -32,10 +34,7 @@ class ConversationStabilitySignalsBuilder:
         memory_long = state.signals.get("memory_long", 0.0)
         memory_medium = state.signals.get("memory_medium", 0.0)
 
-        memory_structural = (
-            0.7 * memory_long +
-            0.3 * memory_medium
-        )
+        memory_structural = 0.7 * memory_long + 0.3 * memory_medium
 
         # store immediately (needed for downstream)
         state.signals["memory_structural"] = memory_structural
@@ -93,19 +92,16 @@ class ConversationStabilitySignalsBuilder:
         alpha_l = min(max(alpha_l, 0.08), 0.25)
 
         memory_short = (1 - alpha_s) * prev_short + alpha_s * instability
-        memory_short *= (1 - 0.2 * stability)
+        memory_short *= 1 - 0.2 * stability
         memory_medium = (1 - alpha_m) * prev_medium + alpha_m * instability
-        memory_medium *= (1 - 0.1 * stability)
+        memory_medium *= 1 - 0.1 * stability
         memory_long = (1 - alpha_l) * prev_long + alpha_l * instability
-        memory_long *= (1 - 0.05 * stability)
+        memory_long *= 1 - 0.05 * stability
 
         # --------------------------------------------
         # STRUCTURAL MEMORY EXTRACTION
         # --------------------------------------------
-        memory_structural = (
-            0.7 * memory_long +
-            0.3 * memory_medium
-        )
+        memory_structural = 0.7 * memory_long + 0.3 * memory_medium
 
         state.signals["memory_structural"] = memory_structural
 
@@ -126,9 +122,7 @@ class ConversationStabilitySignalsBuilder:
         # --------------------------------------------
         # more balanced fusion (less short-term dominance)
         memory_instability = (
-            0.45 * memory_short +
-            0.3 * memory_medium +
-            0.25 * memory_long
+            0.45 * memory_short + 0.3 * memory_medium + 0.25 * memory_long
         )
 
         # store all layers

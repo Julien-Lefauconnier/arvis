@@ -20,7 +20,6 @@ class AdaptiveRuntimeObserver:
         J: float,
         tau_d: float,
     ) -> AdaptiveSnapshot:
-
         # -----------------------------------------
         # Guard: insufficient data
         # -----------------------------------------

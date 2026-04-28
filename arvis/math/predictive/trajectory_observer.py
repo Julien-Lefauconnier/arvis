@@ -76,7 +76,10 @@ class TrajectoryObserver:
 
         verdict = "OK"
 
-        if v_max >= self.params.critical_vmax or shock >= self.params.critical_drift_sum:
+        if (
+            v_max >= self.params.critical_vmax
+            or shock >= self.params.critical_drift_sum
+        ):
             verdict = "CRITICAL"
         elif v_max >= self.params.warn_vmax or drift_mean >= self.params.warn_drift_sum:
             verdict = "WARN"

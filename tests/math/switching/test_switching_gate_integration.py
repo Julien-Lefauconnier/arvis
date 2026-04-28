@@ -3,6 +3,7 @@
 from arvis.math.switching.switching_runtime import SwitchingRuntime
 from arvis.math.switching.switching_params import SwitchingParams, switching_condition
 
+
 def test_switching_condition_detects_instability():
     rt = SwitchingRuntime()
 

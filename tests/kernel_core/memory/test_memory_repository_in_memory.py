@@ -106,7 +106,7 @@ def test_delete_record_removes_entry() -> None:
         key="k",
     )
 
-    record =  repo.get_record(
+    record = repo.get_record(
         user_id=USER_ID,
         namespace="ns",
         key="k",

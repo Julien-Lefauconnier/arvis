@@ -15,6 +15,7 @@ from arvis.ir.cognitive_ir import CognitiveIR
 # Helpers
 # -----------------------------------------
 
+
 def make_ir(reason_codes=("a", "b"), projection=None, validity=None):
     return CognitiveIR(
         input=CognitiveInputIR(
@@ -50,8 +51,10 @@ def make_ir(reason_codes=("a", "b"), projection=None, validity=None):
         validity=validity,
     )
 
+
 def hash_ir(ir):
     return CognitiveIRHasher.hash(ir)
+
 
 class DummyProjection:
     def __init__(self, value="p"):
@@ -67,12 +70,12 @@ class DummyValidity:
 
     def __eq__(self, other):
         return isinstance(other, DummyValidity) and self.value == other.value
-    
 
 
 # -----------------------------------------
 # Tests
 # -----------------------------------------
+
 
 def test_ir_normalization_is_order_invariant():
     ir1 = make_ir(reason_codes=("b", "a"))

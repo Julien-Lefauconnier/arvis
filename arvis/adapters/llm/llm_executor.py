@@ -19,7 +19,6 @@ class LLMExecutor:
 
     @staticmethod
     def execute(plan: ResponsePlan, ctx: Any | None = None) -> str:
-
         # TEMPLATE PATH
         if plan.realization_mode == ResponseRealizationMode.TEMPLATE:
             act = LinguisticAct(LinguisticActType(plan.act_type))
@@ -27,7 +26,6 @@ class LLMExecutor:
 
         # LLM PATH
         if plan.realization_mode == ResponseRealizationMode.LLM:
-
             adapter = get_llm_adapter(ctx)
 
             if adapter is None:

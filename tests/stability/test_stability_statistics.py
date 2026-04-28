@@ -12,6 +12,7 @@ from arvis.stability.stability_statistics import (
 # 1. EMPTY BUFFER
 # ============================================================
 
+
 def test_empty_snapshot():
     stats = StabilityStatistics()
 
@@ -26,6 +27,7 @@ def test_empty_snapshot():
 # ============================================================
 # 2. ONLY NEGATIVE → FULL CONTRACTION
 # ============================================================
+
 
 def test_all_negative():
     stats = StabilityStatistics()
@@ -45,6 +47,7 @@ def test_all_negative():
 # 3. ONLY POSITIVE → FULL INSTABILITY
 # ============================================================
 
+
 def test_all_positive():
     stats = StabilityStatistics()
 
@@ -62,6 +65,7 @@ def test_all_positive():
 # ============================================================
 # 4. MIXED VALUES
 # ============================================================
+
 
 def test_mixed_values():
     stats = StabilityStatistics()
@@ -82,6 +86,7 @@ def test_mixed_values():
 # 5. ZERO VALUES (NEUTRAL)
 # ============================================================
 
+
 def test_zero_values():
     stats = StabilityStatistics()
 
@@ -100,6 +105,7 @@ def test_zero_values():
 # 6. WINDOW LIMIT
 # ============================================================
 
+
 def test_window_limit():
     stats = StabilityStatistics(window=3)
 
@@ -116,6 +122,7 @@ def test_window_limit():
 # ============================================================
 # 7. COMPUTE PASSTHROUGH
 # ============================================================
+
 
 def test_compute_passthrough():
     stats = StabilityStatistics()

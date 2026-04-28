@@ -15,8 +15,10 @@ def test_affine01_non_finite():
     assert affine01(math.inf, x_min=0, x_max=1) == 0.0
     assert affine01(1, x_min=math.nan, x_max=1) == 0.0
 
+
 def test_affine01_degenerate_interval():
     assert affine01(0.5, x_min=1.0, x_max=1.0) == 0.0
+
 
 def test_weighted_sum_length_mismatch():
     with pytest.raises(ValueError):
@@ -29,8 +31,10 @@ def test_budget_ratio_non_finite():
     assert budget_ratio01(math.nan, 1.0) == 1.0
     assert budget_ratio01(1.0, math.inf) == 1.0
 
+
 def test_budget_ratio_zero_max():
     assert budget_ratio01(1.0, 0.0) == 1.0
+
 
 def test_normalized_signals_clamping():
     s = NormalizedSignals(
@@ -45,17 +49,21 @@ def test_normalized_signals_clamping():
     assert s.uncertainty == 0.5
     assert s.budget_used == 1.0
 
+
 def test_normalize_weights_empty():
     from arvis.math.core.normalization import normalize_weights
+
     assert normalize_weights([]) == []
 
 
 def test_weighted_sum_basic():
     from arvis.math.core.normalization import weighted_sum01
+
     result = weighted_sum01([0.2, 0.8], [1.0, 1.0])
     assert 0.49 < result < 0.51
 
 
 def test_budget_ratio_normal():
     from arvis.math.core.normalization import budget_ratio01
+
     assert budget_ratio01(5.0, 10.0) == 0.5

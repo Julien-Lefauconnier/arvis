@@ -50,9 +50,7 @@ class CognitiveRuntime:
         self.tool_executor = tool_executor
         self.runtime_state = CognitiveRuntimeState()
 
-        self.hooks = ProcessHookManager(
-            runtime_state=self.runtime_state
-        )
+        self.hooks = ProcessHookManager(runtime_state=self.runtime_state)
         self.process_executor = PipelineExecutor(self.pipeline)
         self.scheduler = CognitiveScheduler(
             runtime_state=self.runtime_state,
@@ -85,14 +83,10 @@ class CognitiveRuntime:
             status=CognitiveProcessStatus.READY,
             priority=CognitivePriority(50.0),
             budget=CognitiveBudget(
-                reasoning_steps=(
-                    2 * len(list(self.pipeline.iter_stages()))
-                ),
+                reasoning_steps=(2 * len(list(self.pipeline.iter_stages()))),
                 time_slice_ms=100,
             ),
-            created_tick=(
-                self.runtime_state.scheduler_state.tick_count
-            ),
+            created_tick=(self.runtime_state.scheduler_state.tick_count),
             user_id=ctx.user_id,
             local_state=ctx,
         )
@@ -116,9 +110,7 @@ class CognitiveRuntime:
                 break
 
         if result is None:
-            raise RuntimeError(
-                "Execution did not produce any result"
-            )
+            raise RuntimeError("Execution did not produce any result")
 
         self._execute_tool_if_needed(
             ctx=ctx,
@@ -147,22 +139,13 @@ class CognitiveRuntime:
             False,
         )
 
-        if (
-            action
-            and force_tool
-            and action.tool == force_tool
-            and force_execution
-        ):
-            forced_action = SimpleNamespace(
-                **dict(action.__dict__)
-            )
+        if action and force_tool and action.tool == force_tool and force_execution:
+            forced_action = SimpleNamespace(**dict(action.__dict__))
             forced_action.allowed = True
             forced_action.requires_confirmation = False
             forced_action.can_execute = True
 
-            effective_result = SimpleNamespace(
-                **dict(result.__dict__)
-            )
+            effective_result = SimpleNamespace(**dict(result.__dict__))
             effective_result.action_decision = forced_action
             action = forced_action
 
@@ -208,9 +191,7 @@ class CognitiveRuntime:
     ) -> Any:
         if proc.status == CognitiveProcessStatus.ABORTED:
             error = proc.last_error or "unknown_error"
-            raise RuntimeError(
-                f"Process aborted: {error}"
-            )
+            raise RuntimeError(f"Process aborted: {error}")
 
         if proc.status in (
             CognitiveProcessStatus.COMPLETED,
@@ -219,14 +200,11 @@ class CognitiveRuntime:
         ):
             if proc.last_result is None:
                 raise RuntimeError(
-                    f"Process exited in state "
-                    f"{proc.status.value} without result"
+                    f"Process exited in state {proc.status.value} without result"
                 )
             return proc.last_result
 
         if getattr(decision, "result", None) is not None:
             return decision.result
 
-        raise RuntimeError(
-            "Execution exited without resolvable result"
-        )
+        raise RuntimeError("Execution exited without resolvable result")

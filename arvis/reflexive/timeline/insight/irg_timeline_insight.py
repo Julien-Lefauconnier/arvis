@@ -22,8 +22,8 @@ class IRGTimelineInsight:
 
     view_role: TimelineViewRole
     dominant_entry_types: Sequence[TimelineEntryType]
-    confidence: float            # 0.0 → 1.0
-    message: str                 # human-readable, non-sensitive
+    confidence: float  # 0.0 → 1.0
+    message: str  # human-readable, non-sensitive
 
     def to_dict(self) -> dict[str, object]:
         return {

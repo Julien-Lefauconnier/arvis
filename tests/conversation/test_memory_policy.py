@@ -83,9 +83,7 @@ def test_resolver_keeps_action_when_no_memory_constraints():
 
 
 def test_resolver_keeps_informational_without_decision():
-    state = ConversationState(
-        signals={"has_constraints": True}
-    )
+    state = ConversationState(signals={"has_constraints": True})
 
     decision = ResponseStrategyResolver.resolve(
         gate_verdict=CognitiveGateVerdict.ALLOW,

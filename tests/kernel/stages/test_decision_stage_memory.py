@@ -10,6 +10,7 @@ class DummyPipeline:
         class DummyDecision:
             def evaluate(self, ctx):
                 return DecisionResult(reason="test")
+
         self.decision = DummyDecision()
 
     def _get_control_runtime(self, user_id):
@@ -32,8 +33,7 @@ def test_decision_stage_preserves_memory_influence():
     class DummyDecision:
         def evaluate(self, ctx):
             return DecisionResult(
-                reason="test",
-                memory_influence={"memory_present": True}
+                reason="test", memory_influence={"memory_present": True}
             )
 
     pipeline = DummyPipeline()
@@ -51,8 +51,7 @@ def test_decision_stage_retry_does_not_drop_memory_influence():
     class DummyDecision:
         def evaluate(self, ctx):
             return DecisionResult(
-                reason="test",
-                memory_influence={"memory_pressure": 1.0}
+                reason="test", memory_influence={"memory_pressure": 1.0}
             )
 
     pipeline = DummyPipeline()

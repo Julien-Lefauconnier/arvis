@@ -12,6 +12,7 @@ from tests.fixtures.projection_cases import nominal_case
 # Helpers
 # -----------------------------
 
+
 def observation_distance(o1: Observation, o2: Observation) -> float:
     keys = set(o1.numeric_signals.keys()) | set(o2.numeric_signals.keys())
 
@@ -72,6 +73,7 @@ def perturb_observation(obs: Observation, epsilon: float) -> Observation:
 # -----------------------------
 # Test
 # -----------------------------
+
 
 def test_projection_local_lipschitz():
     base_obs = nominal_case()

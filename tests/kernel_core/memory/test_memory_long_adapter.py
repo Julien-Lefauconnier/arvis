@@ -32,6 +32,7 @@ def _record(**overrides):
 # BASIC ADAPTATION
 # =========================================================
 
+
 def test_adapter_creates_entry():
     record = _record()
 
@@ -46,6 +47,7 @@ def test_adapter_creates_entry():
 # NO PAYLOAD LEAK
 # =========================================================
 
+
 def test_adapter_does_not_expose_value():
     record = _record(value="SECRET")
 
@@ -58,6 +60,7 @@ def test_adapter_does_not_expose_value():
 # VALUE REF STABILITY
 # =========================================================
 
+
 def test_value_ref_stable():
     record = _record(version=3)
 
@@ -69,6 +72,7 @@ def test_value_ref_stable():
 # =========================================================
 # CREATED_AT CONVERSION
 # =========================================================
+
 
 def test_created_at_is_datetime():
     record = _record(created_at=1000)
@@ -83,6 +87,7 @@ def test_created_at_is_datetime():
 # DELETED RECORD FILTERED
 # =========================================================
 
+
 def test_deleted_record_returns_none():
     record = _record(status="deleted")
 
@@ -94,6 +99,7 @@ def test_deleted_record_returns_none():
 # =========================================================
 # CONSTRAINT DETECTION
 # =========================================================
+
 
 def test_constraint_key_detection():
     record = _record(namespace="misc", key="no_tracking")

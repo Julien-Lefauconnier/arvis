@@ -12,7 +12,6 @@ import itertools
 from typing import Iterator
 
 
-
 class _SignalSpecProtocol(Protocol):
     @property
     def key(self) -> CanonicalSignalKey: ...
@@ -33,8 +32,7 @@ class SignalFactory:
     def _bootstrap(cls) -> None:
         if not cls._spec_by_code:
             cls._spec_by_code = {
-                spec.key.code: spec
-                for spec in CanonicalSignalRegistry.all()
+                spec.key.code: spec for spec in CanonicalSignalRegistry.all()
             }
 
     @classmethod
@@ -103,11 +101,11 @@ class SignalFactory:
         if "arvis" in spec.origin_allowed:
             return "arvis"
         return next(iter(spec.origin_allowed))
-    
+
     @staticmethod
     def _build_signal_id(code: str, subject_ref: str, temporal_anchor: str) -> str:
         return f"signal:{code}:{subject_ref}:{temporal_anchor}"
-    
+
     @classmethod
     def _build_internal_signal_id(
         cls,

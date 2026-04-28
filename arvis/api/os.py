@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, List, cast
+from typing import Any, Dict, Optional, List
 
 from arvis.api.os_internals import CognitiveOSInternals
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
@@ -28,7 +28,6 @@ class CognitiveOSConfig:
 # Public Runtime Entrypoint
 # -----------------------------------------------------
 class CognitiveOS(CognitiveOSInternals):
-
     def __init__(
         self,
         config: Optional[CognitiveOSConfig] = None,
@@ -68,7 +67,7 @@ class CognitiveOS(CognitiveOSInternals):
         timeline: Any = None,
         confirmation_result: Any = None,
         extra: Optional[Dict[str, Any]] = None,
-    ) -> CognitiveResultView:
+    ) -> CognitiveResultView | Dict[str, Any]:
         result = self._run_single(
             user_id=user_id,
             cognitive_input=cognitive_input,
@@ -77,7 +76,7 @@ class CognitiveOS(CognitiveOSInternals):
             confirmation_result=confirmation_result,
             extra=extra,
         )
-        return cast(CognitiveResultView, result)
+        return result
 
     # -------------------------------------------------
     # IR Export
@@ -152,7 +151,7 @@ class CognitiveOS(CognitiveOSInternals):
         inputs: List[Any],
         *,
         user_id: str = "multi",
-    ) -> List[CognitiveResultView]:
+    ) -> List[CognitiveResultView | Dict[str, Any]]:
         return self._run_batch(
             inputs=inputs,
             user_id=user_id,

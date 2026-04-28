@@ -29,10 +29,7 @@ def build_llm_prompt(
     ]
 
     if frame.allowed_entries:
-        rules.append(
-            "- Allowed key terms: "
-            + ", ".join(frame.allowed_entries)
-        )
+        rules.append("- Allowed key terms: " + ", ".join(frame.allowed_entries))
 
     if frame.tone:
         rules.append(f"- Tone: {frame.tone}")
@@ -41,9 +38,7 @@ def build_llm_prompt(
         rules.append(f"- Verbosity: {frame.verbosity}")
 
     if frame.constraints:
-        rules.append(
-            "- Respect constraints: " + ", ".join(frame.constraints)
-        )
+        rules.append("- Respect constraints: " + ", ".join(frame.constraints))
 
     system_block = "\n".join(rules)
 

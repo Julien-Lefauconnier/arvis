@@ -29,7 +29,6 @@ class StabilityStatistics:
         self._buffer.append(delta_v)
 
     def snapshot(self) -> StabilityStatsSnapshot:
-
         if not self._buffer:
             return StabilityStatsSnapshot(0.0, 0.0, 0.0, 0)
 
@@ -46,7 +45,7 @@ class StabilityStatistics:
             instability_rate=instability,
             samples=n,
         )
-    
+
     def compute(self, snapshot: StabilityStatsSnapshot) -> StabilityStatsSnapshot:
         """
         Compute stability statistics from a projected snapshot.

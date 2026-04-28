@@ -25,8 +25,8 @@ class RefreshableStage(Protocol):
         ctx: CognitivePipelineContext,
     ) -> None: ...
 
-class PipelineObservabilityService:
 
+class PipelineObservabilityService:
     @staticmethod
     def run(
         pipeline: "CognitivePipeline",
@@ -46,9 +46,7 @@ class PipelineObservabilityService:
             )
             projection_stage.refresh(pipeline, ctx)
         except Exception:
-            ctx.extra.setdefault("errors", []).append(
-                "projection_refresh_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("projection_refresh_failure")
 
         ctx.predictive_snapshot = obs["predictive"]
         ctx.multi_horizon = obs["multi"]
@@ -65,9 +63,7 @@ class PipelineObservabilityService:
             stats = StabilityStatistics()
 
             projected = projector.project(ctx.global_stability)
-            computed = stats.compute(
-                cast(StabilityStatsSnapshot, projected)
-            )
+            computed = stats.compute(cast(StabilityStatsSnapshot, projected))
 
             ctx.stability_projection = projected
             ctx.stability_statistics = computed

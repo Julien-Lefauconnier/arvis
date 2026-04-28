@@ -7,9 +7,11 @@ from arvis.reflexive.compliance.compliance_reflexive_attestation import (
     ComplianceReflexiveAttestation,
 )
 
+
 class SupportsToDict(Protocol):
-    def to_dict(self) -> Dict[str, Any]:
-        ...
+    def to_dict(self) -> Dict[str, Any]: ...
+
+
 @dataclass(frozen=True)
 class ReflexiveComplianceChain:
     """

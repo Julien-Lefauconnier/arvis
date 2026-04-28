@@ -4,14 +4,19 @@ from datetime import datetime, timezone
 from typing import Optional, Sequence, Dict, Any
 
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
-from arvis.cognition.bundle.cognitive_bundle_invariants import assert_cognitive_bundle_invariants
+from arvis.cognition.bundle.cognitive_bundle_invariants import (
+    assert_cognitive_bundle_invariants,
+)
 from arvis.cognition.decision.decision_result import DecisionResult
 from arvis.cognition.introspection.introspection_snapshot import IntrospectionSnapshot
 from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
-from arvis.cognition.retrieval.cognitive_retrieval_snapshot import CognitiveRetrievalSnapshot
+from arvis.cognition.retrieval.cognitive_retrieval_snapshot import (
+    CognitiveRetrievalSnapshot,
+)
 from arvis.memory.memory_long_snapshot import MemoryLongSnapshot
 from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.timeline.timeline_snapshot import TimelineSnapshot
+
 
 class CognitiveBundleBuilder:
     """
@@ -35,7 +40,6 @@ class CognitiveBundleBuilder:
         memory: Optional[Dict[str, Any]] = None,
         generated_at: Optional[datetime] = None,
     ) -> CognitiveBundleSnapshot:
-        
         # -----------------------------------------------------
         # Memory projection → normalized features
         # -----------------------------------------------------
@@ -72,7 +76,7 @@ class CognitiveBundleBuilder:
         assert_cognitive_bundle_invariants(bundle)
 
         return bundle
-    
+
     # ------------------------------------------------------------------
     # Replay reconstruction API
     # ------------------------------------------------------------------
@@ -98,9 +102,7 @@ class CognitiveBundleBuilder:
             created_at=ts or datetime.now(timezone.utc)
         )
 
-        explanation = ExplanationSnapshot(
-            created_at=ts or datetime.now(timezone.utc)
-        )
+        explanation = ExplanationSnapshot(created_at=ts or datetime.now(timezone.utc))
 
         return cls.build(
             decision_result=decision,

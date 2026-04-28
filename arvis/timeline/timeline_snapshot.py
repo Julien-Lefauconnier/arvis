@@ -10,7 +10,6 @@ from .timeline_hashchain import TimelineHashChain
 from .timeline_cursor import TimelineCursor
 
 
-
 @dataclass(frozen=True)
 class TimelineSnapshot:
     """
@@ -79,4 +78,3 @@ class TimelineSnapshot:
             entries=new_entries,
             hashchain=new_hashchain,
         )
-    

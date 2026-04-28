@@ -10,7 +10,6 @@ from arvis.conversation.response_strategy_type import (
 
 @dataclass
 class StrategyField:
-
     distribution: Dict[ResponseStrategyType, float]
 
     @staticmethod
@@ -18,9 +17,7 @@ class StrategyField:
         strategies = list(ResponseStrategyType)
         p = 1.0 / len(strategies)
 
-        return StrategyField(
-            distribution={s: p for s in strategies}
-        )
+        return StrategyField(distribution={s: p for s in strategies})
 
     def update(
         self,
@@ -43,13 +40,11 @@ class StrategyField:
                 pass
 
         for s in self.distribution:
-
             target_val = 1.0 if s == target else 0.0
 
-            self.distribution[s] = (
-                (1 - alpha) * self.distribution[s]
-                + alpha * target_val
-            )
+            self.distribution[s] = (1 - alpha) * self.distribution[
+                s
+            ] + alpha * target_val
 
         self._normalize()
 
@@ -60,7 +55,6 @@ class StrategyField:
         )[0]
 
     def _normalize(self) -> None:
-
         total = sum(self.distribution.values())
 
         if total <= 0:

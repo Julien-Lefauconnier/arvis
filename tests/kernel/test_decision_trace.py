@@ -1,5 +1,6 @@
 # tests/kernel/test_decision_trace.py
 
+
 def test_decision_trace_is_immutable():
     from arvis.kernel.trace.decision_trace import DecisionTrace
     from datetime import datetime

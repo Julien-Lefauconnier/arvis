@@ -61,7 +61,9 @@ def make_process(pid: str, priority: float, created_tick: int = 0) -> CognitiveP
 def test_higher_priority_process_selected_first():
     runtime_state = CognitiveRuntimeState()
     executor = NonCompletingExecutor()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=executor)
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=executor
+    )
 
     low = make_process("low", priority=10.0)
     high = make_process("high", priority=50.0)
@@ -79,7 +81,9 @@ def test_higher_priority_process_selected_first():
 def test_age_bonus_can_break_tie_over_time():
     runtime_state = CognitiveRuntimeState()
     executor = NonCompletingExecutor()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=executor)
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=executor
+    )
 
     older = make_process("older", priority=10.0, created_tick=0)
     newer = make_process("newer", priority=10.0, created_tick=5)
@@ -98,7 +102,9 @@ def test_age_bonus_can_break_tie_over_time():
 def test_non_schedulable_process_is_skipped():
     runtime_state = CognitiveRuntimeState()
     executor = NonCompletingExecutor()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=executor)
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=executor
+    )
 
     exhausted = CognitiveProcess(
         process_id=CognitiveProcessId("exhausted"),

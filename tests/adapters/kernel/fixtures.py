@@ -1,5 +1,6 @@
 # tests/adapters/kernel/fixtures.py
 
+
 class DummyState:
     stable = True
     early_warning = False

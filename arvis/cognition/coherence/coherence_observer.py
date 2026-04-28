@@ -21,6 +21,7 @@ class CoherenceSignature:
     This is the "Z(t)" used to measure structural oscillation.
     Content-free: no user text, no reconstruction.
     """
+
     reason: str
     proposed_action_ids: Set[str]
     memory_intent: str
@@ -110,12 +111,18 @@ class CoherenceObserver:
         delta += 1 if curr.reason != prev.reason else 0
 
         # Symmetric differences on sets
-        delta += len(curr.proposed_action_ids.symmetric_difference(prev.proposed_action_ids))
+        delta += len(
+            curr.proposed_action_ids.symmetric_difference(prev.proposed_action_ids)
+        )
         delta += 1 if curr.memory_intent != prev.memory_intent else 0
         delta += len(curr.conflict_types.symmetric_difference(prev.conflict_types))
         delta += 1 if curr.knowledge_state != prev.knowledge_state else 0
-        delta += len(curr.uncertainty_frame_ids.symmetric_difference(prev.uncertainty_frame_ids))
-        delta += len(curr.context_hint_keys.symmetric_difference(prev.context_hint_keys))
+        delta += len(
+            curr.uncertainty_frame_ids.symmetric_difference(prev.uncertainty_frame_ids)
+        )
+        delta += len(
+            curr.context_hint_keys.symmetric_difference(prev.context_hint_keys)
+        )
 
         return int(delta)
 

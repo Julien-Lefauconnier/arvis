@@ -5,6 +5,7 @@ from __future__ import annotations
 from arvis.cognition.control.exploration_snapshot import ExplorationSnapshot
 from arvis.math.signals import RiskSignal, DriftSignal
 
+
 class ExplorationController:
     """
     Kernel-safe exploration/exploitation policy.
@@ -18,9 +19,8 @@ class ExplorationController:
         drift_score: float | DriftSignal | None,
         stable: bool | None,
     ) -> ExplorationSnapshot:
-        
         r = (regime or "neutral").lower()
-        
+
         if isinstance(collapse_risk, RiskSignal):
             cr = float(collapse_risk)
             risk_is_critical = collapse_risk.is_critical()

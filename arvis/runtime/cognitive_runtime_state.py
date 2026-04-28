@@ -19,6 +19,7 @@ from arvis.timeline.timeline_commitment import (
     TimelineCommitment,
 )
 
+
 @dataclass
 class CognitiveRuntimeState:
     scheduler_state: SchedulerState = field(default_factory=SchedulerState)
@@ -31,7 +32,6 @@ class CognitiveRuntimeState:
     _last_tick: int = -1
     _last_ts_local: float = 0.0
     interrupt_bus: CognitiveInterruptBus = field(default_factory=CognitiveInterruptBus)
-    
 
     def register_process(self, process: CognitiveProcess) -> None:
         process.validate()
@@ -45,7 +45,6 @@ class CognitiveRuntimeState:
             return self.processes[process_id]
         except KeyError as exc:
             raise KeyError(f"Unknown process id: {process_id.value}") from exc
-    
 
     def append_event(self, event_type: str, payload: dict[str, Any]) -> None:
         signal = self._map_runtime_event(event_type, payload)
@@ -69,9 +68,7 @@ class CognitiveRuntimeState:
     }
 
     def _map_runtime_event(
-        self,
-        event_type: str,
-        payload: dict[str, Any]
+        self, event_type: str, payload: dict[str, Any]
     ) -> CanonicalSignal:
         code = self._EVENT_TO_CODE.get(event_type)
 
@@ -107,11 +104,8 @@ class CognitiveRuntimeState:
         return signal
 
     def running_processes(self) -> list[CognitiveProcess]:
-        return [
-            p for p in self.processes.values()
-            if p.status.value == "running"
-        ]
-    
+        return [p for p in self.processes.values() if p.status.value == "running"]
+
     # -----------------------------------------------------
     # Timeline commitment (Veramem-backed)
     # -----------------------------------------------------

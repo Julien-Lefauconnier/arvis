@@ -10,7 +10,6 @@ class ConversationCoherenceMetric:
 
     @staticmethod
     def compute(state: ConversationState) -> float:
-
         if state.turn_count == 0:
             return 1.0
 

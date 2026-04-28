@@ -19,14 +19,10 @@ def test_gate_reacts_to_kappa_violation():
         control_snapshot=None,
         collapse_risk=0.0,
         stable=True,
-        global_stability_metrics=SimpleNamespace(
-            kappa_violation=True
-        ),
+        global_stability_metrics=SimpleNamespace(kappa_violation=True),
     )
 
-    pipeline = SimpleNamespace(
-        theoretical_enforcement_mode="monitor"
-    )
+    pipeline = SimpleNamespace(theoretical_enforcement_mode="monitor")
 
     stage.run(pipeline, ctx)
 

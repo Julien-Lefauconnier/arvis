@@ -1,8 +1,11 @@
 # tests/kernel/stages/test_projection_gate_integration.py
 
+
 def test_projection_invalid_blocks_allow():
     from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
-    from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
     pipeline = CognitivePipeline()
 

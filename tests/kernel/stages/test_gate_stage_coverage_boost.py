@@ -10,6 +10,7 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 # Helpers
 # --------------------------------------------------
 
+
 def make_ctx():
     return SimpleNamespace(
         prev_lyap=1.0,
@@ -45,6 +46,7 @@ class DummyFusion:
 # 1. Basic run (happy path)
 # --------------------------------------------------
 
+
 def test_gate_stage_basic(monkeypatch):
     ctx = make_ctx()
 
@@ -75,6 +77,7 @@ def test_gate_stage_basic(monkeypatch):
 # 2. Kernel recovery path
 # --------------------------------------------------
 
+
 def test_recovery_detected(monkeypatch):
     ctx = make_ctx()
 
@@ -99,6 +102,7 @@ def test_recovery_detected(monkeypatch):
 # --------------------------------------------------
 # 3. Fusion fallback (exception)
 # --------------------------------------------------
+
 
 def test_fusion_exception(monkeypatch):
     ctx = make_ctx()
@@ -128,6 +132,7 @@ def test_fusion_exception(monkeypatch):
 # --------------------------------------------------
 # 4. Adaptive unstable veto
 # --------------------------------------------------
+
 
 def test_adaptive_unstable(monkeypatch):
     ctx = make_ctx()
@@ -162,6 +167,7 @@ def test_adaptive_unstable(monkeypatch):
 # 5. Validity envelope violation
 # --------------------------------------------------
 
+
 def test_validity_envelope_block(monkeypatch):
     ctx = make_ctx()
 
@@ -190,6 +196,7 @@ def test_validity_envelope_block(monkeypatch):
 # --------------------------------------------------
 # 6. Kappa violation hard block
 # --------------------------------------------------
+
 
 def test_kappa_violation(monkeypatch):
     ctx = make_ctx()
@@ -222,6 +229,7 @@ def test_kappa_violation(monkeypatch):
 # 7. Composite recommendation path
 # --------------------------------------------------
 
+
 def test_composite_recommendation(monkeypatch):
     ctx = make_ctx()
     ctx.cur_lyap = 2.0
@@ -248,6 +256,7 @@ def test_composite_recommendation(monkeypatch):
 # --------------------------------------------------
 # 8. Observability paths
 # --------------------------------------------------
+
 
 def test_observability_payloads(monkeypatch):
     ctx = make_ctx()
@@ -314,7 +323,7 @@ def test_switching_exception(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.switching_condition",
-        lambda *a, **k: (_ for _ in ()).throw(RuntimeError())
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError()),
     )
 
     monkeypatch.setattr(
@@ -344,7 +353,7 @@ def test_global_guard_exception(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.GlobalStabilityGuard",
-        lambda: BrokenGuard()
+        lambda: BrokenGuard(),
     )
 
     monkeypatch.setattr(
@@ -363,6 +372,7 @@ def test_global_guard_exception(monkeypatch):
     GateStage().run(None, ctx)
 
     assert ctx.global_stability_safe is True
+
 
 def test_adaptive_fallback(monkeypatch):
     ctx = make_ctx()
@@ -392,7 +402,7 @@ def test_validity_envelope_exception(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.build_validity_envelope",
-        lambda **k: (_ for _ in ()).throw(RuntimeError())
+        lambda **k: (_ for _ in ()).throw(RuntimeError()),
     )
 
     monkeypatch.setattr(
@@ -438,6 +448,7 @@ def test_no_observer_path(monkeypatch):
 # 9. Slow drift (full path)
 # --------------------------------------------------
 
+
 def test_gate_stage_full_slow_drift_detection(monkeypatch):
     ctx = make_ctx()
 
@@ -466,6 +477,7 @@ def test_gate_stage_full_slow_drift_detection(monkeypatch):
 # --------------------------------------------------
 # 10. Switching exception (duplicate path clean)
 # --------------------------------------------------
+
 
 def test_gate_stage_switching_exception_2(monkeypatch):
     ctx = make_ctx()
@@ -500,6 +512,7 @@ def test_gate_stage_switching_exception_2(monkeypatch):
 # 11. Fusion exception (explicit)
 # --------------------------------------------------
 
+
 def test_gate_stage_fusion_exception_2(monkeypatch):
     ctx = make_ctx()
 
@@ -526,6 +539,7 @@ def test_gate_stage_fusion_exception_2(monkeypatch):
 # --------------------------------------------------
 # 12. Validity enforcement (post-policy)
 # --------------------------------------------------
+
 
 def test_gate_stage_validity_enforcement(monkeypatch):
     ctx = make_ctx()
@@ -556,6 +570,7 @@ def test_gate_stage_validity_enforcement(monkeypatch):
 # --------------------------------------------------
 # 13. Kappa violation (final override)
 # --------------------------------------------------
+
 
 def test_gate_stage_kappa_violation_2(monkeypatch):
     ctx = make_ctx()
@@ -588,6 +603,7 @@ def test_gate_stage_kappa_violation_2(monkeypatch):
 # --------------------------------------------------
 # 14. Final adaptive unstable override
 # --------------------------------------------------
+
 
 def test_gate_stage_final_adaptive_unstable(monkeypatch):
     ctx = make_ctx()
@@ -623,6 +639,7 @@ def test_gate_stage_final_adaptive_unstable(monkeypatch):
 # 15. Fusion trace update
 # --------------------------------------------------
 
+
 def test_gate_stage_fusion_trace_update(monkeypatch):
     ctx = make_ctx()
 
@@ -656,42 +673,45 @@ def test_gate_stage_full_exception_cascade(monkeypatch):
     # Composite crash
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.CompositeLyapunov",
-        lambda *a, **k: type("X", (), {
-            "W": Boom(),
-            "delta_W": Boom(),
-        })()
+        lambda *a, **k: type(
+            "X",
+            (),
+            {
+                "W": Boom(),
+                "delta_W": Boom(),
+            },
+        )(),
     )
 
     # Global guard crash
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.GlobalStabilityGuard",
-        lambda: type("X", (), {"check": Boom()})()
+        lambda: type("X", (), {"check": Boom()})(),
     )
 
     # Switching crash
     monkeypatch.setattr(
-        "arvis.kernel.pipeline.stages.gate_stage.switching_condition",
-        Boom()
+        "arvis.kernel.pipeline.stages.gate_stage.switching_condition", Boom()
     )
 
     # Observer crash
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.GlobalStabilityObserver",
-        lambda: type("X", (), {"update": Boom()})()
+        lambda: type("X", (), {"update": Boom()})(),
     )
 
     # Kernel + fusion OK
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ALLOW)
+        lambda **k: DummyFusion(LyapunovVerdict.ALLOW),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     GateStage().run(None, ctx)
@@ -709,23 +729,22 @@ def test_validity_forces_confirmation(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ALLOW)
+        lambda **k: DummyFusion(LyapunovVerdict.ALLOW),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: LyapunovVerdict.ALLOW
+        lambda **k: LyapunovVerdict.ALLOW,
     )
 
     GateStage().run(None, ctx)
 
     assert ctx.gate_result == LyapunovVerdict.REQUIRE_CONFIRMATION
-
 
 
 def test_recovery_uncertain_forces_confirmation(monkeypatch):
@@ -739,23 +758,22 @@ def test_recovery_uncertain_forces_confirmation(monkeypatch):
         certificate = {}
 
     monkeypatch.setattr(
-        "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: K()
+        "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel", lambda inputs: K()
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ABSTAIN)
+        lambda **k: DummyFusion(LyapunovVerdict.ABSTAIN),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.build_validity_envelope",
-        lambda **k: SimpleNamespace(valid=False, reason="exponential_violation")
+        lambda **k: SimpleNamespace(valid=False, reason="exponential_violation"),
     )
 
     GateStage().run(None, ctx)
@@ -774,45 +792,45 @@ def test_recovery_valid_promotes_to_confirmation(monkeypatch):
         certificate = {}
 
     monkeypatch.setattr(
-        "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: K()
+        "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel", lambda inputs: K()
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ABSTAIN)
+        lambda **k: DummyFusion(LyapunovVerdict.ABSTAIN),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.build_validity_envelope",
-        lambda **k: SimpleNamespace(valid=True, reason=None)
+        lambda **k: SimpleNamespace(valid=True, reason=None),
     )
 
     GateStage().run(None, ctx)
 
     assert ctx.gate_result == LyapunovVerdict.REQUIRE_CONFIRMATION
 
+
 def test_trace_exception(monkeypatch):
     ctx = make_ctx()
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ALLOW)
+        lambda **k: DummyFusion(LyapunovVerdict.ALLOW),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     # casse les attributs dynamiques
@@ -821,7 +839,6 @@ def test_trace_exception(monkeypatch):
     GateStage().run(None, ctx)
 
     assert ctx.gate_result is not None
-
 
 
 def test_adaptive_observer_creation(monkeypatch):
@@ -837,20 +854,20 @@ def test_adaptive_observer_creation(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.AdaptiveRuntimeObserver",
-        lambda **k: type("X", (), {"update": lambda *a, **k: None})()
+        lambda **k: type("X", (), {"update": lambda *a, **k: None})(),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ALLOW)
+        lambda **k: DummyFusion(LyapunovVerdict.ALLOW),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     GateStage().run(pipeline, ctx)
@@ -866,15 +883,15 @@ def test_recovery_exception_path(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ALLOW)
+        lambda **k: DummyFusion(LyapunovVerdict.ALLOW),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     GateStage().run(None, ctx)
@@ -890,15 +907,15 @@ def test_composite_recommendation_exception(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ALLOW)
+        lambda **k: DummyFusion(LyapunovVerdict.ALLOW),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     GateStage().run(BadPipeline(), ctx)
@@ -911,17 +928,17 @@ def test_fusion_exception_full(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: (_ for _ in ()).throw(RuntimeError())
+        lambda **k: (_ for _ in ()).throw(RuntimeError()),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     GateStage().run(None, ctx)
@@ -929,26 +946,25 @@ def test_fusion_exception_full(monkeypatch):
     assert ctx.extra["fusion_error"] is True
 
 
-
 def test_validity_envelope_exception_real(monkeypatch):
     ctx = make_ctx()
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.build_validity_envelope",
-        lambda **k: (_ for _ in ()).throw(RuntimeError())
+        lambda **k: (_ for _ in ()).throw(RuntimeError()),
     )
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ALLOW)
+        lambda **k: DummyFusion(LyapunovVerdict.ALLOW),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     GateStage().run(None, ctx)
@@ -961,15 +977,15 @@ def test_no_observer_branch(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ALLOW)
+        lambda **k: DummyFusion(LyapunovVerdict.ALLOW),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     GateStage().run(None, ctx)
@@ -985,15 +1001,15 @@ def test_trace_and_iss_exception(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
-        lambda inputs: DummyKernel()
+        lambda inputs: DummyKernel(),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_fusion",
-        lambda **k: DummyFusion(LyapunovVerdict.ALLOW)
+        lambda **k: DummyFusion(LyapunovVerdict.ALLOW),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.apply_gate_policy",
-        lambda **k: k["verdict"]
+        lambda **k: k["verdict"],
     )
 
     GateStage().run(None, ctx)
@@ -1075,7 +1091,6 @@ def test_gate_stage_creates_pipeline_observers(monkeypatch):
 class BadFloat:
     def __float__(self):
         raise RuntimeError()
-    
 
 
 def test_gate_stage_iss_exception_paths(monkeypatch):
@@ -1102,6 +1117,7 @@ def test_gate_stage_iss_exception_paths(monkeypatch):
 
     assert ctx.gate_result is not None
 
+
 def test_gate_stage_validity_extended_exception(monkeypatch):
     ctx = make_ctx()
     ctx.validity_envelope = SimpleNamespace(valid=True, reason="ok")
@@ -1123,6 +1139,7 @@ def test_gate_stage_validity_extended_exception(monkeypatch):
     GateStage().run(None, ctx)
 
     assert ctx.gate_result is not None
+
 
 def test_gate_stage_theoretical_trace_exception(monkeypatch):
     ctx = make_ctx()
@@ -1198,5 +1215,3 @@ def test_gate_stage_composite_rec_try_except(monkeypatch):
     GateStage().run(BadPipeline(), ctx)
 
     assert ctx.extra["composite_gate_recommendation"] is None
-
-

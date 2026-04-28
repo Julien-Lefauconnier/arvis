@@ -6,7 +6,6 @@ from arvis.types.timestamps import utcnow
 
 
 def test_utcnow_returns_datetime():
-
     ts = utcnow()
 
     assert ts is not None
@@ -14,14 +13,12 @@ def test_utcnow_returns_datetime():
 
 
 def test_utcnow_is_utc():
-
     ts = utcnow()
 
     assert ts.tzinfo == timezone.utc
 
 
 def test_utcnow_monotonic():
-
     t1 = utcnow()
     t2 = utcnow()
 

@@ -8,11 +8,9 @@ from arvis.kernel_core.vfs.models import VFSItem
 
 
 class VFSRepository(Protocol):
-    def list_items(self, user_id: str) -> list[VFSItem]:
-        ...
+    def list_items(self, user_id: str) -> list[VFSItem]: ...
 
-    def get_item(self, user_id: str, item_id: str) -> Optional[VFSItem]:
-        ...
+    def get_item(self, user_id: str, item_id: str) -> Optional[VFSItem]: ...
 
     def create_folder(
         self,
@@ -20,8 +18,7 @@ class VFSRepository(Protocol):
         user_id: str,
         name: str,
         parent_id: Optional[str],
-    ) -> str:
-        ...
+    ) -> str: ...
 
     def create_file_item(
         self,
@@ -31,16 +28,14 @@ class VFSRepository(Protocol):
         parent_id: Optional[str],
         size: Optional[int],
         mime: Optional[str],
-    ) -> str:
-        ...
+    ) -> str: ...
 
     def delete_item(
         self,
         *,
         user_id: str,
         item_id: str,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def rename_item(
         self,
@@ -48,8 +43,7 @@ class VFSRepository(Protocol):
         user_id: str,
         item_id: str,
         new_name: str,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def move_item(
         self,
@@ -57,5 +51,4 @@ class VFSRepository(Protocol):
         user_id: str,
         item_id: str,
         parent_id: Optional[str],
-    ) -> None:
-        ...
+    ) -> None: ...

@@ -8,7 +8,6 @@ from arvis.ir.cognitive_ir import CognitiveIR
 
 
 class CognitiveIRBuilder:
-
     @staticmethod
     def from_context(ctx: Any) -> CognitiveIR:
         """

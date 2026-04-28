@@ -25,9 +25,7 @@ class IRGTimelineTemporalMemory:
     """
 
     def __init__(self, *, maxlen: int = 10):
-        self._snapshots: Deque[IRGTimelineTemporalSnapshot] = deque(
-            maxlen=maxlen
-        )
+        self._snapshots: Deque[IRGTimelineTemporalSnapshot] = deque(maxlen=maxlen)
 
     def append(self, snapshot: IRGTimelineTemporalSnapshot) -> None:
         self._snapshots.append(snapshot)

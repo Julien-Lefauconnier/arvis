@@ -6,7 +6,6 @@ from typing import Any
 
 
 class ValidityIRAdapter:
-
     @staticmethod
     def from_validity(env: Any) -> dict[str, Any] | None:
         if env is None:

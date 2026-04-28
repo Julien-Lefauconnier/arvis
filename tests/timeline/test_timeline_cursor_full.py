@@ -21,6 +21,7 @@ def utc_now():
 # __post_init__ validations
 # ============================================================
 
+
 def test_timestamp_none():
     with pytest.raises(ValueError):
         TimelineCursor(timestamp=None)
@@ -77,6 +78,7 @@ def test_valid_full_cursor():
 # Equality / hash
 # ============================================================
 
+
 def test_cursor_equality():
     ts = utc_now()
 
@@ -104,6 +106,7 @@ def test_cursor_not_equal_other_type():
 # ============================================================
 # Serialization
 # ============================================================
+
 
 def test_to_dict_empty():
     c = TimelineCursor(timestamp=utc_now())
@@ -150,6 +153,7 @@ def test_from_dict_non_utc_fails():
 # ============================================================
 # now()
 # ============================================================
+
 
 def test_now_cursor():
     c = TimelineCursor.now()

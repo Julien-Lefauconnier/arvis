@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from arvis.memory.memory_long_entry import MemoryLongEntry
 
+
 @dataclass(frozen=True)
 class MemoryLongRecord:
     entry: MemoryLongEntry

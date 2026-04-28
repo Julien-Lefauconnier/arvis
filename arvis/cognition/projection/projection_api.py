@@ -11,6 +11,7 @@ from .projection_diagnostics import ProjectionDiagnostics
 # Observation contract
 # -----------------------------
 
+
 @dataclass(frozen=True)
 class Observation:
     numeric_signals: Dict[str, float]
@@ -32,6 +33,7 @@ W_BOUND = 10.0
 # -----------------------------
 # Core projection entrypoint
 # -----------------------------
+
 
 def project_observation(observation: Observation) -> ProjectionResult:
     """

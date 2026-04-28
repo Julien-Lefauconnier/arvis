@@ -29,7 +29,6 @@ class GlobalStabilityMetrics:
 
 
 class GlobalStabilityObserver:
-
     def __init__(self, window_size: int = 10) -> None:
         self.t = 0
         self.W0: Optional[float] = None
@@ -45,7 +44,6 @@ class GlobalStabilityObserver:
         self._adaptive_observer = AdaptiveRuntimeObserver(self._adaptive_estimator)
 
     def update(self, ctx: Any) -> GlobalStabilityMetrics:
-
         self.t += 1
 
         W = getattr(ctx, "w_current", None)
@@ -116,7 +114,7 @@ class GlobalStabilityObserver:
             else:
                 # Local exponential bound over the active window
                 W_bound = (
-                    (J ** N_local)
+                    (J**N_local)
                     * (one_minus_k ** max(dt_local - N_local, 0))
                     * W_anchor
                 )

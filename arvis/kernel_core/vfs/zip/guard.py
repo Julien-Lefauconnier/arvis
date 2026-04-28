@@ -25,15 +25,9 @@ class ZipGuard:
     MAX_TOTAL_UNCOMPRESSED_SIZE = int(
         os.getenv("ZIP_MAX_TOTAL_SIZE", 500 * 1024 * 1024)
     )
-    MAX_FILE_COUNT = int(
-        os.getenv("ZIP_MAX_FILE_COUNT", 5_000)
-    )
-    MAX_FILE_SIZE = int(
-        os.getenv("ZIP_MAX_FILE_SIZE", 100 * 1024 * 1024)
-    )
-    MAX_COMPRESSION_RATIO = float(
-        os.getenv("ZIP_MAX_COMPRESSION_RATIO", 100.0)
-    )
+    MAX_FILE_COUNT = int(os.getenv("ZIP_MAX_FILE_COUNT", 5_000))
+    MAX_FILE_SIZE = int(os.getenv("ZIP_MAX_FILE_SIZE", 100 * 1024 * 1024))
+    MAX_COMPRESSION_RATIO = float(os.getenv("ZIP_MAX_COMPRESSION_RATIO", 100.0))
 
     BLOCKED_EXTENSIONS = {
         ".exe",
@@ -88,9 +82,7 @@ class ZipGuard:
             total_uncompressed += info.file_size
 
             if info.file_size > self.MAX_FILE_SIZE:
-                raise ZipSecurityError(
-                    f"file too large in ZIP: {info.filename}"
-                )
+                raise ZipSecurityError(f"file too large in ZIP: {info.filename}")
 
             if info.compress_size > 0:
                 ratio = info.file_size / info.compress_size

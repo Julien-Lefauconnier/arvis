@@ -31,6 +31,7 @@ from arvis.ir.envelope import CognitiveIREnvelope
 from arvis.kernel.projection.certificate import ProjectionCertificate
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 
+
 @dataclass
 class CognitivePipelineContext:
     """
@@ -162,7 +163,7 @@ class CognitivePipelineContext:
     # -------------------------
     confirmation_request: ConfirmationRequest | None = None
     confirmation_result: ConfirmationResult | None = None
-    
+
     # -------------------------
     # Execution layer
     # -------------------------

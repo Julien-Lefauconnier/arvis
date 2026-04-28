@@ -39,10 +39,11 @@ def test_global_stability_observer_includes_adaptive():
     obs.update(ctx1)
     result = obs.update(ctx2)
 
-    assert result.adaptive_kappa_eff is None or isinstance(result.adaptive_kappa_eff, float)
+    assert result.adaptive_kappa_eff is None or isinstance(
+        result.adaptive_kappa_eff, float
+    )
     assert result.adaptive_margin is not None
     assert result.adaptive_regime in {"stable", "marginal", "unstable"}
-
 
 
 def _make_params(

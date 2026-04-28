@@ -16,7 +16,10 @@ from arvis.math.switching.switching_params import switching_condition
 from arvis.math.switching.switching_params import switching_lhs, kappa_eff
 from arvis.math.stability.global_guard import GlobalStabilityGuard
 from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
-from arvis.math.confidence.system_confidence import SystemConfidenceInputs, compute_system_confidence
+from arvis.math.confidence.system_confidence import (
+    SystemConfidenceInputs,
+    compute_system_confidence,
+)
 from arvis.math.adaptive.adaptive_runtime_observer import AdaptiveRuntimeObserver
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.stability.validity_envelope import build_validity_envelope
@@ -27,6 +30,7 @@ from arvis.math.gate.gate_entry import run_gate_kernel
 from arvis.math.gate.gate_fusion import run_fusion
 from arvis.kernel.observability.gate_observer import GateObserver
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
+
 
 @dataclass
 class StabilityEnvelope:
@@ -55,6 +59,7 @@ def _record_verdict_transition(
     )
     ctx.extra["last_verdict_source"] = stage
     ctx.extra["last_verdict_reason"] = reason
+
 
 def _apply_global_stability_policy(
     ctx: Any,
@@ -92,6 +97,7 @@ def _apply_global_stability_policy(
 
     return verdict
 
+
 def _sync_confirmation_flags(
     ctx: Any,
     verdict: LyapunovVerdict,
@@ -115,6 +121,7 @@ def _sync_confirmation_flags(
     except Exception:
         pass
 
+
 @dataclass
 class CompositeMetrics:
     prev_slow: Any
@@ -124,6 +131,7 @@ class CompositeMetrics:
     delta_w: Optional[float]
     w_prev: Optional[float]
     w_current: Optional[float]
+
 
 @dataclass
 class StabilityAssessment:
@@ -137,6 +145,7 @@ class StabilityAssessment:
     envelope: StabilityEnvelope
     confidence_inputs: SystemConfidenceInputs
     system_confidence: float
+
 
 class GateStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
@@ -211,13 +220,15 @@ class GateStage:
             system_confidence=system_confidence,
         )
 
-        verdict, pre_verdict, kernel_result, stability_certificate = self._run_decision_stack(
-            pipeline=pipeline,
-            ctx=ctx,
-            overrides=overrides,
-            composite=composite,
-            assessment=assessment,
-            w_bound_tol=w_bound_tol,
+        verdict, pre_verdict, kernel_result, stability_certificate = (
+            self._run_decision_stack(
+                pipeline=pipeline,
+                ctx=ctx,
+                overrides=overrides,
+                composite=composite,
+                assessment=assessment,
+                w_bound_tol=w_bound_tol,
+            )
         )
 
         self._finalize_observability(
@@ -535,10 +546,12 @@ class GateStage:
         hard_reason = "_".join(reasons) if reasons else None
 
         if hard_block:
-            ctx.extra.setdefault("warnings", []).append({
-                "type": "hard_block",
-                "reason": hard_reason,
-            })
+            ctx.extra.setdefault("warnings", []).append(
+                {
+                    "type": "hard_block",
+                    "reason": hard_reason,
+                }
+            )
 
         envelope = StabilityEnvelope(
             delta_w=delta_w,
@@ -580,7 +593,9 @@ class GateStage:
         ctx.system_confidence = system_confidence
         return confidence_inputs, system_confidence
 
-    def _build_switching_metrics(self, ctx: Any, switching_safe: bool) -> dict[str, Any]:
+    def _build_switching_metrics(
+        self, ctx: Any, switching_safe: bool
+    ) -> dict[str, Any]:
         try:
             if ctx.switching_runtime and ctx.switching_params:
                 tau_d = float(ctx.switching_runtime.dwell_time())
@@ -614,17 +629,19 @@ class GateStage:
             "local": composite.delta_w is not None,
             "global": bool(assessment.global_safe),
             "switching": bool(assessment.switching_safe),
-            "delta_negative": (composite.delta_w is not None and composite.delta_w <= 0),
-            "exponential": (assessment.w_ratio is None or assessment.w_ratio <= w_bound_tol),
+            "delta_negative": (
+                composite.delta_w is not None and composite.delta_w <= 0
+            ),
+            "exponential": (
+                assessment.w_ratio is None or assessment.w_ratio <= w_bound_tol
+            ),
         }
 
         safe_prev_lyap = (
-            ensure_lyapunov_state(ctx.prev_lyap)
-            if ctx.prev_lyap is not None else None
+            ensure_lyapunov_state(ctx.prev_lyap) if ctx.prev_lyap is not None else None
         )
         safe_cur_lyap = (
-            ensure_lyapunov_state(ctx.cur_lyap)
-            if ctx.cur_lyap is not None else None
+            ensure_lyapunov_state(ctx.cur_lyap) if ctx.cur_lyap is not None else None
         )
 
         inputs = GateKernelInputs(
@@ -643,7 +660,8 @@ class GateStage:
             w_current=composite.w_current,
             adaptive_margin=(
                 assessment.adaptive_metrics.margin
-                if assessment.adaptive_metrics and assessment.adaptive_metrics.is_available
+                if assessment.adaptive_metrics
+                and assessment.adaptive_metrics.is_available
                 else None
             ),
             adaptive_available=bool(
@@ -654,7 +672,9 @@ class GateStage:
         )
 
         kernel_result = run_gate_kernel(inputs)
-        recovery_detected = assessment.recovery_detected or kernel_result.recovery_detected
+        recovery_detected = (
+            assessment.recovery_detected or kernel_result.recovery_detected
+        )
         if recovery_detected:
             ctx.extra["recovery_detected"] = True
 
@@ -665,7 +685,9 @@ class GateStage:
 
         self._map_kernel_reasons(ctx, kernel_result, assessment.adaptive_metrics)
         self._apply_kappa_margin_layer(ctx, pre_verdict, assessment.adaptive_metrics)
-        pre_verdict = self._updated_pre_verdict(ctx, pre_verdict, assessment.adaptive_metrics)
+        pre_verdict = self._updated_pre_verdict(
+            ctx, pre_verdict, assessment.adaptive_metrics
+        )
 
         if kernel_result.certificate:
             stability_certificate.update(kernel_result.certificate)
@@ -733,7 +755,9 @@ class GateStage:
             switching_safe=assessment.switching_safe,
         )
         verdict = self._apply_kappa_hard_block(ctx, verdict)
-        verdict = self._apply_final_adaptive_veto(ctx, verdict, assessment.adaptive_metrics)
+        verdict = self._apply_final_adaptive_veto(
+            ctx, verdict, assessment.adaptive_metrics
+        )
 
         verdict = _apply_global_stability_policy(
             ctx,
@@ -798,7 +822,7 @@ class GateStage:
             ctx.extra["fusion_trace"]["final_verdict"] = str(verdict)
 
         # --------------------------------------------------
-        # BUILD FINAL REASON CODES 
+        # BUILD FINAL REASON CODES
         # --------------------------------------------------
         reason_codes = tuple(
             str(code).strip()
@@ -831,7 +855,9 @@ class GateStage:
         if adaptive_metrics and adaptive_metrics.is_available:
             margin = adaptive_metrics.margin
             if margin is not None and -0.02 < margin <= 0:
-                ctx.extra.setdefault("fusion_reasons", []).append("adaptive_margin_warning")
+                ctx.extra.setdefault("fusion_reasons", []).append(
+                    "adaptive_margin_warning"
+                )
 
     def _apply_kappa_margin_layer(
         self,
@@ -877,7 +903,11 @@ class GateStage:
     ) -> LyapunovVerdict:
         if ctx.extra.pop("_kappa_margin_forced_confirmation", False):
             return LyapunovVerdict.REQUIRE_CONFIRMATION
-        if adaptive_metrics and adaptive_metrics.is_available and adaptive_metrics.is_unstable:
+        if (
+            adaptive_metrics
+            and adaptive_metrics.is_available
+            and adaptive_metrics.is_unstable
+        ):
             return LyapunovVerdict.ABSTAIN
         return pre_verdict
 
@@ -901,7 +931,9 @@ class GateStage:
             )
             verdict = cast(LyapunovVerdict, fusion.verdict)
             if kernel_result.final_verdict == LyapunovVerdict.ABSTAIN:
-                ctx.extra.setdefault("fusion_reasons", []).append("kernel_abstain_signal")
+                ctx.extra.setdefault("fusion_reasons", []).append(
+                    "kernel_abstain_signal"
+                )
             if adaptive_metrics and adaptive_metrics.is_unstable:
                 _record_verdict_transition(
                     ctx,
@@ -919,9 +951,7 @@ class GateStage:
             # -----------------------------------------
             try:
                 if delta_w is not None:
-                    soft_threshold = getattr(
-                        ctx, "delta_w_soft_threshold", -0.05
-                    )
+                    soft_threshold = getattr(ctx, "delta_w_soft_threshold", -0.05)
 
                     # faible décroissance → prudence
                     if soft_threshold < delta_w < 0:
@@ -940,7 +970,9 @@ class GateStage:
         except Exception:
             verdict = pre_verdict or LyapunovVerdict.ABSTAIN
             existing = list(ctx.extra.get("fusion_reasons", []))
-            ctx.extra["fusion_reasons"] = list(dict.fromkeys(existing + ["fusion_fallback"]))
+            ctx.extra["fusion_reasons"] = list(
+                dict.fromkeys(existing + ["fusion_fallback"])
+            )
             ctx.extra["fusion_error"] = True
             return verdict
 
@@ -995,8 +1027,8 @@ class GateStage:
             kappa_safe = not bool(
                 metrics is not None and getattr(metrics, "kappa_violation", False)
             )
-            projection_available = (ctx.prev_lyap is not None or ctx.cur_lyap is not None)
-            exponential_safe = (w_ratio is None or w_ratio <= w_bound_tol)
+            projection_available = ctx.prev_lyap is not None or ctx.cur_lyap is not None
+            exponential_safe = w_ratio is None or w_ratio <= w_bound_tol
             adaptive_band = ctx.extra.get("kappa_band")
 
             validity_envelope = build_validity_envelope(
@@ -1004,7 +1036,9 @@ class GateStage:
                 switching_safe=bool(switching_safe),
                 exponential_safe=bool(exponential_safe),
                 kappa_safe=bool(kappa_safe),
-                adaptive_available=bool(adaptive_metrics and adaptive_metrics.is_available),
+                adaptive_available=bool(
+                    adaptive_metrics and adaptive_metrics.is_available
+                ),
                 adaptive_band=adaptive_band,
             )
             ctx.validity_envelope = validity_envelope
@@ -1035,7 +1069,9 @@ class GateStage:
                 "projection": float(getattr(ctx, "projection_disturbance", 0.0) or 0.0),
                 "noise": float(getattr(ctx, "noise_disturbance", 0.0) or 0.0),
                 "switch": float(getattr(ctx, "switching_disturbance", 0.0) or 0.0),
-                "adversarial": float(getattr(ctx, "adversarial_disturbance", 0.0) or 0.0),
+                "adversarial": float(
+                    getattr(ctx, "adversarial_disturbance", 0.0) or 0.0
+                ),
             }
         except Exception:
             pass
@@ -1044,8 +1080,12 @@ class GateStage:
             if ctx.validity_envelope is not None:
                 ctx.extra["validity_envelope_extended"] = {
                     **ctx.extra.get("validity_envelope", {}),
-                    "projection_valid": bool(ctx.prev_lyap is not None or ctx.cur_lyap is not None),
-                    "switching_constraints_valid": bool(getattr(ctx, "switching_safe", False)),
+                    "projection_valid": bool(
+                        ctx.prev_lyap is not None or ctx.cur_lyap is not None
+                    ),
+                    "switching_constraints_valid": bool(
+                        getattr(ctx, "switching_safe", False)
+                    ),
                     "perturbation_bounded": True,
                 }
         except Exception:
@@ -1062,7 +1102,9 @@ class GateStage:
             if overrides.disable_validity_envelope:
                 validity = None
             if validity is not None and not validity.valid:
-                ctx.extra.setdefault("fusion_reasons", []).append(f"validity_{validity.reason}")
+                ctx.extra.setdefault("fusion_reasons", []).append(
+                    f"validity_{validity.reason}"
+                )
                 if verdict == LyapunovVerdict.ALLOW:
                     _record_verdict_transition(
                         ctx,
@@ -1154,14 +1196,11 @@ class GateStage:
                 )
                 ctx.extra["projection_hard_block"] = True
                 return LyapunovVerdict.ABSTAIN
-            
+
             # -----------------------------------------
             # SOFT BLOCK: Lyapunov incompatibility
             # -----------------------------------------
-            if (
-                lyapunov_compatible is False
-                and not overrides.force_safe_projection
-            ):
+            if lyapunov_compatible is False and not overrides.force_safe_projection:
                 if "projection_lyapunov_incompatible" not in projection_reasons:
                     projection_reasons.append("projection_lyapunov_incompatible")
 
@@ -1174,7 +1213,7 @@ class GateStage:
                         reason="projection_lyapunov_incompatible",
                     )
                     verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
-            
+
             # -----------------------------------------
             # SOFT BLOCK: boundary proximity
             # -----------------------------------------
@@ -1200,13 +1239,10 @@ class GateStage:
             # -----------------------------------------
             # COUPLING (: projection must NOT override global policy
             # -----------------------------------------
-            projection_unstable_coupling = (
-                (not is_safe)
-                and (
-                    (delta_w is not None and delta_w > 0.0)
-                    or (not bool(global_safe))
-                    or (not bool(switching_safe))
-                )
+            projection_unstable_coupling = (not is_safe) and (
+                (delta_w is not None and delta_w > 0.0)
+                or (not bool(global_safe))
+                or (not bool(switching_safe))
             )
 
             if projection_unstable_coupling and not overrides.force_safe_projection:
@@ -1233,12 +1269,16 @@ class GateStage:
                     # Example future hook
                     coherence = projected_state.state_signals.get("coherence_score")
                     if coherence is not None and coherence < 0.1:
-                        ctx.extra.setdefault("fusion_reasons", []).append("low_coherence_signal")
+                        ctx.extra.setdefault("fusion_reasons", []).append(
+                            "low_coherence_signal"
+                        )
             except Exception:
                 pass
 
         except Exception:
-            ctx.extra.setdefault("errors", []).append("projection_gate_adjustment_failure")
+            ctx.extra.setdefault("errors", []).append(
+                "projection_gate_adjustment_failure"
+            )
         return verdict
 
     def _apply_kappa_hard_block(
@@ -1326,13 +1366,11 @@ class GateStage:
             else None,
         )
 
-
     def _apply_memory_policy(
         self,
         ctx: Any,
         verdict: LyapunovVerdict,
     ) -> LyapunovVerdict:
-
         try:
             bundle = getattr(ctx, "bundle", None)
             memory_features = getattr(bundle, "memory_features", {}) if bundle else {}

@@ -19,7 +19,6 @@ class ConversationAdversarialDetector:
         collapse_risk: float | None,
         uncertainty: float | None,
     ) -> float:
-
         score = 0.0
 
         if collapse_risk:
@@ -49,7 +48,6 @@ class ConversationAdversarialDetector:
         strategy: ResponseStrategyType,
         adversarial_score: float,
     ) -> ResponseStrategyType:
-
         if adversarial_score > ConversationAdversarialDetector.ADVERSARIAL_THRESHOLD:
             return ResponseStrategyType.CONFIRMATION
 

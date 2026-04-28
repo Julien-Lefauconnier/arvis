@@ -18,6 +18,4 @@ class GhostSignalFallbackRule(CanonicalRule):
         yield "ghost_signal"
 
 
-FALLBACK_RULES: tuple[CanonicalRule, ...] = (
-    GhostSignalFallbackRule(),
-)
+FALLBACK_RULES: tuple[CanonicalRule, ...] = (GhostSignalFallbackRule(),)

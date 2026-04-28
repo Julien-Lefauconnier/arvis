@@ -10,18 +10,18 @@ class ContextHintPolicyGate:
     ZKCS-safe governance gate for context hints.
     """
 
-    ALLOWED_KEYS: FrozenSet[str] = frozenset({
-        "preferred_language",
-        "timezone",
-    })
+    ALLOWED_KEYS: FrozenSet[str] = frozenset(
+        {
+            "preferred_language",
+            "timezone",
+        }
+    )
 
     @classmethod
     def validate(cls, hints: Dict[str, Any]) -> Dict[str, Any]:
-
         safe: Dict[str, Any] = {}
 
         for key, value in hints.items():
-
             if key not in cls.ALLOWED_KEYS:
                 continue
 

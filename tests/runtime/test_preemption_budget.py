@@ -64,7 +64,9 @@ def make_process(process_id: str, *, budget_steps: int) -> CognitiveProcess:
 def test_unfinished_with_remaining_budget_is_requeued():
     runtime_state = CognitiveRuntimeState()
     executor = IncompleteExecutor(reasoning_steps=1)
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=executor)
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=executor
+    )
 
     process = make_process("p1", budget_steps=2)
     scheduler.enqueue(process)
@@ -81,7 +83,9 @@ def test_unfinished_with_remaining_budget_is_requeued():
 def test_unfinished_without_remaining_budget_is_suspended():
     runtime_state = CognitiveRuntimeState()
     executor = IncompleteExecutor(reasoning_steps=1)
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=executor)
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=executor
+    )
 
     process = make_process("p2", budget_steps=1)
     scheduler.enqueue(process)
@@ -98,7 +102,9 @@ def test_unfinished_without_remaining_budget_is_suspended():
 def test_single_tick_executes_single_step():
     runtime_state = CognitiveRuntimeState()
     executor = IncompleteExecutor(reasoning_steps=1)
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=executor)
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=executor
+    )
 
     process = make_process("p3", budget_steps=3)
     scheduler.enqueue(process)

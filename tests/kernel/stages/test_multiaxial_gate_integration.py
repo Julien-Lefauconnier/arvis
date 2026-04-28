@@ -20,6 +20,7 @@ class StableCore:
                 "regime_persistence": 0.1,
                 "uncertainty_drift": 0.1,
             }
+
         return Snapshot()
 
 

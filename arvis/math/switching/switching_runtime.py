@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+
 @dataclass
 class SwitchingRuntime:
     last_regime: str | None = None
@@ -19,7 +20,7 @@ class SwitchingRuntime:
             self.last_regime = regime
         else:
             self.steps_since_switch += 1
-    
+
     # -----------------------------------------
     # Dwell-time (paper alignment)
     # -----------------------------------------

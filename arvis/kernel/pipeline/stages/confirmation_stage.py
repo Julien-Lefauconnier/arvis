@@ -7,7 +7,9 @@ from datetime import datetime, timezone
 from typing import Any
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationStatus
-from arvis.cognition.conflict.conflict_confirmation import requires_conflict_confirmation
+from arvis.cognition.conflict.conflict_confirmation import (
+    requires_conflict_confirmation,
+)
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
@@ -40,17 +42,11 @@ class ConfirmationStage:
         # 1. OVERRIDE (user already answered)
         # -----------------------------------------
         if ctx.confirmation_result is not None:
-            if (
-                ctx.confirmation_result.status
-                == ConfirmationStatus.CONFIRMED
-            ):
+            if ctx.confirmation_result.status == ConfirmationStatus.CONFIRMED:
                 verdict = LyapunovVerdict.ALLOW
                 ctx.extra["confirmation_override"] = True
 
-            elif (
-                ctx.confirmation_result.status
-                == ConfirmationStatus.REJECTED
-            ):
+            elif ctx.confirmation_result.status == ConfirmationStatus.REJECTED:
                 verdict = LyapunovVerdict.ABSTAIN
                 ctx.extra["confirmation_override"] = True
 
@@ -75,9 +71,7 @@ class ConfirmationStage:
             ).get("conflict_pressure")
 
         if conflict_pressure is None:
-            conflict_pressure = (
-                pipeline.conflict_pressure_engine.compute([])
-            )
+            conflict_pressure = pipeline.conflict_pressure_engine.compute([])
 
         #  normalize value
         if isinstance(conflict_pressure, (int, float)):
@@ -89,11 +83,9 @@ class ConfirmationStage:
                 0.0,
             )
 
-        conflict_requires_confirmation = (
-            requires_conflict_confirmation(
-                conflict_pressure=conflict_value,
-                threshold=0.8,
-            )
+        conflict_requires_confirmation = requires_conflict_confirmation(
+            conflict_pressure=conflict_value,
+            threshold=0.8,
         )
 
         self._debug(
@@ -153,12 +145,9 @@ class ConfirmationStage:
         if needs_confirmation and ctx.confirmation_result is None:
             confirmation_request = ConfirmationRequest(
                 request_id=(
-                    f"confirm:{ctx.user_id}:"
-                    f"{datetime.now(timezone.utc).timestamp()}"
+                    f"confirm:{ctx.user_id}:{datetime.now(timezone.utc).timestamp()}"
                 ),
-                target_id=str(
-                    getattr(ctx.bundle, "bundle_id", "bundle")
-                ),
+                target_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
                 reason="lyapunov_guard",
             )
 
@@ -168,8 +157,7 @@ class ConfirmationStage:
         ctx.confirmation_request = confirmation_request
         ctx._needs_confirmation = needs_confirmation
         ctx._requires_confirmation = (
-            needs_confirmation
-            and ctx.confirmation_result is None
+            needs_confirmation and ctx.confirmation_result is None
         )
 
         self._debug(

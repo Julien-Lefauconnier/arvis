@@ -7,7 +7,6 @@ import numpy as np
 from .irg_latent_state import IRGLatentState
 
 
-
 class IRGService:
     """
     Internal Reflexive Geometry (IRG).
@@ -51,7 +50,7 @@ class IRGService:
 
     def snapshot(self) -> IRGLatentState:
         return self.state
-    
+
     def _extract(self, snapshot: Any) -> tuple[float, float, float]:
         """
         Robust ZKCS-safe extractor.
@@ -67,9 +66,7 @@ class IRGService:
             drift = float(getattr(snapshot, "uncertainty", 0.5))
             regimes = getattr(snapshot, "regime_probs", {})
 
-            persistence = (
-                max(regimes.values()) if regimes else 0.0
-            )
+            persistence = max(regimes.values()) if regimes else 0.0
 
             return collapse, drift, persistence
 

@@ -19,6 +19,7 @@ from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 # Helpers / Mocks
 # ---------------------------------------------------------
 
+
 class DummyCoreModel:
     def compute(self, bundle):
         class DummySnapshot:
@@ -85,6 +86,7 @@ def make_ctx():
 # 1. Basic pipeline run
 # ---------------------------------------------------------
 
+
 def test_pipeline_runs_minimal():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
     ctx = make_ctx()
@@ -99,6 +101,7 @@ def test_pipeline_runs_minimal():
 # ---------------------------------------------------------
 # 2. Execution intent when ALLOW
 # ---------------------------------------------------------
+
 
 def test_pipeline_no_intent_when_abstain_even_if_confirmation_required():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
@@ -119,6 +122,7 @@ def test_pipeline_no_intent_when_abstain_even_if_confirmation_required():
 # 3. No intent when Lyapunov blocks
 # ---------------------------------------------------------
 
+
 def test_pipeline_blocks_execution_when_unstable():
     pipeline = CognitivePipeline()
     pipeline.core = pipeline.core.__class__(core_model=BlockingCoreModel())
@@ -134,6 +138,7 @@ def test_pipeline_blocks_execution_when_unstable():
 # ---------------------------------------------------------
 # 4. Temporal layer impacts risk
 # ---------------------------------------------------------
+
 
 def test_temporal_layer_modulates_risk():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
@@ -165,6 +170,7 @@ def test_temporal_layer_modulates_risk():
 # 5. Epsilon is computed and positive
 # ---------------------------------------------------------
 
+
 def test_epsilon_is_positive():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
     ctx = make_ctx()
@@ -177,6 +183,7 @@ def test_epsilon_is_positive():
 # ---------------------------------------------------------
 # 6. Regime fallback works
 # ---------------------------------------------------------
+
 
 def test_regime_fallback_to_transition():
     pipeline = CognitivePipeline()
@@ -193,6 +200,7 @@ def test_regime_fallback_to_transition():
 # 7. Drift propagation
 # ---------------------------------------------------------
 
+
 def test_drift_is_propagated():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
     ctx = make_ctx()
@@ -206,6 +214,7 @@ def test_drift_is_propagated():
 # ---------------------------------------------------------
 # 8. Signals integration
 # ---------------------------------------------------------
+
 
 def test_pipeline_outputs_risk_signal():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
@@ -237,6 +246,7 @@ def test_pipeline_outputs_drift_signal():
 # ---------------------------------------------------------
 # 11. ActionDecision integration
 # ---------------------------------------------------------
+
 
 def test_pipeline_outputs_action_decision():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
@@ -277,6 +287,7 @@ def test_action_and_intent_consistency():
 # ---------------------------------------------------------
 # 12. Confirmation integration
 # ---------------------------------------------------------
+
 
 def test_pipeline_generates_confirmation_request():
     pipeline = CognitivePipeline()
@@ -384,6 +395,7 @@ def test_conflict_triggers_confirmation_even_if_stable():
 # 13. trace integration
 # ---------------------------------------------------------
 
+
 def test_pipeline_produces_trace():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
 
@@ -403,6 +415,7 @@ def test_pipeline_produces_trace():
 # 14. observability integration
 # ---------------------------------------------------------
 
+
 def test_observability_is_attached_to_pipeline():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
     ctx = make_ctx()
@@ -413,15 +426,18 @@ def test_observability_is_attached_to_pipeline():
     assert result.trace.stability is not None
     assert result.trace.symbolic is not None
 
+
 # ---------------------------------------------------------
 # 15. Composite Lyapunov integration (ΔW behavior)
 # ---------------------------------------------------------
+
 
 class CompositePositiveDeltaCore:
     """
     Fast s'améliore légèrement, mais le slow state diverge fortement
     entre deux cycles -> ΔW > 0 au second run.
     """
+
     def __init__(self):
         self.step = 0
 
@@ -429,6 +445,7 @@ class CompositePositiveDeltaCore:
         self.step += 1
 
         if self.step == 1:
+
             class Snapshot:
                 collapse_risk = 0.2
                 drift_score = 0.05
@@ -442,6 +459,7 @@ class CompositePositiveDeltaCore:
                     "regime_persistence": 0.05,
                     "uncertainty_drift": 0.05,
                 }
+
             return Snapshot()
 
         class Snapshot:
@@ -457,6 +475,7 @@ class CompositePositiveDeltaCore:
                 "regime_persistence": 0.90,
                 "uncertainty_drift": 0.90,
             }
+
         return Snapshot()
 
 
@@ -464,6 +483,7 @@ class CompositeNegativeDeltaCore:
     """
     Fast + slow s'améliorent → ΔW < 0
     """
+
     def compute(self, bundle):
         class Snapshot:
             collapse_risk = 0.2
@@ -498,18 +518,26 @@ def test_pipeline_blocks_when_delta_w_positive():
     ctx.switching_runtime = None
     ctx.switching_params = None
 
-    ctx.global_stability_metrics = type("M", (), {
-        "ratio": 1.0,
-        "kappa_violation": False,
-    })()
+    ctx.global_stability_metrics = type(
+        "M",
+        (),
+        {
+            "ratio": 1.0,
+            "kappa_violation": False,
+        },
+    )()
 
-    ctx.projection_certificate = type("P", (), {
-        "domain_valid": True,
-        "is_projection_safe": True,
-        "margin_to_boundary": 1.0,
-    })()
+    ctx.projection_certificate = type(
+        "P",
+        (),
+        {
+            "domain_valid": True,
+            "is_projection_safe": True,
+            "margin_to_boundary": 1.0,
+        },
+    )()
 
-    pipeline.run(ctx)      # initialise t0
+    pipeline.run(ctx)  # initialise t0
     result = pipeline.run(ctx)
 
     assert ctx.delta_w is not None
@@ -545,16 +573,24 @@ def test_pipeline_allows_when_delta_w_negative():
     ctx.switching_runtime = None
     ctx.switching_params = None
 
-    ctx.global_stability_metrics = type("M", (), {
-        "ratio": 1.0,
-        "kappa_violation": False,
-    })()
+    ctx.global_stability_metrics = type(
+        "M",
+        (),
+        {
+            "ratio": 1.0,
+            "kappa_violation": False,
+        },
+    )()
 
-    ctx.projection_certificate = type("P", (), {
-        "domain_valid": True,
-        "is_projection_safe": True,
-        "margin_to_boundary": 1.0,
-    })()
+    ctx.projection_certificate = type(
+        "P",
+        (),
+        {
+            "domain_valid": True,
+            "is_projection_safe": True,
+            "margin_to_boundary": 1.0,
+        },
+    )()
     pipeline.run(ctx)
 
     # Second pass (ΔW calculable)
@@ -579,6 +615,7 @@ def test_pipeline_handles_missing_slow_state():
     Robustesse :
     pas de slow_state → pas de crash
     """
+
     class NoSlowCore:
         def compute(self, bundle):
             class Snapshot:
@@ -612,8 +649,8 @@ def test_pipeline_exposes_delta_w_in_context():
 
     ctx = make_ctx()
 
-    pipeline.run(ctx)   # t0 (init)
-    pipeline.run(ctx)   # t1 (delta calculé)
+    pipeline.run(ctx)  # t0 (init)
+    pipeline.run(ctx)  # t1 (delta calculé)
 
     assert hasattr(ctx, "delta_w")
     assert ctx.delta_w is not None

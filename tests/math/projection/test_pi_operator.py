@@ -16,7 +16,7 @@ def test_pi_operator_bounds_values():
 
     assert abs(projected["state.system_tension"]) < 1.0
     assert abs(projected["risk.conflict_pressure"]) < 1.0
-    assert projected["control.control_signal"] != 0.5  
+    assert projected["control.control_signal"] != 0.5
 
 
 def test_pi_operator_handles_empty_input():
@@ -55,7 +55,6 @@ def test_pi_operator_is_deterministic():
 
 
 def test_pi_operator_aggressive_when_invalid():
-
     class Ctx:
         validity_envelope = type("V", (), {"valid": False})()
         adaptive_snapshot = type("A", (), {"regime": "stable"})()
@@ -69,7 +68,6 @@ def test_pi_operator_aggressive_when_invalid():
 
 
 def test_pi_operator_stable_preserves_values():
-
     class Ctx:
         validity_envelope = type("V", (), {"valid": True})()
         adaptive_snapshot = type("A", (), {"regime": "stable"})()
@@ -83,7 +81,6 @@ def test_pi_operator_stable_preserves_values():
 
 
 def test_pi_operator_critical_is_between():
-
     class Ctx:
         validity_envelope = type("V", (), {"valid": True})()
         adaptive_snapshot = type("A", (), {"regime": "critical"})()
@@ -113,7 +110,6 @@ def test_pi_operator_is_bounded():
 
 
 def test_pi_operator_reacts_to_divergence():
-
     class Ctx:
         _dv = 0.5  # forte divergence
         validity_envelope = type("V", (), {"valid": True})()

@@ -52,4 +52,3 @@ class CognitivePipelineResult:
     ir_hash: Optional[str] = None
     ir_envelope: Optional[CognitiveIREnvelope] = None
     cognitive_state: Optional[CognitiveState] = None
-    

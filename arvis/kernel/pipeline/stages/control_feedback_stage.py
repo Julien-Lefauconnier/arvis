@@ -21,7 +21,6 @@ class ControlFeedbackStage:
     """
 
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         gate_result = getattr(ctx, "gate_result", None)
 
         # Gate not executed yet → skip

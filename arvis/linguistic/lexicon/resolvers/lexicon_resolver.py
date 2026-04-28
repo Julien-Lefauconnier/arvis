@@ -37,7 +37,6 @@ class LexiconResolver:
         scope: str = "core",
         domain: str | None = None,
     ) -> LexiconSnapshot:
-
         core = build_minimal_lexicon_v0()
 
         # core only

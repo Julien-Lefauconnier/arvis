@@ -16,6 +16,7 @@ def test_timeline_view_from_snapshot():
     assert view.head == snapshot.head
     assert len(view.entries) == 3
 
+
 def test_timeline_entry_view_fields():
     entries = tuple(make_entries(1))
     snapshot = TimelineSnapshot.build(entries)
@@ -39,6 +40,7 @@ def test_timeline_view_to_dict():
     assert "head" in data
     assert "total_entries" in data
     assert isinstance(data["entries"], list)
+
 
 def test_timeline_view_empty():
     snapshot = TimelineSnapshot.build([])

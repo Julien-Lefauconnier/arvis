@@ -19,6 +19,7 @@ class RuntimeStateLike(Protocol):
 class SyscallHandlerLike(Protocol):
     runtime_state: RuntimeStateLike | None
 
+
 @register_syscall("interrupt.emit")
 def interrupt_emit(
     handler: SyscallHandlerLike,

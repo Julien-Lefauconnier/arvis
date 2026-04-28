@@ -16,7 +16,6 @@ class ConversationCollapseGuard:
 
     @staticmethod
     def detect(state: ConversationState) -> bool:
-
         raw: Any = state.signals.get("collapse_risk")
 
         if not isinstance(raw, (int, float)):

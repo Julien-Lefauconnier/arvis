@@ -9,16 +9,36 @@ from arvis.kernel.pipeline.cognitive_pipeline_result import CognitivePipelineRes
 from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
 from arvis.ir.cognitive_ir import CognitiveIR
 from arvis.math.switching.switching_params import SwitchingParams
-from arvis.kernel.pipeline.services.pipeline_bootstrap_service import PipelineBootstrapService
-from arvis.kernel.pipeline.services.pipeline_preparation_service import PipelinePreparationService
-from arvis.kernel.pipeline.services.pipeline_execution_sync_service import PipelineExecutionSyncService
-from arvis.kernel.pipeline.services.pipeline_stage_registry_service import PipelineStageRegistryService
-from arvis.kernel.pipeline.services.pipeline_compatibility_service import PipelineCompatibilityService
-from arvis.kernel.pipeline.services.pipeline_lifecycle_service import PipelineLifecycleService
-from arvis.kernel.pipeline.services.pipeline_runtime_service import PipelineRuntimeService
-from arvis.kernel.pipeline.services.pipeline_execution_service import PipelineExecutionService
-from arvis.kernel.pipeline.services.pipeline_iteration_service import PipelineIterationService
-from arvis.kernel.pipeline.services.pipeline_stage_execution_service import PipelineStageExecutionService
+from arvis.kernel.pipeline.services.pipeline_bootstrap_service import (
+    PipelineBootstrapService,
+)
+from arvis.kernel.pipeline.services.pipeline_preparation_service import (
+    PipelinePreparationService,
+)
+from arvis.kernel.pipeline.services.pipeline_execution_sync_service import (
+    PipelineExecutionSyncService,
+)
+from arvis.kernel.pipeline.services.pipeline_stage_registry_service import (
+    PipelineStageRegistryService,
+)
+from arvis.kernel.pipeline.services.pipeline_compatibility_service import (
+    PipelineCompatibilityService,
+)
+from arvis.kernel.pipeline.services.pipeline_lifecycle_service import (
+    PipelineLifecycleService,
+)
+from arvis.kernel.pipeline.services.pipeline_runtime_service import (
+    PipelineRuntimeService,
+)
+from arvis.kernel.pipeline.services.pipeline_execution_service import (
+    PipelineExecutionService,
+)
+from arvis.kernel.pipeline.services.pipeline_iteration_service import (
+    PipelineIterationService,
+)
+from arvis.kernel.pipeline.services.pipeline_stage_execution_service import (
+    PipelineStageExecutionService,
+)
 
 
 DEFAULT_SWITCHING_PARAMS = SwitchingParams(
@@ -29,8 +49,11 @@ DEFAULT_SWITCHING_PARAMS = SwitchingParams(
     J=1.5,
 )
 
+
 class PipelineStage(Protocol):
-    def run(self, pipeline: "CognitivePipeline", ctx: CognitivePipelineContext) -> None: ...
+    def run(
+        self, pipeline: "CognitivePipeline", ctx: CognitivePipelineContext
+    ) -> None: ...
 
 
 class CognitivePipeline:
@@ -98,16 +121,14 @@ class CognitivePipeline:
         Ordered list of pipeline stages.
         Single source of truth for execution order.
         """
-        return PipelineStageRegistryService.iter_stages(
-            self
-        )
+        return PipelineStageRegistryService.iter_stages(self)
 
     def _get_control_runtime(self, user_id: str) -> CognitiveControlRuntime:
         return PipelineRuntimeService.get_control_runtime(
             self,
             user_id,
         )
-    
+
     # -----------------------------------------------------
     # COMPATIBILITY WRAPPERS
     # Legacy internal API preserved while delegating to
@@ -128,25 +149,19 @@ class CognitivePipeline:
         self,
         ctx: CognitivePipelineContext,
     ) -> None:
-        PipelineCompatibilityService.bootstrap_ir_input(
-            ctx
-        )
+        PipelineCompatibilityService.bootstrap_ir_input(ctx)
 
     def _bootstrap_ir_context(
         self,
         ctx: CognitivePipelineContext,
     ) -> None:
-        PipelineCompatibilityService.bootstrap_ir_context(
-            ctx
-        )
+        PipelineCompatibilityService.bootstrap_ir_context(ctx)
 
     def _refresh_ir_context_extra(
         self,
         ctx: CognitivePipelineContext,
     ) -> None:
-        PipelineCompatibilityService.refresh_ir_context_extra(
-            ctx
-        )
+        PipelineCompatibilityService.refresh_ir_context_extra(ctx)
 
     def _prepare_run(
         self,
@@ -161,10 +176,8 @@ class CognitivePipeline:
         self,
         ctx: CognitivePipelineContext,
     ) -> None:
-        PipelineExecutionSyncService.run(
-            ctx
-        )
-    
+        PipelineExecutionSyncService.run(ctx)
+
     def run_stage(
         self,
         ctx: CognitivePipelineContext,
@@ -175,7 +188,6 @@ class CognitivePipeline:
             ctx,
             stage,
         )
-
 
     # -----------------------------------------------------
     # PUBLIC API (safe wrapper)
@@ -190,12 +202,10 @@ class CognitivePipeline:
             input_data,
         )
 
-        
     def run(
         self,
         ctx: CognitivePipelineContext,
     ) -> CognitivePipelineResult:
-
         return PipelineExecutionService.run(
             self,
             ctx,
@@ -215,7 +225,6 @@ class CognitivePipeline:
             self,
             ctx,
         )
-    
 
     def run_from_ir(self, ir: CognitiveIR) -> CognitivePipelineResult:
         """

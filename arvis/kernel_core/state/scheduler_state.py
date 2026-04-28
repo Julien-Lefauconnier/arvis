@@ -41,14 +41,17 @@ class SchedulerState:
             while process_id in queue:
                 queue.remove(process_id)
 
-    def append_unique(self, queue: list[CognitiveProcessId], process_id: CognitiveProcessId) -> None:
+    def append_unique(
+        self, queue: list[CognitiveProcessId], process_id: CognitiveProcessId
+    ) -> None:
         if process_id not in queue:
             queue.append(process_id)
-
 
     # -----------------------------------------------------
     # INVARIANTS
     # -----------------------------------------------------
     def validate_single_running_invariant(self, running_count: int) -> None:
         if running_count > 1:
-            raise RuntimeError("Scheduler invariant violated: more than one RUNNING process")
+            raise RuntimeError(
+                "Scheduler invariant violated: more than one RUNNING process"
+            )

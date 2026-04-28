@@ -24,8 +24,6 @@ class CognitiveIRHasher:
 
         serialized = CognitiveIRSerializer.serialize(ir)
 
-        digest = hashlib.sha256(
-            serialized.encode("utf-8")
-        ).hexdigest()
+        digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
         return digest

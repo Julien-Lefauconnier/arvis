@@ -28,6 +28,7 @@ from arvis.math.signals import (
 # to_float
 # ============================================================
 
+
 def test_to_float_none():
     assert to_float(None) == 0.0
 
@@ -61,6 +62,7 @@ def test_to_float_conflict_signal():
 # ============================================================
 # Passthrough behavior
 # ============================================================
+
 
 def test_to_risk_passthrough():
     s = RiskSignal(0.2)
@@ -100,6 +102,7 @@ def test_to_symbolic_drift_passthrough():
 # ============================================================
 # Conversion behavior
 # ============================================================
+
 
 def test_to_risk_from_float():
     s = to_risk(0.2)
@@ -147,6 +150,7 @@ def test_to_symbolic_drift_from_float():
 # Default fallback
 # ============================================================
 
+
 def test_to_risk_invalid_uses_default():
     s = to_risk("invalid", default=0.9)
     assert float(s) == 0.9
@@ -160,6 +164,7 @@ def test_to_uncertainty_none_default():
 # ============================================================
 # Edge: exception safety
 # ============================================================
+
 
 def test_to_float_exception_safety():
     class Exploding:

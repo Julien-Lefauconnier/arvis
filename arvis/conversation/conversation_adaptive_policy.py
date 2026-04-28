@@ -20,7 +20,6 @@ class AdaptiveThresholdPolicy(ConversationPolicy):
         proposed_strategy: ResponseStrategyType,
         state: ConversationState,
     ) -> ResponseStrategyType:
-
         signals = state.signals or {}
 
         instability = signals.get("instability", 0.0)
@@ -33,18 +32,18 @@ class AdaptiveThresholdPolicy(ConversationPolicy):
         memory_structural = signals.get("memory_structural", 0.0)
 
         pressure = (
-            0.3 * instability +
-            0.25 * memory_instability +
-            0.3 * memory_structural +
-            0.15 * max(delta_w, 0.0)
+            0.3 * instability
+            + 0.25 * memory_instability
+            + 0.3 * memory_structural
+            + 0.15 * max(delta_w, 0.0)
         )
 
         # --------------------------------------------
         # NON-LINEAR MEMORY AMPLIFICATION
         # --------------------------------------------
         # memory becomes dominant when high (structural persistence)
-        pressure += 0.25 * (memory_instability ** 2)
-        pressure += 0.15 * (memory_structural ** 2)
+        pressure += 0.25 * (memory_instability**2)
+        pressure += 0.15 * (memory_structural**2)
 
         pressure = min(max(pressure, 0.0), 1.0)
 

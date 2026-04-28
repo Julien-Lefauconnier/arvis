@@ -7,7 +7,6 @@ from arvis.api.stability import StabilityView
 
 
 def test_stability_projection_and_stats():
-
     projector = StabilityStateProjector()
     stats = StabilityStatistics()
 

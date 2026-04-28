@@ -5,14 +5,12 @@ from arvis.uncertainty.uncertainty_axis import UncertaintyAxis
 
 
 def test_registry_contains_frames():
-
     frames = UncertaintyFrameRegistry.all()
 
     assert len(frames) >= 3
 
 
 def test_registry_frames_have_axes():
-
     frames = UncertaintyFrameRegistry.all()
 
     for frame in frames:
@@ -22,7 +20,6 @@ def test_registry_frames_have_axes():
 
 
 def test_registry_unique_ids():
-
     frames = UncertaintyFrameRegistry.all()
 
     ids = [f.frame_id for f in frames]

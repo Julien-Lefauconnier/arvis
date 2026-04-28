@@ -2,6 +2,7 @@
 
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
+
 def test_gate_single_decision_point(pipeline, ctx):
     ctx.global_stability_action = "confirm"
     ctx.delta_w_history = [10.0, 10.0, 10.0]
@@ -27,8 +28,7 @@ def test_fusion_reason_consistency(pipeline, ctx):
 
     # pas de contradictions
     assert not (
-        any("confirm" in r for r in reasons)
-        and any("abstain" in r for r in reasons)
+        any("confirm" in r for r in reasons) and any("abstain" in r for r in reasons)
     )
 
 

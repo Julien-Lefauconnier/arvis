@@ -2,6 +2,7 @@
 
 from typing import Any, Protocol
 
+
 class _ConversationStateProtocol(Protocol):
     signals: dict[str, Any]
     cognitive_snapshot: Any
@@ -33,7 +34,6 @@ class ConversationCognitiveBridge:
 
     @staticmethod
     def evaluate(context: _ConversationContextProtocol) -> Any | None:
-
         service = ConversationCognitiveBridge._COGNITIVE_SERVICE
 
         # --------------------------------------------------

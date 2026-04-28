@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Dict, Any
 
+
 @dataclass(frozen=True)
 class ComplianceReflexiveAttestation:
     """
@@ -22,7 +23,9 @@ class ComplianceReflexiveAttestation:
     immutability: bool
 
     @classmethod
-    def from_explanation(cls, explanation_dict: Dict[str, Any]) -> "ComplianceReflexiveAttestation":
+    def from_explanation(
+        cls, explanation_dict: Dict[str, Any]
+    ) -> "ComplianceReflexiveAttestation":
         """
         Extract attestation data from a reflexive explanation.
         """

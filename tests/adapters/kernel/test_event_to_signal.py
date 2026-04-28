@@ -24,5 +24,3 @@ def test_ir_produces_expected_categories():
     categories = {c.key.category for c in canonicals}
 
     assert len(categories) >= 1
-
-

@@ -21,6 +21,7 @@ class MultiHorizonPredictiveParams:
     - warn_ttc / critical_ttc: thresholds on time-to-critical (steps)
     - ttc_target_v: V level defining "critical line" for TTC computation
     """
+
     horizons: Tuple[int, int, int] = (5, 25, 100)
     window_size: int = 20
 
@@ -143,9 +144,13 @@ class MultiHorizonPredictiveObserver:
         max_pred = max(short_v, medium_v, long_v)
 
         verdict = "OK"
-        if max_pred >= self.params.critical_pred_v or (ttc is not None and ttc <= self.params.critical_ttc):
+        if max_pred >= self.params.critical_pred_v or (
+            ttc is not None and ttc <= self.params.critical_ttc
+        ):
             verdict = "CRITICAL"
-        elif max_pred >= self.params.warn_pred_v or (ttc is not None and ttc <= self.params.warn_ttc):
+        elif max_pred >= self.params.warn_pred_v or (
+            ttc is not None and ttc <= self.params.warn_ttc
+        ):
             verdict = "WARN"
 
         return MultiHorizonPredictiveSnapshot(

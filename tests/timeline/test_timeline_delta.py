@@ -19,6 +19,7 @@ from arvis.timeline.timeline_types import TimelineEntryType
 # helpers
 # ---------------------------------------------------------
 
+
 def make_entry(i: int) -> TimelineEntry:
     return TimelineEntry.unsafe(
         entry_id=f"entry{i:04d}",
@@ -45,6 +46,7 @@ def extend_snapshot(base: TimelineSnapshot, n_extra: int) -> TimelineSnapshot:
 # basic delta creation
 # ---------------------------------------------------------
 
+
 def test_delta_from_snapshots_basic():
     base = make_snapshot(2)
     target = extend_snapshot(base, 3)
@@ -60,6 +62,7 @@ def test_delta_from_snapshots_basic():
 # delta empty detection
 # ---------------------------------------------------------
 
+
 def test_delta_empty_error():
     snap = make_snapshot(3)
 
@@ -70,6 +73,7 @@ def test_delta_empty_error():
 # ---------------------------------------------------------
 # rollback detection
 # ---------------------------------------------------------
+
 
 def test_delta_rollback_error():
     base = make_snapshot(5)
@@ -82,6 +86,7 @@ def test_delta_rollback_error():
 # ---------------------------------------------------------
 # apply delta
 # ---------------------------------------------------------
+
 
 def test_apply_delta():
     base = make_snapshot(2)
@@ -98,6 +103,7 @@ def test_apply_delta():
 # apply mismatch
 # ---------------------------------------------------------
 
+
 def test_apply_base_mismatch():
     base = make_snapshot(2)
     other = make_snapshot(3)
@@ -112,6 +118,7 @@ def test_apply_base_mismatch():
 # ---------------------------------------------------------
 # verify
 # ---------------------------------------------------------
+
 
 def test_verify_against():
     base = make_snapshot(2)
@@ -136,6 +143,7 @@ def test_verify_mismatch():
 # duplicate entries protection
 # ---------------------------------------------------------
 
+
 def test_duplicate_entries_rejected():
     e = make_entry(1)
 
@@ -153,6 +161,7 @@ def test_duplicate_entries_rejected():
 # ---------------------------------------------------------
 # size helper
 # ---------------------------------------------------------
+
 
 def test_delta_size():
     base = make_snapshot(1)

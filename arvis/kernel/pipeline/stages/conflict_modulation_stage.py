@@ -8,9 +8,7 @@ from arvis.cognition.conflict.conflict_modulation import apply_conflict_to_risk
 
 
 class ConflictModulationStage:
-
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         conflict_pressure = getattr(ctx, "conflict_pressure", None)
 
         if conflict_pressure is None:

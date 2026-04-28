@@ -33,7 +33,7 @@ class ProjectionStage:
             # -----------------------------------------
             if ctx.projection_certificate is not None and not allow_overwrite:
                 return
-            
+
             # -----------------------------------------
             # Structured Π (intermediate/full-theory path)
             # -----------------------------------------
@@ -79,7 +79,9 @@ class ProjectionStage:
             )
 
             if hasattr(pipeline, "pi_operator") and previous_projected:
-               previous_projected = pipeline.pi_operator.project(previous_projected, ctx)
+                previous_projected = pipeline.pi_operator.project(
+                    previous_projected, ctx
+                )
 
             # -----------------------------------------
             # Π_cert

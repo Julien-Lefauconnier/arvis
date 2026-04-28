@@ -22,6 +22,7 @@ def _norm_ascii(s: str, *, field: str, max_len: int = 256) -> str:
         raise ValueError(f"SignalEvent.{field} contains control characters.")
     return s2
 
+
 @dataclass(frozen=True)
 class SignalEvent:
     """
@@ -34,14 +35,13 @@ class SignalEvent:
     event_id: str
     created_at: datetime
 
-    signal_type: str           # e.g. "knowledge", "memory_long", "normative"
-    source: str                # e.g. "user", "system", "observer", "llm"
+    signal_type: str  # e.g. "knowledge", "memory_long", "normative"
+    source: str  # e.g. "user", "system", "observer", "llm"
 
     user_ref: Optional[str] = None
     place_ref: Optional[str] = None
 
     payload: Optional[Dict[str, Any]] = None
-
 
     def __post_init__(self) -> None:
         if self.created_at is None:
@@ -55,9 +55,7 @@ class SignalEvent:
             raise ValueError("SignalEvent.created_at must be UTC.")
 
         object.__setattr__(
-            self,
-            "event_id",
-            _norm_ascii(self.event_id, field="event_id")
+            self, "event_id", _norm_ascii(self.event_id, field="event_id")
         )
 
     @property

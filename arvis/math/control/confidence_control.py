@@ -27,7 +27,9 @@ class ConfidenceControlOutput:
     flags: list[str]
 
 
-def apply_confidence_control(inputs: ConfidenceControlInputs) -> ConfidenceControlOutput:
+def apply_confidence_control(
+    inputs: ConfidenceControlInputs,
+) -> ConfidenceControlOutput:
     """
     Control layer driven by system confidence.
 

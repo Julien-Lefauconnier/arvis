@@ -23,6 +23,7 @@ def test_default_behavior():
 # Regimes
 # -----------------------------
 
+
 def test_stable_regime():
     ctrl = ExplorationController()
 
@@ -71,6 +72,7 @@ def test_chaotic_regime():
 # Risk thresholds
 # -----------------------------
 
+
 def test_high_risk():
     ctrl = ExplorationController()
 
@@ -103,6 +105,7 @@ def test_medium_risk():
 # Drift
 # -----------------------------
 
+
 def test_high_drift():
     ctrl = ExplorationController()
 
@@ -121,6 +124,7 @@ def test_high_drift():
 # Stability flag
 # -----------------------------
 
+
 def test_unstable_flag():
     ctrl = ExplorationController()
 
@@ -138,6 +142,7 @@ def test_unstable_flag():
 # -----------------------------
 # Clamp behavior
 # -----------------------------
+
 
 def test_clamping_bounds():
     ctrl = ExplorationController()
@@ -158,6 +163,7 @@ def test_clamping_bounds():
 # -----------------------------
 # Robustness (None inputs)
 # -----------------------------
+
 
 def test_none_inputs():
     ctrl = ExplorationController()

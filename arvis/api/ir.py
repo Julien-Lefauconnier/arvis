@@ -9,6 +9,7 @@ from arvis.api.ir_canonical import hash_ir
 IR_VERSION = "arvis-ir.v1"
 IR_FINGERPRINT = "stable"
 
+
 def build_ir_view(obj: Any) -> Dict[str, Any]:
     if obj is None:
         raise ValueError("IR source is None")
@@ -30,8 +31,7 @@ def build_ir_view(obj: Any) -> Dict[str, Any]:
         "decision": _serialize_ir(getattr(result, "ir_decision", None)),
         "state": _serialize_ir(getattr(result, "ir_state", None)),
         "gate": _serialize_ir(getattr(result, "ir_gate", None)),
-
-        # extension zone 
+        # extension zone
         "meta": {},
     }
 

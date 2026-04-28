@@ -8,6 +8,7 @@ from arvis.math.switching.regime_state import TheoreticalRegime
 # 1. EACH REGIME
 # ============================================================
 
+
 def test_map_stable():
     r = map_regime("stable", 0.5)
     assert r.q_t == TheoreticalRegime.STABLE
@@ -38,6 +39,7 @@ def test_map_neutral():
 # 2. DEFAULT / FALLBACK
 # ============================================================
 
+
 def test_map_unknown():
     r = map_regime("unknown")
     assert r.q_t == TheoreticalRegime.TRANSITION
@@ -52,6 +54,7 @@ def test_map_none():
 # 3. CASE INSENSITIVE
 # ============================================================
 
+
 def test_case_insensitive():
     r = map_regime("StAbLe")
     assert r.q_t == TheoreticalRegime.STABLE
@@ -60,6 +63,7 @@ def test_case_insensitive():
 # ============================================================
 # 4. CONFIDENCE DEFAULT / COERCION
 # ============================================================
+
 
 def test_confidence_default():
     r = map_regime("stable")

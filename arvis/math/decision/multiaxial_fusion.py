@@ -14,7 +14,7 @@ class MultiaxialInputs:
     switching_safe: bool
     global_safe: bool
     use_composite: bool = False
-    global_action: str = "ignore"   # "ignore" | "confirm" | "abstain"
+    global_action: str = "ignore"  # "ignore" | "confirm" | "abstain"
 
 
 @dataclass(frozen=True)

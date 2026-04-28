@@ -37,7 +37,6 @@ class TemporalPressure:
         has_uncertainty: bool,
         healthy: bool,
     ) -> TemporalPressureSnapshot:
-
         density = min(1.0, float(total) / 100.0) if total > 0 else 0.0
 
         conflicts = 1 if has_conflicts else 0
@@ -49,11 +48,7 @@ class TemporalPressure:
 
         health_penalty = 0.2 if not healthy else 0.0
 
-        pressure = clamp01(
-            0.5 * density
-            + 0.4 * volatility
-            + health_penalty
-        )
+        pressure = clamp01(0.5 * density + 0.4 * volatility + health_penalty)
 
         return TemporalPressureSnapshot(
             pressure=float(pressure),

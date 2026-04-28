@@ -8,7 +8,6 @@ from arvis.timeline.timeline_hashchain import TimelineHashChain
 
 
 def test_full_timeline_pipeline():
-
     entries = make_entries(8)
 
     base_entries = tuple(entries[:4])

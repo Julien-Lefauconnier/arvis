@@ -11,16 +11,13 @@ from arvis.cognition.state.cognitive_state import (
 
 
 def _dummy_state():
-
     return CognitiveState(
         bundle_id="test",
-
         stability=CognitiveStability(
             dv=0.0,
             regime=None,
             stable=True,
         ),
-
         risk=CognitiveRisk(
             mh_risk=0.0,
             world_risk=0.0,
@@ -29,21 +26,17 @@ def _dummy_state():
             smoothed_risk=0.0,
             early_warning=False,
         ),
-
         control=CognitiveControl(
             epsilon=0.0,
         ),
-
         dynamics=CognitiveDynamics(
             system_tension=None,
             drift=None,
         ),
-
         projection=CognitiveProjection(
             valid=True,
             margin=0.0,
         ),
-
         world_prediction=None,
         forecast=None,
         irg=None,

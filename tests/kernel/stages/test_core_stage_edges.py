@@ -5,10 +5,10 @@ from arvis.kernel.pipeline.stages.core_stage import CoreStage
 from arvis.math.lyapunov.lyapunov import LyapunovState
 
 
-
 # ============================================================
 # Helpers
 # ============================================================
+
 
 class DummyCore:
     def __init__(self, result):
@@ -41,6 +41,7 @@ class DummyScientific:
 # 1. NONE / FALLBACK PATHS
 # ============================================================
 
+
 def test_core_none_lyap():
     ctx = DummyCtx()
     pipeline = DummyPipeline(DummyScientific())
@@ -55,11 +56,10 @@ def test_core_none_lyap():
 # 2. LYAP NORMALIZATION
 # ============================================================
 
+
 def test_core_scalar_lyap_normalization():
     ctx = DummyCtx()
-    pipeline = DummyPipeline(
-        DummyScientific(cur_lyap=1.23)
-    )
+    pipeline = DummyPipeline(DummyScientific(cur_lyap=1.23))
 
     CoreStage().run(pipeline, ctx)
 
@@ -70,6 +70,7 @@ def test_core_scalar_lyap_normalization():
 # 3. FAST DYNAMICS EXCEPTION PATH
 # ============================================================
 
+
 def test_fast_dynamics_exception(monkeypatch):
     ctx = DummyCtx()
     ctx.cur_lyap = LyapunovState.from_scalar(1.0)
@@ -79,6 +80,7 @@ def test_fast_dynamics_exception(monkeypatch):
         raise ValueError
 
     from arvis.math.lyapunov import lyapunov as module
+
     monkeypatch.setattr(module, "lyapunov_value", broken)
 
     pipeline = DummyPipeline(DummyScientific(cur_lyap=1.0))
@@ -91,6 +93,7 @@ def test_fast_dynamics_exception(monkeypatch):
 # ============================================================
 # 4. QUADRATIC FAMILY ABSENT
 # ============================================================
+
 
 def test_quadratic_family_none():
     ctx = DummyCtx()
@@ -107,6 +110,7 @@ def test_quadratic_family_none():
 # ============================================================
 # 5. QUADRATIC FAMILY REGIME FALLBACK
 # ============================================================
+
 
 class FakeFamily:
     def has_regime(self, name):
@@ -135,6 +139,7 @@ def test_quadratic_regime_fallback():
 # 6. REFLEXIVE STATE NORMAL
 # ============================================================
 
+
 def test_reflexive_state():
     ctx = DummyCtx()
 
@@ -158,12 +163,11 @@ def test_reflexive_state():
 # 7. REFLEXIVE STATE FAILURE
 # ============================================================
 
+
 def test_reflexive_state_exception(monkeypatch):
     ctx = DummyCtx()
 
-    pipeline = DummyPipeline(
-        DummyScientific(reflexive_state=object())
-    )
+    pipeline = DummyPipeline(DummyScientific(reflexive_state=object()))
 
     CoreStage().run(pipeline, ctx)
 
@@ -174,6 +178,7 @@ def test_reflexive_state_exception(monkeypatch):
 # 8. PAPER SLOW DYNAMICS BRANCH 🔥
 # ============================================================
 
+
 def test_paper_slow_dynamics():
     ctx = DummyCtx()
 
@@ -181,6 +186,7 @@ def test_paper_slow_dynamics():
     ctx.cur_lyap = LyapunovState.from_scalar(1.0)
 
     from arvis.math.lyapunov.slow_state import SlowState
+
     ctx.slow_state = SlowState.zero()
 
     pipeline = DummyPipeline(DummyScientific(cur_lyap=1.0))
@@ -194,6 +200,7 @@ def test_paper_slow_dynamics():
 # 9. TARGET_MAP FAILURE
 # ============================================================
 
+
 def test_target_map_failure(monkeypatch):
     ctx = DummyCtx()
 
@@ -201,12 +208,15 @@ def test_target_map_failure(monkeypatch):
     ctx.cur_lyap = LyapunovState.from_scalar(1.0)
 
     from arvis.math.lyapunov.slow_state import SlowState
+
     ctx.slow_state = SlowState.zero()
     ctx.symbolic_state = object()
 
     from arvis.math.lyapunov import target_map as module
 
-    monkeypatch.setattr(module, "target_map", lambda *a, **k: (_ for _ in ()).throw(ValueError))
+    monkeypatch.setattr(
+        module, "target_map", lambda *a, **k: (_ for _ in ()).throw(ValueError)
+    )
 
     pipeline = DummyPipeline(DummyScientific(cur_lyap=1.0))
 
@@ -219,12 +229,17 @@ def test_target_map_failure(monkeypatch):
 # 10. PERTURBATION FAILURE
 # ============================================================
 
+
 def test_perturbation_failure(monkeypatch):
     ctx = DummyCtx()
 
     import arvis.kernel.pipeline.stages.core_stage as module
 
-    monkeypatch.setattr(module, "compute_perturbation", lambda *a, **k: (_ for _ in ()).throw(ValueError))
+    monkeypatch.setattr(
+        module,
+        "compute_perturbation",
+        lambda *a, **k: (_ for _ in ()).throw(ValueError),
+    )
 
     pipeline = DummyPipeline(DummyScientific())
 

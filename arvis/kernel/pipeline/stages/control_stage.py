@@ -11,15 +11,12 @@ from arvis.uncertainty.uncertainty_to_intent_mapper import map_uncertainty_to_in
 from arvis.math.adaptive.adaptive_control_policy import AdaptiveControlPolicy
 
 
-
 class ControlStage:
-
     def __init__(self) -> None:
         # Lazy adaptive control (safe: no dependency on pipeline init)
         self._adaptive_policy = AdaptiveControlPolicy()
 
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         # -----------------------------------------
         # 1. HYSTERESIS
         # -----------------------------------------
@@ -68,9 +65,7 @@ class ControlStage:
         # -----------------------------------------
         # 5. REGIME POLICY
         # -----------------------------------------
-        regime_control = pipeline.regime_policy.compute(
-            ctx.regime or "neutral"
-        )
+        regime_control = pipeline.regime_policy.compute(ctx.regime or "neutral")
 
         # -----------------------------------------
         # 6. MODULATION
@@ -179,12 +174,10 @@ class ControlStage:
         else:
             ctx.adaptive_control = None
 
-
         confidence = getattr(ctx, "regime_confidence", None)
 
         if confidence is None:
             confidence = 0.0  # safe fallback
-
 
         # -----------------------------------------
         # 9. SNAPSHOT
@@ -209,4 +202,3 @@ class ControlStage:
         ctx._epsilon = epsilon  # used later by gate
         ctx._effective_epsilon = float(epsilon)
         ctx._cognitive_mode = cognitive_mode
-

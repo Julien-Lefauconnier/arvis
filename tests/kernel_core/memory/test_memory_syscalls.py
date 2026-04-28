@@ -22,6 +22,7 @@ USER_ID = "user-1"
 # Helpers
 # ============================================================
 
+
 def _make_handler(
     memory_service: MemoryService | None = None,
     memory_policy_service: MemoryPolicyService | None = None,
@@ -40,6 +41,7 @@ def _make_handler(
 # ============================================================
 # memory.get
 # ============================================================
+
 
 def test_memory_get_returns_record() -> None:
     repo = InMemoryMemoryRepository()
@@ -97,6 +99,7 @@ def test_memory_get_not_found() -> None:
 # memory.put
 # ============================================================
 
+
 def test_memory_put_creates_record() -> None:
     repo = InMemoryMemoryRepository()
     service = MemoryService(repo)
@@ -133,7 +136,7 @@ def test_memory_put_updates_record() -> None:
         namespace="default",
         key="k1",
         value=1,
-        tags=[],  
+        tags=[],
     )
 
     policy = MemoryPolicyService()
@@ -147,7 +150,7 @@ def test_memory_put_updates_record() -> None:
                 "namespace": "default",
                 "key": "k1",
                 "value": 2,
-                "tags": [], 
+                "tags": [],
             },
         )
     )
@@ -160,6 +163,7 @@ def test_memory_put_updates_record() -> None:
 # ============================================================
 # memory.delete
 # ============================================================
+
 
 def test_memory_delete_removes_record() -> None:
     repo = InMemoryMemoryRepository()
@@ -230,6 +234,7 @@ def test_memory_delete_not_found() -> None:
 # ============================================================
 # memory.list
 # ============================================================
+
 
 def test_memory_list_all() -> None:
     repo = InMemoryMemoryRepository()
@@ -306,6 +311,7 @@ def test_memory_list_namespace_filter() -> None:
 # ============================================================
 # service missing
 # ============================================================
+
 
 def test_memory_syscalls_fail_without_service() -> None:
     handler = _make_handler(None)
@@ -431,6 +437,7 @@ def test_memory_get_fails_without_memory_service() -> None:
 
     assert result.success is False
     assert result.error == "no_memory_service"
+
 
 def test_memory_list_filters_namespace() -> None:
     repo = InMemoryMemoryRepository()

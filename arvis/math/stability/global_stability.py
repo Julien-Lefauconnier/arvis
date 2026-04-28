@@ -13,7 +13,7 @@ from arvis.math.core.normalization import clamp01
 
 @dataclass(frozen=True)
 class GlobalStabilityParams:
-# Slightly rebalanced to make room for directional risk (slope).
+    # Slightly rebalanced to make room for directional risk (slope).
     w_instant: float = 0.25
     w_predictive: float = 0.20
     w_trajectory: float = 0.20
@@ -29,7 +29,6 @@ class GlobalStabilitySnapshot:
 
 
 class GlobalStabilityFusion:
-
     def __init__(self, params: Optional[GlobalStabilityParams] = None):
         self.params = params or GlobalStabilityParams()
 
@@ -41,7 +40,6 @@ class GlobalStabilityFusion:
         probabilistic: ProbLyapunovSnapshot,
         regime: Optional[RegimeSnapshot],
     ) -> GlobalStabilitySnapshot:
-        
         instant_v = V(state)
 
         steps = int(getattr(predictive, "window_size", 0) or 0)
@@ -82,7 +80,6 @@ class GlobalStabilityFusion:
 
         directional_risk = max(horizon_term, trend_risk)
 
-
         base = (
             self.params.w_instant * instant_v
             + self.params.w_predictive * predictive.predicted_v
@@ -103,13 +100,14 @@ class GlobalStabilityFusion:
         global_risk = max(
             base,
             0.8 * peak,
-            0.9 * directional_risk,  # makes slow drift visible without requiring high absolute level
+            0.9
+            * directional_risk,  # makes slow drift visible without requiring high absolute level
         )
 
         # hard peak pass-through only once we have enough history
         if steps >= 25 and peak >= 0.9:
             global_risk = max(global_risk, peak)
-        
+
         global_risk = clamp01(global_risk)
 
         verdict = "OK"

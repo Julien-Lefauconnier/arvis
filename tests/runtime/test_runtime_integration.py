@@ -2,8 +2,8 @@
 
 from arvis.api.os import CognitiveOS
 
-def test_runtime_executes_pipeline_via_scheduler():
 
+def test_runtime_executes_pipeline_via_scheduler():
     os = CognitiveOS()
 
     result = os.run(
@@ -18,8 +18,8 @@ def test_runtime_executes_pipeline_via_scheduler():
     ir = result.to_ir()
     assert ir is not None
 
-def test_runtime_creates_process():
 
+def test_runtime_creates_process():
     os = CognitiveOS()
 
     runtime = os.runtime
@@ -30,8 +30,8 @@ def test_runtime_creates_process():
 
     assert len(runtime.runtime_state.processes) == 1
 
-def test_runtime_scheduler_selects_process():
 
+def test_runtime_scheduler_selects_process():
     os = CognitiveOS()
 
     os.run(user_id="u1", cognitive_input={})
@@ -51,7 +51,6 @@ def test_runtime_scheduler_selects_process():
 
 
 def test_runtime_multiple_processes():
-
     os = CognitiveOS()
 
     for i in range(3):

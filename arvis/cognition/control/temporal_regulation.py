@@ -26,7 +26,6 @@ class TemporalRegulation:
         has_uncertainty: bool,
         healthy: bool,
     ) -> TemporalModulation:
-
         base = min(1.0, total / 100.0)
 
         conflict_penalty = 0.10 if has_conflicts else 0.0
@@ -36,7 +35,11 @@ class TemporalRegulation:
 
         stability = max(
             0.0,
-            base - conflict_penalty - gap_penalty - uncertainty_penalty - structural_penalty,
+            base
+            - conflict_penalty
+            - gap_penalty
+            - uncertainty_penalty
+            - structural_penalty,
         )
 
         risk_multiplier = 1.0 + (1.0 - stability) * 0.30

@@ -9,6 +9,7 @@ from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnap
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.ir.cognitive_ir import CognitiveIR
 
+
 @dataclass
 class ReplayEngine:
     """
@@ -20,6 +21,7 @@ class ReplayEngine:
     - timeline replay (original behavior)
     - IR replay (canonical CognitiveOS replay)
     """
+
     # -----------------------------------------------------
     # TIMELINE REPLAY (legacy / bundle reconstruction)
     # -----------------------------------------------------
@@ -27,17 +29,15 @@ class ReplayEngine:
         self,
         timeline_snapshots: Iterable[TimelineSnapshot],
     ) -> List[CognitiveBundleSnapshot]:
-
         bundles: List[CognitiveBundleSnapshot] = []
 
         for snap in timeline_snapshots:
-
             bundle = CognitiveBundleBuilder.from_timeline(snap)
 
             bundles.append(bundle)
 
         return bundles
-    
+
     # -----------------------------------------------------
     # IR REPLAY (canonical CognitiveOS path)
     # -----------------------------------------------------

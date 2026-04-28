@@ -9,6 +9,7 @@ from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.core.normalization import clamp01
 
+
 @dataclass(frozen=True)
 class CognitiveControlSnapshot:
     """

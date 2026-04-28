@@ -2,8 +2,10 @@
 
 from dataclasses import dataclass
 
+
 def _clamp01(x: float) -> float:
     return max(0.0, min(1.0, x))
+
 
 @dataclass(frozen=True)
 class ConflictSignal:
@@ -30,7 +32,6 @@ class ConflictSignal:
             temporal=0.0,
             ethical=0.0,
         )
-    
 
     def clamp(self) -> "ConflictSignal":
         return ConflictSignal(
@@ -40,10 +41,10 @@ class ConflictSignal:
             temporal=_clamp01(self.temporal),
             ethical=_clamp01(self.ethical),
         )
-    
+
     def __float__(self) -> float:
         return self.global_score
-    
+
     # ------------------------------------------------------------
     # Helpers (expected by tests)
     # ------------------------------------------------------------

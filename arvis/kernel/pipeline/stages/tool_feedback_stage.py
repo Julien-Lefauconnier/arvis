@@ -6,9 +6,7 @@ from typing import Any
 
 
 class ToolFeedbackStage:
-
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         tool_results = ctx.extra.get("tool_results", [])
 
         if not tool_results:

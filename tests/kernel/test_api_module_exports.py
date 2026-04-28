@@ -13,7 +13,6 @@ API_MODULES = [
 
 
 def test_api_modules_have_public_symbols():
-
     for modname in API_MODULES:
         module = importlib.import_module(modname)
         public = [name for name in dir(module) if not name.startswith("_")]

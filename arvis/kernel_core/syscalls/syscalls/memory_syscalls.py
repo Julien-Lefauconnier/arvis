@@ -90,6 +90,7 @@ def _serialize_snapshot(snapshot: MemorySnapshot) -> dict[str, Any]:
         "is_empty": snapshot.is_empty,
     }
 
+
 @register_syscall("memory.get")
 def memory_get(
     handler: SyscallHandlerLike,
@@ -130,6 +131,7 @@ def memory_get(
             success=True,
             result=None,
         )
+
 
 @register_syscall("memory.put")
 def memory_put(
@@ -210,7 +212,7 @@ def memory_delete(
                 "namespace": namespace,
                 "key": key,
             },
-         )
+        )
 
     except MemoryRecordNotFoundError:
         return SyscallResult(success=True, result=None)

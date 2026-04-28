@@ -8,7 +8,9 @@ from arvis.kernel_core.memory.observation_long_event import (
 )
 
 
-def project_memory(events: Iterable["ObservationLongEvent"]) -> Dict[Tuple[str, str, str], MemoryRecord]:
+def project_memory(
+    events: Iterable["ObservationLongEvent"],
+) -> Dict[Tuple[str, str, str], MemoryRecord]:
     """
     Pure projection:
     ObservationLongEvent -> MemoryRecord state

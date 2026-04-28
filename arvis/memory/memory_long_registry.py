@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Set, Dict, Optional
 
 
-
 @dataclass(frozen=True)
 class MemoryLongRegistry:
     """
@@ -46,6 +45,7 @@ class MemoryLongRegistry:
 
         return value in allowed
 
+
 # ---------------------------------------------------------
 # Default registry (baseline)
 # ---------------------------------------------------------
@@ -55,13 +55,10 @@ DEFAULT_MEMORY_LONG_KEYS = {
     "language",
     "preferred_language",
     "tone_style",
-
     # Context
     "timezone",
-
     # Constraints
     "no_marketing_emails",
-
     # System
     "working_mode",
 }
@@ -69,7 +66,6 @@ DEFAULT_MEMORY_LONG_KEYS = {
 DEFAULT_PLAIN_VALUE_WHITELIST = {
     # Preferences
     "language": {"fr", "en", "es", "de"},
-
     # Context
     "timezone": {"UTC", "Europe/Paris"},
 }

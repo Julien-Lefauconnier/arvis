@@ -16,7 +16,6 @@ class ConfirmationEvaluator:
         request: ConfirmationRequest,
         confirmed: bool,
     ) -> ConfirmationResult:
-
         return ConfirmationResult(
             request_id=request.request_id,
             status=(

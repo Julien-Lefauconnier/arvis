@@ -97,9 +97,7 @@ class CognitiveProcess:
         execution.pipeline_prepared = kwargs.get("pipeline_prepared", False)
         execution.pipeline_finalized = kwargs.get("pipeline_finalized", False)
 
-        interrupts.subscribed_interrupts = kwargs.get(
-            "subscribed_interrupts", set()
-        )
+        interrupts.subscribed_interrupts = kwargs.get("subscribed_interrupts", set())
 
         self.descriptor = descriptor
         self.runtime = runtime
@@ -227,28 +225,23 @@ class CognitiveProcess:
         return CognitiveBudget(
             reasoning_steps=max(
                 0,
-                self.budget.reasoning_steps
-                - self.runtime.consumed_reasoning_steps,
+                self.budget.reasoning_steps - self.runtime.consumed_reasoning_steps,
             ),
             attention_tokens=max(
                 0,
-                self.budget.attention_tokens
-                - self.runtime.consumed_attention_tokens,
+                self.budget.attention_tokens - self.runtime.consumed_attention_tokens,
             ),
             uncertainty_budget=max(
                 0.0,
-                self.budget.uncertainty_budget
-                - self.runtime.consumed_uncertainty,
+                self.budget.uncertainty_budget - self.runtime.consumed_uncertainty,
             ),
             time_slice_ms=max(
                 0,
-                self.budget.time_slice_ms
-                - self.runtime.consumed_elapsed_ms,
+                self.budget.time_slice_ms - self.runtime.consumed_elapsed_ms,
             ),
             memory_span=max(
                 0,
-                self.budget.memory_span
-                - self.runtime.consumed_memory_span,
+                self.budget.memory_span - self.runtime.consumed_memory_span,
             ),
         )
 
@@ -271,7 +264,7 @@ class CognitiveProcess:
     def is_terminal(self) -> bool:
         # backward compatibility alias
         return self.is_final()
-    
+
     def is_final(self) -> bool:
         return self.status in (
             CognitiveProcessStatus.COMPLETED,
@@ -334,10 +327,7 @@ class CognitiveProcess:
     def has_remaining_stages(self) -> bool:
         if self.execution.total_stage_count is None:
             return True
-        return (
-            self.execution.current_stage_index
-            < self.execution.total_stage_count
-        )
+        return self.execution.current_stage_index < self.execution.total_stage_count
 
     def advance_stage(self, stage_name: str) -> None:
         self.execution.stage_history.append(stage_name)
@@ -366,8 +356,7 @@ class CognitiveProcess:
             and self.execution.total_stage_count < 0
         ):
             raise ValueError("total_stage_count must be >= 0")
-        
-    
+
     # -------------------------
     # BACKWARD COMPAT - RUNTIME
     # -------------------------
@@ -379,7 +368,6 @@ class CognitiveProcess:
     @last_result.setter
     def last_result(self, value: Any) -> None:
         self.runtime.last_result = value
-
 
     @property
     def last_error(self) -> Optional[str]:
@@ -412,7 +400,6 @@ class CognitiveProcess:
     @run_count.setter
     def run_count(self, value: int) -> None:
         self.runtime.run_count = value
-
 
     @property
     def last_run_tick(self) -> Optional[int]:

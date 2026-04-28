@@ -12,6 +12,7 @@ from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlS
 # Dummy control result
 # --------------------------------------------------
 
+
 class DummyControl:
     def __init__(self, epsilon=1.0, exploration=1.0, flags=None):
         self.epsilon = epsilon
@@ -22,6 +23,7 @@ class DummyControl:
 # --------------------------------------------------
 # Fixtures
 # --------------------------------------------------
+
 
 def make_ctx():
     return SimpleNamespace(
@@ -47,6 +49,7 @@ def make_ctx():
 # 1. Early exit: no gate_result
 # --------------------------------------------------
 
+
 def test_skip_no_gate_result():
     ctx = make_ctx()
     ctx.gate_result = None
@@ -62,6 +65,7 @@ def test_skip_no_gate_result():
 # 2. Early exit: no control_snapshot
 # --------------------------------------------------
 
+
 def test_skip_no_snapshot():
     ctx = make_ctx()
     ctx.control_snapshot = None
@@ -75,6 +79,7 @@ def test_skip_no_snapshot():
 # --------------------------------------------------
 # 3. Basic confidence control
 # --------------------------------------------------
+
 
 def test_basic_confidence(monkeypatch):
     ctx = make_ctx()
@@ -99,6 +104,7 @@ def test_basic_confidence(monkeypatch):
 # 4. strong_decrease branch
 # --------------------------------------------------
 
+
 def test_strong_decrease(monkeypatch):
     ctx = make_ctx()
     ctx.extra["composite_gate_recommendation"] = "strong_decrease"
@@ -122,6 +128,7 @@ def test_strong_decrease(monkeypatch):
 # 5. soft_decrease branch
 # --------------------------------------------------
 
+
 def test_soft_decrease(monkeypatch):
     ctx = make_ctx()
     ctx.extra["composite_gate_recommendation"] = "soft_decrease"
@@ -143,6 +150,7 @@ def test_soft_decrease(monkeypatch):
 # --------------------------------------------------
 # 6. strong_increase branch
 # --------------------------------------------------
+
 
 def test_strong_increase(monkeypatch):
     ctx = make_ctx()
@@ -167,6 +175,7 @@ def test_strong_increase(monkeypatch):
 # 7. low confidence escalation
 # --------------------------------------------------
 
+
 def test_low_confidence_escalation(monkeypatch):
     ctx = make_ctx()
 
@@ -190,6 +199,7 @@ def test_low_confidence_escalation(monkeypatch):
 # --------------------------------------------------
 # 8. snapshot replacement
 # --------------------------------------------------
+
 
 def test_snapshot_replacement(monkeypatch):
     ctx = make_ctx()

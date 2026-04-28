@@ -48,17 +48,13 @@ class MemoryLongPolicyGate:
         # Key must be declared in registry
         # -------------------------------------------------
         if not self.registry.is_allowed(entry.key):
-            raise ValueError(
-                f"MemoryLong key '{entry.key}' is not allowed"
-            )
+            raise ValueError(f"MemoryLong key '{entry.key}' is not allowed")
 
         # -------------------------------------------------
         # Source must be explicit or governance-approved
         # -------------------------------------------------
         if entry.source not in {"explicit_user", "onboarding", "governance"}:
-            raise ValueError(
-                f"Invalid memory_long source: {entry.source}"
-            )
+            raise ValueError(f"Invalid memory_long source: {entry.source}")
 
         # -------------------------------------------------
         # Type must exist
@@ -83,10 +79,8 @@ class MemoryLongPolicyGate:
         # -------------------------------------------------
         if entry.notes is not None:
             if entry.notes not in self.ALLOWED_NOTES:
-                raise ValueError(
-                    "notes field is system-only and must be whitelisted"
-                )
-            
+                raise ValueError("notes field is system-only and must be whitelisted")
+
         # -------------------------------------------------
         # value_plain must be strictly whitelisted (ZK-safe)
         # -------------------------------------------------
@@ -97,9 +91,7 @@ class MemoryLongPolicyGate:
                 key=entry.key,
                 value=value_plain,
             ):
-                raise ValueError(
-                    f"value_plain not allowed for key={entry.key}"
-                )
+                raise ValueError(f"value_plain not allowed for key={entry.key}")
 
-        # Declarative only 
+        # Declarative only
         return

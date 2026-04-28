@@ -26,7 +26,6 @@ class IRGTimelineInsightAggregator:
     def aggregate(
         insights: Sequence[IRGTimelineInsight],
     ) -> IRGTimelineInsightAggregate:
-
         if not insights:
             return IRGTimelineInsightAggregate(
                 observed_views=[],
@@ -45,8 +44,7 @@ class IRGTimelineInsightAggregator:
             confidences.append(insight.confidence)
 
         dominant_types = [
-            entry_type
-            for entry_type, _ in entry_type_counter.most_common()
+            entry_type for entry_type, _ in entry_type_counter.most_common()
         ]
 
         average_confidence = sum(confidences) / len(confidences)
@@ -55,8 +53,5 @@ class IRGTimelineInsightAggregator:
             observed_views=view_roles,
             dominant_entry_types=dominant_types,
             confidence=round(average_confidence, 2),
-            message=(
-                f"Aggregated insights over {len(view_roles)} "
-                f"timeline views."
-            ),
+            message=(f"Aggregated insights over {len(view_roles)} timeline views."),
         )

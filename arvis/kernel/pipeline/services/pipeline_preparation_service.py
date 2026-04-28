@@ -33,6 +33,7 @@ class PipelinePreparationService:
         L_T=1.0,
         J=1.5,
     )
+
     @staticmethod
     def run(
         pipeline: "CognitivePipeline",
@@ -44,30 +45,27 @@ class PipelinePreparationService:
         ):
             return
 
-        PipelineIRBootstrapService.bootstrap_input(
-            ctx
-        )
-        PipelineIRBootstrapService.bootstrap_context(
-            ctx
-        )
+        PipelineIRBootstrapService.bootstrap_input(ctx)
+        PipelineIRBootstrapService.bootstrap_context(ctx)
 
-        if getattr(
-            ctx,
-            "switching_params",
-            None,
-        ) is None:
-            ctx.switching_params = (
-                PipelinePreparationService
-                .DEFAULT_SWITCHING_PARAMS
+        if (
+            getattr(
+                ctx,
+                "switching_params",
+                None,
             )
-        if getattr(
-            ctx,
-            "switching_runtime",
-            None,
-        ) is None:
-            ctx.switching_runtime = (
-                SwitchingRuntime()
+            is None
+        ):
+            ctx.switching_params = PipelinePreparationService.DEFAULT_SWITCHING_PARAMS
+        if (
+            getattr(
+                ctx,
+                "switching_runtime",
+                None,
             )
+            is None
+        ):
+            ctx.switching_runtime = SwitchingRuntime()
 
         try:
             comp = getattr(
@@ -88,33 +86,16 @@ class PipelinePreparationService:
                 p = ctx.switching_params
 
                 if p is None:
-                    p = (
-                    PipelinePreparationService
-                    .DEFAULT_SWITCHING_PARAMS
-                )
+                    p = PipelinePreparationService.DEFAULT_SWITCHING_PARAMS
 
-                ctx.switching_params = (
-                    SwitchingParams(
-                        alpha=float(
-                            p.alpha
-                        ),
-                        gamma_z=float(
-                            p.gamma_z
-                        ),
-                        eta=float(
-                            p.eta
-                        ),
-                        L_T=float(
-                            p.L_T
-                        ),
-                        J=float(
-                            comp.J
-                        ),
-                    )
+                ctx.switching_params = SwitchingParams(
+                    alpha=float(p.alpha),
+                    gamma_z=float(p.gamma_z),
+                    eta=float(p.eta),
+                    L_T=float(p.L_T),
+                    J=float(comp.J),
                 )
         except Exception:
             pass
 
-        ctx.extra[
-            "__pipeline_prepared"
-        ] = True
+        ctx.extra["__pipeline_prepared"] = True

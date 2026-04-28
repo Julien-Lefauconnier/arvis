@@ -15,15 +15,20 @@ from arvis.math.control.eps_adaptive import CognitiveMode
 # Dummy core variations
 # --------------------------------------------------
 
+
 class CoreWithMH:
     def __init__(self):
         self.fused_risk = 0.4
         self.dv = 0.1
         self.mh_snapshot = type("X", (), {"mode_hint": "safe"})()
-        self.world_prediction = type("WP", (), {
-            "uncertainty": 0.6,
-            "latent": [0.2],
-        })()
+        self.world_prediction = type(
+            "WP",
+            (),
+            {
+                "uncertainty": 0.6,
+                "latent": [0.2],
+            },
+        )()
 
 
 class CoreBroken:
@@ -38,6 +43,7 @@ class BudgetBroken:
 # Test 1 — prev_lyap path + CRITICAL mode
 # --------------------------------------------------
 
+
 class CriticalHysteresis:
     def update(self, user_id, risk):
         return CognitiveMode.CRITICAL
@@ -45,9 +51,7 @@ class CriticalHysteresis:
 
 def test_prev_lyap_and_critical_mode():
     engine = CognitiveControlEngine(
-        deps=CognitiveControlDeps(
-            mode_hysteresis=CriticalHysteresis()
-        )
+        deps=CognitiveControlDeps(mode_hysteresis=CriticalHysteresis())
     )
 
     runtime = CognitiveControlRuntime()
@@ -69,6 +73,7 @@ def test_prev_lyap_and_critical_mode():
 # --------------------------------------------------
 # Test 2 — exception safety everywhere
 # --------------------------------------------------
+
 
 class Exploding:
     def compute(self, *a, **kw):
@@ -125,6 +130,7 @@ def test_all_exceptions_are_safe():
 # Test 3 — bandit confirm path + epsilon modulation fallback
 # --------------------------------------------------
 
+
 class ConfirmBandit:
     def recommend(self, current_risk):
         return "confirm"
@@ -135,10 +141,14 @@ class ConfirmBandit:
 
 class BadTemporal:
     def compute(self, user_id):
-        return type("X", (), {
-            "risk_multiplier": "bad",  # will break to_float
-            "epsilon_multiplier": "bad",
-        })()
+        return type(
+            "X",
+            (),
+            {
+                "risk_multiplier": "bad",  # will break to_float
+                "epsilon_multiplier": "bad",
+            },
+        )()
 
 
 def test_bandit_confirm_and_bad_temporal():

@@ -10,9 +10,7 @@ from arvis.reasoning.reasoning_intent import ReasoningIntentType
 
 
 class SuggestionEvaluator:
-
     def evaluate(self, decision: DecisionSignal) -> List[SuggestionSignal]:
-
         suggestions = []
 
         # Gaps
@@ -28,7 +26,9 @@ class SuggestionEvaluator:
             axes: set[UncertaintyAxis] = getattr(frame, "axes", set())
 
             if UncertaintyAxis.IRREVERSIBLE_RISK in axes:
-                suggestions.append(SuggestionSignal("request_confirmation", "uncertainty"))
+                suggestions.append(
+                    SuggestionSignal("request_confirmation", "uncertainty")
+                )
 
         # Reasoning intents
         for intent in decision.reasoning_intents:

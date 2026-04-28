@@ -9,7 +9,10 @@ from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRu
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
 
 from arvis.math.control.eps_adaptive import CognitiveMode, EpsAdaptiveParams
-from arvis.math.control.irg_epsilon_controller import IRGEpsilonController, IRGEpsilonParams
+from arvis.math.control.irg_epsilon_controller import (
+    IRGEpsilonController,
+    IRGEpsilonParams,
+)
 from arvis.math.lyapunov.lyapunov_gate import (
     LyapunovGateParams,
     LyapunovVerdict,
@@ -19,6 +22,7 @@ from arvis.math.lyapunov.lyapunov import V
 from arvis.math.core.normalization import clamp01
 
 from arvis.math.signals.coercion import to_float, to_risk, to_drift, to_uncertainty
+
 
 @runtime_checkable
 class HasCompute(Protocol):
@@ -59,10 +63,12 @@ class HasRecommend(Protocol):
 class HasUpdateFromRisks(Protocol):
     def update_from_risks(self, *args: Any, **kwargs: Any) -> Any: ...
 
+
 @runtime_checkable
 class HasPushSnapshot(Protocol):
     def push(self, *args: Any, **kwargs: Any) -> Any: ...
     def snapshot(self, *args: Any, **kwargs: Any) -> Any: ...
+
 
 @dataclass
 class CognitiveControlDeps:
@@ -140,7 +146,8 @@ class CognitiveControlEngine:
             if self.deps.temporal_pressure is not None:
                 temporal_pressure = self.deps.temporal_pressure.compute(user_id)
                 fused_risk = clamp01(
-                    fused_risk + 0.2 * to_float(getattr(temporal_pressure, "pressure", 0.0), 0.0)
+                    fused_risk
+                    + 0.2 * to_float(getattr(temporal_pressure, "pressure", 0.0), 0.0)
                 )
         except Exception:
             temporal_pressure = None
@@ -153,7 +160,10 @@ class CognitiveControlEngine:
             if self.deps.temporal_regulation is not None:
                 temporal_modulation = self.deps.temporal_regulation.compute(user_id)
                 fused_risk = clamp01(
-                    fused_risk * to_float(getattr(temporal_modulation, "risk_multiplier", 1.0), 1.0)
+                    fused_risk
+                    * to_float(
+                        getattr(temporal_modulation, "risk_multiplier", 1.0), 1.0
+                    )
                 )
         except Exception:
             temporal_modulation = None
@@ -164,7 +174,10 @@ class CognitiveControlEngine:
         gate_mode = CognitiveMode.NORMAL
         try:
             mh_snapshot = getattr(core, "mh_snapshot", None)
-            if mh_snapshot is not None and getattr(mh_snapshot, "mode_hint", None) == "safe":
+            if (
+                mh_snapshot is not None
+                and getattr(mh_snapshot, "mode_hint", None) == "safe"
+            ):
                 gate_mode = CognitiveMode.SAFE
         except Exception:
             gate_mode = CognitiveMode.NORMAL
@@ -215,7 +228,9 @@ class CognitiveControlEngine:
 
         try:
             if temporal_modulation is not None:
-                eps = float(eps) * to_float(getattr(temporal_modulation, "epsilon_multiplier", 1.0), 1.0)
+                eps = float(eps) * to_float(
+                    getattr(temporal_modulation, "epsilon_multiplier", 1.0), 1.0
+                )
         except Exception:
             pass
 
@@ -242,7 +257,9 @@ class CognitiveControlEngine:
                     user_id=user_id,
                     collapse_risk=fused_risk,
                 )
-                smoothed_risk = to_float(getattr(inertia_snapshot, "smoothed_risk", fused_risk), fused_risk)
+                smoothed_risk = to_float(
+                    getattr(inertia_snapshot, "smoothed_risk", fused_risk), fused_risk
+                )
                 runtime.inertia_risk = smoothed_risk
         except Exception:
             smoothed_risk = fused_risk
@@ -259,24 +276,35 @@ class CognitiveControlEngine:
             if runtime.epsilon_monitor is None and self.deps.epsilon_monitor_factory:
                 runtime.epsilon_monitor = self.deps.epsilon_monitor_factory()
 
-            if runtime.epsilon_monitor is not None and isinstance(runtime.epsilon_monitor, HasPush):
+            if runtime.epsilon_monitor is not None and isinstance(
+                runtime.epsilon_monitor, HasPush
+            ):
                 runtime.epsilon_monitor.push(to_float(getattr(core, "dv", 0.0), 0.0))
         except Exception:
             pass
 
         try:
-            if self.deps.stability_stats is not None and isinstance(self.deps.stability_stats, HasPushSnapshot):
-                self.deps.stability_stats.push(user_id, to_float(getattr(core, "dv", 0.0), 0.0))
+            if self.deps.stability_stats is not None and isinstance(
+                self.deps.stability_stats, HasPushSnapshot
+            ):
+                self.deps.stability_stats.push(
+                    user_id, to_float(getattr(core, "dv", 0.0), 0.0)
+                )
                 stats = self.deps.stability_stats.snapshot(user_id)
 
                 if stats and getattr(stats, "samples", 0) > 20:
-                    if runtime.drift_detector is None and self.deps.drift_detector_factory:
+                    if (
+                        runtime.drift_detector is None
+                        and self.deps.drift_detector_factory
+                    ):
                         runtime.drift_detector = self.deps.drift_detector_factory()
 
-                    if runtime.drift_detector is not None and isinstance(runtime.drift_detector, HasEvaluate):
+                    if runtime.drift_detector is not None and isinstance(
+                        runtime.drift_detector, HasEvaluate
+                    ):
                         drift_snapshot = runtime.drift_detector.evaluate(
                             contraction_rate=to_float(stats.contraction_rate, 0.0),
-                            instability_rate=to_float(stats.instability_rate, 0.0)
+                            instability_rate=to_float(stats.instability_rate, 0.0),
                         )
         except Exception:
             pass
@@ -285,19 +313,31 @@ class CognitiveControlEngine:
             if runtime.regime_estimator is None and self.deps.regime_estimator_factory:
                 runtime.regime_estimator = self.deps.regime_estimator_factory()
 
-            if runtime.regime_estimator is not None and isinstance(runtime.regime_estimator, HasPush):
-                regime_snapshot = runtime.regime_estimator.push(to_float(getattr(core, "dv", 0.0), 0.0))
+            if runtime.regime_estimator is not None and isinstance(
+                runtime.regime_estimator, HasPush
+            ):
+                regime_snapshot = runtime.regime_estimator.push(
+                    to_float(getattr(core, "dv", 0.0), 0.0)
+                )
 
             if regime_snapshot is not None and self.deps.regime_policy is not None:
-                runtime.regime_control = self.deps.regime_policy.compute(regime_snapshot.regime)
+                runtime.regime_control = self.deps.regime_policy.compute(
+                    regime_snapshot.regime
+                )
         except Exception:
             pass
 
         try:
             if self.deps.exploration_controller is not None:
-                regime_name = getattr(runtime.regime_control, "mode", None) if runtime.regime_control else None
+                regime_name = (
+                    getattr(runtime.regime_control, "mode", None)
+                    if runtime.regime_control
+                    else None
+                )
                 drift_score = to_float(
-                    getattr(drift_snapshot, "drift_score", 0.0) if drift_snapshot else 0.0,
+                    getattr(drift_snapshot, "drift_score", 0.0)
+                    if drift_snapshot
+                    else 0.0,
                     0.0,
                 )
 
@@ -312,7 +352,9 @@ class CognitiveControlEngine:
                 irg_factor = 1.0
                 try:
                     irg_state = irg.snapshot()
-                    structural = to_float(getattr(irg_state, "structural_risk", 0.0), 0.0)
+                    structural = to_float(
+                        getattr(irg_state, "structural_risk", 0.0), 0.0
+                    )
                     irg_factor = max(0.05, min(1.0, 1.0 - structural))
                 except Exception:
                     irg_factor = 1.0
@@ -322,7 +364,12 @@ class CognitiveControlEngine:
                         max(
                             1,
                             to_float(budget.max_changes, 1.0)
-                            * to_float(getattr(exploration_snapshot, "change_budget_scale", 1.0), 1.0)
+                            * to_float(
+                                getattr(
+                                    exploration_snapshot, "change_budget_scale", 1.0
+                                ),
+                                1.0,
+                            )
                             * to_float(irg_factor, 1.0),
                         )
                     )
@@ -339,7 +386,9 @@ class CognitiveControlEngine:
             if runtime.local_dynamics is None and self.deps.local_dynamics_factory:
                 runtime.local_dynamics = self.deps.local_dynamics_factory()
 
-            if runtime.local_dynamics is not None and isinstance(runtime.local_dynamics, HasPush):
+            if runtime.local_dynamics is not None and isinstance(
+                runtime.local_dynamics, HasPush
+            ):
                 runtime.local_dynamics.push(
                     delta_v=to_float(getattr(core, "dv", 0.0), 0.0),
                     features={
@@ -362,7 +411,9 @@ class CognitiveControlEngine:
             if adaptive is not None:
                 adaptive_snapshot = adaptive.compute(
                     collapse_risk=to_float(smoothed_risk, 0.0),
-                    drift_score=getattr(drift_snapshot, "drift_score", None) if drift_snapshot else None,
+                    drift_score=getattr(drift_snapshot, "drift_score", None)
+                    if drift_snapshot
+                    else None,
                 )
 
                 mode = str(getattr(adaptive_snapshot, "mode", "")).lower()
@@ -383,7 +434,9 @@ class CognitiveControlEngine:
             if runtime.counterfactual is None and self.deps.counterfactual_factory:
                 runtime.counterfactual = self.deps.counterfactual_factory()
 
-            if runtime.counterfactual is not None and isinstance(runtime.counterfactual, HasDecide):
+            if runtime.counterfactual is not None and isinstance(
+                runtime.counterfactual, HasDecide
+            ):
                 cf_decision = runtime.counterfactual.decide(
                     base_risk=to_float(smoothed_risk, 0.0),
                     base_uncertainty=to_float(uncertainty, 0.5),
@@ -408,7 +461,9 @@ class CognitiveControlEngine:
             if runtime.cf_bandit is None and self.deps.counterfactual_bandit_factory:
                 runtime.cf_bandit = self.deps.counterfactual_bandit_factory(user_id)
 
-            if runtime.cf_bandit is not None and isinstance(runtime.cf_bandit, HasRecommend):
+            if runtime.cf_bandit is not None and isinstance(
+                runtime.cf_bandit, HasRecommend
+            ):
                 if (
                     runtime.last_action is not None
                     and runtime.last_risk is not None
@@ -420,11 +475,21 @@ class CognitiveControlEngine:
                         current_risk=to_float(smoothed_risk, 0.0),
                     )
 
-                rec = runtime.cf_bandit.recommend(current_risk=to_float(smoothed_risk, 0.0))
+                rec = runtime.cf_bandit.recommend(
+                    current_risk=to_float(smoothed_risk, 0.0)
+                )
 
-                if rec == "abstain" and to_float(smoothed_risk, 0.0) >= 0.70 and not cf_force_abstain:
+                if (
+                    rec == "abstain"
+                    and to_float(smoothed_risk, 0.0) >= 0.70
+                    and not cf_force_abstain
+                ):
                     lyap_verdict = LyapunovVerdict.ABSTAIN
-                elif rec == "confirm" and to_float(smoothed_risk, 0.0) >= 0.35 and not cf_force_abstain:
+                elif (
+                    rec == "confirm"
+                    and to_float(smoothed_risk, 0.0) >= 0.35
+                    and not cf_force_abstain
+                ):
                     lyap_verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
         except Exception:
             pass

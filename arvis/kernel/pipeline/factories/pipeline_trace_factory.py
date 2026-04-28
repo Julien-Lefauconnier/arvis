@@ -14,7 +14,6 @@ from arvis.cognition.gate.cognitive_gate_result import (
 
 
 class PipelineTraceFactory:
-
     @staticmethod
     def build(
         ctx: CognitivePipelineContext,

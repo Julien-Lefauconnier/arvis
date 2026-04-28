@@ -16,7 +16,6 @@ def make_state(v):
 
 
 def test_probabilistic_observer_basic():
-
     obs = ProbabilisticLyapunovObserver()
 
     snap = obs.push(make_state(0.2))
@@ -27,7 +26,6 @@ def test_probabilistic_observer_basic():
 
 
 def test_probabilistic_observer_accumulates():
-
     obs = ProbabilisticLyapunovObserver()
 
     obs.push(make_state(0.2))

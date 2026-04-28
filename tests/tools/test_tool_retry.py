@@ -5,7 +5,6 @@ from arvis.tools.base import BaseTool
 
 
 def test_tool_retry_flow():
-
     calls = {"count": 0}
 
     class FailingThenSuccessTool(BaseTool):
@@ -34,7 +33,6 @@ def test_tool_retry_flow():
     # FORCE EXECUTION (bypass confirmation gate)
     # -----------------------------------------
     ctx_extra["_force_execution"] = True
-
 
     os.run(
         user_id="u1",

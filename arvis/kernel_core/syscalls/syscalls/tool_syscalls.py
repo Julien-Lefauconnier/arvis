@@ -11,8 +11,7 @@ from arvis.kernel_core.syscalls.syscall_registry import register_syscall
 
 @runtime_checkable
 class ToolExecutorLike(Protocol):
-    def execute(self, result: Any, ctx: Any) -> Any:
-        ...
+    def execute(self, result: Any, ctx: Any) -> Any: ...
 
 
 class ServiceRegistryLike(Protocol):

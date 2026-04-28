@@ -34,7 +34,9 @@ class ZipCollisionService:
         children_by_parent_and_name: dict[Optional[str], dict[str, VFSItem]] = {}
 
         for item in vfs_items:
-            children_by_parent_and_name.setdefault(item.parent_id, {})[item.display_name] = item
+            children_by_parent_and_name.setdefault(item.parent_id, {})[
+                item.display_name
+            ] = item
 
         collisions: list[ZipCollision] = []
 
@@ -68,7 +70,11 @@ class ZipCollisionService:
                     )
                 )
 
-            next_parent_id = existing.item_id if (existing is not None and existing.is_folder()) else parent_vfs_id
+            next_parent_id = (
+                existing.item_id
+                if (existing is not None and existing.is_folder())
+                else parent_vfs_id
+            )
 
             for child in zip_node.children:
                 walk(child, next_parent_id)

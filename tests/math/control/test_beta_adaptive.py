@@ -12,6 +12,7 @@ from arvis.math.stability.regime_estimator import RegimeSnapshot
 # Helper
 # ============================================================
 
+
 def make_regime(name):
     return RegimeSnapshot(regime=name, confidence=1.0, variance=0.0)
 
@@ -19,6 +20,7 @@ def make_regime(name):
 # ============================================================
 # 1. NO REGIME (baseline)
 # ============================================================
+
 
 def test_no_regime():
     ctrl = BetaAdaptiveController()
@@ -36,6 +38,7 @@ def test_no_regime():
 # 2. STABLE
 # ============================================================
 
+
 def test_stable_regime():
     ctrl = BetaAdaptiveController()
 
@@ -47,6 +50,7 @@ def test_stable_regime():
 # ============================================================
 # 3. OSCILLATORY
 # ============================================================
+
 
 def test_oscillatory_regime():
     ctrl = BetaAdaptiveController()
@@ -60,6 +64,7 @@ def test_oscillatory_regime():
 # 4. CRITICAL
 # ============================================================
 
+
 def test_critical_regime():
     ctrl = BetaAdaptiveController()
 
@@ -71,6 +76,7 @@ def test_critical_regime():
 # ============================================================
 # 5. CHAOTIC
 # ============================================================
+
 
 def test_chaotic_regime():
     ctrl = BetaAdaptiveController()
@@ -84,6 +90,7 @@ def test_chaotic_regime():
 # 6. TRANSITION
 # ============================================================
 
+
 def test_transition_regime():
     ctrl = BetaAdaptiveController()
 
@@ -95,6 +102,7 @@ def test_transition_regime():
 # ============================================================
 # 7. VARIANCE + DRIFT EFFECT
 # ============================================================
+
 
 def test_variance_and_drift():
     ctrl = BetaAdaptiveController()
@@ -113,15 +121,14 @@ def test_variance_and_drift():
 # 8. CLAMP MAX
 # ============================================================
 
+
 def test_clamp_max():
-    ctrl = BetaAdaptiveController(
-        BetaAdaptiveParams(beta_min=1.0, beta_max=5.0)
-    )
+    ctrl = BetaAdaptiveController(BetaAdaptiveParams(beta_min=1.0, beta_max=5.0))
 
     beta = ctrl.compute(
         regime=make_regime("chaotic"),  # +3
         variance=1.0,  # +2
-        drift=1.0,     # +2
+        drift=1.0,  # +2
     )
 
     # theoretical = 1 + 3 + 2 + 2 = 8 → clamp to 5
@@ -132,10 +139,9 @@ def test_clamp_max():
 # 9. CLAMP MIN (safety)
 # ============================================================
 
+
 def test_clamp_min():
-    ctrl = BetaAdaptiveController(
-        BetaAdaptiveParams(beta_min=2.0, beta_max=5.0)
-    )
+    ctrl = BetaAdaptiveController(BetaAdaptiveParams(beta_min=2.0, beta_max=5.0))
 
     beta = ctrl.compute(
         regime=None,
@@ -149,6 +155,7 @@ def test_clamp_min():
 # ============================================================
 # 10. UNKNOWN REGIME (robustness)
 # ============================================================
+
 
 def test_unknown_regime():
     ctrl = BetaAdaptiveController()

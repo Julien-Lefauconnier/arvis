@@ -25,11 +25,11 @@ class PiOperator:
 
         # Projection strength
         if not validity:
-            alpha = 0.5   # aggressive projection
+            alpha = 0.5  # aggressive projection
         elif regime == "critical":
-            alpha = 0.7   # moderate
+            alpha = 0.7  # moderate
         else:
-            alpha = 1.0   # light (almost identity)
+            alpha = 1.0  # light (almost identity)
 
         # -----------------------------------------
         # Stability feedback control

@@ -1,7 +1,10 @@
 # tests/cognition/control/test_cognitive_control_runtime.py
 
+
 def test_runtime_initial_state():
-    from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
+    from arvis.cognition.control.cognitive_control_runtime import (
+        CognitiveControlRuntime,
+    )
 
     runtime = CognitiveControlRuntime()
 
@@ -9,8 +12,11 @@ def test_runtime_initial_state():
     assert runtime.inertia_risk is None
     assert runtime.last_action is None
 
+
 def test_runtime_updates_values():
-    from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
+    from arvis.cognition.control.cognitive_control_runtime import (
+        CognitiveControlRuntime,
+    )
 
     runtime = CognitiveControlRuntime()
 
@@ -24,7 +30,9 @@ def test_runtime_updates_values():
 
 
 def test_runtime_isolation_between_instances():
-    from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
+    from arvis.cognition.control.cognitive_control_runtime import (
+        CognitiveControlRuntime,
+    )
 
     r1 = CognitiveControlRuntime()
     r2 = CognitiveControlRuntime()
@@ -39,4 +47,3 @@ def test_pipeline_assigns_runtime(ctx, pipeline):
 
     assert hasattr(ctx, "control_runtime")
     assert ctx.control_runtime is not None
-

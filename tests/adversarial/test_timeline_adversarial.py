@@ -18,11 +18,9 @@ def make_entry(i: int):
 def test_hashchain_tampering_detection():
     entries = [make_entry(i) for i in range(5)]
 
-
     entries[2] = make_entry(999)
 
     ids = [e.entry_id for e in entries]
-
 
     assert len(set(ids)) == len(ids)
 
@@ -33,8 +31,8 @@ def test_duplicate_entry_attack():
 
     ids = [x.entry_id for x in entries]
 
-
     assert len(set(ids)) < len(ids)
+
 
 def test_entry_id_collision_attack():
     e1 = make_entry(1)

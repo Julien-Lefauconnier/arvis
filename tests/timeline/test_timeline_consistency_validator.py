@@ -10,7 +10,6 @@ from arvis.timeline.timeline_consistency_validator import (
 
 
 def test_validator_no_issues():
-
     report = TimelineConsistencyValidator.validate([])
 
     assert isinstance(report, TimelineConsistencyReport)
@@ -19,7 +18,6 @@ def test_validator_no_issues():
 
 
 def test_validator_with_one_issue():
-
     issue = TimelineConsistencyIssue(
         code="HASHCHAIN_BROKEN",
         message="Hashchain integrity failure",
@@ -34,7 +32,6 @@ def test_validator_with_one_issue():
 
 
 def test_validator_multiple_issues():
-
     issues = [
         TimelineConsistencyIssue(
             code="HASHCHAIN_BROKEN",
@@ -55,7 +52,6 @@ def test_validator_multiple_issues():
 
 
 def test_report_immutability():
-
     report = TimelineConsistencyReport(
         is_consistent=True,
         issues=(),
@@ -66,7 +62,6 @@ def test_report_immutability():
 
 
 def test_issue_structure():
-
     issue = TimelineConsistencyIssue(
         code="TEST",
         message="Test issue",

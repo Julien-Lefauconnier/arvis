@@ -63,9 +63,7 @@ class MemoryLongService:
         - simulation
         """
 
-        raw = self.repository.list_active_entries_batch(
-            user_ids=user_ids
-        )
+        raw = self.repository.list_active_entries_batch(user_ids=user_ids)
 
         snapshots: Dict[str, MemoryLongSnapshot] = {}
 

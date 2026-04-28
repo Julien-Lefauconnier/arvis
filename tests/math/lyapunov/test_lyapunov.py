@@ -7,7 +7,6 @@ from arvis.math.lyapunov.lyapunov import (
 
 
 def test_lyapunov_value_non_negative():
-
     s = LyapunovState(
         budget_used=0.2,
         risk=0.3,

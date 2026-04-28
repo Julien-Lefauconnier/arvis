@@ -2,6 +2,7 @@
 
 from arvis.api.os import CognitiveResultView
 
+
 def test_result_view_to_dict():
     view = CognitiveResultView(
         decision="test",

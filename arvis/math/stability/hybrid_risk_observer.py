@@ -30,6 +30,7 @@ class HybridRiskSnapshot:
     collapse_risk ∈ [0,1] represents estimated probability
     of cognitive instability / collapse.
     """
+
     v_numeric: float
     v_symbolic: float
     p_numeric: float
@@ -63,6 +64,7 @@ class HybridRiskObserver:
     """
     Observateur hybride risque + composite Lyapunov.
     """
+
     composite: ClassVar[CompositeLyapunov] = CompositeLyapunov(
         lambda_mismatch=0.5, gamma_z=1.0
     )
@@ -87,7 +89,9 @@ class HybridRiskObserver:
         graph = _clamp01(graph_raw / 3.0)
         contr = 1.0 - math.exp(-float(max(0.0, contradiction_density)) / 3.0)
         contr = _clamp01(contr)
-        switch = _clamp01(float(gate_switch_rate) + 0.5 * float(policy_disagreement_rate))
+        switch = _clamp01(
+            float(gate_switch_rate) + 0.5 * float(policy_disagreement_rate)
+        )
         ent = _clamp01(float(conflict_entropy))
         drift = _clamp01(float(symbolic_drift_score))
         x = (
@@ -139,14 +143,22 @@ class HybridRiskObserver:
         delta_w = None
 
         # Calcul composite Lyapunov seulement si toutes les infos sont présentes
-        if current_fast is not None and current_slow is not None and current_symbolic is not None:
+        if (
+            current_fast is not None
+            and current_slow is not None
+            and current_symbolic is not None
+        ):
             w_composite = HybridRiskObserver.composite.W(
                 fast=current_fast,
                 slow=current_slow,
                 symbolic=current_symbolic,
             )
 
-            if prev_fast is not None and prev_slow is not None and prev_symbolic is not None:
+            if (
+                prev_fast is not None
+                and prev_slow is not None
+                and prev_symbolic is not None
+            ):
                 delta_w = HybridRiskObserver.composite.delta_W(
                     fast_prev=prev_fast,
                     fast_next=current_fast,

@@ -11,6 +11,7 @@ from arvis.signals.signal_journal import SignalJournal
 # Sub-blocks
 # ------------------------
 
+
 @dataclass(frozen=True)
 class CognitiveStability:
     dv: float
@@ -49,6 +50,7 @@ class CognitiveProjection:
 # Main state
 # ------------------------
 
+
 @dataclass(frozen=True)
 class CognitiveState:
     # ------------------------
@@ -81,7 +83,7 @@ class CognitiveState:
     # ------------------------
     decision: Optional[Any] = None
     trace: Optional[Any] = None
-    timeline: Optional[SignalJournal] = None 
+    timeline: Optional[SignalJournal] = None
 
     # ------------------------
     # Tools
@@ -89,13 +91,13 @@ class CognitiveState:
     tool_results: list[Any] = field(default_factory=list)
 
     # ------------------------
-    # IR BRIDGE 
+    # IR BRIDGE
     # ------------------------
     ir_input: Optional[Any] = None
     ir_context: Optional[Any] = None
 
     # ------------------------
-    # IR EXTENSION 
+    # IR EXTENSION
     # ------------------------
     ir_decision: Optional[Any] = None
     ir_state: Optional[Any] = None

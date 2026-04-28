@@ -9,13 +9,11 @@ from arvis.api.os import CognitiveOS
 # BASIC INTEGRATION
 # -----------------------------------------------------
 
+
 def test_os_result_contains_reflexive_field():
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input="hello"
-    )
+    result = os.run(user_id="u1", cognitive_input="hello")
 
     assert hasattr(result, "reflexive")
 
@@ -23,10 +21,7 @@ def test_os_result_contains_reflexive_field():
 def test_reflexive_payload_optional():
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input="test"
-    )
+    result = os.run(user_id="u1", cognitive_input="test")
 
     # Reflexive may be None depending on pipeline state
     assert result.reflexive is None or isinstance(result.reflexive, dict)
@@ -36,13 +31,11 @@ def test_reflexive_payload_optional():
 # STRUCTURE TEST (if present)
 # -----------------------------------------------------
 
+
 def test_reflexive_payload_structure_if_present():
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input="test"
-    )
+    result = os.run(user_id="u1", cognitive_input="test")
 
     r = result.reflexive
 
@@ -59,13 +52,11 @@ def test_reflexive_payload_structure_if_present():
 # ATTESTATION TEST
 # -----------------------------------------------------
 
+
 def test_reflexive_attestation_if_present():
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input="test"
-    )
+    result = os.run(user_id="u1", cognitive_input="test")
 
     r = result.reflexive
 
@@ -80,13 +71,11 @@ def test_reflexive_attestation_if_present():
 # NON BREAKING CONTRACT
 # -----------------------------------------------------
 
+
 def test_to_dict_does_not_include_reflexive():
     os = CognitiveOS()
 
-    result = os.run(
-        user_id="u1",
-        cognitive_input="test"
-    )
+    result = os.run(user_id="u1", cognitive_input="test")
 
     d = result.to_dict()
 
@@ -97,6 +86,7 @@ def test_to_dict_does_not_include_reflexive():
 # -----------------------------------------------------
 # DETERMINISM (weak)
 # -----------------------------------------------------
+
 
 def test_reflexive_mode_stable():
     os = CognitiveOS()

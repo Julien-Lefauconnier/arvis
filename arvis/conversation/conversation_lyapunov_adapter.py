@@ -14,7 +14,6 @@ class ConversationLyapunovAdapter:
 
     @staticmethod
     def extract_verdict(state: ConversationState) -> LyapunovVerdict | None:
-
         verdict = state.signals.get("lyapunov_verdict")
 
         if verdict is None:

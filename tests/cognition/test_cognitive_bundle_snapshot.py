@@ -9,14 +9,12 @@ from arvis.timeline.timeline_hashchain import TimelineHashChain
 
 
 def _dummy_timeline():
-
     entries = ()
     chain = TimelineHashChain(())
     return TimelineSnapshot(entries, chain)
 
 
 def test_bundle_snapshot_creation():
-
     snap = CognitiveBundleSnapshot(
         decision_result=DecisionResult(None),
         introspection=IntrospectionSnapshot(),
@@ -28,7 +26,6 @@ def test_bundle_snapshot_creation():
 
 
 def test_bundle_snapshot_immutable():
-
     snap = CognitiveBundleSnapshot(
         decision_result=DecisionResult(None),
         introspection=IntrospectionSnapshot(),

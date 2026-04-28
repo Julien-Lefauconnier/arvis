@@ -19,6 +19,7 @@ from arvis.stability.predictive_snapshot import PredictiveSnapshot
 # Public simplified view (API-level)
 # -----------------------------------------------------
 
+
 @dataclass(frozen=True)
 class StabilityView:
     """
@@ -32,10 +33,17 @@ class StabilityView:
     @staticmethod
     def from_snapshot(snapshot: StabilitySnapshot) -> "StabilityView":
         return StabilityView(
-            stability_score=getattr(snapshot, "score", getattr(snapshot, "stability_score", 0.0)),
-            risk_level=getattr(snapshot, "collapse_risk", getattr(snapshot, "risk", 0.0)),
-            regime=str(getattr(snapshot, "verdict", getattr(snapshot, "regime", "unknown"))),
+            stability_score=getattr(
+                snapshot, "score", getattr(snapshot, "stability_score", 0.0)
+            ),
+            risk_level=getattr(
+                snapshot, "collapse_risk", getattr(snapshot, "risk", 0.0)
+            ),
+            regime=str(
+                getattr(snapshot, "verdict", getattr(snapshot, "regime", "unknown"))
+            ),
         )
+
 
 __all__ = [
     "StabilityObserver",

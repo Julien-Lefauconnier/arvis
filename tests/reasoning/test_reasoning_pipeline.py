@@ -5,7 +5,6 @@ from arvis.reasoning.reasoning_intent import ReasoningIntent
 
 
 def test_reasoning_gap_to_intent_pipeline():
-
     gap = ReasoningGap(
         gap_type="missing_information",
         origin="test",

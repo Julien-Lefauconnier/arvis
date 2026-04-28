@@ -13,6 +13,7 @@ class CalibrationRegime(str, Enum):
     DRIFTING = "drifting"
     REGIME_SHIFT = "regime_shift"
 
+
 @dataclass
 class CalibrationSnapshot:
     contraction_rate: float
@@ -20,6 +21,7 @@ class CalibrationSnapshot:
     drift_score: Optional[float]
     collapse_risk: Optional[float]
     regime: CalibrationRegime
+
 
 class CalibrationEngine:
     """
@@ -41,7 +43,6 @@ class CalibrationEngine:
         Optional[CalibrationSnapshot],
         Optional[List[CognitivePolicyResult]],
     ]:
-
         if contraction_rate is None or instability_rate is None:
             return None, None
 

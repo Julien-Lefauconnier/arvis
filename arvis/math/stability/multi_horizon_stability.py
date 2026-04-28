@@ -28,7 +28,6 @@ class MultiHorizonStabilityObserver:
         trajectory_vmax: float,
         predictive_ttc: int | None,
     ) -> MultiHorizonSnapshot:
-
         # -------------------------
         # Collapse risk
         # -------------------------

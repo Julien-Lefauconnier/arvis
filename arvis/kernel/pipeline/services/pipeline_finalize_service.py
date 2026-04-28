@@ -33,6 +33,7 @@ from arvis.adapters.ir.state_adapter import StateIRAdapter
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 
+
 class PipelineFinalizeService:
     @staticmethod
     def run(
@@ -99,9 +100,7 @@ class PipelineFinalizeService:
         try:
             pipeline._refresh_ir_context_extra(ctx)
         except Exception:
-            ctx.extra.setdefault("errors", []).append(
-                "ir_context_refresh_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("ir_context_refresh_failure")
         PipelineIRService.run(ctx)
 
         # -----------------------------------------------------
@@ -120,9 +119,7 @@ class PipelineFinalizeService:
             ctx.cognitive_state = CognitiveStateBuilder.from_context(ctx)
         except Exception:
             ctx.cognitive_state = None
-            ctx.extra.setdefault("errors", []).append(
-                "cognitive_state_build_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("cognitive_state_build_failure")
 
         # -----------------------------------------------------
         # CONTRACT VALIDATION
@@ -149,9 +146,7 @@ class PipelineFinalizeService:
             else:
                 ctx.ir_state = None
         except Exception:
-            ctx.extra.setdefault("errors", []).append(
-                "state_ir_adapter_failure"
-            )
+            ctx.extra.setdefault("errors", []).append("state_ir_adapter_failure")
             ctx.ir_state = None
 
         # -----------------------------------------------------

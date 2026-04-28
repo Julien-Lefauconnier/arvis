@@ -2,6 +2,7 @@
 
 from typing import Dict
 
+
 class UserAdaptiveProfile:
     """
     Stores adaptive parameters per user.

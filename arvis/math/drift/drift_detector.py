@@ -16,7 +16,9 @@ class DriftDetector:
     Based on contraction vs instability.
     """
 
-    def evaluate(self, contraction_rate: float, instability_rate: float) -> DriftSnapshot:
+    def evaluate(
+        self, contraction_rate: float, instability_rate: float
+    ) -> DriftSnapshot:
         drift = instability_rate - contraction_rate
 
         regime = "STABLE"

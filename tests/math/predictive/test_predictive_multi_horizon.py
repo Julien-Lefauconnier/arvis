@@ -1,6 +1,8 @@
 # tests/math/predictive/test_predictive_multi_horizon.py
 
-from arvis.math.predictive.predictive_multi_horizon import MultiHorizonPredictiveObserver
+from arvis.math.predictive.predictive_multi_horizon import (
+    MultiHorizonPredictiveObserver,
+)
 from arvis.math.lyapunov.lyapunov import LyapunovState
 
 

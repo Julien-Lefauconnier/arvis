@@ -60,7 +60,7 @@ def make_valid_bundle(**overrides):
         retrieval_snapshot=overrides.pop("retrieval_snapshot", None),
         generated_at=overrides.pop("generated_at", 0),
         context_hints=overrides.pop("context_hints", None),
-        **overrides,  
+        **overrides,
     )
 
 
@@ -104,9 +104,7 @@ def test_prescriptive_field_forbidden():
     ],
 )
 def test_explanation_forbidden_words(bad_text):
-    bundle = make_valid_bundle(
-        explanation=ExplanationSnapshot(items=[bad_text])
-    )
+    bundle = make_valid_bundle(explanation=ExplanationSnapshot(items=[bad_text]))
 
     with pytest.raises(CognitiveBundleInvariantError):
         assert_cognitive_bundle_invariants(bundle)
@@ -122,18 +120,14 @@ def test_explanation_forbidden_words(bad_text):
     ],
 )
 def test_timeline_forbidden_types(bad_type):
-    bundle = make_valid_bundle(
-        timeline=[_make_timeline_entry(bad_type)]
-    )
+    bundle = make_valid_bundle(timeline=[_make_timeline_entry(bad_type)])
 
     with pytest.raises(CognitiveBundleInvariantError):
         assert_cognitive_bundle_invariants(bundle)
 
 
 def test_context_hints_valid():
-    bundle = make_valid_bundle(
-        context_hints={"key": "value", "flag": True}
-    )
+    bundle = make_valid_bundle(context_hints={"key": "value", "flag": True})
     assert_cognitive_bundle_invariants(bundle)
 
 

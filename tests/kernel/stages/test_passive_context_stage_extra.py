@@ -8,6 +8,7 @@ from arvis.kernel.pipeline.stages.passive_context_stage import PassiveContextSta
 # Helpers
 # ============================================================
 
+
 class DummyCtx:
     pass
 
@@ -31,6 +32,7 @@ class DummyCoherenceObserver:
         class Snap:
             change_count = 3
             max_change_budget = 10
+
         return Snap()
 
 
@@ -60,6 +62,7 @@ class DummyConversationContext:
 # 1. FULL HAPPY PATH
 # ============================================================
 
+
 def test_full_passive_context():
     ctx = DummyCtx()
     ctx.decision_result = {}
@@ -87,6 +90,7 @@ def test_full_passive_context():
 # 2. GOVERNANCE ABSENT
 # ============================================================
 
+
 def test_governance_absent():
     ctx = DummyCtx()
     ctx.decision_result = {}
@@ -101,6 +105,7 @@ def test_governance_absent():
 # ============================================================
 # 3. GOVERNANCE EXCEPTION
 # ============================================================
+
 
 def test_governance_exception():
     ctx = DummyCtx()
@@ -117,6 +122,7 @@ def test_governance_exception():
 # ============================================================
 # 4. PENDING EXCEPTION
 # ============================================================
+
 
 def test_pending_exception():
     ctx = DummyCtx()
@@ -137,6 +143,7 @@ def test_pending_exception():
 # 5. EVENTS EXCEPTION
 # ============================================================
 
+
 def test_events_exception():
     ctx = DummyCtx()
 
@@ -154,6 +161,7 @@ def test_events_exception():
 # 6. COHERENCE WITHOUT OBSERVER
 # ============================================================
 
+
 def test_coherence_no_observer():
     ctx = DummyCtx()
 
@@ -168,6 +176,7 @@ def test_coherence_no_observer():
 # ============================================================
 # 7. COHERENCE POLICY EXCEPTION
 # ============================================================
+
 
 def test_coherence_policy_exception():
     ctx = DummyCtx()
@@ -185,6 +194,7 @@ def test_coherence_policy_exception():
 # 8. NO CONVERSATION CONTEXT
 # ============================================================
 
+
 def test_no_conversation_context():
     ctx = DummyCtx()
 
@@ -198,6 +208,7 @@ def test_no_conversation_context():
 # ============================================================
 # 9. CONVERSATION WITH PARTIAL STATE
 # ============================================================
+
 
 def test_conversation_partial_state():
     class PartialState:
@@ -222,6 +233,7 @@ def test_conversation_partial_state():
 # 10. EXTRA AUTO-CREATION
 # ============================================================
 
+
 def test_extra_auto_created():
     ctx = DummyCtx()
     ctx.extra = None
@@ -237,6 +249,7 @@ def test_extra_auto_created():
 # 11. SNAPSHOT INJECTION
 # ============================================================
 
+
 def test_memory_snapshot_injection():
     ctx = DummyCtx()
     ctx.memory_snapshot = {"records": ["a"]}
@@ -247,9 +260,11 @@ def test_memory_snapshot_injection():
 
     assert ctx.memory_snapshot["records"] == ["a"]
 
+
 # ============================================================
 # 12. PROJECTION FALLBACK
 # ============================================================
+
 
 def test_memory_projection_from_long_memory():
     ctx = DummyCtx()
@@ -266,6 +281,7 @@ def test_memory_projection_from_long_memory():
 # 13. PROJECTION PRIORITY
 # ============================================================
 
+
 def test_memory_projection_priority():
     ctx = DummyCtx()
     ctx.memory_projection = {"p": 1}
@@ -277,9 +293,11 @@ def test_memory_projection_priority():
 
     assert ctx.memory_projection["p"] == 1
 
+
 # ============================================================
 # 14. SNAPSHOT PRIORITY
 # ============================================================
+
 
 def test_memory_snapshot_priority_over_projection():
     ctx = DummyCtx()

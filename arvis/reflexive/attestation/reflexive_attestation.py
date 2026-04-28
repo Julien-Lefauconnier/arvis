@@ -31,7 +31,6 @@ class ReflexiveAttestation:
         cls,
         rendered_payload: Dict[str, Any],
     ) -> "ReflexiveAttestation":
-
         if not isinstance(rendered_payload, dict):
             raise TypeError("rendered_payload must be a dict")
 
@@ -57,8 +56,7 @@ class ReflexiveAttestation:
             raise TypeError("timeline_views must be a dict")
 
         timeline_views = {
-            k: v for k, v in timeline_views_all.items()
-            if k in exposed_views
+            k: v for k, v in timeline_views_all.items() if k in exposed_views
         }
 
         # remove non-attested fields

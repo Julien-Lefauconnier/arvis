@@ -42,9 +42,7 @@ class PipelineCompatibilityService:
             PipelineIRBootstrapService,
         )
 
-        PipelineIRBootstrapService.bootstrap_input(
-            ctx
-        )
+        PipelineIRBootstrapService.bootstrap_input(ctx)
 
     @staticmethod
     def bootstrap_ir_context(
@@ -54,9 +52,7 @@ class PipelineCompatibilityService:
             PipelineIRBootstrapService,
         )
 
-        PipelineIRBootstrapService.bootstrap_context(
-            ctx
-        )
+        PipelineIRBootstrapService.bootstrap_context(ctx)
 
     @staticmethod
     def refresh_ir_context_extra(
@@ -66,6 +62,4 @@ class PipelineCompatibilityService:
             PipelineIRBootstrapService,
         )
 
-        PipelineIRBootstrapService.refresh_context_extra(
-            ctx
-        )
+        PipelineIRBootstrapService.refresh_context_extra(ctx)

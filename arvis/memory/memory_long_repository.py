@@ -11,6 +11,7 @@ from arvis.memory.memory_long_record import (
     MemoryLongRecord,
 )
 
+
 class MemoryLongRepository(ABC):
     """
     Abstract repository for long-term memory entries.
@@ -35,7 +36,7 @@ class MemoryLongRepository(ABC):
         - no filtering logic here
         """
         raise NotImplementedError
-    
+
     @abstractmethod
     def list_active_entries(self, *, user_id: str) -> List[MemoryLongEntry]:
         """
@@ -48,7 +49,6 @@ class MemoryLongRepository(ABC):
         This is the DEFAULT method used by cognition layer.
         """
         raise NotImplementedError
-
 
     @abstractmethod
     def list_active_entries_batch(

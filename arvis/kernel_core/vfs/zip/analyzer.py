@@ -64,7 +64,7 @@ class ZipAnalyzer:
                 current_parent = root
                 accumulated = ""
 
-                for part in (parts if is_dir else parts[:-1]):
+                for part in parts if is_dir else parts[:-1]:
                     accumulated = f"{accumulated}/{part}" if accumulated else part
 
                     if accumulated not in folders:

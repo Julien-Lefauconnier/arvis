@@ -15,6 +15,7 @@ from arvis.conversation.conversation_state import ConversationState
 # Fixtures
 # --------------------------------------------------
 
+
 @pytest.fixture(autouse=True)
 def reset_bridge():
     """
@@ -28,6 +29,7 @@ def reset_bridge():
 # --------------------------------------------------
 # Dummy objects
 # --------------------------------------------------
+
 
 class DummySnapshot:
     def __init__(self, delta_v):
@@ -54,6 +56,7 @@ class DummyContext:
 # --------------------------------------------------
 # Tests
 # --------------------------------------------------
+
 
 def test_cognitive_bridge_fallback():
     ctx = DummyContext()

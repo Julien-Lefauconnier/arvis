@@ -46,25 +46,20 @@ class DecisionTraceView:
         return DecisionTraceView(
             timestamp=str(getattr(trace, "timestamp", "")),
             user_id=str(getattr(trace, "user_id", "")),
-
             decision=str(trace.action_decision) if trace.action_decision else None,
             intent=str(trace.executable_intent) if trace.executable_intent else None,
-
             gate_verdict=(
                 str(_safe_attr(getattr(trace, "gate_result", None), "verdict"))
             ),
-
-            confirmation_required=getattr(trace, "confirmation_request", None) is not None,
+            confirmation_required=getattr(trace, "confirmation_request", None)
+            is not None,
             confirmation_granted=_safe_attr(
-                getattr(trace, "confirmation_result", None),
-                "confirmed"
+                getattr(trace, "confirmation_result", None), "confirmed"
             ),
-
             stability=trace.stability,
             predictive=trace.predictive,
             symbolic=trace.symbolic,
             system_tension=trace.system_tension,
-
             has_conflict=trace.conflict is not None,
             has_governance=trace.governance is not None,
             has_pending_actions=trace.pending_actions is not None,
@@ -78,19 +73,15 @@ class DecisionTraceView:
         return {
             "timestamp": self.timestamp,
             "user_id": self.user_id,
-
             "decision": self.decision,
             "intent": self.intent,
-
             "gate": {
                 "verdict": self.gate_verdict,
             },
-
             "confirmation": {
                 "required": self.confirmation_required,
                 "granted": self.confirmation_granted,
             },
-
             "observability": {
                 "stability": (
                     {
@@ -98,13 +89,13 @@ class DecisionTraceView:
                         "risk": getattr(self.stability, "collapse_risk", None),
                         "regime": getattr(self.stability, "verdict", None),
                     }
-                    if self.stability else None
+                    if self.stability
+                    else None
                 ),
                 "predictive": str(self.predictive),
                 "symbolic": str(self.symbolic),
                 "system_tension": str(self.system_tension),
             },
-
             "flags": {
                 "conflict": self.has_conflict,
                 "governance": self.has_governance,
@@ -119,7 +110,7 @@ class DecisionTraceView:
             f"Gate={self.gate_verdict} | "
             f"Confirmed={self.confirmation_granted}"
         )
-    
+
 
 # -----------------------------------------------------
 # HELPERS

@@ -5,6 +5,7 @@ from __future__ import annotations
 from arvis.math.lyapunov.slow_state import SlowState
 from typing import Iterable
 
+
 def update_slow_state(
     z_prev: SlowState,
     T_x: Iterable[float],

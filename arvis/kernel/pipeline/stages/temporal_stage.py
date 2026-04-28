@@ -7,9 +7,7 @@ from arvis.math.signals import RiskSignal
 
 
 class TemporalStage:
-
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         timeline = ctx.timeline or []
         total = len(timeline)
 

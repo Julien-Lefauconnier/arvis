@@ -19,7 +19,6 @@ class ConversationFutureSimulator:
         collapse_risk: float | None,
         uncertainty: float | None,
     ) -> ResponseStrategyType:
-
         if collapse_risk is None:
             collapse_risk = 0.0
 

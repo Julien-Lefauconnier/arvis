@@ -37,7 +37,6 @@ class ConversationRegimeController:
         early_warning: bool | None = None,
         state: Any | None = None,
     ) -> ResponseStrategyType:
-        
         # --------------------------------------------
         # MEMORY SIGNALS (ZKCS-safe)
         # --------------------------------------------
@@ -47,7 +46,7 @@ class ConversationRegimeController:
 
         memory_pressure: float = float(signals.get("memory_pressure", 0))
         has_constraints: bool = bool(signals.get("has_constraints", False))
-        
+
         # World regime override
         if world_regime == "collapse":
             return ResponseStrategyType.ABSTENTION
@@ -56,7 +55,7 @@ class ConversationRegimeController:
         if early_warning and collapse_risk and collapse_risk > 0.5:
             if proposed_strategy != ResponseStrategyType.ABSTENTION:
                 return ResponseStrategyType.INFORMATIONAL
-            
+
         # Hard collapse risk override
         if (
             collapse_risk is not None
@@ -94,7 +93,7 @@ class ConversationRegimeController:
             delta_v=instability_effective,
         )
         # --------------------------------------------
-        # INSTABILITY DIRECT IMPACT 
+        # INSTABILITY DIRECT IMPACT
         # --------------------------------------------
         # ensures instability has a strong behavioral effect
         energy += 0.4 * instability_effective
@@ -119,14 +118,10 @@ class ConversationRegimeController:
         s = instability_effective
 
         confirmation_threshold = (
-            ConversationRegimeController.ENERGY_CONFIRMATION_THRESHOLD
-            - 0.25 * s
+            ConversationRegimeController.ENERGY_CONFIRMATION_THRESHOLD - 0.25 * s
         )
 
-        abort_threshold = (
-            ConversationRegimeController.ENERGY_ABORT_THRESHOLD
-            - 0.35 * s
-        )
+        abort_threshold = ConversationRegimeController.ENERGY_ABORT_THRESHOLD - 0.35 * s
 
         # clamp thresholds for safety
         confirmation_threshold = min(max(confirmation_threshold, 0.2), 0.7)
@@ -138,16 +133,25 @@ class ConversationRegimeController:
         if delta_w_effective >= ConversationRegimeController.DELTA_W_ABORT_THRESHOLD:
             return ResponseStrategyType.ABSTENTION
 
-        if delta_w_effective >= ConversationRegimeController.DELTA_W_CONFIRMATION_THRESHOLD:
+        if (
+            delta_w_effective
+            >= ConversationRegimeController.DELTA_W_CONFIRMATION_THRESHOLD
+        ):
             return ResponseStrategyType.CONFIRMATION
-        
+
         # --------------------------------------------
         # INSTABILITY DIRECT OVERRIDE (fusion signal)
         # --------------------------------------------
-        if instability_effective >= ConversationRegimeController.INSTABILITY_ABORT_THRESHOLD:
+        if (
+            instability_effective
+            >= ConversationRegimeController.INSTABILITY_ABORT_THRESHOLD
+        ):
             return ResponseStrategyType.ABSTENTION
 
-        if instability_effective >= ConversationRegimeController.INSTABILITY_CONFIRMATION_THRESHOLD:
+        if (
+            instability_effective
+            >= ConversationRegimeController.INSTABILITY_CONFIRMATION_THRESHOLD
+        ):
             return ResponseStrategyType.CONFIRMATION
 
         # --------------------------------------------
@@ -174,9 +178,12 @@ class ConversationRegimeController:
         if energy > confirmation_threshold:
             return ResponseStrategyType.CONFIRMATION
 
-        if uncertainty is not None and uncertainty > ConversationRegimeController.UNCERTAINTY_THRESHOLD:
+        if (
+            uncertainty is not None
+            and uncertainty > ConversationRegimeController.UNCERTAINTY_THRESHOLD
+        ):
             return ResponseStrategyType.CONFIRMATION
-        
+
         # Predictive adjustment applied last
         proposed_strategy = ConversationPredictor.choose_strategy(
             proposed_strategy=proposed_strategy,

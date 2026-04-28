@@ -18,7 +18,6 @@ class PipelineInputService:
     def build_context(
         input_data: dict[str, Any],
     ) -> CognitivePipelineContext:
-
         ctx = CognitivePipelineContext(
             user_id=input_data.get(
                 "user_id",
@@ -31,14 +30,14 @@ class PipelineInputService:
             long_memory=input_data.get(
                 "long_memory",
                 {},
-            ) or {},
+            )
+            or {},
             timeline=input_data.get(
                 "timeline",
                 [],
-            ) or [],
-            introspection=input_data.get(
-                "introspection"
-            ),
+            )
+            or [],
+            introspection=input_data.get("introspection"),
         )
 
         ctx.extra = getattr(ctx, "extra", {})

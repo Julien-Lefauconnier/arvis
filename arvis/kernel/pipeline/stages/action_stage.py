@@ -11,18 +11,16 @@ from arvis.action.action_context import ActionContext
 from arvis.action.action_decision import ActionDecision
 from arvis.action.action_mode import ActionMode
 
+
 class ActionStage:
-
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         # -----------------------------------------
         # RETRY RESOLUTION (EARLY)
         # -----------------------------------------
         force_tool = ctx.extra.get("force_tool")
-        retry_tool_flag = (
-            ctx.extra.get("execution_policy", {}).get("retry")
-            or ctx.extra.get("retry_tool")
-        )
+        retry_tool_flag = ctx.extra.get("execution_policy", {}).get(
+            "retry"
+        ) or ctx.extra.get("retry_tool")
 
         retry_tool = getattr(ctx.decision_result, "tool", None)
 
@@ -36,7 +34,6 @@ class ActionStage:
 
         # HARD GUARD
         if not getattr(ctx, "_can_execute", False) and not resolved_tool:
-
             ctx.action_decision = ActionDecision(
                 allowed=False,
                 requires_user_validation=getattr(ctx, "_requires_confirmation", False),
@@ -50,7 +47,6 @@ class ActionStage:
         retry_tool = getattr(ctx.decision_result, "tool", None)
 
         if resolved_tool:
-
             ctx.action_decision = ActionDecision(
                 allowed=True,
                 requires_user_validation=False,
@@ -64,7 +60,7 @@ class ActionStage:
             ctx._tool_forced_execution = True
 
             return
-        
+
         action_template = resolve_action(ctx.decision_result)
 
         # 🔒 fallback if no template
@@ -95,20 +91,20 @@ class ActionStage:
         )
         if action_decision is None:
             action_decision = ActionDecision(
-            allowed=False,
-            requires_user_validation=False,
-            denied_reason="no_action_template",
-            audit_required=True,
-            action_mode=ActionMode.MANUAL,
-        )
+                allowed=False,
+                requires_user_validation=False,
+                denied_reason="no_action_template",
+                audit_required=True,
+                action_mode=ActionMode.MANUAL,
+            )
 
         if resolved_tool:
-             action_decision = replace(
-                 action_decision,
-                 allowed=True,
-                 tool=resolved_tool,
-                 tool_payload=getattr(ctx.decision_result, "tool_payload", {}) or {},
-             )
+            action_decision = replace(
+                action_decision,
+                allowed=True,
+                tool=resolved_tool,
+                tool_payload=getattr(ctx.decision_result, "tool_payload", {}) or {},
+            )
 
         # -----------------------------------------
         # TOOL RETRY OVERRIDE

@@ -14,7 +14,9 @@ from tests.math.test_projection_real_lyapunov_compatibility import (
 )
 
 
-def _generate_projection_trajectory(base_obs: Observation, steps: int = 80, noise: float = 0.015) -> list[Observation]:
+def _generate_projection_trajectory(
+    base_obs: Observation, steps: int = 80, noise: float = 0.015
+) -> list[Observation]:
     trajectory = [base_obs]
 
     for _ in range(steps):

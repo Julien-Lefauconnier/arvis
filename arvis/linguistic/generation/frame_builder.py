@@ -47,8 +47,7 @@ def build_generation_frame(
     allowed = [
         e.canonical_form
         for e in lexicon.entries
-        if e.status == "preferred"
-        and e.canonical_form not in forbidden_act_canonicals
+        if e.status == "preferred" and e.canonical_form not in forbidden_act_canonicals
     ]
 
     # --------------------------------------------

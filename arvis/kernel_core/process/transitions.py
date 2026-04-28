@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from arvis.kernel_core.process.process import CognitiveProcess
 
 from arvis.kernel_core.process.types import CognitiveProcessStatus
+
 
 class InvalidTransitionError(Exception):
     pass

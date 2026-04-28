@@ -24,7 +24,9 @@ def test_get_snapshot_returns_deterministic_records():
     service = MemoryService(repo=repo)
 
     service.put_record(user_id="u1", namespace="prefs", key="language", value="fr")
-    service.put_record(user_id="u1", namespace="prefs", key="timezone", value="Europe/Paris")
+    service.put_record(
+        user_id="u1", namespace="prefs", key="timezone", value="Europe/Paris"
+    )
 
     snapshot = service.get_snapshot(user_id="u1")
 

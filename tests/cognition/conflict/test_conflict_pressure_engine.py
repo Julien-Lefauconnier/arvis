@@ -11,6 +11,7 @@ from arvis.cognition.conflict.conflict_pressure_engine import (
 # Helpers
 # -----------------------------
 
+
 class Conflict:
     def __init__(self, score=0.0, type=None):
         self.score = score
@@ -20,6 +21,7 @@ class Conflict:
 # -----------------------------
 # Nominal
 # -----------------------------
+
 
 def test_empty_conflicts():
     engine = ConflictPressureEngine()
@@ -62,6 +64,7 @@ def test_multiple_conflicts_accumulation():
 # Saturation
 # -----------------------------
 
+
 def test_global_saturation():
     engine = ConflictPressureEngine()
 
@@ -91,6 +94,7 @@ def test_type_saturation():
 # -----------------------------
 # Robustness (getattr paths)
 # -----------------------------
+
 
 def test_missing_score():
     class BadConflict:
@@ -131,6 +135,7 @@ def test_none_values():
 # -----------------------------
 # from_scalar
 # -----------------------------
+
 
 def test_from_scalar():
     engine = ConflictPressureEngine()

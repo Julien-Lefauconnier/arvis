@@ -114,9 +114,7 @@ def compute_gate_kernel(inputs: GateKernelInputs) -> GateKernelResult:
         "local": inputs.delta_w is not None,
         "global": bool(inputs.global_safe),
         "switching": bool(inputs.switching_safe),
-        "delta_negative": (
-            inputs.delta_w is not None and inputs.delta_w <= 0
-        ),
+        "delta_negative": (inputs.delta_w is not None and inputs.delta_w <= 0),
     }
 
     return GateKernelResult(

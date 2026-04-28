@@ -21,7 +21,6 @@ class ReflexiveSnapshot:
     timeline_explanation: Optional[Any] = None
     irg_explanation: Optional[Any] = None
 
-
     def _is_public_role(self, role: Any) -> bool:
         if role is None:
             return False
@@ -59,10 +58,7 @@ class ReflexiveSnapshot:
             return value.to_dict()
 
         if isinstance(value, dict):
-            return {
-                k: self._safe_serialize(v)
-                for k, v in value.items()
-            }
+            return {k: self._safe_serialize(v) for k, v in value.items()}
 
         if isinstance(value, list):
             return [self._safe_serialize(v) for v in value]

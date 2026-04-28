@@ -8,6 +8,7 @@ from arvis.api.os import CognitiveOS, CognitiveOSConfig
 # HELPERS
 # =====================================================
 
+
 @dataclass
 class DummyResult:
     can_execute: bool = True
@@ -90,6 +91,7 @@ def _signal_code(entry) -> str | None:
 # =====================================================
 # TESTS
 # =====================================================
+
 
 def test_hook_called_on_selected():
     calls = {"count": 0}

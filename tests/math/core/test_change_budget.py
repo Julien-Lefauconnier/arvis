@@ -4,7 +4,6 @@ from arvis.math.core.change_budget import ChangeBudget
 
 
 def test_budget_initial_state():
-
     b = ChangeBudget(1.0)
 
     assert b.consumption == 0.0
@@ -13,7 +12,6 @@ def test_budget_initial_state():
 
 
 def test_budget_consumption():
-
     b = ChangeBudget(1.0)
 
     b2 = b.consume(0.3)
@@ -24,7 +22,6 @@ def test_budget_consumption():
 
 
 def test_budget_exhaustion():
-
     b = ChangeBudget(1.0)
 
     b = b.consume(0.5)
@@ -35,7 +32,6 @@ def test_budget_exhaustion():
 
 
 def test_budget_can_consume():
-
     b = ChangeBudget(1.0)
 
     assert b.can_consume(0.5)

@@ -43,7 +43,8 @@ class StabilitySnapshot:
             last_v=snapshot.last_v,
             reasons=list(snapshot.reasons or []),
         )
-    
+
+
 @dataclass(frozen=True)
 class StabilityView:
     stability_score: float

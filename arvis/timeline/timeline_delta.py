@@ -14,6 +14,7 @@ from arvis.timeline.timeline_snapshot import TimelineSnapshot
 # Errors
 # ============================================================
 
+
 class TimelineDeltaError(ValueError):
     pass
 
@@ -38,6 +39,7 @@ class TimelineDeltaDecodeError(TimelineDeltaError):
 # helpers: framing
 # ============================================================
 
+
 def _pack_frames(frames: List[bytes]) -> bytes:
     out = bytearray()
     for f in frames:
@@ -53,13 +55,13 @@ def _unpack_frames(blob: bytes) -> List[bytes]:
     while i < n:
         if i + 4 > n:
             raise TimelineDeltaDecodeError("truncated frame length")
-        ln = int.from_bytes(blob[i:i+4], "big")
+        ln = int.from_bytes(blob[i : i + 4], "big")
         i += 4
         if ln == 0:
             raise TimelineDeltaDecodeError("empty frame not allowed")
         if ln < 0 or i + ln > n:
             raise TimelineDeltaDecodeError("invalid frame length")
-        out.append(blob[i:i+ln])
+        out.append(blob[i : i + ln])
         i += ln
     if i != n:
         raise TimelineDeltaDecodeError("extra bytes after frames")
@@ -69,6 +71,7 @@ def _unpack_frames(blob: bytes) -> List[bytes]:
 # ============================================================
 # TimelineDelta
 # ============================================================
+
 
 @dataclass(frozen=True)
 class TimelineDelta:
@@ -98,7 +101,7 @@ class TimelineDelta:
         # ensure entries are immutable tuple
         if not isinstance(self.entries, tuple):
             raise TimelineDeltaError("entries must be a tuple")
-        
+
         for e in self.entries:
             if e is None:
                 raise TimelineDeltaError("entry must not be None")
@@ -106,7 +109,6 @@ class TimelineDelta:
         ids = [e.entry_id for e in self.entries]
         if len(ids) != len(set(ids)):
             raise TimelineDeltaError("duplicate entries in delta")
-
 
     # --------------------------------------------------
     # Core apply
@@ -125,7 +127,9 @@ class TimelineDelta:
 
         cursor = out.cursor()
         if cursor != self.target:
-            raise TimelineDeltaTargetMismatch("resulting snapshot cursor does not match delta target")
+            raise TimelineDeltaTargetMismatch(
+                "resulting snapshot cursor does not match delta target"
+            )
         return out
 
     # --------------------------------------------------
@@ -135,13 +139,14 @@ class TimelineDelta:
         if snap is None:
             raise TimelineDeltaError("snapshot must not be None")
         if snap.cursor() != self.base:
-            raise TimelineDeltaBaseMismatch("snapshot cursor mismatch during verification")
+            raise TimelineDeltaBaseMismatch(
+                "snapshot cursor mismatch during verification"
+            )
         # simulate application without allocation explosion
         expected_total = snap.cursor().total_entries + len(self.entries)
 
         if expected_total != self.target.total_entries:
             raise TimelineDeltaTargetMismatch("delta does not match target cardinality")
-
 
     # --------------------------------------------------
     # Builders
@@ -182,9 +187,7 @@ class TimelineDelta:
         base_len = base_cursor.total_entries
 
         if tuple(target.entries[:base_len]) != tuple(base.entries):
-            raise TimelineDeltaError(
-                "target is not an append-only extension of base"
-            )
+            raise TimelineDeltaError("target is not an append-only extension of base")
 
         try:
             new_entries = target.entries[start:end]
@@ -193,7 +196,7 @@ class TimelineDelta:
 
         if len(new_entries) == 0:
             raise TimelineDeltaEmptyError("delta extraction failed")
-        
+
         # defensive copy + immutability
         new_entries = tuple(new_entries)
 

@@ -4,6 +4,7 @@ import json
 
 from arvis.api.ir import build_ir_view, IR_VERSION
 
+
 def test_ir_has_required_fields(dummy_pipeline_result):
     ir = build_ir_view(dummy_pipeline_result)
 
@@ -34,7 +35,7 @@ def test_ir_is_deterministic(dummy_pipeline_result):
 def test_ir_is_json_serializable(dummy_pipeline_result):
     ir = build_ir_view(dummy_pipeline_result)
 
-    json.dumps(ir) 
+    json.dumps(ir)
 
 
 def test_ir_no_private_fields(dummy_pipeline_result):
@@ -92,6 +93,7 @@ def test_ir_top_level_keys_are_stable(dummy_pipeline_result):
     ir = build_ir_view(dummy_pipeline_result)
 
     assert set(ir.keys()) == EXPECTED_KEYS
+
 
 def test_ir_version_is_exact_v1(dummy_pipeline_result):
     ir = build_ir_view(dummy_pipeline_result)

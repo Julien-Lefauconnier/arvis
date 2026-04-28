@@ -2,7 +2,10 @@
 
 from arvis.cognition.gate import CognitiveGateResult
 from arvis.cognition.gate import CognitiveGateVerdict
-from arvis.cognition.gate.gate_decision_trace import GateDecisionTrace, GateDecisionTraceStep
+from arvis.cognition.gate.gate_decision_trace import (
+    GateDecisionTrace,
+    GateDecisionTraceStep,
+)
 
 
 def test_gate_result_is_immutable():

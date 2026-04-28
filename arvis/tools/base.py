@@ -5,12 +5,14 @@ from typing import Any, Dict
 
 from arvis.tools.spec import ToolSpec
 
+
 class BaseTool(ABC):
     """
     input_data contains:
     - decision
     - context
     """
+
     # legacy support (optional)
     name: str = "base"
     description: str = ""

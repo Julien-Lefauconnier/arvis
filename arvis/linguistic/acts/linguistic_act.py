@@ -28,6 +28,6 @@ class LinguisticAct:
         :param description: Human-readable explanation of the act intent.
         """
         self.act_type = act_type
-        
+
     def __repr__(self) -> str:
         return f"LinguisticAct(type={self.act_type})"

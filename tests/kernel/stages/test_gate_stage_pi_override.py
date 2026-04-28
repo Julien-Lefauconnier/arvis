@@ -10,6 +10,7 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 # Dummy context minimal compatible GateStage
 # ============================================================
 
+
 class DummyCtx:
     def __init__(self):
         self.extra = {}
@@ -35,7 +36,7 @@ class DummyCtx:
         self.projection_view = None
         self.projected_state = None
 
-        self.pi_state = object() 
+        self.pi_state = object()
 
         self.gate_result = None
 
@@ -48,6 +49,7 @@ class DummyPipeline:
 # Helpers
 # ============================================================
 
+
 class DummyPiResult:
     def __init__(self, verdict, risk="low"):
         self.verdict = type("V", (), {"value": verdict})()
@@ -57,6 +59,7 @@ class DummyPiResult:
 # ============================================================
 # TESTS
 # ============================================================
+
 
 def test_pi_can_downgrade_allow_to_confirmation():
     ctx = DummyCtx()

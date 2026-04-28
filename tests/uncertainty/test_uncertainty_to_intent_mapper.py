@@ -14,6 +14,7 @@ from arvis.reasoning.reasoning_intent import ReasoningIntentType
 # Helper
 # ============================================================
 
+
 def make_frame(axes):
     return UncertaintyFrame(
         frame_id="f1",
@@ -26,6 +27,7 @@ def make_frame(axes):
 # ============================================================
 # 1. HIGH IMPACT → REQUEST_USER_CLARIFICATION
 # ============================================================
+
 
 def test_high_impact_intent():
     frame = make_frame([UncertaintyAxis.HIGH_IMPACT])
@@ -41,6 +43,7 @@ def test_high_impact_intent():
 # 2. IRREVERSIBLE RISK → REQUEST_USER_CLARIFICATION
 # ============================================================
 
+
 def test_irreversible_risk_intent():
     frame = make_frame([UncertaintyAxis.IRREVERSIBLE_RISK])
 
@@ -53,6 +56,7 @@ def test_irreversible_risk_intent():
 # ============================================================
 # 3. USER SENSITIVE → ALLOW_WEAK_ASSUMPTION
 # ============================================================
+
 
 def test_user_sensitive_intent():
     frame = make_frame([UncertaintyAxis.USER_SENSITIVE])
@@ -67,6 +71,7 @@ def test_user_sensitive_intent():
 # 4. CONTEXT DEPENDENT → ALLOW_WEAK_ASSUMPTION
 # ============================================================
 
+
 def test_context_dependent_intent():
     frame = make_frame([UncertaintyAxis.CONTEXT_DEPENDENT])
 
@@ -80,11 +85,14 @@ def test_context_dependent_intent():
 # 5. PRIORITY: HIGH_IMPACT overrides USER_SENSITIVE
 # ============================================================
 
+
 def test_priority_high_over_sensitive():
-    frame = make_frame([
-        UncertaintyAxis.HIGH_IMPACT,
-        UncertaintyAxis.USER_SENSITIVE,
-    ])
+    frame = make_frame(
+        [
+            UncertaintyAxis.HIGH_IMPACT,
+            UncertaintyAxis.USER_SENSITIVE,
+        ]
+    )
 
     intents = UncertaintyToIntentMapper.map(frame)
 
@@ -97,6 +105,7 @@ def test_priority_high_over_sensitive():
 # 6. NO MATCH → EMPTY
 # ============================================================
 
+
 def test_no_matching_axis():
     frame = make_frame([])
 
@@ -108,6 +117,7 @@ def test_no_matching_axis():
 # ============================================================
 # 7. PUBLIC API
 # ============================================================
+
 
 def test_function_api():
     frame = make_frame([UncertaintyAxis.HIGH_IMPACT])

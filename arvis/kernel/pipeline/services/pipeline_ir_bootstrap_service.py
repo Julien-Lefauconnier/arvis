@@ -27,9 +27,7 @@ class PipelineIRBootstrapService:
         )
 
         metadata: dict[str, Any] = (
-            dict(cognitive_input)
-            if isinstance(cognitive_input, dict)
-            else {}
+            dict(cognitive_input) if isinstance(cognitive_input, dict) else {}
         )
 
         ctx.ir_input = CognitiveInputIR(
@@ -51,9 +49,7 @@ class PipelineIRBootstrapService:
                     "unknown",
                 )
             ),
-            intent_hint=metadata.get(
-                "intent_hint"
-            ),
+            intent_hint=metadata.get("intent_hint"),
             metadata=metadata,
         )
 
@@ -111,15 +107,11 @@ class PipelineIRBootstrapService:
             )
 
         if conversation_mode is None:
-            conversation_mode = (
-                getattr(
-                    ctx,
-                    "extra",
-                    {},
-                ).get(
-                    "conversation_mode"
-                )
-            )
+            conversation_mode = getattr(
+                ctx,
+                "extra",
+                {},
+            ).get("conversation_mode")
 
         if conversation_mode is not None:
             conversation_mode = str(
@@ -130,9 +122,7 @@ class PipelineIRBootstrapService:
                 )
             )
 
-        memory_present = bool(
-            memory_projection
-        )
+        memory_present = bool(memory_projection)
 
         memory_pressure = float(
             memory_projection.get(
@@ -206,19 +196,13 @@ class PipelineIRBootstrapService:
         if ir_context is None:
             return
 
-        current_extra = dict(
-            ir_context.extra or {}
-        )
+        current_extra = dict(ir_context.extra or {})
 
-        propagated_keys = (
-            "confirmation_override",
-        )
+        propagated_keys = ("confirmation_override",)
 
         for key in propagated_keys:
             if key in ctx.extra:
-                current_extra[key] = (
-                    ctx.extra[key]
-                )
+                current_extra[key] = ctx.extra[key]
 
         ctx.ir_context = replace(
             ir_context,

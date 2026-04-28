@@ -12,15 +12,11 @@ def test_control_stage_applies_adaptive_modulation():
 
     pipeline = SimpleNamespace(
         hysteresis=SimpleNamespace(update=lambda **_: None),
-        epsilon_controller=SimpleNamespace(
-            compute=lambda **_: 1.0
-        ),
+        epsilon_controller=SimpleNamespace(compute=lambda **_: 1.0),
         regime_policy=SimpleNamespace(
             compute=lambda _: SimpleNamespace(epsilon_multiplier=1.0)
         ),
-        exploration=SimpleNamespace(
-            compute=lambda **_: {}
-        ),
+        exploration=SimpleNamespace(compute=lambda **_: {}),
     )
 
     ctx = SimpleNamespace(
@@ -37,7 +33,7 @@ def test_control_stage_applies_adaptive_modulation():
             regime="unstable",
             available=True,
         ),
-     )
+    )
 
     stage.run(pipeline, ctx)
 

@@ -12,17 +12,10 @@ class PipelineExecutionSyncService:
     def run(
         ctx: CognitivePipelineContext,
     ) -> None:
-        requires_confirmation = (
-            ctx._requires_confirmation
-        )
+        requires_confirmation = ctx._requires_confirmation
         can_execute = ctx._can_execute
 
-        assert (
-            ctx.execution_status
-            is not None
-        )
+        assert ctx.execution_status is not None
 
-        ctx.requires_confirmation = (
-            requires_confirmation
-        )
+        ctx.requires_confirmation = requires_confirmation
         ctx.can_execute = can_execute

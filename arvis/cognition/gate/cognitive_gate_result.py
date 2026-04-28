@@ -32,9 +32,7 @@ class CognitiveGateResult:
             cg_verdict = CognitiveGateVerdict.ABSTAIN
 
         normalized_codes = tuple(
-            str(code).strip()
-            for code in reason_codes
-            if str(code).strip()
+            str(code).strip() for code in reason_codes if str(code).strip()
         )
 
         if not normalized_codes:

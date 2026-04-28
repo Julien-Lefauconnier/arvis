@@ -14,6 +14,7 @@ class ChangeBudget:
 
     consumption is monotone non-decreasing (clamped).
     """
+
     budget: float
     consumption: float = 0.0
 

@@ -24,7 +24,6 @@ class ConversationPredictor:
         collapse_risk: float | None,
         uncertainty: float | None,
     ) -> ResponseStrategyType:
-
         base_energy = ConversationEnergyModel.compute_energy(
             collapse_risk=collapse_risk,
             uncertainty=uncertainty,
@@ -45,7 +44,6 @@ class ConversationPredictor:
         best_energy = base_energy
 
         for strategy in candidates:
-
             predicted_energy = ConversationPredictor._predict_energy(
                 strategy=strategy,
                 energy=base_energy,
@@ -63,7 +61,6 @@ class ConversationPredictor:
         strategy: ResponseStrategyType,
         energy: float,
     ) -> float:
-
         if strategy == ResponseStrategyType.ABSTENTION:
             return energy * 0.2
 

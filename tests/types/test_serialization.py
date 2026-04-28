@@ -9,7 +9,6 @@ from arvis.timeline.timeline_hashchain import TimelineHashChain
 
 
 def test_snapshot_pickle_roundtrip():
-
     entries = tuple(make_entries(3))
 
     chain = TimelineHashChain.build(entries)

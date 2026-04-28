@@ -7,7 +7,9 @@ from typing import Optional, Protocol
 
 class SwitchingRuntime(Protocol):
     def dwell_time(self) -> float: ...
+
     total_switches: int
+
 
 @dataclass(frozen=True)
 class SwitchingParams:
@@ -21,7 +23,10 @@ class SwitchingParams:
 def kappa_eff(params: SwitchingParams) -> float:
     return params.alpha - params.gamma_z * params.eta * params.L_T
 
-def switching_lhs(runtime: Optional[SwitchingRuntime], params: SwitchingParams) -> float:
+
+def switching_lhs(
+    runtime: Optional[SwitchingRuntime], params: SwitchingParams
+) -> float:
     if runtime is None:
         return float("-inf")
 
@@ -36,6 +41,8 @@ def switching_lhs(runtime: Optional[SwitchingRuntime], params: SwitchingParams) 
 
     return math.log(J) / tau_d + math.log(one_minus_k)
 
-def switching_condition(runtime: Optional[SwitchingRuntime], params: SwitchingParams) -> bool:
 
+def switching_condition(
+    runtime: Optional[SwitchingRuntime], params: SwitchingParams
+) -> bool:
     return switching_lhs(runtime, params) < 0

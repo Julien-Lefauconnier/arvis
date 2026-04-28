@@ -57,6 +57,7 @@ def test_projection_stage_runs_pi_impl_and_certifies():
     assert ctx.extra["pi_structured_available"] is True
     assert ctx.extra["projection_semantics"] == "structured+certified"
 
+
 def test_projection_stage_persists_structured_pi_state():
     ctx = DummyCtx()
     pipeline = DummyPipeline()

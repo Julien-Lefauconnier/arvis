@@ -10,6 +10,7 @@ from arvis.reasoning.reasoning_intent import ReasoningIntentType
 # Helper
 # ============================================================
 
+
 def make_gap(
     gap_type,
     description="desc",
@@ -20,15 +21,16 @@ def make_gap(
     return ReasoningGap(
         gap_type=gap_type,
         description=description,
-        origin=origin,            
+        origin=origin,
         origin_ref=origin_ref,
-        severity=severity,   
+        severity=severity,
     )
 
 
 # ============================================================
 # 1. MISSING_CONTEXT → REQUEST_USER_CLARIFICATION
 # ============================================================
+
 
 def test_missing_context_maps_to_intent():
     gap = make_gap(GapType.MISSING_CONTEXT)
@@ -47,6 +49,7 @@ def test_missing_context_maps_to_intent():
 # 2. OTHER GAP → EMPTY
 # ============================================================
 
+
 def test_other_gap_returns_empty():
     # prendre un autre type valide
     other_type = next(g for g in GapType if g != GapType.MISSING_CONTEXT)
@@ -61,6 +64,7 @@ def test_other_gap_returns_empty():
 # ============================================================
 # 3. EDGE: EMPTY DESCRIPTION
 # ============================================================
+
 
 def test_missing_context_empty_description():
     gap = make_gap(GapType.MISSING_CONTEXT, description="")

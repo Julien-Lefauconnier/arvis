@@ -19,7 +19,6 @@ class ConversationPredictiveStrategy:
         strategy: ResponseStrategyType,
         state: _StateProtocol,
     ) -> ResponseStrategyType:
-
         collapse_risk = state.signals.get("world_collapse_risk", 0.0)
         uncertainty = state.signals.get("uncertainty", 0.0)
 

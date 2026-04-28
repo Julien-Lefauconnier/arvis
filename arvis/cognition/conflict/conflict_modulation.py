@@ -1,5 +1,6 @@
 # arvis/cognition/conflict/conflict_modulation.py
 
+
 def apply_conflict_to_risk(
     base_risk: float,
     conflict_pressure: float,

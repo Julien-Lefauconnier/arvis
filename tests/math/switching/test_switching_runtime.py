@@ -2,6 +2,7 @@
 
 from arvis.math.switching.switching_runtime import SwitchingRuntime
 
+
 def test_switching_runtime_counts_switches():
     rt = SwitchingRuntime()
 
@@ -20,5 +21,3 @@ def test_switching_runtime_dwell_time():
         rt.update("stable")
 
     assert rt.dwell_time() > 0
-
-

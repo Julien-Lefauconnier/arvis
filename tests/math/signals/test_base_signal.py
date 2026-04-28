@@ -9,6 +9,7 @@ from arvis.math.signals.base import BaseSignal
 # Helper
 # ============================================================
 
+
 class DummyFloat:
     def __float__(self):
         return 0.5
@@ -23,6 +24,7 @@ class BrokenFloat:
 # 1. BASIC API
 # ============================================================
 
+
 def test_level_and_float():
     s = BaseSignal(0.3)
 
@@ -33,6 +35,7 @@ def test_level_and_float():
 # ============================================================
 # 2. COMPARATORS WITH FLOAT
 # ============================================================
+
 
 def test_comparators_float():
     s = BaseSignal(0.5)
@@ -46,6 +49,7 @@ def test_comparators_float():
 # ============================================================
 # 3. COMPARATORS WITH OBJECT
 # ============================================================
+
 
 def test_comparators_object():
     s = BaseSignal(0.5)
@@ -61,6 +65,7 @@ def test_comparators_object():
 # 4. EQ WITH INVALID OBJECT (exception path)
 # ============================================================
 
+
 def test_eq_exception_path():
     s = BaseSignal(0.5)
 
@@ -73,6 +78,7 @@ def test_eq_exception_path():
 # 5. EQ WITH NON-FLOATABLE OBJECT
 # ============================================================
 
+
 def test_eq_non_floatable():
     s = BaseSignal(0.5)
 
@@ -83,6 +89,7 @@ def test_eq_non_floatable():
 # 6. IS_ZERO
 # ============================================================
 
+
 def test_is_zero():
     assert BaseSignal(0.0).is_zero() is True
     assert BaseSignal(0.1).is_zero() is False
@@ -92,6 +99,7 @@ def test_is_zero():
 # 7. IS_MAX
 # ============================================================
 
+
 def test_is_max():
     assert BaseSignal(1.0).is_max() is True
     assert BaseSignal(0.9).is_max() is False
@@ -100,6 +108,7 @@ def test_is_max():
 # ============================================================
 # 8. CROSS COMPARISON BETWEEN SIGNALS
 # ============================================================
+
 
 def test_signal_to_signal_comparison():
     s1 = BaseSignal(0.3)
@@ -113,6 +122,7 @@ def test_signal_to_signal_comparison():
 # ============================================================
 # 9. IMMUTABILITY (important contract)
 # ============================================================
+
 
 def test_immutable():
     s = BaseSignal(0.5)

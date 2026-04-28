@@ -12,7 +12,6 @@ from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
 
 
 def test_full_system_pickle_roundtrip():
-
     timeline = TimelineSnapshot((), TimelineHashChain(()))
 
     bundle = CognitiveBundleSnapshot(

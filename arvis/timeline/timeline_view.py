@@ -23,7 +23,6 @@ class TimelineView:
     entries: Tuple[TimelineEntry, ...]
 
     def __post_init__(self) -> None:
-
         if not isinstance(self.role, TimelineViewRole):
             raise ValueError("TimelineView.role must be TimelineViewRole")
 

@@ -22,7 +22,6 @@ class ResponsePlanBuilder:
 
     @staticmethod
     def build(decision: ResponseStrategyDecision) -> ResponsePlan:
-
         # NOTE: lexicon should come from context in future (injection)
         lexicon = decision.signals.get("lexicon_snapshot")
         state = decision.signals.get("state")
@@ -42,7 +41,7 @@ class ResponsePlanBuilder:
             act = LinguisticAct(LinguisticActType.INFORMATION)
         else:
             raise ValueError(f"Unsupported strategy: {strategy}")
-        
+
         frame = None
         prompt = None
 

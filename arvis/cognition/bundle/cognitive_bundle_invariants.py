@@ -22,7 +22,6 @@ def assert_cognitive_bundle_invariants(bundle: CognitiveBundleSnapshot) -> None:
 
 
 def _assert_no_prescriptive_fields(bundle: CognitiveBundleSnapshot) -> None:
-
     allowed_fields = {
         "decision_result",
         "introspection",
@@ -56,7 +55,6 @@ def _assert_no_prescriptive_fields(bundle: CognitiveBundleSnapshot) -> None:
 
 
 def _assert_explanation_is_declarative(explanation: ExplanationSnapshot) -> None:
-
     forbidden_words = {
         "because",
         "therefore",
@@ -77,7 +75,6 @@ def _assert_explanation_is_declarative(explanation: ExplanationSnapshot) -> None
 
 
 def _assert_timeline_is_declarative(timeline: Sequence[TimelineEntry]) -> None:
-
     forbidden_types = {
         TimelineEntryType.ACTION_PROPOSED,
         TimelineEntryType.ACTION_VALIDATED,
@@ -93,7 +90,6 @@ def _assert_timeline_is_declarative(timeline: Sequence[TimelineEntry]) -> None:
 
 
 def _assert_context_hints_are_safe(bundle: CognitiveBundleSnapshot) -> None:
-
     hints = getattr(bundle, "context_hints", None)
 
     if not hints:
@@ -103,11 +99,8 @@ def _assert_context_hints_are_safe(bundle: CognitiveBundleSnapshot) -> None:
         raise CognitiveBundleInvariantError("context_hints must be a dict")
 
     for key, value in hints.items():
-
         if not isinstance(key, str):
-            raise CognitiveBundleInvariantError(
-                "context_hints keys must be str"
-            )
+            raise CognitiveBundleInvariantError("context_hints keys must be str")
 
         if not isinstance(value, (str, bool, int, float, type(None))):
             raise CognitiveBundleInvariantError(
@@ -116,20 +109,16 @@ def _assert_context_hints_are_safe(bundle: CognitiveBundleSnapshot) -> None:
 
 
 def _assert_no_hidden_logic(bundle: CognitiveBundleSnapshot) -> None:
-
     for value in vars(bundle).values():
         if callable(value):
-            raise CognitiveBundleInvariantError(
-                "Callable forbidden in CognitiveBundle"
-            )
+            raise CognitiveBundleInvariantError("Callable forbidden in CognitiveBundle")
 
 
-def _assert_memory_long_is_optional_and_passive(bundle: CognitiveBundleSnapshot) -> None:
-
+def _assert_memory_long_is_optional_and_passive(
+    bundle: CognitiveBundleSnapshot,
+) -> None:
     if bundle.memory_long is None:
         return
 
     if hasattr(bundle.memory_long, "write") or hasattr(bundle.memory_long, "mutate"):
-        raise CognitiveBundleInvariantError(
-            "Mutation forbidden on MemoryLongSnapshot"
-        )
+        raise CognitiveBundleInvariantError("Mutation forbidden on MemoryLongSnapshot")

@@ -50,7 +50,9 @@ class HoeffdingRiskBound:
         v = sum(self._events)
 
         if n == 0:
-            return RiskBoundSnapshot(n=0, violations=0, p_hat=0.0, p_ucb=0.0, verdict="OK")
+            return RiskBoundSnapshot(
+                n=0, violations=0, p_hat=0.0, p_ucb=0.0, verdict="OK"
+            )
 
         p_hat = v / n
         eps = sqrt(log(1.0 / self.params.delta) / (2.0 * n))

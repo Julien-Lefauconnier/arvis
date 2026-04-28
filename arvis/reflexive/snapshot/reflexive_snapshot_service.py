@@ -15,7 +15,7 @@ from arvis.reflexive.capabilities.capability_snapshot_builder import (
     build_capability_snapshot,
 )
 from arvis.reflexive.introspection.arvis_introspection_service import (
-    ArvisIntrospectionService
+    ArvisIntrospectionService,
 )
 from arvis.reflexive.attestation.reflexive_attestation import ReflexiveAttestation
 

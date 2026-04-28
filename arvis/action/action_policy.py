@@ -27,7 +27,6 @@ class ActionPolicy:
         decision: ActionDecision,
         risk: RiskSignal,
     ) -> ActionDecision:
-
         # --------------------------------------------------
         # 1. Hard block (system safety)
         # --------------------------------------------------

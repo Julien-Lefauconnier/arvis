@@ -7,6 +7,7 @@ from arvis.timeline.timeline_view_types import TimelineViewRole
 # Basic enum behavior
 # --------------------------------------------------
 
+
 def test_enum_contains_expected_roles():
     roles = {r.value for r in TimelineViewRole}
 
@@ -25,6 +26,7 @@ def test_enum_members_are_strings():
 # Uniqueness / integrity
 # --------------------------------------------------
 
+
 def test_enum_values_are_unique():
     values = [role.value for role in TimelineViewRole]
     assert len(values) == len(set(values))
@@ -39,6 +41,7 @@ def test_enum_names_are_unique():
 # Usage compatibility
 # --------------------------------------------------
 
+
 def test_enum_can_be_used_as_dict_key():
     d = {TimelineViewRole.PUBLIC: "ok"}
 
@@ -50,10 +53,10 @@ def test_enum_string_comparison():
     assert TimelineViewRole.PUBLIC.value == "public"
 
 
-
 # --------------------------------------------------
 # Edge / defensive
 # --------------------------------------------------
+
 
 def test_enum_no_empty_values():
     for role in TimelineViewRole:

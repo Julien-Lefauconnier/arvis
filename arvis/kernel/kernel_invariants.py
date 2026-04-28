@@ -2,6 +2,7 @@
 
 from typing import Any
 
+
 def assert_kernel_invariants(bundle: Any) -> None:
     """
     Global ARVIS invariants.
@@ -12,4 +13,3 @@ def assert_kernel_invariants(bundle: Any) -> None:
 
     if bundle.reasoning_gap is not None:
         assert bundle.reasoning_intent is not None
-

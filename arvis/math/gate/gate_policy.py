@@ -28,8 +28,9 @@ def apply_gate_policy(
     # -----------------------------------------
     # 1. STRICT MODE
     # -----------------------------------------
-    mode = getattr(ctx, "theoretical_enforcement_mode", None) \
-        or getattr(getattr(ctx, "pipeline", None), "theoretical_enforcement_mode", "monitor")
+    mode = getattr(ctx, "theoretical_enforcement_mode", None) or getattr(
+        getattr(ctx, "pipeline", None), "theoretical_enforcement_mode", "monitor"
+    )
 
     if mode == "strict" and envelope.hard_block:
         reasons.append(f"strict_veto_{envelope.hard_reason}")

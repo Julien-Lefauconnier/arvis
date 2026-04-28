@@ -4,7 +4,6 @@ import arvis
 
 
 def test_public_api_has_expected_symbols():
-
     expected = {
         "CognitiveBundleSnapshot",
         "CognitiveBundleBuilder",
@@ -43,5 +42,6 @@ def test_public_api_has_expected_symbols():
 
 def test_api_fingerprint_stable():
     from arvis.api.version import API_FINGERPRINT
+
     assert isinstance(API_FINGERPRINT, str)
     assert len(API_FINGERPRINT) == 64

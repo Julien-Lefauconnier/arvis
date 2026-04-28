@@ -12,8 +12,8 @@ from arvis.kernel.execution.execution_gate_status import (
     ExecutionGateStatus,
 )
 
-class PipelineResultFactory:
 
+class PipelineResultFactory:
     @staticmethod
     def build(
         ctx: CognitivePipelineContext,

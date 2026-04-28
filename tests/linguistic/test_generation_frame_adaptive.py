@@ -17,6 +17,7 @@ from arvis.conversation.response_strategy_type import ResponseStrategyType
 # Dummy helpers
 # ---------------------------------------------------------
 
+
 class DummyState:
     def __init__(self, signals: dict):
         self.signals = signals
@@ -45,6 +46,7 @@ def build_lexicon(entries):
 # Strategy → Act mapping
 # ---------------------------------------------------------
 
+
 def test_strategy_to_act_mapping():
     act = map_strategy_to_act(ResponseStrategyType.CONFIRMATION)
     assert act.act_type == LinguisticActType.REQUEST_CONFIRMATION
@@ -60,14 +62,15 @@ def test_strategy_to_act_mapping():
 # Frame memory injection
 # ---------------------------------------------------------
 
-def test_frame_includes_memory_constraints():
-    state = DummyState({
-        "constraints": ["no_financial_advice"]
-    })
 
-    lexicon = build_lexicon([
-        make_entry("Available information"),
-    ])
+def test_frame_includes_memory_constraints():
+    state = DummyState({"constraints": ["no_financial_advice"]})
+
+    lexicon = build_lexicon(
+        [
+            make_entry("Available information"),
+        ]
+    )
 
     frame = build_generation_frame(
         act=LinguisticAct(LinguisticActType.INFORMATION),
@@ -80,13 +83,13 @@ def test_frame_includes_memory_constraints():
 
 
 def test_frame_includes_preferences():
-    state = DummyState({
-        "preferences": {"language": True}
-    })
+    state = DummyState({"preferences": {"language": True}})
 
-    lexicon = build_lexicon([
-        make_entry("Available information"),
-    ])
+    lexicon = build_lexicon(
+        [
+            make_entry("Available information"),
+        ]
+    )
 
     frame = build_generation_frame(
         act=LinguisticAct(LinguisticActType.INFORMATION),
@@ -102,14 +105,15 @@ def test_frame_includes_preferences():
 # Adaptive tone / verbosity
 # ---------------------------------------------------------
 
-def test_frame_adapts_to_instability():
-    state = DummyState({
-        "instability": 0.7
-    })
 
-    lexicon = build_lexicon([
-        make_entry("Available information"),
-    ])
+def test_frame_adapts_to_instability():
+    state = DummyState({"instability": 0.7})
+
+    lexicon = build_lexicon(
+        [
+            make_entry("Available information"),
+        ]
+    )
 
     frame = build_generation_frame(
         act=LinguisticAct(LinguisticActType.INFORMATION),
@@ -122,13 +126,13 @@ def test_frame_adapts_to_instability():
 
 
 def test_frame_adapts_to_memory_instability():
-    state = DummyState({
-        "memory_instability": 0.7
-    })
+    state = DummyState({"memory_instability": 0.7})
 
-    lexicon = build_lexicon([
-        make_entry("Available information"),
-    ])
+    lexicon = build_lexicon(
+        [
+            make_entry("Available information"),
+        ]
+    )
 
     frame = build_generation_frame(
         act=LinguisticAct(LinguisticActType.INFORMATION),
@@ -144,11 +148,14 @@ def test_frame_adapts_to_memory_instability():
 # Canonical filtering safety
 # ---------------------------------------------------------
 
+
 def test_frame_filters_other_act_canonicals():
-    lexicon = build_lexicon([
-        make_entry("Available information"),
-        make_entry("Decision"),
-    ])
+    lexicon = build_lexicon(
+        [
+            make_entry("Available information"),
+            make_entry("Decision"),
+        ]
+    )
 
     frame = build_generation_frame(
         act=LinguisticAct(LinguisticActType.INFORMATION),
@@ -163,10 +170,13 @@ def test_frame_filters_other_act_canonicals():
 # Frame invariants
 # ---------------------------------------------------------
 
+
 def test_frame_is_valid_dataclass():
-    lexicon = build_lexicon([
-        make_entry("Available information"),
-    ])
+    lexicon = build_lexicon(
+        [
+            make_entry("Available information"),
+        ]
+    )
 
     frame = build_generation_frame(
         act=LinguisticAct(LinguisticActType.INFORMATION),

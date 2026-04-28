@@ -13,14 +13,18 @@ from arvis.timeline.timeline_types import TimelineEntryType
 
 def signal_journal_to_timeline_snapshot(journal: SignalJournal) -> TimelineSnapshot:
     signals = journal.list_signals()
-    entries = tuple(_signal_to_timeline_entry(signal, lamport=i) for i, signal in enumerate(signals))
+    entries = tuple(
+        _signal_to_timeline_entry(signal, lamport=i) for i, signal in enumerate(signals)
+    )
     return TimelineSnapshot.build(entries)
 
 
 def _signal_to_timeline_entry(signal: object, *, lamport: int) -> TimelineEntry:
     signal_id = getattr(signal, "signal_id", None)
     if signal_id is None:
-        raise RuntimeError("Signal without signal_id is forbidden for timeline projection")
+        raise RuntimeError(
+            "Signal without signal_id is forbidden for timeline projection"
+        )
     timestamp = getattr(signal, "timestamp", None)
     if not isinstance(timestamp, datetime):
         # fallback = stable, not "now"

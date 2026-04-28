@@ -14,10 +14,7 @@ def load_schema():
 def test_run_ir_matches_schema():
     os = CognitiveOS()
 
-    ir = os.run_ir(
-        user_id="u1",
-        cognitive_input={}
-    )
+    ir = os.run_ir(user_id="u1", cognitive_input={})
 
     schema = load_schema()
 
@@ -30,13 +27,9 @@ def test_run_ir_schema_multiple_runs():
     schema = load_schema()
 
     for _ in range(5):
-        ir = os.run_ir(
-            user_id="u1",
-            cognitive_input={}
-        )
+        ir = os.run_ir(user_id="u1", cognitive_input={})
 
         validate(instance=ir, schema=schema)
-
 
 
 def test_run_ir_contains_hash():

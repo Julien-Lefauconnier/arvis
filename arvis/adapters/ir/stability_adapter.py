@@ -6,7 +6,6 @@ from typing import Any
 
 
 class StabilityIRAdapter:
-
     @staticmethod
     def from_stability(cert: Any) -> dict[str, Any] | None:
         if cert is None:

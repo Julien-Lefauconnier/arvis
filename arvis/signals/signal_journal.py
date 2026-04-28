@@ -42,9 +42,7 @@ class SignalJournal:
             if self._signals:
                 last = self._signals[-1]
                 if signal.timestamp < last.timestamp:
-                    raise ValueError(
-                        "SignalJournal requires monotonic timestamps."
-                    )
+                    raise ValueError("SignalJournal requires monotonic timestamps.")
 
             self._signals.append(signal)
 
@@ -73,6 +71,7 @@ class SignalJournal:
         """
         with self._lock:
             self._signals.clear()
+
 
 # ------------------------------------------------------------------
 # Singleton (V1)

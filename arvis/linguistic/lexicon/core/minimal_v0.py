@@ -18,7 +18,6 @@ def build_minimal_lexicon_v0() -> LexiconSnapshot:
             status="preferred",
             synonyms=["Donnée connue", "État actuel"],
         ),
-
         # DECISION
         LexiconEntry(
             entry_id="decision.result",
@@ -26,7 +25,6 @@ def build_minimal_lexicon_v0() -> LexiconSnapshot:
             description="Explicit decision result",
             status="preferred",
         ),
-
         # REFUS
         LexiconEntry(
             entry_id="refusal.action",
@@ -34,7 +32,6 @@ def build_minimal_lexicon_v0() -> LexiconSnapshot:
             description="Explicit refusal",
             status="preferred",
         ),
-
         # ABSTENTION
         LexiconEntry(
             entry_id="abstention.impossible",
@@ -42,7 +39,6 @@ def build_minimal_lexicon_v0() -> LexiconSnapshot:
             description="Explicit abstention",
             status="preferred",
         ),
-
         # REQUEST_CONFIRMATION
         LexiconEntry(
             entry_id="confirmation.required",

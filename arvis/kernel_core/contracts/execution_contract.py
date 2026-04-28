@@ -6,6 +6,7 @@ from typing import Any, Protocol
 
 from arvis.kernel_core.process import BudgetConsumption, CognitiveProcess
 
+
 @dataclass(frozen=True)
 class ProcessExecutionOutcome:
     result: Any
@@ -13,6 +14,6 @@ class ProcessExecutionOutcome:
     completed: bool
     stage_name: str | None = None
 
+
 class ProcessExecutor(Protocol):
-    def execute_process(self, process: CognitiveProcess) -> ProcessExecutionOutcome:
-        ...
+    def execute_process(self, process: CognitiveProcess) -> ProcessExecutionOutcome: ...

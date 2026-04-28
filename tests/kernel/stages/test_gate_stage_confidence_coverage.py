@@ -81,7 +81,6 @@ def test_fusion_fallback(monkeypatch):
     assert "fusion_fallback" in ctx.extra.get("fusion_reasons", [])
 
 
-
 def test_switching_warning():
     ctx = DummyCtx()
 
@@ -110,7 +109,6 @@ def test_switching_warning():
     GateStage().run(None, ctx)
 
     assert ctx.extra.get("switching_warning") is True
-
 
 
 def test_global_instability_flag(monkeypatch):
@@ -143,6 +141,3 @@ def test_delta_positive_branch(monkeypatch):
     GateStage().run(None, ctx)
 
     assert ctx.extra["composite_gate_recommendation"] is not None
-
-
-

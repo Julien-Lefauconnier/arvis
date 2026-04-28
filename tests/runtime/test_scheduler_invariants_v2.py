@@ -38,9 +38,12 @@ def make_process(
         user_id="u1",
     )
 
+
 def test_enqueue_rejects_final_process():
     runtime_state = CognitiveRuntimeState()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=StubExecutor())
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=StubExecutor()
+    )
 
     proc = make_process("p-final", status=CognitiveProcessStatus.COMPLETED)
 
@@ -50,7 +53,9 @@ def test_enqueue_rejects_final_process():
 
 def test_ready_queue_does_not_duplicate_on_resume():
     runtime_state = CognitiveRuntimeState()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=StubExecutor())
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=StubExecutor()
+    )
 
     proc = make_process("p1")
     scheduler.enqueue(proc)
@@ -68,7 +73,9 @@ def test_ready_queue_does_not_duplicate_on_resume():
 
 def test_completed_process_is_not_rescheduled():
     runtime_state = CognitiveRuntimeState()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=StubExecutor())
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=StubExecutor()
+    )
 
     p_completed = make_process("p-completed", status=CognitiveProcessStatus.COMPLETED)
     runtime_state.processes[p_completed.process_id] = p_completed
@@ -84,7 +91,9 @@ def test_completed_process_is_not_rescheduled():
 
 def test_blocked_process_is_not_selected_even_if_in_ready_queue():
     runtime_state = CognitiveRuntimeState()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=StubExecutor())
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=StubExecutor()
+    )
 
     proc = make_process("p-blocked", status=CognitiveProcessStatus.BLOCKED)
     runtime_state.processes[proc.process_id] = proc
@@ -103,7 +112,9 @@ def test_interrupt_resume_does_not_duplicate_ready_queue():
     from arvis.kernel_core.interrupts.interrupt_type import CognitiveInterruptType
 
     runtime_state = CognitiveRuntimeState()
-    scheduler = CognitiveScheduler(runtime_state=runtime_state, process_executor=StubExecutor())
+    scheduler = CognitiveScheduler(
+        runtime_state=runtime_state, process_executor=StubExecutor()
+    )
 
     proc = make_process("p-int")
     scheduler.enqueue(proc)

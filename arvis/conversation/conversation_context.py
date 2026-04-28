@@ -34,4 +34,3 @@ class ConversationContext:
 
     user_profile: UserAdaptiveProfile | None = None
     long_memory: dict[str, Any] = field(default_factory=dict)
-    

@@ -17,7 +17,6 @@ class ConversationMemoryBridge:
 
     @staticmethod
     def inject(context: ConversationContext) -> None:
-
         snapshot = None
 
         # --------------------------------------------

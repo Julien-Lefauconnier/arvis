@@ -29,5 +29,5 @@ __all__ = [
     "UncertaintyFrame",
     "UncertaintyFrameRegistry",
     "CognitivePolicyResult",
-    "CognitiveSignalSnapshot",   
+    "CognitiveSignalSnapshot",
 ]

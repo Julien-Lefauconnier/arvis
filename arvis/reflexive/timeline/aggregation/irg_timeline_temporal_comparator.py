@@ -22,7 +22,6 @@ class IRGTimelineTemporalComparator:
         *,
         confidence_epsilon: float = 0.05,
     ) -> IRGTimelineTemporalDiff:
-
         prev_views = set(previous.observed_views)
         curr_views = set(current.observed_views)
 

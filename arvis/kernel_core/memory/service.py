@@ -76,7 +76,7 @@ class MemoryService:
             raise MemoryRecordNotFoundError(
                 f"memory record not found: {normalized_namespace}/{normalized_key}"
             )
-        
+
         if record.status == "deleted":
             raise MemoryRecordNotFoundError(
                 f"memory record deleted: {normalized_namespace}/{normalized_key}"
@@ -104,13 +104,11 @@ class MemoryService:
         )
 
         is_deleted = (
-            existing is not None
-            and getattr(existing, "status", "active") == "deleted"
+            existing is not None and getattr(existing, "status", "active") == "deleted"
         )
- 
+
         observed_at = datetime.utcnow()
         ts = int(observed_at.timestamp())
-
 
         if existing is None or is_deleted:
             record_id = (
@@ -182,12 +180,12 @@ class MemoryService:
             raise MemoryRecordNotFoundError(
                 f"memory record not found: {normalized_namespace}/{normalized_key}"
             )
-        
+
         if existing.status == "deleted":
             raise MemoryRecordNotFoundError(
                 f"memory record deleted: {normalized_namespace}/{normalized_key}"
             )
-        
+
         observed_at = datetime.utcnow()
         ts = int(observed_at.timestamp())
 
@@ -220,7 +218,6 @@ class MemoryService:
 
         self.repo.upsert_record(record=deleted_record)
 
-
     def _normalize_namespace(self, namespace: str) -> str:
         normalized = namespace.strip()
         if not normalized:
@@ -243,7 +240,6 @@ class MemoryService:
             normalized_tags.append(tag)
 
         return tuple(sorted(set(normalized_tags)))
-    
 
     def get_snapshot(
         self,

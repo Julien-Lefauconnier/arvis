@@ -22,7 +22,6 @@ class IRGTimelineExplanationBuilder:
     def build(
         memory: IRGTimelineTemporalMemory,
     ) -> IRGTimelineExplanation:
-
         diffs = list(memory.iter_diffs())
 
         if not diffs:
@@ -41,13 +40,9 @@ class IRGTimelineExplanationBuilder:
                     f"New timeline views appeared: {', '.join(diff.views_added)}."
                 )
             if diff.views_removed:
-                signals.append(
-                    "Some timeline views are no longer observed."
-                )
+                signals.append("Some timeline views are no longer observed.")
             if diff.entry_types_added:
-                signals.append(
-                    "New types of timeline entries have been observed."
-                )
+                signals.append("New types of timeline entries have been observed.")
             if not diff.is_stable:
                 unstable = True
 

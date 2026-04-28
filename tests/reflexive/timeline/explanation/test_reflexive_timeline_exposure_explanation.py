@@ -9,6 +9,7 @@ from arvis.reflexive.timeline.explanation.reflexive_timeline_exposure_explanatio
 # Helpers
 # --------------------------------------------------
 
+
 class DummyRole:
     def __init__(self, value):
         self.value = value
@@ -18,11 +19,13 @@ class DummyRole:
 # Core behavior
 # --------------------------------------------------
 
+
 def test_no_roles_no_public_view():
     result = ReflexiveTimelineExposureExplanation.build([])
 
     assert isinstance(result, dict)
-    assert "timeline" in result or result  
+    assert "timeline" in result or result
+
 
 def test_no_roles_but_public_view():
     result = ReflexiveTimelineExposureExplanation.build(
@@ -39,6 +42,7 @@ def test_no_roles_but_public_view():
 # --------------------------------------------------
 # Public factual roles
 # --------------------------------------------------
+
 
 def test_public_role_triggers_public_timeline():
     result = ReflexiveTimelineExposureExplanation.build(["public"])
@@ -62,6 +66,7 @@ def test_multiple_public_roles():
 # Non factual roles
 # --------------------------------------------------
 
+
 def test_non_factual_roles_add_limitation():
     result = ReflexiveTimelineExposureExplanation.build(["internal", "private"])
 
@@ -81,6 +86,7 @@ def test_mixed_roles_public_and_non_factual():
 # Role normalization
 # --------------------------------------------------
 
+
 def test_roles_with_value_attribute():
     roles = [DummyRole("public"), DummyRole("internal")]
 
@@ -90,17 +96,13 @@ def test_roles_with_value_attribute():
 
 
 def test_roles_with_none_filtered():
-    result = ReflexiveTimelineExposureExplanation.build(
-        ["public", None, "internal"]
-    )
+    result = ReflexiveTimelineExposureExplanation.build(["public", None, "internal"])
 
     assert isinstance(result, dict)
 
 
 def test_roles_are_deduplicated():
-    result = ReflexiveTimelineExposureExplanation.build(
-        ["public", "public", "public"]
-    )
+    result = ReflexiveTimelineExposureExplanation.build(["public", "public", "public"])
 
     assert isinstance(result, dict)
 
@@ -114,6 +116,7 @@ def test_roles_as_non_string_objects():
 # --------------------------------------------------
 # Edge cases
 # --------------------------------------------------
+
 
 def test_empty_iterable_object():
     result = ReflexiveTimelineExposureExplanation.build(iter([]))

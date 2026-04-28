@@ -7,9 +7,7 @@ import numpy as np
 
 
 class StructuralRiskStage:
-
     def run(self, pipeline: Any, ctx: Any) -> None:
-
         prev_slow = getattr(ctx, "slow_state_prev", None)
         cur_slow = getattr(ctx, "slow_state", None)
 

@@ -28,5 +28,3 @@ def test_empty_ir_produces_signal():
 
     assert isinstance(canonicals, list)
     assert len(canonicals) > 0
-
-

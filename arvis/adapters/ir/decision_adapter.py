@@ -17,9 +17,7 @@ from arvis.ir.decision import (
 
 
 def _hash(payload: Dict[str, Any]) -> str:
-    return sha256(
-        dumps(payload, sort_keys=True, default=str).encode()
-    ).hexdigest()
+    return sha256(dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
 
 
 def _string_value(value: object | None, default: str = "") -> str:
@@ -119,7 +117,8 @@ class DecisionIRAdapter:
             gaps=gaps,
             conflicts=conflicts,
             reasoning_intents=tuple(
-                _string_value(x) for x in (getattr(result, "reasoning_intents", []) or [])
+                _string_value(x)
+                for x in (getattr(result, "reasoning_intents", []) or [])
             ),
             uncertainty_frames=uncertainty,
             knowledge=knowledge,
