@@ -2,6 +2,8 @@
 
 **The Cognitive Operating System for Governed AI Systems**
 
+> Python 3.11+ • Deterministic • Replayable • Governed • Auditable
+
 ARVIS is a deterministic runtime layer that treats reasoning as **critical infrastructure**.
 
 It provides governed cognition, replayable decisions, inspectable state transitions, controlled execution, explicit uncertainty handling, and verifiable audit trails.
@@ -55,6 +57,18 @@ pip install arvis
 ```
 
 ```python
+from arvis import ArvisEngine
+
+engine = ArvisEngine()
+
+result = engine.ask("Should this high-risk transaction be approved?")
+
+print(result.summary())
+```
+
+Advanced runtime access:
+
+```python
 from arvis import CognitiveOS
 
 os = CognitiveOS()
@@ -64,7 +78,7 @@ result = os.run(
     cognitive_input={
         "risk": 0.92,
         "action": "wire_transfer",
-    },
+    }
 )
 
 print(result.summary())
@@ -76,6 +90,23 @@ Example outcome:
 Status        : BLOCKED
 Approval Need : YES
 Commitment    : 8642d95cfdb73c16...
+```
+
+---
+
+## Public API Levels
+
+ARVIS exposes two stable entrypoints:
+
+| API | Intended Use |
+|-----|--------------|
+| ArvisEngine | Recommended developer-facing standard API |
+| CognitiveOS | Advanced low-level runtime control |
+
+For most integrations, start with:
+
+```python 
+from arvis import ArvisEngine
 ```
 
 ---
@@ -189,19 +220,19 @@ ARVIS addresses these requirements natively.
 
 ## Validation
 
-ARVIS is tested like infrastructure.
+ARVIS is validated like infrastructure.
 
 Current suite includes:
 
+* 1300+ passing tests
 * unit tests
 * integration tests
-* replay verification
-* determinism tests
+* deterministic replay verification
 * adversarial scenarios
 * scheduler fairness tests
 * hashchain integrity tests
 * mathematical invariants
-* robustness tests
+* runtime robustness checks
 
 ---
 
@@ -210,11 +241,12 @@ Current suite includes:
 Run ready-to-use examples:
 
 ```bash
-python examples/01_gate_refusal.py
+python examples/00_quickstart_engine.py
 ```
 
 Included examples:
 
+0. ArvisEngine quickstart
 1. Gate refusal
 2. Deterministic replay
 3. IR export
@@ -271,17 +303,3 @@ ARVIS is about **trustworthy operation under constraints**.
 Most AI systems try to generate outputs.
 ARVIS governs whether outputs are allowed to exist.
 ```
-
----
-
-## Final Statement
-
-ARVIS turns reasoning systems into software infrastructure:
-
-* explicit constraints
-* explicit state
-* explicit boundaries
-* explicit accountability
-* explicit history
-
-Because important intelligence systems should behave like infrastructure — not improvisation.

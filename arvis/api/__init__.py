@@ -16,6 +16,11 @@ from .timeline import TimelineView
 from .stability import StabilityView
 
 # -----------------------------------------------------
+# Product layer
+# -----------------------------------------------------
+from .engine import ArvisEngine
+
+# -----------------------------------------------------
 # Versioning / Contract Fingerprints
 # -----------------------------------------------------
 from .version import (
@@ -114,6 +119,7 @@ __all__ = [
     "DecisionTraceView",
     "TimelineView",
     "StabilityView",
+    "ArvisEngine",
     # Versioning
     "PACKAGE_VERSION",
     "API_VERSION",

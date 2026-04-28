@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pprint import pformat
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Any, Callable, Dict, Optional, cast
@@ -138,6 +139,83 @@ class CognitiveResultView:
 
     def to_ir(self) -> Optional[Dict[str, Any]]:
         return self._ir
+
+    def quickstart_payload(self) -> Dict[str, Any]:
+        """
+        Compact structured payload intended for examples,
+        onboarding, demos, and README snippets.
+        """
+        decision = self.decision
+
+        allowed = bool(getattr(decision, "allowed", False))
+        requires_validation = bool(getattr(decision, "requires_user_validation", False))
+        denied_reason = getattr(decision, "denied_reason", None)
+
+        return {
+            "version": API_VERSION,
+            "status": ("ALLOWED" if allowed else "BLOCKED"),
+            "approval_required": requires_validation,
+            "reason": denied_reason,
+            "has_trace": self.trace_view is not None,
+            "has_timeline": self.timeline_view is not None,
+            "commitment": self.global_commitment,
+        }
+
+    def to_json(self, *, indent: int = 2) -> str:
+        """
+        Stable JSON serialization of public structured output.
+        """
+        return json.dumps(
+            self.to_dict(),
+            indent=indent,
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+
+    def quickstart_json(self, *, indent: int = 2) -> str:
+        """
+        Compact JSON payload for quickstarts.
+        """
+        return json.dumps(
+            self.quickstart_payload(),
+            indent=indent,
+            sort_keys=False,
+            ensure_ascii=False,
+        )
+
+    def explain(self) -> str:
+        """
+        Human-friendly executive summary intended for examples,
+        demos, CLI usage, and onboarding.
+        """
+        decision = self.decision
+
+        allowed = bool(getattr(decision, "allowed", False))
+        requires_validation = bool(getattr(decision, "requires_user_validation", False))
+        denied_reason = getattr(decision, "denied_reason", None) or "-"
+
+        status = "ALLOWED" if allowed else "BLOCKED"
+        approval = "YES" if requires_validation else "NO"
+        commitment = (
+            f"{self.global_commitment[:16]}..." if self.global_commitment else "-"
+        )
+        trace = "Available" if self.trace_view else "None"
+
+        lines = [
+            f"Status         : {status}",
+            f"Approval Need  : {approval}",
+            f"Reason         : {denied_reason}",
+            f"Commitment     : {commitment}",
+            f"Trace          : {trace}",
+        ]
+
+        return "\n".join(lines)
+
+    def pretty(self) -> str:
+        """
+        Pretty printed structured payload for terminal use.
+        """
+        return pformat(self.to_dict(), sort_dicts=False)
 
     def summary(self) -> str:
         if not self.stability_view:
