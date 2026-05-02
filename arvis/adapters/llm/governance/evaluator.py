@@ -19,10 +19,14 @@ class LLMGovernanceEvaluator:
         if not policy.allow_llm:
             return LLMGovernanceDecision.deny("llm_execution_disabled")
 
-        if len(request.prompt) > policy.max_prompt_chars:
+        prompt = request.prompt or ""
+
+        if len(prompt) > policy.max_prompt_chars:
             return LLMGovernanceDecision.deny("prompt_too_large")
 
-        if policy.require_system_prompt and not request.system_prompt:
+        has_system = any(m.role == "system" for m in request.messages or [])
+
+        if policy.require_system_prompt and not has_system:
             return LLMGovernanceDecision.deny("missing_system_prompt")
 
         if (
@@ -39,7 +43,9 @@ class LLMGovernanceEvaluator:
         ):
             return LLMGovernanceDecision.deny("model_not_allowed")
 
-        lowered = request.prompt.lower()
+        all_text = " ".join(m.content for m in (request.messages or []))
+        lowered = all_text.lower()
+
         for term in policy.blocked_terms:
             if term.lower() in lowered:
                 return LLMGovernanceDecision.deny("blocked_term_detected")

@@ -10,9 +10,9 @@ Only symbols listed in __all__ are considered public API.
 # Core Runtime
 # -----------------------------------------------------
 # -----------------------------------------------------
-# Adapters
+# LLM Runtime (unified entrypoint)
 # -----------------------------------------------------
-from arvis.adapters.llm import BaseLLMAdapter, OpenAIAdapter
+from arvis.adapters.llm import LLMRuntimeExecutor
 
 # -----------------------------------------------------
 # Cognition
@@ -158,9 +158,8 @@ __all__ = [
     "ControlInertia",
     "StabilityObserver",
     "StabilitySnapshot",
-    # Adapters
-    "BaseLLMAdapter",
-    "OpenAIAdapter",
+    # LLM Runtime
+    "LLMRuntimeExecutor",
     # Tools
     "BaseTool",
     "ToolExecutor",

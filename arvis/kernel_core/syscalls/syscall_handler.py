@@ -6,6 +6,7 @@ import inspect
 from typing import Any, Protocol
 
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
+from arvis.kernel_core.syscalls.errors import SyscallError
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import SyscallFn, get_syscall
@@ -53,9 +54,12 @@ class SyscallHandler:
         self._local_counter += 1
 
         if fn is None:
-            missing_result = SyscallResult(
-                success=False,
-                error=f"unknown_syscall:{syscall.name}",
+            missing_result = SyscallResult.failure(
+                SyscallError(
+                    code="unknown_syscall",
+                    message=syscall.name,
+                    retryable=False,
+                )
             )
             self._journal(
                 ctx=ctx,
@@ -69,9 +73,13 @@ class SyscallHandler:
         try:
             sig.bind(self, **syscall.args)
         except TypeError as exc:
-            error_result = SyscallResult(
-                success=False,
-                error=f"invalid_syscall_args:{str(exc)}",
+            error_result = SyscallResult.failure(
+                SyscallError(
+                    code="invalid_syscall_args",
+                    message=str(exc),
+                    retryable=False,
+                    metadata={"syscall": syscall.name},
+                )
             )
             self._journal(
                 ctx=ctx,
@@ -96,9 +104,13 @@ class SyscallHandler:
                 },
             )
         except Exception as exc:
-            error_result = SyscallResult(
-                success=False,
-                error=f"{type(exc).__name__}:{str(exc)}",
+            error_result = SyscallResult.failure(
+                SyscallError(
+                    code=type(exc).__name__,
+                    message=str(exc),
+                    retryable=False,
+                    metadata={"syscall": syscall.name},
+                )
             )
             self._journal(
                 ctx=ctx,
@@ -109,9 +121,13 @@ class SyscallHandler:
             return error_result
 
         if not isinstance(syscall_result, SyscallResult):
-            syscall_result = SyscallResult(
-                success=False,
-                error=f"invalid_syscall_return_type:{type(syscall_result).__name__}",
+            syscall_result = SyscallResult.failure(
+                SyscallError(
+                    code="invalid_syscall_return_type",
+                    message=type(syscall_result).__name__,
+                    retryable=False,
+                    metadata={"syscall": syscall.name},
+                )
             )
 
         self._journal(
@@ -205,6 +221,10 @@ class SyscallHandler:
         if result.error is not None:
             entry["error"] = result.error
 
+        # fallback legacy ONLY
+        if result.error_detail is not None:
+            entry["error_detail"] = result.error_detail.to_dict()
+
         if isinstance(results, list):
             results.append(entry)
 
@@ -214,6 +234,9 @@ class SyscallHandler:
 
     def _default_replay_policy(self, syscall_name: str) -> str:
         if syscall_name == "tool.execute":
+            return "journal_only_replay"
+
+        if syscall_name.startswith("llm."):
             return "journal_only_replay"
 
         if syscall_name.startswith("vfs.") and syscall_name not in {
@@ -226,17 +249,10 @@ class SyscallHandler:
         if syscall_name in {"vfs.list", "vfs.tree", "vfs.zip.analyze"}:
             return "recompute"
 
-        # -----------------------------------------
-        # MEMORY SYSCALLS — explicit replay policy
-        # -----------------------------------------
         if syscall_name in {
             "memory.get",
             "memory.list",
             "memory.snapshot",
-        }:
-            return "journal_only_replay"
-
-        if syscall_name in {
             "memory.put",
             "memory.delete",
             "memory.revoke",

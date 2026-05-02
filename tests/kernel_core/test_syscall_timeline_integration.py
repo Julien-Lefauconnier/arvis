@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
+from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
 from arvis.tools.base import BaseTool
 from arvis.tools.executor import ToolExecutor
+from arvis.tools.manager import ToolManager
 from arvis.tools.registry import ToolRegistry
 
 
@@ -18,14 +22,34 @@ class DummyTool(BaseTool):
         return {"ok": True}
 
 
-def test_syscall_emits_runtime_signal():
+class DummySpec:
+    def __init__(self, name):
+        self.name = name
+
+
+def test_syscall_emits_runtime_signal(monkeypatch):
+    monkeypatch.setattr(
+        ToolPolicyEvaluator,
+        "evaluate",
+        lambda invocation, registry: SimpleNamespace(
+            allowed=True,
+            reason=None,
+        ),
+    )
     runtime_state = CognitiveRuntimeState()
 
     registry = ToolRegistry()
     registry.register(DummyTool())
     executor = ToolExecutor(registry)
+    manager = ToolManager(
+        registry=registry,
+        executor=executor,
+    )
 
-    services = KernelServiceRegistry(tool_executor=executor)
+    services = KernelServiceRegistry(
+        tool_executor=executor,
+        tool_manager=manager,
+    )
 
     handler = SyscallHandler(
         runtime_state=runtime_state,
@@ -38,9 +62,11 @@ def test_syscall_emits_runtime_signal():
     class DummyDecision:
         tool = "dummy"
         tool_payload = {}
+        spec = DummySpec("dummy")
 
     class DummyResult:
         action_decision = DummyDecision()
+        spec = DummySpec(action_decision.tool)
 
     syscall = Syscall(
         name="tool.execute",

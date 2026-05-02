@@ -16,6 +16,12 @@ class ToolRetryPolicy:
         if not getattr(ctx, "_tool_failure", False):
             return
 
+        # --- respect tool spec if present ---
+        last_tool = getattr(ctx, "_last_tool_spec", None)
+        if last_tool is not None:
+            if not last_tool.retryable:
+                return
+
         # retry only if system is safe enough
         risk = float(getattr(ctx, "collapse_risk", 0.0))
 

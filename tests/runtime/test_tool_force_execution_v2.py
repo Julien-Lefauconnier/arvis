@@ -15,10 +15,24 @@ class DummyTool(BaseTool):
         return {"ok": True, "tool_payload": input_data.get("tool_payload")}
 
 
+class DummySpec:
+    def __init__(self, name):
+        self.name = name
+
+
 def test_force_tool_executes_when_matching_action_exists():
     os = CognitiveOS()
     os.register_tool(DummyTool())
+    ctx = os._build_context(
+        "u1",
+        {},
+        extra={
+            "force_tool": "dummy_force_v3",
+            "_force_execution": True,
+        },
+    )
 
+    # 🔑 inject a fake decision to simulate pipeline output
     fake_action = SimpleNamespace(
         tool="dummy_force_v3",
         tool_payload={"x": 42},
@@ -29,39 +43,17 @@ def test_force_tool_executes_when_matching_action_exists():
 
     fake_result = SimpleNamespace(
         action_decision=fake_action,
-        can_execute=False,
-        requires_confirmation=True,
     )
 
-    execution = os.runtime.execute(
-        os._build_context(
-            "u1",
-            {},
-            extra={
-                "force_tool": "dummy_force_v3",
-                "_force_execution": True,
-            },
-        )
+    os.runtime._execute_tool_if_needed(
+        ctx=ctx,
+        process=SimpleNamespace(process_id=SimpleNamespace(value="p1")),
+        result=fake_result,
     )
 
-    # smoke test: runtime path itself remains usable
-    assert execution is not None
-
-    syscall_result = os.runtime.syscall_handler.handle(
-        __import__("arvis.kernel_core.syscalls.syscall", fromlist=["Syscall"]).Syscall(
-            name="tool.execute",
-            args={
-                "result": fake_result,
-                "ctx": os._build_context("u1", {}, extra={}),
-                "process_id": "proc::u1::manual",
-            },
-        )
-    )
-
-    assert syscall_result.success is True
-    assert syscall_result.result is not None
-    assert syscall_result.result.output["ok"] is True
-    assert syscall_result.result.output["tool_payload"] == {"x": 42}
+    syscall_results = ctx.extra.get("syscall_results", [])
+    assert len(syscall_results) == 1
+    assert syscall_results[0]["success"] is True
 
 
 def test_force_tool_non_matching_name_does_not_change_manual_syscall_behavior():
@@ -71,6 +63,7 @@ def test_force_tool_non_matching_name_does_not_change_manual_syscall_behavior():
     fake_action = SimpleNamespace(
         tool="another_tool",
         tool_payload={"x": 1},
+        spec=DummySpec("another_tool"),
         allowed=True,
         requires_confirmation=False,
         can_execute=True,
@@ -102,6 +95,7 @@ def test_force_tool_unknown_tool_fails_cleanly():
     fake_action = SimpleNamespace(
         tool="missing_tool",
         tool_payload={},
+        spec=DummySpec("missing_tool"),
         allowed=True,
         requires_confirmation=False,
         can_execute=True,

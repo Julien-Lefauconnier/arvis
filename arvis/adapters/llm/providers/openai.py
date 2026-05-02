@@ -33,25 +33,16 @@ class OpenAIAdapter(BaseLLMProvider):
         self._model = model
 
     def generate(self, request: LLMRequest) -> LLMResponse:
-        messages: list[dict[str, str]] = []
-
-        if request.system_prompt:
-            messages.append(
-                {
-                    "role": "system",
-                    "content": request.system_prompt,
-                }
-            )
-
-        messages.append(
+        messages: list[dict[str, str]] = [
             {
-                "role": "user",
-                "content": request.prompt,
+                "role": m.role,
+                "content": m.content,
             }
-        )
+            for m in (request.messages or [])
+        ]
 
         response: Any = self._client.chat.completions.create(
-            model=request.model or self._model,
+            model=request.effective_model or self._model,
             messages=messages,
             temperature=request.temperature,
             max_tokens=request.max_tokens,
@@ -61,9 +52,9 @@ class OpenAIAdapter(BaseLLMProvider):
 
         return LLMResponse(
             content=content,
-            raw=response,
+            provider="openai",
+            model=request.effective_model or self._model,
             metadata={
-                "provider": "openai",
-                "model": request.model or self._model,
+                "provider_response_id": getattr(response, "id", None),
             },
         )

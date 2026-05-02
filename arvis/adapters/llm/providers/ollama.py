@@ -31,27 +31,21 @@ class OllamaProvider(BaseLLMProvider):
         self._model = model
 
     def generate(self, request: LLMRequest) -> LLMResponse:
+        messages = [
+            {
+                "role": m.role,
+                "content": m.content,
+            }
+            for m in (request.messages or [])
+        ]
+
         payload: dict[str, Any] = {
-            "model": request.model or self._model,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": request.prompt,
-                }
-            ],
+            "model": request.effective_model or self._model,
+            "messages": messages,
             "options": {
                 "temperature": request.temperature,
             },
         }
-
-        if request.system_prompt:
-            payload["messages"].insert(
-                0,
-                {
-                    "role": "system",
-                    "content": request.system_prompt,
-                },
-            )
 
         response: Any = self._client.chat(**payload)
 
@@ -59,9 +53,9 @@ class OllamaProvider(BaseLLMProvider):
 
         return LLMResponse(
             content=content,
-            raw=response,
+            provider="ollama",
+            model=request.effective_model or self._model,
             metadata={
-                "provider": "ollama",
-                "model": request.model or self._model,
+                "provider_response_id": response.get("id"),
             },
         )

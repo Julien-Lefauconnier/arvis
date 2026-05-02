@@ -2,11 +2,13 @@
 
 from types import SimpleNamespace
 
+from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 from arvis.tools.base import BaseTool
 from arvis.tools.executor import ToolExecutor
+from arvis.tools.manager import ToolManager
 from arvis.tools.registry import ToolRegistry
 
 
@@ -20,6 +22,11 @@ class DummyTool(BaseTool):
     def execute(self, input_data):
         assert input_data["tool_payload"]["x"] == 1
         return {"ok": True, "input": input_data}
+
+
+class DummySpec:
+    def __init__(self, name):
+        self.name = name
 
 
 def test_syscall_journal():
@@ -51,12 +58,19 @@ def test_syscall_journal():
     assert entry["error"] == "unknown_syscall:unknown.test"
 
 
-def test_tool_execute_syscall():
+def test_tool_execute_syscall_policy_denied():
     registry = ToolRegistry()
     registry.register(DummyTool())
     executor = ToolExecutor(registry)
+    manager = ToolManager(
+        registry=registry,
+        executor=executor,
+    )
 
-    services = KernelServiceRegistry(tool_executor=executor)
+    services = KernelServiceRegistry(
+        tool_executor=executor,
+        tool_manager=manager,
+    )
 
     handler = SyscallHandler(
         runtime_state=None,
@@ -69,9 +83,11 @@ def test_tool_execute_syscall():
     class DummyDecision:
         tool = "dummy"
         tool_payload = {"x": 1}
+        spec = DummySpec("dummy")
 
     class DummyResult:
         action_decision = DummyDecision()
+        spec = DummySpec(action_decision.tool)
 
     syscall = Syscall(
         name="tool.execute",
@@ -83,19 +99,17 @@ def test_tool_execute_syscall():
 
     result = handler.handle(syscall)
 
-    assert result.success is True
-    assert result.result is not None
-    assert result.result.output["ok"] is True
-    assert result.result.output["input"]["tool_payload"]["x"] == 1
+    assert result.success is False
+    assert result.error is not None
 
     entry = ctx.extra["syscall_results"][0]
     assert entry["syscall"] == "tool.execute"
-    assert entry["success"] is True
+    assert entry["success"] is False
     assert "syscall_id" in entry
     assert entry["replay_policy"] == "journal_only_replay"
 
 
-def test_tool_execute_syscall_failure():
+def test_tool_execute_syscall_failure(monkeypatch):
     class FailingTool(BaseTool):
         name = "fail"
 
@@ -105,8 +119,15 @@ def test_tool_execute_syscall_failure():
     registry = ToolRegistry()
     registry.register(FailingTool())
     executor = ToolExecutor(registry)
+    manager = ToolManager(
+        registry=registry,
+        executor=executor,
+    )
 
-    services = KernelServiceRegistry(tool_executor=executor)
+    services = KernelServiceRegistry(
+        tool_executor=executor,
+        tool_manager=manager,
+    )
 
     handler = SyscallHandler(
         runtime_state=None,
@@ -114,13 +135,25 @@ def test_tool_execute_syscall_failure():
         services=services,
     )
 
+    monkeypatch.setattr(
+        ToolPolicyEvaluator,
+        "evaluate",
+        lambda invocation, registry: SimpleNamespace(
+            allowed=True,
+            reason=None,
+        ),
+    )
+
     ctx = type("Ctx", (), {"extra": {}})()
 
     class DummyDecision:
         tool = "fail"
+        tool_payload = {}
+        spec = DummySpec("fail")
 
     class DummyResult:
         action_decision = DummyDecision()
+        spec = DummySpec(action_decision.tool)
 
     syscall = Syscall(
         name="tool.execute",
@@ -130,14 +163,14 @@ def test_tool_execute_syscall_failure():
     result = handler.handle(syscall)
 
     assert result.success is False
-    assert result.error == "boom"
+    assert "boom" in result.error
 
     entry = ctx.extra["syscall_results"][0]
     assert entry["syscall"] == "tool.execute"
     assert entry["success"] is False
     assert "syscall_id" in entry
     assert entry["replay_policy"] == "journal_only_replay"
-    assert entry["error"] == "boom"
+    assert "boom" in entry["error"]
 
 
 def test_memory_syscalls_replay_policy():
@@ -187,3 +220,55 @@ def test_memory_snapshot_journal_meta_only():
 
     # critical invariant
     assert "result" not in entry
+
+
+def test_tool_execute_syscall_success(monkeypatch):
+    registry = ToolRegistry()
+    registry.register(DummyTool())
+    executor = ToolExecutor(registry)
+    manager = ToolManager(
+        registry=registry,
+        executor=executor,
+    )
+
+    # --- FORCE POLICY ALLOWED ---
+    from arvis.adapters.tools.policy import ToolPolicyEvaluator
+
+    monkeypatch.setattr(
+        ToolPolicyEvaluator,
+        "evaluate",
+        lambda invocation, registry: SimpleNamespace(
+            allowed=True,
+            reason=None,
+        ),
+    )
+
+    services = KernelServiceRegistry(
+        tool_executor=executor,
+        tool_manager=manager,
+    )
+
+    handler = SyscallHandler(
+        runtime_state=None,
+        scheduler=None,
+        services=services,
+    )
+
+    ctx = make_ctx()
+
+    class DummyDecision:
+        tool = "dummy"
+        tool_payload = {"x": 1}
+
+    class DummyResult:
+        action_decision = DummyDecision()
+
+    result = handler.handle(
+        Syscall(
+            name="tool.execute",
+            args={"result": DummyResult(), "ctx": ctx},
+        )
+    )
+
+    assert result.success is True
+    assert result.result.output["ok"] is True

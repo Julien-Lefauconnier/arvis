@@ -12,10 +12,8 @@ class ToolRegistry:
     def register(self, tool: BaseTool) -> None:
         self._tools[tool.name] = tool
 
-    def get(self, name: str) -> BaseTool:
-        if name not in self._tools:
-            raise ValueError(f"Tool '{name}' not found")
-        return self._tools[name]
+    def get(self, name: str) -> BaseTool | None:
+        return self._tools.get(name)
 
     def list(self) -> list[str]:
         return list(self._tools.keys())
@@ -26,6 +24,8 @@ class ToolRegistry:
 
     def get_spec(self, name: str) -> ToolSpec | None:
         tool = self.get(name)
+        if tool is None:
+            return None
         return getattr(tool, "spec", None)
 
     def list_specs(self) -> dict[str, ToolSpec]:

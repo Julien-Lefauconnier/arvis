@@ -10,12 +10,12 @@ from arvis.kernel_core.syscalls.syscall_registry import register_syscall
 
 
 @runtime_checkable
-class ToolExecutorLike(Protocol):
-    def execute(self, result: Any, ctx: Any) -> Any: ...
+class ToolManagerLike(Protocol):
+    def run(self, result: Any, ctx: Any) -> Any: ...
 
 
 class ServiceRegistryLike(Protocol):
-    tool_executor: ToolExecutorLike | None
+    tool_manager: ToolManagerLike | None
 
 
 class SyscallHandlerLike(Protocol):
@@ -53,16 +53,16 @@ def tool_execute(
     ctx: Any,
     **kwargs: Any,
 ) -> SyscallResult:
-    tool_executor = handler.services.tool_executor
+    tool_manager = handler.services.tool_manager
 
-    if tool_executor is None:
+    if tool_manager is None:
         return SyscallResult(
             success=False,
-            error="no_tool_executor",
+            error="no_tool_manager",
         )
 
     try:
-        tool_result = tool_executor.execute(result, ctx)
+        tool_result = tool_manager.run(result, ctx)
     except Exception as exc:
         return SyscallResult(
             success=False,

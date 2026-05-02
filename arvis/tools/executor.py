@@ -1,7 +1,9 @@
 # arvis/tools/executor.py
 
+import time
 from typing import Any
 
+from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.tool_result import ToolResult
 
@@ -33,29 +35,55 @@ class ToolExecutor:
 
         tool_name: str = tool_name_raw
 
+        tool_payload = getattr(decision, "tool_payload", {}) or {}
+
+        # --- NEW: canonical invocation ---
+        invocation = ToolInvocation(
+            tool_name=tool_name,
+            payload=tool_payload,
+            process_id=getattr(ctx, "_process_id", "unknown"),
+            context=ctx,
+        )
+
+        # legacy payload (kept for compatibility)
         payload_runtime: dict[str, Any] = {
             "decision": decision,
             "context": ctx,
-            "tool_payload": getattr(decision, "tool_payload", {}) or {},
+            "tool_payload": tool_payload,
+            "invocation": invocation,  # 👈 NEW BRIDGE
         }
 
         try:
+            start = time.perf_counter()
+
             tool = self.registry.get(tool_name)
+
             if tool is None:
+                ctx._tool_failure = True
                 return ToolResult(
                     tool_name=tool_name,
                     success=False,
                     error="unknown_tool",
+                    latency_ms=None,
                 )
 
+            if tool.spec is not None:
+                ctx._last_tool_spec = tool.spec
+
             tool.validate(payload_runtime)
-            output = tool.execute(payload_runtime)
+            # --- NEW: dual execution support ---
+            if hasattr(tool, "execute_invocation"):
+                output = tool.execute_invocation(invocation)
+            else:
+                output = tool.execute(payload_runtime)
+
+            latency = (time.perf_counter() - start) * 1000
 
             return ToolResult(
                 tool_name=tool_name,
                 success=True,
                 output=output,
-                latency_ms=None,
+                latency_ms=latency,
             )
 
         except Exception as e:

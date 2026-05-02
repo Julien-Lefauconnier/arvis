@@ -31,15 +31,17 @@ class AnthropicProvider(BaseLLMProvider):
         self._model = model
 
     def generate(self, request: LLMRequest) -> LLMResponse:
+        messages = [
+            {
+                "role": m.role,
+                "content": m.content,
+            }
+            for m in (request.messages or [])
+        ]
+
         response: Any = self._client.messages.create(
-            model=request.model or self._model,
-            system=request.system_prompt or "",
-            messages=[
-                {
-                    "role": "user",
-                    "content": request.prompt,
-                }
-            ],
+            model=request.effective_model or self._model,
+            messages=messages,
             temperature=request.temperature,
             max_tokens=request.max_tokens or 1024,
         )
@@ -49,9 +51,9 @@ class AnthropicProvider(BaseLLMProvider):
 
         return LLMResponse(
             content=text,
-            raw=response,
+            provider="anthropic",
+            model=request.effective_model or self._model,
             metadata={
-                "provider": "anthropic",
-                "model": request.model or self._model,
+                "provider_response_id": getattr(response, "id", None),
             },
         )

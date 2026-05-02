@@ -10,8 +10,9 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from arvis.adapters.registry import get_llm_adapter
 from arvis.cognition.execution.executable_intent import ExecutableIntent
+from arvis.kernel.pipeline.services.llm_request_builder import LLMRequestBuilder
+from arvis.kernel.pipeline.services.pipeline_llm_service import PipelineLLMService
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
@@ -64,35 +65,16 @@ class IntentStage:
             ctx.executable_intent,
         )
 
-        llm = get_llm_adapter(ctx)
+        request = LLMRequestBuilder.build_intent_enrichment_request(
+            ctx,
+            ctx.executable_intent,  # ← clean
+        )
 
-        if llm is not None:
-            try:
-                prompt = f"""
-You are a cognitive assistant inside a Cognitive OS.
+        content = PipelineLLMService.generate_text(
+            ctx,
+            request=request,
+            stage="IntentStage",
+        )
 
-Intent:
-{ctx.executable_intent}
-
-Provide:
-- a short execution plan
-- potential risks
-- optional refinement
-
-Keep it structured and concise.
-"""
-
-                response = llm.generate(
-                    prompt,
-                    temperature=0.2,
-                )
-
-                ctx.extra.setdefault("llm", {})["intent_enrichment"] = response.content
-
-            except Exception as e:
-                ctx.extra.setdefault("errors", []).append(
-                    {
-                        "stage": "IntentStage",
-                        "llm_error": str(e),
-                    }
-                )
+        if content is not None:
+            ctx.extra.setdefault("llm", {})["intent_enrichment"] = content

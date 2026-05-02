@@ -19,7 +19,8 @@ class FakeProvider(BaseLLMProvider):
             content=f"ok:{request.prompt}",
             metadata={"provider": "fake"},
         )
-    
+
+
 class FakeExecutor:
     def execute(self, request, *, preferred_provider=None):
         return LLMResponse(

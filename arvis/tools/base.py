@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.tools.spec import ToolSpec
 
 
@@ -36,3 +37,20 @@ class BaseTool(ABC):
     @abstractmethod
     def execute(self, input_data: dict[str, Any]) -> Any:
         pass
+
+    # -----------------------------
+    # API (optional)
+    # -----------------------------
+
+    def execute_invocation(self, invocation: ToolInvocation) -> Any:
+        """
+        New structured execution path.
+        Default fallback to legacy.
+        """
+        return self.execute(
+            {
+                "tool_payload": invocation.payload,
+                "invocation": invocation,
+                "context": getattr(invocation, "context", None),  # 👈 FIX
+            }
+        )

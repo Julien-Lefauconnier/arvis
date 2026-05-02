@@ -87,7 +87,9 @@ class FallbackExecutor:
 
                 final_response = LLMResponse(
                     content=response.content,
-                    raw=response.raw,
+                    provider=response.provider,
+                    model=response.model,
+                    usage=response.usage,
                     metadata=metadata,
                 )
 
@@ -108,6 +110,4 @@ class FallbackExecutor:
                     )
                 )
 
-        raise LLMFallbackExecutionError(
-            f"all_llm_providers_failed:{len(attempts)}"
-        )
+        raise LLMFallbackExecutionError(f"all_llm_providers_failed:{len(attempts)}")

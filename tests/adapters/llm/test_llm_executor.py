@@ -18,6 +18,7 @@ class SuccessProvider(BaseLLMProvider):
             metadata={"provider": "success"},
         )
 
+
 def test_runtime_executor_uses_mock_provider() -> None:
     executor = LLMRuntimeExecutor()
 

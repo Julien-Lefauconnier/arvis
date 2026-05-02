@@ -16,7 +16,9 @@ class KernelServiceRegistry:
     """
 
     tool_executor: Any | None = None
+    tool_manager: Any | None = None
     vfs_service: Any | None = None
     zip_ingest_service: Any | None = None
     memory_service: Any | None = None
     memory_policy_service: Any | None = None
+    llm_adapter: Any | None = None

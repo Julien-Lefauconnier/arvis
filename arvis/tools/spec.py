@@ -16,3 +16,11 @@ class ToolSpec:
     retryable: bool = True
     side_effectful: bool = True
     timeout_seconds: float | None = None
+
+    # -----------------------------
+    # FUTURE GOVERNANCE
+    # -----------------------------
+
+    max_risk: float = 1.0
+    requires_confirmation: bool = False
+    audit_required: bool = False

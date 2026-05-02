@@ -1,17 +1,28 @@
 # arvis/adapters/llm/contracts/response.py
 
-from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict, Field
 
-@dataclass(frozen=True, slots=True)
-class LLMResponse:
+from .usage import LLMUsage
+
+
+class LLMResponse(BaseModel):
     content: str
-    raw: Any | None = None
-    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.content, str):
-            raise TypeError("LLMResponse.content must be a string")
+    provider: str = "unknown"
+    model: str = "unknown"
+    usage: LLMUsage = LLMUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0)
+
+    finish_reason: str | None = None
+
+    response_id: str | None = None
+    trace_id: str | None = None
+
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = ConfigDict(frozen=True)
+
+    def is_empty(self) -> bool:
+        return not self.content.strip()

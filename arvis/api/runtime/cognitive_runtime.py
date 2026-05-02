@@ -11,6 +11,7 @@ from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
+from arvis.kernel.pipeline.runtime_bindings import PipelineRuntimeBindings
 from arvis.kernel_core.process import (
     CognitiveBudget,
     CognitivePriority,
@@ -30,6 +31,9 @@ from arvis.runtime import (
     PipelineExecutor,
 )
 from arvis.runtime.process_hooks import ProcessHookManager
+from arvis.tools.executor import ToolExecutor
+from arvis.tools.manager import ToolManager
+from arvis.tools.registry import ToolRegistry
 
 
 @dataclass(frozen=True)
@@ -44,10 +48,12 @@ class CognitiveRuntime:
         pipeline: CognitivePipeline,
         adapters: dict[str, Any] | None = None,
         tool_executor: Any | None = None,
+        tool_registry: ToolRegistry | None = None,
     ) -> None:
         self.pipeline = pipeline
         self.adapters = adapters or {}
-        self.tool_executor = tool_executor
+        self.tool_registry = tool_registry or ToolRegistry()
+        self.tool_executor = tool_executor or ToolExecutor(self.tool_registry)
         self.runtime_state = CognitiveRuntimeState()
 
         self.hooks = ProcessHookManager(runtime_state=self.runtime_state)
@@ -57,8 +63,14 @@ class CognitiveRuntime:
             process_executor=self.process_executor,
             hooks=self.hooks,
         )
+
+        self.tool_manager = ToolManager(
+            registry=self.tool_registry,
+            executor=self.tool_executor,
+        )
         self.services = KernelServiceRegistry(
             tool_executor=self.tool_executor,
+            tool_manager=self.tool_manager,
             vfs_service=None,
             zip_ingest_service=None,
         )
@@ -90,6 +102,21 @@ class CognitiveRuntime:
             user_id=ctx.user_id,
             local_state=ctx,
         )
+
+        ctx.extra["_syscall_handler"] = self.syscall_handler
+        ctx.extra["_process_id"] = process.process_id.value
+
+        runtime_bindings = PipelineRuntimeBindings(
+            syscall_handler=self.syscall_handler,
+            process_id=process.process_id.value,
+        )
+
+        ctx.extra["_runtime"] = runtime_bindings
+
+        # Backward-compatible aliases.
+        # À supprimer plus tard quand tout sera migré.
+        ctx.extra["_syscall_handler"] = self.syscall_handler
+        ctx.extra["_process_id"] = process.process_id.value
 
         self.scheduler.enqueue(process)
 

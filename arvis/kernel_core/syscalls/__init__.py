@@ -9,6 +9,9 @@ from arvis.kernel_core.syscalls.syscalls import (
     interrupt_syscalls as _interrupt_syscalls,
 )
 from arvis.kernel_core.syscalls.syscalls import (
+    llm_syscalls as _llm_syscalls,
+)
+from arvis.kernel_core.syscalls.syscalls import (
     memory_syscalls as _memory_syscalls,
 )
 from arvis.kernel_core.syscalls.syscalls import (
@@ -28,6 +31,7 @@ __all__ = [
     "register_syscall",
     "get_syscall",
     "_interrupt_syscalls",
+    "_llm_syscalls",
     "_memory_syscalls",
     "_process_syscalls",
     "_tool_syscalls",

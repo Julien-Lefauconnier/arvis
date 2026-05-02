@@ -81,9 +81,7 @@ def _compute_delay(
 ) -> float:
     exponential_delay: float = base_delay * float(2**attempt_index)
     bounded_delay: float = (
-        exponential_delay
-        if exponential_delay < max_delay
-        else max_delay
+        exponential_delay if exponential_delay < max_delay else max_delay
     )
 
     if jitter <= 0:
@@ -92,6 +90,4 @@ def _compute_delay(
     jitter_amount: float = jitter * random_fn()
     delayed: float = bounded_delay + jitter_amount
 
-    return float(
-        delayed if delayed < max_delay else max_delay
-    )
+    return float(delayed if delayed < max_delay else max_delay)

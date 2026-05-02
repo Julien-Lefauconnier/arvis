@@ -45,9 +45,7 @@ def test_success_first_provider_short_circuits() -> None:
         providers=[first, second],
     )
 
-    result = executor.execute(
-        LLMRequest(prompt="test")
-    )
+    result = executor.execute(LLMRequest(prompt="test"))
 
     assert isinstance(result, FallbackExecutionResult)
     assert result.response.content == "hello"
@@ -57,10 +55,7 @@ def test_success_first_provider_short_circuits() -> None:
 
     fallback = result.response.metadata["fallback"]
 
-    assert (
-        fallback["selected_provider"]
-        == "SuccessProvider"
-    )
+    assert fallback["selected_provider"] == "SuccessProvider"
     assert result.response.metadata["fallback"]["attempt_count"] == 1
 
 
@@ -72,9 +67,7 @@ def test_second_provider_used_after_first_failure() -> None:
         providers=[first, second],
     )
 
-    result = executor.execute(
-        LLMRequest(prompt="test")
-    )
+    result = executor.execute(LLMRequest(prompt="test"))
 
     assert result.response.content == "recovered"
 
@@ -98,9 +91,7 @@ def test_all_providers_fail_raises() -> None:
     )
 
     with pytest.raises(LLMFallbackExecutionError):
-        executor.execute(
-            LLMRequest(prompt="test")
-        )
+        executor.execute(LLMRequest(prompt="test"))
 
 
 def test_empty_response_falls_back_when_enabled() -> None:
@@ -112,9 +103,7 @@ def test_empty_response_falls_back_when_enabled() -> None:
         fail_fast_on_empty=True,
     )
 
-    result = executor.execute(
-        LLMRequest(prompt="test")
-    )
+    result = executor.execute(LLMRequest(prompt="test"))
 
     assert result.response.content == "real"
     assert result.response.metadata["fallback"]["attempt_count"] == 2
@@ -128,9 +117,7 @@ def test_empty_response_allowed_when_disabled() -> None:
         fail_fast_on_empty=False,
     )
 
-    result = executor.execute(
-        LLMRequest(prompt="test")
-    )
+    result = executor.execute(LLMRequest(prompt="test"))
 
     assert result.response.content == ""
     assert result.response.metadata["fallback"]["attempt_count"] == 1
@@ -140,6 +127,4 @@ def test_no_provider_configured_raises() -> None:
     executor = FallbackExecutor(providers=[])
 
     with pytest.raises(LLMFallbackExecutionError):
-        executor.execute(
-            LLMRequest(prompt="test")
-        )
+        executor.execute(LLMRequest(prompt="test"))
