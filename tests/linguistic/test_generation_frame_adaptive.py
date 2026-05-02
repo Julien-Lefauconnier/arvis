@@ -1,5 +1,6 @@
 # tests/linguistic/test_generation_frame_adaptive.py
 
+from dataclasses import dataclass
 from datetime import datetime
 
 from arvis.conversation.act_strategy_mapper import map_strategy_to_act
@@ -16,9 +17,9 @@ from arvis.linguistic.lexicon.lexicon_snapshot import LexiconSnapshot
 # ---------------------------------------------------------
 
 
+@dataclass
 class DummyState:
-    def __init__(self, signals: dict):
-        self.signals = signals
+    signals: dict
 
 
 def make_entry(canonical: str):

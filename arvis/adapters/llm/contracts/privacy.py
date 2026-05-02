@@ -1,9 +1,9 @@
 # arvis/adapters/llm/contracts/privacy.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class LLMPrivacyLevel(str, Enum):
+class LLMPrivacyLevel(StrEnum):
     PUBLIC = "public"
     INTERNAL = "internal"
     SENSITIVE = "sensitive"

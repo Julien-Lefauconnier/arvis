@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from json import JSONDecodeError
 from typing import Any
 
@@ -16,7 +16,7 @@ class LLMValidationError:
 
 
 @dataclass(frozen=True)
-class LLMValidationSeverity(str, Enum):
+class LLMValidationSeverity(StrEnum):
     OK = "ok"
     RETRYABLE = "retryable"
     FATAL = "fatal"
