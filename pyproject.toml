@@ -51,6 +51,7 @@ dev = [
   "ruff",
   "pytest",
   "pytest-cov",
+  "pytest-mock",
   "hypothesis",
   "pytest-benchmark",
   "pytest-asyncio",
