@@ -1,12 +1,10 @@
 # arvis/cognition/explanation/explanation_snapshot.py
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
-
-def utcnow() -> datetime:
-    return datetime.now(UTC)
+from arvis.types.timestamps import utcnow
 
 
 @dataclass(frozen=True)

@@ -1,13 +1,10 @@
 # arvis/memory/memory_long_snapshot.py
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 
 from arvis.memory.memory_long_entry import MemoryLongEntry
-
-
-def utcnow() -> datetime:
-    return datetime.now(UTC)
+from arvis.types.timestamps import utcnow
 
 
 @dataclass(frozen=True)

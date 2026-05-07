@@ -2,12 +2,11 @@
 
 
 def test_decision_trace_is_immutable():
-    from datetime import datetime
-
     from arvis.kernel.trace.decision_trace import DecisionTrace
+    from arvis.types import utcnow
 
     trace = DecisionTrace(
-        timestamp=datetime.utcnow(),
+        timestamp=utcnow(),
         user_id="user_1",
         gate_result=None,
     )

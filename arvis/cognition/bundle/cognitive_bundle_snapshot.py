@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from arvis.cognition.decision.decision_result import DecisionResult
@@ -13,10 +13,7 @@ from arvis.cognition.retrieval.cognitive_retrieval_snapshot import (
 )
 from arvis.memory.memory_long_snapshot import MemoryLongSnapshot
 from arvis.timeline.timeline_entry import TimelineEntry
-
-
-def utcnow() -> datetime:
-    return datetime.now(UTC)
+from arvis.types.timestamps import utcnow
 
 
 @dataclass(frozen=True)

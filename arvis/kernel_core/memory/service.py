@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
 
 from arvis.kernel_core.memory.exceptions import (
     MemoryInvalidKeyError,
@@ -20,6 +19,7 @@ from arvis.kernel_core.memory.observation_long_writer import (
 )
 from arvis.kernel_core.memory.repository import MemoryRepository
 from arvis.kernel_core.memory.snapshot import MemorySnapshot
+from arvis.types.timestamps import utcnow
 
 
 class MemoryService:
@@ -106,7 +106,7 @@ class MemoryService:
             existing is not None and getattr(existing, "status", "active") == "deleted"
         )
 
-        observed_at = datetime.utcnow()
+        observed_at = utcnow()
         ts = int(observed_at.timestamp())
 
         if existing is None or is_deleted:
@@ -185,7 +185,7 @@ class MemoryService:
                 f"memory record deleted: {normalized_namespace}/{normalized_key}"
             )
 
-        observed_at = datetime.utcnow()
+        observed_at = utcnow()
         ts = int(observed_at.timestamp())
 
         # 2. projection

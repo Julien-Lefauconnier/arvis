@@ -1,9 +1,8 @@
 # tests/api/test_trace_view.py
 
-from datetime import datetime
-
 from arvis.api.trace import DecisionTraceView
 from arvis.kernel.trace.decision_trace import DecisionTrace
+from arvis.types import utcnow
 
 
 class Dummy:
@@ -13,7 +12,7 @@ class Dummy:
 
 def build_minimal_trace():
     return DecisionTrace(
-        timestamp=datetime.utcnow(),
+        timestamp=utcnow(),
         user_id="user-1",
         gate_result=Dummy(),
     )
@@ -60,7 +59,7 @@ def test_trace_view_with_confirmation():
         confirmed = True
 
     trace = DecisionTrace(
-        timestamp=datetime.utcnow(),
+        timestamp=utcnow(),
         user_id="user-1",
         gate_result=Dummy(),
         confirmation_request=Dummy(),

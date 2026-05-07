@@ -1,7 +1,6 @@
 # tests/linguistic/test_generation_frame_adaptive.py
 
 from dataclasses import dataclass
-from datetime import datetime
 
 from arvis.conversation.act_strategy_mapper import map_strategy_to_act
 from arvis.conversation.response_strategy_type import ResponseStrategyType
@@ -11,6 +10,7 @@ from arvis.linguistic.generation.frame_builder import build_generation_frame
 from arvis.linguistic.generation.generation_frame import LinguisticGenerationFrame
 from arvis.linguistic.lexicon.lexicon_entry import LexiconEntry
 from arvis.linguistic.lexicon.lexicon_snapshot import LexiconSnapshot
+from arvis.types import utcnow
 
 # ---------------------------------------------------------
 # Dummy helpers
@@ -35,7 +35,7 @@ def build_lexicon(entries):
     return LexiconSnapshot(
         snapshot_id="test_snapshot",
         author="test",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
         scope="test",
         entries=entries,
     )
