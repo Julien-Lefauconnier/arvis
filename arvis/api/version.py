@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-import inspect
 from importlib.metadata import PackageNotFoundError, version
-from typing import Any
+from typing import Final
 
 # -----------------------------------------------------
 # Installed package version
@@ -19,7 +18,7 @@ except PackageNotFoundError:
 # -----------------------------------------------------
 # EXISTING TEST CONTRACT
 # -----------------------------------------------------
-API_VERSION = "1.0.0"
+API_VERSION: Final[str] = "1.0.0"
 
 
 # -----------------------------------------------------
@@ -27,60 +26,36 @@ API_VERSION = "1.0.0"
 # -----------------------------------------------------
 def compute_public_api_fingerprint() -> str:
     try:
-        import arvis.api as api
+        import arvis
 
-        exported = getattr(api, "__all__", None)
+        exported = getattr(arvis, "__all__", None)
         if not exported:
             raise RuntimeError
-
-        rows: list[str] = []
-
-        for name in sorted(exported):
-            obj: Any = getattr(api, name, None)
-            kind = type(obj).__name__
-
-            if callable(obj):
-                try:
-                    sig = str(inspect.signature(obj))
-                except (TypeError, ValueError):
-                    sig = ""
-            else:
-                sig = ""
-
-            rows.append(f"{name}:{kind}:{sig}")
-
-        payload = "|".join(rows)
-
+        payload = "|".join(sorted(exported))
     except Exception:
         payload = f"bootstrap:{PACKAGE_VERSION}:{API_VERSION}"
-
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
 # -----------------------------------------------------
-# LEGACY TESTED FUNCTION
+# LEGACY TESTED FUNCTION (64 chars)
 # Must remain 64-char sha256 string
 # -----------------------------------------------------
 def compute_api_fingerprint() -> str:
     try:
-        import arvis.api as api
+        import arvis
 
-        exported = sorted(getattr(api, "__all__", []))
+        exported = getattr(arvis, "__all__", None)
         if not exported:
             raise RuntimeError
-
-        payload = "|".join(exported)
-
+        payload = "|".join(sorted(exported))
     except Exception:
         payload = f"bootstrap:{PACKAGE_VERSION}:{API_VERSION}"
-
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
 # -----------------------------------------------------
-# Constants
+# Public constants (eager, safe via fallback)
 # -----------------------------------------------------
-PUBLIC_API_FINGERPRINT = compute_public_api_fingerprint()
-
-# Existing codebase compatibility
-API_FINGERPRINT = compute_api_fingerprint()
+API_FINGERPRINT: Final[str] = compute_api_fingerprint()
+PUBLIC_API_FINGERPRINT: Final[str] = compute_public_api_fingerprint()

@@ -6,6 +6,16 @@ This module defines the supported stable public contract.
 Only symbols listed in __all__ are considered public API.
 """
 
+# =====================================================
+# ⚠️ IMPORTANT
+# =====================================================
+# This module exposes the EXTENDED API surface.
+# It is considered semi-stable (advanced users).
+#
+# For stable usage, prefer:
+#     from arvis import ArvisEngine, CognitiveOS
+# =====================================================
+
 # -----------------------------------------------------
 # Core Runtime
 # -----------------------------------------------------

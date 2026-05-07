@@ -107,7 +107,7 @@ class CognitiveRuntimeState:
         return [p for p in self.processes.values() if p.status.value == "running"]
 
     # -----------------------------------------------------
-    # Timeline commitment (Veramem-backed)
+    # Timeline commitment (external-system-backed)
     # -----------------------------------------------------
     def compute_timeline_commitment(self) -> str:
         if not isinstance(self.timeline, SignalJournal):

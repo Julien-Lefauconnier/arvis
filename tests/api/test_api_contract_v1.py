@@ -79,3 +79,15 @@ def test_disable_trace_mode():
     assert isinstance(result, dict)
     assert "action" in result
     assert "can_execute" in result
+
+
+def test_fingerprint_matches_contract():
+    import arvis
+    from arvis.api.version import compute_api_fingerprint
+
+    expected = "|".join(sorted(arvis.__all__))
+    import hashlib
+
+    expected_hash = hashlib.sha256(expected.encode()).hexdigest()
+
+    assert compute_api_fingerprint() == expected_hash

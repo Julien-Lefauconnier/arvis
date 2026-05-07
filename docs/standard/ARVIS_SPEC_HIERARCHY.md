@@ -200,7 +200,7 @@ This layer is NOT part of:
 It is a **pure projection layer** between:
 
 > ARVIS internal semantics (IR)
-> and external canonical systems (e.g. Veramem Kernel)
+> and external canonical systems (e.g. ARVIS Research Initiative)
 
 It ensures:
 

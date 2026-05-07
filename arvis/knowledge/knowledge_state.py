@@ -5,7 +5,7 @@ from enum import StrEnum
 
 class KnowledgeState(StrEnum):
     """
-    Declarative representation of Veramem's knowledge awareness.
+    Declarative representation of system knowledge awareness.
 
     This is NOT:
     - confidence

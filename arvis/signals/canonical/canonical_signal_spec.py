@@ -2,8 +2,8 @@
 
 """
 Canonical Signal Specification — Core Definition
-Part of Veramem Kernel — Closed Canonical World
-Version 1.1.7 — Extended with explicit allowed_states and subject_kinds validation
+Part of ARVIS Kernel — Closed Canonical World
+Extended with explicit allowed_states and subject_kinds validation
 """
 
 from dataclasses import dataclass, field

@@ -146,7 +146,7 @@ Examples:
 - stability evolution
 - historical summaries
 
-Implemented through the veramem-kernel dependance
+Implemented through external signal/timeline integrations
 
 ---
 

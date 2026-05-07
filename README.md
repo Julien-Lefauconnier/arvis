@@ -109,6 +109,14 @@ For most integrations, start with:
 from arvis import ArvisEngine
 ```
 
+### When to use what?
+
+- Use **ArvisEngine** for application-level integrations
+- Use **CognitiveOS** when you need:
+  - deterministic replay
+  - IR control
+  - pipeline customization
+
 ---
 
 ## What ARVIS Enables

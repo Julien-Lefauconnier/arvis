@@ -1,6 +1,6 @@
 # tests/kernel/test_public_api_exports.py
 
-import arvis
+import arvis.api as api
 
 
 def test_public_api_has_expected_symbols():
@@ -33,7 +33,7 @@ def test_public_api_has_expected_symbols():
         "StabilityView",
     }
 
-    exported = set(getattr(arvis, "__all__", []))
+    exported = set(getattr(api, "__all__", []))
 
     missing = expected - exported
 

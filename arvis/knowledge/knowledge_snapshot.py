@@ -10,7 +10,7 @@ from arvis.knowledge.knowledge_state import KnowledgeState
 @dataclass(frozen=True)
 class KnowledgeSnapshot:
     """
-    Immutable, declarative snapshot of Veramem's epistemic state
+    Immutable, declarative snapshot of system epistemic state
     at a given moment in time.
     """
 

@@ -156,3 +156,12 @@ class CognitiveOS(CognitiveOSInternals):
             inputs=inputs,
             user_id=user_id,
         )
+
+    # -------------------------------------------------
+    # Properties
+    # -------------------------------------------------
+    @property
+    def version(self) -> str:
+        from arvis.api.version import PACKAGE_VERSION
+
+        return PACKAGE_VERSION

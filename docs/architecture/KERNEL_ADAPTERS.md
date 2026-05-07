@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-The Kernel Adapter Layer enables **deterministic interoperability** between ARVIS and external systems based on **canonical signals** (e.g. Veramem Kernel).
+The Kernel Adapter Layer enables **deterministic interoperability** between ARVIS and external systems based on **canonical signals** (e.g. external signal kernels)..
 
 It provides a structured way to:
 
@@ -414,7 +414,7 @@ It MUST NOT violate:
 
 The adapter enables integration with systems such as:
 
-- Veramem Kernel
+- external signal kernels
 - signal-based monitoring systems
 - observability pipelines
 - audit / certification layers

@@ -41,10 +41,11 @@ class ArvisEngine:
     # Representations
     # -------------------------------------------------
     def __repr__(self) -> str:
+        cfg = self.config
         return (
             "ArvisEngine("
-            f"runtime_mode={self.config.runtime_mode!r}, "
-            f"strict_mode={self.config.strict_mode!r})"
+            f"runtime_mode={cfg.runtime_mode!r}, "
+            f"strict_mode={cfg.strict_mode!r})"
         )
 
     # -------------------------------------------------
@@ -59,6 +60,11 @@ class ArvisEngine:
     def config(self) -> CognitiveOSConfig:
         """Runtime configuration."""
         return cast(CognitiveOSConfig, self._os.config)
+
+    @property
+    def version(self) -> str:
+        """ARVIS package version."""
+        return self._os.version
 
     # -------------------------------------------------
     # Core Runtime
