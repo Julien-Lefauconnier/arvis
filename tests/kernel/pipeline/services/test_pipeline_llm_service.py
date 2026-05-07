@@ -157,6 +157,37 @@ def _success_result(content: str) -> SyscallResult:
     )
 
 
+def _success_result_with_llm_metadata() -> SyscallResult:
+    return SyscallResult(
+        success=True,
+        result=ExecutionArtifact(
+            artifact_type="llm_generation",
+            syscall="llm.generate",
+            status="success",
+            output={"content": "ok"},
+            metadata={
+                "prompt_logged": False,
+                "llm_observation": {
+                    "entropy_mean": 0.8,
+                    "confidence_mean": 0.2,
+                    "logprob_variance": 0.1,
+                },
+                "llm_evaluation": {
+                    "confidence": 0.2,
+                    "uncertainty": 0.8,
+                    "variance": 0.1,
+                    "risk": 0.8,
+                },
+            },
+            replay_policy="journal_only_replay",
+            process_id="proc-1",
+            tick=None,
+            timestamp=0.0,
+            causal_id="causal-1",
+        ),
+    )
+
+
 def test_pipeline_llm_service_returns_text() -> None:
     ctx = SimpleNamespace(
         extra={
@@ -463,3 +494,29 @@ def test_pipeline_llm_service_records_structured_output() -> None:
     parsed = ctx.extra["llm_structured_outputs"]["IntentStage"]
     assert parsed.intent == "search"
     assert parsed.confidence == 0.91
+
+
+def test_pipeline_llm_service_records_llm_runtime_metadata(mocker) -> None:
+    ctx = SimpleNamespace(
+        extra={
+            "_syscall_handler": object(),
+            "_process_id": "proc-1",
+            "_allow_mock_runtime": True,
+        }
+    )
+
+    mocker.patch(
+        _EXECUTE_LLM_SYSCALL,
+        return_value=_success_result_with_llm_metadata(),
+    )
+
+    content = PipelineLLMService.generate_text(
+        ctx,
+        request=_request(),
+        stage="LLMStage",
+    )
+
+    assert content == "ok"
+    assert ctx.extra["llm_observation"]["entropy_mean"] == 0.8
+    assert ctx.extra["llm_evaluation"]["confidence"] == 0.2
+    assert ctx.extra["llm_evaluation"]["risk"] == 0.8

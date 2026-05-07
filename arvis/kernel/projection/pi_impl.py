@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .llm_projection_mapper import LLMProjectionMapper
 from .pi_types import (
     PiState,
     QState,
@@ -29,6 +30,9 @@ class PiImpl:
     - normalize them into a deterministic projected state
     - remain conservative and fail-soft
     """
+
+    def __init__(self) -> None:
+        self._llm_mapper = LLMProjectionMapper()
 
     def project(self, ctx: Any) -> ProjectedState:
         state_signals: dict[str, float] = {}
@@ -60,12 +64,23 @@ class PiImpl:
             is not None,
         }
 
+        extra = getattr(ctx, "extra", None)
+        llm_obs = extra.get("llm_observation") if isinstance(extra, dict) else None
+
+        self._llm_mapper.inject(
+            llm_obs,
+            state_signals=state_signals,
+            risk_signals=risk_signals,
+            trace_features=trace_features,
+        )
+
         return ProjectedState(
             state_signals=state_signals,
             risk_signals=risk_signals,
             control_signals=control_signals,
             trace_features=trace_features,
             metadata=metadata,
+            llm_observation=llm_obs,
         )
 
     def project_previous(self, ctx: Any) -> dict[str, float] | None:
@@ -107,9 +122,52 @@ class PiImpl:
 
         uncertainty = self._coerce(getattr(ctx, "uncertainty", None), 0.0)
 
-        decision_commitment = 0.5
+        extra = getattr(ctx, "extra", None)
+        llm_obs = None
+        llm_eval = None
+
+        if isinstance(extra, dict):
+            llm_obs = extra.get("llm_observation")
+            llm_eval = extra.get("llm_evaluation")
+
+        if isinstance(llm_obs, dict):
+            entropy = llm_obs.get("entropy_mean")
+            variance = llm_obs.get("logprob_variance")
+
+            if isinstance(entropy, (int, float)):
+                uncertainty = max(uncertainty, float(entropy))
+
+            if isinstance(variance, (int, float)):
+                uncertainty = max(uncertainty, float(variance))
+
+        if isinstance(llm_eval, dict):
+            eval_uncertainty = llm_eval.get("uncertainty")
+            eval_risk = llm_eval.get("risk")
+
+            if isinstance(eval_uncertainty, (int, float)):
+                uncertainty = max(uncertainty, float(eval_uncertainty))
+
+            if isinstance(eval_risk, (int, float)):
+                uncertainty = max(uncertainty, float(eval_risk))
+
+        base_commitment = 0.5
+
+        if isinstance(llm_eval, dict):
+            confidence = llm_eval.get("confidence")
+            if isinstance(confidence, (int, float)):
+                base_commitment = max(base_commitment, float(confidence))
+        elif isinstance(llm_obs, dict):
+            confidence = llm_obs.get("confidence_mean")
+            if isinstance(confidence, (int, float)):
+                base_commitment = max(base_commitment, float(confidence))
+
         if ir_decision:
-            decision_commitment = 1.0 if ir_decision.decision_kind else 0.3
+            base_commitment = max(
+                base_commitment,
+                1.0 if ir_decision.decision_kind else 0.3,
+            )
+
+        decision_commitment = base_commitment
 
         x = XState(
             cognitive_load=tension,
@@ -152,6 +210,14 @@ class PiImpl:
                 verdict = "allow"
             else:
                 verdict = "require_confirmation"
+
+            # LLM-aware tightening
+            if isinstance(extra, dict):
+                llm_obs = extra.get("llm_observation")
+                if isinstance(llm_obs, dict):
+                    confidence = llm_obs.get("confidence_mean")
+                    if isinstance(confidence, (int, float)) and confidence < 0.3:
+                        verdict = "require_confirmation"
 
         safety_margin = self._coerce(
             getattr(ctx, "projection_margin", getattr(ctx, "m_t", None)), 0.0

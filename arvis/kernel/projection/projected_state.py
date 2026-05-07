@@ -6,6 +6,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from arvis.adapters.llm.observability.observation import LLMObservation
+
 
 @dataclass(frozen=True)
 class ProjectedState:
@@ -22,6 +24,7 @@ class ProjectedState:
     control_signals: dict[str, float] = field(default_factory=dict)
     trace_features: dict[str, float] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
+    llm_observation: LLMObservation | None = None
 
     def to_projection_view(self) -> dict[str, float]:
         """

@@ -99,6 +99,17 @@ def llm_generate(
     artifact_metadata["seq"] = getattr(handler, "_local_counter", 0)
     artifact_metadata["prompt_logged"] = False
 
+    metadata = getattr(response, "metadata", None)
+
+    if isinstance(metadata, dict):
+        llm_observation = metadata.get("llm_observation")
+        if isinstance(llm_observation, dict):
+            artifact_metadata["llm_observation"] = llm_observation
+
+        llm_evaluation = metadata.get("llm_evaluation")
+        if isinstance(llm_observation, dict):
+            artifact_metadata["llm_evaluation"] = llm_evaluation
+
     artifact = ExecutionArtifact(
         artifact_type="llm_generation",
         syscall="llm.generate",

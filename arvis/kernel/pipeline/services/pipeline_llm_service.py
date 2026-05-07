@@ -89,6 +89,9 @@ class PipelineLLMService:
                 )
 
                 if content is not None:
+                    # --- LLM OBSERVATION ---
+                    PipelineLLMService._record_llm_runtime_metadata(ctx, result)
+
                     # --- VALIDATION LLM OUTPUT ---
                     require_abstention = "linguistic_act:abstention" in getattr(
                         request, "tags", []
@@ -419,3 +422,58 @@ class PipelineLLMService:
                 "errors": [{"code": e.code, "message": e.message} for e in errors],
             }
         )
+
+    @staticmethod
+    def _record_llm_runtime_metadata(
+        ctx: PipelineContextLike,
+        result: SyscallResult,
+    ) -> None:
+        artifact = result.result
+        meta = getattr(artifact, "metadata", None)
+
+        if not isinstance(meta, dict):
+            return
+
+        observation = meta.get("llm_observation")
+        if isinstance(observation, dict):
+            ctx.extra["llm_observation"] = observation
+
+        evaluation = meta.get("llm_evaluation")
+        if isinstance(evaluation, dict):
+            ctx.extra["llm_evaluation"] = evaluation
+            return
+
+        if isinstance(observation, dict):
+            ctx.extra["llm_evaluation"] = (
+                PipelineLLMService._build_llm_evaluation_from_observation(observation)
+            )
+
+    @staticmethod
+    def _build_llm_evaluation_from_observation(
+        observation: dict[str, Any],
+    ) -> dict[str, float]:
+        confidence = PipelineLLMService._numeric_or_default(
+            observation.get("confidence_mean"),
+            0.0,
+        )
+        uncertainty = PipelineLLMService._numeric_or_default(
+            observation.get("entropy_mean"),
+            0.0,
+        )
+        variance = PipelineLLMService._numeric_or_default(
+            observation.get("logprob_variance"),
+            0.0,
+        )
+
+        return {
+            "confidence": confidence,
+            "uncertainty": uncertainty,
+            "variance": variance,
+            "risk": max(uncertainty, variance),
+        }
+
+    @staticmethod
+    def _numeric_or_default(value: Any, default: float) -> float:
+        if isinstance(value, (int, float)):
+            return float(value)
+        return default
