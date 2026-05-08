@@ -1,5 +1,6 @@
 # tests/kernel/stages/test_gate_stage_pi_override.py
 
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
@@ -31,11 +32,12 @@ class DummyCtx:
 
         self.collapse_risk = 0.0
 
-        self.projection_certificate = None
-        self.projection_view = None
-        self.projected_state = None
-
-        self.pi_state = object()
+        self.projection = SimpleNamespace(
+            certificate=None,
+            view=None,
+            projected_state=None,
+            pi_state=object(),
+        )
 
         self.gate_result = None
 
@@ -122,7 +124,7 @@ def test_pi_cannot_relax_abstain():
 
 def test_pi_ignored_if_no_pi_state():
     ctx = DummyCtx()
-    ctx.pi_state = None  # désactivation Π
+    ctx.projection.pi_state = None  # deactivation Π
     pipeline = DummyPipeline()
     stage = GateStage()
 

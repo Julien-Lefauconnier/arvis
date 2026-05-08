@@ -9,9 +9,29 @@ from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_trans
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
+def _resolve_pi_state(ctx: Any) -> Any:
+    """
+    Canonical Π-state resolver.
+
+    New projection architecture stores Π artifacts under:
+        ctx.projection.pi_state
+
+    Legacy compatibility still supports:
+        ctx.pi_state
+    """
+    projection = getattr(ctx, "projection", None)
+
+    if projection is not None:
+        pi_state = getattr(projection, "pi_state", None)
+        if pi_state is not None:
+            return pi_state
+
+    return getattr(ctx, "pi_state", None)
+
+
 def apply_pi_gate_override(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict:
     try:
-        pi_state = getattr(ctx, "pi_state", None)
+        pi_state = _resolve_pi_state(ctx)
 
         if pi_state is not None:
             pi_gate = PiBasedGate()
@@ -63,4 +83,5 @@ def apply_pi_gate_override(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
 __all__ = [
     "PiBasedGate",
     "apply_pi_gate_override",
+    "_resolve_pi_state",
 ]

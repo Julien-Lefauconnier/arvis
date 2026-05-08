@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from arvis.adapters.llm.observability.observation import LLMObservation
+from arvis.kernel.projection.projection_view import ProjectionView
 
 
 @dataclass(frozen=True)
@@ -26,7 +27,7 @@ class ProjectedState:
     metadata: dict[str, Any] = field(default_factory=dict)
     llm_observation: LLMObservation | None = None
 
-    def to_projection_view(self) -> dict[str, float]:
+    def to_projection_view(self) -> ProjectionView:
         """
         Flat numeric view used by the certification layer.
 
@@ -44,7 +45,7 @@ class ProjectedState:
         _inject("control", self.control_signals)
         _inject("trace", self.trace_features)
 
-        return projection
+        return ProjectionView(_values=projection)
 
     def primary_tension(self) -> float:
         """

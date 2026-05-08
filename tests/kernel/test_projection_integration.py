@@ -16,6 +16,6 @@ def test_projection_integration_basic():
 
     pipeline.run(ctx)
 
-    assert ctx.projection_certificate is not None
-    assert ctx.projection_domain_valid is not None
-    assert ctx.projection_certificate.domain_valid is not None
+    assert ctx.projection.certificate is not None
+    assert ctx.projection.domain_valid is not None
+    assert ctx.projection.certificate.domain_valid is not None

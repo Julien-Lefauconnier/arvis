@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.kernel.projection.projection_view import ProjectionView
+
 
 class PiOperator:
     """
@@ -11,11 +13,15 @@ class PiOperator:
     Projects a state into a safe / stable domain.
     """
 
-    def project(self, state: dict[str, float], ctx: Any = None) -> dict[str, float]:
+    def project(
+        self,
+        state: ProjectionView,
+        ctx: Any = None,
+    ) -> ProjectionView:
         if state is None:
-            return {}
+            return ProjectionView(_values={})
 
-        projected = {}
+        projected: dict[str, float] = {}
 
         # -----------------------------------------
         # Context-aware parameters
@@ -73,4 +79,4 @@ class PiOperator:
             # -----------------------------------------
             projected[k] = blended / (1.0 + abs(blended))
 
-        return projected
+        return ProjectionView(_values=projected)

@@ -33,18 +33,28 @@ def test_yaml_scenarios(name):
     print("==============================")
 
     print("\n--- GATE ---")
-    print("verdict:", result.ir_gate.verdict)
-    print("reason_codes:", getattr(result.ir_gate, "reason_codes", None))
+    print("verdict:", result.ir.ir_gate.verdict)
+    print(
+        "reason_codes:",
+        getattr(result.ir.ir_gate, "reason_codes", None),
+    )
 
     print("\n--- VALIDITY ---")
-    print("validity:", result.ir_validity)
+    print("validity:", result.ir.ir_validity)
 
     print("\n--- PROJECTION ---")
-    print("projection:", result.ir_projection)
+    print("projection:", result.ir.ir_projection)
 
     print("\n--- EXECUTION ---")
-    print("requires_confirmation:", result.requires_confirmation)
-    print("can_execute:", result.can_execute)
+    print(
+        "requires_confirmation:",
+        result.execution.requires_confirmation,
+    )
+
+    print(
+        "can_execute:",
+        result.execution.can_execute,
+    )
 
     print("\n--- RAW CONTEXT SIGNALS ---")
     print("extra:", ctx.extra)
@@ -65,19 +75,19 @@ def test_yaml_scenarios(name):
         verdict = expected["gate"]["verdict"]
 
         if verdict == "ABSTAIN":
-            assert result.ir_gate.verdict == CognitiveGateVerdictIR.ABSTAIN
+            assert result.ir.ir_gate.verdict == CognitiveGateVerdictIR.ABSTAIN
 
         elif verdict == "not_allow":
-            assert result.ir_gate.verdict != CognitiveGateVerdictIR.ALLOW
+            assert result.ir.ir_gate.verdict != CognitiveGateVerdictIR.ALLOW
 
         elif verdict == "ALLOW":
-            assert result.ir_gate.verdict == CognitiveGateVerdictIR.ALLOW
+            assert result.ir.ir_gate.verdict == CognitiveGateVerdictIR.ALLOW
 
     # -------------------------
     # Validity assertions
     # -------------------------
     if "validity" in expected:
-        assert result.ir_validity["valid"] == expected["validity"]["valid"]
+        assert result.ir.ir_validity["valid"] == expected["validity"]["valid"]
 
     # -------------------------
     # Projection assertions
@@ -85,7 +95,8 @@ def test_yaml_scenarios(name):
     if "projection" in expected:
         if "available" in expected["projection"]:
             assert (
-                result.ir_projection["available"] == expected["projection"]["available"]
+                result.ir.ir_projection["available"]
+                == expected["projection"]["available"]
             )
 
     # -------------------------
@@ -94,7 +105,7 @@ def test_yaml_scenarios(name):
     if "execution" in expected:
         if "requires_confirmation" in expected["execution"]:
             assert (
-                result.requires_confirmation
+                result.execution.requires_confirmation
                 == expected["execution"]["requires_confirmation"]
             )
 
@@ -106,9 +117,9 @@ def test_yaml_scenarios(name):
 
         # ALLOW => fully executable
         if verdict == "ALLOW":
-            assert result.requires_confirmation is False
-            assert result.can_execute is True
+            assert result.execution.requires_confirmation is False
+            assert result.execution.can_execute is True
 
         # not_allow / ABSTAIN => not directly executable
         elif verdict in ("not_allow", "ABSTAIN"):
-            assert result.can_execute is False
+            assert result.execution.can_execute is False

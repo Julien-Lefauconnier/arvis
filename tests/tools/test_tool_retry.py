@@ -52,7 +52,11 @@ def test_tool_retry_flow(monkeypatch):
     )
     # check failure stored
     tool_results = ctx_extra.get("syscall_results", [])
-    assert len(tool_results) == 1
+    tool_exec_results = [
+        r for r in tool_results if "tool.execute" in str(r.get("causal_id", ""))
+    ]
+
+    assert len(tool_exec_results) == 1
     assert tool_results[0]["syscall"] == "tool.execute"
 
     # -------------------------

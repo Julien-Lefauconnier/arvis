@@ -131,7 +131,7 @@ def test_pipeline_runs_minimal():
 
     assert result.bundle is not None
     assert result.decision is not None
-    assert result.control is not None
+    assert result.observability.control is not None
 
 
 # =========================================================
@@ -180,8 +180,8 @@ def test_temporal_layer_modulates_risk():
 
     result = pipeline.run(ctx)
 
-    assert result.control.temporal_pressure is not None
-    assert result.control.temporal_modulation is not None
+    assert result.observability.control.temporal_pressure is not None
+    assert result.observability.control.temporal_modulation is not None
 
 
 # =========================================================
@@ -195,7 +195,7 @@ def test_epsilon_is_positive():
 
     result = pipeline.run(ctx)
 
-    assert result.control.epsilon > 0
+    assert result.observability.control.epsilon > 0
 
 
 def test_regime_fallback_to_transition():
@@ -208,7 +208,7 @@ def test_regime_fallback_to_transition():
 
     result = pipeline.run(ctx)
 
-    assert result.control.regime is not None
+    assert result.observability.control.regime is not None
 
 
 # =========================================================
@@ -222,7 +222,7 @@ def test_drift_is_propagated():
 
     result = pipeline.run(ctx)
 
-    assert result.control.drift is not None
+    assert result.observability.control.drift is not None
     assert isinstance(ctx.drift_score, DriftSignal)
 
 
@@ -293,7 +293,7 @@ def test_action_and_intent_consistency():
 
     result = pipeline.run(ctx)
 
-    if result.execution_status != ExecutionGateStatus.READY:
+    if result.execution.execution_status != ExecutionGateStatus.READY:
         assert result.executable_intent is None
 
 
@@ -311,12 +311,12 @@ def test_pipeline_generates_confirmation_request():
 
     result = pipeline.run(ctx)
 
-    assert result.execution_status in {
+    assert result.execution.execution_status in {
         ExecutionGateStatus.BLOCKED_ABSTAIN,
         ExecutionGateStatus.BLOCKED_CONFIRMATION,
     }
 
-    assert result.can_execute is False
+    assert result.execution.can_execute is False
 
 
 def test_confirmation_result_confirmed_allows_execution():
@@ -335,8 +335,8 @@ def test_confirmation_result_confirmed_allows_execution():
 
     result = pipeline.run(ctx)
 
-    assert result.can_execute is True
-    assert result.requires_confirmation is False
+    assert result.execution.can_execute is True
+    assert result.execution.requires_confirmation is False
 
 
 def test_confirmation_result_rejected_blocks_execution():
@@ -355,7 +355,7 @@ def test_confirmation_result_rejected_blocks_execution():
 
     result = pipeline.run(ctx)
 
-    assert result.can_execute is False
+    assert result.execution.can_execute is False
     assert result.executable_intent is None
 
 
@@ -375,7 +375,7 @@ def test_no_confirmation_request_if_result_already_present():
 
     result = pipeline.run(ctx)
 
-    assert result.confirmation_request is None
+    assert result.execution.confirmation_request is None
 
 
 def test_requires_confirmation_false_after_resolution():
@@ -394,7 +394,7 @@ def test_requires_confirmation_false_after_resolution():
 
     result = pipeline.run(ctx)
 
-    assert result.requires_confirmation is False
+    assert result.execution.requires_confirmation is False
 
 
 # =========================================================
@@ -570,7 +570,7 @@ def test_pipeline_handles_missing_slow_state():
     result = pipeline.run(ctx)
 
     assert result.gate_result is not None
-    assert result.execution_status is not None
+    assert result.execution.execution_status is not None
 
 
 def test_pipeline_exposes_delta_w_in_context():

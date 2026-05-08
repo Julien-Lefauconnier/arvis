@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from .certificate import (
@@ -9,6 +10,7 @@ from .certificate import (
     ProjectionCertificationLevel,
 )
 from .domain import ProjectionDomain
+from .projection_view import ProjectionView
 
 
 class ProjectionValidator:
@@ -30,12 +32,19 @@ class ProjectionValidator:
 
     def validate(
         self,
-        projected: dict[str, Any],
-        previous_projected: dict[str, Any] | None = None,
+        projected: ProjectionView | Mapping[str, float],
+        previous_projected: ProjectionView | Mapping[str, float] | None = None,
         ctx: Any | None = None,
     ) -> ProjectionCertificate:
-        domain_valid, checks_detail = self.domain.validate(projected)
-        margin = self.domain.margin_to_boundary(projected)
+        if not isinstance(projected, ProjectionView):
+            projected = ProjectionView.from_mapping(projected)
+
+        if previous_projected is not None and not isinstance(
+            previous_projected, ProjectionView
+        ):
+            previous_projected = ProjectionView.from_mapping(previous_projected)
+        domain_valid, checks_detail = self.domain.validate(projected.to_dict())
+        margin = self.domain.margin_to_boundary(projected.to_dict())
 
         # --- boundedness ---
         boundedness_ok = domain_valid
@@ -46,13 +55,17 @@ class ProjectionValidator:
 
         if previous_projected is not None:
             try:
-                delta = sum(
-                    abs(
-                        float(projected.get(k, 0)) - float(previous_projected.get(k, 0))
-                    )
-                    for k in projected
-                    if isinstance(projected.get(k), (int, float))
-                )
+                delta = 0.0
+
+                for k in projected.keys():
+                    current = projected.get(k, 0.0)
+                    previous = previous_projected.get(k, 0.0)
+
+                    if isinstance(current, (int, float)) and isinstance(
+                        previous,
+                        (int, float),
+                    ):
+                        delta += abs(float(current) - float(previous))
                 local_lipschitz = delta
                 lipschitz_ok = delta <= self.lipschitz_threshold
             except Exception:

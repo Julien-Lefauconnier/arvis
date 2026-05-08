@@ -1,5 +1,7 @@
 # tests/kernel/stages/test_projection_stage_pi_impl.py
 
+from types import SimpleNamespace
+
 from arvis.kernel.pipeline.stages.projection_stage import ProjectionStage
 from arvis.kernel.projection.domain import NumericBounds, ProjectionDomain
 from arvis.kernel.projection.pi_impl import PiImpl
@@ -14,12 +16,16 @@ class DummyCtx:
         self.control_signal = 20.0
         self.adaptive_kappa_eff = 0.2
 
-        self.projected_state = None
-        self.pi_state = None
-        self.projection_view = None
-        self.projection_certificate = None
-        self.projection_domain_valid = None
-        self.projection_margin = None
+        self.projection = SimpleNamespace(
+            runtime_projection=None,
+            structured_projection=None,
+            view=None,
+            view_raw=None,
+            certificate=None,
+            domain_valid=None,
+            margin=None,
+        )
+
         self.extra = {}
 
 
@@ -46,12 +52,12 @@ def test_projection_stage_runs_pi_impl_and_certifies():
 
     stage.run(pipeline, ctx)
 
-    assert ctx.projected_state is not None
-    assert ctx.pi_state is not None
-    assert ctx.projection_view is not None
-    assert ctx.projection_certificate is not None
-    assert ctx.projection_domain_valid is True
-    assert ctx.projection_margin is not None
+    assert ctx.projection.runtime_projection is not None
+    assert ctx.projection.structured_projection is not None
+    assert ctx.projection.view is not None
+    assert ctx.projection.certificate is not None
+    assert ctx.projection.domain_valid is True
+    assert ctx.projection.margin is not None
     assert ctx.extra["projection_source"] == "PiImpl"
     assert ctx.extra["projection_structured"] is True
     assert ctx.extra["pi_structured_available"] is True
@@ -65,12 +71,12 @@ def test_projection_stage_persists_structured_pi_state():
 
     stage.run(pipeline, ctx)
 
-    assert ctx.pi_state is not None
-    assert ctx.pi_state.x is not None
-    assert ctx.pi_state.z is not None
-    assert ctx.pi_state.q is not None
-    assert ctx.pi_state.w is not None
-    assert ctx.pi_state.z.gate.verdict in {
+    assert ctx.projection.structured_projection is not None
+    assert ctx.projection.structured_projection.x is not None
+    assert ctx.projection.structured_projection.z is not None
+    assert ctx.projection.structured_projection.q is not None
+    assert ctx.projection.structured_projection.w is not None
+    assert ctx.projection.structured_projection.z.gate.verdict in {
         "allow",
         "require_confirmation",
         "abstain",

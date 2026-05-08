@@ -1,5 +1,7 @@
 # tests/kernel/stages/test_projection_stage_pi_operator.py
 
+from types import SimpleNamespace
+
 from arvis.kernel.pipeline.stages.projection_stage import ProjectionStage
 from arvis.kernel.projection.validator import ProjectionValidator
 
@@ -44,17 +46,24 @@ def test_projection_stage_applies_pi_operator():
         pi_operator = PiOperator()
 
     class Ctx:
-        projection_certificate = None
+        projection = SimpleNamespace(
+            certificate=None,
+            view=None,
+            view_raw=None,
+            runtime_projection=None,
+            structured_projection=None,
+        )
+
         extra = {}
 
     ctx = Ctx()
 
     stage.run(Pipeline(), ctx)
 
-    assert abs(ctx.projection_view["state.system_tension"]) < 1.0
-    assert abs(ctx.projection_view["risk.conflict_pressure"]) < 1.0
-    assert ctx.projection_view_raw["state.system_tension"] == 5.0
-    assert ctx.projection_view_raw["risk.conflict_pressure"] == -3.0
+    assert abs(ctx.projection.view["state.system_tension"]) < 1.0
+    assert abs(ctx.projection.view["risk.conflict_pressure"]) < 1.0
+    assert ctx.projection.view_raw["state.system_tension"] == 5.0
+    assert ctx.projection.view_raw["risk.conflict_pressure"] == -3.0
 
 
 def test_projection_stage_fallback_still_applies():
@@ -80,15 +89,21 @@ def test_projection_stage_fallback_still_applies():
         pi_operator = PiOperator()
 
     class Ctx:
-        projection_certificate = None
+        projection = SimpleNamespace(
+            certificate=None,
+            view=None,
+            view_raw=None,
+            runtime_projection=None,
+            structured_projection=None,
+        )
         extra = {}
 
     ctx = Ctx()
 
     stage.run(Pipeline(), ctx)
 
-    assert "state.system_tension" in ctx.projection_view
-    assert "state.system_tension" in ctx.projection_view_raw
+    assert "state.system_tension" in ctx.projection.view
+    assert "state.system_tension" in ctx.projection.view_raw
 
 
 def test_projection_stage_passes_previous_projection():
@@ -107,14 +122,20 @@ def test_projection_stage_passes_previous_projection():
         pi_operator = PiOperator()
 
     class Ctx:
-        projection_certificate = None
+        projection = SimpleNamespace(
+            certificate=None,
+            view=None,
+            view_raw=None,
+            runtime_projection=None,
+            structured_projection=None,
+        )
         extra = {}
 
     ctx = Ctx()
 
     stage.run(Pipeline(), ctx)
 
-    assert ctx.projection_certificate is not None
+    assert ctx.projection.certificate is not None
 
 
 def test_projection_validator_rejects_high_divergence():

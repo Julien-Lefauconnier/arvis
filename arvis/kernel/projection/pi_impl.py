@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.adapters.llm.observability.observation import LLMObservation
+from arvis.kernel.projection.projection_view import ProjectionView
 
 from .llm_projection_mapper import LLMProjectionMapper
 from .pi_types import (
@@ -98,17 +99,17 @@ class PiImpl:
             ),
         )
 
-    def project_previous(self, ctx: Any) -> dict[str, float] | None:
+    def project_previous(
+        self,
+        ctx: Any,
+    ) -> ProjectionView | None:
         """
         Return the previous flat projection view when available.
         """
         previous = getattr(ctx, "projection_view", None)
-        if isinstance(previous, dict):
-            out: dict[str, float] = {}
-            for key, value in previous.items():
-                if isinstance(value, (int, float)):
-                    out[str(key)] = float(value)
-            return out
+
+        if isinstance(previous, ProjectionView):
+            return previous
         return None
 
     def _coerce(self, value: Any, default: Number = 0.0) -> float:

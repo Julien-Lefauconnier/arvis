@@ -26,8 +26,10 @@ from arvis.kernel.pipeline.context.execution_context import (
 from arvis.kernel.pipeline.context.observability_context import (
     PipelineObservabilityContext,
 )
+from arvis.kernel.pipeline.context.projection_context import (
+    PipelineProjectionContext,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
-from arvis.kernel.projection.certificate import ProjectionCertificate
 from arvis.kernel.trace.decision_trace import DecisionTrace
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov import LyapunovState
@@ -258,13 +260,90 @@ class CognitivePipelineContext:
     # -------------------------
     # Projection (Pi certification)
     # -------------------------
-    projection_certificate: ProjectionCertificate | None = None
-    projection_domain_valid: bool | None = None
-    projection_margin: float | None = None
-    projected_state: Any | None = None
-    pi_state: Any | None = None
-    projection_view: dict[str, float] | None = None
-    projection_view_raw: dict[str, float] | None = None
+    projection: PipelineProjectionContext = field(
+        default_factory=PipelineProjectionContext,
+    )
+    # -----------------------------------------------------
+    # Projection compatibility layer
+    # -----------------------------------------------------
+
+    @property
+    def runtime_projection(self) -> Any | None:
+        return self.projection.runtime_projection
+
+    @runtime_projection.setter
+    def runtime_projection(self, value: Any | None) -> None:
+        self.projection.runtime_projection = value
+
+    @property
+    def structured_projection(self) -> Any | None:
+        return self.projection.structured_projection
+
+    @structured_projection.setter
+    def structured_projection(self, value: Any | None) -> None:
+        self.projection.structured_projection = value
+
+    # -----------------------------------------------------
+    # Legacy aliases
+    # TODO(arvis-projection-v2):
+    # remove once all callsites migrated
+    # -----------------------------------------------------
+
+    @property
+    def projection_certificate(self) -> Any | None:
+        return self.projection.certificate
+
+    @projection_certificate.setter
+    def projection_certificate(self, value: Any | None) -> None:
+        self.projection.certificate = value
+
+    @property
+    def projection_domain_valid(self) -> bool | None:
+        return self.projection.domain_valid
+
+    @projection_domain_valid.setter
+    def projection_domain_valid(self, value: bool | None) -> None:
+        self.projection.domain_valid = value
+
+    @property
+    def projection_margin(self) -> float | None:
+        return self.projection.margin
+
+    @projection_margin.setter
+    def projection_margin(self, value: float | None) -> None:
+        self.projection.margin = value
+
+    @property
+    def projected_state(self) -> Any | None:
+        return self.projection.runtime_projection
+
+    @projected_state.setter
+    def projected_state(self, value: Any | None) -> None:
+        self.projection.runtime_projection = value
+
+    @property
+    def pi_state(self) -> Any | None:
+        return self.projection.structured_projection
+
+    @pi_state.setter
+    def pi_state(self, value: Any | None) -> None:
+        self.projection.structured_projection = value
+
+    @property
+    def projection_view(self) -> dict[str, float] | None:
+        return self.projection.view
+
+    @projection_view.setter
+    def projection_view(self, value: dict[str, float] | None) -> None:
+        self.projection.view = value
+
+    @property
+    def projection_view_raw(self) -> dict[str, float] | None:
+        return self.projection.view_raw
+
+    @projection_view_raw.setter
+    def projection_view_raw(self, value: dict[str, float] | None) -> None:
+        self.projection.view_raw = value
 
     # -------------------------
     # Gate overrides

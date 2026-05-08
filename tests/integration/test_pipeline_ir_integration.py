@@ -165,7 +165,7 @@ def test_pipeline_run_from_input_exports_ir(monkeypatch) -> None:
         }
     )
 
-    assert result.ir_input is not None
+    assert result.ir.ir_input is not None
     assert result.ir_input.input_id == "input-1"
     assert result.ir_input.surface_kind == "linguistic"
 
@@ -181,7 +181,7 @@ def test_pipeline_run_from_input_exports_ir(monkeypatch) -> None:
 
     assert result.ir_state is not None
     assert result.ir_state.bundle_id == "bundle-1"
-    assert result.ir_state.epsilon == 0.4
+    assert result.ir.ir_state.epsilon == 0.4
 
-    assert result.ir_gate is not None
-    assert result.ir_gate.verdict.value == "allow"
+    assert result.ir.ir_gate is not None
+    assert result.ir.ir_gate.verdict.value == "allow"

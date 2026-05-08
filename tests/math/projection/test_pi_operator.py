@@ -24,7 +24,7 @@ def test_pi_operator_handles_empty_input():
 
     projected = pi.project({})
 
-    assert projected == {}
+    assert projected.to_dict() == {}
 
 
 def test_pi_operator_ignores_non_numeric():

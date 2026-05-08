@@ -48,14 +48,14 @@ class ControlFeedbackStage:
 
         new_epsilon = control.epsilon
         new_exploration = control.exploration
-        new_flags = list(control.flags)
+        new_flags = list(getattr(control, "flags", []))
 
         # -----------------------------------------
         # Lyapunov feedback
         # -----------------------------------------
         if rec == "strong_decrease":
             new_epsilon *= 0.8
-            new_exploration *= 0.7
+            new_exploration = _scale_exploration(new_exploration, 0.7)
             new_flags.append("composite_strong_decrease")
 
         elif rec == "soft_decrease":
@@ -64,7 +64,7 @@ class ControlFeedbackStage:
 
         elif rec == "strong_increase":
             new_epsilon *= 1.1
-            new_exploration *= 1.1
+            new_exploration = _scale_exploration(new_exploration, 1.1)
             new_flags.append("composite_strong_increase")
 
         # -----------------------------------------
@@ -91,3 +91,29 @@ class ControlFeedbackStage:
             temporal_modulation=getattr(ctx, "temporal_modulation", None),
         )
         ctx._effective_epsilon = float(new_epsilon)
+
+
+def _scale_exploration(value: Any, factor: float) -> Any:
+    """
+    Safely scales exploration structures.
+
+    Supports:
+    - float exploration
+    - dataclass snapshots exposing exploration_factor
+    """
+
+    if isinstance(value, (int, float)):
+        return float(value) * factor
+
+    if hasattr(value, "exploration_factor"):
+        try:
+            from dataclasses import replace
+
+            return replace(
+                value,
+                exploration_factor=float(value.exploration_factor) * factor,
+            )
+        except Exception:
+            return value
+
+    return value
