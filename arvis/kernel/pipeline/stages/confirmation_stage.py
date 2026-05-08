@@ -11,6 +11,9 @@ from arvis.cognition.conflict.conflict_confirmation import (
     requires_conflict_confirmation,
 )
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.runtime.execution.cognitive_execution_state import (
+    CognitiveExecutionState,
+)
 
 
 class ConfirmationStage:
@@ -138,6 +141,16 @@ class ConfirmationStage:
         )
 
         # -----------------------------------------
+        # Runtime execution state bootstrap
+        # -----------------------------------------
+        if ctx.execution_state is None:
+            ctx.execution_state = CognitiveExecutionState()
+
+        runtime = ctx.execution_state
+
+        requires_confirmation = needs_confirmation and ctx.confirmation_result is None
+
+        # -----------------------------------------
         # 4. REQUEST
         # -----------------------------------------
         confirmation_request = None
@@ -154,9 +167,22 @@ class ConfirmationStage:
         # -----------------------------------------
         ctx.confirmation_request = confirmation_request
         ctx._needs_confirmation = needs_confirmation
-        ctx._requires_confirmation = (
-            needs_confirmation and ctx.confirmation_result is None
-        )
+        ctx._requires_confirmation = requires_confirmation
+
+        # -------------------------------------------------
+        # Legacy compatibility layer
+        # TODO(arvis-runtime-v2):
+        # remove legacy mutable confirmation authority
+        # from CognitivePipelineContext once runtime
+        # execution state migration fully completed.
+        # -------------------------------------------------
+        ctx.requires_confirmation = requires_confirmation
+
+        # -------------------------------------------------
+        # Runtime-owned execution authority
+        # -------------------------------------------------
+        runtime.needs_confirmation = needs_confirmation
+        runtime.requires_confirmation = requires_confirmation
 
         self._debug(
             ctx,

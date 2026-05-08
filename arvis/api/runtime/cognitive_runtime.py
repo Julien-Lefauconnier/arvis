@@ -25,11 +25,9 @@ from arvis.kernel_core.syscalls.service_registry import (
 )
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
-from arvis.runtime import (
-    CognitiveRuntimeState,
-    CognitiveScheduler,
-    PipelineExecutor,
-)
+from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
+from arvis.runtime.cognitive_scheduler import CognitiveScheduler
+from arvis.runtime.pipeline_executor import PipelineExecutor
 from arvis.runtime.process_hooks import ProcessHookManager
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.manager import ToolManager

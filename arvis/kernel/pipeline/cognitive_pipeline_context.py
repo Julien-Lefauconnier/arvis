@@ -29,6 +29,9 @@ from arvis.math.lyapunov.slow_state import SlowState
 from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
 from arvis.math.stability.validity_envelope import ValidityEnvelope
 from arvis.math.switching.switching_runtime import SwitchingRuntime
+from arvis.runtime.execution.cognitive_execution_state import (
+    CognitiveExecutionState,
+)
 
 
 @dataclass
@@ -249,3 +252,4 @@ class CognitivePipelineContext:
     # Runtime
     # -------------------------
     control_runtime: Any | None = None
+    execution_state: CognitiveExecutionState | None = None

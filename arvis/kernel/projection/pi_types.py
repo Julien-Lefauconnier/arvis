@@ -89,6 +89,7 @@ class WState:
     observation_gap: float
     external_disturbance: float
     projection_residual: float
+    llm_risk_pressure: float = 0.0
 
 
 # =========================

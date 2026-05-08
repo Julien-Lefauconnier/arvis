@@ -114,3 +114,28 @@ def test_llm_evaluation_low_confidence_tightens_gate():
     state = PiImpl().project_structured(ctx)
 
     assert state.z.gate.confirmation_required is True
+
+
+def test_llm_evaluation_risk_is_injected_into_w_state():
+    ctx = DummyCtx()
+    ctx.extra["llm_evaluation"] = {
+        "confidence": 0.2,
+        "uncertainty": 0.3,
+        "variance": 0.1,
+        "risk": 0.92,
+    }
+
+    state = PiImpl().project_structured(ctx)
+
+    assert state.w.llm_risk_pressure >= 0.92
+    assert state.w.uncertainty_pressure >= 0.92
+    assert state.w.observation_gap >= 0.92
+
+
+def test_low_llm_confidence_increases_w_risk_pressure():
+    ctx = DummyCtx()
+    ctx.extra["llm_observation"]["confidence_mean"] = 0.05
+
+    state = PiImpl().project_structured(ctx)
+
+    assert state.w.llm_risk_pressure >= 0.95

@@ -1,33 +1,12 @@
 # arvis/runtime/__init__.py
 
-from arvis.kernel_core.state.scheduler_state import SchedulerState
-from arvis.runtime.cognitive_process import (
-    CognitiveBudget,
-    CognitivePriority,
-    CognitiveProcess,
-    CognitiveProcessId,
-    CognitiveProcessKind,
-    CognitiveProcessStatus,
-)
-from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
-from arvis.runtime.cognitive_scheduler import CognitiveScheduler, SchedulingPolicyConfig
-from arvis.runtime.pipeline_executor import PipelineExecutor
-from arvis.runtime.resource_model import ResourcePressure, ResourceState
-from arvis.runtime.scheduler_decision import SchedulerDecision
+"""
+ARVIS runtime package.
 
-__all__ = [
-    "CognitiveBudget",
-    "CognitivePriority",
-    "CognitiveProcess",
-    "CognitiveProcessId",
-    "CognitiveProcessKind",
-    "CognitiveProcessStatus",
-    "CognitiveRuntimeState",
-    "CognitiveScheduler",
-    "SchedulingPolicyConfig",
-    "PipelineExecutor",
-    "ResourcePressure",
-    "ResourceState",
-    "SchedulerDecision",
-    "SchedulerState",
-]
+IMPORTANT:
+This package intentionally avoids importing heavy runtime
+or pipeline modules at import-time in order to preserve
+kernel dependency boundaries and avoid circular imports.
+"""
+
+__all__: list[str] = []

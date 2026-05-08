@@ -520,3 +520,57 @@ def test_pipeline_llm_service_records_llm_runtime_metadata(mocker) -> None:
     assert ctx.extra["llm_observation"]["entropy_mean"] == 0.8
     assert ctx.extra["llm_evaluation"]["confidence"] == 0.2
     assert ctx.extra["llm_evaluation"]["risk"] == 0.8
+
+
+def test_pipeline_llm_service_records_runtime_metadata_into_execution_state():
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+    from arvis.kernel.pipeline.services.pipeline_llm_service import (
+        PipelineLLMService,
+    )
+    from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
+    from arvis.kernel_core.syscalls.syscall import SyscallResult
+    from arvis.runtime.execution import CognitiveExecutionState
+
+    ctx = CognitivePipelineContext(
+        user_id="u1",
+        cognitive_input=None,
+        execution_state=CognitiveExecutionState(),
+    )
+
+    result = SyscallResult(
+        success=True,
+        result=ExecutionArtifact(
+            artifact_type="llm_generation",
+            syscall="llm.generate",
+            status="success",
+            output={"content": "ok"},
+            metadata={
+                "llm_observation": {
+                    "confidence_mean": 0.8,
+                    "entropy_mean": 0.2,
+                },
+                "llm_evaluation": {
+                    "risk": 0.2,
+                    "uncertainty": 0.2,
+                },
+            },
+            replay_policy="journal_only_replay",
+            timestamp=123.0,
+        ),
+    )
+
+    PipelineLLMService._record_llm_runtime_metadata(
+        ctx,
+        result,
+    )
+
+    assert ctx.extra["llm_observation"]["confidence_mean"] == 0.8
+    assert ctx.extra["llm_evaluation"]["risk"] == 0.2
+
+    assert ctx.execution_state is not None
+
+    assert ctx.execution_state.llm.observation == ctx.extra["llm_observation"]
+
+    assert ctx.execution_state.llm.evaluation == ctx.extra["llm_evaluation"]

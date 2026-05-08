@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.adapters.llm.observability.observation import LLMObservation
+
 from .llm_projection_mapper import LLMProjectionMapper
 from .pi_types import (
     PiState,
@@ -65,10 +67,21 @@ class PiImpl:
         }
 
         extra = getattr(ctx, "extra", None)
-        llm_obs = extra.get("llm_observation") if isinstance(extra, dict) else None
+        if isinstance(extra, dict):
+            llm_obs_raw = extra.get("llm_observation")
+            llm_eval_raw = extra.get("llm_evaluation")
+
+            llm_obs = self._safe_to_dict(llm_obs_raw)
+            llm_eval = self._safe_to_dict(llm_eval_raw)
+        else:
+            llm_obs_raw = None
+            llm_eval_raw = None
+            llm_obs = None
+            llm_eval = None
 
         self._llm_mapper.inject(
             llm_obs,
+            llm_eval=llm_eval,
             state_signals=state_signals,
             risk_signals=risk_signals,
             trace_features=trace_features,
@@ -80,7 +93,9 @@ class PiImpl:
             control_signals=control_signals,
             trace_features=trace_features,
             metadata=metadata,
-            llm_observation=llm_obs,
+            llm_observation=(
+                llm_obs_raw if isinstance(llm_obs_raw, LLMObservation) else None
+            ),
         )
 
     def project_previous(self, ctx: Any) -> dict[str, float] | None:
@@ -126,19 +141,35 @@ class PiImpl:
         llm_obs = None
         llm_eval = None
 
+        base_commitment = 0.5
+
         if isinstance(extra, dict):
-            llm_obs = extra.get("llm_observation")
-            llm_eval = extra.get("llm_evaluation")
+            llm_obs = self._safe_to_dict(extra.get("llm_observation"))
+            llm_eval = self._safe_to_dict(extra.get("llm_evaluation"))
 
         if isinstance(llm_obs, dict):
             entropy = llm_obs.get("entropy_mean")
             variance = llm_obs.get("logprob_variance")
+            confidence = llm_obs.get("confidence_mean")
 
-            if isinstance(entropy, (int, float)):
-                uncertainty = max(uncertainty, float(entropy))
+            if (
+                isinstance(entropy, (int, float))
+                and isinstance(variance, (int, float))
+                and isinstance(confidence, (int, float))
+            ):
+                entropy_f = float(entropy)
+                variance_f = float(variance)
+                confidence_f = float(confidence)
 
-            if isinstance(variance, (int, float)):
-                uncertainty = max(uncertainty, float(variance))
+                entropy_n = min(max(entropy_f, 0.0), 1.0)
+                variance_n = min(max(variance_f, 0.0), 1.0)
+                confidence_n = min(max(confidence_f, 0.0), 1.0)
+
+                # IMPORTANT: preserve monotonicity (test expects >= entropy)
+                uncertainty = max(uncertainty, entropy_n, variance_n)
+
+                # affects commitment (soft scaling)
+                base_commitment *= 0.5 + 0.5 * confidence_n
 
         if isinstance(llm_eval, dict):
             eval_uncertainty = llm_eval.get("uncertainty")
@@ -150,16 +181,20 @@ class PiImpl:
             if isinstance(eval_risk, (int, float)):
                 uncertainty = max(uncertainty, float(eval_risk))
 
-        base_commitment = 0.5
-
         if isinstance(llm_eval, dict):
             confidence = llm_eval.get("confidence")
             if isinstance(confidence, (int, float)):
-                base_commitment = max(base_commitment, float(confidence))
+                base_commitment = max(
+                    base_commitment,
+                    min(max(float(confidence), 0.0), 1.0),
+                )
         elif isinstance(llm_obs, dict):
             confidence = llm_obs.get("confidence_mean")
             if isinstance(confidence, (int, float)):
-                base_commitment = max(base_commitment, float(confidence))
+                base_commitment = max(
+                    base_commitment,
+                    min(max(float(confidence), 0.0), 1.0),
+                )
 
         if ir_decision:
             base_commitment = max(
@@ -167,7 +202,9 @@ class PiImpl:
                 1.0 if ir_decision.decision_kind else 0.3,
             )
 
-        decision_commitment = base_commitment
+        decision_commitment = min(max(base_commitment, 0.0), 1.0)
+
+        uncertainty = min(max(uncertainty, 0.0), 1.5)
 
         x = XState(
             cognitive_load=tension,
@@ -189,7 +226,7 @@ class PiImpl:
         if ir_decision:
             decision_kind = ir_decision.decision_kind
 
-        confidence = 1.0 - uncertainty
+        confidence = max(0.0, min(1.0, 1.0 - uncertainty))
 
         z_decision = ZDecisionState(
             decision_kind=decision_kind,
@@ -211,13 +248,17 @@ class PiImpl:
             else:
                 verdict = "require_confirmation"
 
+            # LLM tightening
+            if isinstance(llm_obs, dict):
+                var = llm_obs.get("logprob_variance")
+                if isinstance(var, (int, float)) and var > 1.2:
+                    verdict = "require_confirmation"
+
             # LLM-aware tightening
-            if isinstance(extra, dict):
-                llm_obs = extra.get("llm_observation")
-                if isinstance(llm_obs, dict):
-                    confidence = llm_obs.get("confidence_mean")
-                    if isinstance(confidence, (int, float)) and confidence < 0.3:
-                        verdict = "require_confirmation"
+            if isinstance(llm_obs, dict):
+                conf = llm_obs.get("confidence_mean")
+                if isinstance(conf, (int, float)) and conf < 0.3:
+                    verdict = "require_confirmation"
 
         safety_margin = self._coerce(
             getattr(ctx, "projection_margin", getattr(ctx, "m_t", None)), 0.0
@@ -277,12 +318,70 @@ class PiImpl:
         # W STATE
         # =========================
 
+        llm_pressure = 0.0
+        llm_risk_pressure = 0.0
+
+        if isinstance(llm_obs, dict):
+            entropy = llm_obs.get("entropy_mean")
+            variance = llm_obs.get("logprob_variance")
+            confidence = llm_obs.get("confidence_mean")
+
+            if isinstance(variance, (int, float)):
+                llm_pressure = max(
+                    llm_pressure,
+                    min(max(float(variance), 0.0), 1.0),
+                )
+
+            if isinstance(entropy, (int, float)):
+                llm_pressure = max(
+                    llm_pressure,
+                    min(max(float(entropy), 0.0), 1.0),
+                )
+
+            if isinstance(confidence, (int, float)):
+                llm_risk_pressure = max(
+                    llm_risk_pressure,
+                    1.0 - min(max(float(confidence), 0.0), 1.0),
+                )
+
+        if isinstance(llm_eval, dict):
+            eval_risk = llm_eval.get("risk")
+            eval_uncertainty = llm_eval.get("uncertainty")
+
+            if isinstance(eval_risk, (int, float)):
+                llm_risk_pressure = max(
+                    llm_risk_pressure,
+                    min(max(float(eval_risk), 0.0), 1.0),
+                )
+
+            if isinstance(eval_uncertainty, (int, float)):
+                llm_pressure = max(
+                    llm_pressure,
+                    min(max(float(eval_uncertainty), 0.0), 1.0),
+                )
+
         w = WState(
-            uncertainty_pressure=uncertainty,
-            ambiguity_pressure=uncertainty,
-            observation_gap=uncertainty,
-            external_disturbance=drift,
+            uncertainty_pressure=max(uncertainty, llm_risk_pressure),
+            ambiguity_pressure=min(1.5, uncertainty + llm_pressure),
+            observation_gap=max(uncertainty, llm_risk_pressure),
+            external_disturbance=min(1.5, drift + llm_pressure + llm_risk_pressure),
             projection_residual=1.0 - safety_margin,
+            llm_risk_pressure=llm_risk_pressure,
         )
 
         return PiState(x=x, z=z, q=q, w=w)
+
+    def _safe_to_dict(self, value: Any) -> dict[str, float] | None:
+        if isinstance(value, dict):
+            return value  # assume already sanitized
+
+        if isinstance(value, LLMObservation):
+            return value.to_dict()
+
+        # support LLMEvaluation
+        if hasattr(value, "to_dict"):
+            candidate = value.to_dict()
+            if isinstance(candidate, dict):
+                return candidate
+
+        return None

@@ -12,10 +12,25 @@ class PipelineExecutionSyncService:
     def run(
         ctx: CognitivePipelineContext,
     ) -> None:
-        requires_confirmation = ctx._requires_confirmation
-        can_execute = ctx._can_execute
+        runtime = ctx.execution_state
+
+        requires_confirmation = (
+            runtime.requires_confirmation
+            if runtime is not None
+            else ctx._requires_confirmation
+        )
+
+        can_execute = runtime.can_execute if runtime is not None else ctx._can_execute
 
         assert ctx.execution_status is not None
+
+        # -------------------------------------------------
+        # Legacy compatibility mirror
+        # TODO(arvis-runtime-v2):
+        # remove mutable execution authority from
+        # CognitivePipelineContext once all runtime
+        # consumers migrated to CognitiveExecutionState.
+        # -------------------------------------------------
 
         ctx.requires_confirmation = requires_confirmation
         ctx.can_execute = can_execute
