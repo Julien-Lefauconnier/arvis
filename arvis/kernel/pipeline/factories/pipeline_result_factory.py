@@ -11,6 +11,15 @@ from arvis.kernel.pipeline.cognitive_pipeline_context import (
 from arvis.kernel.pipeline.cognitive_pipeline_result import (
     CognitivePipelineResult,
 )
+from arvis.kernel.pipeline.result.execution_result import (
+    PipelineExecutionResult,
+)
+from arvis.kernel.pipeline.result.ir_result import (
+    PipelineIRResult,
+)
+from arvis.kernel.pipeline.result.observability_result import (
+    PipelineObservabilityResult,
+)
 
 
 class PipelineResultFactory:
@@ -22,6 +31,38 @@ class PipelineResultFactory:
         requires_confirmation: bool,
     ) -> CognitivePipelineResult:
         return CognitivePipelineResult(
+            execution=PipelineExecutionResult(
+                execution_status=execution_status,
+                can_execute=can_execute,
+                requires_confirmation=requires_confirmation,
+                executable_intent=ctx.executable_intent,
+                action_decision=ctx.action_decision,
+                confirmation_request=ctx.confirmation_request,
+            ),
+            ir=PipelineIRResult(
+                ir_input=ctx.ir_input,
+                ir_context=ctx.ir_context,
+                ir_decision=ctx.ir_decision,
+                ir_state=ctx.ir_state,
+                ir_gate=ctx.ir_gate,
+                ir_projection=ctx.ir_projection,
+                ir_validity=ctx.ir_validity,
+                ir_stability=ctx.ir_stability,
+                ir_adaptive=ctx.ir_adaptive,
+                cognitive_ir=ctx.cognitive_ir,
+                ir_serialized=ctx.ir_serialized,
+                ir_hash=ctx.ir_hash,
+                ir_envelope=ctx.ir_envelope,
+            ),
+            observability=PipelineObservabilityResult(
+                scientific=ctx.scientific_snapshot,
+                control=ctx.control_snapshot,
+            ),
+            # -------------------------------------------------
+            # Legacy compatibility surface
+            # TODO(arvis-result-v2):
+            # remove after full migration to nested result model
+            # -------------------------------------------------
             bundle=ctx.bundle,
             decision=ctx.decision_result,
             scientific=ctx.scientific_snapshot,

@@ -21,6 +21,10 @@ class CognitiveOSInternals:
     runtime: CognitiveRuntime
     tool_executor: ToolExecutor
 
+    @staticmethod
+    def _result_execution(result: Any) -> Any:
+        return getattr(result, "execution", result)
+
     def _build_context(
         self,
         user_id: str,
@@ -76,9 +80,10 @@ class CognitiveOSInternals:
     ) -> CognitiveResultView | dict[str, Any]:
         # legacy mode explicite
         if not self.config.enable_trace:
+            execution = self._result_execution(result)
             return {
                 "action": getattr(result, "action_decision", None),
-                "can_execute": getattr(result, "can_execute", None),
+                "can_execute": getattr(execution, "can_execute", None),
             }
 
         # trace mode normal
@@ -86,9 +91,10 @@ class CognitiveOSInternals:
             return self._build_trace_result(state, result)
 
         # fallback fake executors/tests
+        execution = self._result_execution(result)
         return {
             "action": getattr(result, "action_decision", None),
-            "can_execute": getattr(result, "can_execute", None),
+            "can_execute": getattr(execution, "can_execute", None),
         }
 
     def _run_single(

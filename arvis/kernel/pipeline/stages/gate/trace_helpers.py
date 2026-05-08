@@ -40,8 +40,19 @@ def sync_confirmation_flags(ctx: Any, verdict: LyapunovVerdict) -> None:
             or conflict_value > 0.0
         )
 
-        ctx.extra["_requires_confirmation"] = requires_confirmation
-        ctx.extra["_needs_confirmation"] = requires_confirmation
+        # -------------------------------------------------
+        # Legacy trace compatibility only.
+        # Runtime authority lives in execution_state.
+        #
+        # DO NOT write mutable runtime authority into
+        # private ctx flags from trace helpers.
+        # -------------------------------------------------
+        ctx.extra["requires_confirmation"] = requires_confirmation
+        ctx.extra["needs_confirmation"] = requires_confirmation
+
+        runtime = getattr(ctx, "execution_state", None)
+        if runtime is not None:
+            runtime.needs_confirmation = requires_confirmation
 
     except Exception:
         pass

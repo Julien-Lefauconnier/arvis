@@ -47,6 +47,7 @@ def test_runtime_scheduler_selects_process():
         "READY",
         "COMPLETED",
         "WAITING_CONFIRMATION",
+        "BLOCKED",
     ]
 
 

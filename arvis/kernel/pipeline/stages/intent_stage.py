@@ -25,18 +25,24 @@ class IntentStage:
         if getattr(ctx, "_tool_forced_execution", False):
             self._debug(ctx, "[INTENT DEBUG] SKIP (forced tool execution)")
 
+        runtime = getattr(ctx, "execution_state", None)
+
+        can_execute = runtime.can_execute if runtime is not None else False
+
+        requires_confirmation = (
+            runtime.requires_confirmation if runtime is not None else False
+        )
+
         action_decision = ctx.action_decision
         verdict = getattr(ctx, "gate_result", None)
 
         self._debug(ctx, "\n[INTENT DEBUG] START")
         self._debug(ctx, "[INTENT DEBUG] verdict:", verdict)
-        self._debug(
-            ctx, "[INTENT DEBUG] _can_execute:", getattr(ctx, "_can_execute", None)
-        )
+        self._debug(ctx, "[INTENT DEBUG] can_execute:", can_execute)
         self._debug(
             ctx,
-            "[INTENT DEBUG] _requires_confirmation:",
-            getattr(ctx, "_requires_confirmation", None),
+            "[INTENT DEBUG] requires_confirmation:",
+            requires_confirmation,
         )
         self._debug(ctx, "[INTENT DEBUG] action_decision:", action_decision)
 

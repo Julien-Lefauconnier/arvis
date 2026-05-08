@@ -42,11 +42,22 @@ class PipelineFinalizeService:
             if cached is not None:
                 return cast(CognitivePipelineResult, cached)
 
-        requires_confirmation = ctx.requires_confirmation
-        can_execute = ctx.can_execute
+        # -----------------------------------------------------
+        # Runtime-owned execution authority
+        # -----------------------------------------------------
+        runtime = ctx.execution_state
 
-        assert ctx.execution_status is not None
-        execution_status = ctx.execution_status
+        assert runtime is not None
+        assert runtime.execution_status is not None
+
+        requires_confirmation = runtime.requires_confirmation
+        can_execute = runtime.can_execute
+        execution_status = runtime.execution_status
+
+        # -----------------------------------------------------
+        # Public compatibility mirror
+        # -----------------------------------------------------
+        ctx.requires_confirmation = requires_confirmation
 
         # -----------------------------------------------------
         # OBSERVABILITY
@@ -151,6 +162,8 @@ class PipelineFinalizeService:
         # Sync canonical projections
         # -----------------------------------------------------
         ctx.decision = ctx.decision_result
+        ctx.can_execute = can_execute
+        ctx.execution_status = execution_status
         ctx.control = ctx.control_snapshot
 
         result = PipelineResultFactory.build(

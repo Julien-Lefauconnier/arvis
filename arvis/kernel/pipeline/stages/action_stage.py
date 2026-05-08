@@ -14,6 +14,13 @@ from arvis.action.action_resolver import resolve_action
 
 class ActionStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
+        runtime = getattr(ctx, "execution_state", None)
+
+        can_execute = runtime.can_execute if runtime is not None else False
+
+        requires_confirmation = (
+            runtime.requires_confirmation if runtime is not None else False
+        )
         # -----------------------------------------
         # RETRY RESOLUTION (EARLY)
         # -----------------------------------------
@@ -33,10 +40,10 @@ class ActionStage:
         resolved_tool = retry_tool or force_tool
 
         # HARD GUARD
-        if not getattr(ctx, "_can_execute", False) and not resolved_tool:
+        if not can_execute and not resolved_tool:
             ctx.action_decision = ActionDecision(
                 allowed=False,
-                requires_user_validation=getattr(ctx, "_requires_confirmation", False),
+                requires_user_validation=requires_confirmation,
                 denied_reason="execution_blocked",
                 audit_required=True,
                 action_mode=ActionMode.AUTOMATIC,

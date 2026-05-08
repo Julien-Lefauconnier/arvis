@@ -120,12 +120,12 @@ class ConfirmationStage:
         # -----------------------------------------
         # 3. NEEDS CONFIRMATION (include Gate signal)
         # -----------------------------------------
-        gate_requires_confirmation = bool(
-            getattr(ctx, "extra", {}).get(
-                "_requires_confirmation",
-                False,
-            )
-        )
+        if ctx.execution_state is None:
+            ctx.execution_state = CognitiveExecutionState()
+
+        runtime = ctx.execution_state
+
+        gate_requires_confirmation = runtime.requires_confirmation
 
         needs_confirmation = (
             gate_requires_confirmation
@@ -139,14 +139,6 @@ class ConfirmationStage:
             "[CONFIRMATION DEBUG] needs_confirmation:",
             needs_confirmation,
         )
-
-        # -----------------------------------------
-        # Runtime execution state bootstrap
-        # -----------------------------------------
-        if ctx.execution_state is None:
-            ctx.execution_state = CognitiveExecutionState()
-
-        runtime = ctx.execution_state
 
         requires_confirmation = needs_confirmation and ctx.confirmation_result is None
 
@@ -166,31 +158,27 @@ class ConfirmationStage:
         # 5. EXPORT
         # -----------------------------------------
         ctx.confirmation_request = confirmation_request
-        ctx._needs_confirmation = needs_confirmation
-        ctx._requires_confirmation = requires_confirmation
-
-        # -------------------------------------------------
-        # Legacy compatibility layer
-        # TODO(arvis-runtime-v2):
-        # remove legacy mutable confirmation authority
-        # from CognitivePipelineContext once runtime
-        # execution state migration fully completed.
-        # -------------------------------------------------
-        ctx.requires_confirmation = requires_confirmation
 
         # -------------------------------------------------
         # Runtime-owned execution authority
         # -------------------------------------------------
         runtime.needs_confirmation = needs_confirmation
         runtime.requires_confirmation = requires_confirmation
+        runtime.metadata["confirmation_required"] = requires_confirmation
+        runtime.metadata["confirmation_needed"] = needs_confirmation
+
+        # -------------------------------------------------
+        # Compatibility projection handled centrally by
+        # PipelineExecutionSyncService.
+        # -------------------------------------------------
 
         self._debug(
             ctx,
-            "[CONFIRMATION DEBUG] exported _needs_confirmation:",
-            ctx._needs_confirmation,
+            "[CONFIRMATION DEBUG] runtime.needs_confirmation:",
+            runtime.needs_confirmation,
         )
         self._debug(
             ctx,
-            "[CONFIRMATION DEBUG] exported _requires_confirmation:",
-            ctx._requires_confirmation,
+            "[CONFIRMATION DEBUG] runtime.requires_confirmation:",
+            runtime.requires_confirmation,
         )

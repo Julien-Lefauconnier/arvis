@@ -14,7 +14,6 @@ from arvis.runtime.execution.cognitive_execution_state import (
 class ExecutionStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
         verdict = ctx.gate_result
-        needs_confirmation = getattr(ctx, "_needs_confirmation", False)
 
         # -------------------------------------------------
         # Runtime execution state bootstrap
@@ -24,12 +23,33 @@ class ExecutionStage:
 
         runtime = ctx.execution_state
 
+        # -------------------------------------------------
+        # Runtime authority resolution
+        # -------------------------------------------------
+        # REQUIRE_CONFIRMATION verdict is itself a runtime
+        # execution authority signal.
+        #
+        # ConfirmationStage may also have propagated an
+        # explicit runtime.needs_confirmation state.
+        # -------------------------------------------------
+
+        needs_confirmation = (
+            verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
+            or runtime.needs_confirmation
+        )
+
         requires_confirmation = needs_confirmation and ctx.confirmation_result is None
 
         can_execute = verdict == LyapunovVerdict.ALLOW and not requires_confirmation
 
+        # -------------------------------------------------
+        # Execution status resolution
+        # -------------------------------------------------
         if can_execute:
             execution_status = ExecutionGateStatus.READY
+
+        elif needs_confirmation:
+            execution_status = ExecutionGateStatus.BLOCKED_CONFIRMATION
 
         elif requires_confirmation:
             execution_status = ExecutionGateStatus.BLOCKED_CONFIRMATION
@@ -38,24 +58,16 @@ class ExecutionStage:
             execution_status = ExecutionGateStatus.BLOCKED_ABSTAIN
 
         # -------------------------------------------------
-        # Legacy compatibility layer
-        # TODO(arvis-runtime-v2):
-        # remove legacy mutable ctx execution flags once
-        # runtime execution authority fully migrates to
-        # CognitiveExecutionState.
-        # -------------------------------------------------
-        ctx._needs_confirmation = needs_confirmation
-        ctx._requires_confirmation = requires_confirmation
-        ctx._can_execute = can_execute
-
-        ctx.requires_confirmation = requires_confirmation
-        ctx.can_execute = can_execute
-        ctx.execution_status = execution_status
-
-        # -------------------------------------------------
         # Runtime-owned execution authority
         # -------------------------------------------------
         runtime.needs_confirmation = needs_confirmation
         runtime.requires_confirmation = requires_confirmation
         runtime.can_execute = can_execute
         runtime.execution_status = execution_status
+
+        # -------------------------------------------------
+        # Compatibility observability exports
+        # -------------------------------------------------
+        ctx.extra["needs_confirmation"] = needs_confirmation
+        ctx.extra["requires_confirmation"] = requires_confirmation
+        ctx.extra["can_execute"] = can_execute

@@ -1,6 +1,6 @@
 # arvis/kernel/pipeline/cognitive_pipeline_context.py
 
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import Any
 
 from arvis.action.action_decision import ActionDecision
@@ -20,6 +20,12 @@ from arvis.ir.gate import CognitiveGateIR
 from arvis.ir.input import CognitiveInputIR
 from arvis.ir.state import CognitiveStateIR
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
+from arvis.kernel.pipeline.context.execution_context import (
+    PipelineExecutionContext,
+)
+from arvis.kernel.pipeline.context.observability_context import (
+    PipelineObservabilityContext,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.projection.certificate import ProjectionCertificate
 from arvis.kernel.trace.decision_trace import DecisionTrace
@@ -169,37 +175,54 @@ class CognitivePipelineContext:
     # -------------------------
     # Execution layer
     # -------------------------
-    executable_intent: Any | None = None
-    action_decision: ActionDecision | None = None
-    execution_status: ExecutionGateStatus | None = None
-    can_execute: bool = False
-    requires_confirmation: bool = False
+    execution: PipelineExecutionContext = field(
+        default_factory=PipelineExecutionContext,
+    )
 
-    # Internal stage flags
-    _can_execute: bool = False
-    _requires_confirmation: bool = False
-    _needs_confirmation: bool = False
+    # -----------------------------------------------------
+    # Legacy compatibility layer
+    # -----------------------------------------------------
+    # Transitional compatibility input preserved during
+    # runtime ownership migration.
+    # TODO(arvis-runtime-v2):
+    # remove once all callsites migrated to ctx.execution.*
+    legacy_execution_state: CognitiveExecutionState | None = field(
+        default=None,
+        repr=False,
+    )
 
     # -------------------------
     # Extensions
     # -------------------------
     extra: dict[str, Any] = field(default_factory=dict)
 
-    # -------------------------
-    # Observability (read-only projections)
-    # -------------------------
-    predictive_snapshot: Any | None = None
-    global_forecast: Any | None = None
-    global_stability: Any | None = None
-    multi_horizon: Any | None = None
-    stability_stats: Any | None = None
-    stability_projection: Any | None = None
-    stability_statistics: Any | None = None
-    symbolic_drift: Any | None = None
-    symbolic_features: Any | None = None
+    # -----------------------------------------------------
+    # Transitional observability constructor compatibility
+    # -----------------------------------------------------
+
+    predictive_snapshot_init: InitVar[Any | None] = None
+    global_forecast_init: InitVar[Any | None] = None
+    global_stability_init: InitVar[Any | None] = None
+    multi_horizon_init: InitVar[Any | None] = None
+
+    stability_stats_init: InitVar[Any | None] = None
+    stability_projection_init: InitVar[Any | None] = None
+    stability_statistics_init: InitVar[Any | None] = None
+
+    symbolic_drift_init: InitVar[Any | None] = None
+    symbolic_features_init: InitVar[Any | None] = None
+
     system_tension: Any | None = None
-    ir_state: CognitiveStateIR | None = None
-    cognitive_state: Any | None = None
+
+    ir_state_init: InitVar[CognitiveStateIR | None] = None
+    cognitive_state_init: InitVar[Any | None] = None
+
+    # -------------------------
+    # Observability
+    # -------------------------
+    observability: PipelineObservabilityContext = field(
+        default_factory=PipelineObservabilityContext,
+    )
 
     # -----------------------------------------------------
     # Conversation layer (optional, passive)
@@ -252,4 +275,226 @@ class CognitivePipelineContext:
     # Runtime
     # -------------------------
     control_runtime: Any | None = None
-    execution_state: CognitiveExecutionState | None = None
+
+    # -----------------------------------------------------
+    # Execution authority projection
+    # -----------------------------------------------------
+    # Runtime-owned source of truth:
+    #   self.execution_state
+    #
+    # These properties intentionally preserve the public
+    # context/result surface while preventing duplicated
+    # mutable execution authority inside the context.
+    # -----------------------------------------------------
+
+    def __post_init__(
+        self,
+        predictive_snapshot_init: Any | None,
+        global_forecast_init: Any | None,
+        global_stability_init: Any | None,
+        multi_horizon_init: Any | None,
+        stability_stats_init: Any | None,
+        stability_projection_init: Any | None,
+        stability_statistics_init: Any | None,
+        symbolic_drift_init: Any | None,
+        symbolic_features_init: Any | None,
+        ir_state_init: CognitiveStateIR | None,
+        cognitive_state_init: Any | None,
+    ) -> None:
+        """
+        Transitional compatibility migration hook.
+        """
+        if self.legacy_execution_state is not None:
+            self.execution.execution_state = self.legacy_execution_state
+
+        # -------------------------------------------------
+        # Transitional observability migration
+        # -------------------------------------------------
+        self.observability.predictive_snapshot = predictive_snapshot_init
+
+        self.observability.global_forecast = global_forecast_init
+
+        self.observability.global_stability = global_stability_init
+
+        self.observability.multi_horizon = multi_horizon_init
+
+        self.observability.stability_stats = stability_stats_init
+
+        self.observability.stability_projection = stability_projection_init
+
+        self.observability.stability_statistics = stability_statistics_init
+
+        self.observability.symbolic_drift = symbolic_drift_init
+
+        self.observability.symbolic_features = symbolic_features_init
+
+        self.observability.system_tension = self.system_tension
+
+        self.observability.ir_state = ir_state_init
+
+        self.observability.cognitive_state = cognitive_state_init
+
+    def _ensure_execution_state(
+        self,
+    ) -> CognitiveExecutionState:
+        if self.execution.execution_state is None:
+            self.execution.execution_state = CognitiveExecutionState()
+
+        return self.execution.execution_state
+
+    @property
+    def executable_intent(self) -> Any | None:
+        return self.execution.executable_intent
+
+    @executable_intent.setter
+    def executable_intent(
+        self,
+        value: Any | None,
+    ) -> None:
+        self.execution.executable_intent = value
+
+    @property
+    def action_decision(
+        self,
+    ) -> ActionDecision | None:
+        return self.execution.action_decision
+
+    @action_decision.setter
+    def action_decision(
+        self,
+        value: ActionDecision | None,
+    ) -> None:
+        self.execution.action_decision = value
+
+    @property
+    def execution_state(
+        self,
+    ) -> CognitiveExecutionState | None:
+        return self.execution.execution_state
+
+    @execution_state.setter
+    def execution_state(
+        self,
+        value: CognitiveExecutionState | None,
+    ) -> None:
+        self.execution.execution_state = value
+
+    # Legacy projection properties
+    @property
+    def can_execute(self) -> bool:
+        return self._ensure_execution_state().can_execute
+
+    @can_execute.setter
+    def can_execute(self, value: bool) -> None:
+        self._ensure_execution_state().can_execute = value
+
+    @property
+    def requires_confirmation(self) -> bool:
+        return self._ensure_execution_state().requires_confirmation
+
+    @requires_confirmation.setter
+    def requires_confirmation(self, value: bool) -> None:
+        self._ensure_execution_state().requires_confirmation = value
+
+    @property
+    def execution_status(self) -> ExecutionGateStatus | None:
+        return self._ensure_execution_state().execution_status
+
+    @execution_status.setter
+    def execution_status(
+        self,
+        value: ExecutionGateStatus | None,
+    ) -> None:
+        self._ensure_execution_state().execution_status = value
+
+    # -----------------------------------------------------
+    # Observability compatibility layer
+    # -----------------------------------------------------
+
+    @property
+    def predictive_snapshot(self) -> Any | None:
+        return self.observability.predictive_snapshot
+
+    @predictive_snapshot.setter
+    def predictive_snapshot(self, value: Any | None) -> None:
+        self.observability.predictive_snapshot = value
+
+    @property
+    def global_forecast(self) -> Any | None:
+        return self.observability.global_forecast
+
+    @global_forecast.setter
+    def global_forecast(self, value: Any | None) -> None:
+        self.observability.global_forecast = value
+
+    @property
+    def global_stability(self) -> Any | None:
+        return self.observability.global_stability
+
+    @global_stability.setter
+    def global_stability(self, value: Any | None) -> None:
+        self.observability.global_stability = value
+
+    @property
+    def multi_horizon(self) -> Any | None:
+        return self.observability.multi_horizon
+
+    @multi_horizon.setter
+    def multi_horizon(self, value: Any | None) -> None:
+        self.observability.multi_horizon = value
+
+    @property
+    def stability_stats(self) -> Any | None:
+        return self.observability.stability_stats
+
+    @stability_stats.setter
+    def stability_stats(self, value: Any | None) -> None:
+        self.observability.stability_stats = value
+
+    @property
+    def stability_projection(self) -> Any | None:
+        return self.observability.stability_projection
+
+    @stability_projection.setter
+    def stability_projection(self, value: Any | None) -> None:
+        self.observability.stability_projection = value
+
+    @property
+    def stability_statistics(self) -> Any | None:
+        return self.observability.stability_statistics
+
+    @stability_statistics.setter
+    def stability_statistics(self, value: Any | None) -> None:
+        self.observability.stability_statistics = value
+
+    @property
+    def symbolic_drift(self) -> Any | None:
+        return self.observability.symbolic_drift
+
+    @symbolic_drift.setter
+    def symbolic_drift(self, value: Any | None) -> None:
+        self.observability.symbolic_drift = value
+
+    @property
+    def symbolic_features(self) -> Any | None:
+        return self.observability.symbolic_features
+
+    @symbolic_features.setter
+    def symbolic_features(self, value: Any | None) -> None:
+        self.observability.symbolic_features = value
+
+    @property
+    def ir_state(self) -> CognitiveStateIR | None:
+        return self.observability.ir_state
+
+    @ir_state.setter
+    def ir_state(self, value: CognitiveStateIR | None) -> None:
+        self.observability.ir_state = value
+
+    @property
+    def cognitive_state(self) -> Any | None:
+        return self.observability.cognitive_state
+
+    @cognitive_state.setter
+    def cognitive_state(self, value: Any | None) -> None:
+        self.observability.cognitive_state = value

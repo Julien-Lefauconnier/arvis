@@ -8,29 +8,36 @@ from arvis.kernel.pipeline.cognitive_pipeline_context import (
 
 
 class PipelineExecutionSyncService:
+    """
+    Legacy compatibility projection layer.
+
+    Runtime execution authority is owned by
+    CognitiveExecutionState.
+
+    This service only mirrors runtime-owned state
+    into CognitivePipelineContext for backward
+    compatibility with older integrations/tests.
+
+    TODO(arvis-runtime-v2):
+    remove compatibility projection once all
+    consumers migrated to execution_state.
+    """
+
     @staticmethod
     def run(
         ctx: CognitivePipelineContext,
     ) -> None:
+        """
+        Compatibility hook.
+
+        Execution authority is now runtime-owned and exposed
+        through CognitivePipelineContext proxy properties.
+        This service remains as a lifecycle hook for older
+        pipeline callers but no longer mirrors mutable state.
+        """
         runtime = ctx.execution_state
 
-        requires_confirmation = (
-            runtime.requires_confirmation
-            if runtime is not None
-            else ctx._requires_confirmation
-        )
+        if runtime is None:
+            return
 
-        can_execute = runtime.can_execute if runtime is not None else ctx._can_execute
-
-        assert ctx.execution_status is not None
-
-        # -------------------------------------------------
-        # Legacy compatibility mirror
-        # TODO(arvis-runtime-v2):
-        # remove mutable execution authority from
-        # CognitivePipelineContext once all runtime
-        # consumers migrated to CognitiveExecutionState.
-        # -------------------------------------------------
-
-        ctx.requires_confirmation = requires_confirmation
-        ctx.can_execute = can_execute
+        assert runtime.execution_status is not None

@@ -41,7 +41,15 @@ class CognitiveResultView:
         state: CognitiveState,
         result: Any,
     ) -> CognitiveResultView:
-        stability = getattr(result, "stability", None)
+        observability = getattr(result, "observability", None)
+        execution = getattr(result, "execution", result)
+
+        stability = (
+            getattr(observability, "scientific", None)
+            if observability is not None
+            else getattr(result, "stability", None)
+        )
+
         trace = getattr(result, "trace", None)
         timeline_journal = state.timeline
 
@@ -97,7 +105,7 @@ class CognitiveResultView:
             reflexive_payload = None
 
         return CognitiveResultView(
-            decision=getattr(result, "action_decision", None),
+            decision=getattr(execution, "action_decision", None),
             stability=stability,
             stability_view=(
                 StabilityView.from_snapshot(stability) if stability else None

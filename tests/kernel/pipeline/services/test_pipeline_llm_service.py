@@ -536,7 +536,7 @@ def test_pipeline_llm_service_records_runtime_metadata_into_execution_state():
     ctx = CognitivePipelineContext(
         user_id="u1",
         cognitive_input=None,
-        execution_state=CognitiveExecutionState(),
+        legacy_execution_state=CognitiveExecutionState(),
     )
 
     result = SyscallResult(

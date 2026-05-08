@@ -16,6 +16,9 @@ from arvis.math.switching.switching_params import (
 from arvis.math.switching.switching_runtime import (
     SwitchingRuntime,
 )
+from arvis.runtime.execution.cognitive_execution_state import (
+    CognitiveExecutionState,
+)
 
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline import (
@@ -24,6 +27,18 @@ if TYPE_CHECKING:
 
 
 class PipelinePreparationService:
+    """
+    Runtime-safe pipeline bootstrap service.
+
+    Responsibilities:
+    - bootstrap canonical IR inputs/context
+    - initialize runtime-owned state
+    - initialize switching runtime state
+    - prepare deterministic execution context
+
+    Preparation MUST occur once per pipeline lifecycle.
+    """
+
     DEFAULT_SWITCHING_PARAMS = SwitchingParams(
         alpha=0.15,
         gamma_z=0.4,
@@ -37,63 +52,54 @@ class PipelinePreparationService:
         pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
     ) -> None:
-        if ctx.extra.get(
-            "__pipeline_prepared",
-            False,
-        ):
+        # -----------------------------------------
+        # Idempotent lifecycle guard
+        # -----------------------------------------
+        if ctx.extra.get("__pipeline_prepared", False):
             return
 
+        # -----------------------------------------
+        # Canonical IR bootstrap
+        # -----------------------------------------
         PipelineIRBootstrapService.bootstrap_input(ctx)
         PipelineIRBootstrapService.bootstrap_context(ctx)
 
-        if (
-            getattr(
-                ctx,
-                "switching_params",
-                None,
-            )
-            is None
-        ):
+        # -----------------------------------------
+        # Runtime execution bootstrap
+        # -----------------------------------------
+        if ctx.execution_state is None:
+            ctx.execution_state = CognitiveExecutionState()
+
+        # -----------------------------------------
+        # Switching runtime bootstrap
+        # -----------------------------------------
+        if ctx.switching_params is None:
             ctx.switching_params = PipelinePreparationService.DEFAULT_SWITCHING_PARAMS
-        if (
-            getattr(
-                ctx,
-                "switching_runtime",
-                None,
-            )
-            is None
-        ):
+
+        if ctx.switching_runtime is None:
             ctx.switching_runtime = SwitchingRuntime()
 
-        try:
-            comp = getattr(
-                pipeline,
-                "quadratic_comparability",
-                None,
+        # -----------------------------------------
+        # Quadratic comparability projection
+        # -----------------------------------------
+        comp = getattr(
+            pipeline,
+            "quadratic_comparability",
+            None,
+        )
+
+        if comp is not None and ctx.switching_params is not None:
+            p = ctx.switching_params
+
+            ctx.switching_params = SwitchingParams(
+                alpha=float(p.alpha),
+                gamma_z=float(p.gamma_z),
+                eta=float(p.eta),
+                L_T=float(p.L_T),
+                J=float(comp.J),
             )
 
-            if (
-                comp is not None
-                and getattr(
-                    ctx,
-                    "switching_params",
-                    None,
-                )
-                is not None
-            ):
-                p = ctx.switching_params
-
-                if p is None:
-                    p = PipelinePreparationService.DEFAULT_SWITCHING_PARAMS
-
-                ctx.switching_params = SwitchingParams(
-                    alpha=float(p.alpha),
-                    gamma_z=float(p.gamma_z),
-                    eta=float(p.eta),
-                    L_T=float(p.L_T),
-                    J=float(comp.J),
-                )
-        except Exception:
-            pass
-
+        # -----------------------------------------
+        # Lifecycle prepared marker
+        # -----------------------------------------
         ctx.extra["__pipeline_prepared"] = True

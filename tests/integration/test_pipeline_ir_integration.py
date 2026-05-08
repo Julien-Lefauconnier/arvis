@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from arvis.kernel.execution.execution_gate_status import (
+    ExecutionGateStatus,
+)
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
@@ -106,9 +109,13 @@ def test_pipeline_run_from_input_exports_ir(monkeypatch) -> None:
         pipeline.execution_stage,
         "run",
         lambda _p, ctx: (
-            setattr(ctx, "_requires_confirmation", False),
-            setattr(ctx, "_can_execute", True),
-            setattr(ctx, "execution_status", "allow"),
+            setattr(ctx.execution_state, "requires_confirmation", False),
+            setattr(ctx.execution_state, "can_execute", True),
+            setattr(
+                ctx.execution_state,
+                "execution_status",
+                ExecutionGateStatus.READY,
+            ),
         ),
     )
     monkeypatch.setattr(

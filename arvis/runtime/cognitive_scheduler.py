@@ -218,8 +218,18 @@ class CognitiveScheduler:
                 result = outcome.result
                 process.last_result = result
 
-                requires_confirmation = getattr(result, "requires_confirmation", False)
-                can_execute = getattr(result, "can_execute", True)
+                execution = getattr(result, "execution", result)
+
+                requires_confirmation = getattr(
+                    execution,
+                    "requires_confirmation",
+                    False,
+                )
+                can_execute = getattr(
+                    execution,
+                    "can_execute",
+                    True,
+                )
 
                 # -----------------------------
                 # Case 1: confirmation required

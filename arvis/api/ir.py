@@ -18,6 +18,8 @@ def build_ir_view(obj: Any) -> dict[str, Any]:
     result = getattr(obj, "last_result", obj)
     if result is None:
         raise ValueError("IR result is None")
+
+    ir_result = getattr(result, "ir", result)
     """
     Canonical IR view (stable public contract).
 
@@ -27,11 +29,11 @@ def build_ir_view(obj: Any) -> dict[str, Any]:
     ir = {
         "version": IR_VERSION,
         "fingerprint": IR_FINGERPRINT,
-        "input": _serialize_ir(getattr(result, "ir_input", None)),
-        "context": _serialize_ir(getattr(result, "ir_context", None)),
-        "decision": _serialize_ir(getattr(result, "ir_decision", None)),
-        "state": _serialize_ir(getattr(result, "ir_state", None)),
-        "gate": _serialize_ir(getattr(result, "ir_gate", None)),
+        "input": _serialize_ir(getattr(ir_result, "ir_input", None)),
+        "context": _serialize_ir(getattr(ir_result, "ir_context", None)),
+        "decision": _serialize_ir(getattr(ir_result, "ir_decision", None)),
+        "state": _serialize_ir(getattr(ir_result, "ir_state", None)),
+        "gate": _serialize_ir(getattr(ir_result, "ir_gate", None)),
         # extension zone
         "meta": {},
     }

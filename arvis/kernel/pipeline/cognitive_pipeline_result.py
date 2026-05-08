@@ -13,6 +13,15 @@ from arvis.ir.gate import CognitiveGateIR
 from arvis.ir.input import CognitiveInputIR
 from arvis.ir.state import CognitiveStateIR
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
+from arvis.kernel.pipeline.result.execution_result import (
+    PipelineExecutionResult,
+)
+from arvis.kernel.pipeline.result.ir_result import (
+    PipelineIRResult,
+)
+from arvis.kernel.pipeline.result.observability_result import (
+    PipelineObservabilityResult,
+)
 from arvis.kernel.trace.decision_trace import DecisionTrace
 
 
@@ -25,6 +34,14 @@ class CognitivePipelineResult:
     No LLM.
     No side effects.
     """
+
+    # -----------------------------------------------------
+    # Structured result projections
+    # -----------------------------------------------------
+
+    execution: PipelineExecutionResult
+    ir: PipelineIRResult
+    observability: PipelineObservabilityResult
 
     bundle: Any | None
     decision: Any | None

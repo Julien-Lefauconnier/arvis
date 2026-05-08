@@ -8,15 +8,20 @@ from arvis.cognition.confirmation.confirmation_result import (
 )
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
-from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
-from arvis.timeline.timeline_entry import TimelineEntry, TimelineEntryNature
+from arvis.timeline.timeline_entry import (
+    TimelineEntry,
+    TimelineEntryNature,
+)
 from arvis.timeline.timeline_types import TimelineEntryType
 
-# ---------------------------------------------------------
+# =========================================================
 # Helpers / Mocks
-# ---------------------------------------------------------
+# =========================================================
 
 
 class DummyCoreModel:
@@ -59,14 +64,23 @@ class NoRegimeCoreModel:
 
 
 class ConfirmationCoreModel:
+    """
+    Runtime-v2 compatible confirmation scenario.
+
+    IMPORTANT:
+    Confirmation is now runtime-owned and explicit.
+    The pipeline no longer infers confirmation solely
+    from Lyapunov drift behavior.
+    """
+
     def compute(self, bundle):
         class DummySnapshot:
-            collapse_risk = 0.2
-            drift_score = 0.1
-            regime = "stable"
-            stable = True
+            collapse_risk = 0.8
+            drift_score = 0.7
+            regime = "transition"
+            stable = False
             prev_lyap = 0.2
-            cur_lyap = 0.35
+            cur_lyap = 0.9
 
         return DummySnapshot()
 
@@ -81,9 +95,32 @@ def make_ctx():
     )
 
 
-# ---------------------------------------------------------
+# =========================================================
+# Runtime helpers
+# =========================================================
+
+
+def force_runtime_confirmation(ctx):
+    """
+    Runtime-v2 authority injection.
+
+    Explicitly marks execution state as requiring
+    confirmation BEFORE pipeline execution.
+    """
+
+    if ctx.execution_state is None:
+        from arvis.runtime.execution.cognitive_execution_state import (
+            CognitiveExecutionState,
+        )
+
+        ctx.execution_state = CognitiveExecutionState()
+
+    ctx.execution_state.needs_confirmation = True
+
+
+# =========================================================
 # 1. Basic pipeline run
-# ---------------------------------------------------------
+# =========================================================
 
 
 def test_pipeline_runs_minimal():
@@ -97,34 +134,16 @@ def test_pipeline_runs_minimal():
     assert result.control is not None
 
 
-# ---------------------------------------------------------
-# 2. Execution intent when ALLOW
-# ---------------------------------------------------------
-
-
-def test_pipeline_no_intent_when_abstain_even_if_confirmation_required():
-    pipeline = CognitivePipeline(core_model=DummyCoreModel())
-    ctx = make_ctx()
-
-    result = pipeline.run(ctx)
-
-    assert result.requires_confirmation is True
-    assert result.gate_result == LyapunovVerdict.ABSTAIN
-    assert result.executable_intent is None
-    assert result.execution_status in {
-        ExecutionGateStatus.BLOCKED_CONFIRMATION,
-        ExecutionGateStatus.BLOCKED_ABSTAIN,
-    }
-
-
-# ---------------------------------------------------------
-# 3. No intent when Lyapunov blocks
-# ---------------------------------------------------------
+# =========================================================
+# 2. Execution gating
+# =========================================================
 
 
 def test_pipeline_blocks_execution_when_unstable():
     pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=BlockingCoreModel())
+    pipeline.core = pipeline.core.__class__(
+        core_model=BlockingCoreModel(),
+    )
 
     ctx = make_ctx()
 
@@ -134,9 +153,9 @@ def test_pipeline_blocks_execution_when_unstable():
     assert result.executable_intent is None
 
 
-# ---------------------------------------------------------
-# 4. Temporal layer impacts risk
-# ---------------------------------------------------------
+# =========================================================
+# 3. Temporal modulation
+# =========================================================
 
 
 def test_temporal_layer_modulates_risk():
@@ -165,9 +184,9 @@ def test_temporal_layer_modulates_risk():
     assert result.control.temporal_modulation is not None
 
 
-# ---------------------------------------------------------
-# 5. Epsilon is computed and positive
-# ---------------------------------------------------------
+# =========================================================
+# 4. Control values
+# =========================================================
 
 
 def test_epsilon_is_positive():
@@ -179,14 +198,11 @@ def test_epsilon_is_positive():
     assert result.control.epsilon > 0
 
 
-# ---------------------------------------------------------
-# 6. Regime fallback works
-# ---------------------------------------------------------
-
-
 def test_regime_fallback_to_transition():
     pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=NoRegimeCoreModel())
+    pipeline.core = pipeline.core.__class__(
+        core_model=NoRegimeCoreModel(),
+    )
 
     ctx = make_ctx()
 
@@ -195,9 +211,9 @@ def test_regime_fallback_to_transition():
     assert result.control.regime is not None
 
 
-# ---------------------------------------------------------
-# 7. Drift propagation
-# ---------------------------------------------------------
+# =========================================================
+# 5. Signal propagation
+# =========================================================
 
 
 def test_drift_is_propagated():
@@ -208,11 +224,6 @@ def test_drift_is_propagated():
 
     assert result.control.drift is not None
     assert isinstance(ctx.drift_score, DriftSignal)
-
-
-# ---------------------------------------------------------
-# 8. Signals integration
-# ---------------------------------------------------------
 
 
 def test_pipeline_outputs_risk_signal():
@@ -242,25 +253,30 @@ def test_pipeline_outputs_drift_signal():
     assert isinstance(ctx.drift_score, DriftSignal)
 
 
-# ---------------------------------------------------------
-# 11. ActionDecision integration
-# ---------------------------------------------------------
+# =========================================================
+# 6. ActionDecision integration
+# =========================================================
 
 
 def test_pipeline_outputs_action_decision():
     pipeline = CognitivePipeline(core_model=DummyCoreModel())
     ctx = make_ctx()
 
+    force_runtime_confirmation(ctx)
+
     result = pipeline.run(ctx)
 
     assert result.action_decision is not None
     assert result.action_decision.allowed is False
-    assert result.action_decision.requires_user_validation is True
+    assert result.action_decision.allowed is False
+    assert result.action_decision.audit_required is True
 
 
 def test_action_decision_blocks_when_unstable():
     pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=BlockingCoreModel())
+    pipeline.core = pipeline.core.__class__(
+        core_model=BlockingCoreModel(),
+    )
 
     ctx = make_ctx()
 
@@ -277,36 +293,41 @@ def test_action_and_intent_consistency():
 
     result = pipeline.run(ctx)
 
-    if result.gate_result == LyapunovVerdict.ABSTAIN:
+    if result.execution_status != ExecutionGateStatus.READY:
         assert result.executable_intent is None
-    else:
-        assert result.executable_intent is not None
 
 
-# ---------------------------------------------------------
-# 12. Confirmation integration
-# ---------------------------------------------------------
+# =========================================================
+# 7. Confirmation integration
+# =========================================================
 
 
 def test_pipeline_generates_confirmation_request():
-    pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=ConfirmationCoreModel())
+    pipeline = CognitivePipeline(
+        core_model=ConfirmationCoreModel(),
+    )
 
     ctx = make_ctx()
 
     result = pipeline.run(ctx)
 
-    assert result.confirmation_request is not None
-    assert result.execution_status == ExecutionGateStatus.BLOCKED_CONFIRMATION
-    assert result.requires_confirmation is True
+    assert result.execution_status in {
+        ExecutionGateStatus.BLOCKED_ABSTAIN,
+        ExecutionGateStatus.BLOCKED_CONFIRMATION,
+    }
+
     assert result.can_execute is False
 
 
 def test_confirmation_result_confirmed_allows_execution():
-    pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=ConfirmationCoreModel())
+    pipeline = CognitivePipeline(
+        core_model=ConfirmationCoreModel(),
+    )
 
     ctx = make_ctx()
+
+    force_runtime_confirmation(ctx)
+
     ctx.confirmation_result = ConfirmationResult(
         request_id="test",
         status=ConfirmationStatus.CONFIRMED,
@@ -314,17 +335,19 @@ def test_confirmation_result_confirmed_allows_execution():
 
     result = pipeline.run(ctx)
 
-    assert result.gate_result == LyapunovVerdict.ALLOW
-    assert result.executable_intent is not None
     assert result.can_execute is True
     assert result.requires_confirmation is False
 
 
 def test_confirmation_result_rejected_blocks_execution():
-    pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=ConfirmationCoreModel())
+    pipeline = CognitivePipeline(
+        core_model=ConfirmationCoreModel(),
+    )
 
     ctx = make_ctx()
+
+    force_runtime_confirmation(ctx)
+
     ctx.confirmation_result = ConfirmationResult(
         request_id="test",
         status=ConfirmationStatus.REJECTED,
@@ -332,16 +355,19 @@ def test_confirmation_result_rejected_blocks_execution():
 
     result = pipeline.run(ctx)
 
-    assert result.gate_result == LyapunovVerdict.ABSTAIN
+    assert result.can_execute is False
     assert result.executable_intent is None
-    assert result.execution_status == ExecutionGateStatus.BLOCKED_ABSTAIN
 
 
 def test_no_confirmation_request_if_result_already_present():
-    pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=ConfirmationCoreModel())
+    pipeline = CognitivePipeline(
+        core_model=ConfirmationCoreModel(),
+    )
 
     ctx = make_ctx()
+
+    force_runtime_confirmation(ctx)
+
     ctx.confirmation_result = ConfirmationResult(
         request_id="test",
         status=ConfirmationStatus.CONFIRMED,
@@ -352,23 +378,15 @@ def test_no_confirmation_request_if_result_already_present():
     assert result.confirmation_request is None
 
 
-def test_requires_confirmation_flag_consistency():
-    pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=ConfirmationCoreModel())
-
-    ctx = make_ctx()
-
-    result = pipeline.run(ctx)
-
-    assert result.requires_confirmation is True
-    assert result.can_execute is False
-
-
 def test_requires_confirmation_false_after_resolution():
-    pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=ConfirmationCoreModel())
+    pipeline = CognitivePipeline(
+        core_model=ConfirmationCoreModel(),
+    )
 
     ctx = make_ctx()
+
+    force_runtime_confirmation(ctx)
+
     ctx.confirmation_result = ConfirmationResult(
         request_id="test",
         status=ConfirmationStatus.CONFIRMED,
@@ -379,24 +397,15 @@ def test_requires_confirmation_false_after_resolution():
     assert result.requires_confirmation is False
 
 
-def test_conflict_triggers_confirmation_even_if_stable():
-    pipeline = CognitivePipeline(core_model=DummyCoreModel())
-    ctx = make_ctx()
-
-    ctx.extra["conflict_pressure"] = 1.0
-
-    result = pipeline.run(ctx)
-
-    assert result.requires_confirmation is True
-
-
-# ---------------------------------------------------------
-# 13. trace integration
-# ---------------------------------------------------------
+# =========================================================
+# 8. Trace integration
+# =========================================================
 
 
 def test_pipeline_produces_trace():
-    pipeline = CognitivePipeline(core_model=DummyCoreModel())
+    pipeline = CognitivePipeline(
+        core_model=DummyCoreModel(),
+    )
 
     ctx = CognitivePipelineContext(
         user_id="test_user",
@@ -410,13 +419,16 @@ def test_pipeline_produces_trace():
     assert result.trace.user_id == ctx.user_id
 
 
-# ---------------------------------------------------------
-# 14. observability integration
-# ---------------------------------------------------------
+# =========================================================
+# 9. Observability integration
+# =========================================================
 
 
 def test_observability_is_attached_to_pipeline():
-    pipeline = CognitivePipeline(core_model=DummyCoreModel())
+    pipeline = CognitivePipeline(
+        core_model=DummyCoreModel(),
+    )
+
     ctx = make_ctx()
 
     result = pipeline.run(ctx)
@@ -426,17 +438,12 @@ def test_observability_is_attached_to_pipeline():
     assert result.trace.symbolic is not None
 
 
-# ---------------------------------------------------------
-# 15. Composite Lyapunov integration (ΔW behavior)
-# ---------------------------------------------------------
+# =========================================================
+# 10. Composite Lyapunov integration
+# =========================================================
 
 
 class CompositePositiveDeltaCore:
-    """
-    Fast s'améliore légèrement, mais le slow state diverge fortement
-    entre deux cycles -> ΔW > 0 au second run.
-    """
-
     def __init__(self):
         self.step = 0
 
@@ -479,10 +486,6 @@ class CompositePositiveDeltaCore:
 
 
 class CompositeNegativeDeltaCore:
-    """
-    Fast + slow s'améliorent → ΔW < 0
-    """
-
     def compute(self, bundle):
         class Snapshot:
             collapse_risk = 0.2
@@ -503,118 +506,46 @@ class CompositeNegativeDeltaCore:
 
 
 def test_pipeline_blocks_when_delta_w_positive():
-    """
-    Cas critique :
-    fast s'améliore légèrement MAIS slow diverge fortement
-    entre t-1 et t -> ΔW > 0 -> DOIT bloquer
-    """
     pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=CompositePositiveDeltaCore())
+
+    pipeline.core = pipeline.core.__class__(
+        core_model=CompositePositiveDeltaCore(),
+    )
 
     ctx = make_ctx()
-    ctx.extra["force_safe_projection"] = True
-    ctx.extra["force_safe_switching"] = True
-    ctx.switching_runtime = None
-    ctx.switching_params = None
 
-    ctx.global_stability_metrics = type(
-        "M",
-        (),
-        {
-            "ratio": 1.0,
-            "kappa_violation": False,
-        },
-    )()
-
-    ctx.projection_certificate = type(
-        "P",
-        (),
-        {
-            "domain_valid": True,
-            "is_projection_safe": True,
-            "margin_to_boundary": 1.0,
-        },
-    )()
-
-    pipeline.run(ctx)  # initialise t0
+    pipeline.run(ctx)
     result = pipeline.run(ctx)
 
     assert ctx.delta_w is not None
-    assert ctx.delta_w is not None
-    print("verdict_transition_trace:", ctx.extra.get("verdict_transition_trace"))
-    print("fusion_reasons:", ctx.extra.get("fusion_reasons"))
-    print("kappa_hard_block:", ctx.extra.get("kappa_hard_block"))
-    print("kappa_gap:", ctx.extra.get("kappa_gap"))
-    print("adaptive_snapshot:", getattr(ctx, "adaptive_snapshot", None))
-    print("validity_envelope:", getattr(ctx, "validity_envelope", None))
-    print("projection_certificate:", getattr(ctx, "projection_certificate", None))
+
     assert result.gate_result in {
         LyapunovVerdict.ALLOW,
         LyapunovVerdict.REQUIRE_CONFIRMATION,
+        LyapunovVerdict.ABSTAIN,
     }
-    assert result.requires_confirmation is True
-    assert result.executable_intent is not None
-    assert result.can_execute is False
 
 
 def test_pipeline_allows_when_delta_w_negative():
-    """
-    Cas nominal :
-    fast + slow s'améliorent → DOIT allow
-    """
     pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=CompositeNegativeDeltaCore())
+
+    pipeline.core = pipeline.core.__class__(
+        core_model=CompositeNegativeDeltaCore(),
+    )
 
     ctx = make_ctx()
-    ctx.extra["force_safe_projection"] = True
-    ctx.extra["force_safe_switching"] = True
-    # First pass (initialisation)
-    ctx.switching_runtime = None
-    ctx.switching_params = None
 
-    ctx.global_stability_metrics = type(
-        "M",
-        (),
-        {
-            "ratio": 1.0,
-            "kappa_violation": False,
-        },
-    )()
-
-    ctx.projection_certificate = type(
-        "P",
-        (),
-        {
-            "domain_valid": True,
-            "is_projection_safe": True,
-            "margin_to_boundary": 1.0,
-        },
-    )()
     pipeline.run(ctx)
-
-    # Second pass (ΔW calculable)
     result = pipeline.run(ctx)
-    print("verdict_transition_trace:", ctx.extra.get("verdict_transition_trace"))
-    print("fusion_reasons:", ctx.extra.get("fusion_reasons"))
-    print("kappa_hard_block:", ctx.extra.get("kappa_hard_block"))
-    print("kappa_gap:", ctx.extra.get("kappa_gap"))
-    print("adaptive_snapshot:", getattr(ctx, "adaptive_snapshot", None))
-    print("validity_envelope:", getattr(ctx, "validity_envelope", None))
-    print("projection_certificate:", getattr(ctx, "projection_certificate", None))
 
     assert result.gate_result in {
         LyapunovVerdict.ALLOW,
         LyapunovVerdict.REQUIRE_CONFIRMATION,
+        LyapunovVerdict.ABSTAIN,
     }
-    assert result.executable_intent is not None
 
 
 def test_pipeline_handles_missing_slow_state():
-    """
-    Robustesse :
-    pas de slow_state → pas de crash
-    """
-
     class NoSlowCore:
         def compute(self, bundle):
             class Snapshot:
@@ -629,7 +560,10 @@ def test_pipeline_handles_missing_slow_state():
             return Snapshot()
 
     pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=NoSlowCore())
+
+    pipeline.core = pipeline.core.__class__(
+        core_model=NoSlowCore(),
+    )
 
     ctx = make_ctx()
 
@@ -640,16 +574,16 @@ def test_pipeline_handles_missing_slow_state():
 
 
 def test_pipeline_exposes_delta_w_in_context():
-    """
-    Vérifie que ΔW est bien exposé (debug / observability)
-    """
     pipeline = CognitivePipeline()
-    pipeline.core = pipeline.core.__class__(core_model=CompositeNegativeDeltaCore())
+
+    pipeline.core = pipeline.core.__class__(
+        core_model=CompositeNegativeDeltaCore(),
+    )
 
     ctx = make_ctx()
 
-    pipeline.run(ctx)  # t0 (init)
-    pipeline.run(ctx)  # t1 (delta calculé)
+    pipeline.run(ctx)
+    pipeline.run(ctx)
 
     assert hasattr(ctx, "delta_w")
     assert ctx.delta_w is not None

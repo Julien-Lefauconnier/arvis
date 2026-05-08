@@ -17,15 +17,27 @@ if TYPE_CHECKING:
 
 
 class PipelineRunnerService:
+    """
+    Runtime pipeline stage orchestrator.
+
+    Lifecycle preparation is performed once at the
+    pipeline execution boundary.
+
+    Individual stage execution MUST remain side-effect
+    free regarding runtime bootstrap/preparation.
+    """
+
     @staticmethod
     def run_stage(
         pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
         stage: PipelineStage,
     ) -> None:
-        pipeline._prepare_run(ctx)
         pipeline._safe_run(stage, ctx)
 
+        # -----------------------------------------
+        # Legacy compatibility projection
+        # -----------------------------------------
         if stage is pipeline.execution_stage:
             pipeline._sync_execution_flags(ctx)
 
@@ -34,6 +46,9 @@ class PipelineRunnerService:
         pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
     ) -> None:
+        # -----------------------------------------
+        # Single lifecycle preparation point
+        # -----------------------------------------
         pipeline._prepare_run(ctx)
 
         for stage in pipeline.iter_stages():
@@ -48,6 +63,9 @@ class PipelineRunnerService:
         pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
     ) -> Iterator[PipelineStage]:
+        # -----------------------------------------
+        # Single lifecycle preparation point
+        # -----------------------------------------
         pipeline._prepare_run(ctx)
 
         for stage in pipeline.iter_stages():
@@ -56,4 +74,5 @@ class PipelineRunnerService:
                 ctx,
                 stage,
             )
+
             yield stage
