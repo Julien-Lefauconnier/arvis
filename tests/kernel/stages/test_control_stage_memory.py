@@ -26,7 +26,8 @@ def test_memory_pressure_reduces_epsilon():
     ctx.timeline = []
 
     # 👉 memory pressure HIGH
-    ctx.bundle = type(
+    ctx.decision_layer = type("DL", (), {})()
+    ctx.decision_layer.bundle = type(
         "B",
         (),
         {
@@ -63,8 +64,8 @@ def test_memory_constraints_reduce_epsilon():
     ctx.regime = "neutral"
     ctx.stable = True
     ctx.timeline = []
-
-    ctx.bundle = type(
+    ctx.decision_layer = type("DL", (), {})()
+    ctx.decision_layer.bundle = type(
         "B",
         (),
         {
@@ -101,7 +102,8 @@ def test_no_memory_features_safe_fallback():
     ctx.regime = "neutral"
     ctx.stable = True
     ctx.timeline = []
-    ctx.bundle = None
+    ctx.decision_layer = type("DL", (), {})()
+    ctx.decision_layer.bundle = None
 
     stage.run(DummyPipeline(), ctx)
 
@@ -128,8 +130,8 @@ def test_memory_pressure_moderate_mode():
     ctx.regime = "neutral"
     ctx.stable = True
     ctx.timeline = []
-
-    ctx.bundle = type(
+    ctx.decision_layer = type("DL", (), {})()
+    ctx.decision_layer.bundle = type(
         "B",
         (),
         {

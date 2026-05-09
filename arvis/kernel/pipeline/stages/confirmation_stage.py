@@ -150,7 +150,9 @@ class ConfirmationStage:
         if needs_confirmation and ctx.confirmation_result is None:
             confirmation_request = ConfirmationRequest(
                 request_id=(f"confirm:{ctx.user_id}:{datetime.now(UTC).timestamp()}"),
-                target_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
+                target_id=str(
+                    getattr(ctx.decision_layer.bundle, "bundle_id", "bundle")
+                ),
                 reason="lyapunov_guard",
             )
 

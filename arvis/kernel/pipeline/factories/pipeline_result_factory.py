@@ -42,7 +42,7 @@ class PipelineResultFactory:
             ir=PipelineIRResult(
                 ir_input=ctx.ir_input,
                 ir_context=ctx.ir_context,
-                ir_decision=ctx.ir_decision,
+                ir_decision=ctx.decision_layer.ir_decision,
                 ir_state=ctx.ir_state,
                 ir_gate=ctx.ir_gate,
                 ir_projection=ctx.ir_projection,
@@ -59,8 +59,8 @@ class PipelineResultFactory:
                 control=ctx.control_snapshot,
                 cognitive_state=ctx.cognitive_state,
             ),
-            bundle=ctx.bundle,
-            decision=ctx.decision_result,
+            bundle=ctx.decision_layer.bundle,
+            decision=ctx.decision_layer.decision_result,
             gate_result=ctx.gate_result,
             trace=ctx.trace,
         )

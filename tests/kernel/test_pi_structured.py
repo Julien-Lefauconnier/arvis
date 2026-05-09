@@ -30,7 +30,7 @@ def minimal_ctx():
 
 @pytest.fixture
 def ctx_with_ir(minimal_ctx):
-    minimal_ctx.ir_decision = CognitiveDecisionIR(
+    minimal_ctx.decision_layer.ir_decision = CognitiveDecisionIR(
         decision_id="d1",
         decision_kind="action",
         memory_intent="none",
@@ -222,7 +222,7 @@ def test_switching_flag_propagation(minimal_ctx):
 def test_no_ir_does_not_crash(minimal_ctx):
     pi = PiImpl()
 
-    minimal_ctx.ir_decision = None
+    minimal_ctx.decision_layer.ir_decision = None
     minimal_ctx.ir_gate = None
     minimal_ctx.ir_state = None
 

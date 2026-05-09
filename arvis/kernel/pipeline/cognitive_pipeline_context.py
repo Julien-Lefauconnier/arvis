@@ -20,6 +20,9 @@ from arvis.ir.gate import CognitiveGateIR
 from arvis.ir.input import CognitiveInputIR
 from arvis.ir.state import CognitiveStateIR
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
+from arvis.kernel.pipeline.context.decision_context import (
+    PipelineDecisionContext,
+)
 from arvis.kernel.pipeline.context.execution_context import (
     PipelineExecutionContext,
 )
@@ -74,16 +77,11 @@ class CognitivePipelineContext:
     memory_projection: dict[str, Any] | None = None
 
     # -------------------------
-    # Decision layer
+    # Decision
     # -------------------------
-    decision_result: Any | None = None
-    decision: Any | None = None
-    ir_decision: CognitiveDecisionIR | None = None
-
-    # -------------------------
-    # Bundle layer
-    # -------------------------
-    bundle: Any | None = None
+    decision_layer: PipelineDecisionContext = field(
+        default_factory=PipelineDecisionContext,
+    )
 
     # -------------------------
     # Scientific / core layer
@@ -577,3 +575,31 @@ class CognitivePipelineContext:
     @cognitive_state.setter
     def cognitive_state(self, value: Any | None) -> None:
         self.observability.cognitive_state = value
+
+    # -----------------------------------------------------
+    # Decision compatibility layer
+    # -----------------------------------------------------
+
+    @property
+    def decision_result(self) -> Any | None:
+        return self.decision_layer.decision_result
+
+    @decision_result.setter
+    def decision_result(self, value: Any | None) -> None:
+        self.decision_layer.decision_result = value
+
+    @property
+    def ir_decision(self) -> CognitiveDecisionIR | None:
+        return self.decision_layer.ir_decision
+
+    @ir_decision.setter
+    def ir_decision(self, value: CognitiveDecisionIR | None) -> None:
+        self.decision_layer.ir_decision = value
+
+    @property
+    def bundle(self) -> Any | None:
+        return self.decision_layer.bundle
+
+    @bundle.setter
+    def bundle(self, value: Any | None) -> None:
+        self.decision_layer.bundle = value

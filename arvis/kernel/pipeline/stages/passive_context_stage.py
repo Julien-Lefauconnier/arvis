@@ -64,7 +64,9 @@ class PassiveContextStage:
         # -----------------------------------------------------
         try:
             if hasattr(pipeline, "governance"):
-                ctx.governance = pipeline.governance.evaluate(ctx.decision_result)
+                ctx.governance = pipeline.governance.evaluate(
+                    ctx.decision_layer.decision_result
+                )
             else:
                 ctx.governance = None
         except Exception:

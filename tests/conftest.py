@@ -76,7 +76,7 @@ def ctx_with_ir(minimal_ctx):
     from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR
     from arvis.ir.state import CognitiveRiskIR, CognitiveStateIR
 
-    minimal_ctx.ir_decision = CognitiveDecisionIR(
+    minimal_ctx.decision_layer.ir_decision = CognitiveDecisionIR(
         decision_id="d1",
         decision_kind="action",
         memory_intent="none",

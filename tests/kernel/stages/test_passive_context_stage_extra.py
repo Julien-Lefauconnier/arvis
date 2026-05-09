@@ -57,6 +57,11 @@ class DummyConversationContext:
         self.state = DummyConversationState()
 
 
+class DummyDecisionLayer:
+    def __init__(self):
+        self.decision_result = {}
+
+
 # ============================================================
 # 1. FULL HAPPY PATH
 # ============================================================
@@ -64,7 +69,7 @@ class DummyConversationContext:
 
 def test_full_passive_context():
     ctx = DummyCtx()
-    ctx.decision_result = {}
+    ctx.decision_layer = DummyDecisionLayer()
     ctx.conversation_context = DummyConversationContext()
 
     pipeline = DummyPipeline()
@@ -92,7 +97,7 @@ def test_full_passive_context():
 
 def test_governance_absent():
     ctx = DummyCtx()
-    ctx.decision_result = {}
+    ctx.decision_layer = DummyDecisionLayer()
 
     pipeline = DummyPipeline()
 
@@ -108,7 +113,7 @@ def test_governance_absent():
 
 def test_governance_exception():
     ctx = DummyCtx()
-    ctx.decision_result = {}
+    ctx.decision_layer = DummyDecisionLayer()
 
     pipeline = DummyPipeline()
     pipeline.governance = BrokenGovernance()

@@ -9,7 +9,8 @@ def test_memory_pressure_hard_abstain():
 
     ctx = type("Ctx", (), {})()
     ctx.extra = {}
-    ctx.bundle = type(
+    ctx.decision_layer = type("DL", (), {})()
+    ctx.decision_layer.bundle = type(
         "B",
         (),
         {
@@ -31,7 +32,8 @@ def test_memory_pressure_moderate_confirmation():
 
     ctx = type("Ctx", (), {})()
     ctx.extra = {}
-    ctx.bundle = type(
+    ctx.decision_layer = type("DL", (), {})()
+    ctx.decision_layer.bundle = type(
         "B",
         (),
         {
@@ -52,7 +54,8 @@ def test_memory_constraints_force_confirmation():
 
     ctx = type("Ctx", (), {})()
     ctx.extra = {}
-    ctx.bundle = type(
+    ctx.decision_layer = type("DL", (), {})()
+    ctx.decision_layer.bundle = type(
         "B",
         (),
         {
@@ -73,7 +76,8 @@ def test_memory_policy_safe_no_bundle():
 
     ctx = type("Ctx", (), {})()
     ctx.extra = {}
-    ctx.bundle = None
+    ctx.decision_layer = type("DL", (), {})()
+    ctx.decision_layer.bundle = None
 
     verdict = stage._apply_memory_policy(ctx, LyapunovVerdict.ALLOW)
 

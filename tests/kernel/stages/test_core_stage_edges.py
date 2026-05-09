@@ -24,9 +24,15 @@ class DummyPipeline:
         self.quadratic_comparability = "ok"
 
 
-class DummyCtx:
+class DummyDecisionLayer:
     def __init__(self):
         self.bundle = {}
+        self.decision_result = None
+
+
+class DummyCtx:
+    def __init__(self):
+        self.decision_layer = DummyDecisionLayer()
         self.regime = "test"
 
 

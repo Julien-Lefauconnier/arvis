@@ -9,7 +9,7 @@ from arvis.cognition.conflict.conflict_extractor import extract_conflicts_from_b
 
 class ConflictStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
-        bundle = ctx.bundle
+        bundle = ctx.decision_layer.bundle
 
         # -----------------------------------------
         # 1. Extract conflicts

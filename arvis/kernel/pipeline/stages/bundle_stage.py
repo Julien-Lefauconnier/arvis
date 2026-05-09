@@ -17,7 +17,7 @@ class BundleStage:
         memory_long = getattr(ctx, "memory_long", None)
 
         bundle = pipeline.bundle_builder.build(
-            decision_result=ctx.decision_result,
+            decision_result=ctx.decision_layer.decision_result,
             introspection=introspection,
             explanation=explanation,
             timeline=ctx.timeline,
@@ -25,4 +25,4 @@ class BundleStage:
             memory=memory_projection,
         )
 
-        ctx.bundle = bundle
+        ctx.decision_layer.bundle = bundle

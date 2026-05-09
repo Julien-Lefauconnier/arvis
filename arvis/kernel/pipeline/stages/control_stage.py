@@ -85,7 +85,9 @@ class ControlStage:
         # 6.5 MEMORY-AWARE MODULATION (OS layer)
         # -----------------------------------------
         try:
-            bundle = getattr(ctx, "bundle", None)
+            decision_layer = getattr(ctx, "decision_layer", None)
+            decision_layer = getattr(ctx, "decision_layer", None)
+            bundle = getattr(decision_layer, "bundle", None)
             memory_features = getattr(bundle, "memory_features", {}) if bundle else {}
 
             memory_pressure = float(memory_features.get("memory_pressure", 0.0))

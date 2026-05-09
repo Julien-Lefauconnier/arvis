@@ -85,14 +85,18 @@ class PipelineFinalizeService:
         if isinstance(ctx.gate_result, LyapunovVerdict):
             normalized_gate_result = CognitiveGateResult.from_lyapunov(
                 ctx.gate_result,
-                bundle_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
+                bundle_id=str(
+                    getattr(ctx.decision_layer.bundle, "bundle_id", "bundle")
+                ),
                 reason_codes=final_reason_codes,
                 decision_trace=gate_decision_trace,
             )
         else:
             normalized_gate_result = CognitiveGateResult.from_lyapunov(
                 LyapunovVerdict.ABSTAIN,
-                bundle_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
+                bundle_id=str(
+                    getattr(ctx.decision_layer.bundle, "bundle_id", "bundle")
+                ),
                 reason_codes=final_reason_codes or ("fallback_abstain",),
                 decision_trace=gate_decision_trace,
             )
@@ -161,7 +165,6 @@ class PipelineFinalizeService:
         # -----------------------------------------------------
         # Sync canonical projections
         # -----------------------------------------------------
-        ctx.decision = ctx.decision_result
         ctx.can_execute = can_execute
         ctx.execution_status = execution_status
         ctx.control = ctx.control_snapshot

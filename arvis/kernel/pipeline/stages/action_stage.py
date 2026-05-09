@@ -29,7 +29,7 @@ class ActionStage:
             "retry"
         ) or ctx.extra.get("retry_tool")
 
-        retry_tool = getattr(ctx.decision_result, "tool", None)
+        retry_tool = getattr(ctx.decision_layer.decision_result, "tool", None)
 
         # fallback BEFORE guard
         if retry_tool_flag and not retry_tool:
@@ -51,7 +51,7 @@ class ActionStage:
             return
 
         verdict = ctx.gate_result
-        retry_tool = getattr(ctx.decision_result, "tool", None)
+        retry_tool = getattr(ctx.decision_layer.decision_result, "tool", None)
 
         if resolved_tool:
             ctx.action_decision = ActionDecision(
@@ -61,14 +61,21 @@ class ActionStage:
                 audit_required=True,
                 action_mode=ActionMode.AUTOMATIC,
                 tool=resolved_tool,
-                tool_payload=getattr(ctx.decision_result, "tool_payload", {}) or {},
+                tool_payload=(
+                    getattr(
+                        ctx.decision_layer.decision_result,
+                        "tool_payload",
+                        {},
+                    )
+                    or {}
+                ),
             )
             # lock downstream stages (IntentStage, etc.)
             ctx._tool_forced_execution = True
 
             return
 
-        action_template = resolve_action(ctx.decision_result)
+        action_template = resolve_action(ctx.decision_layer.decision_result)
 
         # 🔒 fallback if no template
         if action_template is None:
@@ -84,11 +91,11 @@ class ActionStage:
         # -----------------------------------------
 
         if force_tool:
-            ctx.decision_result.tool = force_tool
+            ctx.decision_layer.decision_result.tool = force_tool
 
         # optional sync (not required anymore)
         if resolved_tool:
-            ctx.decision_result.tool = resolved_tool
+            ctx.decision_layer.decision_result.tool = resolved_tool
 
         action_decision = evaluate_action(
             verdict=verdict,
@@ -110,26 +117,40 @@ class ActionStage:
                 action_decision,
                 allowed=True,
                 tool=resolved_tool,
-                tool_payload=getattr(ctx.decision_result, "tool_payload", {}) or {},
+                tool_payload=(
+                    getattr(
+                        ctx.decision_layer.decision_result,
+                        "tool_payload",
+                        {},
+                    )
+                    or {}
+                ),
             )
 
         # -----------------------------------------
         # TOOL RETRY OVERRIDE
         # -----------------------------------------
-        retry_tool = getattr(ctx.decision_result, "tool", None)
+        retry_tool = getattr(ctx.decision_layer.decision_result, "tool", None)
 
         if retry_tool:
             action_decision = replace(
                 action_decision,
                 allowed=True,
                 tool=retry_tool,
-                tool_payload=getattr(ctx.decision_result, "tool_payload", {}) or {},
+                tool_payload=(
+                    getattr(
+                        ctx.decision_layer.decision_result,
+                        "tool_payload",
+                        {},
+                    )
+                    or {}
+                ),
             )
 
         tool_name = None
         tool_payload = None
 
-        decision_result = getattr(ctx, "decision_result", None)
+        decision_result = getattr(ctx.decision_layer, "decision_result", None)
         if decision_result is not None:
             tool_name = getattr(decision_result, "tool", None)
             tool_payload = getattr(decision_result, "tool_payload", None)

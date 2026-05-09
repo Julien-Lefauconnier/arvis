@@ -43,7 +43,7 @@ class PipelineTraceFactory:
             events=ctx.events,
             coherence_policy=ctx.coherence_policy,
             memory_influence=getattr(
-                ctx.decision_result,
+                ctx.decision_layer.decision_result,
                 "memory_influence",
                 None,
             ),

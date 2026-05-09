@@ -55,9 +55,15 @@ class IntentStage:
             return
 
         ctx.executable_intent = ExecutableIntent(
-            bundle_id=str(getattr(ctx.bundle, "bundle_id", "bundle")),
+            bundle_id=str(getattr(ctx.decision_layer.bundle, "bundle_id", "bundle")),
             user_id=ctx.user_id,
-            intent_signature=str(getattr(ctx.decision_result, "reason", "opaque")),
+            intent_signature=str(
+                getattr(
+                    ctx.decision_layer.decision_result,
+                    "reason",
+                    "opaque",
+                )
+            ),
             allow_rag=True,
             max_top_k=5,
             provider="default",

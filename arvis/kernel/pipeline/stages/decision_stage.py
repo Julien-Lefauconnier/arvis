@@ -39,7 +39,7 @@ class DecisionStage:
         if not hasattr(decision_result, "memory_influence"):
             decision_result = replace(decision_result, memory_influence={})
 
-        ctx.decision_result = decision_result
+        ctx.decision_layer.decision_result = decision_result
         # -----------------------------------------
         # TOOL RETRY INJECTION (post-decision override)
         # -----------------------------------------
@@ -59,7 +59,9 @@ class DecisionStage:
                     }
 
         try:
-            ctx.ir_decision = DecisionIRAdapter.from_result(ctx.decision_result)
+            ctx.decision_layer.ir_decision = DecisionIRAdapter.from_result(
+                ctx.decision_layer.decision_result,
+            )
         except Exception:
             ctx.extra.setdefault("errors", []).append("decision_ir_adapter_failure")
 

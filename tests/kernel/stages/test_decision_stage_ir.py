@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from arvis.kernel.pipeline.context.decision_context import PipelineDecisionContext
 from arvis.kernel.pipeline.stages.decision_stage import DecisionStage
 
 
@@ -28,12 +29,13 @@ def test_decision_stage_populates_ir_decision() -> None:
     ctx = SimpleNamespace(
         user_id="user-1",
         extra={},
+        decision_layer=PipelineDecisionContext(),
     )
 
     stage = DecisionStage()
     stage.run(pipeline, ctx)
 
-    assert ctx.decision_result.reason == "informational_query"
-    assert ctx.ir_decision is not None
-    assert ctx.ir_decision.decision_kind == "informational"
+    assert ctx.decision_layer.decision_result.reason == "informational_query"
+    assert ctx.decision_layer.ir_decision is not None
+    assert ctx.decision_layer.ir_decision.decision_kind == "informational"
     assert ctx.control_runtime == "runtime-for-user-1"

@@ -24,9 +24,12 @@ def test_decision_stage_injects_memory_influence_default():
     stage = DecisionStage()
     stage.run(pipeline, ctx)
 
-    assert ctx.decision_result is not None
-    assert hasattr(ctx.decision_result, "memory_influence")
-    assert ctx.decision_result.memory_influence == {}
+    assert ctx.decision_layer.decision_result is not None
+    assert hasattr(
+        ctx.decision_layer.decision_result,
+        "memory_influence",
+    )
+    assert ctx.decision_layer.decision_result.memory_influence == {}
 
 
 def test_decision_stage_preserves_memory_influence():
@@ -44,7 +47,7 @@ def test_decision_stage_preserves_memory_influence():
     stage = DecisionStage()
     stage.run(pipeline, ctx)
 
-    assert ctx.decision_result.memory_influence["memory_present"] is True
+    assert ctx.decision_layer.decision_result.memory_influence["memory_present"] is True
 
 
 def test_decision_stage_retry_does_not_drop_memory_influence():
@@ -65,4 +68,4 @@ def test_decision_stage_retry_does_not_drop_memory_influence():
     stage = DecisionStage()
     stage.run(pipeline, ctx)
 
-    assert ctx.decision_result.memory_influence["memory_pressure"] == 1.0
+    assert ctx.decision_layer.decision_result.memory_influence["memory_pressure"] == 1.0

@@ -19,7 +19,7 @@ from arvis.math.signals import DriftSignal, RiskSignal
 
 class CoreStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
-        bundle = ctx.bundle
+        bundle = ctx.decision_layer.bundle
 
         # -----------------------------------------
         # 0. Preserve previous causal states
