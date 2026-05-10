@@ -53,11 +53,29 @@ def build_context_from_yaml(data):
     # -----------------------------------------
     # Lyapunov
     # -----------------------------------------
-    lyap = data.get("lyapunov")
-    if lyap:
-        prev = lyap.get("prev")
-        cur = lyap.get("current")
+    lyap = data.get("lyapunov", {}) or {}
 
+    def _first_defined(*values):
+        for value in values:
+            if value is not None:
+                return value
+        return None
+
+    prev = _first_defined(
+        lyap.get("prev"),
+        lyap.get("previous"),
+        lyap.get("w_prev"),
+        data.get("prev_lyap"),
+    )
+
+    cur = _first_defined(
+        lyap.get("current"),
+        lyap.get("cur"),
+        lyap.get("w_current"),
+        data.get("cur_lyap"),
+    )
+
+    if prev is not None or cur is not None:
         # Use the canonical gate adapter so the injected type matches
         # what GateStage / CompositeLyapunov expect.
         ctx.prev_lyap = ensure_lyapunov_state(float(prev)) if prev is not None else None
@@ -66,7 +84,14 @@ def build_context_from_yaml(data):
         # Helpful hint for the rest of the pipeline / observability
         if prev is not None and cur is not None:
             ctx.stable = float(cur) < float(prev)
+            ctx.delta_w = float(cur) - float(prev)
+
             ctx.extra["preserve_injected_lyapunov"] = True
+
+            # Preserve explicit observability fields expected
+            # by compliance and IR layers.
+            ctx.extra["delta_w"] = ctx.delta_w
+            ctx.extra["stable"] = ctx.stable
 
     # -----------------------------------------
     # Projection
@@ -92,6 +117,26 @@ def build_context_from_yaml(data):
             noise_gain_estimate=float(proj.get("noise_gain_estimate", 0.0)),
             certification_level=level,
             checks_detail=proj.get("checks_detail", {}),
+        )
+
+        # Keep legacy/root projection injection and canonical
+        # ctx.projection.* state in sync.
+        #
+        # Gate validity / observability stages primarily read
+        # ctx.projection.certificate when the projection container exists.
+        # Compliance YAML scenarios inject projection data directly, so
+        # without this mirror the runtime sees an unavailable/invalid
+        # projection even when the scenario explicitly provides a valid one.
+        ctx.projection.certificate = ctx.projection_certificate
+        ctx.projection.domain_valid = ctx.projection_certificate.domain_valid
+        ctx.projection.margin = ctx.projection_certificate.margin_to_boundary
+
+        # Projection observability hints used by IR adapters
+        ctx.projection_domain_valid = bool(proj.get("domain_valid", True))
+        ctx.projection_margin = float(proj.get("margin_to_boundary", 1.0))
+        ctx.projection_safe = bool(proj.get("is_projection_safe", True))
+        ctx.projection_lyapunov_compatible = bool(
+            proj.get("lyapunov_compatibility_ok", True)
         )
 
     # -----------------------------------------

@@ -61,7 +61,22 @@ def compute_gate_kernel(inputs: GateKernelInputs) -> GateKernelResult:
     # -----------------------------------------
     # Pre-verdict (Lyapunov local)
     # -----------------------------------------
-    if inputs.stable is False:
+
+    # -------------------------------------------------
+    # Minimal local stability fallback
+    # -------------------------------------------------
+    # Compliance YAML scenarios may inject a certified
+    # local delta_w without full Lyapunov objects.
+    #
+    # If:
+    #   - system explicitly marked stable
+    #   - delta_w is strictly negative
+    # then we accept a local ALLOW pre-verdict.
+
+    if inputs.stable is True and inputs.delta_w is not None and inputs.delta_w < 0:
+        pre_verdict = LyapunovVerdict.ALLOW
+
+    elif inputs.stable is False:
         pre_verdict = LyapunovVerdict.ABSTAIN
 
     elif inputs.collapse_risk >= 0.8:

@@ -32,6 +32,9 @@ from arvis.kernel.pipeline.context.observability_context import (
 from arvis.kernel.pipeline.context.projection_context import (
     PipelineProjectionContext,
 )
+from arvis.kernel.pipeline.context.scientific_context import (
+    PipelineScientificContext,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.trace.decision_trace import DecisionTrace
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
@@ -83,6 +86,17 @@ class CognitivePipelineContext:
         default_factory=PipelineDecisionContext,
     )
 
+    # -------------------------
+    # Scientific bounded context
+    # -------------------------
+    scientific: PipelineScientificContext = field(
+        default_factory=PipelineScientificContext,
+    )
+
+    # TODO(arvis-scientific-v2):
+    # migrate all scientific runtime ownership to
+    # ctx.scientific.*
+    # then remove legacy root scientific fields.
     # -------------------------
     # Scientific / core layer
     # -------------------------
@@ -410,6 +424,75 @@ class CognitivePipelineContext:
         self.observability.ir_state = ir_state_init
 
         self.observability.cognitive_state = cognitive_state_init
+
+        # -------------------------------------------------
+        # Transitional scientific migration
+        # -------------------------------------------------
+
+        self.scientific.scientific_snapshot = self.scientific_snapshot
+
+        self.scientific.collapse_risk = self.collapse_risk
+
+        self.scientific.uncertainty = self.uncertainty
+
+        self.scientific.drift_score = self.drift_score
+
+        self.scientific.prev_lyap = self.prev_lyap
+        self.scientific.cur_lyap = self.cur_lyap
+
+        self.scientific.prev_quadratic_lyap_state = self.prev_quadratic_lyap_state
+
+        self.scientific.cur_quadratic_lyap_state = self.cur_quadratic_lyap_state
+
+        self.scientific.quadratic_lyap_snapshot = self.quadratic_lyap_snapshot
+
+        self.scientific.quadratic_comparability = self.quadratic_comparability
+
+        self.scientific.slow_state = self.slow_state
+
+        self.scientific.slow_state_prev = self.slow_state_prev
+
+        self.scientific.symbolic_state = self.symbolic_state
+
+        self.scientific.symbolic_state_prev = self.symbolic_state_prev
+
+        self.scientific.w_current = self.w_current
+        self.scientific.w_prev = self.w_prev
+        self.scientific.delta_w = self.delta_w
+
+        self.scientific.regime = self.regime
+
+        self.scientific.stable = self.stable
+
+        self.scientific.regime_confidence = self.regime_confidence
+
+        self.scientific.theoretical_regime = self.theoretical_regime
+
+        self.scientific.fast_dynamics = self.fast_dynamics
+
+        self.scientific.perturbation = self.perturbation
+
+        self.scientific.switching_runtime = self.switching_runtime
+
+        self.scientific.switching_params = self.switching_params
+
+        self.scientific.switching_safe = self.switching_safe
+
+        self.scientific.switching_metrics = self.switching_metrics
+
+        self.scientific.adaptive_snapshot = self.adaptive_snapshot
+
+        self.scientific.validity_envelope = self.validity_envelope
+
+        self.scientific.use_paper_slow_dynamics = self.use_paper_slow_dynamics
+
+        self.scientific.use_paper_composite_gate = self.use_paper_composite_gate
+
+        self.scientific.global_stability_metrics = self.global_stability_metrics
+
+        self.scientific.enforce_global_stability = self.enforce_global_stability
+
+        self.scientific.global_stability_action = self.global_stability_action
 
     def _ensure_execution_state(
         self,

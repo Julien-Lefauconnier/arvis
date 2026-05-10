@@ -38,16 +38,20 @@ class ControlFeedbackStage:
         # -----------------------------------------
         # Confidence control
         # -----------------------------------------
+        base_exploration_scalar = _exploration_scalar(base.exploration)
         control = apply_confidence_control(
             ConfidenceControlInputs(
                 system_confidence=system_confidence,
                 base_epsilon=base.epsilon,
-                exploration=base.exploration,
+                exploration=base_exploration_scalar,
             )
         )
 
         new_epsilon = control.epsilon
-        new_exploration = control.exploration
+        new_exploration = _restore_exploration_shape(
+            base.exploration,
+            control.exploration,
+        )
         new_flags = list(getattr(control, "flags", []))
 
         # -----------------------------------------
@@ -91,6 +95,34 @@ class ControlFeedbackStage:
             temporal_modulation=getattr(ctx, "temporal_modulation", None),
         )
         ctx._effective_epsilon = float(new_epsilon)
+
+
+def _exploration_scalar(value: Any) -> float:
+    """
+    Extract scalar exploration value for math/control layer.
+    """
+
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    if hasattr(value, "exploration_factor"):
+        try:
+            return float(value.exploration_factor)
+        except Exception:
+            return 1.0
+
+    return 1.0
+
+
+def _restore_exploration_shape(original: Any, scalar: float) -> Any:
+    """
+    Preserve snapshot shape when the input exploration was structured.
+    """
+
+    if hasattr(original, "exploration_factor"):
+        return _scale_exploration(original, scalar / _exploration_scalar(original))
+
+    return float(scalar)
 
 
 def _scale_exploration(value: Any, factor: float) -> Any:

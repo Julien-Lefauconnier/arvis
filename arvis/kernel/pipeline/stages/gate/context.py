@@ -31,6 +31,18 @@ def initialize_context(ctx: Any) -> logging.Logger:
     ctx.w_current = getattr(ctx, "w_current", 0.0)
     ctx.delta_w = getattr(ctx, "delta_w", 0.0)
 
+    # Preserve explicit Lyapunov injections from compliance/YAML builders.
+    # Some preparation stages may leave canonical attrs at default values
+    # while the injected values are still available in ctx.extra.
+    if ctx.extra.get("preserve_injected_lyapunov", False):
+        injected_delta = ctx.extra.get("delta_w")
+        injected_stable = ctx.extra.get("stable")
+
+        if injected_delta is not None:
+            ctx.delta_w = float(injected_delta)
+        if injected_stable is not None:
+            ctx.stable = bool(injected_stable)
+
     ctx.stability_certificate = getattr(
         ctx,
         "stability_certificate",

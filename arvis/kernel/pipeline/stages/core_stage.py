@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Any
 
 import numpy as np
@@ -19,6 +20,51 @@ from arvis.math.signals import DriftSignal, RiskSignal
 
 class CoreStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
+        # ==========================================================
+        # Transitional compatibility layer
+        # ----------------------------------------------------------
+        # Old tests and legacy runtime contexts may not yet expose
+        # the structured scientific namespaces.
+        #
+        # During migration we lazily create them to preserve
+        # backward compatibility with the flat context API.
+        # ==========================================================
+
+        if not hasattr(ctx, "scientific"):
+            ctx.scientific = SimpleNamespace(
+                core=SimpleNamespace(),
+                lyapunov=SimpleNamespace(
+                    prev_lyap=None,
+                    cur_lyap=None,
+                    prev_quadratic_lyap_state=None,
+                    cur_quadratic_lyap_state=None,
+                    quadratic_lyap_snapshot=None,
+                    quadratic_comparability=None,
+                    slow_state=None,
+                    slow_state_prev=None,
+                    symbolic_state=None,
+                    symbolic_state_prev=None,
+                ),
+                regime_state=SimpleNamespace(
+                    regime=None,
+                    stable=None,
+                    fast_dynamics=None,
+                    perturbation=None,
+                    theoretical_regime=None,
+                ),
+                switching=SimpleNamespace(
+                    switching_params=None,
+                ),
+                adaptive=SimpleNamespace(),
+                composite=SimpleNamespace(),
+            )
+
+        scientific = ctx.scientific
+        core_ctx = scientific.core
+        lyap_ctx = scientific.lyapunov
+        regime_ctx = scientific.regime_state
+        switching_ctx = scientific.switching
+
         bundle = ctx.decision_layer.bundle
 
         # -----------------------------------------
@@ -29,10 +75,10 @@ class CoreStage:
         preserve_injected = bool(
             getattr(ctx, "extra", {}).get("preserve_injected_lyapunov", False)
         )
-        injected_prev = getattr(ctx, "prev_lyap", None)
-        injected_cur = getattr(ctx, "cur_lyap", None)
-        prev_slow_before = getattr(ctx, "slow_state", None)
-        prev_symbolic_before = getattr(ctx, "symbolic_state", None)
+        injected_prev = lyap_ctx.prev_lyap
+        injected_cur = lyap_ctx.cur_lyap
+        prev_slow_before = lyap_ctx.slow_state
+        prev_symbolic_before = lyap_ctx.symbolic_state
         prev_lyap_before = (
             injected_prev
             if preserve_injected and injected_prev is not None
@@ -42,18 +88,22 @@ class CoreStage:
         # -----------------------------------------
         # 1. Core processing
         # -----------------------------------------
-        scientific = pipeline.core.process(bundle)
-        ctx.scientific_snapshot = scientific
+        scientific_snapshot = pipeline.core.process(bundle)
+        core_ctx.scientific_snapshot = scientific_snapshot
 
-        core_snapshot = getattr(scientific, "core_snapshot", None) or scientific
+        core_snapshot = (
+            getattr(scientific_snapshot, "core_snapshot", None) or scientific_snapshot
+        )
 
-        ctx.collapse_risk = RiskSignal(getattr(scientific, "collapse_risk", 0.0) or 0.0)
+        core_ctx.collapse_risk = RiskSignal(
+            getattr(scientific_snapshot, "collapse_risk", 0.0) or 0.0
+        )
 
         # -----------------------------------------
         # 2. Lyapunov states
         # -----------------------------------------
 
-        new_cur = getattr(scientific, "cur_lyap", None) or getattr(
+        new_cur = getattr(scientific_snapshot, "cur_lyap", None) or getattr(
             core_snapshot, "cur_lyap", None
         )
 
@@ -74,8 +124,8 @@ class CoreStage:
 
         # Causal convention:
         # prev = last cycle current, cur = current cycle current
-        ctx.prev_lyap = prev_lyap_before
-        ctx.cur_lyap = new_cur
+        lyap_ctx.prev_lyap = prev_lyap_before
+        lyap_ctx.cur_lyap = new_cur
 
         # -----------------------------------------
         # fast dynamics snapshot
@@ -94,10 +144,10 @@ class CoreStage:
                 except Exception:
                     delta_norm = None
 
-            ctx.fast_dynamics = FastDynamicsSnapshot(
+            regime_ctx.fast_dynamics = FastDynamicsSnapshot(
                 regime=str(
-                    getattr(getattr(ctx, "theoretical_regime", None), "q_t", None)
-                    or ctx.regime
+                    getattr(regime_ctx.theoretical_regime, "q_t", None)
+                    or regime_ctx.regime
                 ),
                 x_prev=x_prev,
                 x_next=x_next,
@@ -105,21 +155,21 @@ class CoreStage:
             )
 
         except Exception:
-            ctx.fast_dynamics = None
+            regime_ctx.fast_dynamics = None
 
         # -----------------------------------------
         # Paper-aligned quadratic fast state
         # -----------------------------------------
-        prev_q = getattr(ctx, "cur_quadratic_lyap_state", None)
-        cur_q = project_operational_to_quadratic(ctx.cur_lyap)
+        prev_q = lyap_ctx.cur_quadratic_lyap_state
+        cur_q = project_operational_to_quadratic(lyap_ctx.cur_lyap)
 
-        ctx.prev_quadratic_lyap_state = prev_q
-        ctx.cur_quadratic_lyap_state = cur_q
+        lyap_ctx.prev_quadratic_lyap_state = prev_q
+        lyap_ctx.cur_quadratic_lyap_state = cur_q
 
         try:
             regime_name = str(
-                getattr(getattr(ctx, "theoretical_regime", None), "q_t", None)
-                or ctx.regime
+                getattr(regime_ctx.theoretical_regime, "q_t", None)
+                or regime_ctx.regime
                 or "transition"
             )
             family = getattr(pipeline, "quadratic_lyapunov_family", None)
@@ -134,53 +184,56 @@ class CoreStage:
                 if prev_q is not None:
                     q_delta = family.delta(regime_name, prev_q, cur_q)
 
-                ctx.quadratic_lyap_snapshot = QuadraticLyapunovSnapshot(
+                lyap_ctx.quadratic_lyap_snapshot = QuadraticLyapunovSnapshot(
                     regime=regime_name,
                     value=q_value,
                     delta=q_delta,
                     dimension=len(cur_q.as_vector()),
                 )
             else:
-                ctx.quadratic_lyap_snapshot = None
+                lyap_ctx.quadratic_lyap_snapshot = None
         except Exception:
-            ctx.quadratic_lyap_snapshot = None
+            lyap_ctx.quadratic_lyap_snapshot = None
 
         try:
-            ctx.quadratic_comparability = getattr(
+            lyap_ctx.quadratic_comparability = getattr(
                 pipeline, "quadratic_comparability", None
             )
         except Exception:
-            ctx.quadratic_comparability = None
+            lyap_ctx.quadratic_comparability = None
 
         # If no current Lyapunov state is available, the gate must not
         # fabricate a causal transition.
-        if ctx.cur_lyap is None:
-            ctx.stable = False
+        if lyap_ctx.cur_lyap is None:
+            regime_ctx.stable = False
 
-        ctx.drift_score = DriftSignal(
-            getattr(scientific, "drift_score", None)
-            or getattr(scientific, "dv", None)
+        core_ctx.drift_score = DriftSignal(
+            getattr(scientific_snapshot, "drift_score", None)
+            or getattr(scientific_snapshot, "dv", None)
             or getattr(core_snapshot, "drift_score", None)
             or getattr(core_snapshot, "dv", 0.0)
             or 0.0
         )
+
         try:
-            ctx._dv = float(ctx.drift_score)
+            ctx._dv = float(core_ctx.drift_score)
         except Exception:
             ctx._dv = 0.0
 
-        ctx.regime = getattr(scientific, "regime", None) or getattr(
-            core_snapshot, "regime", None
-        )
+        regime_ctx.regime = getattr(
+            scientific_snapshot,
+            "regime",
+            None,
+        ) or getattr(core_snapshot, "regime", None)
 
-        ctx.stable = (
-            getattr(scientific, "stable", None)
-            if getattr(scientific, "stable", None) is not None
+        regime_ctx.stable = (
+            getattr(scientific_snapshot, "stable", None)
+            if getattr(scientific_snapshot, "stable", None) is not None
             else getattr(core_snapshot, "stable", None)
         )
 
         try:
-            reflexive = getattr(scientific, "reflexive_state", None)
+            reflexive = getattr(scientific_snapshot, "reflexive_state", None)
 
             if reflexive:
                 new_slow = SlowState(
@@ -203,13 +256,13 @@ class CoreStage:
         # -----------------------------------------
         # 3. Causal export for composite gate
         # -----------------------------------------
-        ctx.slow_state_prev = prev_slow_before
+        lyap_ctx.slow_state_prev = prev_slow_before
 
         # -----------------------------------------
         # Future: slow-fast consistency (paper alignment)
         # Currently disabled (safe mode)
         # -----------------------------------------
-        ctx.slow_state = new_slow
+        lyap_ctx.slow_state = new_slow
 
         # -----------------------------------------
         # Optional paper-aligned slow dynamics
@@ -221,18 +274,27 @@ class CoreStage:
                 and prev_slow_before is not None
                 and ctx.cur_lyap is not None
             ):
-                symbolic_for_T = getattr(ctx, "symbolic_state", None)
+                symbolic_for_T = lyap_ctx.symbolic_state
 
                 if symbolic_for_T is not None:
-                    T_x = target_map(symbolic_for_T, fast=ctx.cur_lyap)
+                    T_x = target_map(
+                        symbolic_for_T,
+                        fast=lyap_ctx.cur_lyap,
+                    )
                 else:
                     T_x = np.zeros_like(prev_slow_before.as_vector(), dtype=float)
 
                 eta = 0.05
-                if getattr(ctx, "switching_params", None) is not None:
-                    eta = float(getattr(ctx.switching_params, "eta", 0.05))
+                if switching_ctx.switching_params is not None:
+                    eta = float(
+                        getattr(
+                            switching_ctx.switching_params,
+                            "eta",
+                            0.05,
+                        )
+                    )
 
-                ctx.slow_state = update_slow_state(
+                lyap_ctx.slow_state = update_slow_state(
                     prev_slow_before,
                     T_x,
                     eta=eta,
@@ -243,19 +305,48 @@ class CoreStage:
         # Example future activation:
         # if prev_slow_before is not None and ctx.cur_lyap is not None:
         #     T_x = target_map(ctx.symbolic_state, ctx.cur_lyap)
-        #     ctx.slow_state = update_slow_state(prev_slow_before, T_x)
+        #     lyap_ctx.slow_state = update_slow_state(prev_slow_before, T_x)
 
-        ctx.symbolic_state_prev = prev_symbolic_before
+        lyap_ctx.symbolic_state_prev = prev_symbolic_before
 
         # Current symbolic state is not produced by the core here.
         # It may be attached later by observability or another stage.
         # Keep whatever current value already exists, but do not fabricate it.
-        ctx.symbolic_state = getattr(ctx, "symbolic_state", None)
+        lyap_ctx.symbolic_state = lyap_ctx.symbolic_state
 
         # -----------------------------------------
         #  perturbation w_t
         # -----------------------------------------
         try:
-            ctx.perturbation = compute_perturbation(ctx)
+            regime_ctx.perturbation = compute_perturbation(ctx)
         except Exception:
-            ctx.perturbation = None
+            regime_ctx.perturbation = None
+
+        # ==========================================================
+        # Legacy flat-context compatibility bridge
+        # ----------------------------------------------------------
+        # Temporary during scientific namespace migration.
+        # ==========================================================
+
+        ctx.prev_lyap = lyap_ctx.prev_lyap
+        ctx.cur_lyap = lyap_ctx.cur_lyap
+
+        ctx.prev_quadratic_lyap_state = lyap_ctx.prev_quadratic_lyap_state
+        ctx.cur_quadratic_lyap_state = lyap_ctx.cur_quadratic_lyap_state
+
+        ctx.quadratic_lyap_snapshot = lyap_ctx.quadratic_lyap_snapshot
+        ctx.quadratic_comparability = lyap_ctx.quadratic_comparability
+
+        ctx.slow_state = lyap_ctx.slow_state
+        ctx.slow_state_prev = lyap_ctx.slow_state_prev
+
+        ctx.symbolic_state = lyap_ctx.symbolic_state
+        ctx.symbolic_state_prev = lyap_ctx.symbolic_state_prev
+
+        ctx.fast_dynamics = regime_ctx.fast_dynamics
+        ctx.perturbation = regime_ctx.perturbation
+        ctx.regime = regime_ctx.regime
+        ctx.stable = regime_ctx.stable
+
+        ctx.drift_score = core_ctx.drift_score
+        ctx.collapse_risk = core_ctx.collapse_risk

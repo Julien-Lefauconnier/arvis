@@ -59,9 +59,28 @@ class GateObserver:
         # -----------------------------------------
         # projection_trace
         # -----------------------------------------
-        projection_certificate = getattr(ctx, "projection_certificate", None)
-        projection_view = getattr(ctx, "projection_view", None)
-        projection_view_raw = getattr(ctx, "projection_view_raw", None)
+        projection_ctx = getattr(ctx, "projection", None)
+
+        if projection_ctx is not None:
+            projection_certificate = getattr(
+                projection_ctx,
+                "certificate",
+                None,
+            )
+            projection_view = getattr(
+                projection_ctx,
+                "view",
+                None,
+            )
+            projection_view_raw = getattr(
+                projection_ctx,
+                "view_raw",
+                None,
+            )
+        else:
+            projection_certificate = getattr(ctx, "projection_certificate", None)
+            projection_view = getattr(ctx, "projection_view", None)
+            projection_view_raw = getattr(ctx, "projection_view_raw", None)
 
         projection_trace = {
             "available": projection_certificate is not None,
@@ -100,12 +119,21 @@ class GateObserver:
                 if projection_certificate is not None
                 else None
             ),
-            "view": dict(projection_view)
-            if isinstance(projection_view, dict)
-            else None,
-            "raw_view": dict(projection_view_raw)
-            if isinstance(projection_view_raw, dict)
-            else None,
+            "view": (
+                (
+                    projection_view.to_dict()
+                    if projection_view is not None
+                    and hasattr(projection_view, "to_dict")
+                    else (
+                        dict(projection_view) if projection_view is not None else None
+                    )
+                )
+                if projection_view is not None
+                else None
+            ),
+            "raw_view": (
+                dict(projection_view_raw) if projection_view_raw is not None else None
+            ),
         }
 
         projection_summary = {

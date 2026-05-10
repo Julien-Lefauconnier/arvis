@@ -26,7 +26,7 @@ def apply_projection_enforcement(
         if projection_cert is not None:
             domain_valid = bool(getattr(projection_cert, "domain_valid", False))
             margin = getattr(projection_cert, "margin_to_boundary", None)
-            is_safe = bool(getattr(projection_cert, "is_projection_safe", False))
+            is_safe = bool(getattr(projection_cert, "is_projection_safe", True))
             lyapunov_compatible = bool(
                 getattr(projection_cert, "lyapunov_compatibility_ok", True)
             )

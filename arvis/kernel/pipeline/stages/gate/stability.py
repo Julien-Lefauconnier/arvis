@@ -148,7 +148,42 @@ def build_validity_envelope(
         kappa_safe = not bool(
             metrics is not None and getattr(metrics, "kappa_violation", False)
         )
-        projection_available = ctx.prev_lyap is not None or ctx.cur_lyap is not None
+        projection_ctx = getattr(ctx, "projection", None)
+
+        if projection_ctx is not None:
+            projection_certificate = getattr(
+                projection_ctx,
+                "certificate",
+                None,
+            )
+        else:
+            projection_certificate = getattr(
+                ctx,
+                "projection_certificate",
+                None,
+            )
+
+        projection_available = projection_certificate is not None
+
+        projection_domain_valid = bool(
+            getattr(
+                projection_certificate,
+                "domain_valid",
+                False,
+            )
+        )
+
+        projection_safe = bool(
+            getattr(
+                projection_certificate,
+                "is_projection_safe",
+                True,
+            )
+        )
+
+        projection_available = (
+            projection_available and projection_domain_valid and projection_safe
+        )
         exponential_safe = w_ratio is None or w_ratio <= w_bound_tol
         adaptive_band = ctx.extra.get("kappa_band")
 

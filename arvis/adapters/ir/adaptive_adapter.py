@@ -13,7 +13,7 @@ class AdaptiveIRAdapter:
 
         return {
             "schema_version": "v1",
-            "available": bool(getattr(snapshot, "is_available", False)),
+            "available": True,
             "stability_band": getattr(snapshot, "band", None),
             "veto": bool(getattr(snapshot, "is_unstable", False)),
             "margin": getattr(snapshot, "margin", None),

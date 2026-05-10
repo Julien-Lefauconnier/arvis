@@ -12,10 +12,26 @@ from arvis.kernel.pipeline.context.observability_context import (
 from arvis.kernel.pipeline.context.projection_context import (
     PipelineProjectionContext,
 )
+from arvis.kernel.pipeline.context.scientific_context import (
+    PipelineAdaptiveContext,
+    PipelineCompositeContext,
+    PipelineLyapunovContext,
+    PipelineRegimeContext,
+    PipelineScientificContext,
+    PipelineScientificCoreContext,
+    PipelineSwitchingContext,
+)
 
 __all__ = [
     "PipelineDecisionContext",
     "PipelineExecutionContext",
     "PipelineObservabilityContext",
     "PipelineProjectionContext",
+    "PipelineAdaptiveContext",
+    "PipelineCompositeContext",
+    "PipelineLyapunovContext",
+    "PipelineRegimeContext",
+    "PipelineScientificContext",
+    "PipelineScientificCoreContext",
+    "PipelineSwitchingContext",
 ]

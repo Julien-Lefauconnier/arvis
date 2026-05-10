@@ -13,7 +13,10 @@ class ProjectionIRAdapter:
 
         return {
             "schema_version": "v1",
-            "available": bool(getattr(cert, "available", False)),
+            "available": bool(
+                getattr(cert, "domain_valid", False)
+                and getattr(cert, "is_projection_safe", False)
+            ),
             "domain_valid": getattr(cert, "domain_valid", None),
             "is_projection_safe": getattr(cert, "is_projection_safe", None),
             "lyapunov_compatibility_ok": getattr(
