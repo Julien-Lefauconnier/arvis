@@ -117,6 +117,7 @@ class ProjectionStage:
             ctx.projection.view_raw = projection_view_raw
 
             ctx.projection.certificate = projection_certificate
+            ctx.projection_certificate = projection_certificate
             ctx.projection.domain_valid = projection_certificate.domain_valid
             ctx.projection.margin = projection_certificate.margin_to_boundary
 

@@ -35,6 +35,7 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 class GateStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
+        scientific = getattr(ctx, "scientific", None)
         overrides = resolve_overrides(ctx)
         initialize_context(ctx)
         w_bound_tol = getattr(pipeline, "w_bound_tolerance", 1.05)
@@ -61,6 +62,9 @@ class GateStage:
             delta_w=composite.delta_w,
             w_current=composite.w_current,
         )
+        if scientific is not None:
+            scientific.composite.recommendation = composite_recommendation
+
         ctx.extra["composite_gate_recommendation"] = composite_recommendation
 
         detect_slow_drift(

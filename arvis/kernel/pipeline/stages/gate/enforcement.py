@@ -108,20 +108,16 @@ def apply_projection_enforcement(
             if verdict == LyapunovVerdict.ALLOW:
                 verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
 
-        projection_unstable_coupling = (not is_safe) and (
-            (delta_w is not None and delta_w > 0.0)
-            or (not bool(global_safe))
-            or (not bool(switching_safe))
-        )
+        projection_unsafe = is_safe is False
 
-        if projection_unstable_coupling and not overrides.force_safe_projection:
+        if projection_unsafe and not overrides.force_safe_projection:
             if "projection_unsafe" not in projection_reasons:
                 projection_reasons.append("projection_unsafe")
 
             if verdict == LyapunovVerdict.ALLOW:
                 record_verdict_transition(
                     ctx,
-                    stage="projection_unstable_coupling_soft",
+                    stage="projection_unsafe_soft",
                     before=verdict,
                     after=LyapunovVerdict.REQUIRE_CONFIRMATION,
                     reason="projection_unsafe",
@@ -145,7 +141,12 @@ def apply_projection_enforcement(
 
 def apply_kappa_hard_block(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict:
     try:
-        metrics = getattr(ctx, "global_stability_metrics", None)
+        scientific = getattr(ctx, "scientific", None)
+
+        if scientific is not None:
+            metrics = scientific.adaptive.global_stability_metrics
+        else:
+            metrics = getattr(ctx, "global_stability_metrics", None)
         if metrics is not None and getattr(metrics, "kappa_violation", False):
             reasons = ctx.extra.setdefault("fusion_reasons", [])
             if "kappa_violation" not in reasons:

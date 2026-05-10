@@ -54,15 +54,23 @@ def apply_global_stability_policy(
 
 
 def compute_global_stability(ctx: Any, delta_w: float | None) -> bool:
-    history = list(getattr(ctx, "delta_w_history", []))
+    scientific = getattr(ctx, "scientific", None)
+
+    if scientific is not None:
+        history = list(scientific.composite.delta_w_history)
+    else:
+        history = list(getattr(ctx, "delta_w_history", []))
     if delta_w is not None:
         history.append(float(delta_w))
+    if scientific is not None:
+        scientific.composite.delta_w_history = history
+
     ctx.delta_w_history = history
 
     global_safe = True
     try:
         guard = GlobalStabilityGuard()
-        global_safe = guard.check(ctx.delta_w_history)
+        global_safe = guard.check(history)
     except Exception:
         global_safe = True
 
@@ -73,10 +81,18 @@ def compute_global_stability(ctx: Any, delta_w: float | None) -> bool:
 def compute_exponential_bound(ctx: Any) -> float | None:
     w_ratio = None
     try:
-        metrics = getattr(ctx, "global_stability_metrics", None)
+        scientific = getattr(ctx, "scientific", None)
+
+        if scientific is not None:
+            metrics = scientific.adaptive.global_stability_metrics
+        else:
+            metrics = getattr(ctx, "global_stability_metrics", None)
         if metrics is None:
             observer = GlobalStabilityObserver()
             metrics = observer.update(ctx)
+            if scientific is not None:
+                scientific.adaptive.global_stability_metrics = metrics
+
             ctx.global_stability_metrics = metrics
 
         if metrics is not None:
@@ -144,7 +160,12 @@ def build_validity_envelope(
     adaptive_metrics: AdaptiveSnapshot | None,
 ) -> None:
     try:
-        metrics = getattr(ctx, "global_stability_metrics", None)
+        scientific = getattr(ctx, "scientific", None)
+
+        if scientific is not None:
+            metrics = scientific.adaptive.global_stability_metrics
+        else:
+            metrics = getattr(ctx, "global_stability_metrics", None)
         kappa_safe = not bool(
             metrics is not None and getattr(metrics, "kappa_violation", False)
         )
@@ -187,17 +208,43 @@ def build_validity_envelope(
         exponential_safe = w_ratio is None or w_ratio <= w_bound_tol
         adaptive_band = ctx.extra.get("kappa_band")
 
+        # -----------------------------------------------------
+        # Switching safety is currently treated as a SOFT signal.
+        #
+        # It should not invalidate the mathematical validity
+        # envelope unless explicitly escalated to a hard block.
+        # -----------------------------------------------------
+
+        effective_switching_safe = True
+
         validity_envelope = build_math_validity_envelope(
             projection_available=bool(projection_available),
-            switching_safe=bool(switching_safe),
+            switching_safe=bool(effective_switching_safe),
             exponential_safe=bool(exponential_safe),
             kappa_safe=bool(kappa_safe),
             adaptive_available=bool(adaptive_metrics and adaptive_metrics.is_available),
             adaptive_band=adaptive_band,
         )
+        if scientific is not None:
+            scientific.adaptive.validity_envelope = validity_envelope
+
         ctx.validity_envelope = validity_envelope
+
+        # -----------------------------------------------------
+        # Soft switching observability
+        # -----------------------------------------------------
+
+        if not switching_safe:
+            ctx.extra["switching_warning"] = True
+            ctx.extra.setdefault("fusion_reasons", []).append(
+                "switching_soft_warning"
+            )
+
         ctx.extra["validity_envelope"] = validity_envelope.__dict__.copy()
     except Exception:
+        if scientific is not None:
+            scientific.adaptive.validity_envelope = None
+
         ctx.validity_envelope = None
 
 
@@ -207,20 +254,38 @@ def apply_validity_enforcement(
     overrides: GateOverrides,
 ) -> LyapunovVerdict:
     try:
-        validity = getattr(ctx, "validity_envelope", None)
-        if overrides.disable_validity_envelope:
-            validity = None
-        if validity is not None and not validity.valid:
-            ctx.extra.setdefault("fusion_reasons", []).append(
-                f"validity_{validity.reason}"
+        scientific = getattr(ctx, "scientific", None)
+
+        if scientific is not None:
+            validity = scientific.adaptive.validity_envelope
+        else:
+            validity = getattr(ctx, "validity_envelope", None)
+        requires_enforcement = bool(
+            validity is not None
+            and (
+                getattr(validity, "hard_block", False)
+                or not bool(getattr(validity, "valid", True))
             )
+        )
+
+        if validity is not None and requires_enforcement:
+            reason_code = f"validity_{validity.reason}"
+
+            fusion_reasons = ctx.extra.setdefault(
+                "fusion_reasons",
+                [],
+            )
+
+            if reason_code not in fusion_reasons:
+                fusion_reasons.append(reason_code)
+
             if verdict == LyapunovVerdict.ALLOW:
                 record_verdict_transition(
                     ctx,
                     stage="validity_envelope_enforcement",
                     before=verdict,
                     after=LyapunovVerdict.REQUIRE_CONFIRMATION,
-                    reason=f"validity_{validity.reason}",
+                    reason=reason_code,
                 )
                 verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
     except Exception:

@@ -48,6 +48,15 @@ def _get_gate_stage_hook(name: str) -> Callable[..., Any] | None:
     except Exception:
         return None
 
+def _validity_requires_enforcement(envelope: Any) -> bool:
+    if envelope is None:
+        return False
+
+    hard_block = getattr(envelope, "hard_block", None)
+    if hard_block is not None:
+        return bool(hard_block)
+
+    return not bool(getattr(envelope, "valid", True))
 
 class GateDecisionStack:
     def run(
@@ -182,12 +191,18 @@ class GateDecisionStack:
         )
         # VALIDITY MUST OVERRIDE POLICY
         try:
-            if envelope and not envelope.valid:
-                ctx.extra.setdefault("fusion_reasons", []).append(
-                    f"validity_{envelope.reason}"
-                )
+            if envelope and not bool(getattr(envelope, "valid", True)):
+                reason_code = f"validity_{envelope.reason}"
 
-                if verdict == LyapunovVerdict.ALLOW:
+                fusion_reasons = ctx.extra.setdefault("fusion_reasons", [])
+
+                if reason_code not in fusion_reasons:
+                    fusion_reasons.append(reason_code)
+
+                if (
+                    _validity_requires_enforcement(envelope)
+                    and verdict == LyapunovVerdict.ALLOW
+                ):
                     record_verdict_transition(
                         ctx,
                         stage="validity_enforcement",
