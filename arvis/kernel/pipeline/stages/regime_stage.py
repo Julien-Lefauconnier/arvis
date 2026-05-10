@@ -33,7 +33,7 @@ class RegimeStage:
                 runtime = SwitchingRuntime()
             except Exception:
                 runtime = None
-        
+
         if switching_ctx is not None:
             switching_ctx.switching_runtime = runtime
 

@@ -82,7 +82,6 @@ class PipelineAdaptiveContext:
     global_stability_metrics: Any | None = None
     enforce_global_stability: bool = False
     global_stability_action: str = "ignore"
-    
 
 
 @dataclass

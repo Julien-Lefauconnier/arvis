@@ -48,6 +48,7 @@ def _get_gate_stage_hook(name: str) -> Callable[..., Any] | None:
     except Exception:
         return None
 
+
 def _validity_requires_enforcement(envelope: Any) -> bool:
     if envelope is None:
         return False
@@ -57,6 +58,7 @@ def _validity_requires_enforcement(envelope: Any) -> bool:
         return bool(hard_block)
 
     return not bool(getattr(envelope, "valid", True))
+
 
 class GateDecisionStack:
     def run(

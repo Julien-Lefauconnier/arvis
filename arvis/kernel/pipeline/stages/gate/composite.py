@@ -292,7 +292,6 @@ def compute_composite_recommendation(
     delta_w: float | None,
     w_current: float | None,
 ) -> str | None:
-
     composite_recommendation = None
     try:
         if delta_w is not None and w_current is not None:

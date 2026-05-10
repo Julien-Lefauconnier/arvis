@@ -236,9 +236,7 @@ def build_validity_envelope(
 
         if not switching_safe:
             ctx.extra["switching_warning"] = True
-            ctx.extra.setdefault("fusion_reasons", []).append(
-                "switching_soft_warning"
-            )
+            ctx.extra.setdefault("fusion_reasons", []).append("switching_soft_warning")
 
         ctx.extra["validity_envelope"] = validity_envelope.__dict__.copy()
     except Exception:
