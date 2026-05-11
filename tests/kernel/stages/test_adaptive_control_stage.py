@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from arvis.kernel.pipeline.stages.control_stage import ControlStage
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
+from tests.fixtures.builders.context_builder import build_test_context
 
 
 def test_control_stage_applies_adaptive_modulation():
@@ -19,20 +20,22 @@ def test_control_stage_applies_adaptive_modulation():
         exploration=SimpleNamespace(compute=lambda **_: {}),
     )
 
-    ctx = SimpleNamespace(
+    ctx = build_test_context(
         user_id="u",
         collapse_risk=0.5,
         drift_score=0.2,
         regime="stable",
-        regime_confidence=1.0,
-        stable=True,
-        timeline=None,
-        adaptive_snapshot=AdaptiveSnapshot(
-            kappa_eff=0.1,
-            margin=0.1,
-            regime="unstable",
-            available=True,
-        ),
+    )
+
+    ctx.scientific.regime_state.regime_confidence = 1.0
+    ctx.scientific.regime_state.stable = True
+    ctx.timeline = None
+
+    ctx.scientific.adaptive.adaptive_snapshot = AdaptiveSnapshot(
+        kappa_eff=0.1,
+        margin=0.1,
+        regime="unstable",
+        available=True,
     )
 
     stage.run(pipeline, ctx)

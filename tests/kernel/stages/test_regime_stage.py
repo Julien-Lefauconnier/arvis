@@ -2,6 +2,8 @@
 
 
 from arvis.kernel.pipeline.stages.regime_stage import RegimeStage
+from arvis.math.signals import DriftSignal
+from tests.fixtures.builders.context_builder import build_test_context
 
 # ============================================================
 # Helpers
@@ -27,10 +29,6 @@ class DummyPipeline:
         self.regime_estimator = estimator
 
 
-class DummyCtx:
-    pass
-
-
 class DummySwitchingRuntime:
     def __init__(self):
         self.updated = None
@@ -45,18 +43,18 @@ class DummySwitchingRuntime:
 
 
 def test_full_flow():
-    ctx = DummyCtx()
-    ctx.drift_score = 0.2
-    ctx.switching_runtime = DummySwitchingRuntime()
+    ctx = build_test_context()
+    ctx.scientific.core.drift_score = DriftSignal(0.2)
+    ctx.scientific.switching.switching_runtime = DummySwitchingRuntime()
 
     pipeline = DummyPipeline(DummyEstimator(DummySnapshot("stable", 0.9)))
 
     RegimeStage().run(pipeline, ctx)
 
-    assert ctx.regime == "stable"
-    assert ctx.regime_confidence == 0.9
-    assert ctx.theoretical_regime is not None
-    assert ctx.switching_runtime.updated == "stable"
+    assert ctx.scientific.regime_state.regime == "stable"
+    assert ctx.scientific.regime_state.regime_confidence == 0.9
+    assert ctx.scientific.regime_state.theoretical_regime is not None
+    assert ctx.scientific.switching.switching_runtime.updated == "stable"
 
 
 # ============================================================
@@ -65,16 +63,16 @@ def test_full_flow():
 
 
 def test_snapshot_none():
-    ctx = DummyCtx()
-    ctx.drift_score = 0.1
-    ctx.switching_runtime = DummySwitchingRuntime()
+    ctx = build_test_context()
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
+    ctx.scientific.switching.switching_runtime = DummySwitchingRuntime()
 
     pipeline = DummyPipeline(DummyEstimator(None))
 
     RegimeStage().run(pipeline, ctx)
 
-    assert ctx.regime == "transition"
-    assert ctx.regime_confidence == 0.0
+    assert ctx.scientific.regime_state.regime == "transition"
+    assert ctx.scientific.regime_state.regime_confidence == 0.0
 
 
 # ============================================================
@@ -83,8 +81,8 @@ def test_snapshot_none():
 
 
 def test_runtime_auto_creation(monkeypatch):
-    ctx = DummyCtx()
-    ctx.drift_score = 0.1
+    ctx = build_test_context()
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
 
     # fake SwitchingRuntime
     class FakeRuntime:
@@ -100,7 +98,7 @@ def test_runtime_auto_creation(monkeypatch):
 
     RegimeStage().run(pipeline, ctx)
 
-    assert ctx.switching_runtime is not None
+    assert ctx.scientific.switching.switching_runtime is not None
 
 
 # ============================================================
@@ -109,8 +107,8 @@ def test_runtime_auto_creation(monkeypatch):
 
 
 def test_runtime_import_failure(monkeypatch):
-    ctx = DummyCtx()
-    ctx.drift_score = 0.1
+    ctx = build_test_context()
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
 
     # force import error
     monkeypatch.setitem(
@@ -123,7 +121,7 @@ def test_runtime_import_failure(monkeypatch):
 
     RegimeStage().run(pipeline, ctx)
 
-    assert ctx.switching_runtime is None
+    assert ctx.scientific.switching.switching_runtime is None
 
 
 # ============================================================
@@ -132,9 +130,9 @@ def test_runtime_import_failure(monkeypatch):
 
 
 def test_map_regime_exception(monkeypatch):
-    ctx = DummyCtx()
-    ctx.drift_score = 0.1
-    ctx.switching_runtime = DummySwitchingRuntime()
+    ctx = build_test_context()
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
+    ctx.scientific.switching.switching_runtime = DummySwitchingRuntime()
 
     pipeline = DummyPipeline(DummyEstimator(DummySnapshot()))
 
@@ -145,7 +143,7 @@ def test_map_regime_exception(monkeypatch):
 
     RegimeStage().run(pipeline, ctx)
 
-    assert ctx.theoretical_regime is None
+    assert ctx.scientific.regime_state.theoretical_regime is None
 
 
 # ============================================================
@@ -158,9 +156,9 @@ def test_switching_update_exception():
         def update(self, *a, **k):
             raise ValueError
 
-    ctx = DummyCtx()
-    ctx.drift_score = 0.1
-    ctx.switching_runtime = BrokenRuntime()
+    ctx = build_test_context()
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
+    ctx.scientific.switching.switching_runtime = BrokenRuntime()
 
     pipeline = DummyPipeline(DummyEstimator(DummySnapshot()))
 
@@ -174,9 +172,9 @@ def test_switching_update_exception():
 
 
 def test_no_switching_runtime_and_no_import(monkeypatch):
-    ctx = DummyCtx()
-    ctx.drift_score = 0.1
-    ctx.switching_runtime = None
+    ctx = build_test_context()
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
+    ctx.scientific.switching.switching_runtime = None
 
     # force import failure
     monkeypatch.setattr(

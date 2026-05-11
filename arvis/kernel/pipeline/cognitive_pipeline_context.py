@@ -1,6 +1,6 @@
 # arvis/kernel/pipeline/cognitive_pipeline_context.py
 
-from dataclasses import InitVar, dataclass, field
+from dataclasses import dataclass, field
 from typing import Any
 
 from arvis.action.action_decision import ActionDecision
@@ -10,7 +10,6 @@ from arvis.cognition.conversation.conversation_context import ConversationContex
 from arvis.cognition.conversation.conversation_signal import ConversationSignal
 from arvis.cognition.events.base_event import BaseEvent
 from arvis.cognition.governance.governance_decision import GovernanceDecision
-from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.cognition.pending.pending_cognitive_action import PendingCognitiveAction
 from arvis.cognition.policy import CognitivePolicyResult
 from arvis.ir.context import CognitiveContextIR
@@ -39,16 +38,13 @@ from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.trace.decision_trace import DecisionTrace
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov import LyapunovState
-from arvis.math.lyapunov.slow_state import SlowState
 from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
-from arvis.math.stability.validity_envelope import ValidityEnvelope
-from arvis.math.switching.switching_runtime import SwitchingRuntime
 from arvis.runtime.execution.cognitive_execution_state import (
     CognitiveExecutionState,
 )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class CognitivePipelineContext:
     """
     Pure kernel context (ZKCS-safe).
@@ -93,59 +89,21 @@ class CognitivePipelineContext:
         default_factory=PipelineScientificContext,
     )
 
-    # TODO(arvis-scientific-v2):
-    # migrate all scientific runtime ownership to
+    # -----------------------------------------------------
+    # NOTE(arvis-runtime-v3):
+    # # Scientific runtime ownership is now canonicalized under:
     # ctx.scientific.*
-    # then remove legacy root scientific fields.
-    # -------------------------
-    # Scientific / core layer
-    # -------------------------
-    scientific_snapshot: Any | None = None
-    collapse_risk: RiskSignal | float = 0.0
-    uncertainty: UncertaintySignal | float | None = None
-    # Fast Lyapunov state (x)
-    prev_lyap: LyapunovState | None = None
-    cur_lyap: LyapunovState | None = None
-    prev_quadratic_lyap_state: Any | None = None
-    cur_quadratic_lyap_state: Any | None = None
-    quadratic_lyap_snapshot: Any | None = None
-    quadratic_comparability: Any | None = None
-    # Slow state (z)
-    slow_state: SlowState | None = None
-    slow_state_prev: SlowState | None = None
-    # Symbolic state (used for T(x))
-    symbolic_state: SymbolicState | None = None
-    symbolic_state_prev: SymbolicState | None = None
-    # Composite Lyapunov tracking
-    w_current: float | None = None
-    w_prev: float | None = None
-    delta_w: float | None = None
+    #
+    # Root scientific mutable ownership was removed.
+    # Compatibility constructor fields remain preserved.
+    # - duplicated mutable state
+    # - sync drift
+    # - legacy mirror inconsistencies
+    #
+    # Transitional compatibility is now provided exclusively
+    # through root-level properties.
+    # -----------------------------------------------------
 
-    drift_score: DriftSignal | float = 0.0
-    regime: str | None = None
-    stable: bool | None = None
-    regime_confidence: float = 0.0
-    theoretical_regime: Any | None = None
-    fast_dynamics: Any | None = None
-    perturbation: Any | None = None
-
-    # -------------------------
-    # Switching runtime (theorem)
-    # -------------------------
-    switching_runtime: SwitchingRuntime | None = None
-    switching_params: Any | None = None
-    switching_safe: bool | None = None
-    switching_metrics: dict[str, Any] = field(default_factory=dict)
-    # -------------------------
-    # Adaptive stability (canonical)
-    # -------------------------
-    adaptive_snapshot: AdaptiveSnapshot | None = None
-    validity_envelope: ValidityEnvelope | None = None
-
-    use_paper_slow_dynamics: bool = False
-    use_paper_composite_gate: bool = False
-    global_stability_metrics: Any | None = None
-    enforce_global_stability: bool = False
     # -----------------------------------------
     # Global stability enforcement policy
     # "ignore" | "confirm" | "abstain"
@@ -210,26 +168,20 @@ class CognitivePipelineContext:
     # -------------------------
     extra: dict[str, Any] = field(default_factory=dict)
 
-    # -----------------------------------------------------
-    # Transitional observability constructor compatibility
-    # -----------------------------------------------------
+    predictive_snapshot: Any | None = None
+    global_forecast: Any | None = None
+    global_stability: Any | None = None
+    multi_horizon: Any | None = None
 
-    predictive_snapshot_init: InitVar[Any | None] = None
-    global_forecast_init: InitVar[Any | None] = None
-    global_stability_init: InitVar[Any | None] = None
-    multi_horizon_init: InitVar[Any | None] = None
+    stability_stats: Any | None = None
+    stability_projection: Any | None = None
+    stability_statistics: Any | None = None
 
-    stability_stats_init: InitVar[Any | None] = None
-    stability_projection_init: InitVar[Any | None] = None
-    stability_statistics_init: InitVar[Any | None] = None
+    symbolic_drift: Any | None = None
+    symbolic_features: Any | None = None
 
-    symbolic_drift_init: InitVar[Any | None] = None
-    symbolic_features_init: InitVar[Any | None] = None
-
-    system_tension: Any | None = None
-
-    ir_state_init: InitVar[CognitiveStateIR | None] = None
-    cognitive_state_init: InitVar[Any | None] = None
+    ir_state: CognitiveStateIR | None = None
+    cognitive_state: Any | None = None
 
     # -------------------------
     # Observability
@@ -378,121 +330,34 @@ class CognitivePipelineContext:
     # mutable execution authority inside the context.
     # -----------------------------------------------------
 
-    def __post_init__(
-        self,
-        predictive_snapshot_init: Any | None,
-        global_forecast_init: Any | None,
-        global_stability_init: Any | None,
-        multi_horizon_init: Any | None,
-        stability_stats_init: Any | None,
-        stability_projection_init: Any | None,
-        stability_statistics_init: Any | None,
-        symbolic_drift_init: Any | None,
-        symbolic_features_init: Any | None,
-        ir_state_init: CognitiveStateIR | None,
-        cognitive_state_init: Any | None,
-    ) -> None:
+    def __post_init__(self) -> None:
         """
         Transitional compatibility migration hook.
         """
         if self.legacy_execution_state is not None:
             self.execution.execution_state = self.legacy_execution_state
 
-        # -------------------------------------------------
-        # Transitional observability migration
-        # -------------------------------------------------
-        self.observability.predictive_snapshot = predictive_snapshot_init
+        self.observability.predictive_snapshot = self.predictive_snapshot
 
-        self.observability.global_forecast = global_forecast_init
+        self.observability.global_forecast = self.global_forecast
 
-        self.observability.global_stability = global_stability_init
+        self.observability.global_stability = self.global_stability
 
-        self.observability.multi_horizon = multi_horizon_init
+        self.observability.multi_horizon = self.multi_horizon
 
-        self.observability.stability_stats = stability_stats_init
+        self.observability.stability_stats = self.stability_stats
 
-        self.observability.stability_projection = stability_projection_init
+        self.observability.stability_projection = self.stability_projection
 
-        self.observability.stability_statistics = stability_statistics_init
+        self.observability.stability_statistics = self.stability_statistics
 
-        self.observability.symbolic_drift = symbolic_drift_init
+        self.observability.symbolic_drift = self.symbolic_drift
 
-        self.observability.symbolic_features = symbolic_features_init
+        self.observability.symbolic_features = self.symbolic_features
 
-        self.observability.system_tension = self.system_tension
+        self.observability.ir_state = self.ir_state
 
-        self.observability.ir_state = ir_state_init
-
-        self.observability.cognitive_state = cognitive_state_init
-
-        # -------------------------------------------------
-        # Transitional scientific migration
-        # -------------------------------------------------
-
-        self.scientific.scientific_snapshot = self.scientific_snapshot
-
-        self.scientific.collapse_risk = self.collapse_risk
-
-        self.scientific.uncertainty = self.uncertainty
-
-        self.scientific.drift_score = self.drift_score
-
-        self.scientific.prev_lyap = self.prev_lyap
-        self.scientific.cur_lyap = self.cur_lyap
-
-        self.scientific.prev_quadratic_lyap_state = self.prev_quadratic_lyap_state
-
-        self.scientific.cur_quadratic_lyap_state = self.cur_quadratic_lyap_state
-
-        self.scientific.quadratic_lyap_snapshot = self.quadratic_lyap_snapshot
-
-        self.scientific.quadratic_comparability = self.quadratic_comparability
-
-        self.scientific.slow_state = self.slow_state
-
-        self.scientific.slow_state_prev = self.slow_state_prev
-
-        self.scientific.symbolic_state = self.symbolic_state
-
-        self.scientific.symbolic_state_prev = self.symbolic_state_prev
-
-        self.scientific.w_current = self.w_current
-        self.scientific.w_prev = self.w_prev
-        self.scientific.delta_w = self.delta_w
-
-        self.scientific.regime = self.regime
-
-        self.scientific.stable = self.stable
-
-        self.scientific.regime_confidence = self.regime_confidence
-
-        self.scientific.theoretical_regime = self.theoretical_regime
-
-        self.scientific.fast_dynamics = self.fast_dynamics
-
-        self.scientific.perturbation = self.perturbation
-
-        self.scientific.switching_runtime = self.switching_runtime
-
-        self.scientific.switching_params = self.switching_params
-
-        self.scientific.switching_safe = self.switching_safe
-
-        self.scientific.switching_metrics = self.switching_metrics
-
-        self.scientific.adaptive_snapshot = self.adaptive_snapshot
-
-        self.scientific.validity_envelope = self.validity_envelope
-
-        self.scientific.use_paper_slow_dynamics = self.use_paper_slow_dynamics
-
-        self.scientific.use_paper_composite_gate = self.use_paper_composite_gate
-
-        self.scientific.global_stability_metrics = self.global_stability_metrics
-
-        self.scientific.enforce_global_stability = self.enforce_global_stability
-
-        self.scientific.global_stability_action = self.global_stability_action
+        self.observability.cognitive_state = self.cognitive_state
 
     def _ensure_execution_state(
         self,
@@ -568,98 +433,6 @@ class CognitivePipelineContext:
         self._ensure_execution_state().execution_status = value
 
     # -----------------------------------------------------
-    # Observability compatibility layer
-    # -----------------------------------------------------
-
-    @property
-    def predictive_snapshot(self) -> Any | None:
-        return self.observability.predictive_snapshot
-
-    @predictive_snapshot.setter
-    def predictive_snapshot(self, value: Any | None) -> None:
-        self.observability.predictive_snapshot = value
-
-    @property
-    def global_forecast(self) -> Any | None:
-        return self.observability.global_forecast
-
-    @global_forecast.setter
-    def global_forecast(self, value: Any | None) -> None:
-        self.observability.global_forecast = value
-
-    @property
-    def global_stability(self) -> Any | None:
-        return self.observability.global_stability
-
-    @global_stability.setter
-    def global_stability(self, value: Any | None) -> None:
-        self.observability.global_stability = value
-
-    @property
-    def multi_horizon(self) -> Any | None:
-        return self.observability.multi_horizon
-
-    @multi_horizon.setter
-    def multi_horizon(self, value: Any | None) -> None:
-        self.observability.multi_horizon = value
-
-    @property
-    def stability_stats(self) -> Any | None:
-        return self.observability.stability_stats
-
-    @stability_stats.setter
-    def stability_stats(self, value: Any | None) -> None:
-        self.observability.stability_stats = value
-
-    @property
-    def stability_projection(self) -> Any | None:
-        return self.observability.stability_projection
-
-    @stability_projection.setter
-    def stability_projection(self, value: Any | None) -> None:
-        self.observability.stability_projection = value
-
-    @property
-    def stability_statistics(self) -> Any | None:
-        return self.observability.stability_statistics
-
-    @stability_statistics.setter
-    def stability_statistics(self, value: Any | None) -> None:
-        self.observability.stability_statistics = value
-
-    @property
-    def symbolic_drift(self) -> Any | None:
-        return self.observability.symbolic_drift
-
-    @symbolic_drift.setter
-    def symbolic_drift(self, value: Any | None) -> None:
-        self.observability.symbolic_drift = value
-
-    @property
-    def symbolic_features(self) -> Any | None:
-        return self.observability.symbolic_features
-
-    @symbolic_features.setter
-    def symbolic_features(self, value: Any | None) -> None:
-        self.observability.symbolic_features = value
-
-    @property
-    def ir_state(self) -> CognitiveStateIR | None:
-        return self.observability.ir_state
-
-    @ir_state.setter
-    def ir_state(self, value: CognitiveStateIR | None) -> None:
-        self.observability.ir_state = value
-
-    @property
-    def cognitive_state(self) -> Any | None:
-        return self.observability.cognitive_state
-
-    @cognitive_state.setter
-    def cognitive_state(self, value: Any | None) -> None:
-        self.observability.cognitive_state = value
-
-    # -----------------------------------------------------
     # Decision compatibility layer
     # -----------------------------------------------------
 
@@ -686,3 +459,268 @@ class CognitivePipelineContext:
     @bundle.setter
     def bundle(self, value: Any | None) -> None:
         self.decision_layer.bundle = value
+
+    # -----------------------------------------------------
+    # Canonical scientific compatibility properties
+    # -----------------------------------------------------
+    @property
+    def collapse_risk(
+        self,
+    ) -> RiskSignal | float:
+        return self.scientific.core.collapse_risk
+
+    @collapse_risk.setter
+    def collapse_risk(
+        self,
+        value: RiskSignal | float,
+    ) -> None:
+        self.scientific.core.collapse_risk = value
+
+    @property
+    def uncertainty(
+        self,
+    ) -> UncertaintySignal | float | None:
+        return self.scientific.core.uncertainty
+
+    @uncertainty.setter
+    def uncertainty(
+        self,
+        value: UncertaintySignal | float | None,
+    ) -> None:
+        self.scientific.core.uncertainty = value
+
+    @property
+    def drift_score(
+        self,
+    ) -> DriftSignal | float:
+        return self.scientific.core.drift_score
+
+    @drift_score.setter
+    def drift_score(
+        self,
+        value: DriftSignal | float,
+    ) -> None:
+        self.scientific.core.drift_score = value
+
+    @property
+    def prev_lyap(self) -> LyapunovState | float | None:
+        return self.scientific.lyapunov.prev_lyap
+
+    @prev_lyap.setter
+    def prev_lyap(self, value: LyapunovState | None) -> None:
+        self.scientific.lyapunov.prev_lyap = value
+
+    @property
+    def cur_lyap(self) -> LyapunovState | float | None:
+        return self.scientific.lyapunov.cur_lyap
+
+    @cur_lyap.setter
+    def cur_lyap(self, value: LyapunovState | None) -> None:
+        self.scientific.lyapunov.cur_lyap = value
+
+    @property
+    def stable(self) -> bool | None:
+        return self.scientific.regime_state.stable
+
+    @stable.setter
+    def stable(self, value: bool | None) -> None:
+        self.scientific.regime_state.stable = value
+
+    @property
+    def delta_w(self) -> float | None:
+        return self.scientific.composite.delta_w
+
+    @delta_w.setter
+    def delta_w(self, value: float | None) -> None:
+        self.scientific.composite.delta_w = value
+
+    @property
+    def adaptive_snapshot(self) -> AdaptiveSnapshot | None:
+        return self.scientific.adaptive.adaptive_snapshot
+
+    @adaptive_snapshot.setter
+    def adaptive_snapshot(
+        self,
+        value: AdaptiveSnapshot | None,
+    ) -> None:
+        self.scientific.adaptive.adaptive_snapshot = value
+
+    # -----------------------------------------------------
+    # Transitional scientific compatibility properties
+    # -----------------------------------------------------
+
+    @property
+    def switching_params(self) -> Any | None:
+        return self.scientific.switching.switching_params
+
+    @switching_params.setter
+    def switching_params(self, value: Any | None) -> None:
+        self.scientific.switching.switching_params = value
+
+    @property
+    def switching_runtime(self) -> Any | None:
+        return self.scientific.switching.switching_runtime
+
+    @switching_runtime.setter
+    def switching_runtime(self, value: Any | None) -> None:
+        self.scientific.switching.switching_runtime = value
+
+    @property
+    def switching_safe(self) -> bool | None:
+        return self.scientific.switching.switching_safe
+
+    @switching_safe.setter
+    def switching_safe(
+        self,
+        value: bool | None,
+    ) -> None:
+        self.scientific.switching.switching_safe = value
+
+    @property
+    def switching_metrics(
+        self,
+    ) -> dict[str, Any]:
+        return self.scientific.switching.switching_metrics
+
+    @switching_metrics.setter
+    def switching_metrics(
+        self,
+        value: dict[str, Any],
+    ) -> None:
+        self.scientific.switching.switching_metrics = value
+
+    @property
+    def symbolic_state(self) -> Any | None:
+        return self.scientific.lyapunov.symbolic_state
+
+    @symbolic_state.setter
+    def symbolic_state(self, value: Any | None) -> None:
+        self.scientific.lyapunov.symbolic_state = value
+
+    @property
+    def symbolic_state_prev(self) -> Any | None:
+        return self.scientific.lyapunov.symbolic_state_prev
+
+    @symbolic_state_prev.setter
+    def symbolic_state_prev(self, value: Any | None) -> None:
+        self.scientific.lyapunov.symbolic_state_prev = value
+
+    @property
+    def slow_state(self) -> Any | None:
+        return self.scientific.lyapunov.slow_state
+
+    @slow_state.setter
+    def slow_state(self, value: Any | None) -> None:
+        self.scientific.lyapunov.slow_state = value
+
+    @property
+    def slow_state_prev(self) -> Any | None:
+        return self.scientific.lyapunov.slow_state_prev
+
+    @slow_state_prev.setter
+    def slow_state_prev(self, value: Any | None) -> None:
+        self.scientific.lyapunov.slow_state_prev = value
+
+    @property
+    def fast_dynamics(self) -> Any | None:
+        return self.scientific.regime_state.fast_dynamics
+
+    @fast_dynamics.setter
+    def fast_dynamics(self, value: Any | None) -> None:
+        self.scientific.regime_state.fast_dynamics = value
+
+    @property
+    def perturbation(self) -> Any | None:
+        return self.scientific.regime_state.perturbation
+
+    @perturbation.setter
+    def perturbation(self, value: Any | None) -> None:
+        self.scientific.regime_state.perturbation = value
+
+    @property
+    def theoretical_regime(self) -> Any | None:
+        return self.scientific.regime_state.theoretical_regime
+
+    @theoretical_regime.setter
+    def theoretical_regime(self, value: Any | None) -> None:
+        self.scientific.regime_state.theoretical_regime = value
+
+    @property
+    def quadratic_lyap_snapshot(self) -> Any | None:
+        return self.scientific.lyapunov.quadratic_lyap_snapshot
+
+    @quadratic_lyap_snapshot.setter
+    def quadratic_lyap_snapshot(self, value: Any | None) -> None:
+        self.scientific.lyapunov.quadratic_lyap_snapshot = value
+
+    @property
+    def quadratic_comparability(self) -> Any | None:
+        return self.scientific.lyapunov.quadratic_comparability
+
+    @quadratic_comparability.setter
+    def quadratic_comparability(self, value: Any | None) -> None:
+        self.scientific.lyapunov.quadratic_comparability = value
+
+    @property
+    def scientific_snapshot(self) -> Any | None:
+        return self.scientific.core.scientific_snapshot
+
+    @scientific_snapshot.setter
+    def scientific_snapshot(self, value: Any | None) -> None:
+        self.scientific.core.scientific_snapshot = value
+
+    @property
+    def w_prev(self) -> float | None:
+        return self.scientific.composite.w_prev
+
+    @w_prev.setter
+    def w_prev(self, value: float | None) -> None:
+        self.scientific.composite.w_prev = value
+
+    @property
+    def w_current(self) -> float | None:
+        return self.scientific.composite.w_current
+
+    @w_current.setter
+    def w_current(self, value: float | None) -> None:
+        self.scientific.composite.w_current = value
+
+    @property
+    def delta_w_history(self) -> list[float]:
+        return self.scientific.composite.delta_w_history
+
+    @delta_w_history.setter
+    def delta_w_history(self, value: list[float]) -> None:
+        self.scientific.composite.delta_w_history = value
+
+    @property
+    def regime(self) -> str | None:
+        return self.scientific.regime_state.regime
+
+    @regime.setter
+    def regime(self, value: str | None) -> None:
+        self.scientific.regime_state.regime = value
+
+    @property
+    def global_stability_metrics(self) -> Any | None:
+        return self.scientific.adaptive.global_stability_metrics
+
+    @global_stability_metrics.setter
+    def global_stability_metrics(self, value: Any | None) -> None:
+        self.scientific.adaptive.global_stability_metrics = value
+
+    @property
+    def validity_envelope(self) -> Any | None:
+        return self.scientific.adaptive.validity_envelope
+
+    @validity_envelope.setter
+    def validity_envelope(self, value: Any | None) -> None:
+        self.scientific.adaptive.validity_envelope = value
+
+    @property
+    def use_paper_slow_dynamics(self) -> bool:
+        return self.scientific.adaptive.use_paper_slow_dynamics
+
+    @use_paper_slow_dynamics.setter
+    def use_paper_slow_dynamics(self, value: bool) -> None:
+        self.scientific.adaptive.use_paper_slow_dynamics = value

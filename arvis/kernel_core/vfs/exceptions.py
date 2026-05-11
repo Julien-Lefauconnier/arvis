@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from arvis.errors import ArvisDomainError
 
-class VFSError(Exception):
+
+class VFSError(ArvisDomainError):
     """Base class for all VFS domain errors."""
 
 

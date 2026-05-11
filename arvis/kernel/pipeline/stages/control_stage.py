@@ -5,6 +5,21 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    adaptive_snapshot as get_adaptive_snapshot,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    collapse_risk as get_collapse_risk,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    drift_score as get_drift_score,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    regime as get_regime,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    stable as get_stable,
+)
 from arvis.math.adaptive.adaptive_control_policy import AdaptiveControlPolicy
 from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
@@ -23,7 +38,7 @@ class ControlStage:
         # -----------------------------------------
         gate_mode_raw = pipeline.hysteresis.update(
             user_id=ctx.user_id,
-            risk=float(ctx.collapse_risk),
+            risk=float(get_collapse_risk(ctx)),
         )
 
         if isinstance(gate_mode_raw, CognitiveMode):
@@ -34,12 +49,16 @@ class ControlStage:
         # -----------------------------------------
         # 2. UNCERTAINTY
         # -----------------------------------------
-        ctx.uncertainty = UncertaintySignal(float(ctx.collapse_risk))
+        ctx.scientific.core.uncertainty = UncertaintySignal(
+            float(get_collapse_risk(ctx))
+        )
 
         try:
-            ctx.uncertainty_intent = map_uncertainty_to_intent(ctx.uncertainty)
+            ctx.scientific.core.uncertainty_intent = map_uncertainty_to_intent(
+                ctx.scientific.core.uncertainty
+            )
         except Exception:
-            ctx.uncertainty_intent = None
+            ctx.scientific.core.uncertainty_intent = None
 
         # -----------------------------------------
         # 3. TEMPORAL
@@ -55,18 +74,21 @@ class ControlStage:
         # 4. EPSILON
         # -----------------------------------------
         epsilon = pipeline.epsilon_controller.compute(
-            uncertainty=float(ctx.uncertainty),
+            uncertainty=float(ctx.scientific.core.uncertainty),
             budget_used=0.5,
-            delta_v=float(ctx.drift_score),
-            collapse_risk=float(ctx.collapse_risk),
-            latent_volatility=min(1.0, abs(float(ctx.drift_score))),
+            delta_v=float(get_drift_score(ctx)),
+            collapse_risk=float(get_collapse_risk(ctx)),
+            latent_volatility=min(
+                1.0,
+                abs(float(get_drift_score(ctx))),
+            ),
             mode=cognitive_mode,
         )
 
         # -----------------------------------------
         # 5. REGIME POLICY
         # -----------------------------------------
-        regime_control = pipeline.regime_policy.compute(ctx.regime or "neutral")
+        regime_control = pipeline.regime_policy.compute(get_regime(ctx) or "neutral")
 
         # -----------------------------------------
         # 6. MODULATION
@@ -124,16 +146,16 @@ class ControlStage:
         # 7. EXPLORATION
         # -----------------------------------------
         exploration_snapshot = pipeline.exploration.compute(
-            regime=ctx.regime,
-            collapse_risk=float(ctx.collapse_risk),
-            drift_score=float(ctx.drift_score),
-            stable=ctx.stable,
+            regime=get_regime(ctx),
+            collapse_risk=float(get_collapse_risk(ctx)),
+            drift_score=float(get_drift_score(ctx)),
+            stable=get_stable(ctx),
         )
 
         # -----------------------------------------
         # 8. ADAPTIVE CONTROL
         # -----------------------------------------
-        adaptive_snapshot = getattr(ctx, "adaptive_snapshot", None)
+        adaptive_snapshot = get_adaptive_snapshot(ctx)
 
         if adaptive_snapshot and adaptive_snapshot.is_available:
             try:
@@ -188,11 +210,11 @@ class ControlStage:
         control_snapshot = CognitiveControlSnapshot(
             gate_mode=cognitive_mode,
             epsilon=float(epsilon),
-            smoothed_risk=float(ctx.collapse_risk),
+            smoothed_risk=float(get_collapse_risk(ctx)),
             lyap_verdict=LyapunovVerdict.ABSTAIN,
             exploration=exploration_snapshot,
             drift={
-                "score": float(ctx.drift_score),
+                "score": float(get_drift_score(ctx)),
                 "confidence": float(confidence),
             },
             regime=regime_control,

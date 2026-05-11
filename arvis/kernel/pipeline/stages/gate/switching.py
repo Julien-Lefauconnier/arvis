@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.helpers import append_error
+from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.math.switching.switching_params import (
     kappa_eff,
@@ -21,7 +23,18 @@ def compute_switching_safety(ctx: Any, overrides: GateOverrides) -> bool:
                     ctx.switching_runtime,
                     ctx.switching_params,
                 )
-    except Exception:
+    except Exception as exc:
+        append_error(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "compute_switching_safety",
+                    "fallback": "switching_safe=True",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
         switching_safe = True
 
     if overrides.force_safe_switching:
@@ -48,8 +61,17 @@ def build_switching_metrics(ctx: Any, switching_safe: bool) -> dict[str, Any]:
                 "gamma_z": float(ctx.switching_params.gamma_z),
                 "L_T": float(ctx.switching_params.L_T),
             }
-    except Exception:
-        pass
+    except Exception as exc:
+        append_error(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "build_switching_metrics",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
     return {}
 
 

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from arvis.errors import ArvisInvariantViolation
 from arvis.ir.cognitive_ir import CognitiveIR
 from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR
 
 
-class CognitiveIRValidationError(Exception):
+class CognitiveIRValidationError(ArvisInvariantViolation):
     pass
 
 

@@ -4,12 +4,13 @@ from collections.abc import Sequence
 
 from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
+from arvis.errors import ArvisInvariantViolation
 from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.timeline.timeline_types import TimelineEntryType
 
 
-class CognitiveBundleInvariantError(Exception):
-    """Violation explicite des invariants du CognitiveBundle."""
+class CognitiveBundleInvariantError(ArvisInvariantViolation):
+    """Explicit violations of bundle invariants."""
 
 
 def assert_cognitive_bundle_invariants(bundle: CognitiveBundleSnapshot) -> None:

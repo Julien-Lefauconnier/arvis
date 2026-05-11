@@ -78,20 +78,21 @@ def build_context_from_yaml(data):
     if prev is not None or cur is not None:
         # Use the canonical gate adapter so the injected type matches
         # what GateStage / CompositeLyapunov expect.
-        ctx.prev_lyap = ensure_lyapunov_state(float(prev)) if prev is not None else None
-        ctx.cur_lyap = ensure_lyapunov_state(float(cur)) if cur is not None else None
+        ctx.scientific.lyapunov.prev_lyap = (
+            ensure_lyapunov_state(float(prev)) if prev is not None else None
+        )
+
+        ctx.scientific.lyapunov.cur_lyap = (
+            ensure_lyapunov_state(float(cur)) if cur is not None else None
+        )
 
         # Helpful hint for the rest of the pipeline / observability
         if prev is not None and cur is not None:
-            ctx.stable = float(cur) < float(prev)
-            ctx.delta_w = float(cur) - float(prev)
+            ctx.scientific.regime_state.stable = float(cur) < float(prev)
+
+            ctx.scientific.composite.delta_w = float(cur) - float(prev)
 
             ctx.extra["preserve_injected_lyapunov"] = True
-
-            # Preserve explicit observability fields expected
-            # by compliance and IR layers.
-            ctx.extra["delta_w"] = ctx.delta_w
-            ctx.extra["stable"] = ctx.stable
 
     # -----------------------------------------
     # Projection

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from arvis.errors import ArvisInvariantViolation
 from arvis.kernel_core.vfs.zip.models import ZipImportPlan, ZipNode
 
 
-class ZipImportPlanError(ValueError):
+class ZipImportPlanError(ArvisInvariantViolation):
     """Raised when a ZIP import plan is invalid."""
 
 

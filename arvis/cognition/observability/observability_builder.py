@@ -21,6 +21,9 @@ from arvis.cognition.observability.symbolic.symbolic_feature_snapshot import (
     SymbolicFeatureSnapshot,
 )
 from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    cur_lyap,
+)
 from arvis.math.signals.system_tension import SystemTensionSignal
 from arvis.stability.stability_snapshot import StabilitySnapshot
 
@@ -54,8 +57,10 @@ class ObservabilityBuilder:
             except Exception:
                 return float(getattr(x, "value", 0.0))
 
+        current_lyap = cur_lyap(ctx)
+
         predictive = PredictiveSnapshot(
-            predicted_v=_lyap_scalar(ctx.cur_lyap),
+            predicted_v=_lyap_scalar(current_lyap),
             slope=drift,
             time_to_critical=None,
             verdict=str(ctx.gate_result),
@@ -84,7 +89,7 @@ class ObservabilityBuilder:
             std_dv=0.0,
             instability_rate=self._signal(ctx.collapse_risk),
             collapse_risk=collapse,
-            last_v=_lyap_scalar(ctx.cur_lyap),
+            last_v=_lyap_scalar(current_lyap),
             reasons=(
                 ["high_system_tension", tension.dominant_axis()]
                 if tension.is_high()

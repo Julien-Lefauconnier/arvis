@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.helpers import append_error
+from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.models import StabilityEnvelope
 from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
@@ -22,6 +24,9 @@ def apply_global_stability_policy(
     global_safe: bool,
     stage_prefix: str = "global_policy",
 ) -> LyapunovVerdict:
+    if ctx.extra.get("_hard_adaptive_veto", False):
+        return verdict
+
     if global_safe:
         return verdict
 
@@ -47,8 +52,17 @@ def apply_global_stability_policy(
                 reasons.append("global_instability_abstain")
             return LyapunovVerdict.ABSTAIN
 
-    except Exception:
-        pass
+    except Exception as exc:
+        append_error(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "global_stability_policy",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
 
     return verdict
 
@@ -99,8 +113,17 @@ def compute_exponential_bound(ctx: Any) -> float | None:
             w_ratio = getattr(metrics, "ratio", None)
             if w_ratio is not None:
                 ctx.w_bound_ratio = float(w_ratio)
-    except Exception:
-        pass
+    except Exception as exc:
+        append_error(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "global_stability_policy",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
     return w_ratio
 
 
@@ -286,8 +309,17 @@ def apply_validity_enforcement(
                     reason=reason_code,
                 )
                 verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
-    except Exception:
-        pass
+    except Exception as exc:
+        append_error(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "global_stability_policy",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
     return verdict
 
 

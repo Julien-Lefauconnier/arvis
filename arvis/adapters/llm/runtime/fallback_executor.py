@@ -9,9 +9,10 @@ from time import perf_counter
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.providers.base import BaseLLMProvider
+from arvis.errors import ArvisExternalError
 
 
-class LLMFallbackExecutionError(RuntimeError):
+class LLMFallbackExecutionError(ArvisExternalError):
     """Raised when all providers fail."""
 
 

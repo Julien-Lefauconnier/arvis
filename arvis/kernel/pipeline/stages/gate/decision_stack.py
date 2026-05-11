@@ -6,6 +6,17 @@ import importlib
 from collections.abc import Callable
 from typing import Any, cast
 
+from arvis.errors.helpers import append_error
+from arvis.errors.pipeline import PipelineStageDegradedError
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    cur_lyap as get_cur_lyap,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    prev_lyap as get_prev_lyap,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    stable as get_stable,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.adaptive import (
     apply_final_adaptive_veto,
@@ -82,11 +93,14 @@ class GateDecisionStack:
             ),
         }
 
+        prev_lyap = get_prev_lyap(ctx)
+        cur_lyap = get_cur_lyap(ctx)
+
         safe_prev_lyap = (
-            ensure_lyapunov_state(ctx.prev_lyap) if ctx.prev_lyap is not None else None
+            ensure_lyapunov_state(prev_lyap) if prev_lyap is not None else None
         )
         safe_cur_lyap = (
-            ensure_lyapunov_state(ctx.cur_lyap) if ctx.cur_lyap is not None else None
+            ensure_lyapunov_state(cur_lyap) if cur_lyap is not None else None
         )
 
         inputs = GateKernelInputs(
@@ -97,7 +111,7 @@ class GateDecisionStack:
             symbolic_prev=composite.prev_symbolic,
             symbolic_cur=composite.cur_symbolic,
             collapse_risk=float(getattr(ctx, "collapse_risk", 0.0)),
-            stable=ctx.stable,
+            stable=get_stable(ctx),
             switching_safe=bool(assessment.switching_safe),
             global_safe=bool(assessment.global_safe),
             delta_w=composite.delta_w,
@@ -160,6 +174,7 @@ class GateDecisionStack:
         hook = _get_gate_stage_hook("build_validity_envelope")
         validity_fn = hook or build_validity_envelope
 
+        envelope = None
         try:
             envelope = validity_fn(
                 ctx=ctx,
@@ -168,9 +183,18 @@ class GateDecisionStack:
                 w_bound_tol=w_bound_tol,
                 adaptive_metrics=assessment.adaptive_metrics,
             )
-
-        except Exception:
+        except Exception as exc:
             ctx.validity_envelope = None
+            append_error(
+                ctx,
+                PipelineStageDegradedError(
+                    message=str(exc),
+                    details={
+                        "component": "build_validity_envelope",
+                        "exception_type": type(exc).__name__,
+                    },
+                ),
+            )
 
         write_mid_traces(
             ctx=ctx,
@@ -236,12 +260,17 @@ class GateDecisionStack:
             switching_safe=assessment.switching_safe,
         )
         verdict = apply_kappa_hard_block(ctx, verdict)
-        verdict = apply_final_adaptive_veto(ctx, verdict, assessment.adaptive_metrics)
 
         verdict = apply_global_stability_policy(
             ctx,
             verdict,
             assessment.global_safe,
+        )
+
+        verdict = apply_final_adaptive_veto(
+            ctx,
+            verdict,
+            assessment.adaptive_metrics,
         )
 
         verdict = apply_memory_policy(ctx, verdict)
@@ -313,7 +342,11 @@ def run_gate_fusion(
         verdict: LyapunovVerdict = cast(LyapunovVerdict, fusion.verdict)
         if kernel_result.final_verdict == LyapunovVerdict.ABSTAIN:
             ctx.extra.setdefault("fusion_reasons", []).append("kernel_abstain_signal")
-        if adaptive_metrics and adaptive_metrics.is_unstable:
+        if (
+            adaptive_metrics is not None
+            and getattr(adaptive_metrics, "is_available", False)
+            and getattr(adaptive_metrics, "is_unstable", False)
+        ):
             record_verdict_transition(
                 ctx,
                 stage="fusion_adaptive_hard_veto",
@@ -339,11 +372,32 @@ def run_gate_fusion(
                             reason="weak_stability",
                         )
                         verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
-        except Exception:
-            pass
+        except Exception as exc:
+            verdict = pre_verdict or LyapunovVerdict.ABSTAIN
+            append_error(
+                ctx,
+                PipelineStageDegradedError(
+                    message=str(exc),
+                    details={
+                        "component": "gate_fusion",
+                        "exception_type": type(exc).__name__,
+                    },
+                ),
+            )
         return verdict
-    except Exception:
+    except Exception as exc:
         verdict = pre_verdict or LyapunovVerdict.ABSTAIN
+        append_error(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "run_gate_fusion",
+                    "fallback": "pre_verdict",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
         existing = list(ctx.extra.get("fusion_reasons", []))
         ctx.extra["fusion_reasons"] = list(
             dict.fromkeys(existing + ["fusion_fallback"])
@@ -360,6 +414,13 @@ def apply_recovery_override(
     kernel_result: Any,
     adaptive_metrics: Any,
 ) -> LyapunovVerdict:
+    if (
+        adaptive_metrics is not None
+        and getattr(adaptive_metrics, "is_available", False)
+        and getattr(adaptive_metrics, "is_unstable", False)
+    ):
+        return LyapunovVerdict.ABSTAIN
+
     if recovery_detected or kernel_result.recovery_detected:
         if verdict == LyapunovVerdict.ABSTAIN:
             validity = getattr(ctx, "validity_envelope", None)

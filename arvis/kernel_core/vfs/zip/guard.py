@@ -6,8 +6,10 @@ import os
 import zipfile
 from pathlib import Path
 
+from arvis.errors import ArvisSecurityError
 
-class ZipSecurityError(RuntimeError):
+
+class ZipSecurityError(ArvisSecurityError):
     """Blocking security error raised during ZIP validation."""
 
 

@@ -36,7 +36,7 @@ class PipelineObservabilityService:
         system_tension = obs.get("system_tension")
         if system_tension is not None:
             ctx.extra["system_tension"] = system_tension
-            ctx.system_tension = system_tension
+            ctx.observability.system_tension = system_tension
 
         try:
             projection_stage = cast(

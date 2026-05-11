@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    cur_lyap,
+    prev_lyap,
+)
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
@@ -39,7 +43,7 @@ def write_mid_traces(
             ctx.extra["validity_envelope_extended"] = {
                 **ctx.extra.get("validity_envelope", {}),
                 "projection_valid": bool(
-                    ctx.prev_lyap is not None or ctx.cur_lyap is not None
+                    prev_lyap(ctx) is not None or cur_lyap(ctx) is not None
                 ),
                 "switching_constraints_valid": bool(
                     getattr(ctx, "switching_safe", False)

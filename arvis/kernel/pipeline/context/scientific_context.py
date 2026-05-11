@@ -34,8 +34,8 @@ class PipelineScientificCoreContext:
 
 @dataclass
 class PipelineLyapunovContext:
-    prev_lyap: LyapunovState | None = None
-    cur_lyap: LyapunovState | None = None
+    prev_lyap: LyapunovState | float | None = None
+    cur_lyap: LyapunovState | float | None = None
     prev_quadratic_lyap_state: Any | None = None
     cur_quadratic_lyap_state: Any | None = None
     quadratic_lyap_snapshot: Any | None = None
@@ -53,6 +53,28 @@ class PipelineCompositeContext:
     delta_w: float | None = None
     delta_w_history: list[float] = field(default_factory=list)
     recommendation: str | None = None
+    # Composite W inputs
+    # Ownership target for slow/symbolic components used by
+    # composite Lyapunov evaluation.
+    prev_slow: SlowState | None = None
+    cur_slow: SlowState | None = None
+
+    prev_symbolic: SymbolicState | None = None
+    cur_symbolic: SymbolicState | None = None
+
+
+@dataclass
+class PipelineDriftContext:
+    """
+    Scientific drift runtime state.
+
+    Owns drift histories and warnings previously stored in ctx.extra.
+    """
+
+    lyap_history: list[float] = field(default_factory=list)
+    lyap_delta_history: list[float] = field(default_factory=list)
+    slow_drift_history: list[float] = field(default_factory=list)
+    slow_drift_warning: bool = False
 
 
 @dataclass
@@ -111,6 +133,9 @@ class PipelineScientificContext:
     composite: PipelineCompositeContext = field(
         default_factory=PipelineCompositeContext,
     )
+    drift: PipelineDriftContext = field(
+        default_factory=PipelineDriftContext,
+    )
     regime_state: PipelineRegimeContext = field(
         default_factory=PipelineRegimeContext,
     )
@@ -154,19 +179,19 @@ class PipelineScientificContext:
         self.core.drift_score = value
 
     @property
-    def prev_lyap(self) -> LyapunovState | None:
+    def prev_lyap(self) -> LyapunovState | float | None:
         return self.lyapunov.prev_lyap
 
     @prev_lyap.setter
-    def prev_lyap(self, value: LyapunovState | None) -> None:
+    def prev_lyap(self, value: LyapunovState | float | None) -> None:
         self.lyapunov.prev_lyap = value
 
     @property
-    def cur_lyap(self) -> LyapunovState | None:
+    def cur_lyap(self) -> LyapunovState | float | None:
         return self.lyapunov.cur_lyap
 
     @cur_lyap.setter
-    def cur_lyap(self, value: LyapunovState | None) -> None:
+    def cur_lyap(self, value: LyapunovState | float | None) -> None:
         self.lyapunov.cur_lyap = value
 
     @property

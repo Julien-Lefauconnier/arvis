@@ -3,6 +3,7 @@
 
 from arvis.kernel.pipeline.stages.core_stage import CoreStage
 from arvis.math.lyapunov.lyapunov import LyapunovState
+from tests.fixtures.builders.context_builder import build_test_context
 
 # ============================================================
 # Helpers
@@ -24,22 +25,16 @@ class DummyPipeline:
         self.quadratic_comparability = "ok"
 
 
-class DummyDecisionLayer:
-    def __init__(self):
-        self.bundle = {}
-        self.decision_result = None
-
-
-class DummyCtx:
-    def __init__(self):
-        self.decision_layer = DummyDecisionLayer()
-        self.regime = "test"
-
-
 class DummyScientific:
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
+
+
+def make_core_ctx():
+    ctx = build_test_context(regime="test")
+    ctx.decision_layer.bundle = {}
+    return ctx
 
 
 # ============================================================
@@ -48,13 +43,13 @@ class DummyScientific:
 
 
 def test_core_none_lyap():
-    ctx = DummyCtx()
+    ctx = make_core_ctx()
     pipeline = DummyPipeline(DummyScientific())
 
     CoreStage().run(pipeline, ctx)
 
-    assert ctx.cur_lyap is None
-    assert ctx.stable is None
+    assert ctx.scientific.lyapunov.cur_lyap is None
+    assert ctx.scientific.regime_state.stable is None
 
 
 # ============================================================
@@ -63,12 +58,12 @@ def test_core_none_lyap():
 
 
 def test_core_scalar_lyap_normalization():
-    ctx = DummyCtx()
+    ctx = make_core_ctx()
     pipeline = DummyPipeline(DummyScientific(cur_lyap=1.23))
 
     CoreStage().run(pipeline, ctx)
 
-    assert isinstance(ctx.cur_lyap, LyapunovState)
+    assert isinstance(ctx.scientific.lyapunov.cur_lyap, LyapunovState)
 
 
 # ============================================================
@@ -77,9 +72,9 @@ def test_core_scalar_lyap_normalization():
 
 
 def test_fast_dynamics_exception(monkeypatch):
-    ctx = DummyCtx()
-    ctx.cur_lyap = LyapunovState.from_scalar(1.0)
-    ctx.prev_lyap = LyapunovState.from_scalar(2.0)
+    ctx = make_core_ctx()
+    ctx.scientific.lyapunov.cur_lyap = LyapunovState.from_scalar(1.0)
+    ctx.scientific.lyapunov.prev_lyap = LyapunovState.from_scalar(2.0)
 
     def broken(*args, **kwargs):
         raise ValueError
@@ -92,7 +87,7 @@ def test_fast_dynamics_exception(monkeypatch):
 
     CoreStage().run(pipeline, ctx)
 
-    assert ctx.fast_dynamics is not None  # fallback works
+    assert ctx.scientific.regime_state.fast_dynamics is not None
 
 
 # ============================================================
@@ -101,7 +96,7 @@ def test_fast_dynamics_exception(monkeypatch):
 
 
 def test_quadratic_family_none():
-    ctx = DummyCtx()
+    ctx = make_core_ctx()
     pipeline = DummyPipeline(
         DummyScientific(cur_lyap=1.0),
         family=None,
@@ -109,7 +104,7 @@ def test_quadratic_family_none():
 
     CoreStage().run(pipeline, ctx)
 
-    assert ctx.quadratic_lyap_snapshot is None
+    assert ctx.scientific.lyapunov.quadratic_lyap_snapshot is None
 
 
 # ============================================================
@@ -129,7 +124,7 @@ class FakeFamily:
 
 
 def test_quadratic_regime_fallback():
-    ctx = DummyCtx()
+    ctx = make_core_ctx()
     pipeline = DummyPipeline(
         DummyScientific(cur_lyap=1.0),
         family=FakeFamily(),
@@ -137,7 +132,7 @@ def test_quadratic_regime_fallback():
 
     CoreStage().run(pipeline, ctx)
 
-    assert ctx.quadratic_lyap_snapshot.regime == "transition"
+    assert ctx.scientific.lyapunov.quadratic_lyap_snapshot.regime == "transition"
 
 
 # ============================================================
@@ -146,7 +141,7 @@ def test_quadratic_regime_fallback():
 
 
 def test_reflexive_state():
-    ctx = DummyCtx()
+    ctx = make_core_ctx()
 
     pipeline = DummyPipeline(
         DummyScientific(
@@ -161,7 +156,7 @@ def test_reflexive_state():
 
     CoreStage().run(pipeline, ctx)
 
-    assert ctx.slow_state is not None
+    assert ctx.scientific.lyapunov.slow_state is not None
 
 
 # ============================================================
@@ -170,35 +165,35 @@ def test_reflexive_state():
 
 
 def test_reflexive_state_exception(monkeypatch):
-    ctx = DummyCtx()
+    ctx = make_core_ctx()
 
     pipeline = DummyPipeline(DummyScientific(reflexive_state=object()))
 
     CoreStage().run(pipeline, ctx)
 
-    assert ctx.slow_state is None
+    assert ctx.scientific.lyapunov.slow_state is None
 
 
 # ============================================================
-# 8. PAPER SLOW DYNAMICS BRANCH 🔥
+# 8. PAPER SLOW DYNAMICS BRANCH
 # ============================================================
 
 
 def test_paper_slow_dynamics():
-    ctx = DummyCtx()
+    ctx = make_core_ctx()
 
-    ctx.use_paper_slow_dynamics = True
-    ctx.cur_lyap = LyapunovState.from_scalar(1.0)
+    ctx.scientific.adaptive.use_paper_slow_dynamics = True
+    ctx.scientific.lyapunov.cur_lyap = LyapunovState.from_scalar(1.0)
 
     from arvis.math.lyapunov.slow_state import SlowState
 
-    ctx.slow_state = SlowState.zero()
+    ctx.scientific.lyapunov.slow_state = SlowState.zero()
 
     pipeline = DummyPipeline(DummyScientific(cur_lyap=1.0))
 
     CoreStage().run(pipeline, ctx)
 
-    assert ctx.slow_state is not None
+    assert ctx.scientific.lyapunov.slow_state is not None
 
 
 # ============================================================
@@ -207,15 +202,15 @@ def test_paper_slow_dynamics():
 
 
 def test_target_map_failure(monkeypatch):
-    ctx = DummyCtx()
+    ctx = make_core_ctx()
 
-    ctx.use_paper_slow_dynamics = True
-    ctx.cur_lyap = LyapunovState.from_scalar(1.0)
+    ctx.scientific.adaptive.use_paper_slow_dynamics = True
+    ctx.scientific.lyapunov.cur_lyap = LyapunovState.from_scalar(1.0)
 
     from arvis.math.lyapunov.slow_state import SlowState
 
-    ctx.slow_state = SlowState.zero()
-    ctx.symbolic_state = object()
+    ctx.scientific.lyapunov.slow_state = SlowState.zero()
+    ctx.scientific.lyapunov.symbolic_state = object()
 
     from arvis.math.lyapunov import target_map as module
 
@@ -227,7 +222,7 @@ def test_target_map_failure(monkeypatch):
 
     CoreStage().run(pipeline, ctx)
 
-    assert ctx.slow_state is not None  # fallback
+    assert ctx.scientific.lyapunov.slow_state is not None
 
 
 # ============================================================
@@ -236,7 +231,7 @@ def test_target_map_failure(monkeypatch):
 
 
 def test_perturbation_failure(monkeypatch):
-    ctx = DummyCtx()
+    ctx = make_core_ctx()
 
     import arvis.kernel.pipeline.stages.core_stage as module
 
@@ -250,4 +245,4 @@ def test_perturbation_failure(monkeypatch):
 
     CoreStage().run(pipeline, ctx)
 
-    assert ctx.perturbation is None
+    assert ctx.scientific.regime_state.perturbation is None

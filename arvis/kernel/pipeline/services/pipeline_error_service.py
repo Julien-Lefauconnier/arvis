@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from arvis.errors.helpers import append_error
+from arvis.errors.pipeline import (
+    PipelineStageError,
+)
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
@@ -24,11 +28,14 @@ class PipelineErrorService:
     ) -> None:
         try:
             stage.run(pipeline, ctx)
-        except Exception as e:
-            ctx.extra.setdefault("errors", []).append(
-                {
-                    "stage": stage.__class__.__name__,
-                    "error": str(e),
-                    "type": type(e).__name__,
-                }
+        except Exception as exc:
+            append_error(
+                ctx,
+                PipelineStageError(
+                    message=str(exc),
+                    details={
+                        "stage": stage.__class__.__name__,
+                        "exception_type": type(exc).__name__,
+                    },
+                ),
             )

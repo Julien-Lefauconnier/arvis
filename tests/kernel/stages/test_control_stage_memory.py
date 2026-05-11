@@ -2,6 +2,8 @@
 
 from arvis.kernel.pipeline.stages.control_stage import ControlStage
 from arvis.math.control.eps_adaptive import CognitiveMode
+from arvis.math.signals import DriftSignal, RiskSignal
+from tests.fixtures.builders.context_builder import build_test_context
 
 
 def test_memory_pressure_reduces_epsilon():
@@ -17,12 +19,12 @@ def test_memory_pressure_reduces_epsilon():
         )()
         exploration = type("X", (), {"compute": lambda *a, **k: None})()
 
-    ctx = type("Ctx", (), {})()
+    ctx = build_test_context()
     ctx.user_id = "u1"
-    ctx.collapse_risk = 0.1
-    ctx.drift_score = 0.1
-    ctx.regime = "neutral"
-    ctx.stable = True
+    ctx.scientific.core.collapse_risk = RiskSignal(0.1)
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
+    ctx.scientific.regime_state.regime = "neutral"
+    ctx.scientific.regime_state.stable = True
     ctx.timeline = []
 
     # 👉 memory pressure HIGH
@@ -57,12 +59,12 @@ def test_memory_constraints_reduce_epsilon():
         )()
         exploration = type("X", (), {"compute": lambda *a, **k: None})()
 
-    ctx = type("Ctx", (), {})()
+    ctx = build_test_context()
     ctx.user_id = "u1"
-    ctx.collapse_risk = 0.1
-    ctx.drift_score = 0.1
-    ctx.regime = "neutral"
-    ctx.stable = True
+    ctx.scientific.core.collapse_risk = RiskSignal(0.1)
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
+    ctx.scientific.regime_state.regime = "neutral"
+    ctx.scientific.regime_state.stable = True
     ctx.timeline = []
     ctx.decision_layer = type("DL", (), {})()
     ctx.decision_layer.bundle = type(
@@ -95,12 +97,12 @@ def test_no_memory_features_safe_fallback():
         )()
         exploration = type("X", (), {"compute": lambda *a, **k: None})()
 
-    ctx = type("Ctx", (), {})()
+    ctx = build_test_context()
     ctx.user_id = "u1"
-    ctx.collapse_risk = 0.1
-    ctx.drift_score = 0.1
-    ctx.regime = "neutral"
-    ctx.stable = True
+    ctx.scientific.core.collapse_risk = RiskSignal(0.1)
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
+    ctx.scientific.regime_state.regime = "neutral"
+    ctx.scientific.regime_state.stable = True
     ctx.timeline = []
     ctx.decision_layer = type("DL", (), {})()
     ctx.decision_layer.bundle = None
@@ -123,12 +125,12 @@ def test_memory_pressure_moderate_mode():
         )()
         exploration = type("X", (), {"compute": lambda *a, **k: None})()
 
-    ctx = type("Ctx", (), {})()
+    ctx = build_test_context()
     ctx.user_id = "u1"
-    ctx.collapse_risk = 0.1
-    ctx.drift_score = 0.1
-    ctx.regime = "neutral"
-    ctx.stable = True
+    ctx.scientific.core.collapse_risk = RiskSignal(0.1)
+    ctx.scientific.core.drift_score = DriftSignal(0.1)
+    ctx.scientific.regime_state.regime = "neutral"
+    ctx.scientific.regime_state.stable = True
     ctx.timeline = []
     ctx.decision_layer = type("DL", (), {})()
     ctx.decision_layer.bundle = type(

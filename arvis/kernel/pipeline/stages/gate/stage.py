@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    scientific,
+)
 from arvis.kernel.pipeline.stages.gate.adaptive import compute_adaptive_metrics
 from arvis.kernel.pipeline.stages.gate.composite import (
     compute_composite_metrics,
@@ -35,9 +38,11 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 class GateStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
-        scientific = getattr(ctx, "scientific", None)
         overrides = resolve_overrides(ctx)
+
         initialize_context(ctx)
+        runtime = scientific(ctx)
+
         w_bound_tol = getattr(pipeline, "w_bound_tolerance", 1.05)
 
         composite = compute_composite_metrics(ctx)
@@ -49,6 +54,14 @@ class GateStage:
             w_prev=composite.w_prev,
             w_current=composite.w_current,
         )
+
+        # -----------------------------------------------------
+        # Transitional runtime mirror synchronization
+        #
+        # Some downstream legacy decision layers still consume
+        # ctx.adaptive_snapshot directly.
+        # -----------------------------------------------------
+        ctx.adaptive_snapshot = adaptive_metrics
 
         global_safe = compute_global_stability(ctx, composite.delta_w)
         recovery_detected = detect_recovery(
@@ -62,8 +75,7 @@ class GateStage:
             delta_w=composite.delta_w,
             w_current=composite.w_current,
         )
-        if scientific is not None:
-            scientific.composite.recommendation = composite_recommendation
+        runtime.composite.recommendation = composite_recommendation
 
         ctx.extra["composite_gate_recommendation"] = composite_recommendation
 

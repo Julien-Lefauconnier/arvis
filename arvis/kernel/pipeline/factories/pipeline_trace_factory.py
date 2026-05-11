@@ -10,6 +10,14 @@ from arvis.cognition.gate.cognitive_gate_result import (
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    fast_dynamics,
+    perturbation,
+    quadratic_comparability,
+    quadratic_lyap_snapshot,
+    symbolic_state,
+    theoretical_regime,
+)
 from arvis.kernel.trace.decision_trace import DecisionTrace
 
 
@@ -30,13 +38,13 @@ class PipelineTraceFactory:
             conflict=ctx.extra.get("conflict"),
             predictive=ctx.predictive_snapshot,
             stability=ctx.global_stability,
-            symbolic=ctx.symbolic_state,
-            system_tension=ctx.system_tension,
-            quadratic_lyapunov=ctx.quadratic_lyap_snapshot,
-            quadratic_comparability=ctx.quadratic_comparability,
-            theoretical_regime=ctx.theoretical_regime,
-            fast_dynamics=ctx.fast_dynamics,
-            perturbation=ctx.perturbation,
+            symbolic=symbolic_state(ctx),
+            system_tension=ctx.observability.system_tension,
+            quadratic_lyapunov=quadratic_lyap_snapshot(ctx),
+            quadratic_comparability=quadratic_comparability(ctx),
+            theoretical_regime=theoretical_regime(ctx),
+            fast_dynamics=fast_dynamics(ctx),
+            perturbation=perturbation(ctx),
             conversation=ctx.conversation_signal,
             governance=ctx.governance,
             pending_actions=ctx.pending_actions,

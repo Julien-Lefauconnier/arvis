@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from typing import Any
 
 import numpy as np
@@ -20,50 +19,19 @@ from arvis.math.signals import DriftSignal, RiskSignal
 
 class CoreStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
-        # ==========================================================
-        # Transitional compatibility layer
-        # ----------------------------------------------------------
-        # Old tests and legacy runtime contexts may not yet expose
-        # the structured scientific namespaces.
-        #
-        # During migration we lazily create them to preserve
-        # backward compatibility with the flat context API.
-        # ==========================================================
-
         if not hasattr(ctx, "scientific"):
-            ctx.scientific = SimpleNamespace(
-                core=SimpleNamespace(),
-                lyapunov=SimpleNamespace(
-                    prev_lyap=None,
-                    cur_lyap=None,
-                    prev_quadratic_lyap_state=None,
-                    cur_quadratic_lyap_state=None,
-                    quadratic_lyap_snapshot=None,
-                    quadratic_comparability=None,
-                    slow_state=None,
-                    slow_state_prev=None,
-                    symbolic_state=None,
-                    symbolic_state_prev=None,
-                ),
-                regime_state=SimpleNamespace(
-                    regime=None,
-                    stable=None,
-                    fast_dynamics=None,
-                    perturbation=None,
-                    theoretical_regime=None,
-                ),
-                switching=SimpleNamespace(
-                    switching_params=None,
-                ),
-                adaptive=SimpleNamespace(),
-                composite=SimpleNamespace(),
+            from arvis.kernel.pipeline.context.scientific_context import (
+                PipelineScientificContext,
             )
+
+            ctx.scientific = PipelineScientificContext()
 
         scientific = ctx.scientific
         core_ctx = scientific.core
         lyap_ctx = scientific.lyapunov
         regime_ctx = scientific.regime_state
         switching_ctx = scientific.switching
+        adaptive_ctx = scientific.adaptive
 
         bundle = ctx.decision_layer.bundle
 
@@ -270,9 +238,9 @@ class CoreStage:
         # -----------------------------------------
         try:
             if (
-                getattr(ctx, "use_paper_slow_dynamics", False)
+                adaptive_ctx.use_paper_slow_dynamics
                 and prev_slow_before is not None
-                and ctx.cur_lyap is not None
+                and lyap_ctx.cur_lyap is not None
             ):
                 symbolic_for_T = lyap_ctx.symbolic_state
 
@@ -303,9 +271,15 @@ class CoreStage:
             pass
 
         # Example future activation:
-        # if prev_slow_before is not None and ctx.cur_lyap is not None:
-        #     T_x = target_map(ctx.symbolic_state, ctx.cur_lyap)
-        #     lyap_ctx.slow_state = update_slow_state(prev_slow_before, T_x)
+        # if prev_slow_before is not None and lyap_ctx.cur_lyap is not None:
+        #     T_x = target_map(
+        #         lyap_ctx.symbolic_state,
+        #         lyap_ctx.cur_lyap,
+        #     )
+        #     lyap_ctx.slow_state = update_slow_state(
+        #         prev_slow_before,
+        #         T_x,
+        #     )
 
         lyap_ctx.symbolic_state_prev = prev_symbolic_before
 
@@ -322,31 +296,6 @@ class CoreStage:
         except Exception:
             regime_ctx.perturbation = None
 
-        # ==========================================================
-        # Legacy flat-context compatibility bridge
-        # ----------------------------------------------------------
-        # Temporary during scientific namespace migration.
-        # ==========================================================
-
-        ctx.prev_lyap = lyap_ctx.prev_lyap
-        ctx.cur_lyap = lyap_ctx.cur_lyap
-
-        ctx.prev_quadratic_lyap_state = lyap_ctx.prev_quadratic_lyap_state
-        ctx.cur_quadratic_lyap_state = lyap_ctx.cur_quadratic_lyap_state
-
-        ctx.quadratic_lyap_snapshot = lyap_ctx.quadratic_lyap_snapshot
-        ctx.quadratic_comparability = lyap_ctx.quadratic_comparability
-
-        ctx.slow_state = lyap_ctx.slow_state
-        ctx.slow_state_prev = lyap_ctx.slow_state_prev
-
-        ctx.symbolic_state = lyap_ctx.symbolic_state
-        ctx.symbolic_state_prev = lyap_ctx.symbolic_state_prev
-
-        ctx.fast_dynamics = regime_ctx.fast_dynamics
-        ctx.perturbation = regime_ctx.perturbation
-        ctx.regime = regime_ctx.regime
-        ctx.stable = regime_ctx.stable
-
-        ctx.drift_score = core_ctx.drift_score
-        ctx.collapse_risk = core_ctx.collapse_risk
+        # Root scientific mirrors removed.
+        # Runtime ownership is canonicalized under:
+        # ctx.scientific.*

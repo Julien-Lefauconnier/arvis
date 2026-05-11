@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from arvis.errors import ArvisReplayError
 from arvis.timeline.timeline_cursor import TimelineCursor
 from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.timeline.timeline_snapshot import TimelineSnapshot
@@ -13,7 +14,7 @@ from arvis.timeline.timeline_snapshot import TimelineSnapshot
 # ============================================================
 
 
-class TimelineDeltaError(ValueError):
+class TimelineDeltaError(ArvisReplayError):
     pass
 
 

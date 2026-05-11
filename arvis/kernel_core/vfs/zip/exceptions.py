@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from arvis.errors import ArvisExternalError
 
-class ZipIngestError(Exception):
+
+class ZipIngestError(ArvisExternalError):
     """Base class for ZIP ingest errors."""
 
 
