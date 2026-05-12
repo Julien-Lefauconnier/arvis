@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from arvis.adapters.kernel.rules import ALL_RULES
 from arvis.adapters.kernel.signals.signal_factory import SignalFactory
-from arvis.api.signals import CanonicalSignal
 from arvis.ir.cognitive_ir import CognitiveIR
+from arvis.signals.canonical.canonical_signal import CanonicalSignal
 
 
 def ir_to_canonical(ir: CognitiveIR) -> list[CanonicalSignal]:

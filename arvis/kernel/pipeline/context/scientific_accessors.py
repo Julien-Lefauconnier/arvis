@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from arvis.cognition.observability.symbolic.symbolic_state import (
-    SymbolicState,
-)
 from arvis.kernel.pipeline.context.scientific_context import (
     PipelineScientificContext,
 )
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov import LyapunovState
 from arvis.math.lyapunov.slow_state import SlowState
+from arvis.math.state.symbolic_state import (
+    SymbolicState,
+)
 
 
 def scientific(ctx: Any) -> PipelineScientificContext:

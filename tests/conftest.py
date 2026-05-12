@@ -16,6 +16,14 @@ from tests.fixtures.builders.context_builder import (
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+# ============================================================
+# Global pytest fixture modules
+# ============================================================
+pytest_plugins = [
+    "tests.fixtures.errors",
+    "tests.fixtures.projections",
+]
+
 
 @pytest.fixture
 def pipeline():

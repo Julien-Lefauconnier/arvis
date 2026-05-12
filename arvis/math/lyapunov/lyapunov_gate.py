@@ -3,7 +3,6 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.math.control.eps_adaptive import (
     CognitiveMode,
     EpsAdaptiveParams,
@@ -11,6 +10,7 @@ from arvis.math.control.eps_adaptive import (
 )
 from arvis.math.core.normalization import clamp01
 from arvis.math.lyapunov.lyapunov import LyapunovState, V, delta_V
+from arvis.math.state.symbolic_state import SymbolicState
 
 from .slow_state import SlowState
 

@@ -1,10 +1,16 @@
 # arvis/errors/__init__.py
 
+from arvis.errors.api import (
+    ArvisAPIError,
+    CognitiveStateRequiredError,
+    InvalidIRPayloadError,
+)
 from arvis.errors.base import (
     ArvisDegradedModeError,
     ArvisDomainError,
     ArvisError,
     ArvisErrorCategory,
+    ArvisErrorMetadata,
     ArvisErrorSeverity,
     ArvisExternalError,
     ArvisInvariantViolation,
@@ -24,6 +30,12 @@ from arvis.errors.pipeline import (
     PipelineStageDegradedError,
     PipelineStageError,
 )
+from arvis.errors.replay import (
+    ReplayCognitiveStateMissing,
+    ReplayGlobalCommitmentMismatch,
+    ReplayGlobalCommitmentMissing,
+    ReplayVerificationError,
+)
 from arvis.errors.syscall import (
     SyscallExecutionError,
     SyscallExternalDependencyError,
@@ -35,10 +47,14 @@ __all__ = [
     "ArvisError",
     "ArvisErrorCategory",
     "ArvisErrorSeverity",
+    "ArvisErrorMetadata",
     "ArvisInvariantViolation",
     "ArvisRuntimeError",
     "ArvisDomainError",
     "ArvisExternalError",
+    "ArvisAPIError",
+    "CognitiveStateRequiredError",
+    "InvalidIRPayloadError",
     "ArvisReplayError",
     "ArvisSecurityError",
     "ArvisKernelError",
@@ -50,6 +66,10 @@ __all__ = [
     "PipelineStageError",
     "PipelineStageDegradedError",
     "PipelineFailClosedError",
+    "ReplayVerificationError",
+    "ReplayGlobalCommitmentMissing",
+    "ReplayGlobalCommitmentMismatch",
+    "ReplayCognitiveStateMissing",
     "SyscallExecutionError",
     "SyscallValidationError",
     "SyscallReplayError",

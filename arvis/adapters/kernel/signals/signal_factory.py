@@ -7,8 +7,8 @@ from collections.abc import Iterable, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import ClassVar, Protocol
 
-from arvis.api.signals import CanonicalSignal
 from arvis.signals.canonical import CanonicalSignalKey, CanonicalSignalRegistry
+from arvis.signals.canonical.canonical_signal import CanonicalSignal
 
 
 class _SignalSpecProtocol(Protocol):

@@ -109,7 +109,7 @@ def force_runtime_confirmation(ctx):
     """
 
     if ctx.execution_state is None:
-        from arvis.runtime.execution.cognitive_execution_state import (
+        from arvis.kernel.execution.cognitive_execution_state import (
             CognitiveExecutionState,
         )
 

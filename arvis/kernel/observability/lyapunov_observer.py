@@ -3,12 +3,20 @@
 from dataclasses import dataclass
 from typing import Any
 
-from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
+from arvis.cognition.bundle.cognitive_bundle_snapshot import (
+    CognitiveBundleSnapshot,
+)
+from arvis.kernel.projection.bundle_projection_mapper import (
+    BundleProjectionMapper,
+)
 from arvis.math.lyapunov.lyapunov import LyapunovState, V
 from arvis.math.lyapunov.lyapunov_gate import (
     LyapunovGateParams,
     LyapunovVerdict,
     lyapunov_gate,
+)
+from arvis.math.state.lyapunov_projection_state import (
+    LyapunovProjectionState,
 )
 from arvis.stability.stability_observer import StabilityObserver, StabilitySnapshot
 from arvis.stability.stability_state_projector import (
@@ -71,7 +79,9 @@ class LyapunovObserver(StabilityObserver):
         self,
         bundle: CognitiveBundleSnapshot,
     ) -> StabilitySnapshot:
-        cur_state = LyapunovStateBuilder.from_bundle(bundle)
+        projection: LyapunovProjectionState = BundleProjectionMapper.from_bundle(bundle)
+
+        cur_state = LyapunovStateBuilder.from_projection(projection)
 
         if self._last_state is None:
             self._last_state = cur_state

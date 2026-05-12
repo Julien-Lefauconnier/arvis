@@ -4,9 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from arvis.action.action_decision import ActionDecision
-from arvis.runtime.execution.cognitive_execution_state import (
-    CognitiveExecutionState,
-)
+from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 
 
 @dataclass

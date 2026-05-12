@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvis.api.signals import Signal
+from arvis.signals.signal import Signal
 
 
 class SignalSemantics:

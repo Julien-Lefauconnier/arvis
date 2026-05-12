@@ -1,4 +1,4 @@
-# arvis/runtime/execution/cognitive_execution_state.py
+# arvis/kernel/execution/cognitive_execution_state.py
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
-from arvis.runtime.execution.execution_llm_state import ExecutionLLMState
+from arvis.kernel.execution.execution_llm_state import ExecutionLLMState
 
 
 @dataclass(slots=True)

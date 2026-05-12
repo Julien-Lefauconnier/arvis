@@ -5,12 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from arvis.math.projection.projection_view import ProjectionView
+
 from .certificate import (
     ProjectionCertificate,
     ProjectionCertificationLevel,
 )
 from .domain import ProjectionDomain
-from .projection_view import ProjectionView
 
 
 class ProjectionValidator:

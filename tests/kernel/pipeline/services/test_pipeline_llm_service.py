@@ -523,6 +523,7 @@ def test_pipeline_llm_service_records_llm_runtime_metadata(mocker) -> None:
 
 
 def test_pipeline_llm_service_records_runtime_metadata_into_execution_state():
+    from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
     from arvis.kernel.pipeline.cognitive_pipeline_context import (
         CognitivePipelineContext,
     )
@@ -531,7 +532,6 @@ def test_pipeline_llm_service_records_runtime_metadata_into_execution_state():
     )
     from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
     from arvis.kernel_core.syscalls.syscall import SyscallResult
-    from arvis.runtime.execution import CognitiveExecutionState
 
     ctx = CognitivePipelineContext(
         user_id="u1",

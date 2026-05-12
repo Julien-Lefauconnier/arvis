@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from arvis.adapters.llm.observability.observation import LLMObservation
-from arvis.kernel.projection.projection_view import ProjectionView
+from arvis.math.projection.projection_view import ProjectionView
 
 
 @dataclass(frozen=True)

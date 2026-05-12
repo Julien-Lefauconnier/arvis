@@ -1,4 +1,4 @@
-# arvis/kernel/projection/projection_view.py
+# arvis/math/projection/projection_view.py
 
 from __future__ import annotations
 

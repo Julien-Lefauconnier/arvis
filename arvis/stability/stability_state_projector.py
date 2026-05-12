@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnapshot
 from arvis.math.core.normalization import budget_ratio01, clamp01
 from arvis.math.lyapunov.lyapunov import LyapunovState
+from arvis.math.state.lyapunov_projection_state import (
+    LyapunovProjectionState,
+)
 
 
 class StabilityStateProjector:
@@ -17,13 +19,13 @@ class StabilityStateProjector:
     """
 
     @staticmethod
-    def from_bundle(bundle: CognitiveBundleSnapshot) -> LyapunovState:
+    def from_projection(state: LyapunovProjectionState) -> LyapunovState:
         # -------------------------
         # 1) Budget used
         # -------------------------
         budget_used = 0.0
         try:
-            stab = getattr(bundle.explanation, "stability", None)
+            stab = getattr(state, "stability", None)
             if isinstance(stab, dict):
                 cur = float(stab.get("current_changes", 0.0))
                 mx = float(stab.get("max_changes", 0.0))
@@ -35,9 +37,7 @@ class StabilityStateProjector:
         # 2) Risk proxy (conflicts)
         # -------------------------
         try:
-            conflicts = getattr(bundle.decision_result, "conflicts", []) or []
-            # scale: 0 conflict => 0, >=5 => 1
-            risk = clamp01(len(conflicts) / 5.0)
+            risk = clamp01(float(state.collapse_risk))
         except Exception:
             risk = 0.0
 
@@ -45,9 +45,7 @@ class StabilityStateProjector:
         # 3) Uncertainty proxy (frames)
         # -------------------------
         try:
-            frames = getattr(bundle.decision_result, "uncertainty_frames", []) or []
-            # scale: 0 frame => 0, >=5 => 1
-            uncertainty = clamp01(len(frames) / 5.0)
+            uncertainty = clamp01(1.0 - float(state.confidence))
         except Exception:
             uncertainty = 0.0
 
@@ -55,8 +53,7 @@ class StabilityStateProjector:
         # 4) Governance proxy (gaps)
         # -------------------------
         try:
-            gaps = getattr(bundle.decision_result, "gaps", []) or []
-            governance = clamp01(len(gaps) / 5.0)
+            governance = clamp01(float(state.drift_score))
         except Exception:
             governance = 0.0
 

@@ -6,10 +6,10 @@ import math
 from dataclasses import dataclass
 from typing import ClassVar
 
-from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
 from arvis.math.lyapunov.lyapunov import LyapunovState
 from arvis.math.lyapunov.slow_state import SlowState
+from arvis.math.state.symbolic_state import SymbolicState
 
 
 def _clamp01(x: float) -> float:

@@ -9,11 +9,11 @@ from arvis.adapters.kernel.signals.signal_factory import SignalFactory
 from arvis.adapters.kernel.timeline_from_signals import (
     signal_journal_to_timeline_snapshot,
 )
-from arvis.api.signals import CanonicalSignal
 from arvis.kernel_core.interrupts.interrupt_bus import CognitiveInterruptBus
 from arvis.kernel_core.process import CognitiveProcess, CognitiveProcessId
 from arvis.kernel_core.state.scheduler_state import SchedulerState
 from arvis.runtime.resource_model import ResourceState
+from arvis.signals.canonical.canonical_signal import CanonicalSignal
 from arvis.signals.signal_journal import SignalJournal
 from arvis.timeline.timeline_commitment import (
     TimelineCommitment,

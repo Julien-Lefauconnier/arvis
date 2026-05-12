@@ -10,10 +10,8 @@ from arvis.cognition.confirmation.confirmation_result import ConfirmationStatus
 from arvis.cognition.conflict.conflict_confirmation import (
     requires_conflict_confirmation,
 )
+from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
-from arvis.runtime.execution.cognitive_execution_state import (
-    CognitiveExecutionState,
-)
 
 
 class ConfirmationStage:

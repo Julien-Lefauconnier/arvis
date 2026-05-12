@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvis.kernel.projection.projection_view import ProjectionView
+from arvis.math.projection.projection_view import ProjectionView
 
 
 class PiOperator:

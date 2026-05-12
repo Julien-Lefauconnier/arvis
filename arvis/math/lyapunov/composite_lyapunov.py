@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
+from arvis.math.state.symbolic_state import SymbolicState
 
 from .lyapunov import LyapunovState, lyapunov_value
 from .slow_state import SlowState

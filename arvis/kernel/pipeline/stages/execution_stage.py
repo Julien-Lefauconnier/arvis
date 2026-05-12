@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
-from arvis.runtime.execution.cognitive_execution_state import (
-    CognitiveExecutionState,
-)
 
 
 class ExecutionStage:

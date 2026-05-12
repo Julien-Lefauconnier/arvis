@@ -3,9 +3,6 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-from arvis.cognition.observability.symbolic.symbolic_state import (
-    SymbolicState,
-)
 from arvis.math.adaptive.adaptive_snapshot import (
     AdaptiveSnapshot,
 )
@@ -18,6 +15,9 @@ from arvis.math.signals import (
 )
 from arvis.math.stability.validity_envelope import (
     ValidityEnvelope,
+)
+from arvis.math.state.symbolic_state import (
+    SymbolicState,
 )
 from arvis.math.switching.switching_runtime import (
     SwitchingRuntime,

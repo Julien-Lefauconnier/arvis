@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.adapters.llm.observability.observation import LLMObservation
-from arvis.kernel.projection.projection_view import ProjectionView
+from arvis.math.projection.projection_view import ProjectionView
 
 from .llm_projection_mapper import LLMProjectionMapper
 from .pi_types import (

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any
+
+from arvis.errors.types import ErrorDetails, ErrorPayload
 
 
 class ArvisErrorCategory(StrEnum):
@@ -34,9 +35,9 @@ class ArvisErrorMetadata:
     deterministic: bool = True
     replay_safe: bool = True
     degraded: bool = False
-    details: dict[str, Any] = field(default_factory=dict)
+    details: ErrorDetails = field(default_factory=dict)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> ErrorPayload:
         return {
             "code": self.code,
             "category": self.category.value,
@@ -57,16 +58,18 @@ class ArvisError(Exception):
     replay_safe = True
     degraded = False
 
+    default_code = "ARVIS_ERROR"
+
     def __init__(
         self,
         message: str = "",
         *,
         code: str | None = None,
-        details: dict[str, Any] | None = None,
+        details: ErrorDetails | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message
-        self.code = code or self.__class__.__name__
+        self.code = code or self.default_code
         self.details = dict(details or {})
 
     @property
@@ -82,7 +85,7 @@ class ArvisError(Exception):
             details=self.details,
         )
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> ErrorPayload:
         payload = self.metadata.to_dict()
         payload["message"] = self.message
         payload["type"] = self.__class__.__name__
@@ -90,6 +93,7 @@ class ArvisError(Exception):
 
 
 class ArvisInvariantViolation(ArvisError, ValueError):
+    default_code = "INVARIANT_VIOLATION"
     category = ArvisErrorCategory.INVARIANT
     severity = ArvisErrorSeverity.FATAL
     retryable = False
@@ -98,10 +102,12 @@ class ArvisInvariantViolation(ArvisError, ValueError):
 
 
 class ArvisRuntimeError(ArvisError, RuntimeError):
+    default_code = "RUNTIME_ERROR"
     category = ArvisErrorCategory.RUNTIME
 
 
 class ArvisDomainError(ArvisError):
+    default_code = "DOMAIN_ERROR"
     category = ArvisErrorCategory.DOMAIN
     severity = ArvisErrorSeverity.ERROR
     retryable = False
@@ -110,6 +116,7 @@ class ArvisDomainError(ArvisError):
 
 
 class ArvisExternalError(ArvisRuntimeError):
+    default_code = "EXTERNAL_ERROR"
     category = ArvisErrorCategory.EXTERNAL
     retryable = True
     deterministic = False
@@ -117,18 +124,22 @@ class ArvisExternalError(ArvisRuntimeError):
 
 
 class ArvisReplayError(ArvisInvariantViolation):
+    default_code = "REPLAY_ERROR"
     category = ArvisErrorCategory.REPLAY
 
 
 class ArvisSecurityError(ArvisInvariantViolation):
+    default_code = "SECURITY_ERROR"
     category = ArvisErrorCategory.SECURITY
 
 
 class ArvisKernelError(ArvisRuntimeError):
+    default_code = "KERNEL_ERROR"
     category = ArvisErrorCategory.KERNEL
 
 
 class ArvisDegradedModeError(ArvisRuntimeError):
+    default_code = "DEGRADED_MODE"
     category = ArvisErrorCategory.DEGRADED
     severity = ArvisErrorSeverity.WARNING
     degraded = True

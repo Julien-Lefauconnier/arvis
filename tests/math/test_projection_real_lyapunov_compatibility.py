@@ -4,12 +4,12 @@ import math
 
 import pytest
 
-from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.cognition.projection.projection_api import Observation, project_observation
 from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
 from arvis.math.lyapunov.lyapunov import LyapunovState, lyapunov_value
 from arvis.math.lyapunov.slow_state import SlowState
 from arvis.math.lyapunov.target_map import target_map
+from arvis.math.state.symbolic_state import SymbolicState
 from tests.fixtures.projection_cases import (
     boundary_case,
     high_risk_case,

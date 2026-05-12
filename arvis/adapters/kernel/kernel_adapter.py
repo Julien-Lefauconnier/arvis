@@ -1,8 +1,8 @@
 # arvis/adapters/kernel/kernel_adapter.py
 
 
-from arvis.api.signals import Signal
 from arvis.ir.cognitive_ir import CognitiveIR
+from arvis.signals.signal import Signal
 from arvis.signals.signal_journal import get_signal_journal
 
 from .canonical_to_event import canonical_to_event

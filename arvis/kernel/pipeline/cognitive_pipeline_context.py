@@ -18,6 +18,7 @@ from arvis.ir.envelope import CognitiveIREnvelope
 from arvis.ir.gate import CognitiveGateIR
 from arvis.ir.input import CognitiveInputIR
 from arvis.ir.state import CognitiveStateIR
+from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 from arvis.kernel.pipeline.context.decision_context import (
     PipelineDecisionContext,
@@ -39,9 +40,6 @@ from arvis.kernel.trace.decision_trace import DecisionTrace
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov import LyapunovState
 from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
-from arvis.runtime.execution.cognitive_execution_state import (
-    CognitiveExecutionState,
-)
 
 
 @dataclass(kw_only=True)

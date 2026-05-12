@@ -3,7 +3,8 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from arvis.api.signals import CanonicalSignal, SignalEvent
+from arvis.signals.canonical.canonical_signal import CanonicalSignal
+from arvis.signals.signal_event import SignalEvent
 
 
 def canonical_to_event(canonical: CanonicalSignal) -> SignalEvent:

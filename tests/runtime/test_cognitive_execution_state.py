@@ -1,6 +1,7 @@
 # tests/runtime/test_cognitive_execution_state.py
 
-from arvis.runtime.execution import CognitiveExecutionState, ExecutionLLMState
+from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
+from arvis.kernel.execution.execution_llm_state import ExecutionLLMState
 
 
 def test_cognitive_execution_state_defaults():

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
@@ -15,9 +16,6 @@ from arvis.math.switching.switching_params import (
 )
 from arvis.math.switching.switching_runtime import (
     SwitchingRuntime,
-)
-from arvis.runtime.execution.cognitive_execution_state import (
-    CognitiveExecutionState,
 )
 
 if TYPE_CHECKING:

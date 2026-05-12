@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from arvis.cognition.observability.symbolic.symbolic_state import SymbolicState
 from arvis.math.lyapunov.lyapunov import LyapunovState
+from arvis.math.state.symbolic_state import SymbolicState
 
 
 def _fast_vector(fast: LyapunovState) -> np.ndarray:
