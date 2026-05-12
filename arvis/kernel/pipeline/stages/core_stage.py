@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 
+from arvis.errors.manager import ErrorManager
 from arvis.math.core.fast_dynamics import FastDynamicsSnapshot
 from arvis.math.core.perturbation import compute_perturbation
 from arvis.math.lyapunov.lyapunov import LyapunovState, lyapunov_value
@@ -109,8 +110,14 @@ class CoreStage:
                     delta_norm = abs(
                         float(lyapunov_value(x_next) - lyapunov_value(x_prev))
                     )
-                except Exception:
+                except Exception as exc:
                     delta_norm = None
+
+                    ErrorManager.capture_exception(
+                        ctx,
+                        exc,
+                        code="fast_dynamics_delta_failure",
+                    )
 
             regime_ctx.fast_dynamics = FastDynamicsSnapshot(
                 regime=str(
@@ -121,9 +128,14 @@ class CoreStage:
                 x_next=x_next,
                 delta_norm=delta_norm,
             )
-
-        except Exception:
+        except Exception as exc:
             regime_ctx.fast_dynamics = None
+
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="fast_dynamics_snapshot_failure",
+            )
 
         # -----------------------------------------
         # Paper-aligned quadratic fast state
@@ -160,15 +172,28 @@ class CoreStage:
                 )
             else:
                 lyap_ctx.quadratic_lyap_snapshot = None
-        except Exception:
+
+        except Exception as exc:
             lyap_ctx.quadratic_lyap_snapshot = None
+
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="quadratic_lyapunov_snapshot_failure",
+            )
 
         try:
             lyap_ctx.quadratic_comparability = getattr(
                 pipeline, "quadratic_comparability", None
             )
-        except Exception:
+        except Exception as exc:
             lyap_ctx.quadratic_comparability = None
+
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="quadratic_lyapunov_comparability_failure",
+            )
 
         # If no current Lyapunov state is available, the gate must not
         # fabricate a causal transition.
@@ -185,8 +210,15 @@ class CoreStage:
 
         try:
             ctx._dv = float(core_ctx.drift_score)
-        except Exception:
+
+        except Exception as exc:
             ctx._dv = 0.0
+
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="drift_score_cast_failure",
+            )
 
         regime_ctx.regime = getattr(
             scientific_snapshot,
@@ -218,8 +250,14 @@ class CoreStage:
                 )
             else:
                 new_slow = SlowState.zero()
-        except Exception:
+        except Exception as exc:
             new_slow = None
+
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="reflexive_slow_state_failure",
+            )
 
         # -----------------------------------------
         # 3. Causal export for composite gate
@@ -293,8 +331,14 @@ class CoreStage:
         # -----------------------------------------
         try:
             regime_ctx.perturbation = compute_perturbation(ctx)
-        except Exception:
+        except Exception as exc:
             regime_ctx.perturbation = None
+
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="perturbation_compute_failure",
+            )
 
         # Root scientific mirrors removed.
         # Runtime ownership is canonicalized under:

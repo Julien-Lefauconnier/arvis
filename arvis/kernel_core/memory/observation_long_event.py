@@ -3,12 +3,13 @@
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from arvis.kernel_core.memory.observation_long_invariants import (
     validate_observation_long_event,
 )
+from arvis.types.timestamps import utcnow
 
 
 @dataclass(frozen=True)
@@ -58,7 +59,7 @@ class ObservationLongEvent:
         observed_at: datetime | None = None,
     ) -> "ObservationLongEvent":
         if observed_at is None:
-            observed_at = datetime.now(UTC)
+            observed_at = utcnow()
 
         raw = {
             "user_id": user_id,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvis.errors.helpers import append_error
+from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.math.switching.switching_params import (
@@ -24,7 +24,7 @@ def compute_switching_safety(ctx: Any, overrides: GateOverrides) -> bool:
                     ctx.switching_params,
                 )
     except Exception as exc:
-        append_error(
+        ErrorManager.attach(
             ctx,
             PipelineStageDegradedError(
                 message=str(exc),
@@ -62,7 +62,7 @@ def build_switching_metrics(ctx: Any, switching_safe: bool) -> dict[str, Any]:
                 "L_T": float(ctx.switching_params.L_T),
             }
     except Exception as exc:
-        append_error(
+        ErrorManager.attach(
             ctx,
             PipelineStageDegradedError(
                 message=str(exc),

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.manager import ErrorManager
 from arvis.math.projection.projection_view import ProjectionView
 
 
@@ -132,6 +133,10 @@ class ProjectionStage:
                 else "flat+certified"
             )
 
-        except Exception:
-            ctx.extra.setdefault("errors", []).append("projection_stage_failure")
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="projection_stage_failure",
+            )
             raise

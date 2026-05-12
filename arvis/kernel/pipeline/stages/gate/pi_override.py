@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.manager import ErrorManager
 from arvis.kernel.gate.pi_gate import PiBasedGate
 from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
@@ -74,8 +75,12 @@ def apply_pi_gate_override(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
                 ):
                     verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
 
-    except Exception:
-        ctx.extra.setdefault("errors", []).append("pi_gate_failure")
+    except Exception as exc:
+        ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code="pi_gate_failure",
+        )
 
     return verdict
 

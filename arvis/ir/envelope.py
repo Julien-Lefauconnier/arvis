@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from arvis.ir.cognitive_ir import CognitiveIR
+from arvis.types.timestamps import utcnow
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,6 @@ class CognitiveIREnvelope:
             ir=ir,
             serialized=serialized,
             hash=hash_value,
-            created_at=created_at or datetime.now(UTC),
+            created_at=created_at or utcnow(),
             version=version,
         )

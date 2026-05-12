@@ -6,6 +6,7 @@ from typing import Any
 
 from arvis.cognition.coherence.change_budget import ChangeBudget
 from arvis.cognition.conversation.conversation_signal import ConversationSignal
+from arvis.errors.manager import ErrorManager
 
 
 class PassiveContextStage:
@@ -56,8 +57,12 @@ class PassiveContextStage:
             if snapshot is not None:
                 ctx.memory_snapshot = snapshot
 
-        except Exception:
-            ctx.extra.setdefault("errors", []).append("memory_injection_failure")
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="memory_injection_failure",
+            )
 
         # -----------------------------------------------------
         # GOVERNANCE (PASSIVE)

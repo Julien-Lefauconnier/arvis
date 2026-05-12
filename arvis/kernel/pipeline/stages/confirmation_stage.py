@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Any
 
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
@@ -12,6 +11,7 @@ from arvis.cognition.conflict.conflict_confirmation import (
 )
 from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.types.identifiers import deterministic_id
 
 
 class ConfirmationStage:
@@ -146,12 +146,22 @@ class ConfirmationStage:
         confirmation_request = None
 
         if needs_confirmation and ctx.confirmation_result is None:
+            reason = "lyapunov_guard"
             confirmation_request = ConfirmationRequest(
-                request_id=(f"confirm:{ctx.user_id}:{datetime.now(UTC).timestamp()}"),
+                request_id=deterministic_id(
+                    "confirm",
+                    ctx.user_id,
+                    getattr(
+                        ctx.decision_layer.bundle,
+                        "bundle_id",
+                        "bundle",
+                    ),
+                    reason,
+                ),
                 target_id=str(
                     getattr(ctx.decision_layer.bundle, "bundle_id", "bundle")
                 ),
-                reason="lyapunov_guard",
+                reason=reason,
             )
 
         # -----------------------------------------

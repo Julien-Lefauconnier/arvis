@@ -224,3 +224,29 @@ class ErrorManager:
             "non_deterministic": 0,
             "fail_closed": 0,
         }
+
+    @staticmethod
+    def capture_exception(
+        ctx: Any,
+        exc: Exception,
+        *,
+        code: str | None = None,
+        details: dict[str, str | int | float | bool | None] | None = None,
+    ) -> ErrorPayload:
+        arvis_error = normalize_error(exc)
+
+        merged_details = dict(arvis_error.details)
+        if details:
+            merged_details.update(details)
+
+        if code is not None or merged_details != arvis_error.details:
+            semantics = tuple(arvis_error.metadata.semantics)
+
+            arvis_error = arvis_error.__class__(
+                arvis_error.message,
+                code=code or arvis_error.code,
+                details=merged_details,
+                semantics=semantics,
+            )
+
+        return ErrorManager.attach(ctx, arvis_error)

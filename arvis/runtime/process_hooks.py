@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
+from arvis.errors.manager import ErrorManager
 from arvis.kernel_core.process.process import CognitiveProcess
 
 
@@ -90,5 +91,13 @@ class ProcessHookManager:
                     "hook": hook_name,
                     "error": str(exc),
                     "error_type": type(exc).__name__,
+                },
+            )
+            ErrorManager.capture_exception(
+                process.local_state,
+                exc,
+                code="process_hook_failure",
+                details={
+                    "hook": hook_name,
                 },
             )

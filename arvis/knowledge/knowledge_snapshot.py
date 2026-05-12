@@ -1,10 +1,11 @@
 # arvis/knowledge/knowledge_snapshot.py
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 
 from arvis.knowledge.knowledge_signal import KnowledgeSignal
 from arvis.knowledge.knowledge_state import KnowledgeState
+from arvis.types.timestamps import utcnow
 
 
 @dataclass(frozen=True)
@@ -18,4 +19,4 @@ class KnowledgeSnapshot:
     signals: list[KnowledgeSignal]
     scope: str | None = None
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = field(default_factory=utcnow)

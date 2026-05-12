@@ -1,6 +1,6 @@
 # arvis/reflexive/snapshot/reflexive_snapshot_builder.py
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
@@ -13,6 +13,7 @@ from arvis.reflexive.timeline.explanation import (
 from arvis.reflexive.timeline.explanation.irg_timeline_explanation_builder import (
     IRGTimelineExplanationBuilder,
 )
+from arvis.types.timestamps import utcnow
 
 
 class ReflexiveSnapshotBuilder:
@@ -30,7 +31,7 @@ class ReflexiveSnapshotBuilder:
         introspection: Any | None = None,
         generated_at: datetime | None = None,
     ) -> ReflexiveSnapshot:
-        generated_at = generated_at or datetime.now(UTC)
+        generated_at = generated_at or utcnow()
 
         roles: list[Any] = []
         has_any_public_view = False

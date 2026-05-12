@@ -1,13 +1,8 @@
-# arvis/kernel/pipeline/services/pipeline_error_service.py
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from arvis.errors.helpers import append_error
-from arvis.errors.pipeline import (
-    PipelineStageError,
-)
+from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
@@ -28,14 +23,13 @@ class PipelineErrorService:
     ) -> None:
         try:
             stage.run(pipeline, ctx)
+
         except Exception as exc:
-            append_error(
-                ctx,
-                PipelineStageError(
-                    message=str(exc),
-                    details={
-                        "stage": stage.__class__.__name__,
-                        "exception_type": type(exc).__name__,
-                    },
-                ),
+            ErrorManager.capture_exception(
+                ctx=ctx,
+                exc=exc,
+                code="PIPELINE_STAGE_FAILURE",
+                details={
+                    "stage": stage.__class__.__name__,
+                },
             )

@@ -179,5 +179,9 @@ def test_pi_failure_is_safe():
     ):
         stage.run(pipeline, ctx)
 
-    assert "pi_gate_failure" in ctx.extra.get("errors", [])
+    errors = ctx.extra.get("errors", [])
+
+    assert any(
+        err.get("code") == "pi_gate_failure" for err in errors if isinstance(err, dict)
+    )
     assert ctx.gate_result is not None  # pipeline continue

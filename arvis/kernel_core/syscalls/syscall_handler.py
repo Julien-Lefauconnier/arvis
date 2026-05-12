@@ -5,9 +5,7 @@ from __future__ import annotations
 import inspect
 from typing import Any, Protocol
 
-from arvis.errors.syscall import (
-    SyscallExecutionError,
-)
+from arvis.errors.manager import ErrorManager
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.errors import SyscallError
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
@@ -107,8 +105,10 @@ class SyscallHandler:
                 },
             )
         except Exception as exc:
-            syscall_error = SyscallExecutionError(
-                message=str(exc),
+            payload = ErrorManager.capture_exception(
+                ctx=ctx,
+                exc=exc,
+                code="SYSCALL_EXECUTION_FAILURE",
                 details={
                     "syscall": syscall.name,
                     "exception_type": type(exc).__name__,
@@ -116,10 +116,10 @@ class SyscallHandler:
             )
             error_result = SyscallResult.failure(
                 SyscallError(
-                    code=syscall_error.code,
-                    message=syscall_error.message,
-                    retryable=syscall_error.retryable,
-                    metadata=syscall_error.to_dict(),
+                    code=str(payload["code"]),
+                    message=str(payload["message"]),
+                    retryable=bool(payload["retryable"]),
+                    metadata=payload,
                 )
             )
             self._journal(

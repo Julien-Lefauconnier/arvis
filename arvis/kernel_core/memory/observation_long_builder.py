@@ -1,10 +1,9 @@
-# kernel/journals/observation_long/observation_long_builder.py
+# arvis/kernel_core/memory/observation_long_builder.py
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from typing import Any
 
 from arvis.kernel_core.memory.observation_long_event import (
@@ -13,6 +12,7 @@ from arvis.kernel_core.memory.observation_long_event import (
 from arvis.kernel_core.memory.observation_long_invariants import (
     validate_observation_long_event,
 )
+from arvis.types.timestamps import utcnow
 
 
 @dataclass
@@ -35,7 +35,7 @@ class ObservationLongBuilder:
             user_id=self.user_id,
             source_type=self.source_type,
             payload=dict(self.payload),
-            observed_at=datetime.now(UTC),
+            observed_at=utcnow(),
         )
 
         validate_observation_long_event(event)

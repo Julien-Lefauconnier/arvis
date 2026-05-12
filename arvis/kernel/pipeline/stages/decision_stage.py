@@ -7,6 +7,7 @@ from typing import Any
 
 from arvis.adapters.ir.decision_adapter import DecisionIRAdapter
 from arvis.cognition.decision.decision_result import DecisionResult
+from arvis.errors.manager import ErrorManager
 
 
 class DecisionStage:
@@ -62,8 +63,12 @@ class DecisionStage:
             ctx.decision_layer.ir_decision = DecisionIRAdapter.from_result(
                 ctx.decision_layer.decision_result,
             )
-        except Exception:
-            ctx.extra.setdefault("errors", []).append("decision_ir_adapter_failure")
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="decision_ir_adapter_failure",
+            )
 
         # Control Runtime (stateful per user)
         ctx.control_runtime = pipeline._get_control_runtime(ctx.user_id)

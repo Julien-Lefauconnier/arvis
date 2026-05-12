@@ -1,7 +1,7 @@
 # arvis/cognition/bundle/cognitive_bundle_builder.py
 
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from arvis.cognition.bundle.cognitive_bundle_invariants import (
@@ -17,6 +17,7 @@ from arvis.cognition.retrieval.cognitive_retrieval_snapshot import (
 from arvis.memory.memory_long_snapshot import MemoryLongSnapshot
 from arvis.timeline.timeline_entry import TimelineEntry
 from arvis.timeline.timeline_snapshot import TimelineSnapshot
+from arvis.types.timestamps import utcnow
 
 
 class CognitiveBundleBuilder:
@@ -70,7 +71,7 @@ class CognitiveBundleBuilder:
             memory_long=memory_long,
             retrieval_snapshot=retrieval_snapshot,
             context_hints=getattr(decision_result, "context_hints", {}),
-            generated_at=generated_at or datetime.now(UTC),
+            generated_at=generated_at or utcnow(),
             memory_features=memory_features,
         )
 
@@ -99,9 +100,9 @@ class CognitiveBundleBuilder:
 
         ts = snapshot.entries[-1].created_at if snapshot.entries else None
 
-        introspection = IntrospectionSnapshot(created_at=ts or datetime.now(UTC))
+        introspection = IntrospectionSnapshot(created_at=ts or utcnow())
 
-        explanation = ExplanationSnapshot(created_at=ts or datetime.now(UTC))
+        explanation = ExplanationSnapshot(created_at=ts or utcnow())
 
         return cls.build(
             decision_result=decision,

@@ -6,7 +6,7 @@ import importlib
 from collections.abc import Callable
 from typing import Any, cast
 
-from arvis.errors.helpers import append_error
+from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.context.scientific_accessors import (
     cur_lyap as get_cur_lyap,
@@ -185,7 +185,7 @@ class GateDecisionStack:
             )
         except Exception as exc:
             ctx.validity_envelope = None
-            append_error(
+            ErrorManager.attach(
                 ctx,
                 PipelineStageDegradedError(
                     message=str(exc),
@@ -374,7 +374,7 @@ def run_gate_fusion(
                         verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
         except Exception as exc:
             verdict = pre_verdict or LyapunovVerdict.ABSTAIN
-            append_error(
+            ErrorManager.attach(
                 ctx,
                 PipelineStageDegradedError(
                     message=str(exc),
@@ -387,7 +387,7 @@ def run_gate_fusion(
         return verdict
     except Exception as exc:
         verdict = pre_verdict or LyapunovVerdict.ABSTAIN
-        append_error(
+        ErrorManager.attach(
             ctx,
             PipelineStageDegradedError(
                 message=str(exc),
@@ -403,7 +403,6 @@ def run_gate_fusion(
             dict.fromkeys(existing + ["fusion_fallback"])
         )
         ctx.extra["fusion_error"] = True
-        ctx.extra.setdefault("fusion_error", True)
         return verdict
 
 

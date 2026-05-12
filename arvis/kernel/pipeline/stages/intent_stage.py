@@ -7,13 +7,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Any
 
 from arvis.cognition.execution.executable_intent import ExecutableIntent
 from arvis.kernel.pipeline.services.llm_request_builder import LLMRequestBuilder
 from arvis.kernel.pipeline.services.pipeline_llm_service import PipelineLLMService
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.types.timestamps import utcnow
 
 
 class IntentStage:
@@ -67,7 +67,7 @@ class IntentStage:
             allow_rag=True,
             max_top_k=5,
             provider="default",
-            decided_at=datetime.now(UTC),
+            decided_at=utcnow(),
             linguistic_context=None,
         )
 

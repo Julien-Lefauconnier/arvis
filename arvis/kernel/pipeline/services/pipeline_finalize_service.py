@@ -11,6 +11,7 @@ from arvis.cognition.gate.cognitive_gate_result import CognitiveGateResult
 from arvis.cognition.gate.gate_trace_builder import GateTraceBuilder
 from arvis.cognition.gate.reason_code_normalizer import ReasonCodeNormalizer
 from arvis.cognition.state.cognitive_state_builder import CognitiveStateBuilder
+from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
@@ -103,8 +104,15 @@ class PipelineFinalizeService:
 
         try:
             ctx.ir_gate = GateIRAdapter.from_gate(normalized_gate_result)
-        except Exception:
-            ctx.extra.setdefault("errors", []).append("gate_ir_adapter_failure")
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx=ctx,
+                exc=exc,
+                code="GATE_IR_ADAPTER_FAILURE",
+                details={
+                    "component": "GateIRAdapter",
+                },
+            )
             ctx.ir_gate = None
 
         # -----------------------------------------------------
@@ -112,8 +120,15 @@ class PipelineFinalizeService:
         # -----------------------------------------------------
         try:
             pipeline._refresh_ir_context_extra(ctx)
-        except Exception:
-            ctx.extra.setdefault("errors", []).append("ir_context_refresh_failure")
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx=ctx,
+                exc=exc,
+                code="IR_CONTEXT_REFRESH_FAILURE",
+                details={
+                    "component": "PipelineIRContextRefresh",
+                },
+            )
         PipelineIRService.run(ctx)
 
         # -----------------------------------------------------
@@ -130,9 +145,17 @@ class PipelineFinalizeService:
         # -----------------------------------------------------
         try:
             ctx.cognitive_state = CognitiveStateBuilder.from_context(ctx)
-        except Exception:
+        except Exception as exc:
             ctx.cognitive_state = None
-            ctx.extra.setdefault("errors", []).append("cognitive_state_build_failure")
+
+            ErrorManager.capture_exception(
+                ctx=ctx,
+                exc=exc,
+                code="COGNITIVE_STATE_BUILD_FAILURE",
+                details={
+                    "component": "CognitiveStateBuilder",
+                },
+            )
 
         # -----------------------------------------------------
         # CONTRACT VALIDATION
@@ -144,10 +167,16 @@ class PipelineFinalizeService:
                 )
 
                 CognitiveStateContract.validate(ctx.cognitive_state)
-        except Exception:
-            ctx.extra.setdefault("errors", []).append(
-                "cognitive_state_contract_failure"
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx=ctx,
+                exc=exc,
+                code="COGNITIVE_STATE_CONTRACT_FAILURE",
+                details={
+                    "component": "CognitiveStateContract",
+                },
             )
+
             ctx.cognitive_state = None
 
         # -----------------------------------------------------
@@ -158,8 +187,16 @@ class PipelineFinalizeService:
                 ctx.ir_state = StateIRAdapter.from_state(ctx.cognitive_state)
             else:
                 ctx.ir_state = None
-        except Exception:
-            ctx.extra.setdefault("errors", []).append("state_ir_adapter_failure")
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx=ctx,
+                exc=exc,
+                code="STATE_IR_ADAPTER_FAILURE",
+                details={
+                    "component": "StateIRAdapter",
+                },
+            )
+
             ctx.ir_state = None
 
         # -----------------------------------------------------

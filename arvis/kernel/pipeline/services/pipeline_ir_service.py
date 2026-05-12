@@ -7,6 +7,7 @@ from arvis.adapters.ir.cognitive_ir_builder import CognitiveIRBuilder
 from arvis.adapters.ir.projection_adapter import ProjectionIRAdapter
 from arvis.adapters.ir.stability_adapter import StabilityIRAdapter
 from arvis.adapters.ir.validity_adapter import ValidityIRAdapter
+from arvis.errors.manager import ErrorManager
 from arvis.ir.envelope import CognitiveIREnvelope
 from arvis.ir.normalization.cognitive_ir_normalizer import (
     CognitiveIRNormalizer,
@@ -35,9 +36,13 @@ class PipelineIRService:
             ctx.ir_projection = ProjectionIRAdapter.from_projection(
                 getattr(ctx, "projection_certificate", None)
             )
-        except Exception:
+        except Exception as exc:
             ctx.ir_projection = None
-            ctx.extra.setdefault("errors", []).append("projection_ir_adapter_failure")
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="projection_ir_adapter_failure",
+            )
 
         # -----------------------------------------
         # Validity IR
@@ -46,9 +51,13 @@ class PipelineIRService:
             ctx.ir_validity = ValidityIRAdapter.from_validity(
                 getattr(ctx, "validity_envelope", None)
             )
-        except Exception:
+        except Exception as exc:
             ctx.ir_validity = None
-            ctx.extra.setdefault("errors", []).append("validity_ir_adapter_failure")
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="validity_ir_adapter_failure",
+            )
 
         # -----------------------------------------
         # Stability IR
@@ -57,9 +66,13 @@ class PipelineIRService:
             ctx.ir_stability = StabilityIRAdapter.from_stability(
                 getattr(ctx, "stability_projection", None)
             )
-        except Exception:
+        except Exception as exc:
             ctx.ir_stability = None
-            ctx.extra.setdefault("errors", []).append("stability_ir_adapter_failure")
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="stability_ir_adapter_failure",
+            )
 
         # -----------------------------------------
         # Adaptive IR
@@ -68,18 +81,26 @@ class PipelineIRService:
             ctx.ir_adaptive = AdaptiveIRAdapter.from_adaptive(
                 getattr(ctx, "adaptive_snapshot", None)
             )
-        except Exception:
+        except Exception as exc:
             ctx.ir_adaptive = None
-            ctx.extra.setdefault("errors", []).append("adaptive_ir_adapter_failure")
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="adaptive_ir_adapter_failure",
+            )
 
         # -----------------------------------------
         # Build canonical IR
         # -----------------------------------------
         try:
             ctx.cognitive_ir = CognitiveIRBuilder.from_context(ctx)
-        except Exception:
+        except Exception as exc:
             ctx.cognitive_ir = None
-            ctx.extra.setdefault("errors", []).append("cognitive_ir_build_failure")
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="cognitive_ir_build_failure",
+            )
             return
 
         # -----------------------------------------
@@ -92,8 +113,12 @@ class PipelineIRService:
         # -----------------------------------------
         try:
             CognitiveIRValidator.validate(ctx.cognitive_ir)
-        except Exception:
-            ctx.extra.setdefault("errors", []).append("cognitive_ir_validation_failure")
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="cognitive_ir_validation_failure",
+            )
             raise
 
         # -----------------------------------------
@@ -112,9 +137,13 @@ class PipelineIRService:
                 hash_value=ctx.ir_hash,
             )
 
-        except Exception:
+        except Exception as exc:
             ctx.ir_serialized = None
             ctx.ir_hash = None
             ctx.ir_envelope = None
 
-            ctx.extra.setdefault("errors", []).append("ir_serialization_failure")
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="ir_serialization_failure",
+            )

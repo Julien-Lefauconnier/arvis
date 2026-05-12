@@ -3,9 +3,11 @@
 import inspect
 import unicodedata
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
-from uuid import uuid4
+
+from arvis.types.identifiers import deterministic_id
+from arvis.types.timestamps import utcnow
 
 
 @dataclass(frozen=True)
@@ -106,8 +108,13 @@ class Signal:
         MUST NOT be used inside kernel logic.
         """
         return cls(
-            signal_id=signal_id or str(uuid4()),
-            timestamp=timestamp or datetime.now(UTC),
+            signal_id=signal_id
+            or deterministic_id(
+                "unsafe-signal",
+                origin,
+                repr(payload),
+            ),
+            timestamp=timestamp or utcnow(),
             payload=payload,
             origin=origin,
         )

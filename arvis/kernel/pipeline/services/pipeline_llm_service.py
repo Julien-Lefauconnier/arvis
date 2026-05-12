@@ -10,6 +10,7 @@ from arvis.adapters.llm.validation.output_validator import (
     LLMOutputValidator,
     LLMValidationSeverity,
 )
+from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.runtime_bindings import PipelineRuntimeBindings
 from arvis.kernel.pipeline.services.pipeline_retry_budget import PipelineRetryBudget
 from arvis.kernel.pipeline.services.pipeline_retry_policy import PipelineRetryPolicy
@@ -311,15 +312,30 @@ class PipelineLLMService:
         error_code: str,
         error_detail: SyscallError | None = None,
     ) -> None:
-        entry: dict[str, Any] = {
+        details: dict[str, str | int | float | bool | None] = {
             "stage": stage,
             "llm_error": error_code,
         }
 
         if error_detail is not None:
-            entry["llm_error_detail"] = error_detail.to_dict()
+            details["syscall_error_code"] = error_detail.code
+            details["syscall_error_message"] = error_detail.message
+            details["syscall_retryable"] = error_detail.retryable
 
-        ctx.extra.setdefault("errors", []).append(entry)
+        if error_detail is not None:
+            ErrorManager.capture_exception(
+                ctx,
+                RuntimeError(error_detail.message),
+                code=error_code,
+                details=details,
+            )
+        else:
+            ErrorManager.capture_exception(
+                ctx,
+                RuntimeError(error_code),
+                code=error_code,
+                details=details,
+            )
 
     @staticmethod
     def _record_attempt(

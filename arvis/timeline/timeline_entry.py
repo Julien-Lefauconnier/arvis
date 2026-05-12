@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 
+from arvis.types.timestamps import utcnow
+
 from .timeline_types import TimelineEntryType
 
 
@@ -137,7 +139,7 @@ class TimelineEntry:
         """
         return cls(
             entry_id=entry_id,
-            created_at=created_at or datetime.now(UTC),
+            created_at=created_at or utcnow(),
             type=type,
             title=title,
             description=description,

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import time
-
 from arvis.kernel_core.memory.models import MemoryRecord
 from arvis.kernel_core.memory.repository import MemoryRepository
+from arvis.types.timestamps import utcnow
 
 
 class InMemoryMemoryRepository(MemoryRepository):
@@ -94,7 +93,7 @@ class InMemoryMemoryRepository(MemoryRepository):
             key=record.key,
             value=record.value,
             created_at=record.created_at,
-            updated_at=int(time.time()),
+            updated_at=int(utcnow().timestamp()),
             version=record.version,
             tags=record.tags,
             status="deleted",

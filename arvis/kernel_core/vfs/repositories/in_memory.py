@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import time
-import uuid
-
 from arvis.kernel_core.vfs.models import VFSItem
+from arvis.types.identifiers import deterministic_id
+from arvis.types.timestamps import utcnow
 
 
 class InMemoryVFSRepository:
@@ -31,7 +30,16 @@ class InMemoryVFSRepository:
         parent_id: str | None,
     ) -> str:
         bucket = self._user_bucket(user_id)
-        item_id = str(uuid.uuid4())
+        created_at = int(utcnow().timestamp())
+
+        item_id = deterministic_id(
+            "vfs-folder",
+            user_id,
+            parent_id or "root",
+            name,
+            str(created_at),
+        )
+
         bucket[item_id] = VFSItem(
             item_id=item_id,
             display_name=name,
@@ -39,7 +47,7 @@ class InMemoryVFSRepository:
             parent_id=parent_id,
             mime=None,
             file_size=0,
-            created_at=int(time.time()),
+            created_at=created_at,
         )
         return item_id
 
@@ -53,7 +61,15 @@ class InMemoryVFSRepository:
         mime: str | None,
     ) -> str:
         bucket = self._user_bucket(user_id)
-        item_id = str(uuid.uuid4())
+        created_at = int(utcnow().timestamp())
+
+        item_id = deterministic_id(
+            "vfs-file",
+            user_id,
+            parent_id or "root",
+            name,
+            str(created_at),
+        )
         bucket[item_id] = VFSItem(
             item_id=item_id,
             display_name=name,
@@ -61,7 +77,7 @@ class InMemoryVFSRepository:
             parent_id=parent_id,
             mime=mime,
             file_size=size,
-            created_at=int(time.time()),
+            created_at=created_at,
         )
         return item_id
 

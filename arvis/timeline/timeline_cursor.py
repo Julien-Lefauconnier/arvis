@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
+
+from arvis.types.timestamps import utcnow
 
 
 @dataclass(frozen=True)
@@ -76,4 +78,4 @@ class TimelineCursor:
 
     @classmethod
     def now(cls) -> TimelineCursor:
-        return cls(timestamp=datetime.now(UTC))
+        return cls(timestamp=utcnow())

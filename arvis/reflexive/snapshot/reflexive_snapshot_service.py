@@ -1,7 +1,7 @@
 # arvis/reflexive/services/reflexive_snapshot_service.py
 
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from arvis.reflexive.attestation.reflexive_attestation import ReflexiveAttestation
@@ -18,6 +18,7 @@ from arvis.reflexive.snapshot.reflexive_snapshot_builder import (
 from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_memory import (
     IRGTimelineTemporalMemory,
 )
+from arvis.types.timestamps import utcnow
 
 
 class ReflexiveSnapshotService:
@@ -42,7 +43,7 @@ class ReflexiveSnapshotService:
             introspection = ArvisIntrospectionService().build_system_overview()
 
         if generated_at is None:
-            generated_at = datetime.now(UTC)
+            generated_at = utcnow()
 
         snapshot = ReflexiveSnapshotBuilder.build(
             capabilities=build_capability_snapshot(),

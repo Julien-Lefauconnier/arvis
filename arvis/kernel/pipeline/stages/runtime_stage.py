@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.manager import ErrorManager
+
 
 class RuntimeStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
@@ -20,8 +22,12 @@ class RuntimeStage:
                 runtime.inertia_risk = float(ctx.collapse_risk)
                 runtime.last_action = str(getattr(ctx.action_decision, "mode", None))
 
-        except Exception:
-            pass
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="runtime_control_update_failure",
+            )
 
         # -----------------------------------------
         #  Switching runtime
@@ -32,8 +38,12 @@ class RuntimeStage:
 
             if switching_runtime is not None and regime is not None:
                 switching_runtime.update(str(regime))
-        except Exception:
-            pass
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="runtime_switching_update_failure",
+            )
 
         # -----------------------------------------
         # Global stability observer
@@ -43,5 +53,10 @@ class RuntimeStage:
             if observer:
                 metrics = observer.update(ctx)
                 ctx.global_stability_metrics = metrics
-        except Exception:
+        except Exception as exc:
             ctx.global_stability_metrics = None
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="runtime_observer_update_failure",
+            )

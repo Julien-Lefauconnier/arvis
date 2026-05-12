@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from arvis.errors.base import (
+    ArvisErrorCategory,
     ArvisErrorSeverity,
+    ErrorDomain,
     ErrorPolicy,
     ErrorSemantics,
 )
@@ -196,3 +198,29 @@ def test_attach_supports_custom_semantics(ctx):
 
     assert "fail_open" in exported["semantics"]
     assert "non_deterministic" in exported["semantics"]
+
+
+def test_capture_exception_preserves_semantics(ctx):
+    error = build_error(
+        semantics=(
+            ErrorSemantics.FAIL_OPEN,
+            ErrorSemantics.NON_DETERMINISTIC,
+        ),
+        domain=ErrorDomain.CORE,
+        category=ArvisErrorCategory.RUNTIME,
+    )
+
+    payload = ErrorManager.capture_exception(
+        ctx,
+        error,
+        code="UPDATED_ERROR",
+        details={"stage": "projection"},
+    )
+
+    assert payload["code"] == "UPDATED_ERROR"
+    assert payload["details"]["stage"] == "projection"
+
+    semantics = payload["semantics"]
+
+    assert "fail_open" in semantics
+    assert "non_deterministic" in semantics

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, cast
 
+from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
@@ -44,8 +45,12 @@ class PipelineObservabilityService:
                 pipeline.projection_stage,
             )
             projection_stage.refresh(pipeline, ctx)
-        except Exception:
-            ctx.extra.setdefault("errors", []).append("projection_refresh_failure")
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="projection_refresh_failure",
+            )
 
         ctx.predictive_snapshot = obs["predictive"]
         ctx.multi_horizon = obs["multi"]
@@ -67,6 +72,11 @@ class PipelineObservabilityService:
             ctx.stability_projection = projected
             ctx.stability_statistics = computed
 
-        except Exception:
+        except Exception as exc:
             ctx.stability_projection = None
             ctx.stability_statistics = None
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="stability_projection_failure",
+            )

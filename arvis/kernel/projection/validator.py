@@ -77,6 +77,13 @@ class ProjectionValidator:
         noise_robustness_ok = True
 
         # TODO: brancher sur un vrai estimateur plus tard
+        """
+        Deterministic conservative baseline.
+
+        Noise robustness currently reuses domain validity
+        as a monotonic proxy until a dedicated estimator
+        is introduced.
+        """
         # pour l'instant on assume OK si domain OK
         noise_robustness_ok = domain_valid
 

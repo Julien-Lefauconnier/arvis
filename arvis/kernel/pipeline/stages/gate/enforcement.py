@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
@@ -134,8 +135,12 @@ def apply_projection_enforcement(
         except Exception:
             pass
 
-    except Exception:
-        ctx.extra.setdefault("errors", []).append("projection_gate_adjustment_failure")
+    except Exception as exc:
+        ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code="projection_gate_adjustment_failure",
+        )
     return verdict
 
 

@@ -128,4 +128,10 @@ class GuardedLLMAdapter:
         - content sensitivity detection
         """
         # TODO: plug real risk evaluator
+        """
+        Baseline deterministic risk evaluator.
+
+        Production deployments are expected to inject
+        a domain-specific evaluator.
+        """
         return LLMRisk(LLMRiskLevel.LOW)

@@ -217,8 +217,8 @@ def test_pipeline_llm_service_missing_handler_records_error() -> None:
     assert content is None
     error = ctx.extra["errors"][0]
 
-    assert error["stage"] == "TestStage"
-    assert error["llm_error"] == "missing_runtime_bindings"
+    assert error["details"]["stage"] == "TestStage"
+    assert error["details"]["llm_error"] == "missing_runtime_bindings"
 
 
 def test_pipeline_llm_service_failure_records_error() -> None:
@@ -236,7 +236,7 @@ def test_pipeline_llm_service_failure_records_error() -> None:
     )
 
     assert content is None
-    assert ctx.extra["errors"][0]["llm_error"] == "llm_failed"
+    assert ctx.extra["errors"][0]["details"]["llm_error"] == "llm_failed"
 
 
 def test_pipeline_llm_service_retries_retryable_failure_then_succeeds() -> None:
@@ -301,7 +301,7 @@ def test_pipeline_llm_service_stops_after_retry_limit() -> None:
 
     assert content is None
     assert handler.calls == 3
-    assert ctx.extra["errors"][0]["llm_error"] == "llm_execution_failed"
+    assert ctx.extra["errors"][0]["details"]["llm_error"] == "llm_execution_failed"
     assert ctx.extra["llm_retry_events"][-1]["retry"] is False
 
 
@@ -323,7 +323,7 @@ def test_pipeline_llm_service_does_not_retry_non_retryable_failure() -> None:
 
     assert content is None
     assert handler.calls == 1
-    assert ctx.extra["errors"][0]["llm_error"] == "no_llm_adapter"
+    assert ctx.extra["errors"][0]["details"]["llm_error"] == "no_llm_adapter"
     assert ctx.extra["llm_retry_events"][0]["retry"] is False
 
 
