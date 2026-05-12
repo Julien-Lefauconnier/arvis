@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.context.scientific_accessors import (
     cur_lyap as get_cur_lyap,
 )
@@ -186,6 +187,11 @@ def compute_composite_metrics(ctx: Any) -> CompositeMetrics:
             )
         except Exception as exc:
             ctx.extra["composite_injected_error"] = repr(exc)
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="composite_injected_compute_failure",
+            )
     comp = CompositeLyapunov(lambda_mismatch=0.5, gamma_z=1.0)
 
     computed_delta_w: float | None = None
@@ -232,8 +238,14 @@ def compute_composite_metrics(ctx: Any) -> CompositeMetrics:
 
         if computed_delta_w is None:
             computed_delta_w = 0.0
-    except Exception:
+    except Exception as exc:
         computed_delta_w = composite_ctx.delta_w
+
+        ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code="composite_delta_compute_failure",
+        )
 
     return CompositeMetrics(
         prev_slow=prev_slow,
@@ -316,8 +328,13 @@ def detect_recovery(
             and float(w_current) < float(w_prev)
         ):
             recovery_detected = True
-    except Exception:
+    except Exception as exc:
         recovery_detected = False
+        ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code="composite_recovery_detection_failure",
+        )
 
     return recovery_detected
 
@@ -433,8 +450,12 @@ def detect_slow_drift(
                 if drift_ctx is not None:
                     drift_ctx.slow_drift_warning = True
                 ctx.extra["slow_drift_warning"] = True
-    except Exception:
-        pass
+    except Exception as exc:
+        ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code="slow_drift_detection_failure",
+        )
 
 
 __all__ = [

@@ -49,11 +49,13 @@ class CognitiveInterruptBus:
         """
         Returns process_ids that should be woken up.
         """
-        targets = set()
+        targets: list[str] = []
 
         if interrupt.target_process_id:
-            targets.add(interrupt.target_process_id)
+            targets.append(interrupt.target_process_id)
 
-        targets.update(self._subscribers.get(interrupt.type, []))
+        for process_id in self._subscribers.get(interrupt.type, []):
+            if process_id not in targets:
+                targets.append(process_id)
 
-        return list(targets)
+        return targets

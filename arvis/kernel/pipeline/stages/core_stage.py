@@ -305,8 +305,12 @@ class CoreStage:
                     T_x,
                     eta=eta,
                 )
-        except Exception:
-            pass
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="paper_slow_dynamics_update_failure",
+            )
 
         # Example future activation:
         # if prev_slow_before is not None and lyap_ctx.cur_lyap is not None:

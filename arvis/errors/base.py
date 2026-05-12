@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from arvis.errors.provenance import (
+    ErrorCause,
+    ErrorOrigin,
+    build_error_fingerprint,
+)
 from arvis.errors.types import ErrorDetails, ErrorPayload
+from arvis.types.timestamps import utcnow
 
 
 class ErrorDomain(StrEnum):
@@ -34,6 +41,10 @@ class ErrorSemantics(StrEnum):
     NON_DETERMINISTIC = "non_deterministic"
     REPLAY_SAFE = "replay_safe"
     REPLAY_UNSAFE = "replay_unsafe"
+    OBSERVABLE = "observable"
+    RECOVERABLE = "recoverable"
+    DEGRADED_RUNTIME = "degraded_runtime"
+    COMPUTATION_FAILURE = "computation_failure"
 
 
 class ErrorPolicy(StrEnum):
@@ -77,9 +88,16 @@ class ArvisErrorMetadata:
     replay_safe: bool = True
     degraded: bool = False
     details: ErrorDetails = field(default_factory=dict)
+    origin: ErrorOrigin | None = None
+    cause: ErrorCause | None = None
+    fingerprint: str | None = None
+    created_at: str | None = None
+    monotonic_ns: int | None = None
+    sensitive: bool = False
+    redactable: bool = True
 
     def to_dict(self) -> ErrorPayload:
-        return {
+        payload: ErrorPayload = {
             "code": self.code,
             "domain": self.domain.value,
             "category": self.category.value,
@@ -91,7 +109,20 @@ class ArvisErrorMetadata:
             "replay_safe": self.replay_safe,
             "degraded": self.degraded,
             "details": dict(self.details),
+            "fingerprint": self.fingerprint,
+            "created_at": self.created_at,
+            "monotonic_ns": self.monotonic_ns,
+            "sensitive": self.sensitive,
+            "redactable": self.redactable,
         }
+
+        if self.origin is not None:
+            payload["origin"] = self.origin.to_dict()
+
+        if self.cause is not None:
+            payload["cause"] = self.cause.to_dict()
+
+        return payload
 
 
 class ArvisError(Exception):
@@ -121,6 +152,13 @@ class ArvisError(Exception):
         degraded: bool | None = None,
         semantics: tuple[ErrorSemantics, ...] | None = None,
         details: ErrorDetails | None = None,
+        origin: ErrorOrigin | None = None,
+        cause: ErrorCause | None = None,
+        fingerprint: str | None = None,
+        created_at: str | None = None,
+        monotonic_ns: int | None = None,
+        sensitive: bool = False,
+        redactable: bool = True,
     ) -> None:
         super().__init__(message)
 
@@ -148,21 +186,47 @@ class ArvisError(Exception):
 
         self._custom_semantics = semantics
         self.details = dict(details or {})
+        self.origin = origin
+        self.cause = cause
+        self.created_at = created_at or utcnow().isoformat()
+        self.monotonic_ns = monotonic_ns or time.monotonic_ns()
+        self.sensitive = sensitive
+        self.redactable = redactable
+        self.fingerprint = fingerprint
 
     @property
     def metadata(self) -> ArvisErrorMetadata:
+        semantics = self._semantics()
+        fingerprint = self.fingerprint or build_error_fingerprint(
+            code=self.code,
+            domain=self.domain.value,
+            category=self.category.value,
+            severity=self.severity.value,
+            policy=self.policy.value,
+            semantics=tuple(s.value for s in semantics),
+            deterministic=self.deterministic,
+            replay_safe=self.replay_safe,
+            degraded=self.degraded,
+        )
         return ArvisErrorMetadata(
             code=self.code,
             domain=self.domain,
             category=self.category,
             severity=self.severity,
             policy=self.policy,
-            semantics=self._semantics(),
+            semantics=semantics,
             retryable=self.retryable,
             deterministic=self.deterministic,
             replay_safe=self.replay_safe,
             degraded=self.degraded,
             details=self.details,
+            origin=self.origin,
+            cause=self.cause,
+            fingerprint=fingerprint,
+            created_at=self.created_at,
+            monotonic_ns=self.monotonic_ns,
+            sensitive=self.sensitive,
+            redactable=self.redactable,
         )
 
     def _semantics(self) -> tuple[ErrorSemantics, ...]:
@@ -185,12 +249,16 @@ class ArvisError(Exception):
 
         if self.retryable:
             out.append(ErrorSemantics.TRANSIENT)
+            out.append(ErrorSemantics.RECOVERABLE)
 
         if self.degraded:
             out.append(ErrorSemantics.DEGRADED)
+            out.append(ErrorSemantics.DEGRADED_RUNTIME)
 
         if self.policy == ErrorPolicy.FAIL_CLOSED:
             out.append(ErrorSemantics.FAIL_CLOSED)
+
+        out.append(ErrorSemantics.OBSERVABLE)
 
         return tuple(out)
 

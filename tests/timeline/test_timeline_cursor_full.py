@@ -86,7 +86,6 @@ def test_cursor_equality():
     c2 = TimelineCursor(ts, VALID_HASH, 10)
 
     assert c1 == c2
-    assert hash(c1) == hash(c2)
 
 
 def test_cursor_inequality():

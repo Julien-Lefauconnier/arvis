@@ -36,10 +36,21 @@ class PipelineRetryDecision:
 
 @dataclass(frozen=True, slots=True)
 class PipelineRetryPolicy:
+    """
+    Deterministic retry policy.
+
+    Kernel invariants:
+    - retry decisions must remain replay-safe by default
+    - randomness must be explicitly injected
+    - default execution path is deterministic
+    """
+
     max_attempts: int = 1
     base_delay_ms: int = 0
     max_delay_ms: int = 0
     jitter_fn: Callable[[int], int] | None = None
+    # Optional replay-controlled RNG.
+    # MUST remain None in deterministic kernel execution.
     rng: random.Random | None = None
 
     def __post_init__(self) -> None:
@@ -110,6 +121,8 @@ class PipelineRetryPolicy:
             jittered = self.jitter_fn(delay)
             return max(0, min(jittered, delay))
 
+        # Explicit non-deterministic mode.
+        # Intended for external runtime environments only.
         if self.rng is not None:
             return self.rng.randint(0, delay)
 

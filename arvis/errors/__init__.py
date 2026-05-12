@@ -36,12 +36,25 @@ from arvis.errors.pipeline import (
     PipelineStageError,
 )
 from arvis.errors.policy import ErrorPolicyDecision, decide_error_policy
+from arvis.errors.provenance import (
+    ErrorCause,
+    ErrorOrigin,
+    build_error_fingerprint,
+    cause_from_exception,
+)
 from arvis.errors.registry import error_code_registry, iter_error_classes
 from arvis.errors.replay import (
     ReplayCognitiveStateMissing,
     ReplayGlobalCommitmentMismatch,
     ReplayGlobalCommitmentMissing,
     ReplayVerificationError,
+)
+from arvis.errors.runtime import (
+    AdaptiveComputationError,
+    CompositeComputationError,
+    ProjectionComputationError,
+    RuntimeDegradationError,
+    StabilityEvaluationError,
 )
 from arvis.errors.syscall import (
     SyscallExecutionError,
@@ -64,6 +77,11 @@ __all__ = [
     "ArvisExternalError",
     "ArvisAPIError",
     "CognitiveStateRequiredError",
+    "RuntimeDegradationError",
+    "CompositeComputationError",
+    "AdaptiveComputationError",
+    "ProjectionComputationError",
+    "StabilityEvaluationError",
     "InvalidIRPayloadError",
     "ErrorManager",
     "ArvisReplayError",
@@ -81,6 +99,10 @@ __all__ = [
     "normalize_error",
     "ErrorPolicyDecision",
     "decide_error_policy",
+    "ErrorOrigin",
+    "ErrorCause",
+    "build_error_fingerprint",
+    "cause_from_exception",
     "iter_error_classes",
     "error_code_registry",
     "ReplayGlobalCommitmentMissing",

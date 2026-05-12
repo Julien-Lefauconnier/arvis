@@ -4,11 +4,26 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.manager import ErrorManager
+from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.context.scientific_accessors import (
     cur_lyap,
     prev_lyap,
 )
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+
+
+def _attach_mid_trace_failure(ctx: Any, component: str, exc: Exception) -> None:
+    ErrorManager.attach(
+        ctx,
+        PipelineStageDegradedError(
+            message=str(exc),
+            details={
+                "component": component,
+                "exception_type": type(exc).__name__,
+            },
+        ),
+    )
 
 
 def write_mid_traces(
@@ -25,8 +40,8 @@ def write_mid_traces(
                 "energy_decrease": bool(delta_w < 0),
                 "control_should_reduce": bool(delta_w > 0),
             }
-    except Exception:
-        pass
+    except Exception as exc:
+        _attach_mid_trace_failure(ctx, "closed_loop_feedback_trace", exc)
 
     try:
         ctx.extra["iss_perturbation"] = {
@@ -35,8 +50,8 @@ def write_mid_traces(
             "switch": float(getattr(ctx, "switching_disturbance", 0.0) or 0.0),
             "adversarial": float(getattr(ctx, "adversarial_disturbance", 0.0) or 0.0),
         }
-    except Exception:
-        pass
+    except Exception as exc:
+        _attach_mid_trace_failure(ctx, "iss_perturbation_trace", exc)
 
     try:
         if ctx.validity_envelope is not None:
@@ -50,5 +65,5 @@ def write_mid_traces(
                 ),
                 "perturbation_bounded": True,
             }
-    except Exception:
-        pass
+    except Exception as exc:
+        _attach_mid_trace_failure(ctx, "validity_envelope_extended_trace", exc)

@@ -12,6 +12,7 @@ from arvis.errors.base import (
     ErrorSemantics,
 )
 from arvis.errors.normalization import normalize_error
+from arvis.errors.provenance import ErrorCause, ErrorOrigin, cause_from_exception
 from arvis.errors.types import ErrorPayload
 
 ERRORS_KEY: Final[str] = "errors"
@@ -19,6 +20,7 @@ DEGRADED_KEY: Final[str] = "degraded"
 KERNEL_FAILURES_KEY: Final[str] = "kernel_failures"
 LAST_ERROR_KEY: Final[str] = "last_error"
 ERROR_STATS_KEY: Final[str] = "error_statistics"
+RUNTIME_DEGRADATION_KEY: Final[str] = "runtime_degradation"
 
 DEFAULT_DEGRADED_ESCALATION_THRESHOLD: Final[int] = 3
 DEFAULT_ERROR_ESCALATION_THRESHOLD: Final[int] = 5
@@ -59,6 +61,28 @@ class ErrorManager:
         if arvis_error.degraded:
             degraded = ErrorManager._list(extra, DEGRADED_KEY)
             degraded.append(arvis_error.code)
+            runtime = cast(
+                dict[str, Any],
+                extra.setdefault(
+                    RUNTIME_DEGRADATION_KEY,
+                    {
+                        "active": False,
+                        "count": 0,
+                        "last_code": None,
+                        "domains": {},
+                    },
+                ),
+            )
+
+            runtime["active"] = True
+            runtime["count"] = int(runtime.get("count", 0)) + 1
+            runtime["last_code"] = arvis_error.code
+
+            domains = cast(dict[str, int], runtime.setdefault("domains", {}))
+
+            domain_key = arvis_error.domain.value
+
+            domains[domain_key] = int(domains.get(domain_key, 0)) + 1
 
         if arvis_error.severity in {
             ArvisErrorSeverity.ERROR,
@@ -90,6 +114,27 @@ class ErrorManager:
             "replay_unsafe": int(stats.get("replay_unsafe", 0)),
             "non_deterministic": int(stats.get("non_deterministic", 0)),
             "fail_closed": int(stats.get("fail_closed", 0)),
+        }
+
+    @staticmethod
+    def runtime_degradation_state(ctx: Any) -> dict[str, Any]:
+        extra = ErrorManager._extra(ctx)
+
+        runtime = extra.get(RUNTIME_DEGRADATION_KEY)
+
+        if not isinstance(runtime, dict):
+            return {
+                "active": False,
+                "count": 0,
+                "last_code": None,
+                "domains": {},
+            }
+
+        return {
+            "active": bool(runtime.get("active", False)),
+            "count": int(runtime.get("count", 0)),
+            "last_code": runtime.get("last_code"),
+            "domains": dict(runtime.get("domains", {})),
         }
 
     @staticmethod
@@ -154,6 +199,7 @@ class ErrorManager:
         extra.pop(KERNEL_FAILURES_KEY, None)
         extra.pop(LAST_ERROR_KEY, None)
         extra.pop(ERROR_STATS_KEY, None)
+        extra.pop(RUNTIME_DEGRADATION_KEY, None)
 
     @staticmethod
     def _extra(ctx: Any) -> MutableMapping[str, Any]:
@@ -232,6 +278,8 @@ class ErrorManager:
         *,
         code: str | None = None,
         details: dict[str, str | int | float | bool | None] | None = None,
+        origin: ErrorOrigin | None = None,
+        cause: ErrorCause | None = None,
     ) -> ErrorPayload:
         arvis_error = normalize_error(exc)
 
@@ -247,6 +295,47 @@ class ErrorManager:
                 code=code or arvis_error.code,
                 details=merged_details,
                 semantics=semantics,
+                origin=origin or arvis_error.origin,
+                cause=cause or arvis_error.cause or cause_from_exception(exc),
+                sensitive=arvis_error.sensitive,
+                redactable=arvis_error.redactable,
             )
 
         return ErrorManager.attach(ctx, arvis_error)
+
+    @staticmethod
+    def capture_runtime_degradation(
+        ctx: Any,
+        exc: Exception,
+        *,
+        code: str,
+        component: str,
+    ) -> ErrorPayload:
+        return ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code=code,
+            origin=ErrorOrigin(component=component, subsystem="runtime"),
+            details={
+                "component": component,
+                "runtime_degraded": True,
+            },
+        )
+
+    @staticmethod
+    def capture_computation_failure(
+        ctx: Any,
+        exc: Exception,
+        *,
+        component: str,
+    ) -> ErrorPayload:
+        return ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code="COMPUTATION_FAILURE",
+            origin=ErrorOrigin(component=component, subsystem="computation"),
+            details={
+                "component": component,
+                "computation_failure": True,
+            },
+        )

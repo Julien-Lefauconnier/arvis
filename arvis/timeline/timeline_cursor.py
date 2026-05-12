@@ -8,7 +8,7 @@ from typing import Any
 from arvis.types.timestamps import utcnow
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class TimelineCursor:
     timestamp: datetime
     head: str | None = None
@@ -46,9 +46,6 @@ class TimelineCursor:
             other.head,
             other.total_entries,
         )
-
-    def __hash__(self) -> int:
-        return hash((self.head, self.total_entries))
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {

@@ -224,3 +224,19 @@ def test_capture_exception_preserves_semantics(ctx):
 
     assert "fail_open" in semantics
     assert "non_deterministic" in semantics
+
+
+def test_runtime_degradation_tracking(ctx):
+    error = build_error(
+        degraded=True,
+        severity=ArvisErrorSeverity.WARNING,
+        policy=ErrorPolicy.DEGRADE,
+    )
+
+    ErrorManager.attach(ctx, error)
+
+    runtime = ErrorManager.runtime_degradation_state(ctx)
+
+    assert runtime["active"] is True
+    assert runtime["count"] == 1
+    assert runtime["last_code"] == "TEST_ERROR"

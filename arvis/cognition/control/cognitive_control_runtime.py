@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -26,3 +27,8 @@ class CognitiveControlRuntime:
     last_action: str | None = None
     last_risk: float | None = None
     inertia_risk: float | None = None
+
+    # -------------------------------------------------
+    # Replay-visible degraded/error telemetry.
+    # -------------------------------------------------
+    extra: dict[str, Any] = field(default_factory=dict)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.context.scientific_accessors import (
     adaptive_snapshot,
     set_adaptive_snapshot,
@@ -58,8 +59,13 @@ def compute_adaptive_metrics(
 
             set_adaptive_snapshot(ctx, metrics)
 
-    except Exception:
+    except Exception as exc:
         metrics = None
+        ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code="adaptive_metrics_compute_failure",
+        )
 
     if metrics is None:
         metrics = adaptive_snapshot(ctx)
@@ -107,8 +113,12 @@ def apply_kappa_margin_layer(
             if "kappa_margin_warning" not in reasons:
                 reasons.append("kappa_margin_warning")
 
-    except Exception:
-        pass
+    except Exception as exc:
+        ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code="adaptive_kappa_margin_failure",
+        )
 
 
 def updated_pre_verdict(

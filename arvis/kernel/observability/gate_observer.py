@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any
 
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
@@ -125,14 +126,18 @@ class GateObserver:
                     if projection_view is not None
                     and hasattr(projection_view, "to_dict")
                     else (
-                        dict(projection_view) if projection_view is not None else None
+                        MappingProxyType(dict(projection_view))
+                        if projection_view is not None
+                        else None
                     )
                 )
                 if projection_view is not None
                 else None
             ),
             "raw_view": (
-                dict(projection_view_raw) if projection_view_raw is not None else None
+                MappingProxyType(dict(projection_view_raw))
+                if projection_view_raw is not None
+                else None
             ),
         }
 
@@ -170,7 +175,9 @@ class GateObserver:
         # -----------------------------------------
         # theoretical_trace
         # -----------------------------------------
-        ctx.extra["stability_certificate"] = dict(stability_certificate or {})
+        ctx.extra["stability_certificate"] = MappingProxyType(
+            dict(stability_certificate or {})
+        )
         ctx.extra["theoretical_trace"] = {
             "lyapunov": {
                 "w_prev": float(w_prev) if w_prev is not None else None,
@@ -178,7 +185,7 @@ class GateObserver:
                 "delta_w": float(delta_w) if delta_w is not None else None,
             },
             "adaptive": adaptive_trace,
-            "switching": dict(switching_metrics or {}),
+            "switching": MappingProxyType(dict(switching_metrics or {})),
             "global": {
                 "safe": bool(global_safe),
                 "history_len": len(ctx.delta_w_history),
@@ -193,7 +200,7 @@ class GateObserver:
                 "reason": envelope.hard_reason,
                 "w_bound_ratio": envelope.w_bound_ratio,
             },
-            "certificate": dict(stability_certificate or {}),
+            "certificate": MappingProxyType(dict(stability_certificate or {})),
             "decision_flow": {
                 "pre_verdict": str(pre_verdict),
                 "final_verdict": str(final_verdict),
@@ -201,7 +208,7 @@ class GateObserver:
         }
 
         # canonical projection
-        ctx.extra["switching_metrics"] = dict(switching_metrics or {})
+        ctx.extra["switching_metrics"] = MappingProxyType(dict(switching_metrics or {}))
         ctx.extra["projection_trace"] = projection_trace
 
         # -----------------------------------------

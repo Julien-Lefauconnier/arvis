@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.manager import ErrorManager
+from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
@@ -60,7 +62,16 @@ def apply_memory_policy(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict:
                 )
                 verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
 
-    except Exception:
-        pass
+    except Exception as exc:
+        ErrorManager.attach(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "memory_gate_policy",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
 
     return verdict

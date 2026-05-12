@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import random
 from collections.abc import Callable
 from dataclasses import dataclass
 from time import sleep
@@ -44,7 +43,7 @@ def retry_call(
     *,
     config: LLMRetryConfig | None = None,
     sleep_fn: Callable[[float], None] = sleep,
-    random_fn: Callable[[], float] = random.random,
+    random_fn: Callable[[], float] | None = None,
 ) -> T:
     active_config = config or LLMRetryConfig()
     last_error: Exception | None = None
@@ -79,7 +78,7 @@ def _compute_delay(
     base_delay: float,
     max_delay: float,
     jitter: float,
-    random_fn: Callable[[], float],
+    random_fn: Callable[[], float] | None,
 ) -> float:
     exponential_delay: float = base_delay * float(2**attempt_index)
     bounded_delay: float = (
@@ -87,6 +86,9 @@ def _compute_delay(
     )
 
     if jitter <= 0:
+        return float(bounded_delay)
+
+    if random_fn is None:
         return float(bounded_delay)
 
     jitter_amount: float = jitter * random_fn()

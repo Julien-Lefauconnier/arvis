@@ -83,11 +83,16 @@ class Signal:
         if inspect.isgenerator(self.payload):
             raise ValueError("Signal.payload must not be a generator.")
 
-        # Defensive minimal determinism
-        try:
-            hash(self.payload)
-        except Exception:
-            pass  # allowed but non-hashable payload must still be inert
+        # --- Determinism hardening ---
+        #
+        # Unordered containers introduce replay instability
+        # and non-canonical iteration ordering.
+        #
+        # Signals are kernel-level declarative artifacts and
+        # must remain serialization-safe and replay-safe.
+        #
+        if isinstance(self.payload, (set, frozenset)):
+            raise ValueError("Signal.payload must avoid unordered set-like containers.")
 
     # ------------------------------------------------------------------
     # Unsafe constructor (tests / adapters only)

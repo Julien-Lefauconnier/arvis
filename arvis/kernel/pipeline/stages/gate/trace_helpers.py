@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.manager import ErrorManager
+from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
@@ -54,5 +56,14 @@ def sync_confirmation_flags(ctx: Any, verdict: LyapunovVerdict) -> None:
         if runtime is not None:
             runtime.needs_confirmation = requires_confirmation
 
-    except Exception:
-        pass
+    except Exception as exc:
+        ErrorManager.attach(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "sync_confirmation_flags",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )

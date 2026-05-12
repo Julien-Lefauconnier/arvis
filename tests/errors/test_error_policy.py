@@ -28,3 +28,15 @@ def test_degraded_error_policy_decision():
     decision = decide_error_policy(ArvisDegradedModeError("degraded"))
 
     assert decision.degrade is True
+
+
+def test_policy_decision_observable():
+    decision = decide_error_policy(ArvisRuntimeError("runtime"))
+
+    assert decision.observable is True
+
+
+def test_policy_decision_recoverable():
+    decision = decide_error_policy(ArvisDegradedModeError("degraded"))
+
+    assert decision.recoverable is True

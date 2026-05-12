@@ -44,8 +44,13 @@ def apply_projection_enforcement(
                         projection_view["system_tension"] = float(
                             projected_state.primary_tension()
                         )
-                except Exception:
+                except Exception as exc:
                     projection_view["system_tension"] = 0.0
+                    ErrorManager.capture_exception(
+                        ctx,
+                        exc,
+                        code="projection_system_tension_failure",
+                    )
 
         projection_boundary_threshold = float(
             getattr(pipeline, "projection_boundary_threshold", 0.1)
@@ -132,8 +137,12 @@ def apply_projection_enforcement(
                     ctx.extra.setdefault("fusion_reasons", []).append(
                         "low_coherence_signal"
                     )
-        except Exception:
-            pass
+        except Exception as exc:
+            ErrorManager.capture_exception(
+                ctx,
+                exc,
+                code="projection_coherence_signal_failure",
+            )
 
     except Exception as exc:
         ErrorManager.capture_exception(
@@ -166,6 +175,10 @@ def apply_kappa_hard_block(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
             ctx.extra["kappa_hard_block"] = True
             ctx.extra["kappa_gap"] = getattr(metrics, "kappa_gap", None)
             verdict = LyapunovVerdict.ABSTAIN
-    except Exception:
-        pass
+    except Exception as exc:
+        ErrorManager.capture_exception(
+            ctx,
+            exc,
+            code="kappa_hard_block_failure",
+        )
     return verdict

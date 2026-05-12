@@ -8,6 +8,8 @@ from typing import Any, Protocol, runtime_checkable
 
 from arvis.cognition.control.cognitive_control_runtime import CognitiveControlRuntime
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
+from arvis.errors.manager import ErrorManager
+from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.math.control.eps_adaptive import CognitiveMode, EpsAdaptiveParams
 from arvis.math.control.irg_epsilon_controller import (
     IRGEpsilonController,
@@ -122,6 +124,38 @@ class CognitiveControlEngine:
         except Exception:
             return 0.0
 
+    @staticmethod
+    def _attach_degraded(
+        runtime: CognitiveControlRuntime,
+        *,
+        component: str,
+        exc: Exception,
+    ) -> None:
+        """
+        Attach a replay-visible degraded subsystem signal.
+
+        Control subsystems are allowed to fail soft, but never silently.
+        """
+        ErrorManager.attach(
+            runtime,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": component,
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
+
+        extra = getattr(runtime, "extra", None)
+        if isinstance(extra, dict):
+            degraded_components = extra.setdefault("degraded_components", [])
+            if (
+                isinstance(degraded_components, list)
+                and component not in degraded_components
+            ):
+                degraded_components.append(component)
+
     def compute(
         self,
         *,
@@ -148,7 +182,12 @@ class CognitiveControlEngine:
                     fused_risk
                     + 0.2 * to_float(getattr(temporal_pressure, "pressure", 0.0), 0.0)
                 )
-        except Exception:
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="temporal_pressure",
+                exc=exc,
+            )
             temporal_pressure = None
 
         # ----------------------------------
@@ -164,7 +203,12 @@ class CognitiveControlEngine:
                         getattr(temporal_modulation, "risk_multiplier", 1.0), 1.0
                     )
                 )
-        except Exception:
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="temporal_regulation",
+                exc=exc,
+            )
             temporal_modulation = None
 
         # ----------------------------------
@@ -178,14 +222,23 @@ class CognitiveControlEngine:
                 and getattr(mh_snapshot, "mode_hint", None) == "safe"
             ):
                 gate_mode = CognitiveMode.SAFE
-        except Exception:
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="gate_mode_hint",
+                exc=exc,
+            )
             gate_mode = CognitiveMode.NORMAL
 
         try:
             if self.deps.mode_hysteresis is not None:
                 gate_mode = self.deps.mode_hysteresis.update(user_id, fused_risk)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="mode_hysteresis",
+                exc=exc,
+            )
 
         # ----------------------------------
         # Latent volatility
@@ -196,7 +249,12 @@ class CognitiveControlEngine:
             latent = getattr(wp, "latent", None) if wp is not None else None
             if latent is not None and len(latent) > 0:
                 latent_volatility = to_float(latent[0], 0.0)
-        except Exception:
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="latent_volatility",
+                exc=exc,
+            )
             latent_volatility = 0.0
 
         # ----------------------------------
@@ -206,8 +264,12 @@ class CognitiveControlEngine:
         try:
             wp = getattr(core, "world_prediction", None)
             uncertainty = to_float(getattr(wp, "uncertainty", 0.5), 0.5)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="world_prediction_uncertainty",
+                exc=exc,
+            )
 
         budget_ratio = self._budget_ratio(budget)
 
@@ -230,8 +292,12 @@ class CognitiveControlEngine:
                 eps = float(eps) * to_float(
                     getattr(temporal_modulation, "epsilon_multiplier", 1.0), 1.0
                 )
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="temporal_epsilon_modulation",
+                exc=exc,
+            )
 
         # ----------------------------------
         # Base Lyapunov verdict
@@ -260,7 +326,12 @@ class CognitiveControlEngine:
                     getattr(inertia_snapshot, "smoothed_risk", fused_risk), fused_risk
                 )
                 runtime.inertia_risk = smoothed_risk
-        except Exception:
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="inertia_controller",
+                exc=exc,
+            )
             smoothed_risk = fused_risk
 
         # ----------------------------------
@@ -279,8 +350,12 @@ class CognitiveControlEngine:
                 runtime.epsilon_monitor, HasPush
             ):
                 runtime.epsilon_monitor.push(to_float(getattr(core, "dv", 0.0), 0.0))
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="epsilon_monitor",
+                exc=exc,
+            )
 
         try:
             if self.deps.stability_stats is not None and isinstance(
@@ -305,8 +380,12 @@ class CognitiveControlEngine:
                             contraction_rate=to_float(stats.contraction_rate, 0.0),
                             instability_rate=to_float(stats.instability_rate, 0.0),
                         )
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="stability_stats_or_drift_detector",
+                exc=exc,
+            )
 
         try:
             if runtime.regime_estimator is None and self.deps.regime_estimator_factory:
@@ -323,8 +402,12 @@ class CognitiveControlEngine:
                 runtime.regime_control = self.deps.regime_policy.compute(
                     regime_snapshot.regime
                 )
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="regime_estimator_or_policy",
+                exc=exc,
+            )
 
         try:
             if self.deps.exploration_controller is not None:
@@ -355,7 +438,12 @@ class CognitiveControlEngine:
                         getattr(irg_state, "structural_risk", 0.0), 0.0
                     )
                     irg_factor = max(0.05, min(1.0, 1.0 - structural))
-                except Exception:
+                except Exception as exc:
+                    self._attach_degraded(
+                        runtime,
+                        component="irg_factor",
+                        exc=exc,
+                    )
                     irg_factor = 1.0
 
                 try:
@@ -373,10 +461,18 @@ class CognitiveControlEngine:
                         )
                     )
                     budget.max_changes = scaled
-                except Exception:
-                    pass
-        except Exception:
-            pass
+                except Exception as exc:
+                    self._attach_degraded(
+                        runtime,
+                        component="exploration_budget_scaling",
+                        exc=exc,
+                    )
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="exploration_controller",
+                exc=exc,
+            )
 
         # ----------------------------------
         # Local dynamics
@@ -396,8 +492,12 @@ class CognitiveControlEngine:
                         "V": float(V(cur_lyap)),
                     },
                 )
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="local_dynamics",
+                exc=exc,
+            )
 
         # ----------------------------------
         # Adaptive controller
@@ -420,8 +520,12 @@ class CognitiveControlEngine:
                     lyap_verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
                 elif mode in {"abstain", "critical"}:
                     lyap_verdict = LyapunovVerdict.ABSTAIN
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="adaptive_controller",
+                exc=exc,
+            )
 
         # ----------------------------------
         # Counterfactual simulator
@@ -445,8 +549,12 @@ class CognitiveControlEngine:
                     cf_force_abstain = True
                 elif getattr(cf_decision, "best_action", None) == "confirm":
                     cf_force_confirm = True
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="counterfactual_simulator",
+                exc=exc,
+            )
 
         if cf_force_abstain:
             lyap_verdict = LyapunovVerdict.ABSTAIN
@@ -490,8 +598,12 @@ class CognitiveControlEngine:
                     and not cf_force_abstain
                 ):
                     lyap_verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
-        except Exception:
-            pass
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="counterfactual_bandit",
+                exc=exc,
+            )
 
         runtime.last_risk = to_float(smoothed_risk, 0.0)
         if lyap_verdict == LyapunovVerdict.ABSTAIN:
@@ -507,7 +619,12 @@ class CognitiveControlEngine:
         try:
             if self.deps.calibration_engine is not None and drift_snapshot is not None:
                 calibration_snapshot = self.deps.calibration_engine.evaluate([])
-        except Exception:
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="calibration_engine",
+                exc=exc,
+            )
             calibration_snapshot = None
 
         smoothed_risk = clamp01(float(smoothed_risk))

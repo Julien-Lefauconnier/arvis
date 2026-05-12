@@ -150,7 +150,9 @@ class GateDecisionStack:
         pre_verdict = updated_pre_verdict(ctx, pre_verdict, assessment.adaptive_metrics)
 
         if kernel_result.certificate:
-            stability_certificate.update(kernel_result.certificate)
+            for key, value in kernel_result.certificate.items():
+                if key not in stability_certificate:
+                    stability_certificate[key] = value
         ctx.stability_certificate = stability_certificate
 
         verdict = run_gate_fusion(
@@ -237,8 +239,17 @@ class GateDecisionStack:
                         reason="validity_constraint",
                     )
                     verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
-        except Exception:
-            pass
+        except Exception as exc:
+            ErrorManager.attach(
+                ctx,
+                PipelineStageDegradedError(
+                    message=str(exc),
+                    details={
+                        "component": "validity_policy_override",
+                        "exception_type": type(exc).__name__,
+                    },
+                ),
+            )
 
         if verdict != before_policy:
             record_verdict_transition(

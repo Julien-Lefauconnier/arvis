@@ -19,6 +19,8 @@ class ErrorPolicyDecision:
     halt_pipeline: bool
     fail_closed: bool
     escalate: bool
+    observable: bool
+    recoverable: bool
 
 
 def decide_error_policy(error: ArvisError) -> ErrorPolicyDecision:
@@ -32,4 +34,6 @@ def decide_error_policy(error: ArvisError) -> ErrorPolicyDecision:
         halt_pipeline=policy == ErrorPolicy.HALT_PIPELINE,
         fail_closed=policy == ErrorPolicy.FAIL_CLOSED,
         escalate=policy == ErrorPolicy.ESCALATE,
+        observable=True,
+        recoverable=error.retryable or error.degraded,
     )

@@ -28,3 +28,11 @@ def test_external_error_semantics():
     assert ErrorSemantics.NON_DETERMINISTIC.value in semantics
     assert ErrorSemantics.TRANSIENT.value in semantics
     assert error.metadata.policy == ErrorPolicy.RETRY
+
+
+def test_runtime_error_observable():
+    error = ArvisRuntimeError("runtime")
+
+    semantics = {s.value for s in error.metadata.semantics}
+
+    assert "observable" in semantics
