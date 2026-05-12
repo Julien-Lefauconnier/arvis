@@ -5,10 +5,13 @@ from __future__ import annotations
 from arvis.errors.base import (
     ArvisErrorSeverity,
     ArvisKernelError,
+    ErrorDomain,
+    ErrorPolicy,
 )
 
 
 class SyscallExecutionError(ArvisKernelError):
+    domain = ErrorDomain.SYSCALL
     default_code = "SYSCALL_EXECUTION_ERROR"
     severity = ArvisErrorSeverity.ERROR
     retryable = False
@@ -17,6 +20,7 @@ class SyscallExecutionError(ArvisKernelError):
 class SyscallValidationError(SyscallExecutionError):
     default_code = "SYSCALL_VALIDATION_ERROR"
     replay_safe = True
+    policy = ErrorPolicy.FAIL_CLOSED
 
 
 class SyscallReplayError(SyscallExecutionError):
@@ -28,3 +32,4 @@ class SyscallExternalDependencyError(SyscallExecutionError):
     default_code = "SYSCALL_EXTERNAL_DEPENDENCY_ERROR"
     retryable = True
     deterministic = False
+    policy = ErrorPolicy.RETRY

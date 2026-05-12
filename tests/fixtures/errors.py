@@ -20,26 +20,23 @@ def runtime_error() -> ArvisError:
 
 @pytest.fixture
 def invariant_error() -> ArvisInvariantViolation:
-    err = ArvisInvariantViolation("invariant violation")
-
-    err.code = "INVARIANT_VIOLATION"
-
-    return err
+    return ArvisInvariantViolation(
+        "invariant violation",
+        code="INVARIANT_VIOLATION",
+    )
 
 
 @pytest.fixture
 def degraded_error() -> ArvisDegradedModeError:
-    err = ArvisDegradedModeError("degraded mode")
-
-    err.code = "DEGRADED_MODE"
-
-    return err
+    return ArvisDegradedModeError(
+        "degraded mode",
+        code="DEGRADED_MODE",
+    )
 
 
 @pytest.fixture
 def external_error() -> ArvisExternalError:
-    err = ArvisExternalError("external failure")
-
-    err.code = "EXTERNAL_FAILURE"
-
-    return err
+    return ArvisExternalError(
+        "external failure",
+        code="EXTERNAL_FAILURE",
+    )

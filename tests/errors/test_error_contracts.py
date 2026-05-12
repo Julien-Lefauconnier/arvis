@@ -1,4 +1,4 @@
-# tests/contracts/test_error_contracts.py
+# tests/errors/test_error_contracts.py
 
 from __future__ import annotations
 
@@ -26,8 +26,11 @@ def test_all_errors_are_serializable():
 
         assert isinstance(payload, dict)
         assert "code" in payload
+        assert "domain" in payload
         assert "category" in payload
         assert "severity" in payload
+        assert "policy" in payload
+        assert "semantics" in payload
         assert "message" in payload
         assert "type" in payload
 
@@ -39,8 +42,10 @@ def test_all_errors_have_valid_metadata():
         metadata = error.metadata
 
         assert metadata.code
+        assert metadata.domain
         assert metadata.category
         assert metadata.severity
+        assert metadata.policy
 
 
 def test_fatal_errors_are_not_retryable():
@@ -60,3 +65,24 @@ def test_degraded_errors_have_warning_or_info():
                 "warning",
                 "info",
             }
+
+
+def test_retryable_errors_have_retry_policy():
+    for error_cls in iter_error_classes():
+        error = error_cls("test")
+
+        if error.retryable:
+            assert error.metadata.policy.value in {
+                "retry",
+                "degrade",
+            }
+
+
+def test_non_deterministic_errors_have_semantic_flag():
+    for error_cls in iter_error_classes():
+        error = error_cls("test")
+
+        if not error.deterministic:
+            semantics = {s.value for s in error.metadata.semantics}
+
+            assert "non_deterministic" in semantics

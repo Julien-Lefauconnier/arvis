@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from arvis.errors.base import ArvisErrorSeverity, ArvisReplayError
+from arvis.errors.base import ArvisErrorSeverity, ArvisReplayError, ErrorDomain
 
 
 class ReplayVerificationError(ArvisReplayError):
+    domain = ErrorDomain.REPLAY
     default_code = "REPLAY_VERIFICATION_FAILED"
     severity = ArvisErrorSeverity.ERROR
     replay_safe = True

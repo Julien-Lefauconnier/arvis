@@ -18,6 +18,9 @@ from arvis.errors.base import (
     ArvisReplayError,
     ArvisRuntimeError,
     ArvisSecurityError,
+    ErrorDomain,
+    ErrorPolicy,
+    ErrorSemantics,
 )
 from arvis.errors.helpers import append_error
 from arvis.errors.kernel import (
@@ -25,11 +28,15 @@ from arvis.errors.kernel import (
     KernelFailClosedError,
     KernelInvariantViolation,
 )
+from arvis.errors.manager import ErrorManager
+from arvis.errors.normalization import normalize_error
 from arvis.errors.pipeline import (
     PipelineFailClosedError,
     PipelineStageDegradedError,
     PipelineStageError,
 )
+from arvis.errors.policy import ErrorPolicyDecision, decide_error_policy
+from arvis.errors.registry import error_code_registry, iter_error_classes
 from arvis.errors.replay import (
     ReplayCognitiveStateMissing,
     ReplayGlobalCommitmentMismatch,
@@ -47,6 +54,9 @@ __all__ = [
     "ArvisError",
     "ArvisErrorCategory",
     "ArvisErrorSeverity",
+    "ErrorDomain",
+    "ErrorSemantics",
+    "ErrorPolicy",
     "ArvisErrorMetadata",
     "ArvisInvariantViolation",
     "ArvisRuntimeError",
@@ -55,6 +65,7 @@ __all__ = [
     "ArvisAPIError",
     "CognitiveStateRequiredError",
     "InvalidIRPayloadError",
+    "ErrorManager",
     "ArvisReplayError",
     "ArvisSecurityError",
     "ArvisKernelError",
@@ -67,6 +78,11 @@ __all__ = [
     "PipelineStageDegradedError",
     "PipelineFailClosedError",
     "ReplayVerificationError",
+    "normalize_error",
+    "ErrorPolicyDecision",
+    "decide_error_policy",
+    "iter_error_classes",
+    "error_code_registry",
     "ReplayGlobalCommitmentMissing",
     "ReplayGlobalCommitmentMismatch",
     "ReplayCognitiveStateMissing",

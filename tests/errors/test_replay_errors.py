@@ -5,6 +5,7 @@ from __future__ import annotations
 from arvis.errors.base import (
     ArvisErrorCategory,
     ArvisErrorSeverity,
+    ErrorDomain,
 )
 from arvis.errors.replay import (
     ReplayCognitiveStateMissing,
@@ -18,6 +19,7 @@ def test_replay_verification_error():
     error = ReplayVerificationError("verification")
 
     assert error.category == ArvisErrorCategory.REPLAY
+    assert error.domain == ErrorDomain.REPLAY
     assert error.severity == ArvisErrorSeverity.ERROR
     assert error.replay_safe is True
 

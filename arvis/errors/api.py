@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from arvis.errors.base import ArvisRuntimeError
+from arvis.errors.base import ArvisRuntimeError, ErrorDomain
 
 
 class ArvisAPIError(ArvisRuntimeError):
+    domain = ErrorDomain.API
     default_code = "API_ERROR"
     replay_safe = True
 
