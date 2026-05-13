@@ -22,6 +22,8 @@ from arvis.errors.base import (
     ErrorPolicy,
     ErrorSemantics,
 )
+from arvis.errors.codes import ErrorCode
+from arvis.errors.disposition import ErrorDisposition
 from arvis.errors.helpers import append_error
 from arvis.errors.kernel import (
     KernelDegradedWarning,
@@ -84,6 +86,8 @@ __all__ = [
     "StabilityEvaluationError",
     "InvalidIRPayloadError",
     "ErrorManager",
+    "ErrorCode",
+    "ErrorDisposition",
     "ArvisReplayError",
     "ArvisSecurityError",
     "ArvisKernelError",

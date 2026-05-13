@@ -5,7 +5,9 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from enum import StrEnum
+from uuid import uuid4
 
+from arvis.errors.codes import ErrorCode
 from arvis.errors.provenance import (
     ErrorCause,
     ErrorOrigin,
@@ -19,16 +21,16 @@ class ErrorDomain(StrEnum):
     CORE = "core"
     API = "api"
     KERNEL = "kernel"
-    PIPELINE = "pipeline"
-    SYSCALL = "syscall"
-    REPLAY = "replay"
+    PIPELINE = "kernel.pipeline"
+    SYSCALL = "kernel.syscall"
+    REPLAY = "kernel.replay"
     MEMORY = "memory"
     VFS = "vfs"
     TOOL = "tool"
     LLM = "llm"
-    PROJECTION = "projection"
-    GATE = "gate"
-    SECURITY = "security"
+    PROJECTION = "kernel.projection"
+    GATE = "kernel.gate"
+    SECURITY = "kernel.security"
     EXTERNAL = "external"
 
 
@@ -94,6 +96,9 @@ class ArvisErrorMetadata:
     created_at: str | None = None
     monotonic_ns: int | None = None
     sensitive: bool = False
+    error_id: str | None = None
+    traceback: str | None = None
+
     redactable: bool = True
 
     def to_dict(self) -> ErrorPayload:
@@ -114,6 +119,8 @@ class ArvisErrorMetadata:
             "monotonic_ns": self.monotonic_ns,
             "sensitive": self.sensitive,
             "redactable": self.redactable,
+            "error_id": self.error_id,
+            "traceback": self.traceback,
         }
 
         if self.origin is not None:
@@ -135,7 +142,7 @@ class ArvisError(Exception):
     replay_safe = True
     degraded = False
 
-    default_code = "ARVIS_ERROR"
+    default_code: str = ErrorCode.ARVIS_ERROR
 
     def __init__(
         self,
@@ -159,6 +166,8 @@ class ArvisError(Exception):
         monotonic_ns: int | None = None,
         sensitive: bool = False,
         redactable: bool = True,
+        traceback: str | None = None,
+        error_id: str | None = None,
     ) -> None:
         super().__init__(message)
 
@@ -192,6 +201,9 @@ class ArvisError(Exception):
         self.monotonic_ns = monotonic_ns or time.monotonic_ns()
         self.sensitive = sensitive
         self.redactable = redactable
+        self.error_id = error_id or uuid4().hex
+        self.traceback = traceback
+
         self.fingerprint = fingerprint
 
     @property
@@ -227,6 +239,8 @@ class ArvisError(Exception):
             monotonic_ns=self.monotonic_ns,
             sensitive=self.sensitive,
             redactable=self.redactable,
+            error_id=self.error_id,
+            traceback=self.traceback,
         )
 
     def _semantics(self) -> tuple[ErrorSemantics, ...]:
@@ -270,7 +284,7 @@ class ArvisError(Exception):
 
 
 class ArvisInvariantViolation(ArvisError, ValueError):
-    default_code = "INVARIANT_VIOLATION"
+    default_code = ErrorCode.INVARIANT_VIOLATION
     category = ArvisErrorCategory.INVARIANT
     severity = ArvisErrorSeverity.FATAL
     retryable = False
@@ -279,13 +293,13 @@ class ArvisInvariantViolation(ArvisError, ValueError):
 
 
 class ArvisRuntimeError(ArvisError, RuntimeError):
-    default_code = "RUNTIME_ERROR"
+    default_code = ErrorCode.RUNTIME_ERROR
     category = ArvisErrorCategory.RUNTIME
     policy = ErrorPolicy.HALT_PROCESS
 
 
 class ArvisDomainError(ArvisError):
-    default_code = "DOMAIN_ERROR"
+    default_code = ErrorCode.DOMAIN_ERROR
     category = ArvisErrorCategory.DOMAIN
     policy = ErrorPolicy.FAIL_CLOSED
     severity = ArvisErrorSeverity.ERROR
@@ -295,7 +309,7 @@ class ArvisDomainError(ArvisError):
 
 
 class ArvisExternalError(ArvisRuntimeError):
-    default_code = "EXTERNAL_ERROR"
+    default_code = ErrorCode.EXTERNAL_ERROR
     category = ArvisErrorCategory.EXTERNAL
     domain = ErrorDomain.EXTERNAL
     policy = ErrorPolicy.RETRY
@@ -305,26 +319,26 @@ class ArvisExternalError(ArvisRuntimeError):
 
 
 class ArvisReplayError(ArvisInvariantViolation):
-    default_code = "REPLAY_ERROR"
+    default_code = ErrorCode.REPLAY_ERROR
     category = ArvisErrorCategory.REPLAY
     domain = ErrorDomain.REPLAY
 
 
 class ArvisSecurityError(ArvisInvariantViolation):
-    default_code = "SECURITY_ERROR"
+    default_code = ErrorCode.SECURITY_ERROR
     category = ArvisErrorCategory.SECURITY
     domain = ErrorDomain.SECURITY
 
 
 class ArvisKernelError(ArvisRuntimeError):
-    default_code = "KERNEL_ERROR"
+    default_code = ErrorCode.KERNEL_ERROR
     category = ArvisErrorCategory.KERNEL
     domain = ErrorDomain.KERNEL
     policy = ErrorPolicy.FAIL_CLOSED
 
 
 class ArvisDegradedModeError(ArvisRuntimeError):
-    default_code = "DEGRADED_MODE"
+    default_code = ErrorCode.DEGRADED_MODE
     category = ArvisErrorCategory.DEGRADED
     severity = ArvisErrorSeverity.WARNING
     policy = ErrorPolicy.DEGRADE

@@ -3,19 +3,22 @@
 from __future__ import annotations
 
 from arvis.errors.base import (
+    ArvisErrorCategory,
     ArvisErrorSeverity,
     ArvisRuntimeError,
     ErrorDomain,
     ErrorPolicy,
     ErrorSemantics,
 )
+from arvis.errors.codes import ErrorCode
 
 
 class RuntimeDegradationError(ArvisRuntimeError):
     domain = ErrorDomain.CORE
-    default_code = "RUNTIME_DEGRADATION"
+    default_code = ErrorCode.RUNTIME_DEGRADATION
 
     severity = ArvisErrorSeverity.WARNING
+    category = ArvisErrorCategory.DEGRADED
     policy = ErrorPolicy.DEGRADE
 
     degraded = True
@@ -29,16 +32,16 @@ class RuntimeDegradationError(ArvisRuntimeError):
 
 
 class CompositeComputationError(RuntimeDegradationError):
-    default_code = "COMPOSITE_COMPUTATION_ERROR"
+    default_code = ErrorCode.COMPOSITE_COMPUTATION_ERROR
 
 
 class AdaptiveComputationError(RuntimeDegradationError):
-    default_code = "ADAPTIVE_COMPUTATION_ERROR"
+    default_code = ErrorCode.ADAPTIVE_COMPUTATION_ERROR
 
 
 class StabilityEvaluationError(RuntimeDegradationError):
-    default_code = "STABILITY_EVALUATION_ERROR"
+    default_code = ErrorCode.STABILITY_EVALUATION_ERROR
 
 
 class ProjectionComputationError(RuntimeDegradationError):
-    default_code = "PROJECTION_COMPUTATION_ERROR"
+    default_code = ErrorCode.PROJECTION_COMPUTATION_ERROR

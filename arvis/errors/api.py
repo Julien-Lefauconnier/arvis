@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from arvis.errors.base import ArvisRuntimeError, ErrorDomain
+from arvis.errors.codes import ErrorCode
 
 
 class ArvisAPIError(ArvisRuntimeError):
     domain = ErrorDomain.API
-    default_code = "API_ERROR"
+    default_code = ErrorCode.API_ERROR
     replay_safe = True
 
 
 class CognitiveStateRequiredError(ArvisAPIError):
-    default_code = "COGNITIVE_STATE_REQUIRED"
+    default_code = ErrorCode.COGNITIVE_STATE_REQUIRED
 
 
 class InvalidIRPayloadError(ArvisAPIError):
-    default_code = "INVALID_IR_PAYLOAD"
+    default_code = ErrorCode.INVALID_IR_PAYLOAD

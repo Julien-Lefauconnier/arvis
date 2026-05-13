@@ -231,7 +231,6 @@ class SyscallHandler:
         if result.error is not None:
             entry["error"] = result.error
 
-        # fallback legacy ONLY
         if result.error_detail is not None:
             entry["error_detail"] = result.error_detail.to_dict()
 

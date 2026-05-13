@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
+from arvis.adapters.llm.contracts.execution_result import LLMExecutionResult
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.tracing import LLMTrace, serialize_response, serialize_trace
@@ -19,7 +20,7 @@ class LLMAdapterLike(Protocol):
         request: LLMRequest,
         *,
         preferred_provider: str | None = None,
-    ) -> LLMResponse: ...
+    ) -> LLMExecutionResult: ...
 
 
 class ServiceRegistryLike(Protocol):
@@ -66,8 +67,8 @@ def llm_generate(
         )
 
     try:
-        response = adapter.generate(
-            request,
+        execution = adapter.generate(
+            request=request,
             preferred_provider=preferred_provider,
         )
     except Exception as exc:
@@ -84,6 +85,23 @@ def llm_generate(
                 },
             )
         )
+
+    response = execution.response
+
+    if response is None:
+        return SyscallResult.failure(
+            SyscallError(
+                code="llm_missing_response",
+                message="LLM execution returned no response",
+                retryable=False,
+            )
+        )
+
+    if hasattr(response, "response"):
+        response = response.response
+
+    if not isinstance(response, LLMResponse):
+        raise TypeError("llm adapter returned invalid response type")
 
     trace_id = response.trace_id or str(kwargs.get("causal_id") or "llm.generate")
 
@@ -105,6 +123,14 @@ def llm_generate(
         llm_observation = metadata.get("llm_observation")
         if isinstance(llm_observation, dict):
             artifact_metadata["llm_observation"] = llm_observation
+
+        artifact_metadata["llm_execution"] = {
+            "status": execution.status.value,
+            "retry_count": execution.retry_count,
+            "fallback_used": execution.fallback_used,
+            "degraded": execution.degraded,
+            "require_confirmation": execution.require_confirmation,
+        }
 
         llm_evaluation = metadata.get("llm_evaluation")
         if isinstance(llm_observation, dict):

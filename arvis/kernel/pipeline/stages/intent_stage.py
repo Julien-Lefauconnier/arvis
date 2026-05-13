@@ -1,10 +1,5 @@
 # arvis/kernel/pipeline/stages/intent_stage.py
 
-# =====================================================
-# arvis/kernel/pipeline/stages/intent_stage.py
-# CLEAN DEBUG-GATED VERSION
-# =====================================================
-
 from __future__ import annotations
 
 from typing import Any

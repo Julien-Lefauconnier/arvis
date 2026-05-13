@@ -2,10 +2,8 @@
 
 from arvis.adapters.llm.runtime.executor import LLMRuntimeExecutor
 from arvis.adapters.llm.runtime.fallback_executor import (
-    FallbackExecutionResult,
     FallbackExecutor,
     LLMFallbackExecutionError,
-    ProviderAttempt,
 )
 from arvis.adapters.llm.runtime.guarded_adapter import GuardedLLMAdapter
 from arvis.adapters.llm.runtime.retry import (
@@ -19,7 +17,6 @@ from arvis.adapters.llm.runtime.router import (
 )
 
 __all__ = [
-    "FallbackExecutionResult",
     "FallbackExecutor",
     "GuardedLLMAdapter",
     "LLMFallbackExecutionError",
@@ -28,6 +25,5 @@ __all__ = [
     "LLMRouter",
     "LLMRoutingRequest",
     "LLMRuntimeExecutor",
-    "ProviderAttempt",
     "retry_call",
 ]

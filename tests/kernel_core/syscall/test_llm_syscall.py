@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from arvis.adapters.llm.contracts.execution_result import (
+    LLMExecutionResult,
+    LLMExecutionStatus,
+)
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.contracts.usage import LLMUsage
@@ -22,17 +26,30 @@ class DummyLLMAdapter:
         request: LLMRequest,
         *,
         preferred_provider: str | None = None,
-    ) -> LLMResponse:
-        return LLMResponse(
+    ) -> LLMExecutionResult:
+        response = LLMResponse(
             content=f"answer:{request.prompt}",
             provider=preferred_provider or "mock",
-            model="mock-model",
             usage=LLMUsage(
                 prompt_tokens=2,
                 completion_tokens=3,
                 total_tokens=5,
             ),
-            metadata={"ok": True},
+            metadata={},
+        )
+
+        return LLMExecutionResult(
+            status=LLMExecutionStatus.SUCCESS,
+            response=response,
+            retry_count=0,
+            fallback_used=False,
+            provider_attempts=(),
+            evaluation={},
+            observation={},
+            error=None,
+            degraded=False,
+            replay_safe=False,
+            require_confirmation=False,
         )
 
 

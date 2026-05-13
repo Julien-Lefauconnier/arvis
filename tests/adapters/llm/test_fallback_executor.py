@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import pytest
 
+from arvis.adapters.llm.contracts.execution_result import (
+    LLMExecutionResult,
+    LLMExecutionStatus,
+)
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.providers.base import BaseLLMProvider
 from arvis.adapters.llm.runtime.fallback_executor import (
-    FallbackExecutionResult,
     FallbackExecutor,
     LLMFallbackExecutionError,
 )
@@ -47,7 +50,8 @@ def test_success_first_provider_short_circuits() -> None:
 
     result = executor.execute(LLMRequest(prompt="test"))
 
-    assert isinstance(result, FallbackExecutionResult)
+    assert isinstance(result, LLMExecutionResult)
+    assert result.status == LLMExecutionStatus.FALLBACK_USED
     assert result.response.content == "hello"
 
     assert first.calls == 1

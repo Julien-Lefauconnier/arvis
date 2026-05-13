@@ -45,6 +45,10 @@ class LLMRuntimeExecutor:
             ).execute(request)
 
             response = result.response
+
+            if response is None:
+                raise RuntimeError("fallback_executor_returned_none")
+
             obs = self._observer.observe(response)
             decision = self._evaluator.evaluate(obs)
 
@@ -56,6 +60,8 @@ class LLMRuntimeExecutor:
                     providers=self._fallback_providers,
                 ).execute(request)
                 response = result.response
+                if response is None:
+                    raise RuntimeError("fallback_executor_returned_none")
                 obs = self._observer.observe(response)
 
             # Fallback logic
@@ -64,6 +70,8 @@ class LLMRuntimeExecutor:
                     providers=self._fallback_providers,
                 ).execute(request)
                 response = result.response
+                if response is None:
+                    raise RuntimeError("fallback_executor_returned_none")
                 obs = self._observer.observe(response)
 
             # Inject metadata
@@ -73,9 +81,21 @@ class LLMRuntimeExecutor:
             response.metadata["llm_evaluation"] = {
                 "accept": decision.accept,
                 "retry": decision.retry,
-                "fallback": decision.fallback,
+                "fallback": bool(decision.fallback),
                 "require_confirmation": decision.require_confirmation,
             }
+
+            response.metadata["execution_result"] = {
+                "status": "success",
+                "retry_count": 1 if decision.retry else 0,
+                "fallback_used": bool(decision.fallback),
+                "provider_attempts": [],
+                "require_confirmation": decision.require_confirmation,
+                "error": None,
+                "degraded": False,
+                "replay_safe": False,
+            }
+
             return response
 
         provider = self._router.route(
@@ -112,6 +132,17 @@ class LLMRuntimeExecutor:
             "retry": decision.retry,
             "fallback": decision.fallback,
             "require_confirmation": decision.require_confirmation,
+        }
+
+        response.metadata["execution_result"] = {
+            "status": "success",
+            "retry_count": 1 if decision.retry else 0,
+            "fallback_used": bool(decision.fallback),
+            "provider_attempts": [],
+            "require_confirmation": decision.require_confirmation,
+            "error": None,
+            "degraded": False,
+            "replay_safe": False,
         }
 
         return response

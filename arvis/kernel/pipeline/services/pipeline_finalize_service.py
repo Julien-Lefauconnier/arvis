@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, cast
 
 from arvis.adapters.ir.gate_adapter import GateIRAdapter
@@ -12,6 +11,7 @@ from arvis.cognition.gate.gate_trace_builder import GateTraceBuilder
 from arvis.cognition.gate.reason_code_normalizer import ReasonCodeNormalizer
 from arvis.cognition.state.cognitive_state_builder import CognitiveStateBuilder
 from arvis.errors.manager import ErrorManager
+from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
@@ -69,11 +69,18 @@ class PipelineFinalizeService:
         # DECISION TRACE
         # -----------------------------------------------------
         if ctx.gate_result is None:
-            warnings.warn(
-                "gate_result is None → fallback ABSTAIN (verify gate_stage)",
-                RuntimeWarning,
-                stacklevel=2,
+            ErrorManager.attach(
+                ctx,
+                PipelineStageDegradedError(
+                    message="gate_result missing during finalize",
+                    details={
+                        "component": "PipelineFinalizeService",
+                        "fallback": "abstain",
+                        "reason": "missing_gate_result",
+                    },
+                ),
             )
+
             ctx.gate_result = LyapunovVerdict.ABSTAIN
 
         gate_decision_trace = GateTraceBuilder.build(

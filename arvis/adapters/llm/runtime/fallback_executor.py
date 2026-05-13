@@ -6,6 +6,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from time import perf_counter
 
+from arvis.adapters.llm.contracts.execution_result import (
+    LLMExecutionResult,
+    LLMExecutionStatus,
+    ProviderAttempt,
+)
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.providers.base import BaseLLMProvider
@@ -14,20 +19,6 @@ from arvis.errors import ArvisExternalError
 
 class LLMFallbackExecutionError(ArvisExternalError):
     """Raised when all providers fail."""
-
-
-@dataclass(frozen=True, slots=True)
-class ProviderAttempt:
-    provider: str
-    success: bool
-    latency_ms: float
-    error: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class FallbackExecutionResult:
-    response: LLMResponse
-    attempts: tuple[ProviderAttempt, ...]
 
 
 @dataclass(slots=True)
@@ -45,7 +36,7 @@ class FallbackExecutor:
     providers: Sequence[BaseLLMProvider]
     fail_fast_on_empty: bool = True
 
-    def execute(self, request: LLMRequest) -> FallbackExecutionResult:
+    def execute(self, request: LLMRequest) -> LLMExecutionResult:
         if not self.providers:
             raise LLMFallbackExecutionError("no_llm_providers_configured")
 
@@ -94,9 +85,18 @@ class FallbackExecutor:
                     metadata=metadata,
                 )
 
-                return FallbackExecutionResult(
+                return LLMExecutionResult(
+                    status=LLMExecutionStatus.FALLBACK_USED,
                     response=final_response,
-                    attempts=tuple(attempts),
+                    retry_count=0,
+                    fallback_used=len(attempts) > 1,
+                    provider_attempts=tuple(attempts),
+                    evaluation={},
+                    observation={},
+                    error=None,
+                    degraded=False,
+                    replay_safe=False,
+                    require_confirmation=False,
                 )
 
             except Exception as exc:

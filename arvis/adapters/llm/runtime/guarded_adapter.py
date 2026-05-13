@@ -119,19 +119,14 @@ class GuardedLLMAdapter:
 
     @staticmethod
     def _default_risk_evaluator(request: LLMRequest) -> LLMRisk:
+        # NOTE: plug real risk evaluator
         """
-        Minimal baseline risk evaluation.
+        Baseline deterministic evaluator.
 
-        Will be replaced later by:
-        - prompt analysis
-        - intent classification
-        - content sensitivity detection
-        """
-        # TODO: plug real risk evaluator
-        """
-        Baseline deterministic risk evaluator.
+        Production deployments SHOULD inject
+        domain-specific evaluators.
 
-        Production deployments are expected to inject
-        a domain-specific evaluator.
+        This fallback intentionally stays conservative
+        and deterministic.
         """
         return LLMRisk(LLMRiskLevel.LOW)
