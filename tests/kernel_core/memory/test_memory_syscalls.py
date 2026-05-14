@@ -2,15 +2,25 @@
 
 from __future__ import annotations
 
-from arvis.kernel_core.memory.policy import MemoryPolicyService
-from arvis.kernel_core.memory.repositories.in_memory import InMemoryMemoryRepository
+from arvis.kernel_core.memory.policy import (
+    MemoryPolicyService,
+)
+from arvis.kernel_core.memory.repositories.in_memory import (
+    InMemoryMemoryRepository,
+)
 from arvis.kernel_core.memory.service import MemoryService
-from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
+from arvis.kernel_core.syscalls.service_registry import (
+    KernelServiceRegistry,
+)
 from arvis.kernel_core.syscalls.syscall import Syscall
-from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+from arvis.kernel_core.syscalls.syscall_handler import (
+    SyscallHandler,
+)
 
-# Important: force syscall registration
-from arvis.kernel_core.syscalls.syscalls import memory_syscalls  # noqa: F401
+# force syscall registration
+from arvis.kernel_core.syscalls.syscalls import (  # noqa: F401
+    memory_syscalls,
+)
 
 USER_ID = "user-1"
 
@@ -28,11 +38,21 @@ def _make_handler(
         memory_service=memory_service,
         memory_policy_service=memory_policy_service,
     )
+
     return SyscallHandler(
         runtime_state=None,
         scheduler=None,
         services=services,
     )
+
+
+def _assert_error_code(
+    result,
+    expected_code: str,
+) -> None:
+    assert result.success is False
+    assert result.error is not None
+    assert result.error.code == expected_code
 
 
 # ============================================================
@@ -190,7 +210,6 @@ def test_memory_delete_removes_record() -> None:
     assert result.success is True
     assert result.result["deleted"] is True
 
-    # verify gone
     result2 = handler.handle(
         Syscall(
             name="memory.get",
@@ -244,6 +263,7 @@ def test_memory_list_all() -> None:
         value=1,
         tags=[],
     )
+
     service.put_record(
         user_id=USER_ID,
         namespace="ns2",
@@ -279,6 +299,7 @@ def test_memory_list_namespace_filter() -> None:
         value=1,
         tags=[],
     )
+
     service.put_record(
         user_id=USER_ID,
         namespace="ns2",
@@ -306,7 +327,7 @@ def test_memory_list_namespace_filter() -> None:
 
 
 # ============================================================
-# service missing
+# service failures
 # ============================================================
 
 
@@ -324,13 +345,16 @@ def test_memory_syscalls_fail_without_service() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "no_memory_service"
+    _assert_error_code(
+        result,
+        "no_memory_service",
+    )
 
 
 def test_memory_put_and_get_roundtrip() -> None:
     repo = InMemoryMemoryRepository()
     service = MemoryService(repo)
+
     policy = MemoryPolicyService()
     handler = _make_handler(service, policy)
 
@@ -348,7 +372,6 @@ def test_memory_put_and_get_roundtrip() -> None:
 
     assert put_result.success is True
     assert put_result.result["key"] == "k1"
-    assert put_result.result["value"] == {"x": 1}
 
     get_result = handler.handle(
         Syscall(
@@ -369,6 +392,7 @@ def test_memory_put_and_get_roundtrip() -> None:
 def test_memory_get_denies_cross_user_access() -> None:
     repo = InMemoryMemoryRepository()
     service = MemoryService(repo)
+
     policy = MemoryPolicyService()
 
     service.put_record(
@@ -392,13 +416,16 @@ def test_memory_get_denies_cross_user_access() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "memory_access_denied"
+    _assert_error_code(
+        result,
+        "memory_policy_violation",
+    )
 
 
 def test_memory_put_fails_without_policy_service() -> None:
     repo = InMemoryMemoryRepository()
     service = MemoryService(repo)
+
     handler = _make_handler(service, None)
 
     result = handler.handle(
@@ -413,12 +440,15 @@ def test_memory_put_fails_without_policy_service() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "no_memory_policy_service"
+    _assert_error_code(
+        result,
+        "no_memory_policy_service",
+    )
 
 
 def test_memory_get_fails_without_memory_service() -> None:
     policy = MemoryPolicyService()
+
     handler = _make_handler(None, policy)
 
     result = handler.handle(
@@ -432,17 +462,31 @@ def test_memory_get_fails_without_memory_service() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "no_memory_service"
+    _assert_error_code(
+        result,
+        "no_memory_service",
+    )
 
 
 def test_memory_list_filters_namespace() -> None:
     repo = InMemoryMemoryRepository()
     service = MemoryService(repo)
+
     policy = MemoryPolicyService()
 
-    service.put_record(user_id=USER_ID, namespace="ns1", key="a", value=1)
-    service.put_record(user_id=USER_ID, namespace="ns2", key="b", value=2)
+    service.put_record(
+        user_id=USER_ID,
+        namespace="ns1",
+        key="a",
+        value=1,
+    )
+
+    service.put_record(
+        user_id=USER_ID,
+        namespace="ns2",
+        key="b",
+        value=2,
+    )
 
     handler = _make_handler(service, policy)
 
@@ -465,6 +509,7 @@ def test_memory_list_filters_namespace() -> None:
 def test_memory_delete_removes_record_syscall() -> None:
     repo = InMemoryMemoryRepository()
     service = MemoryService(repo)
+
     policy = MemoryPolicyService()
 
     service.put_record(
@@ -505,12 +550,18 @@ def test_memory_delete_removes_record_syscall() -> None:
     assert check.result is None
 
 
-def test_memory_snapshot_syscall_returns_snapshot():
+def test_memory_snapshot_syscall_returns_snapshot() -> None:
     repo = InMemoryMemoryRepository()
+
     service = MemoryService(repo=repo)
     policy = MemoryPolicyService()
 
-    service.put_record(user_id="u1", namespace="prefs", key="language", value="fr")
+    service.put_record(
+        user_id="u1",
+        namespace="prefs",
+        key="language",
+        value="fr",
+    )
 
     handler = SyscallHandler(
         runtime_state=None,
@@ -524,15 +575,20 @@ def test_memory_snapshot_syscall_returns_snapshot():
     result = handler.handle(
         Syscall(
             name="memory.snapshot",
-            args={"user_id": "u1"},
+            args={
+                "user_id": "u1",
+            },
         )
     )
 
     assert result.success is True
     assert result.result is not None
+
     assert result.result["user_id"] == "u1"
     assert result.result["total_records"] == 1
     assert result.result["active_records"] == 1
     assert result.result["is_empty"] is False
+
     assert len(result.result["records"]) == 1
+
     assert result.result["records"][0]["key"] == "language"

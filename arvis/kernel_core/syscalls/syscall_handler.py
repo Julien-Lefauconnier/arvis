@@ -5,9 +5,13 @@ from __future__ import annotations
 import inspect
 from typing import Any, Protocol
 
+from arvis.errors import ErrorOrigin
+from arvis.errors.codes import ErrorCode
 from arvis.errors.manager import ErrorManager
+from arvis.errors.normalization import normalize_error
+from arvis.errors.syscall import SyscallExecutionError, SyscallValidationError
+from arvis.errors.types import ErrorPayload
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
-from arvis.kernel_core.syscalls.errors import SyscallError
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import SyscallFn, get_syscall
@@ -55,12 +59,18 @@ class SyscallHandler:
         self._local_counter += 1
 
         if fn is None:
-            missing_result = SyscallResult.failure(
-                SyscallError(
-                    code="unknown_syscall",
-                    message=syscall.name,
-                    retryable=False,
-                )
+            missing_result = self._failure_from_error(
+                ctx,
+                SyscallValidationError(
+                    f"Unknown syscall: {syscall.name}",
+                    code=ErrorCode.UNKNOWN_SYSCALL,
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={"syscall": syscall.name},
+                ),
             )
             self._journal(
                 ctx=ctx,
@@ -74,13 +84,22 @@ class SyscallHandler:
         try:
             sig.bind(self, **syscall.args)
         except TypeError as exc:
-            error_result = SyscallResult.failure(
-                SyscallError(
-                    code="invalid_syscall_args",
-                    message=str(exc),
-                    retryable=False,
-                    metadata={"syscall": syscall.name},
-                )
+            error_result = self._failure_from_error(
+                ctx,
+                SyscallValidationError(
+                    str(exc),
+                    code=ErrorCode.INVALID_SYSCALL_ARGS,
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "exception_type": type(exc).__name__,
+                    },
+                    cause=None,
+                ),
             )
             self._journal(
                 ctx=ctx,
@@ -105,22 +124,10 @@ class SyscallHandler:
                 },
             )
         except Exception as exc:
-            payload = ErrorManager.capture_exception(
-                ctx=ctx,
-                exc=exc,
-                code="SYSCALL_EXECUTION_FAILURE",
-                details={
-                    "syscall": syscall.name,
-                    "exception_type": type(exc).__name__,
-                },
-            )
-            error_result = SyscallResult.failure(
-                SyscallError(
-                    code=str(payload["code"]),
-                    message=str(payload["message"]),
-                    retryable=bool(payload["retryable"]),
-                    metadata=payload,
-                )
+            error_result = self._failure_from_exception(
+                ctx,
+                exc,
+                syscall_name=syscall.name,
             )
             self._journal(
                 ctx=ctx,
@@ -131,13 +138,21 @@ class SyscallHandler:
             return error_result
 
         if not isinstance(syscall_result, SyscallResult):
-            syscall_result = SyscallResult.failure(
-                SyscallError(
-                    code="invalid_syscall_return_type",
-                    message=type(syscall_result).__name__,
-                    retryable=False,
-                    metadata={"syscall": syscall.name},
-                )
+            syscall_result = self._failure_from_error(
+                ctx,
+                SyscallValidationError(
+                    f"Invalid syscall return type: {type(syscall_result).__name__}",
+                    code=ErrorCode.INVALID_SYSCALL_RETURN_TYPE,
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "return_type": type(syscall_result).__name__,
+                    },
+                ),
             )
 
         self._journal(
@@ -229,10 +244,7 @@ class SyscallHandler:
             entry["result"] = result.result
 
         if result.error is not None:
-            entry["error"] = result.error
-
-        if result.error_detail is not None:
-            entry["error_detail"] = result.error_detail.to_dict()
+            entry["error"] = result.error.to_dict()
 
         if isinstance(results, list):
             results.append(entry)
@@ -307,3 +319,47 @@ class SyscallHandler:
             payload["artifact_id"] = artifact.get("id")
 
         self.runtime_state.append_event(event_type, payload)
+
+    def _failure_from_exception(
+        self,
+        ctx: PipelineContextLike | None,
+        exc: Exception,
+        *,
+        syscall_name: str,
+    ) -> SyscallResult:
+        arvis_error = SyscallExecutionError(
+            str(exc),
+            origin=ErrorOrigin(
+                component="SyscallHandler",
+                subsystem="kernel.syscall",
+                syscall=syscall_name,
+            ),
+            details={
+                "syscall": syscall_name,
+                "exception_type": type(exc).__name__,
+            },
+            cause=normalize_error(exc).cause,
+        )
+        return self._failure_from_error(ctx, arvis_error)
+
+    def _failure_from_error(
+        self,
+        ctx: PipelineContextLike | None,
+        error: Exception,
+    ) -> SyscallResult:
+        arvis_error = normalize_error(error)
+
+        if ctx is not None:
+            ErrorManager.attach(ctx, arvis_error)
+
+        return SyscallResult.failure(arvis_error)
+
+    def _attach_or_normalize(
+        self,
+        ctx: PipelineContextLike | None,
+        error: Exception,
+    ) -> ErrorPayload:
+        if ctx is None:
+            return normalize_error(error).to_dict()
+
+        return ErrorManager.attach(ctx, error)

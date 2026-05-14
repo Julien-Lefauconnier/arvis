@@ -181,7 +181,10 @@ def test_vfs_get_syscall_maps_not_found_error() -> None:
     )
 
     assert result.success is False
-    assert result.error == "vfs_item_not_found"
+    _assert_error_code(
+        result,
+        "vfs_item_not_found",
+    )
 
 
 def test_vfs_tree_syscall_returns_serialized_tree() -> None:
@@ -225,7 +228,24 @@ def test_vfs_list_syscall_fails_without_service() -> None:
     )
 
     assert result.success is False
-    assert result.error == "no_vfs_service"
+    _assert_error_code(
+        result,
+        "no_vfs_service",
+    )
+
+
+# ============================================================
+# Helpers
+# ============================================================
+
+
+def _assert_error_code(
+    result,
+    expected_code: str,
+) -> None:
+    assert result.success is False
+    assert result.error is not None
+    assert result.error.code == expected_code
 
 
 # ============================================================
@@ -258,6 +278,7 @@ def test_vfs_create_folder_syscall_creates_folder() -> None:
 def test_vfs_create_folder_syscall_maps_invalid_name() -> None:
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
+
     handler = _make_handler(vfs_service=service)
 
     result = handler.handle(
@@ -271,13 +292,16 @@ def test_vfs_create_folder_syscall_maps_invalid_name() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "vfs_invalid_name"
+    _assert_error_code(
+        result,
+        "vfs_invalid_name",
+    )
 
 
 def test_vfs_create_folder_syscall_maps_parent_not_found() -> None:
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
+
     handler = _make_handler(vfs_service=service)
 
     result = handler.handle(
@@ -291,8 +315,10 @@ def test_vfs_create_folder_syscall_maps_parent_not_found() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "vfs_parent_not_found"
+    _assert_error_code(
+        result,
+        "vfs_parent_not_found",
+    )
 
 
 def test_vfs_create_file_syscall_creates_file() -> None:
@@ -322,6 +348,7 @@ def test_vfs_create_file_syscall_creates_file() -> None:
 def test_vfs_create_file_syscall_maps_name_conflict() -> None:
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
+
     service.create_file_item(
         user_id=USER_ID,
         name="note.txt",
@@ -345,8 +372,10 @@ def test_vfs_create_file_syscall_maps_name_conflict() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "vfs_name_conflict"
+    _assert_error_code(
+        result,
+        "vfs_name_conflict",
+    )
 
 
 def test_vfs_delete_item_syscall_deletes_file() -> None:
@@ -380,7 +409,13 @@ def test_vfs_delete_item_syscall_deletes_file() -> None:
 def test_vfs_delete_item_syscall_maps_folder_not_empty() -> None:
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
-    folder = service.create_folder(user_id=USER_ID, name="docs", parent_id=None)
+
+    folder = service.create_folder(
+        user_id=USER_ID,
+        name="docs",
+        parent_id=None,
+    )
+
     service.create_file_item(
         user_id=USER_ID,
         name="a.txt",
@@ -401,8 +436,10 @@ def test_vfs_delete_item_syscall_maps_folder_not_empty() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "vfs_folder_not_empty"
+    _assert_error_code(
+        result,
+        "vfs_folder_not_empty",
+    )
 
 
 def test_vfs_rename_item_syscall_renames_item() -> None:
@@ -436,6 +473,7 @@ def test_vfs_rename_item_syscall_renames_item() -> None:
 def test_vfs_rename_item_syscall_maps_conflict() -> None:
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
+
     item_a = service.create_file_item(
         user_id=USER_ID,
         name="a.txt",
@@ -443,6 +481,7 @@ def test_vfs_rename_item_syscall_maps_conflict() -> None:
         size=1,
         mime="text/plain",
     )
+
     service.create_file_item(
         user_id=USER_ID,
         name="b.txt",
@@ -464,8 +503,10 @@ def test_vfs_rename_item_syscall_maps_conflict() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "vfs_name_conflict"
+    _assert_error_code(
+        result,
+        "vfs_name_conflict",
+    )
 
 
 def test_vfs_move_item_syscall_moves_item() -> None:
@@ -500,6 +541,7 @@ def test_vfs_move_item_syscall_moves_item() -> None:
 def test_vfs_move_item_syscall_maps_parent_not_folder() -> None:
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
+
     target = service.create_file_item(
         user_id=USER_ID,
         name="not-a-folder.txt",
@@ -507,6 +549,7 @@ def test_vfs_move_item_syscall_maps_parent_not_folder() -> None:
         size=1,
         mime="text/plain",
     )
+
     item = service.create_file_item(
         user_id=USER_ID,
         name="note.txt",
@@ -528,15 +571,27 @@ def test_vfs_move_item_syscall_maps_parent_not_folder() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "vfs_parent_not_folder"
+    _assert_error_code(
+        result,
+        "vfs_parent_not_folder",
+    )
 
 
 def test_vfs_move_item_syscall_maps_cycle_error() -> None:
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
-    root = service.create_folder(user_id=USER_ID, name="root", parent_id=None)
-    child = service.create_folder(user_id=USER_ID, name="child", parent_id=root.item_id)
+
+    root = service.create_folder(
+        user_id=USER_ID,
+        name="root",
+        parent_id=None,
+    )
+
+    child = service.create_folder(
+        user_id=USER_ID,
+        name="child",
+        parent_id=root.item_id,
+    )
 
     handler = _make_handler(vfs_service=service)
 
@@ -551,8 +606,10 @@ def test_vfs_move_item_syscall_maps_cycle_error() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "vfs_cycle_error"
+    _assert_error_code(
+        result,
+        "vfs_cycle_error",
+    )
 
 
 # ============================================================
@@ -701,9 +758,12 @@ def test_vfs_zip_execute_syscall_executes_successfully() -> None:
 
 def test_vfs_zip_execute_syscall_maps_rejected_error() -> None:
     zip_service = StubZipIngestService()
+
     zip_service.set_execute_exception(ZipRejectedError("bad zip"))
 
-    handler = _make_handler(zip_ingest_service=zip_service)
+    handler = _make_handler(
+        zip_ingest_service=zip_service,
+    )
 
     result = handler.handle(
         Syscall(
@@ -715,15 +775,20 @@ def test_vfs_zip_execute_syscall_maps_rejected_error() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "zip_rejected"
+    _assert_error_code(
+        result,
+        "zip_rejected",
+    )
 
 
 def test_vfs_zip_execute_syscall_maps_conflict_error() -> None:
     zip_service = StubZipIngestService()
+
     zip_service.set_execute_exception(ZipConflictError("conflict"))
 
-    handler = _make_handler(zip_ingest_service=zip_service)
+    handler = _make_handler(
+        zip_ingest_service=zip_service,
+    )
 
     result = handler.handle(
         Syscall(
@@ -735,8 +800,10 @@ def test_vfs_zip_execute_syscall_maps_conflict_error() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "zip_conflict"
+    _assert_error_code(
+        result,
+        "zip_conflict",
+    )
 
 
 def test_vfs_zip_execute_syscall_fails_without_service() -> None:
@@ -752,8 +819,10 @@ def test_vfs_zip_execute_syscall_fails_without_service() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.error == "no_zip_ingest_service"
+    _assert_error_code(
+        result,
+        "no_zip_ingest_service",
+    )
 
 
 def test_vfs_zip_plan_basic():

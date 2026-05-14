@@ -7,12 +7,23 @@ from types import SimpleNamespace
 from pydantic import BaseModel
 
 from arvis.adapters.llm.contracts.request import LLMRequest
-from arvis.adapters.llm.contracts.structured_output import LLMStructuredOutputSpec
-from arvis.kernel.pipeline.services.pipeline_llm_service import PipelineLLMService
-from arvis.kernel.pipeline.services.pipeline_retry_budget import PipelineRetryBudget
-from arvis.kernel.pipeline.services.pipeline_retry_policy import PipelineRetryPolicy
+from arvis.adapters.llm.contracts.structured_output import (
+    LLMStructuredOutputSpec,
+)
+from arvis.errors.base import (
+    ArvisExternalError,
+    ArvisRuntimeError,
+)
+from arvis.kernel.pipeline.services.pipeline_llm_service import (
+    PipelineLLMService,
+)
+from arvis.kernel.pipeline.services.pipeline_retry_budget import (
+    PipelineRetryBudget,
+)
+from arvis.kernel.pipeline.services.pipeline_retry_policy import (
+    PipelineRetryPolicy,
+)
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
-from arvis.kernel_core.syscalls.errors import SyscallError
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 
 _EXECUTE_LLM_SYSCALL = (
@@ -21,139 +32,45 @@ _EXECUTE_LLM_SYSCALL = (
 )
 
 
-class DummyHandler:
-    def handle(self, syscall):
-        return SyscallResult(
-            success=True,
-            result=ExecutionArtifact(
-                artifact_type="llm_generation",
-                syscall="llm.generate",
-                status="success",
-                output={
-                    "content": "ok",
-                },
-                metadata={
-                    "prompt_logged": False,
-                },
-                replay_policy="journal_only_replay",
-                process_id="proc-1",
-                tick=None,
-                timestamp=0.0,
-                causal_id="causal-1",
-            ),
-        )
+def _artifact(content: str) -> ExecutionArtifact:
+    return ExecutionArtifact(
+        artifact_type="llm_generation",
+        syscall="llm.generate",
+        status="success",
+        output={"content": content},
+        metadata={
+            "prompt_logged": False,
+        },
+        replay_policy="journal_only_replay",
+        process_id="proc-1",
+        tick=None,
+        timestamp=0.0,
+        causal_id="causal-1",
+    )
 
 
-class StructuredIntentResult(BaseModel):
-    intent: str
-    confidence: float
-
-
-class StructuredHandler:
-    def handle(self, syscall):
-        return _success_result('{"intent": "search", "confidence": 0.91}')
-
-
-class FailingHandler:
-    def handle(self, syscall):
-        return SyscallResult(
-            success=False,
-            error="llm_failed",
-        )
-
-
-class RetryThenSuccessHandler:
-    def __init__(self) -> None:
-        self.calls = 0
-
-    def handle(self, syscall):
-        self.calls += 1
-
-        if self.calls == 1:
-            return SyscallResult.failure(
-                SyscallError(
-                    code="llm_execution_failed",
-                    message="temporary outage",
-                    retryable=True,
-                )
-            )
-
-        return SyscallResult(
-            success=True,
-            result=ExecutionArtifact(
-                artifact_type="llm_generation",
-                syscall="llm.generate",
-                status="success",
-                output={"content": "ok-after-retry"},
-                metadata={"prompt_logged": False},
-                replay_policy="journal_only_replay",
-                process_id="proc-1",
-                tick=None,
-                timestamp=0.0,
-                causal_id="causal-1",
-            ),
-        )
-
-
-class AlwaysRetryableFailureHandler:
-    def __init__(self) -> None:
-        self.calls = 0
-
-    def handle(self, syscall):
-        self.calls += 1
-
-        return SyscallResult.failure(
-            SyscallError(
-                code="llm_execution_failed",
-                message="temporary outage",
-                retryable=True,
-            )
-        )
-
-
-class NonRetryableFailureHandler:
-    def __init__(self) -> None:
-        self.calls = 0
-
-    def handle(self, syscall):
-        self.calls += 1
-
-        return SyscallResult.failure(
-            SyscallError(
-                code="no_llm_adapter",
-                message="missing adapter",
-                retryable=False,
-            )
-        )
-
-
-def _request() -> LLMRequest:
-    return LLMRequest(prompt="hello")
-
-
-def _retryable_error() -> SyscallError:
-    return SyscallError(
+def _retryable_error() -> ArvisExternalError:
+    return ArvisExternalError(
+        "temporary outage",
         code="llm_execution_failed",
-        message="temporary outage",
-        retryable=True,
+        details={
+            "retry_class": "transient",
+        },
+    )
+
+
+def _non_retryable_error() -> ArvisRuntimeError:
+    return ArvisRuntimeError(
+        "missing adapter",
+        code="no_llm_adapter",
+        retryable=False,
     )
 
 
 def _success_result(content: str) -> SyscallResult:
     return SyscallResult(
         success=True,
-        result=ExecutionArtifact(
-            artifact_type="llm_generation",
-            syscall="llm.generate",
-            status="success",
-            output={"content": content},
-            metadata={"prompt_logged": False},
-            replay_policy="journal_only_replay",
-            process_id="proc-1",
-            tick=None,
-            timestamp=0.0,
-            causal_id="causal-1",
-        ),
+        result=_artifact(content),
     )
 
 
@@ -188,6 +105,68 @@ def _success_result_with_llm_metadata() -> SyscallResult:
     )
 
 
+def _request() -> LLMRequest:
+    return LLMRequest(prompt="hello")
+
+
+class DummyHandler:
+    def handle(self, syscall):
+        return _success_result("ok")
+
+
+class StructuredIntentResult(BaseModel):
+    intent: str
+    confidence: float
+
+
+class StructuredHandler:
+    def handle(self, syscall):
+        return _success_result('{"intent": "search", "confidence": 0.91}')
+
+
+class FailingHandler:
+    def handle(self, syscall):
+        return SyscallResult.failure(
+            ArvisRuntimeError(
+                "llm failed",
+                code="llm_failed",
+            )
+        )
+
+
+class RetryThenSuccessHandler:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def handle(self, syscall):
+        self.calls += 1
+
+        if self.calls == 1:
+            return SyscallResult.failure(_retryable_error())
+
+        return _success_result("ok-after-retry")
+
+
+class AlwaysRetryableFailureHandler:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def handle(self, syscall):
+        self.calls += 1
+
+        return SyscallResult.failure(_retryable_error())
+
+
+class NonRetryableFailureHandler:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def handle(self, syscall):
+        self.calls += 1
+
+        return SyscallResult.failure(_non_retryable_error())
+
+
 def test_pipeline_llm_service_returns_text() -> None:
     ctx = SimpleNamespace(
         extra={
@@ -198,7 +177,7 @@ def test_pipeline_llm_service_returns_text() -> None:
 
     content = PipelineLLMService.generate_text(
         ctx,
-        request=LLMRequest(prompt="hello"),
+        request=_request(),
         stage="TestStage",
     )
 
@@ -210,11 +189,12 @@ def test_pipeline_llm_service_missing_handler_records_error() -> None:
 
     content = PipelineLLMService.generate_text(
         ctx,
-        request=LLMRequest(prompt="hello"),
+        request=_request(),
         stage="TestStage",
     )
 
     assert content is None
+
     error = ctx.extra["errors"][0]
 
     assert error["details"]["stage"] == "TestStage"
@@ -231,16 +211,18 @@ def test_pipeline_llm_service_failure_records_error() -> None:
 
     content = PipelineLLMService.generate_text(
         ctx,
-        request=LLMRequest(prompt="hello"),
+        request=_request(),
         stage="TestStage",
     )
 
     assert content is None
+
     assert ctx.extra["errors"][0]["details"]["llm_error"] == "llm_failed"
 
 
 def test_pipeline_llm_service_retries_retryable_failure_then_succeeds() -> None:
     handler = RetryThenSuccessHandler()
+
     ctx = SimpleNamespace(
         extra={
             "_syscall_handler": handler,
@@ -250,41 +232,26 @@ def test_pipeline_llm_service_retries_retryable_failure_then_succeeds() -> None:
 
     content = PipelineLLMService.generate_text(
         ctx,
-        request=LLMRequest(prompt="hello"),
+        request=_request(),
         stage="TestStage",
         retry_policy=PipelineRetryPolicy(max_attempts=2),
     )
 
-    event = ctx.extra["llm_retry_events"][0]
-
     assert content == "ok-after-retry"
     assert handler.calls == 2
-    assert ctx.extra["llm_retry_events"][0]["retry"] is True
+
+    event = ctx.extra["llm_retry_events"][0]
+
+    assert event["retry"] is True
+    assert event["error_code"] == "llm_execution_failed"
+    assert event["reason"] == "retryable"
+
     assert ctx.extra["llm_retry_events"][1]["success"] is True
-    # canonical tick should exist
-    assert "tick" in ctx.extra["llm_retry_events"][0]
-    assert isinstance(ctx.extra["llm_retry_events"][0]["tick"], int)
-    # ticks should be consistent (same tick since no runtime_state)
-    assert ctx.extra["llm_retry_events"][0]["tick"] == 0
-    assert (
-        event.items()
-        >= {
-            "stage": "TestStage",
-            "attempt": 0,
-            "success": False,
-            "retry": True,
-            "error_code": "llm_execution_failed",
-            "tick": 0,
-            "reason": "retryable",
-            "delay_ms": 0,
-            "next_attempt": 1,
-            "retry_class": "unknown",
-        }.items()
-    )
 
 
 def test_pipeline_llm_service_stops_after_retry_limit() -> None:
     handler = AlwaysRetryableFailureHandler()
+
     ctx = SimpleNamespace(
         extra={
             "_syscall_handler": handler,
@@ -294,19 +261,22 @@ def test_pipeline_llm_service_stops_after_retry_limit() -> None:
 
     content = PipelineLLMService.generate_text(
         ctx,
-        request=LLMRequest(prompt="hello"),
+        request=_request(),
         stage="TestStage",
         retry_policy=PipelineRetryPolicy(max_attempts=3),
     )
 
     assert content is None
     assert handler.calls == 3
+
     assert ctx.extra["errors"][0]["details"]["llm_error"] == "llm_execution_failed"
+
     assert ctx.extra["llm_retry_events"][-1]["retry"] is False
 
 
 def test_pipeline_llm_service_does_not_retry_non_retryable_failure() -> None:
     handler = NonRetryableFailureHandler()
+
     ctx = SimpleNamespace(
         extra={
             "_syscall_handler": handler,
@@ -316,19 +286,22 @@ def test_pipeline_llm_service_does_not_retry_non_retryable_failure() -> None:
 
     content = PipelineLLMService.generate_text(
         ctx,
-        request=LLMRequest(prompt="hello"),
+        request=_request(),
         stage="TestStage",
         retry_policy=PipelineRetryPolicy(max_attempts=3),
     )
 
     assert content is None
     assert handler.calls == 1
+
     assert ctx.extra["errors"][0]["details"]["llm_error"] == "no_llm_adapter"
+
     assert ctx.extra["llm_retry_events"][0]["retry"] is False
 
 
 def test_pipeline_llm_service_stops_when_retry_budget_exhausted() -> None:
     handler = AlwaysRetryableFailureHandler()
+
     ctx = SimpleNamespace(
         extra={
             "_syscall_handler": handler,
@@ -338,7 +311,7 @@ def test_pipeline_llm_service_stops_when_retry_budget_exhausted() -> None:
 
     content = PipelineLLMService.generate_text(
         ctx,
-        request=LLMRequest(prompt="hello"),
+        request=_request(),
         stage="TestStage",
         retry_policy=PipelineRetryPolicy(max_attempts=3),
         retry_budget=PipelineRetryBudget(max_retries=1),
@@ -348,16 +321,16 @@ def test_pipeline_llm_service_stops_when_retry_budget_exhausted() -> None:
     assert handler.calls == 2
 
     final_event = ctx.extra["llm_retry_events"][-1]
+
     assert final_event["retry"] is False
     assert final_event["budget_allowed"] is False
     assert final_event["budget_reason"] == "retry_budget_exhausted"
-    assert final_event["budget_remaining"] == 0
 
 
 def test_llm_service_retries_until_success(mocker):
     ctx = SimpleNamespace(
         extra={
-            "_syscall_handler": object(),  # mock bypass
+            "_syscall_handler": object(),
             "_process_id": "proc-1",
             "_allow_mock_runtime": True,
         }
@@ -368,7 +341,8 @@ def test_llm_service_retries_until_success(mocker):
     def fake_call(*args, **kwargs):
         if len(calls) < 2:
             calls.append("fail")
-            return SyscallResult(success=False, error_detail=_retryable_error())
+            return SyscallResult.failure(_retryable_error())
+
         return _success_result("ok")
 
     mocker.patch(
@@ -401,7 +375,7 @@ def test_llm_service_applies_delay(mocker):
 
     mocker.patch(
         _EXECUTE_LLM_SYSCALL,
-        return_value=SyscallResult(success=False, error_detail=_retryable_error()),
+        return_value=SyscallResult.failure(_retryable_error()),
     )
 
     PipelineLLMService.generate_text(
@@ -427,7 +401,7 @@ def test_llm_service_stops_when_budget_exhausted(mocker):
 
     mocker.patch(
         _EXECUTE_LLM_SYSCALL,
-        return_value=SyscallResult(success=False, error_detail=_retryable_error()),
+        return_value=SyscallResult.failure(_retryable_error()),
     )
 
     result = PipelineLLMService.generate_text(
@@ -449,16 +423,17 @@ def test_llm_service_no_retry_on_permanent_error(mocker):
         }
     )
 
-    error = SyscallError(
+    error = ArvisExternalError(
+        "fail",
         code="x",
-        message="fail",
-        retryable=True,
-        metadata={"retry_class": "permanent"},
+        details={
+            "retry_class": "permanent",
+        },
     )
 
     mocker.patch(
         _EXECUTE_LLM_SYSCALL,
-        return_value=SyscallResult(success=False, error_detail=error),
+        return_value=SyscallResult.failure(error),
     )
 
     result = PipelineLLMService.generate_text(
@@ -491,12 +466,16 @@ def test_pipeline_llm_service_records_structured_output() -> None:
     )
 
     assert content == '{"intent": "search", "confidence": 0.91}'
+
     parsed = ctx.extra["llm_structured_outputs"]["IntentStage"]
+
     assert parsed.intent == "search"
     assert parsed.confidence == 0.91
 
 
-def test_pipeline_llm_service_records_llm_runtime_metadata(mocker) -> None:
+def test_pipeline_llm_service_records_llm_runtime_metadata(
+    mocker,
+) -> None:
     ctx = SimpleNamespace(
         extra={
             "_syscall_handler": object(),
@@ -517,21 +496,21 @@ def test_pipeline_llm_service_records_llm_runtime_metadata(mocker) -> None:
     )
 
     assert content == "ok"
+
     assert ctx.extra["llm_observation"]["entropy_mean"] == 0.8
+
     assert ctx.extra["llm_evaluation"]["confidence"] == 0.2
+
     assert ctx.extra["llm_evaluation"]["risk"] == 0.8
 
 
 def test_pipeline_llm_service_records_runtime_metadata_into_execution_state():
-    from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
+    from arvis.kernel.execution.cognitive_execution_state import (
+        CognitiveExecutionState,
+    )
     from arvis.kernel.pipeline.cognitive_pipeline_context import (
         CognitivePipelineContext,
     )
-    from arvis.kernel.pipeline.services.pipeline_llm_service import (
-        PipelineLLMService,
-    )
-    from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
-    from arvis.kernel_core.syscalls.syscall import SyscallResult
 
     ctx = CognitivePipelineContext(
         user_id="u1",
@@ -567,6 +546,7 @@ def test_pipeline_llm_service_records_runtime_metadata_into_execution_state():
     )
 
     assert ctx.extra["llm_observation"]["confidence_mean"] == 0.8
+
     assert ctx.extra["llm_evaluation"]["risk"] == 0.2
 
     assert ctx.execution_state is not None

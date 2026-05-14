@@ -51,11 +51,14 @@ def test_syscall_journal():
     assert "syscall_results" in ctx.extra
 
     entry = ctx.extra["syscall_results"][0]
+
     assert entry["syscall"] == "unknown.test"
     assert entry["success"] is False
     assert "syscall_id" in entry
     assert entry["replay_policy"] == "unknown"
-    assert entry["error"] == "unknown_syscall:unknown.test"
+
+    assert isinstance(entry["error"], dict)
+    assert entry["error"]["code"] == "UNKNOWN_SYSCALL"
 
 
 def test_tool_execute_syscall_policy_denied():
@@ -107,6 +110,7 @@ def test_tool_execute_syscall_policy_denied():
     assert entry["success"] is False
     assert "syscall_id" in entry
     assert entry["replay_policy"] == "journal_only_replay"
+    assert "error" in entry
 
 
 def test_tool_execute_syscall_failure(monkeypatch):
@@ -163,14 +167,17 @@ def test_tool_execute_syscall_failure(monkeypatch):
     result = handler.handle(syscall)
 
     assert result.success is False
-    assert "boom" in result.error
+    assert result.error is not None
+    assert "boom" in str(result.error)
 
     entry = ctx.extra["syscall_results"][0]
     assert entry["syscall"] == "tool.execute"
     assert entry["success"] is False
     assert "syscall_id" in entry
     assert entry["replay_policy"] == "journal_only_replay"
-    assert "boom" in entry["error"]
+    assert isinstance(entry["error"], dict)
+    assert "boom" in entry["error"]["message"]
+    assert "error" in entry
 
 
 def test_memory_syscalls_replay_policy():

@@ -6,7 +6,13 @@ import json
 
 from pydantic import BaseModel, ValidationError
 
-from arvis.errors.base import ArvisError, ArvisExternalError, ArvisRuntimeError
+from arvis.errors.api import InvalidIRPayloadError
+from arvis.errors.base import (
+    ArvisError,
+    ArvisExternalError,
+    ArvisInvariantViolation,
+    ArvisRuntimeError,
+)
 from arvis.errors.normalization import normalize_error
 
 
@@ -20,11 +26,12 @@ def test_normalize_arvis_error_passthrough():
     assert normalize_error(error) is error
 
 
-def test_normalize_unknown_exception_as_runtime_error():
+def test_normalize_value_error_as_invariant_violation():
     error = normalize_error(ValueError("invalid"))
 
-    assert isinstance(error, ArvisRuntimeError)
+    assert isinstance(error, ArvisInvariantViolation)
     assert error.details["exception_type"] == "ValueError"
+    assert error.details["value_error"] is True
 
 
 def test_normalize_timeout_as_external_error():
@@ -53,7 +60,7 @@ def test_json_decode_error_maps_to_runtime():
     except json.JSONDecodeError as exc:
         error = normalize_error(exc)
 
-    assert isinstance(error, ArvisRuntimeError)
+    assert isinstance(error, InvalidIRPayloadError)
     assert error.details["json_error"] is True
 
 
@@ -65,3 +72,17 @@ def test_pydantic_validation_error_maps_to_runtime():
 
     assert isinstance(error, ArvisRuntimeError)
     assert error.details["validation_error"] is True
+
+
+def test_assertion_error_maps_to_invariant_violation():
+    error = normalize_error(AssertionError("broken invariant"))
+
+    assert isinstance(error, ArvisInvariantViolation)
+    assert error.details["assertion_error"] is True
+
+
+def test_type_error_maps_to_runtime_error():
+    error = normalize_error(TypeError("bad type"))
+
+    assert isinstance(error, ArvisRuntimeError)
+    assert error.details["type_error"] is True

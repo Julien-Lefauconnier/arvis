@@ -10,12 +10,17 @@ from arvis.adapters.llm.validation.output_validator import (
     LLMOutputValidator,
     LLMValidationSeverity,
 )
+from arvis.errors.base import (
+    ArvisError,
+    ArvisExternalError,
+    ArvisRuntimeError,
+    ErrorDomain,
+)
 from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.runtime_bindings import PipelineRuntimeBindings
 from arvis.kernel.pipeline.services.pipeline_retry_budget import PipelineRetryBudget
 from arvis.kernel.pipeline.services.pipeline_retry_policy import PipelineRetryPolicy
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
-from arvis.kernel_core.syscalls.errors import SyscallError
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 
 
@@ -62,24 +67,8 @@ class PipelineLLMService:
 
             if not result.success:
                 # --- SYSCALL FAILURE PATH ---
-                error_detail = result.error_detail
+                error_detail = result.error
                 error_code = PipelineLLMService._error_code(result)
-
-                # Normalisation existante (tu peux la garder telle quelle)
-                if error_detail is None:
-                    error_detail = SyscallError(
-                        code=error_code,
-                        message="unknown error",
-                        retryable=False,
-                        metadata={"retry_class": "unknown"},
-                    )
-                elif error_detail.metadata is None:
-                    error_detail = SyscallError(
-                        code=error_detail.code,
-                        message=error_detail.message,
-                        retryable=error_detail.retryable,
-                        metadata={"retry_class": "unknown"},
-                    )
 
             else:
                 # --- SUCCESS PATH ---
@@ -130,20 +119,21 @@ class PipelineLLMService:
                         return content
 
                     if validation.severity == LLMValidationSeverity.FATAL:
-                        error_detail = SyscallError(
+                        error_detail = ArvisRuntimeError(
+                            "Fatal validation failure",
                             code="llm_output_fatal",
-                            message="Fatal validation failure",
-                            retryable=False,
-                            metadata={"retry_class": "fatal"},
+                            domain=ErrorDomain.LLM,
+                            details={"retry_class": "fatal"},
                         )
                         error_code = "llm_output_fatal"
 
                     elif validation.severity == LLMValidationSeverity.RETRYABLE:
-                        error_detail = SyscallError(
+                        error_detail = ArvisExternalError(
+                            "Retryable validation failure",
                             code="llm_output_retryable",
-                            message="Retryable validation failure",
-                            retryable=True,
-                            metadata={"retry_class": "validation"},
+                            domain=ErrorDomain.LLM,
+                            details={"retry_class": "validation"},
+                            replay_safe=False,
                         )
                         error_code = "llm_output_retryable"
 
@@ -167,11 +157,11 @@ class PipelineLLMService:
                     )
 
                 else:
-                    error_detail = SyscallError(
+                    error_detail = ArvisRuntimeError(
+                        "No content returned",
                         code="llm_output_missing",
-                        message="No content returned",
-                        retryable=False,
-                        metadata={"retry_class": "fatal"},
+                        domain=ErrorDomain.LLM,
+                        details={"retry_class": "fatal"},
                     )
 
             decision = policy.decide(
@@ -295,12 +285,8 @@ class PipelineLLMService:
 
     @staticmethod
     def _error_code(result: SyscallResult) -> str:
-        if result.error_detail is not None:
-            return result.error_detail.code
-
-        # Legacy fallback normalization (strip message if present)
         if result.error is not None:
-            return result.error.split(":", 1)[0]
+            return result.error.code
 
         return "unknown_llm_syscall_error"
 
@@ -310,7 +296,7 @@ class PipelineLLMService:
         *,
         stage: str,
         error_code: str,
-        error_detail: SyscallError | None = None,
+        error_detail: ArvisError | None = None,
     ) -> None:
         details: dict[str, str | int | float | bool | None] = {
             "stage": stage,

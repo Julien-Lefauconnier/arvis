@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
+from arvis.errors.base import (
+    ArvisError,
+    ArvisExternalError,
+    ArvisRuntimeError,
+    ErrorDomain,
+)
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
@@ -56,23 +62,37 @@ def tool_execute(
     tool_manager = handler.services.tool_manager
 
     if tool_manager is None:
-        return SyscallResult(
-            success=False,
-            error="no_tool_manager",
+        return SyscallResult.failure(
+            ArvisRuntimeError(
+                "Tool manager not configured",
+                code="no_tool_manager",
+                domain=ErrorDomain.TOOL,
+            )
         )
 
     try:
         tool_result = tool_manager.run(result, ctx)
     except Exception as exc:
-        return SyscallResult(
-            success=False,
-            error=f"{type(exc).__name__}:{str(exc)}",
+        return SyscallResult.failure(
+            ArvisExternalError(
+                str(exc),
+                code="tool_execution_failed",
+                domain=ErrorDomain.TOOL,
+                details={
+                    "exception": type(exc).__name__,
+                    "retry_class": "transient",
+                },
+                replay_safe=False,
+            )
         )
 
     if tool_result is None:
-        return SyscallResult(
-            success=False,
-            error="no_tool_execution",
+        return SyscallResult.failure(
+            ArvisRuntimeError(
+                "Tool execution returned no result",
+                code="no_tool_execution",
+                domain=ErrorDomain.TOOL,
+            )
         )
 
     if hasattr(tool_result, "success"):
@@ -86,12 +106,43 @@ def tool_execute(
         error = None
         tool_name = None
 
+    normalized_error: ArvisError | None = None
+
+    if error is not None:
+        if isinstance(error, Exception):
+            normalized_error = ArvisExternalError(
+                str(error),
+                code="tool_execution_error",
+                domain=ErrorDomain.TOOL,
+                details={
+                    "exception": type(error).__name__,
+                    "retry_class": "transient",
+                },
+                replay_safe=False,
+            )
+        else:
+            normalized_error = ArvisRuntimeError(
+                str(error),
+                code="tool_execution_error",
+                domain=ErrorDomain.TOOL,
+            )
+
+    if not success and normalized_error is None:
+        normalized_error = ArvisRuntimeError(
+            "Tool execution failed without explicit error",
+            code="tool_execution_unknown_failure",
+            domain=ErrorDomain.TOOL,
+            details={
+                "retry_class": "unknown",
+            },
+        )
+
     artifact = ExecutionArtifact(
         artifact_type="tool_execution",
         syscall="tool.execute",
         status="success" if success else "error",
         output=output,
-        error=error,
+        error=normalized_error,
         metadata={
             "tool": tool_name,
             "seq": getattr(handler, "_local_counter", 0),

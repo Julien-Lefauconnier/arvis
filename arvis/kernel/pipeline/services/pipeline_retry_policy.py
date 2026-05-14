@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal, cast
 
-from arvis.kernel_core.syscalls.errors import SyscallError
+from arvis.errors.base import ArvisError
 
 RetryDecisionReason = Literal[
     "success",
@@ -20,6 +20,7 @@ RetryDecisionReason = Literal[
 RetryClass = Literal[
     "transient",
     "rate_limit",
+    "fatal",
     "permanent",
     "unknown",
 ]
@@ -66,7 +67,7 @@ class PipelineRetryPolicy:
     def decide(
         self,
         *,
-        error: SyscallError | None,
+        error: ArvisError | None,
         attempt: int,
     ) -> PipelineRetryDecision:
         if error is None:
@@ -78,7 +79,15 @@ class PipelineRetryPolicy:
 
         retry_class = self._extract_retry_class(error)
 
-        if not error.retryable or retry_class == "permanent":
+        if retry_class in {"fatal", "permanent"}:
+            return PipelineRetryDecision(
+                should_retry=False,
+                reason="not_retryable",
+                next_attempt=attempt,
+                retry_class=retry_class,
+            )
+
+        if not error.retryable:
             return PipelineRetryDecision(
                 should_retry=False,
                 reason="not_retryable",
@@ -128,11 +137,15 @@ class PipelineRetryPolicy:
 
         return delay
 
-    def _extract_retry_class(self, error: SyscallError) -> RetryClass:
-        metadata = error.metadata or {}
-        value = metadata.get("retry_class")
+    def _extract_retry_class(self, error: ArvisError) -> RetryClass:
+        value = error.details.get("retry_class")
 
-        if value in {"transient", "rate_limit", "permanent"}:
+        if value in {
+            "transient",
+            "rate_limit",
+            "fatal",
+            "permanent",
+        }:
             return cast(RetryClass, value)
 
         return "unknown"

@@ -1,4 +1,4 @@
-# tests/kernel_core/test_llm_syscall.py
+# tests/kernel_core/syscall/test_llm_syscall.py
 
 from __future__ import annotations
 
@@ -11,9 +11,13 @@ from arvis.adapters.llm.contracts.execution_result import (
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.contracts.usage import LLMUsage
-from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
+from arvis.kernel_core.syscalls.service_registry import (
+    KernelServiceRegistry,
+)
 from arvis.kernel_core.syscalls.syscall import Syscall
-from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+from arvis.kernel_core.syscalls.syscall_handler import (
+    SyscallHandler,
+)
 
 
 def make_ctx():
@@ -59,7 +63,7 @@ class FailingLLMAdapter:
         request: LLMRequest,
         *,
         preferred_provider: str | None = None,
-    ) -> LLMResponse:
+    ) -> LLMExecutionResult:
         raise TimeoutError("provider timeout")
 
 
@@ -89,14 +93,17 @@ def test_llm_generate_syscall_success() -> None:
     assert result.result is not None
 
     artifact = result.result
+
     assert artifact.artifact_type == "llm_generation"
     assert artifact.output["content"] == "answer:hello"
     assert artifact.output["provider"] == "mock"
     assert artifact.output["usage"]["total_tokens"] == 5
 
     entry = ctx.extra["syscall_results"][0]
+
     assert entry["syscall"] == "llm.generate"
     assert entry["success"] is True
+
     assert entry["artifact"]["metadata"]["prompt_logged"] is False
 
 
@@ -120,8 +127,10 @@ def test_llm_generate_syscall_missing_adapter() -> None:
     )
 
     assert result.success is False
-    assert result.error_detail is not None
-    assert result.error_detail.code == "no_llm_adapter"
+    assert result.error is not None
+
+    assert result.error.code == "no_llm_adapter"
+    assert result.error.retryable is False
 
 
 def test_llm_generate_syscall_failure_has_retry_class() -> None:
@@ -146,10 +155,14 @@ def test_llm_generate_syscall_failure_has_retry_class() -> None:
     )
 
     assert result.success is False
-    assert result.error_detail is not None
-    assert result.error_detail.code == "llm_execution_failed"
-    assert result.error_detail.retryable is True
-    assert result.error_detail.metadata == {
+    assert result.error is not None
+
+    error = result.error
+
+    assert error.code == "llm_execution_failed"
+    assert error.retryable is True
+
+    assert error.details == {
         "exception": "TimeoutError",
         "retry_class": "transient",
     }

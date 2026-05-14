@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
+from arvis.errors.base import (
+    ArvisRuntimeError,
+    ErrorDomain,
+)
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
 
@@ -26,9 +30,12 @@ def interrupt_emit(
     interrupt: Any,
 ) -> SyscallResult:
     if handler.runtime_state is None:
-        return SyscallResult(
-            success=False,
-            error="no_runtime_state",
+        return SyscallResult.failure(
+            ArvisRuntimeError(
+                "Runtime state not configured",
+                code="no_runtime_state",
+                domain=ErrorDomain.KERNEL,
+            )
         )
 
     handler.runtime_state.interrupt_bus.emit(interrupt)

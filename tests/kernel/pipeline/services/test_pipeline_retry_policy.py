@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import pytest
 
+from arvis.errors.base import (
+    ArvisExternalError,
+    ArvisRuntimeError,
+)
 from arvis.kernel.pipeline.services.pipeline_retry_policy import PipelineRetryPolicy
-from arvis.kernel_core.syscalls.errors import SyscallError
 
 
 def test_retry_policy_does_not_retry_without_error_detail() -> None:
@@ -24,9 +27,9 @@ def test_retry_policy_does_not_retry_non_retryable_error() -> None:
     policy = PipelineRetryPolicy(max_attempts=3)
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisRuntimeError(
+            "missing adapter",
             code="no_llm_adapter",
-            message="missing adapter",
             retryable=False,
         ),
         attempt=0,
@@ -40,9 +43,9 @@ def test_retry_policy_retries_retryable_error_before_limit() -> None:
     policy = PipelineRetryPolicy(max_attempts=3)
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisRuntimeError(
+            "temporary",
             code="llm_execution_failed",
-            message="temporary",
             retryable=True,
         ),
         attempt=0,
@@ -57,9 +60,9 @@ def test_retry_policy_stops_at_attempt_limit() -> None:
     policy = PipelineRetryPolicy(max_attempts=2)
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisRuntimeError(
+            "temporary",
             code="llm_execution_failed",
-            message="temporary",
             retryable=True,
         ),
         attempt=1,
@@ -77,9 +80,9 @@ def test_retry_policy_computes_exponential_delay() -> None:
     )
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisRuntimeError(
+            "temporary",
             code="llm_execution_failed",
-            message="temporary",
             retryable=True,
         ),
         attempt=2,
@@ -97,9 +100,9 @@ def test_retry_policy_caps_delay() -> None:
     )
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisRuntimeError(
+            "temporary",
             code="llm_execution_failed",
-            message="temporary",
             retryable=True,
         ),
         attempt=3,
@@ -112,11 +115,11 @@ def test_retry_policy_caps_delay() -> None:
 def test_retry_policy_respects_retry_class_permanent() -> None:
     policy = PipelineRetryPolicy(max_attempts=3)
 
-    error = SyscallError(
+    error = ArvisExternalError(
         code="x",
         message="fail",
         retryable=True,
-        metadata={"retry_class": "permanent"},
+        details={"retry_class": "permanent"},
     )
 
     decision = policy.decide(error=error, attempt=0)
@@ -130,11 +133,11 @@ def test_retry_policy_rate_limit_backoff_stronger() -> None:
         base_delay_ms=100,
     )
 
-    error = SyscallError(
+    error = ArvisExternalError(
         code="x",
         message="rate limited",
         retryable=True,
-        metadata={"retry_class": "rate_limit"},
+        details={"retry_class": "rate_limit"},
     )
 
     d1 = policy.decide(error=error, attempt=0)
@@ -162,7 +165,7 @@ def test_retry_policy_without_jitter_is_deterministic() -> None:
     )
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisExternalError(
             code="llm_execution_failed",
             message="temporary",
             retryable=True,
@@ -184,9 +187,9 @@ def test_retry_policy_rng_jitter_is_bounded() -> None:
     )
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisRuntimeError(
+            "temporary",
             code="x",
-            message="temporary",
             retryable=True,
         ),
         attempt=1,
@@ -203,9 +206,9 @@ def test_retry_policy_jitter_fn_is_clamped() -> None:
     )
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisRuntimeError(
+            "temporary",
             code="x",
-            message="temporary",
             retryable=True,
         ),
         attempt=1,
@@ -223,9 +226,9 @@ def test_retry_policy_uses_injected_jitter_fn() -> None:
     )
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisRuntimeError(
+            "temporary",
             code="llm_execution_failed",
-            message="temporary",
             retryable=True,
         ),
         attempt=1,
@@ -241,9 +244,9 @@ def test_retry_policy_jitter_is_bounded() -> None:
     )
 
     decision = policy.decide(
-        error=SyscallError(
+        error=ArvisRuntimeError(
+            "temporary",
             code="llm_execution_failed",
-            message="temporary",
             retryable=True,
         ),
         attempt=1,

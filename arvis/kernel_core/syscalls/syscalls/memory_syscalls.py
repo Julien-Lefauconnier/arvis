@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
+from arvis.errors.base import (
+    ArvisRuntimeError,
+    ErrorDomain,
+)
 from arvis.kernel_core.memory.exceptions import MemoryRecordNotFoundError
 from arvis.kernel_core.memory.policy import (
     MemoryAccessRequest,
@@ -31,7 +35,29 @@ def _get_memory_policy_service(
 
 
 def _missing_service_error(service_name: str) -> SyscallResult:
-    return SyscallResult(success=False, error=service_name)
+    return SyscallResult.failure(
+        _memory_error(
+            code=service_name,
+            message=service_name.replace("_", " "),
+        )
+    )
+
+
+def _memory_error(
+    *,
+    code: str,
+    message: str,
+    retryable: bool = False,
+) -> ArvisRuntimeError:
+    return ArvisRuntimeError(
+        message,
+        code=code,
+        domain=ErrorDomain.MEMORY,
+        retryable=retryable,
+        details={
+            "retry_class": "permanent",
+        },
+    )
 
 
 def _authorize(
@@ -58,9 +84,11 @@ def _authorize(
     )
 
     if not decision.allowed:
-        return SyscallResult(
-            success=False,
-            error=decision.reason or "memory_policy_violation",
+        return SyscallResult.failure(
+            _memory_error(
+                code="memory_policy_violation",
+                message=decision.reason or "Memory policy violation",
+            )
         )
 
     return None

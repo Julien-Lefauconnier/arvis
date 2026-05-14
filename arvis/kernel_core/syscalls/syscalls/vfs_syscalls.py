@@ -1,11 +1,13 @@
 # arvis/kernel_core/syscalls/syscalls/vfs_syscalls.py
 
-# arvis/kernel_core/syscalls/syscalls/vfs_syscalls.py
-
 from __future__ import annotations
 
 from typing import Any, Protocol
 
+from arvis.errors.base import (
+    ArvisRuntimeError,
+    ErrorDomain,
+)
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
@@ -53,7 +55,30 @@ def _get_zip(handler: SyscallHandlerLike) -> ZipIngestService | None:
 
 
 def _missing_service_error(service_name: str) -> SyscallResult:
-    return SyscallResult(success=False, error=service_name)
+    return SyscallResult.failure(
+        _syscall_error(
+            code=service_name,
+            message=service_name.replace("_", " "),
+        )
+    )
+
+
+def _syscall_error(
+    *,
+    code: str,
+    message: str,
+    retryable: bool = False,
+    retry_class: str = "permanent",
+) -> ArvisRuntimeError:
+    return ArvisRuntimeError(
+        message,
+        code=code,
+        domain=ErrorDomain.VFS,
+        retryable=retryable,
+        details={
+            "retry_class": retry_class,
+        },
+    )
 
 
 # =====================================================
@@ -138,30 +163,65 @@ def _serialize_zip_decision(decision: ZipIngestDecision) -> dict[str, Any]:
 # =====================================================
 
 
-def _map_vfs_error(exc: Exception) -> str:
+def _map_vfs_error(exc: Exception) -> ArvisRuntimeError:
     if isinstance(exc, VFSItemNotFoundError):
-        return "vfs_item_not_found"
+        return _syscall_error(
+            code="vfs_item_not_found",
+            message=str(exc),
+        )
     if isinstance(exc, VFSParentNotFoundError):
-        return "vfs_parent_not_found"
+        return _syscall_error(
+            code="vfs_parent_not_found",
+            message=str(exc),
+        )
     if isinstance(exc, VFSParentNotFolderError):
-        return "vfs_parent_not_folder"
+        return _syscall_error(
+            code="vfs_parent_not_folder",
+            message=str(exc),
+        )
     if isinstance(exc, VFSNameConflictError):
-        return "vfs_name_conflict"
+        return _syscall_error(
+            code="vfs_name_conflict",
+            message=str(exc),
+        )
     if isinstance(exc, VFSFolderNotEmptyError):
-        return "vfs_folder_not_empty"
+        return _syscall_error(
+            code="vfs_folder_not_empty",
+            message=str(exc),
+        )
     if isinstance(exc, VFSCycleError):
-        return "vfs_cycle_error"
+        return _syscall_error(
+            code="vfs_cycle_error",
+            message=str(exc),
+        )
     if isinstance(exc, VFSInvalidNameError):
-        return "vfs_invalid_name"
-    return f"{type(exc).__name__}:{str(exc)}"
+        return _syscall_error(
+            code="vfs_invalid_name",
+            message=str(exc),
+        )
+    return _syscall_error(
+        code="vfs_unknown_error",
+        message=str(exc),
+    )
 
 
-def _map_zip_error(exc: Exception) -> str:
+def _map_zip_error(exc: Exception) -> ArvisRuntimeError:
     if isinstance(exc, ZipRejectedError):
-        return "zip_rejected"
+        return _syscall_error(
+            code="zip_rejected",
+            message=str(exc),
+        )
+
     if isinstance(exc, ZipConflictError):
-        return "zip_conflict"
-    return f"{type(exc).__name__}:{str(exc)}"
+        return _syscall_error(
+            code="zip_conflict",
+            message=str(exc),
+        )
+
+    return _syscall_error(
+        code="zip_unknown_error",
+        message=str(exc),
+    )
 
 
 # =====================================================
@@ -190,7 +250,7 @@ def vfs_get(
     try:
         item = vfs.get_item(user_id=user_id, item_id=item_id)
     except Exception as exc:
-        return SyscallResult(success=False, error=_map_vfs_error(exc))
+        return SyscallResult.failure(_map_vfs_error(exc))
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -220,7 +280,7 @@ def vfs_create_folder(
     try:
         item = vfs.create_folder(user_id=user_id, name=name, parent_id=parent_id)
     except Exception as exc:
-        return SyscallResult(success=False, error=_map_vfs_error(exc))
+        return SyscallResult.failure(_map_vfs_error(exc))
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -248,7 +308,7 @@ def vfs_create_file(
             mime=mime,
         )
     except Exception as exc:
-        return SyscallResult(success=False, error=_map_vfs_error(exc))
+        return SyscallResult.failure(_map_vfs_error(exc))
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -267,7 +327,7 @@ def vfs_delete_item(
     try:
         vfs.delete_item(user_id=user_id, item_id=item_id)
     except Exception as exc:
-        return SyscallResult(success=False, error=_map_vfs_error(exc))
+        return SyscallResult.failure(_map_vfs_error(exc))
 
     return SyscallResult(success=True, result={"deleted": True, "item_id": item_id})
 
@@ -287,7 +347,7 @@ def vfs_rename_item(
     try:
         item = vfs.rename_item(user_id=user_id, item_id=item_id, new_name=new_name)
     except Exception as exc:
-        return SyscallResult(success=False, error=_map_vfs_error(exc))
+        return SyscallResult.failure(_map_vfs_error(exc))
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -307,7 +367,7 @@ def vfs_move_item(
     try:
         item = vfs.move_item(user_id=user_id, item_id=item_id, parent_id=parent_id)
     except Exception as exc:
-        return SyscallResult(success=False, error=_map_vfs_error(exc))
+        return SyscallResult.failure(_map_vfs_error(exc))
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -361,7 +421,7 @@ def vfs_zip_execute(
             plan=plan,
         )
     except Exception as exc:
-        return SyscallResult(success=False, error=_map_zip_error(exc))
+        return SyscallResult.failure(_map_zip_error(exc))
 
     return SyscallResult(success=True, result=result)
 
@@ -409,10 +469,7 @@ def vfs_zip_plan(
         )
 
     except Exception as exc:
-        return SyscallResult(
-            success=False,
-            error=_map_zip_error(exc),
-        )
+        return SyscallResult.failure(_map_zip_error(exc))
 
     return SyscallResult(
         success=True,

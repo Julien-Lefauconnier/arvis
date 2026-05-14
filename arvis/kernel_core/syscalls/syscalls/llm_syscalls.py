@@ -8,8 +8,8 @@ from arvis.adapters.llm.contracts.execution_result import LLMExecutionResult
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.tracing import LLMTrace, serialize_response, serialize_trace
+from arvis.errors.base import ArvisExternalError, ArvisRuntimeError, ErrorDomain
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
-from arvis.kernel_core.syscalls.errors import SyscallError
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
 
@@ -59,10 +59,13 @@ def llm_generate(
 
     if adapter is None:
         return SyscallResult.failure(
-            SyscallError(
+            ArvisRuntimeError(
+                "LLM adapter not configured",
                 code="no_llm_adapter",
-                message="LLM adapter not configured",
-                retryable=False,
+                domain=ErrorDomain.LLM,
+                details={
+                    "syscall": "llm.generate",
+                },
             )
         )
 
@@ -75,14 +78,15 @@ def llm_generate(
         retry_class = "transient"
 
         return SyscallResult.failure(
-            SyscallError(
+            ArvisExternalError(
+                str(exc),
                 code="llm_execution_failed",
-                message=str(exc),
-                retryable=True,
-                metadata={
+                domain=ErrorDomain.LLM,
+                details={
                     "exception": type(exc).__name__,
                     "retry_class": retry_class,
                 },
+                replay_safe=False,
             )
         )
 
@@ -90,10 +94,13 @@ def llm_generate(
 
     if response is None:
         return SyscallResult.failure(
-            SyscallError(
+            ArvisRuntimeError(
+                "LLM execution returned no response",
                 code="llm_missing_response",
-                message="LLM execution returned no response",
-                retryable=False,
+                domain=ErrorDomain.LLM,
+                details={
+                    "syscall": "llm.generate",
+                },
             )
         )
 
@@ -133,7 +140,7 @@ def llm_generate(
         }
 
         llm_evaluation = metadata.get("llm_evaluation")
-        if isinstance(llm_observation, dict):
+        if isinstance(llm_evaluation, dict):
             artifact_metadata["llm_evaluation"] = llm_evaluation
 
     artifact = ExecutionArtifact(

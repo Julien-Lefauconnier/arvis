@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.base import ArvisError
+
 
 class ExecutionArtifact:
     def __init__(
@@ -13,7 +15,7 @@ class ExecutionArtifact:
         syscall: str,
         status: str,
         output: Any | None = None,
-        error: str | None = None,
+        error: ArvisError | None = None,
         metadata: dict[str, Any] | None = None,
         replay_policy: str = "unknown",
         process_id: str | None = None,
@@ -42,11 +44,11 @@ class ExecutionArtifact:
         if self.status == "success" and error is not None:
             raise ValueError("success artifact cannot have error")
 
-        if self.status == "error" and not error:
+        if self.status == "error" and error is None:
             raise ValueError("error artifact must have error message")
 
         self.output: Any | None = output
-        self.error: str | None = error
+        self.error: ArvisError | None = error
 
         self.metadata = self.metadata
 
@@ -92,7 +94,7 @@ class ExecutionArtifact:
             "syscall": self.syscall,
             "status": self.status,
             "output": self.output,
-            "error": self.error,
+            "error": self.error.to_dict() if self.error is not None else None,
             "metadata": self.metadata,
             "replay_policy": self.replay_policy,
             "process_id": self.process_id,

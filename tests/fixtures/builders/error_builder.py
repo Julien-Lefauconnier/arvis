@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from arvis.errors.base import (
     ArvisError,
     ArvisErrorCategory,
@@ -25,21 +27,26 @@ def build_error(
     replay_safe: bool = True,
     degraded: bool = False,
     semantics: tuple[ErrorSemantics, ...] | None = None,
+    details: dict[str, Any] | None = None,
 ) -> ArvisError:
-    class SyntheticError(ArvisError):
-        pass
-
-    SyntheticError.domain = domain
-    SyntheticError.category = category
-    SyntheticError.severity = severity
-    SyntheticError.policy = policy
-    SyntheticError.retryable = retryable
-    SyntheticError.deterministic = deterministic
-    SyntheticError.replay_safe = replay_safe
-    SyntheticError.degraded = degraded
+    SyntheticError = type(
+        "SyntheticError",
+        (ArvisError,),
+        {
+            "domain": domain,
+            "category": category,
+            "severity": severity,
+            "policy": policy,
+            "retryable": retryable,
+            "deterministic": deterministic,
+            "replay_safe": replay_safe,
+            "degraded": degraded,
+        },
+    )
 
     return SyntheticError(
         message,
         code=code,
         semantics=semantics,
+        details=details,
     )
