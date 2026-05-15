@@ -3,6 +3,27 @@
 from __future__ import annotations
 
 from arvis.cognition.state.cognitive_state import CognitiveState
+from arvis.errors.base import ArvisInvariantViolation, ErrorDomain
+from arvis.errors.codes import ErrorCode
+
+
+def _contract_violation(
+    message: str,
+    *,
+    field: str,
+    reason: str,
+) -> ArvisInvariantViolation:
+    return ArvisInvariantViolation(
+        message,
+        code=ErrorCode.PIPELINE_EXECUTION_CONTRACT_VIOLATION,
+        domain=ErrorDomain.PIPELINE,
+        details={
+            "component": "CognitiveStateContract",
+            "field": field,
+            "reason": reason,
+            "retry_class": "permanent",
+        },
+    )
 
 
 class CognitiveStateContract:
@@ -16,27 +37,59 @@ class CognitiveStateContract:
         # -------------------------
         # REQUIRED FIELDS
         # -------------------------
-        assert state.bundle_id, "bundle_id is required"
+        if not state.bundle_id:
+            raise _contract_violation(
+                "bundle_id is required",
+                field="bundle_id",
+                reason="missing_required_field",
+            )
 
         # -------------------------
         # NUMERICAL SANITY
         # -------------------------
-        assert state.stability is not None
-        assert state.stability.dv is not None
-        assert state.stability.dv >= 0.0
+        if state.stability is None:
+            raise _contract_violation(
+                "stability is required",
+                field="stability",
+                reason="missing_required_block",
+            )
 
-        assert 0.0 <= state.control.epsilon <= 1.0, "epsilon out of bounds"
+        if state.stability.dv is None:
+            raise _contract_violation(
+                "stability.dv is required",
+                field="stability.dv",
+                reason="missing_required_field",
+            )
+
+        if state.stability.dv < 0.0:
+            raise _contract_violation(
+                "stability.dv must be >= 0.0",
+                field="stability.dv",
+                reason="negative_value",
+            )
+
+        if not 0.0 <= state.control.epsilon <= 1.0:
+            raise _contract_violation(
+                "epsilon out of bounds",
+                field="control.epsilon",
+                reason="out_of_bounds",
+            )
 
         # -------------------------
         # RISK CONSISTENCY
         # -------------------------
         r = state.risk
         # fused risk must dominate components
-        assert r.fused_risk >= max(
+        if r.fused_risk < max(
             r.mh_risk,
             r.world_risk,
             r.forecast_risk,
-        ), "fused_risk must dominate component risks"
+        ):
+            raise _contract_violation(
+                "fused_risk must dominate component risks",
+                field="risk.fused_risk",
+                reason="risk_consistency_violation",
+            )
 
         for name in [
             "mh_risk",
@@ -46,23 +99,43 @@ class CognitiveStateContract:
             "smoothed_risk",
         ]:
             val = getattr(r, name)
-            assert 0.0 <= val <= 1.0, f"{name} must be in [0,1]"
+            if not 0.0 <= val <= 1.0:
+                raise _contract_violation(
+                    f"{name} must be in [0,1]",
+                    field=f"risk.{name}",
+                    reason="out_of_bounds",
+                )
 
         # -------------------------
         # LOGICAL CONSISTENCY
         # -------------------------
         if r.fused_risk >= 0.75:
-            assert r.early_warning is True
+            if r.early_warning is not True:
+                raise _contract_violation(
+                    "early_warning required when fused_risk >= 0.75",
+                    field="risk.early_warning",
+                    reason="missing_early_warning",
+                )
 
         # -------------------------
         # OPTIONAL BLOCK CONSISTENCY
         # -------------------------
         if state.projection is not None:
             if state.projection.valid is False:
-                assert state.projection.margin is not None
+                if state.projection.margin is None:
+                    raise _contract_violation(
+                        "projection.margin required when projection is invalid",
+                        field="projection.margin",
+                        reason="missing_projection_margin",
+                    )
 
         # -------------------------
         # TIMELINE SAFETY
         # -------------------------
         if state.timeline is not None:
-            assert hasattr(state.timeline, "list_signals")
+            if not hasattr(state.timeline, "list_signals"):
+                raise _contract_violation(
+                    "timeline must expose list_signals",
+                    field="timeline",
+                    reason="invalid_timeline_interface",
+                )

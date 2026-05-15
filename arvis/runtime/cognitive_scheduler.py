@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
+from arvis.errors import ErrorManager, normalize_error
+from arvis.errors.runtime_scheduler import (
+    InvalidProcessSchedulingError,
+    SchedulerConfigurationError,
+    SchedulerInvariantViolation,
+)
 from arvis.kernel_core.contracts.execution_contract import ProcessExecutor
 from arvis.kernel_core.process import (
     CognitiveProcess,
@@ -63,7 +69,9 @@ class CognitiveScheduler:
         )
 
         if executor is None:
-            raise ValueError("A process executor is required")
+            raise SchedulerConfigurationError(
+                "A process executor is required",
+            )
 
         self.runtime_state = runtime_state
         self.process_executor = executor
@@ -79,7 +87,7 @@ class CognitiveScheduler:
 
     def enqueue(self, process: CognitiveProcess) -> None:
         if process.is_final():
-            raise ValueError(
+            raise InvalidProcessSchedulingError(
                 "Cannot enqueue final process: "
                 f"{process.process_id.value} "
                 f"[{process.status.value}]"
@@ -178,7 +186,10 @@ class CognitiveScheduler:
             )
             return decision
 
-        assert decision.selected_process_id is not None
+        if decision.selected_process_id is None:
+            raise SchedulerInvariantViolation(
+                "Scheduler selected_process_id cannot be None for non-noop decision",
+            )
         process = self.runtime_state.get_process(decision.selected_process_id)
 
         if process.status != CognitiveProcessStatus.READY:
@@ -315,6 +326,39 @@ class CognitiveScheduler:
             return decision
 
         except Exception as exc:
+            error = normalize_error(exc)
+
+            ErrorManager.attach(
+                process.local_state,
+                error,
+            )
+
+            process.mark_aborted(error=error.code)
+
+            state.active_process_id = None
+
+            state.append_unique(
+                state.aborted_queue,
+                process.process_id,
+            )
+
+            self.runtime_state.append_event(
+                "process_aborted",
+                {
+                    "process_id": process.process_id.value,
+                    "error": error.to_safe_dict(),
+                    "error_type": type(exc).__name__,
+                },
+            )
+
+            self.hooks.on_aborted(process, error.code)
+
+            return SchedulerDecision(
+                selected_process_id=process.process_id,
+                rationale=f"execution failed: {error.code}",
+                resource_grant=process.remaining_budget(),
+                score=process.last_score,
+            )
             # ----------------------------------------
             # Only TRUE execution errors should abort
             # ----------------------------------------

@@ -8,6 +8,8 @@ from arvis.errors.base import (
     ArvisRuntimeError,
     ErrorDomain,
 )
+from arvis.errors.normalization import normalize_error
+from arvis.errors.provenance import cause_from_exception
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
@@ -56,28 +58,44 @@ def _get_zip(handler: SyscallHandlerLike) -> ZipIngestService | None:
 
 def _missing_service_error(service_name: str) -> SyscallResult:
     return SyscallResult.failure(
-        _syscall_error(
+        _vfs_error(
             code=service_name,
             message=service_name.replace("_", " "),
         )
     )
 
 
-def _syscall_error(
+def _vfs_error(
     *,
     code: str,
     message: str,
-    retryable: bool = False,
+    exc: Exception | None = None,
     retry_class: str = "permanent",
 ) -> ArvisRuntimeError:
+    details: dict[str, str | int | float | bool | None] = {
+        "retry_class": retry_class,
+    }
+
+    cause = None
+
+    if exc is not None:
+        normalized = normalize_error(exc)
+        details.update(
+            {
+                "exception": type(exc).__name__,
+                "wrapped_error_code": normalized.code,
+                "wrapped_error_domain": normalized.domain.value,
+            }
+        )
+        cause = cause_from_exception(exc)
+        message = normalized.message
+
     return ArvisRuntimeError(
         message,
         code=code,
         domain=ErrorDomain.VFS,
-        retryable=retryable,
-        details={
-            "retry_class": retry_class,
-        },
+        details=details,
+        cause=cause,
     )
 
 
@@ -165,63 +183,30 @@ def _serialize_zip_decision(decision: ZipIngestDecision) -> dict[str, Any]:
 
 def _map_vfs_error(exc: Exception) -> ArvisRuntimeError:
     if isinstance(exc, VFSItemNotFoundError):
-        return _syscall_error(
-            code="vfs_item_not_found",
-            message=str(exc),
-        )
+        return _vfs_error(code="vfs_item_not_found", message=str(exc), exc=exc)
     if isinstance(exc, VFSParentNotFoundError):
-        return _syscall_error(
-            code="vfs_parent_not_found",
-            message=str(exc),
-        )
+        return _vfs_error(code="vfs_parent_not_found", message=str(exc), exc=exc)
     if isinstance(exc, VFSParentNotFolderError):
-        return _syscall_error(
-            code="vfs_parent_not_folder",
-            message=str(exc),
-        )
+        return _vfs_error(code="vfs_parent_not_folder", message=str(exc), exc=exc)
     if isinstance(exc, VFSNameConflictError):
-        return _syscall_error(
-            code="vfs_name_conflict",
-            message=str(exc),
-        )
+        return _vfs_error(code="vfs_name_conflict", message=str(exc), exc=exc)
     if isinstance(exc, VFSFolderNotEmptyError):
-        return _syscall_error(
-            code="vfs_folder_not_empty",
-            message=str(exc),
-        )
+        return _vfs_error(code="vfs_folder_not_empty", message=str(exc), exc=exc)
     if isinstance(exc, VFSCycleError):
-        return _syscall_error(
-            code="vfs_cycle_error",
-            message=str(exc),
-        )
+        return _vfs_error(code="vfs_cycle_error", message=str(exc), exc=exc)
     if isinstance(exc, VFSInvalidNameError):
-        return _syscall_error(
-            code="vfs_invalid_name",
-            message=str(exc),
-        )
-    return _syscall_error(
-        code="vfs_unknown_error",
-        message=str(exc),
-    )
+        return _vfs_error(code="vfs_invalid_name", message=str(exc), exc=exc)
+    return _vfs_error(code="vfs_unknown_error", message=str(exc), exc=exc)
 
 
 def _map_zip_error(exc: Exception) -> ArvisRuntimeError:
     if isinstance(exc, ZipRejectedError):
-        return _syscall_error(
-            code="zip_rejected",
-            message=str(exc),
-        )
+        return _vfs_error(code="zip_rejected", message=str(exc), exc=exc)
 
     if isinstance(exc, ZipConflictError):
-        return _syscall_error(
-            code="zip_conflict",
-            message=str(exc),
-        )
+        return _vfs_error(code="zip_conflict", message=str(exc), exc=exc)
 
-    return _syscall_error(
-        code="zip_unknown_error",
-        message=str(exc),
-    )
+    return _vfs_error(code="zip_unknown_error", message=str(exc), exc=exc)
 
 
 # =====================================================

@@ -10,6 +10,8 @@ from arvis.errors.base import (
     ArvisRuntimeError,
     ErrorDomain,
 )
+from arvis.errors.normalization import normalize_error
+from arvis.errors.provenance import cause_from_exception
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
@@ -73,15 +75,20 @@ def tool_execute(
     try:
         tool_result = tool_manager.run(result, ctx)
     except Exception as exc:
+        normalized = normalize_error(exc)
+
         return SyscallResult.failure(
             ArvisExternalError(
-                str(exc),
+                normalized.message,
                 code="tool_execution_failed",
                 domain=ErrorDomain.TOOL,
                 details={
                     "exception": type(exc).__name__,
+                    "wrapped_error_code": normalized.code,
+                    "wrapped_error_domain": normalized.domain.value,
                     "retry_class": "transient",
                 },
+                cause=cause_from_exception(exc),
                 replay_safe=False,
             )
         )
@@ -109,15 +116,21 @@ def tool_execute(
     normalized_error: ArvisError | None = None
 
     if error is not None:
-        if isinstance(error, Exception):
+        if isinstance(error, ArvisError):
+            normalized_error = error
+        elif isinstance(error, Exception):
+            wrapped_error = normalize_error(error)
             normalized_error = ArvisExternalError(
-                str(error),
+                wrapped_error.message,
                 code="tool_execution_error",
                 domain=ErrorDomain.TOOL,
                 details={
                     "exception": type(error).__name__,
+                    "wrapped_error_code": wrapped_error.code,
+                    "wrapped_error_domain": wrapped_error.domain.value,
                     "retry_class": "transient",
                 },
+                cause=cause_from_exception(error),
                 replay_safe=False,
             )
         else:

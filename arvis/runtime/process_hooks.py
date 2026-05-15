@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
+from arvis.errors import normalize_error
 from arvis.errors.manager import ErrorManager
 from arvis.kernel_core.process.process import CognitiveProcess
 
@@ -89,7 +90,7 @@ class ProcessHookManager:
                 {
                     "process_id": process.process_id.value,
                     "hook": hook_name,
-                    "error": str(exc),
+                    "error": normalize_error(exc).to_safe_dict(),
                     "error_type": type(exc).__name__,
                 },
             )

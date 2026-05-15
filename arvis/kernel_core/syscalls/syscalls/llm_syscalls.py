@@ -8,7 +8,13 @@ from arvis.adapters.llm.contracts.execution_result import LLMExecutionResult
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.tracing import LLMTrace, serialize_response, serialize_trace
-from arvis.errors.base import ArvisExternalError, ArvisRuntimeError, ErrorDomain
+from arvis.errors.base import (
+    ArvisExternalError,
+    ArvisRuntimeError,
+    ErrorDomain,
+)
+from arvis.errors.normalization import normalize_error
+from arvis.errors.provenance import cause_from_exception
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
@@ -75,17 +81,20 @@ def llm_generate(
             preferred_provider=preferred_provider,
         )
     except Exception as exc:
-        retry_class = "transient"
+        normalized = normalize_error(exc)
 
         return SyscallResult.failure(
             ArvisExternalError(
-                str(exc),
+                normalized.message,
                 code="llm_execution_failed",
                 domain=ErrorDomain.LLM,
                 details={
                     "exception": type(exc).__name__,
-                    "retry_class": retry_class,
+                    "wrapped_error_code": normalized.code,
+                    "wrapped_error_domain": normalized.domain.value,
+                    "retry_class": "transient",
                 },
+                cause=cause_from_exception(exc),
                 replay_safe=False,
             )
         )
@@ -108,7 +117,17 @@ def llm_generate(
         response = response.response
 
     if not isinstance(response, LLMResponse):
-        raise TypeError("llm adapter returned invalid response type")
+        return SyscallResult.failure(
+            ArvisRuntimeError(
+                "llm adapter returned invalid response type",
+                code="llm_invalid_response_type",
+                domain=ErrorDomain.LLM,
+                details={
+                    "expected_type": "LLMResponse",
+                    "received_type": type(response).__name__,
+                },
+            )
+        )
 
     trace_id = response.trace_id or str(kwargs.get("causal_id") or "llm.generate")
 

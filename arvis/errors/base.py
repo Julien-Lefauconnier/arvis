@@ -183,7 +183,8 @@ class ArvisError(Exception):
         super().__init__(message)
 
         self.message = message
-        self.code = code or self.default_code
+        raw_code = code or self.default_code
+        self.code = getattr(raw_code, "value", raw_code)
 
         self.domain = domain or self.__class__.domain
         self.category = category or self.__class__.category

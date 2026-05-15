@@ -28,7 +28,7 @@ class LLMResponseEvaluator:
         confidence = obs.confidence_mean or 0.0
         variance = obs.logprob_variance or 0.0
 
-        # 🔴 High uncertainty → retry
+        # High uncertainty → retry
         if entropy > 1.5 or variance > 0.2:
             return EvaluationDecision(
                 accept=False,
@@ -37,7 +37,7 @@ class LLMResponseEvaluator:
                 require_confirmation=True,
             )
 
-        # 🟠 Low confidence → fallback
+        # Low confidence → fallback
         if confidence < 0.3:
             return EvaluationDecision(
                 accept=False,
@@ -46,7 +46,7 @@ class LLMResponseEvaluator:
                 require_confirmation=True,
             )
 
-        # 🟢 Accept
+        # Accept
         return EvaluationDecision(
             accept=True,
             retry=False,

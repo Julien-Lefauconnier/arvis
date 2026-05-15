@@ -7,12 +7,14 @@ from dataclasses import dataclass
 from time import sleep
 from typing import TypeVar
 
-from arvis.errors import ArvisExternalError
+from arvis.errors.llm_runtime import (
+    LLMRetryExhaustedError,
+)
 
 T = TypeVar("T")
 
 
-class LLMRetryError(ArvisExternalError):
+class LLMRetryError(LLMRetryExhaustedError):
     """Raised when a retryable operation exhausts all retry attempts."""
 
 

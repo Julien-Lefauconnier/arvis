@@ -359,7 +359,7 @@ Escalation is triggered by:
 ## Replay-Safe Export
 
 ```python
-should_escalate = ErrorManager.should_escalate(ctx)
+errors = ErrorManager.export_replay_safe(ctx)
 ```
 
 Only errors with replay_safe=True are exported.
@@ -472,6 +472,74 @@ Duplicate error codes raise at registry construction time.
 - SyscallReplayError
 - SyscallExternalDependencyError
 
+**Artifact**
+
+- ArtifactError
+- ArtifactValidationError
+- ArtifactTimestampMissingError
+- ArtifactInvalidStatusError
+- ArtifactConsistencyError
+
+**Kernel Runtime**
+
+- KernelRuntimeError
+- SyscallRegistryError
+- DuplicateSyscallRegistrationError
+
+**Scheduler Runtime**
+
+- SchedulerRuntimeError
+- SchedulerConfigurationError
+- SchedulerInvariantViolation
+- InvalidProcessSchedulingError
+- UnknownProcessError
+
+**Pipeline Runtime**
+
+- PipelineRuntimeError
+- PipelineExecutionContractViolation
+
+**Runtime Execution**
+
+- RuntimeExecutionError
+- ProcessExecutionAborted
+- RuntimeExecutionContractViolation
+
+**Tool Runtime**
+
+- ToolExecutionError
+- ToolAuthorizationError
+- UnknownToolError
+
+**LLM Runtime**
+
+- LLMRuntimeError
+- LLMExecutionContractViolation
+- LLMEmptyResponseError
+- LLMRetryExhaustedError
+- LLMFallbackExhaustedError
+
+---
+
+## Error Code Convention
+
+ARVIS error codes use stable lower snake_case values.
+
+Example:
+
+```python
+ErrorCode.TOOL_EXECUTION_ERROR
+```
+
+serializes as:
+
+```json
+"tool_execution_error"
+```
+
+Enum member names are internal Python identifiers.
+Serialized values are the canonical runtime/export format.
+
 ---
 
 ## Design Rules
@@ -491,6 +559,8 @@ When adding a new error:
     - policy decision;
     - replay safety;
     - registry uniqueness.
+9. Runtime boundaries must normalize broad exceptions into ArvisError subclasses.
+10. Scheduler and pipeline invariants must never rely on Python assert statements.
 
 ---
 
@@ -524,5 +594,8 @@ pytest tests/errors
 Reference passing state:
 
 ```bash
-113 passed
+ruff check --fix
+mypy arvis --strict
+pytest tests/errors
+pytest
 ```

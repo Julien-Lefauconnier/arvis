@@ -2,6 +2,7 @@
 
 import pytest
 
+from arvis.errors.base import ArvisInvariantViolation
 from arvis.kernel.kernel_invariants import assert_kernel_invariants
 
 # -----------------------------
@@ -57,14 +58,14 @@ def test_stability_upper_bound():
 def test_stability_below_zero():
     b = Bundle(stability_score=-0.1)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ArvisInvariantViolation):
         assert_kernel_invariants(b)
 
 
 def test_stability_above_one():
     b = Bundle(stability_score=1.1)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ArvisInvariantViolation):
         assert_kernel_invariants(b)
 
 
@@ -80,7 +81,7 @@ def test_gap_without_intent_fails():
         reasoning_intent=None,
     )
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ArvisInvariantViolation):
         assert_kernel_invariants(b)
 
 

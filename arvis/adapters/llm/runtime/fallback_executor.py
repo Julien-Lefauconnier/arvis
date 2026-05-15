@@ -14,10 +14,14 @@ from arvis.adapters.llm.contracts.execution_result import (
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.providers.base import BaseLLMProvider
-from arvis.errors import ArvisExternalError
+from arvis.errors import normalize_error
+from arvis.errors.llm_runtime import (
+    LLMEmptyResponseError,
+    LLMFallbackExhaustedError,
+)
 
 
-class LLMFallbackExecutionError(ArvisExternalError):
+class LLMFallbackExecutionError(LLMFallbackExhaustedError):
     """Raised when all providers fail."""
 
 
@@ -52,7 +56,7 @@ class FallbackExecutor:
                 latency_ms = (perf_counter() - started) * 1000.0
 
                 if self.fail_fast_on_empty and not response.content.strip():
-                    raise RuntimeError("empty_llm_response")
+                    raise LLMEmptyResponseError("empty_llm_response")
 
                 attempts.append(
                     ProviderAttempt(
@@ -107,7 +111,7 @@ class FallbackExecutor:
                         provider=provider_name,
                         success=False,
                         latency_ms=latency_ms,
-                        error=str(exc),
+                        error=normalize_error(exc).code,
                     )
                 )
 

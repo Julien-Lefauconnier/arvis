@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from arvis.errors.base import ArvisRuntimeError, ErrorDomain
+from arvis.errors.codes import ErrorCode
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
@@ -40,4 +42,14 @@ class PipelineExecutionSyncService:
         if runtime is None:
             return
 
-        assert runtime.execution_status is not None
+        if runtime.execution_status is None:
+            raise ArvisRuntimeError(
+                "Pipeline execution sync requires runtime.execution_status",
+                code=ErrorCode.PIPELINE_EXECUTION_CONTRACT_VIOLATION,
+                domain=ErrorDomain.PIPELINE,
+                details={
+                    "component": "PipelineExecutionSyncService",
+                    "missing": "runtime.execution_status",
+                    "retry_class": "permanent",
+                },
+            )

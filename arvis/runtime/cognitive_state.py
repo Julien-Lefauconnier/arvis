@@ -1,4 +1,4 @@
-# # arvis/runtime/cognitive_state.py
+# arvis/runtime/cognitive_state.py
 
 from __future__ import annotations
 

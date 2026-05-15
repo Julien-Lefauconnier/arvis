@@ -58,7 +58,7 @@ def test_syscall_journal():
     assert entry["replay_policy"] == "unknown"
 
     assert isinstance(entry["error"], dict)
-    assert entry["error"]["code"] == "UNKNOWN_SYSCALL"
+    assert entry["error"]["code"] == "unknown_syscall"
 
 
 def test_tool_execute_syscall_policy_denied():
@@ -168,15 +168,34 @@ def test_tool_execute_syscall_failure(monkeypatch):
 
     assert result.success is False
     assert result.error is not None
-    assert "boom" in str(result.error)
+
+    assert result.error.code == "tool_execution_error"
+    assert result.error.message == "boom"
+
+    assert result.error.cause is not None
+    assert result.error.cause.code == "invariant_violation"
+    assert result.error.cause.message == "boom"
 
     entry = ctx.extra["syscall_results"][0]
+
     assert entry["syscall"] == "tool.execute"
     assert entry["success"] is False
+
     assert "syscall_id" in entry
     assert entry["replay_policy"] == "journal_only_replay"
+
     assert isinstance(entry["error"], dict)
-    assert "boom" in entry["error"]["message"]
+
+    assert entry["error"]["code"] == "tool_execution_error"
+    assert entry["error"]["message"] == "boom"
+
+    assert entry["error"]["domain"] == "tool"
+
+    assert entry["error"]["cause"]["code"] == "invariant_violation"
+    assert entry["error"]["cause"]["message"] == "boom"
+
+    assert entry["error"]["details"]["wrapped_error_code"] == "invariant_violation"
+
     assert "error" in entry
 
 

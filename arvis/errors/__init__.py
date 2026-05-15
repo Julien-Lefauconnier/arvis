@@ -5,6 +5,13 @@ from arvis.errors.api import (
     CognitiveStateRequiredError,
     InvalidIRPayloadError,
 )
+from arvis.errors.artifact import (
+    ArtifactConsistencyError,
+    ArtifactError,
+    ArtifactInvalidStatusError,
+    ArtifactTimestampMissingError,
+    ArtifactValidationError,
+)
 from arvis.errors.base import (
     ArvisDegradedModeError,
     ArvisDomainError,
@@ -30,6 +37,18 @@ from arvis.errors.kernel import (
     KernelDegradedWarning,
     KernelFailClosedError,
     KernelInvariantViolation,
+)
+from arvis.errors.kernel_runtime import (
+    DuplicateSyscallRegistrationError,
+    KernelRuntimeError,
+    SyscallRegistryError,
+)
+from arvis.errors.llm_runtime import (
+    LLMEmptyResponseError,
+    LLMExecutionContractViolation,
+    LLMFallbackExhaustedError,
+    LLMRetryExhaustedError,
+    LLMRuntimeError,
 )
 from arvis.errors.manager import ErrorManager
 from arvis.errors.normalization import normalize_error
@@ -60,11 +79,32 @@ from arvis.errors.runtime import (
     RuntimeDegradationError,
     StabilityEvaluationError,
 )
+from arvis.errors.runtime_execution import (
+    ProcessExecutionAborted,
+    RuntimeExecutionContractViolation,
+    RuntimeExecutionError,
+)
+from arvis.errors.runtime_pipeline import (
+    PipelineExecutionContractViolation,
+    PipelineRuntimeError,
+)
+from arvis.errors.runtime_scheduler import (
+    InvalidProcessSchedulingError,
+    SchedulerConfigurationError,
+    SchedulerInvariantViolation,
+    SchedulerRuntimeError,
+    UnknownProcessError,
+)
 from arvis.errors.syscall import (
     SyscallExecutionError,
     SyscallExternalDependencyError,
     SyscallReplayError,
     SyscallValidationError,
+)
+from arvis.errors.tool_runtime import (
+    ToolAuthorizationError,
+    ToolExecutionError,
+    UnknownToolError,
 )
 
 __all__ = [
@@ -123,4 +163,30 @@ __all__ = [
     "SyscallValidationError",
     "SyscallReplayError",
     "SyscallExternalDependencyError",
+    "ArtifactError",
+    "ArtifactValidationError",
+    "ArtifactTimestampMissingError",
+    "ArtifactInvalidStatusError",
+    "ArtifactConsistencyError",
+    "KernelRuntimeError",
+    "SyscallRegistryError",
+    "DuplicateSyscallRegistrationError",
+    "SchedulerRuntimeError",
+    "SchedulerConfigurationError",
+    "SchedulerInvariantViolation",
+    "InvalidProcessSchedulingError",
+    "UnknownProcessError",
+    "PipelineRuntimeError",
+    "PipelineExecutionContractViolation",
+    "ProcessExecutionAborted",
+    "RuntimeExecutionContractViolation",
+    "RuntimeExecutionError",
+    "ToolAuthorizationError",
+    "ToolExecutionError",
+    "UnknownToolError",
+    "LLMEmptyResponseError",
+    "LLMExecutionContractViolation",
+    "LLMFallbackExhaustedError",
+    "LLMRetryExhaustedError",
+    "LLMRuntimeError",
 ]

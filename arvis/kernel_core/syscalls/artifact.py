@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.errors.artifact import (
+    ArtifactConsistencyError,
+    ArtifactInvalidStatusError,
+    ArtifactTimestampMissingError,
+)
 from arvis.errors.base import ArvisError
 
 
@@ -38,14 +43,14 @@ class ExecutionArtifact:
 
         # HARDENING: enforce valid status
         if self.status not in ("success", "error"):
-            raise ValueError(f"invalid artifact status: {self.status}")
+            raise ArtifactInvalidStatusError(f"invalid artifact status: {self.status}")
 
         # HARDENING: enforce consistency
         if self.status == "success" and error is not None:
-            raise ValueError("success artifact cannot have error")
+            raise ArtifactConsistencyError("success artifact cannot have error")
 
         if self.status == "error" and error is None:
-            raise ValueError("error artifact must have error message")
+            raise ArtifactConsistencyError("error artifact must have error message")
 
         self.output: Any | None = output
         self.error: ArvisError | None = error
@@ -58,7 +63,7 @@ class ExecutionArtifact:
         self.tick: int | None = tick
 
         if timestamp is None:
-            raise RuntimeError(
+            raise ArtifactTimestampMissingError(
                 "artifact requires explicit timestamp (kernel-controlled)"
             )
 

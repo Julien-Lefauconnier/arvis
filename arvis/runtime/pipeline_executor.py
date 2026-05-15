@@ -5,6 +5,12 @@ from __future__ import annotations
 from time import perf_counter
 from typing import Any, cast
 
+from arvis.errors.runtime_pipeline import (
+    PipelineExecutionContractViolation,
+    PipelineExecutionReturnedNone,
+    PipelineFinalizeContractViolation,
+    PipelineRuntimeError,
+)
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.kernel.pipeline.pipeline_contract import (
@@ -62,9 +68,9 @@ class PipelineExecutor:
                 result = None
 
             if completed:
-                raise RuntimeError(
+                raise PipelineExecutionContractViolation(
                     "run_stage() must not finalize the pipeline directly; "
-                    "use finalize_run() for terminal completion"
+                    "use finalize_run() for terminal completion",
                 )
 
             stage_name = stage.__class__.__name__
@@ -94,17 +100,19 @@ class PipelineExecutor:
     def _normalize_finalize_result(self, finalize_result: Any) -> Any:
         if isinstance(finalize_result, PipelineFinalizeSignal):
             if not finalize_result.completed:
-                raise RuntimeError(
+                raise PipelineFinalizeContractViolation(
                     "PipelineFinalizeSignal.completed must be True in finalize_run()"
                 )
             if finalize_result.result is None:
-                raise RuntimeError(
+                raise PipelineFinalizeContractViolation(
                     "PipelineFinalizeSignal.result must not be None in finalize_run()"
                 )
             return finalize_result.result
 
         if finalize_result is None:
-            raise RuntimeError("Pipeline finalize_run returned None")
+            raise PipelineRuntimeError(
+                "Pipeline finalize_run returned None",
+            )
 
         return finalize_result
 
@@ -116,7 +124,7 @@ class PipelineExecutor:
     ) -> ProcessExecutionOutcome:
         result = self.pipeline.run(ctx)
         if result is None:
-            raise RuntimeError("Pipeline run(ctx) returned None")
+            raise PipelineExecutionReturnedNone("Pipeline run(ctx) returned None")
 
         elapsed_ms = max(1, int((perf_counter() - start) * 1000.0))
 

@@ -29,7 +29,10 @@ class CognitiveIRValidator:
 
         # 🔒 extract once (mypy-safe)
         gate = ir.gate
-        assert gate is not None  # guaranteed by presence
+        if gate is None:
+            raise CognitiveIRValidationError(
+                "Missing gate IR after presence validation"
+            )
 
         cls._validate_gate(gate)
         cls._validate_reason_codes(gate)

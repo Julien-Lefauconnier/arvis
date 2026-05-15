@@ -164,5 +164,7 @@ def test_llm_generate_syscall_failure_has_retry_class() -> None:
 
     assert error.details == {
         "exception": "TimeoutError",
+        "wrapped_error_code": "external_error",
+        "wrapped_error_domain": "external",
         "retry_class": "transient",
     }

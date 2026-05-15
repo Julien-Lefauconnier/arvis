@@ -7,6 +7,11 @@ from types import SimpleNamespace
 from typing import Any
 
 from arvis.cognition.state.cognitive_state import CognitiveState
+from arvis.errors.runtime_execution import (
+    ProcessExecutionAborted,
+    RuntimeExecutionContractViolation,
+    RuntimeExecutionError,
+)
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
@@ -135,7 +140,7 @@ class CognitiveRuntime:
                 break
 
         if result is None:
-            raise RuntimeError("Execution did not produce any result")
+            raise RuntimeExecutionError("Execution did not produce any result")
 
         self._execute_tool_if_needed(
             ctx=ctx,
@@ -216,7 +221,12 @@ class CognitiveRuntime:
     ) -> Any:
         if proc.status == CognitiveProcessStatus.ABORTED:
             error = proc.last_error or "unknown_error"
-            raise RuntimeError(f"Process aborted: {error}")
+            raise ProcessExecutionAborted(
+                f"Process aborted: {error}",
+                details={
+                    "process_id": proc.process_id.value,
+                },
+            )
 
         if proc.status in (
             CognitiveProcessStatus.COMPLETED,
@@ -224,7 +234,7 @@ class CognitiveRuntime:
             CognitiveProcessStatus.BLOCKED,
         ):
             if proc.last_result is None:
-                raise RuntimeError(
+                raise RuntimeExecutionContractViolation(
                     f"Process exited in state {proc.status.value} without result"
                 )
             return proc.last_result
@@ -232,4 +242,6 @@ class CognitiveRuntime:
         if getattr(decision, "result", None) is not None:
             return decision.result
 
-        raise RuntimeError("Execution exited without resolvable result")
+        raise RuntimeExecutionContractViolation(
+            "Execution exited without resolvable result"
+        )

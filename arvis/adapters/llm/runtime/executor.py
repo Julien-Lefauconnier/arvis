@@ -11,6 +11,9 @@ from arvis.adapters.llm.providers.base import BaseLLMProvider
 from arvis.adapters.llm.runtime.evaluator import LLMResponseEvaluator
 from arvis.adapters.llm.runtime.fallback_executor import FallbackExecutor
 from arvis.adapters.llm.runtime.router import LLMRouter, LLMRoutingRequest
+from arvis.errors.llm_runtime import (
+    LLMExecutionContractViolation,
+)
 
 
 class LLMRuntimeExecutor:
@@ -47,7 +50,7 @@ class LLMRuntimeExecutor:
             response = result.response
 
             if response is None:
-                raise RuntimeError("fallback_executor_returned_none")
+                raise LLMExecutionContractViolation("fallback_executor_returned_none")
 
             obs = self._observer.observe(response)
             decision = self._evaluator.evaluate(obs)
@@ -61,7 +64,9 @@ class LLMRuntimeExecutor:
                 ).execute(request)
                 response = result.response
                 if response is None:
-                    raise RuntimeError("fallback_executor_returned_none")
+                    raise LLMExecutionContractViolation(
+                        "fallback_executor_returned_none"
+                    )
                 obs = self._observer.observe(response)
 
             # Fallback logic
@@ -71,7 +76,9 @@ class LLMRuntimeExecutor:
                 ).execute(request)
                 response = result.response
                 if response is None:
-                    raise RuntimeError("fallback_executor_returned_none")
+                    raise LLMExecutionContractViolation(
+                        "fallback_executor_returned_none"
+                    )
                 obs = self._observer.observe(response)
 
             # Inject metadata

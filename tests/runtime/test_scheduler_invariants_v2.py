@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from arvis.errors import InvalidProcessSchedulingError
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.kernel_core.process import (
     CognitiveBudget,
@@ -47,7 +48,10 @@ def test_enqueue_rejects_final_process():
 
     proc = make_process("p-final", status=CognitiveProcessStatus.COMPLETED)
 
-    with pytest.raises(ValueError, match="Cannot enqueue final process"):
+    with pytest.raises(
+        InvalidProcessSchedulingError,
+        match="Cannot enqueue final process",
+    ):
         scheduler.enqueue(proc)
 
 

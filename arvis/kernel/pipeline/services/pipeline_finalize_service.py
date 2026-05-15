@@ -10,6 +10,8 @@ from arvis.cognition.gate.cognitive_gate_result import CognitiveGateResult
 from arvis.cognition.gate.gate_trace_builder import GateTraceBuilder
 from arvis.cognition.gate.reason_code_normalizer import ReasonCodeNormalizer
 from arvis.cognition.state.cognitive_state_builder import CognitiveStateBuilder
+from arvis.errors.base import ArvisRuntimeError, ErrorDomain
+from arvis.errors.codes import ErrorCode
 from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
@@ -48,8 +50,29 @@ class PipelineFinalizeService:
         # -----------------------------------------------------
         runtime = ctx.execution_state
 
-        assert runtime is not None
-        assert runtime.execution_status is not None
+        if runtime is None:
+            raise ArvisRuntimeError(
+                "Pipeline finalize requires execution_state",
+                code=ErrorCode.PIPELINE_FINALIZE_CONTRACT_VIOLATION,
+                domain=ErrorDomain.PIPELINE,
+                details={
+                    "component": "PipelineFinalizeService",
+                    "missing": "execution_state",
+                    "retry_class": "permanent",
+                },
+            )
+
+        if runtime.execution_status is None:
+            raise ArvisRuntimeError(
+                "Pipeline finalize requires runtime.execution_status",
+                code=ErrorCode.PIPELINE_FINALIZE_CONTRACT_VIOLATION,
+                domain=ErrorDomain.PIPELINE,
+                details={
+                    "component": "PipelineFinalizeService",
+                    "missing": "runtime.execution_status",
+                    "retry_class": "permanent",
+                },
+            )
 
         requires_confirmation = runtime.requires_confirmation
         can_execute = runtime.can_execute

@@ -9,6 +9,10 @@ from arvis.adapters.kernel.signals.signal_factory import SignalFactory
 from arvis.adapters.kernel.timeline_from_signals import (
     signal_journal_to_timeline_snapshot,
 )
+from arvis.errors.runtime_scheduler import (
+    SchedulerInvariantViolation,
+    UnknownProcessError,
+)
 from arvis.kernel_core.interrupts.interrupt_bus import CognitiveInterruptBus
 from arvis.kernel_core.process import CognitiveProcess, CognitiveProcessId
 from arvis.kernel_core.state.scheduler_state import SchedulerState
@@ -36,7 +40,9 @@ class CognitiveRuntimeState:
     def register_process(self, process: CognitiveProcess) -> None:
         process.validate()
         if process.process_id in self.processes:
-            raise ValueError(f"Duplicate process id: {process.process_id.value}")
+            raise SchedulerInvariantViolation(
+                f"Duplicate process id: {process.process_id.value}",
+            )
         self.processes[process.process_id] = process
         self.resource_state.note_process_seen()
 
@@ -44,7 +50,9 @@ class CognitiveRuntimeState:
         try:
             return self.processes[process_id]
         except KeyError as exc:
-            raise KeyError(f"Unknown process id: {process_id.value}") from exc
+            raise UnknownProcessError(
+                f"Unknown process id: {process_id.value}",
+            ) from exc
 
     def append_event(self, event_type: str, payload: dict[str, Any]) -> None:
         signal = self._map_runtime_event(event_type, payload)
@@ -111,7 +119,9 @@ class CognitiveRuntimeState:
     # -----------------------------------------------------
     def compute_timeline_commitment(self) -> str:
         if not isinstance(self.timeline, SignalJournal):
-            raise RuntimeError("Timeline is not a SignalJournal")
+            raise SchedulerInvariantViolation(
+                "Timeline is not a SignalJournal",
+            )
 
         snapshot = signal_journal_to_timeline_snapshot(self.timeline)
         commitment = TimelineCommitment.from_snapshot(snapshot)

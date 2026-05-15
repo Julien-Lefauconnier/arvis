@@ -5,6 +5,7 @@ from typing import Any
 from arvis.adapters.tools.authorization import ToolAuthorizationDecision
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
+from arvis.errors.tool_runtime import ToolAuthorizationError
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.retry_policy import ToolRetryPolicy
@@ -74,10 +75,11 @@ class ToolManager:
             policy = ToolPolicyEvaluator.evaluate(invocation, self.registry)
 
         if not policy.allowed:
+            error = ToolAuthorizationError(policy.reason or "tool_policy_denied")
             return ToolResult(
                 tool_name=tool_name,
                 success=False,
-                error=policy.reason,
+                error=error,
                 latency_ms=None,
             )
 

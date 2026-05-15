@@ -24,7 +24,7 @@ def test_unknown_syscall_fails_cleanly_without_runtime_state():
     result = handler.handle(Syscall(name="unknown.call", args={"ctx": ctx}))
 
     assert result.success is False
-    assert result.error.code == "UNKNOWN_SYSCALL"
+    assert result.error.code == "unknown_syscall"
     assert "syscall_results" in ctx.extra
     assert ctx.extra["syscall_results"][0]["success"] is False
 
@@ -42,7 +42,7 @@ def test_invalid_syscall_args_fail_cleanly():
 
     assert result.success is False
     assert result.error is not None
-    assert result.error.code == "INVALID_SYSCALL_ARGS"
+    assert result.error.code == "invalid_syscall_args"
 
 
 def test_syscall_handler_keeps_journal_even_on_failure():

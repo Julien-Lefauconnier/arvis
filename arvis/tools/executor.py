@@ -4,6 +4,13 @@ import time
 from typing import Any
 
 from arvis.adapters.tools.invocation import ToolInvocation
+from arvis.errors import normalize_error
+from arvis.errors.provenance import cause_from_exception
+from arvis.errors.tool_runtime import (
+    ToolAuthorizationError,
+    ToolExecutionError,
+    UnknownToolError,
+)
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.tool_result import ToolResult
 
@@ -60,10 +67,11 @@ class ToolExecutor:
 
             if tool is None:
                 ctx._tool_failure = True
+                unknown_error = UnknownToolError(f"Unknown tool: {tool_name}")
                 return ToolResult(
                     tool_name=tool_name,
                     success=False,
-                    error="unknown_tool",
+                    error=unknown_error,
                     latency_ms=None,
                 )
 
@@ -83,16 +91,27 @@ class ToolExecutor:
                 tool_name=tool_name,
                 success=True,
                 output=output,
+                error=None,
                 latency_ms=latency,
             )
 
         except Exception as e:
             ctx._tool_failure = True
+            normalized_error = normalize_error(e)
+            error = ToolExecutionError(
+                normalized_error.message,
+                cause=cause_from_exception(normalized_error),
+                details={
+                    "wrapped_error_code": normalized_error.code,
+                    "wrapped_error_domain": normalized_error.domain.value,
+                    "exception_type": type(e).__name__,
+                },
+            )
 
             return ToolResult(
                 tool_name=tool_name,
                 success=False,
-                error=str(e),
+                error=error,
                 latency_ms=None,
             )
 
@@ -102,7 +121,7 @@ class ToolExecutor:
         Direct production execution is forbidden.
         """
         if isinstance(arg1, str):
-            raise RuntimeError(
+            raise ToolAuthorizationError(
                 "direct_tool_execution_forbidden: "
                 "use syscall authority via SyscallHandler"
             )

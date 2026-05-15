@@ -40,6 +40,10 @@ class ErrorOrigin:
 class ErrorCause:
     code: str
     error_type: str
+    message: str | None = None
+    domain: str | None = None
+    category: str | None = None
+    severity: str | None = None
     fingerprint: str | None = None
 
     def to_dict(self) -> ErrorDetails:
@@ -47,6 +51,17 @@ class ErrorCause:
             "code": self.code,
             "error_type": self.error_type,
         }
+        if self.message is not None:
+            out["message"] = self.message
+
+        if self.domain is not None:
+            out["domain"] = self.domain
+
+        if self.category is not None:
+            out["category"] = self.category
+
+        if self.severity is not None:
+            out["severity"] = self.severity
 
         if self.fingerprint is not None:
             out["fingerprint"] = self.fingerprint
@@ -88,5 +103,14 @@ def cause_from_exception(exc: BaseException) -> ErrorCause:
     return ErrorCause(
         code=str(code),
         error_type=type(exc).__name__,
+        message=str(exc),
+        domain=_enum_or_str(getattr(exc, "domain", None)),
+        category=_enum_or_str(getattr(exc, "category", None)),
+        severity=_enum_or_str(getattr(exc, "severity", None)),
         fingerprint=str(fingerprint) if fingerprint is not None else None,
     )
+
+
+def _enum_or_str(value: object) -> str | None:
+    raw = getattr(value, "value", value)
+    return str(raw) if raw else None
