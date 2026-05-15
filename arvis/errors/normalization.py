@@ -120,5 +120,6 @@ def normalize_error(exc: BaseException) -> ArvisError:
         str(exc),
         code=ErrorCode.RUNTIME_ERROR,
         details=details,
+        cause=cause,
         traceback=tb,
     )

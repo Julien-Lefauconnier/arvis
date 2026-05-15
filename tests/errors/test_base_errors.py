@@ -98,3 +98,22 @@ def test_kernel_error_category():
     assert error.category == ArvisErrorCategory.KERNEL
     assert error.domain == ErrorDomain.KERNEL
     assert error.policy == ErrorPolicy.FAIL_CLOSED
+
+
+def test_clone_preserves_runtime_flags():
+    error = ArvisRuntimeError(
+        "boom",
+        retryable=True,
+        deterministic=False,
+        replay_safe=False,
+        degraded=True,
+        policy=ErrorPolicy.RETRY,
+    )
+
+    cloned = error.clone()
+
+    assert cloned.retryable is True
+    assert cloned.deterministic is False
+    assert cloned.replay_safe is False
+    assert cloned.degraded is True
+    assert cloned.policy == ErrorPolicy.RETRY

@@ -11,8 +11,10 @@ from arvis.errors.base import (
     ErrorPolicy,
     ErrorSemantics,
 )
+from arvis.errors.context import ensure_error_extra
 from arvis.errors.normalization import normalize_error
 from arvis.errors.provenance import ErrorCause, ErrorOrigin, cause_from_exception
+from arvis.errors.redaction import redact_error_payload
 from arvis.errors.types import ErrorPayload
 
 ERRORS_KEY: Final[str] = "errors"
@@ -47,9 +49,11 @@ class ErrorManager:
     def attach(
         ctx: Any,
         error: ArvisError | Exception,
+        *,
+        safe: bool = False,
     ) -> ErrorPayload:
         arvis_error = normalize_error(error)
-        payload = arvis_error.to_dict()
+        payload = arvis_error.to_safe_dict() if safe else arvis_error.to_dict()
 
         extra = ErrorManager._extra(ctx)
 
@@ -101,7 +105,7 @@ class ErrorManager:
         stats = extra.get(ERROR_STATS_KEY)
 
         if not isinstance(stats, dict):
-            return ErrorManager._empty_statistics()
+            raise TypeError(f"ctx.extra[{ERROR_STATS_KEY!r}] must be a dict")
 
         return {
             "total": int(stats.get("total", 0)),
@@ -176,7 +180,7 @@ class ErrorManager:
 
             payload = cast(ErrorPayload, item)
             if payload.get("replay_safe") is True:
-                replay_safe.append(payload)
+                replay_safe.append(redact_error_payload(payload))
 
         return replay_safe
 
@@ -203,16 +207,7 @@ class ErrorManager:
 
     @staticmethod
     def _extra(ctx: Any) -> MutableMapping[str, Any]:
-        extra = getattr(ctx, "extra", None)
-
-        if extra is None:
-            ctx.extra = {}
-            extra = ctx.extra
-
-        if not isinstance(extra, MutableMapping):
-            raise TypeError("ctx.extra must be a mutable mapping")
-
-        return extra
+        return ensure_error_extra(ctx)
 
     @staticmethod
     def _list(
@@ -287,18 +282,17 @@ class ErrorManager:
         if details:
             merged_details.update(details)
 
-        if code is not None or merged_details != arvis_error.details:
-            semantics = tuple(arvis_error.metadata.semantics)
-
-            arvis_error = arvis_error.__class__(
-                arvis_error.message,
+        if (
+            code is not None
+            or merged_details != arvis_error.details
+            or origin is not None
+            or cause is not None
+        ):
+            arvis_error = arvis_error.clone(
                 code=code or arvis_error.code,
                 details=merged_details,
-                semantics=semantics,
                 origin=origin or arvis_error.origin,
                 cause=cause or arvis_error.cause or cause_from_exception(exc),
-                sensitive=arvis_error.sensitive,
-                redactable=arvis_error.redactable,
             )
 
         return ErrorManager.attach(ctx, arvis_error)

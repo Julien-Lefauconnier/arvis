@@ -23,7 +23,8 @@ from arvis.errors.base import (
     ErrorSemantics,
 )
 from arvis.errors.codes import ErrorCode
-from arvis.errors.disposition import ErrorDisposition
+from arvis.errors.context import ErrorContextLike, ensure_error_extra, has_error_extra
+from arvis.errors.disposition import ErrorDisposition, disposition_from_policy
 from arvis.errors.helpers import append_error
 from arvis.errors.kernel import (
     KernelDegradedWarning,
@@ -44,6 +45,7 @@ from arvis.errors.provenance import (
     build_error_fingerprint,
     cause_from_exception,
 )
+from arvis.errors.redaction import redact_error_payload
 from arvis.errors.registry import error_code_registry, iter_error_classes
 from arvis.errors.replay import (
     ReplayCognitiveStateMissing,
@@ -88,6 +90,10 @@ __all__ = [
     "ErrorManager",
     "ErrorCode",
     "ErrorDisposition",
+    "disposition_from_policy",
+    "ErrorContextLike",
+    "ensure_error_extra",
+    "has_error_extra",
     "ArvisReplayError",
     "ArvisSecurityError",
     "ArvisKernelError",
@@ -103,6 +109,7 @@ __all__ = [
     "normalize_error",
     "ErrorPolicyDecision",
     "decide_error_policy",
+    "redact_error_payload",
     "ErrorOrigin",
     "ErrorCause",
     "build_error_fingerprint",

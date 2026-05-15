@@ -86,3 +86,10 @@ def test_type_error_maps_to_runtime_error():
 
     assert isinstance(error, ArvisRuntimeError)
     assert error.details["type_error"] is True
+
+
+def test_normalize_generic_exception_preserves_cause():
+    error = normalize_error(Exception("boom"))
+
+    assert error.cause is not None
+    assert error.cause.error_type == "Exception"

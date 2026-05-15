@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from arvis.errors.base import (
     ArvisErrorCategory,
     ArvisErrorSeverity,
@@ -54,7 +56,14 @@ def test_attach_adds_kernel_failures(ctx):
     assert ctx.extra["kernel_failures"] == ["TEST_ERROR"]
 
 
-def test_statistics_empty(ctx):
+def test_statistics_requires_initialized_state(ctx):
+    with pytest.raises(TypeError):
+        ErrorManager.statistics(ctx)
+
+
+def test_statistics_initialized_state(ctx):
+    ctx.extra["error_statistics"] = ErrorManager._empty_statistics()
+
     stats = ErrorManager.statistics(ctx)
 
     assert stats["total"] == 0
@@ -121,6 +130,40 @@ def test_statistics_fail_closed(ctx):
     stats = ErrorManager.statistics(ctx)
 
     assert stats["fail_closed"] == 1
+
+
+def test_statistics_rejects_invalid_statistics_container(ctx):
+    ctx.extra["error_statistics"] = []
+
+    with pytest.raises(TypeError):
+        ErrorManager.statistics(ctx)
+
+
+def test_attach_rejects_invalid_errors_container(ctx):
+    ctx.extra["errors"] = {}
+
+    with pytest.raises(TypeError):
+        ErrorManager.attach(ctx, build_error())
+
+
+def test_attach_rejects_invalid_kernel_failures_container(ctx):
+    ctx.extra["kernel_failures"] = {}
+
+    with pytest.raises(TypeError):
+        ErrorManager.attach(ctx, build_error())
+
+
+def test_attach_rejects_invalid_degraded_container(ctx):
+    ctx.extra["degraded"] = {}
+
+    error = build_error(
+        degraded=True,
+        severity=ArvisErrorSeverity.WARNING,
+        policy=ErrorPolicy.DEGRADE,
+    )
+
+    with pytest.raises(TypeError):
+        ErrorManager.attach(ctx, error)
 
 
 def test_export_replay_safe(ctx):

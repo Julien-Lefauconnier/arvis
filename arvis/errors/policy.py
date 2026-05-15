@@ -8,11 +8,13 @@ from arvis.errors.base import (
     ArvisError,
     ErrorPolicy,
 )
+from arvis.errors.disposition import ErrorDisposition, disposition_from_policy
 
 
 @dataclass(frozen=True, slots=True)
 class ErrorPolicyDecision:
     policy: ErrorPolicy
+    disposition: ErrorDisposition
     retry: bool
     degrade: bool
     halt_process: bool
@@ -28,6 +30,7 @@ def decide_error_policy(error: ArvisError) -> ErrorPolicyDecision:
 
     return ErrorPolicyDecision(
         policy=policy,
+        disposition=disposition_from_policy(policy),
         retry=policy == ErrorPolicy.RETRY or error.retryable,
         degrade=policy == ErrorPolicy.DEGRADE or error.degraded,
         halt_process=policy == ErrorPolicy.HALT_PROCESS,

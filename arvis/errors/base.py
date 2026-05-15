@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import cast
 from uuid import uuid4
 
 from arvis.errors.codes import ErrorCode
@@ -13,7 +14,11 @@ from arvis.errors.provenance import (
     ErrorOrigin,
     build_error_fingerprint,
 )
-from arvis.errors.types import ErrorDetails, ErrorPayload
+from arvis.errors.types import (
+    ErrorDetails,
+    ErrorPayload,
+    ErrorPayloadValue,
+)
 from arvis.types.timestamps import utcnow
 
 
@@ -124,10 +129,16 @@ class ArvisErrorMetadata:
         }
 
         if self.origin is not None:
-            payload["origin"] = self.origin.to_dict()
+            payload["origin"] = cast(
+                ErrorPayloadValue,
+                self.origin.to_dict(),
+            )
 
         if self.cause is not None:
-            payload["cause"] = self.cause.to_dict()
+            payload["cause"] = cast(
+                ErrorPayloadValue,
+                self.cause.to_dict(),
+            )
 
         return payload
 
@@ -198,12 +209,13 @@ class ArvisError(Exception):
         self.origin = origin
         self.cause = cause
         self.created_at = created_at or utcnow().isoformat()
-        self.monotonic_ns = monotonic_ns or time.monotonic_ns()
+        self.monotonic_ns = (
+            monotonic_ns if monotonic_ns is not None else time.monotonic_ns()
+        )
         self.sensitive = sensitive
         self.redactable = redactable
         self.error_id = error_id or uuid4().hex
         self.traceback = traceback
-
         self.fingerprint = fingerprint
 
     @property
@@ -281,6 +293,52 @@ class ArvisError(Exception):
         payload["message"] = self.message
         payload["type"] = self.__class__.__name__
         return payload
+
+    def clone(
+        self,
+        *,
+        code: str | None = None,
+        details: ErrorDetails | None = None,
+        origin: ErrorOrigin | None = None,
+        cause: ErrorCause | None = None,
+    ) -> ArvisError:
+        return self.__class__(
+            self.message,
+            code=code or self.code,
+            domain=self.domain,
+            category=self.category,
+            severity=self.severity,
+            policy=self.policy,
+            retryable=self.retryable,
+            deterministic=self.deterministic,
+            replay_safe=self.replay_safe,
+            degraded=self.degraded,
+            details=details or self.details,
+            semantics=tuple(self.metadata.semantics),
+            origin=origin or self.origin,
+            cause=cause or self.cause,
+            fingerprint=self.fingerprint,
+            created_at=self.created_at,
+            monotonic_ns=self.monotonic_ns,
+            sensitive=self.sensitive,
+            redactable=self.redactable,
+            traceback=self.traceback,
+            error_id=self.error_id,
+        )
+
+    def to_safe_dict(
+        self,
+        *,
+        include_traceback: bool = False,
+        include_error_id: bool = True,
+    ) -> ErrorPayload:
+        from arvis.errors.redaction import redact_error_payload
+
+        return redact_error_payload(
+            self.to_dict(),
+            include_traceback=include_traceback,
+            include_error_id=include_error_id,
+        )
 
 
 class ArvisInvariantViolation(ArvisError, ValueError):
