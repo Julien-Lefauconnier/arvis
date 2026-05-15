@@ -6,7 +6,12 @@ from typing import Any
 
 import numpy as np
 
+from arvis.errors.boundaries.observability import capture_observability_failure
 from arvis.errors.manager import ErrorManager
+from arvis.errors.observability import (
+    FastDynamicsSnapshotFailure,
+    QuadraticLyapunovSnapshotFailure,
+)
 from arvis.math.core.fast_dynamics import FastDynamicsSnapshot
 from arvis.math.core.perturbation import compute_perturbation
 from arvis.math.lyapunov.lyapunov import LyapunovState, lyapunov_value
@@ -131,10 +136,12 @@ class CoreStage:
         except Exception as exc:
             regime_ctx.fast_dynamics = None
 
-            ErrorManager.capture_exception(
+            capture_observability_failure(
                 ctx,
                 exc,
-                code="fast_dynamics_snapshot_failure",
+                error_cls=FastDynamicsSnapshotFailure,
+                message="Fast dynamics snapshot computation failed",
+                component="CoreStage.fast_dynamics_snapshot",
             )
 
         # -----------------------------------------
@@ -175,11 +182,12 @@ class CoreStage:
 
         except Exception as exc:
             lyap_ctx.quadratic_lyap_snapshot = None
-
-            ErrorManager.capture_exception(
+            capture_observability_failure(
                 ctx,
                 exc,
-                code="quadratic_lyapunov_snapshot_failure",
+                error_cls=QuadraticLyapunovSnapshotFailure,
+                message="Quadratic Lyapunov snapshot computation failed",
+                component="CoreStage.quadratic_lyapunov_snapshot",
             )
 
         try:

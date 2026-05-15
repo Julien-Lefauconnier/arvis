@@ -19,6 +19,11 @@ class PipelineRuntimeError(PipelineStageError):
     replay_safe = False
 
 
+class PipelineStageRuntimeError(PipelineRuntimeError):
+    default_code = ErrorCode.PIPELINE_STAGE_FAILURE
+    severity = ArvisErrorSeverity.ERROR
+
+
 class PipelineExecutionContractViolation(PipelineRuntimeError):
     default_code = ErrorCode.PIPELINE_EXECUTION_CONTRACT_VIOLATION
     severity = ArvisErrorSeverity.FATAL

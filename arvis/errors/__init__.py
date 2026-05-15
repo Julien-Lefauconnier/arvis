@@ -29,6 +29,10 @@ from arvis.errors.base import (
     ErrorPolicy,
     ErrorSemantics,
 )
+from arvis.errors.boundaries import (
+    capture_observability_failure,
+    capture_pipeline_degraded_failure,
+)
 from arvis.errors.codes import ErrorCode
 from arvis.errors.context import ErrorContextLike, ensure_error_extra, has_error_extra
 from arvis.errors.disposition import ErrorDisposition, disposition_from_policy
@@ -52,6 +56,13 @@ from arvis.errors.llm_runtime import (
 )
 from arvis.errors.manager import ErrorManager
 from arvis.errors.normalization import normalize_error
+from arvis.errors.observability import (
+    FastDynamicsSnapshotFailure,
+    ObservabilityRuntimeError,
+    ProjectionRefreshFailure,
+    QuadraticLyapunovSnapshotFailure,
+    StabilityProjectionFailure,
+)
 from arvis.errors.pipeline import (
     PipelineFailClosedError,
     PipelineStageDegradedError,
@@ -87,6 +98,7 @@ from arvis.errors.runtime_execution import (
 from arvis.errors.runtime_pipeline import (
     PipelineExecutionContractViolation,
     PipelineRuntimeError,
+    PipelineStageRuntimeError,
 )
 from arvis.errors.runtime_scheduler import (
     InvalidProcessSchedulingError,
@@ -178,6 +190,7 @@ __all__ = [
     "UnknownProcessError",
     "PipelineRuntimeError",
     "PipelineExecutionContractViolation",
+    "PipelineStageRuntimeError",
     "ProcessExecutionAborted",
     "RuntimeExecutionContractViolation",
     "RuntimeExecutionError",
@@ -189,4 +202,11 @@ __all__ = [
     "LLMFallbackExhaustedError",
     "LLMRetryExhaustedError",
     "LLMRuntimeError",
+    "ObservabilityRuntimeError",
+    "ProjectionRefreshFailure",
+    "StabilityProjectionFailure",
+    "FastDynamicsSnapshotFailure",
+    "QuadraticLyapunovSnapshotFailure",
+    "capture_observability_failure",
+    "capture_pipeline_degraded_failure",
 ]

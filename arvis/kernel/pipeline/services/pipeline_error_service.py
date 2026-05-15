@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from arvis.errors.base import (
+    ArvisInvariantViolation,
+    ArvisRuntimeError,
+)
 from arvis.errors.manager import ErrorManager
+from arvis.errors.provenance import cause_from_exception
+from arvis.errors.runtime_pipeline import (
+    PipelineStageRuntimeError,
+)
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
@@ -24,12 +32,26 @@ class PipelineErrorService:
         try:
             stage.run(pipeline, ctx)
 
-        except Exception as exc:
+        except ArvisInvariantViolation:
+            raise
+
+        except ArvisRuntimeError as exc:
             ErrorManager.capture_exception(
                 ctx=ctx,
                 exc=exc,
-                code="PIPELINE_STAGE_FAILURE",
+            )
+
+        except Exception as exc:
+            wrapped = PipelineStageRuntimeError(
+                message="Unhandled pipeline stage failure",
                 details={
                     "stage": stage.__class__.__name__,
                 },
+                cause=cause_from_exception(exc),
+            )
+
+            ErrorManager.capture_exception(
+                ctx=ctx,
+                exc=wrapped,
+                code=wrapped.code,
             )

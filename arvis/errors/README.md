@@ -302,6 +302,35 @@ payload = ErrorManager.attach(ctx, error)
 
 ---
 
+## Boundary Helpers
+
+Boundary helpers should be preferred over raw `ErrorManager.capture_exception`
+at runtime boundaries.
+
+They convert broad exceptions into typed ARVIS errors while preserving:
+
+- domain;
+- policy;
+- degradation semantics;
+- origin;
+- cause;
+- replay-safe serialization.
+
+Examples:
+
+```python
+from arvis.errors.boundaries import capture_pipeline_degraded_failure
+
+capture_pipeline_degraded_failure(
+    ctx,
+    exc,
+    component="ProjectionIRAdapter",
+    message="Projection IR adapter failure",
+)
+```
+
+---
+
 ## Statistics
 
 ```python
@@ -519,6 +548,14 @@ Duplicate error codes raise at registry construction time.
 - LLMRetryExhaustedError
 - LLMFallbackExhaustedError
 
+**Observability Runtime**
+
+- ObservabilityRuntimeError
+- ProjectionRefreshFailure
+- StabilityProjectionFailure
+- FastDynamicsSnapshotFailure
+- QuadraticLyapunovSnapshotFailure
+
 ---
 
 ## Error Code Convention
@@ -556,6 +593,7 @@ When adding a new error:
 8. Add tests for:
     - metadata;
     - serialization;
+    - boundary capture behavior when applicable;
     - policy decision;
     - replay safety;
     - registry uniqueness.

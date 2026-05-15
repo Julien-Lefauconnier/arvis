@@ -54,7 +54,7 @@ def apply_global_stability_policy(
 
     except Exception as exc:
         ErrorManager.attach(
-            +ctx,
+            ctx,
             PipelineStageDegradedError(
                 message=str(exc),
                 details={

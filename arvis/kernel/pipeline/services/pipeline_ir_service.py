@@ -7,7 +7,7 @@ from arvis.adapters.ir.cognitive_ir_builder import CognitiveIRBuilder
 from arvis.adapters.ir.projection_adapter import ProjectionIRAdapter
 from arvis.adapters.ir.stability_adapter import StabilityIRAdapter
 from arvis.adapters.ir.validity_adapter import ValidityIRAdapter
-from arvis.errors.manager import ErrorManager
+from arvis.errors.boundaries.pipeline import capture_pipeline_degraded_failure
 from arvis.ir.envelope import CognitiveIREnvelope
 from arvis.ir.normalization.cognitive_ir_normalizer import (
     CognitiveIRNormalizer,
@@ -38,10 +38,11 @@ class PipelineIRService:
             )
         except Exception as exc:
             ctx.ir_projection = None
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="projection_ir_adapter_failure",
+                component="ProjectionIRAdapter",
+                message="Projection IR adapter failure",
             )
 
         # -----------------------------------------
@@ -53,10 +54,11 @@ class PipelineIRService:
             )
         except Exception as exc:
             ctx.ir_validity = None
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="validity_ir_adapter_failure",
+                component="ValidityIRAdapter",
+                message="Validity IR adapter failure",
             )
 
         # -----------------------------------------
@@ -68,10 +70,11 @@ class PipelineIRService:
             )
         except Exception as exc:
             ctx.ir_stability = None
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="stability_ir_adapter_failure",
+                component="StabilityIRAdapter",
+                message="Stability IR adapter failure",
             )
 
         # -----------------------------------------
@@ -83,10 +86,11 @@ class PipelineIRService:
             )
         except Exception as exc:
             ctx.ir_adaptive = None
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="adaptive_ir_adapter_failure",
+                component="AdaptiveIRAdapter",
+                message="Adaptive IR adapter failure",
             )
 
         # -----------------------------------------
@@ -96,10 +100,11 @@ class PipelineIRService:
             ctx.cognitive_ir = CognitiveIRBuilder.from_context(ctx)
         except Exception as exc:
             ctx.cognitive_ir = None
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="cognitive_ir_build_failure",
+                component="CognitiveIRBuilder",
+                message="Cognitive IR build failure",
             )
             return
 
@@ -114,10 +119,11 @@ class PipelineIRService:
         try:
             CognitiveIRValidator.validate(ctx.cognitive_ir)
         except Exception as exc:
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="cognitive_ir_validation_failure",
+                component="CognitiveIRValidator",
+                message="Cognitive IR validation failure",
             )
             raise
 
@@ -142,8 +148,9 @@ class PipelineIRService:
             ctx.ir_hash = None
             ctx.ir_envelope = None
 
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="ir_serialization_failure",
+                component="CognitiveIRSerialization",
+                message="IR serialization failure",
             )

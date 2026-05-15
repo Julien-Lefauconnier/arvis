@@ -150,3 +150,17 @@ class ErrorCode(StrEnum):
     LLM_EMPTY_RESPONSE = "llm_empty_response"
     LLM_RETRY_EXHAUSTED = "llm_retry_exhausted"
     LLM_FALLBACK_EXHAUSTED = "llm_fallback_exhausted"
+
+    # =========================================================
+    # Observability
+    # =========================================================
+
+    OBSERVABILITY_RUNTIME_ERROR = "observability_runtime_error"
+
+    PROJECTION_REFRESH_FAILURE = "projection_refresh_failure"
+
+    STABILITY_PROJECTION_FAILURE = "stability_projection_failure"
+
+    FAST_DYNAMICS_SNAPSHOT_FAILURE = "fast_dynamics_snapshot_failure"
+
+    QUADRATIC_LYAPUNOV_SNAPSHOT_FAILURE = "quadratic_lyapunov_snapshot_failure"
