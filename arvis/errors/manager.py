@@ -57,6 +57,10 @@ class ErrorManager:
 
         extra = ErrorManager._extra(ctx)
 
+        error_state = getattr(ctx, "error_state", None)
+        if error_state is not None and hasattr(error_state, "errors"):
+            error_state.errors.append(arvis_error)
+
         errors = ErrorManager._list(extra, ERRORS_KEY)
         errors.append(payload)
 

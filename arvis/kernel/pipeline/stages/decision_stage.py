@@ -7,7 +7,9 @@ from typing import Any
 
 from arvis.adapters.ir.decision_adapter import DecisionIRAdapter
 from arvis.cognition.decision.decision_result import DecisionResult
-from arvis.errors.manager import ErrorManager
+from arvis.errors.boundaries.pipeline import (
+    capture_pipeline_degraded_failure,
+)
 
 
 class DecisionStage:
@@ -64,10 +66,11 @@ class DecisionStage:
                 ctx.decision_layer.decision_result,
             )
         except Exception as exc:
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="decision_ir_adapter_failure",
+                component="DecisionIRAdapter",
+                message="Decision IR adapter failure",
             )
 
         # Control Runtime (stateful per user)

@@ -12,6 +12,7 @@ from arvis.cognition.events.base_event import BaseEvent
 from arvis.cognition.governance.governance_decision import GovernanceDecision
 from arvis.cognition.pending.pending_cognitive_action import PendingCognitiveAction
 from arvis.cognition.policy import CognitivePolicyResult
+from arvis.errors.base import ArvisError
 from arvis.ir.context import CognitiveContextIR
 from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.envelope import CognitiveIREnvelope
@@ -22,6 +23,9 @@ from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionS
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 from arvis.kernel.pipeline.context.decision_context import (
     PipelineDecisionContext,
+)
+from arvis.kernel.pipeline.context.error_context import (
+    PipelineErrorContext,
 )
 from arvis.kernel.pipeline.context.execution_context import (
     PipelineExecutionContext,
@@ -159,6 +163,13 @@ class CognitivePipelineContext:
     legacy_execution_state: CognitiveExecutionState | None = field(
         default=None,
         repr=False,
+    )
+
+    # -------------------------
+    # Errors
+    # -------------------------
+    error_state: PipelineErrorContext = field(
+        default_factory=PipelineErrorContext,
     )
 
     # -------------------------
@@ -722,3 +733,11 @@ class CognitivePipelineContext:
     @use_paper_slow_dynamics.setter
     def use_paper_slow_dynamics(self, value: bool) -> None:
         self.scientific.adaptive.use_paper_slow_dynamics = value
+
+    # -----------------------------------------------------
+    # Error compatibility layer
+    # -----------------------------------------------------
+
+    @property
+    def errors(self) -> list[ArvisError]:
+        return self.error_state.errors

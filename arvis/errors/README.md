@@ -59,6 +59,20 @@ error = ArvisRuntimeError(
 )
 ```
 
+### `ErrorClassification`
+
+`ErrorClassification` is the semantic interpretation layer between raw Python exceptions and ARVIS errors.
+
+It prevents ARVIS from treating all `ValueError`, `TypeError`, or broad exceptions the same way.
+
+This matters because the same Python exception type can represent different runtime meanings depending on the boundary:
+
+```text
+ValueError in a pure invariant check → invariant violation
+ValueError while parsing external data → invalid payload
+ValueError inside optional numeric projection → degraded computation
+```
+
 ---
 
 ## Taxonomy
@@ -227,15 +241,67 @@ safe = redact_error_payload(
 
 ---
 
-## Normalization
+## Classification and Normalization
 
-normalize_error() converts arbitrary Python exceptions into ARVIS errors.
+The error layer separates two concerns:
+
+```text
+Python exception
+      ↓
+semantic classification
+      ↓
+ARVIS error normalization
+```
+
+### Classification
+
+Classification decides:
+
+- whether the failure is an invariant violation;
+- whether it is a contract violation;
+- whether it is a degraded computation failure;
+- whether it is external and retryable;
+- whether it is deterministic;
+- whether it is replay-safe;
+- whether fail-closed behavior is required.
+
+Example:
+
+```python
+classification = classify_exception(
+    ValueError("bad numeric value"),
+    boundary="computation",
+)
+```
+
+Boundary hints can be used when the callsite has stronger semantic knowledge than the raw Python 
+exception type.
+
+Supported boundary hints include:
+
+- api
+- pipeline
+- llm
+- syscall
+- replay
+- runtime
+- external
+- computation
+- contract
+- invariant
+- invalid_payload
+
+### Normalization
+
+normalize_error() converts arbitrary Python exceptions into concrete ARVIS errors.
 
 ```python
 from arvis.errors import normalize_error
 
 error = normalize_error(exc)
 ```
+
+Normalization uses classification first, then builds the correct ArvisError subclass.
 
 Mapping examples:
 
@@ -244,12 +310,17 @@ Mapping examples:
 - ConnectionError → ArvisExternalError
 - json.JSONDecodeError → InvalidIRPayloadError
 - AssertionError → ArvisInvariantViolation
-- ValueError → ArvisInvariantViolation
+- ValueError → ArvisInvariantViolation by default
 - TypeError → ArvisRuntimeError
-unknown exceptions → ArvisRuntimeError
+- boundary="computation" → RuntimeDegradationError
+- boundary="contract" → ArvisRuntimeError with fail-closed contract semantics
+- unknown exceptions → ArvisRuntimeError
 ```
 
 The original exception cause and traceback are preserved.
+
+Classification is semantic.
+Normalization is mechanical.
 
 ---
 

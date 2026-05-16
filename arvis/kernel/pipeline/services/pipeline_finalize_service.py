@@ -11,8 +11,12 @@ from arvis.cognition.gate.gate_trace_builder import GateTraceBuilder
 from arvis.cognition.gate.reason_code_normalizer import ReasonCodeNormalizer
 from arvis.cognition.state.cognitive_state_builder import CognitiveStateBuilder
 from arvis.errors.base import ArvisRuntimeError, ErrorDomain
+from arvis.errors.boundaries.pipeline import (
+    capture_pipeline_contract_failure,
+    capture_pipeline_degraded_failure,
+    capture_pipeline_runtime_failure,
+)
 from arvis.errors.codes import ErrorCode
-from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
@@ -51,7 +55,7 @@ class PipelineFinalizeService:
         runtime = ctx.execution_state
 
         if runtime is None:
-            raise ArvisRuntimeError(
+            contract_error = ArvisRuntimeError(
                 "Pipeline finalize requires execution_state",
                 code=ErrorCode.PIPELINE_FINALIZE_CONTRACT_VIOLATION,
                 domain=ErrorDomain.PIPELINE,
@@ -62,8 +66,20 @@ class PipelineFinalizeService:
                 },
             )
 
+            capture_pipeline_contract_failure(
+                ctx,
+                contract_error,
+                component="PipelineFinalizeService",
+                message="Pipeline finalize contract violation",
+                details={
+                    "missing": "execution_state",
+                },
+            )
+
+            raise contract_error
+
         if runtime.execution_status is None:
-            raise ArvisRuntimeError(
+            contract_error = ArvisRuntimeError(
                 "Pipeline finalize requires runtime.execution_status",
                 code=ErrorCode.PIPELINE_FINALIZE_CONTRACT_VIOLATION,
                 domain=ErrorDomain.PIPELINE,
@@ -73,6 +89,18 @@ class PipelineFinalizeService:
                     "retry_class": "permanent",
                 },
             )
+
+            capture_pipeline_contract_failure(
+                ctx,
+                contract_error,
+                component="PipelineFinalizeService",
+                message="Pipeline finalize contract violation",
+                details={
+                    "missing": "runtime.execution_status",
+                },
+            )
+
+            raise contract_error
 
         requires_confirmation = runtime.requires_confirmation
         can_execute = runtime.can_execute
@@ -92,7 +120,7 @@ class PipelineFinalizeService:
         # DECISION TRACE
         # -----------------------------------------------------
         if ctx.gate_result is None:
-            ErrorManager.attach(
+            capture_pipeline_degraded_failure(
                 ctx,
                 PipelineStageDegradedError(
                     message="gate_result missing during finalize",
@@ -102,6 +130,12 @@ class PipelineFinalizeService:
                         "reason": "missing_gate_result",
                     },
                 ),
+                component="PipelineFinalizeService",
+                message="Missing gate result during finalize",
+                details={
+                    "fallback": "abstain",
+                    "reason": "missing_gate_result",
+                },
             )
 
             ctx.gate_result = LyapunovVerdict.ABSTAIN
@@ -135,13 +169,11 @@ class PipelineFinalizeService:
         try:
             ctx.ir_gate = GateIRAdapter.from_gate(normalized_gate_result)
         except Exception as exc:
-            ErrorManager.capture_exception(
-                ctx=ctx,
-                exc=exc,
-                code="GATE_IR_ADAPTER_FAILURE",
-                details={
-                    "component": "GateIRAdapter",
-                },
+            capture_pipeline_degraded_failure(
+                ctx,
+                exc,
+                component="GateIRAdapter",
+                message="Gate IR adapter failure",
             )
             ctx.ir_gate = None
 
@@ -151,13 +183,11 @@ class PipelineFinalizeService:
         try:
             pipeline._refresh_ir_context_extra(ctx)
         except Exception as exc:
-            ErrorManager.capture_exception(
-                ctx=ctx,
-                exc=exc,
-                code="IR_CONTEXT_REFRESH_FAILURE",
-                details={
-                    "component": "PipelineIRContextRefresh",
-                },
+            capture_pipeline_runtime_failure(
+                ctx,
+                exc,
+                component="PipelineIRContextRefresh",
+                message="IR context refresh failure",
             )
         PipelineIRService.run(ctx)
 
@@ -178,13 +208,11 @@ class PipelineFinalizeService:
         except Exception as exc:
             ctx.cognitive_state = None
 
-            ErrorManager.capture_exception(
-                ctx=ctx,
-                exc=exc,
-                code="COGNITIVE_STATE_BUILD_FAILURE",
-                details={
-                    "component": "CognitiveStateBuilder",
-                },
+            capture_pipeline_degraded_failure(
+                ctx,
+                exc,
+                component="CognitiveStateBuilder",
+                message="Cognitive state build failure",
             )
 
         # -----------------------------------------------------
@@ -198,13 +226,11 @@ class PipelineFinalizeService:
 
                 CognitiveStateContract.validate(ctx.cognitive_state)
         except Exception as exc:
-            ErrorManager.capture_exception(
-                ctx=ctx,
-                exc=exc,
-                code="COGNITIVE_STATE_CONTRACT_FAILURE",
-                details={
-                    "component": "CognitiveStateContract",
-                },
+            capture_pipeline_contract_failure(
+                ctx,
+                exc,
+                component="CognitiveStateContract",
+                message="Cognitive state contract validation failure",
             )
 
             ctx.cognitive_state = None
@@ -218,13 +244,11 @@ class PipelineFinalizeService:
             else:
                 ctx.ir_state = None
         except Exception as exc:
-            ErrorManager.capture_exception(
-                ctx=ctx,
-                exc=exc,
-                code="STATE_IR_ADAPTER_FAILURE",
-                details={
-                    "component": "StateIRAdapter",
-                },
+            capture_pipeline_degraded_failure(
+                ctx,
+                exc,
+                component="StateIRAdapter",
+                message="State IR adapter failure",
             )
 
             ctx.ir_state = None

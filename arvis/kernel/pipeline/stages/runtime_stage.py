@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvis.errors.manager import ErrorManager
+from arvis.errors.boundaries.pipeline import (
+    capture_pipeline_degraded_failure,
+)
 
 
 class RuntimeStage:
@@ -23,10 +25,11 @@ class RuntimeStage:
                 runtime.last_action = str(getattr(ctx.action_decision, "mode", None))
 
         except Exception as exc:
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="runtime_control_update_failure",
+                component="RuntimeControlUpdate",
+                message="Runtime control update failure",
             )
 
         # -----------------------------------------
@@ -39,10 +42,11 @@ class RuntimeStage:
             if switching_runtime is not None and regime is not None:
                 switching_runtime.update(str(regime))
         except Exception as exc:
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="runtime_switching_update_failure",
+                component="RuntimeSwitchingUpdate",
+                message="Runtime switching update failure",
             )
 
         # -----------------------------------------
@@ -55,8 +59,9 @@ class RuntimeStage:
                 ctx.global_stability_metrics = metrics
         except Exception as exc:
             ctx.global_stability_metrics = None
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="runtime_observer_update_failure",
+                component="GlobalStabilityObserver",
+                message="Runtime observer update failure",
             )

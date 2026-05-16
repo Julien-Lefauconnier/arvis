@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
-from arvis.errors.boundaries.pipeline import capture_pipeline_degraded_failure
+from arvis.errors import ErrorManager
+from arvis.errors.base import ErrorPolicy
+from arvis.errors.boundaries.pipeline import (
+    capture_pipeline_contract_failure,
+    capture_pipeline_degraded_failure,
+    capture_pipeline_runtime_failure,
+)
 from arvis.errors.codes import ErrorCode
 from arvis.errors.context import DefaultErrorContext
-from arvis.errors.manager import ErrorManager
 
 
 def test_capture_pipeline_degraded_failure_attaches_structured_error() -> None:
@@ -75,3 +80,60 @@ def test_capture_pipeline_degraded_failure_preserves_origin_and_cause() -> None:
 
     assert isinstance(cause, dict)
     assert cause["error_type"] == "TypeError"
+
+
+def test_capture_pipeline_degraded_failure() -> None:
+    ctx = DefaultErrorContext()
+
+    payload = capture_pipeline_degraded_failure(
+        ctx,
+        RuntimeError("adapter failed"),
+        component="TestAdapter",
+        message="Pipeline degraded failure",
+    )
+
+    assert payload["code"] == ErrorCode.PIPELINE_STAGE_DEGRADED
+    assert payload["degraded"] is True
+    assert payload["policy"] == ErrorPolicy.DEGRADE
+    assert payload["details"]["component"] == "TestAdapter"
+    assert payload["details"]["runtime_degraded"] is True
+    assert payload["origin"]["subsystem"] == "pipeline"
+    assert ErrorManager.runtime_degradation_state(ctx)["active"] is True
+
+
+def test_capture_pipeline_runtime_failure() -> None:
+    ctx = DefaultErrorContext()
+
+    payload = capture_pipeline_runtime_failure(
+        ctx,
+        RuntimeError("projection failed"),
+        component="ProjectionStage",
+        message="Pipeline runtime failure",
+    )
+
+    assert payload["code"] == ErrorCode.PIPELINE_STAGE_FAILURE
+    assert payload["degraded"] is False
+    assert payload["policy"] == ErrorPolicy.FAIL_CLOSED
+    assert payload["replay_safe"] is False
+    assert payload["details"]["component"] == "ProjectionStage"
+    assert payload["details"]["runtime_degraded"] is False
+    assert payload["origin"]["subsystem"] == "pipeline"
+
+
+def test_capture_pipeline_contract_failure() -> None:
+    ctx = DefaultErrorContext()
+
+    payload = capture_pipeline_contract_failure(
+        ctx,
+        RuntimeError("missing execution_state"),
+        component="PipelineFinalizeService",
+        message="Pipeline contract failure",
+        details={"missing": "execution_state"},
+    )
+
+    assert payload["code"] == ErrorCode.PIPELINE_EXECUTION_CONTRACT_VIOLATION
+    assert payload["severity"] == "fatal"
+    assert payload["policy"] == ErrorPolicy.FAIL_CLOSED
+    assert payload["details"]["component"] == "PipelineFinalizeService"
+    assert payload["details"]["contract_violation"] is True
+    assert payload["details"]["missing"] == "execution_state"

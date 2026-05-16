@@ -30,8 +30,19 @@ from arvis.errors.base import (
     ErrorSemantics,
 )
 from arvis.errors.boundaries import (
+    capture_llm_contract_failure,
+    capture_llm_degraded_failure,
+    capture_llm_runtime_failure,
     capture_observability_failure,
+    capture_pipeline_contract_failure,
     capture_pipeline_degraded_failure,
+    capture_pipeline_runtime_failure,
+)
+from arvis.errors.classification import (
+    BoundaryHint,
+    ErrorClassification,
+    ErrorClassificationKind,
+    classify_exception,
 )
 from arvis.errors.codes import ErrorCode
 from arvis.errors.context import ErrorContextLike, ensure_error_extra, has_error_extra
@@ -208,5 +219,14 @@ __all__ = [
     "FastDynamicsSnapshotFailure",
     "QuadraticLyapunovSnapshotFailure",
     "capture_observability_failure",
+    "capture_pipeline_contract_failure",
     "capture_pipeline_degraded_failure",
+    "capture_pipeline_runtime_failure",
+    "capture_llm_runtime_failure",
+    "capture_llm_degraded_failure",
+    "capture_llm_contract_failure",
+    "BoundaryHint",
+    "ErrorClassification",
+    "ErrorClassificationKind",
+    "classify_exception",
 ]

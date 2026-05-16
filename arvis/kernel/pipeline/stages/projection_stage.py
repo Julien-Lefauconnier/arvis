@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvis.errors.manager import ErrorManager
+from arvis.errors.boundaries.pipeline import (
+    capture_pipeline_runtime_failure,
+)
 from arvis.math.projection.projection_view import ProjectionView
 
 
@@ -134,9 +136,10 @@ class ProjectionStage:
             )
 
         except Exception as exc:
-            ErrorManager.capture_exception(
+            capture_pipeline_runtime_failure(
                 ctx,
                 exc,
-                code="projection_stage_failure",
+                component="ProjectionStage",
+                message="Projection stage failure",
             )
             raise

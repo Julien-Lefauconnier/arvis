@@ -7,6 +7,10 @@ from typing import Any
 from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.errors.provenance import ErrorOrigin, cause_from_exception
+from arvis.errors.runtime_pipeline import (
+    PipelineExecutionContractViolation,
+    PipelineStageRuntimeError,
+)
 from arvis.errors.types import ErrorDetails, ErrorPayload
 
 
@@ -39,6 +43,56 @@ def capture_pipeline_degraded_failure(
             component=component,
             subsystem="pipeline",
         ),
+        cause=cause_from_exception(exc),
+    )
+
+    return ErrorManager.attach(ctx, wrapped)
+
+
+def capture_pipeline_runtime_failure(
+    ctx: Any,
+    exc: Exception,
+    *,
+    component: str,
+    message: str,
+    details: ErrorDetails | None = None,
+) -> ErrorPayload:
+    merged_details: ErrorDetails = {
+        "component": component,
+        "runtime_degraded": False,
+    }
+    if details:
+        merged_details.update(details)
+
+    wrapped = PipelineStageRuntimeError(
+        message=message,
+        details=merged_details,
+        origin=ErrorOrigin(component=component, subsystem="pipeline"),
+        cause=cause_from_exception(exc),
+    )
+
+    return ErrorManager.attach(ctx, wrapped)
+
+
+def capture_pipeline_contract_failure(
+    ctx: Any,
+    exc: Exception,
+    *,
+    component: str,
+    message: str,
+    details: ErrorDetails | None = None,
+) -> ErrorPayload:
+    merged_details: ErrorDetails = {
+        "component": component,
+        "contract_violation": True,
+    }
+    if details:
+        merged_details.update(details)
+
+    wrapped = PipelineExecutionContractViolation(
+        message=message,
+        details=merged_details,
+        origin=ErrorOrigin(component=component, subsystem="pipeline"),
         cause=cause_from_exception(exc),
     )
 
