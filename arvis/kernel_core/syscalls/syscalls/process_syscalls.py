@@ -5,9 +5,10 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 from arvis.errors.base import (
-    ArvisRuntimeError,
     ErrorDomain,
 )
+from arvis.errors.manager import ErrorManager
+from arvis.errors.provenance import ErrorOrigin
 from arvis.kernel_core.process import CognitiveProcessId
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
@@ -32,12 +33,15 @@ def process_spawn(
         handler.scheduler.enqueue(process)
     except Exception as exc:
         return SyscallResult.failure(
-            ArvisRuntimeError(
-                str(exc),
+            ErrorManager.normalize_for_boundary(
+                exc,
+                boundary="runtime",
                 code="process_spawn_failed",
                 domain=ErrorDomain.KERNEL,
+                origin=ErrorOrigin(
+                    component="process.spawn", subsystem="kernel.syscall"
+                ),
                 details={
-                    "exception": type(exc).__name__,
                     "retry_class": "transient",
                 },
                 replay_safe=False,
@@ -55,12 +59,15 @@ def process_suspend(
         handler.scheduler.suspend(process_id)
     except Exception as exc:
         return SyscallResult.failure(
-            ArvisRuntimeError(
-                str(exc),
+            ErrorManager.normalize_for_boundary(
+                exc,
+                boundary="runtime",
                 code="process_suspend_failed",
                 domain=ErrorDomain.KERNEL,
+                origin=ErrorOrigin(
+                    component="process.suspend", subsystem="kernel.syscall"
+                ),
                 details={
-                    "exception": type(exc).__name__,
                     "retry_class": "transient",
                 },
                 replay_safe=False,
@@ -79,12 +86,15 @@ def process_resume(
         handler.scheduler.resume(process_id)
     except Exception as exc:
         return SyscallResult.failure(
-            ArvisRuntimeError(
-                str(exc),
+            ErrorManager.normalize_for_boundary(
+                exc,
+                boundary="runtime",
                 code="process_resume_failed",
                 domain=ErrorDomain.KERNEL,
+                origin=ErrorOrigin(
+                    component="process.resume", subsystem="kernel.syscall"
+                ),
                 details={
-                    "exception": type(exc).__name__,
                     "retry_class": "transient",
                 },
                 replay_safe=False,

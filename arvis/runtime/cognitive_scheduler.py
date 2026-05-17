@@ -17,6 +17,7 @@ from arvis.kernel_core.process import (
     CognitiveProcessId,
     CognitiveProcessStatus,
 )
+from arvis.kernel_core.process.lifecycle.lifecycle_manager import LifecycleManager
 from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
 from arvis.runtime.process_hooks import ProcessHookManager
 from arvis.runtime.resource_model import ResourcePressure
@@ -77,6 +78,7 @@ class CognitiveScheduler:
         self.process_executor = executor
         self.policy = policy or SchedulingPolicyConfig()
         self._interrupt_wakeup_pending = False
+        self.lifecycle = LifecycleManager(runtime_state)
         # -----------------------------------------
         # Hooks are ALWAYS available (never None)
         # -----------------------------------------
@@ -93,10 +95,7 @@ class CognitiveScheduler:
                 f"[{process.status.value}]"
             )
         self.runtime_state.register_process(process)
-        state = self.runtime_state.scheduler_state
-        state.remove_from_all_queues(process.process_id)
-        process.mark_ready()
-        state.append_unique(state.ready_queue, process.process_id)
+        self.lifecycle.transition(process, CognitiveProcessStatus.READY)
         self.runtime_state.append_event(
             "process_enqueued",
             {
@@ -112,12 +111,11 @@ class CognitiveScheduler:
         self, process_id: CognitiveProcessId, reason: str = "suspended"
     ) -> None:
         process = self.runtime_state.get_process(process_id)
-        state = self.runtime_state.scheduler_state
-        state.remove_from_all_queues(process_id)
-        if state.active_process_id == process_id:
-            state.active_process_id = None
-        process.mark_suspended(reason=reason)
-        state.append_unique(state.suspended_queue, process_id)
+        self.lifecycle.transition(
+            process,
+            CognitiveProcessStatus.SUSPENDED,
+            reason=reason,
+        )
         self.runtime_state.append_event(
             "process_suspended",
             {"process_id": process_id.value, "reason": reason},
@@ -125,12 +123,11 @@ class CognitiveScheduler:
 
     def block(self, process_id: CognitiveProcessId, waiting_on: str) -> None:
         process = self.runtime_state.get_process(process_id)
-        state = self.runtime_state.scheduler_state
-        state.remove_from_all_queues(process_id)
-        if state.active_process_id == process_id:
-            state.active_process_id = None
-        process.mark_blocked(waiting_on=waiting_on)
-        state.append_unique(state.blocked_queue, process_id)
+        self.lifecycle.transition(
+            process,
+            CognitiveProcessStatus.BLOCKED,
+            waiting_on=waiting_on,
+        )
         self.runtime_state.append_event(
             "process_blocked",
             {"process_id": process_id.value, "waiting_on": waiting_on},
@@ -138,12 +135,10 @@ class CognitiveScheduler:
 
     def wait_confirmation(self, process_id: CognitiveProcessId) -> None:
         process = self.runtime_state.get_process(process_id)
-        state = self.runtime_state.scheduler_state
-        state.remove_from_all_queues(process_id)
-        if state.active_process_id == process_id:
-            state.active_process_id = None
-        process.mark_waiting_confirmation()
-        state.append_unique(state.waiting_confirmation_queue, process_id)
+        self.lifecycle.transition(
+            process,
+            CognitiveProcessStatus.WAITING_CONFIRMATION,
+        )
         self.runtime_state.append_event(
             "process_waiting_confirmation",
             {"process_id": process_id.value},
@@ -151,10 +146,7 @@ class CognitiveScheduler:
 
     def resume(self, process_id: CognitiveProcessId) -> None:
         process = self.runtime_state.get_process(process_id)
-        state = self.runtime_state.scheduler_state
-        state.remove_from_all_queues(process_id)
-        process.mark_ready()
-        state.append_unique(state.ready_queue, process_id)
+        self.lifecycle.transition(process, CognitiveProcessStatus.READY)
         self.runtime_state.append_event(
             "process_resumed",
             {"process_id": process_id.value},
@@ -202,9 +194,12 @@ class CognitiveScheduler:
             )
             return decision
 
-        state.remove_from_all_queues(process.process_id)
-        state.active_process_id = process.process_id
-        process.mark_running(tick=state.tick_count, score=decision.score)
+        self.lifecycle.transition(
+            process,
+            CognitiveProcessStatus.RUNNING,
+            tick=state.tick_count,
+            score=decision.score,
+        )
 
         self.runtime_state.append_event(
             "scheduler_selected",
@@ -267,9 +262,11 @@ class CognitiveScheduler:
                 # -----------------------------
                 # Case 3: normal completion
                 # -----------------------------
-                process.mark_completed(result=result)
-                state.active_process_id = None
-                state.append_unique(state.completed_queue, process.process_id)
+                self.lifecycle.transition(
+                    process,
+                    CognitiveProcessStatus.COMPLETED,
+                    result=result,
+                )
                 self.runtime_state.append_event(
                     "process_completed",
                     {
@@ -290,8 +287,7 @@ class CognitiveScheduler:
 
             if process.has_budget():
                 process.last_result = None
-                process.mark_ready()
-                state.append_unique(state.ready_queue, process.process_id)
+                self.lifecycle.transition(process, CognitiveProcessStatus.READY)
 
                 self.runtime_state.append_event(
                     "process_preempted",
@@ -309,8 +305,11 @@ class CognitiveScheduler:
             # -----------------------------
             # Budget exhausted BEFORE completion
             # -----------------------------
-            process.mark_suspended(reason="budget_exhausted")
-            state.append_unique(state.suspended_queue, process.process_id)
+            self.lifecycle.transition(
+                process,
+                CognitiveProcessStatus.SUSPENDED,
+                reason="budget_exhausted",
+            )
 
             self.hooks.on_suspended(process, "budget_exhausted")
 
@@ -327,19 +326,14 @@ class CognitiveScheduler:
 
         except Exception as exc:
             error = normalize_error(exc)
-
             ErrorManager.attach(
                 process.local_state,
                 error,
             )
-
-            process.mark_aborted(error=error.code)
-
-            state.active_process_id = None
-
-            state.append_unique(
-                state.aborted_queue,
-                process.process_id,
+            self.lifecycle.transition(
+                process,
+                CognitiveProcessStatus.ABORTED,
+                error=error.code,
             )
 
             self.runtime_state.append_event(
@@ -351,37 +345,11 @@ class CognitiveScheduler:
                 },
             )
 
-            self.hooks.on_aborted(process, error.code)
+            self.hooks.on_aborted(process, error.to_safe_dict())
 
             return SchedulerDecision(
                 selected_process_id=process.process_id,
                 rationale=f"execution failed: {error.code}",
-                resource_grant=process.remaining_budget(),
-                score=process.last_score,
-            )
-            # ----------------------------------------
-            # Only TRUE execution errors should abort
-            # ----------------------------------------
-            # ----------------------------------------
-            # NON-FATAL errors → let pipeline handle (retry etc.)
-            # ----------------------------------------
-            process.mark_aborted(error=str(exc))
-            state.active_process_id = None
-            state.append_unique(state.aborted_queue, process.process_id)
-            self.runtime_state.append_event(
-                "process_aborted",
-                {
-                    "process_id": process.process_id.value,
-                    "error": str(exc),
-                    "error_type": type(exc).__name__,
-                },
-            )
-
-            self.hooks.on_aborted(process, str(exc))
-
-            return SchedulerDecision(
-                selected_process_id=process.process_id,
-                rationale=f"execution failed: {type(exc).__name__}",
                 resource_grant=process.remaining_budget(),
                 score=process.last_score,
             )
@@ -465,8 +433,6 @@ class CognitiveScheduler:
         if not events:
             return
 
-        state = self.runtime_state.scheduler_state
-
         woke_any_process = False
 
         for event in events:
@@ -491,9 +457,10 @@ class CognitiveScheduler:
                     CognitiveProcessStatus.WAITING_CONFIRMATION,
                     CognitiveProcessStatus.SUSPENDED,
                 ):
-                    state.remove_from_all_queues(process_id)
-                    process.mark_ready()
-                    state.append_unique(state.ready_queue, process_id)
+                    self.lifecycle.transition(
+                        process,
+                        CognitiveProcessStatus.READY,
+                    )
                     woke_any_process = True
 
                     self.runtime_state.append_event(

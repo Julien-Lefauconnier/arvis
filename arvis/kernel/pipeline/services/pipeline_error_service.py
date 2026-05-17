@@ -1,3 +1,5 @@
+# arvis/kernel/pipeline/services/pipeline_error_service.py
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -40,6 +42,7 @@ class PipelineErrorService:
                 ctx=ctx,
                 exc=exc,
             )
+            raise
 
         except Exception as exc:
             wrapped = PipelineStageRuntimeError(
@@ -55,3 +58,5 @@ class PipelineErrorService:
                 exc=wrapped,
                 code=wrapped.code,
             )
+
+            raise wrapped from exc

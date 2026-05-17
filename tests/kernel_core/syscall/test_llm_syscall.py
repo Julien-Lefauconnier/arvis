@@ -161,10 +161,11 @@ def test_llm_generate_syscall_failure_has_retry_class() -> None:
 
     assert error.code == "llm_execution_failed"
     assert error.retryable is True
+    assert error.domain == "llm"
+    assert error.details["classification"] == "external"
 
     assert error.details == {
-        "exception": "TimeoutError",
-        "wrapped_error_code": "external_error",
-        "wrapped_error_domain": "external",
+        "exception_type": "TimeoutError",
+        "classification": "external",
         "retry_class": "transient",
     }

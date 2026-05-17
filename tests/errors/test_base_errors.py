@@ -6,6 +6,7 @@ from arvis.errors.base import (
     ArvisDomainError,
     ArvisErrorCategory,
     ArvisErrorSeverity,
+    ArvisExternalError,
     ArvisKernelError,
     ArvisReplayError,
     ArvisRuntimeError,
@@ -117,3 +118,63 @@ def test_clone_preserves_runtime_flags():
     assert cloned.replay_safe is False
     assert cloned.degraded is True
     assert cloned.policy == ErrorPolicy.RETRY
+
+
+def test_error_clone_can_override_replay_safe() -> None:
+    error = ArvisExternalError(
+        "timeout",
+        replay_safe=False,
+    )
+
+    cloned = error.clone(
+        replay_safe=True,
+    )
+
+    assert cloned.replay_safe is True
+
+
+def test_error_clone_can_override_domain() -> None:
+    error = ArvisExternalError(
+        "timeout",
+    )
+
+    cloned = error.clone(
+        domain=ErrorDomain.KERNEL,
+    )
+
+    assert cloned.domain == ErrorDomain.KERNEL
+
+
+def test_error_clone_preserves_subclass_with_overrides() -> None:
+    error = ArvisExternalError(
+        "timeout",
+    )
+
+    cloned = error.clone(
+        replay_safe=True,
+    )
+
+    assert isinstance(cloned, ArvisExternalError)
+
+
+def test_error_clone_merges_details() -> None:
+    error = ArvisExternalError(
+        "timeout",
+        details={
+            "provider": "openai",
+            "retry_count": 1,
+        },
+    )
+
+    cloned = error.clone(
+        details={
+            "retry_count": 2,
+            "region": "eu-west",
+        },
+    )
+
+    assert cloned.details == {
+        "provider": "openai",
+        "retry_count": 2,
+        "region": "eu-west",
+    }

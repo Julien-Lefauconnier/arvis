@@ -7,7 +7,10 @@ from arvis.adapters.ir.cognitive_ir_builder import CognitiveIRBuilder
 from arvis.adapters.ir.projection_adapter import ProjectionIRAdapter
 from arvis.adapters.ir.stability_adapter import StabilityIRAdapter
 from arvis.adapters.ir.validity_adapter import ValidityIRAdapter
-from arvis.errors.boundaries.pipeline import capture_pipeline_degraded_failure
+from arvis.errors.boundaries.pipeline import (
+    capture_pipeline_contract_failure,
+    capture_pipeline_degraded_failure,
+)
 from arvis.ir.envelope import CognitiveIREnvelope
 from arvis.ir.normalization.cognitive_ir_normalizer import (
     CognitiveIRNormalizer,
@@ -119,7 +122,7 @@ class PipelineIRService:
         try:
             CognitiveIRValidator.validate(ctx.cognitive_ir)
         except Exception as exc:
-            capture_pipeline_degraded_failure(
+            capture_pipeline_contract_failure(
                 ctx,
                 exc,
                 component="CognitiveIRValidator",
@@ -148,9 +151,10 @@ class PipelineIRService:
             ctx.ir_hash = None
             ctx.ir_envelope = None
 
-            capture_pipeline_degraded_failure(
+            capture_pipeline_contract_failure(
                 ctx,
                 exc,
                 component="CognitiveIRSerialization",
                 message="IR serialization failure",
             )
+            raise

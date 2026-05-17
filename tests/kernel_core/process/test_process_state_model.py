@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from arvis.errors.runtime_scheduler import SchedulerInvariantViolation
 from arvis.kernel_core.process import (
     BudgetConsumption,
     CognitiveBudget,
@@ -106,5 +107,14 @@ def test_validate_rejects_empty_process_id():
         user_id="u1",
     )
 
-    with pytest.raises(ValueError, match="process_id.value must not be empty"):
+    with pytest.raises(
+        SchedulerInvariantViolation,
+        match="Process id must not be empty",
+    ) as exc_info:
         proc.validate()
+
+    error = exc_info.value
+
+    assert error.code == "scheduler_invariant_violation"
+    assert error.details["invariant"] == "process_id_non_empty"
+    assert error.details["retry_class"] == "permanent"

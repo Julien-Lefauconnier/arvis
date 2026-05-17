@@ -8,9 +8,11 @@ from typing import Any, Final, cast
 from arvis.errors.base import (
     ArvisError,
     ArvisErrorSeverity,
+    ErrorDomain,
     ErrorPolicy,
     ErrorSemantics,
 )
+from arvis.errors.classification import BoundaryHint
 from arvis.errors.context import ensure_error_extra
 from arvis.errors.normalization import normalize_error
 from arvis.errors.provenance import ErrorCause, ErrorOrigin, cause_from_exception
@@ -300,6 +302,72 @@ class ErrorManager:
             )
 
         return ErrorManager.attach(ctx, arvis_error)
+
+    @staticmethod
+    def normalize_for_boundary(
+        exc: Exception,
+        *,
+        boundary: BoundaryHint | None = None,
+        code: str | None = None,
+        domain: ErrorDomain | None = None,
+        details: dict[str, str | int | float | bool | None] | None = None,
+        origin: ErrorOrigin | None = None,
+        cause: ErrorCause | None = None,
+        replay_safe: bool | None = None,
+    ) -> ArvisError:
+        arvis_error = normalize_error(exc, boundary=boundary)
+
+        merged_details = dict(arvis_error.details)
+        if details:
+            merged_details.update(details)
+
+        return arvis_error.clone(
+            code=code or arvis_error.code,
+            domain=domain or arvis_error.domain,
+            details=merged_details,
+            origin=origin or arvis_error.origin,
+            cause=cause or arvis_error.cause,
+            replay_safe=(
+                arvis_error.replay_safe if replay_safe is None else replay_safe
+            ),
+        )
+
+    @staticmethod
+    def capture_normalized(
+        ctx: Any,
+        exc: Exception,
+        *,
+        boundary: BoundaryHint | None = None,
+        code: str | None = None,
+        details: dict[str, str | int | float | bool | None] | None = None,
+        origin: ErrorOrigin | None = None,
+        cause: ErrorCause | None = None,
+        safe: bool = False,
+    ) -> ErrorPayload:
+        """
+        Canonical runtime normalization entrypoint.
+
+        This method MUST be preferred over manual ArvisError wrapping
+        inside runtime boundaries (syscalls, pipeline, observability,
+        adapters, etc.).
+
+        Responsibilities:
+        - semantic classification
+        - normalization
+        - optional enrichment
+        - deterministic attachment
+        """
+
+        arvis_error = ErrorManager.normalize_for_boundary(
+            exc,
+            boundary=boundary,
+            code=code,
+            details=details,
+            origin=origin,
+            cause=cause,
+        )
+
+        return ErrorManager.attach(ctx, arvis_error, safe=safe)
 
     @staticmethod
     def capture_runtime_degradation(

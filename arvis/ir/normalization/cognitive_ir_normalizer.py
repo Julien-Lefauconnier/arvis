@@ -93,4 +93,5 @@ class CognitiveIRNormalizer:
             adaptive=ir.adaptive,
             projection=normalized_projection,
             validity=normalized_validity,
+            tools=ir.tools,
         )

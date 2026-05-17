@@ -12,9 +12,10 @@ from arvis.adapters.llm.validation.output_validator import (
 )
 from arvis.errors.base import (
     ArvisError,
-    ArvisExternalError,
-    ArvisRuntimeError,
-    ErrorDomain,
+)
+from arvis.errors.factories import (
+    build_llm_fatal_error,
+    build_llm_retryable_error,
 )
 from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.runtime_bindings import PipelineRuntimeBindings
@@ -119,21 +120,17 @@ class PipelineLLMService:
                         return content
 
                     if validation.severity == LLMValidationSeverity.FATAL:
-                        error_detail = ArvisRuntimeError(
+                        error_detail = build_llm_fatal_error(
                             "Fatal validation failure",
                             code="llm_output_fatal",
-                            domain=ErrorDomain.LLM,
-                            details={"retry_class": "fatal"},
                         )
                         error_code = "llm_output_fatal"
 
                     elif validation.severity == LLMValidationSeverity.RETRYABLE:
-                        error_detail = ArvisExternalError(
+                        error_detail = build_llm_retryable_error(
                             "Retryable validation failure",
                             code="llm_output_retryable",
-                            domain=ErrorDomain.LLM,
-                            details={"retry_class": "validation"},
-                            replay_safe=False,
+                            retry_class="validation",
                         )
                         error_code = "llm_output_retryable"
 
@@ -157,11 +154,9 @@ class PipelineLLMService:
                     )
 
                 else:
-                    error_detail = ArvisRuntimeError(
+                    error_detail = build_llm_fatal_error(
                         "No content returned",
                         code="llm_output_missing",
-                        domain=ErrorDomain.LLM,
-                        details={"retry_class": "fatal"},
                     )
 
             decision = policy.decide(

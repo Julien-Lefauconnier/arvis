@@ -298,24 +298,41 @@ class ArvisError(Exception):
     def clone(
         self,
         *,
+        message: str | None = None,
         code: str | None = None,
+        domain: ErrorDomain | None = None,
+        category: ArvisErrorCategory | None = None,
+        severity: ArvisErrorSeverity | None = None,
+        policy: ErrorPolicy | None = None,
+        retryable: bool | None = None,
+        deterministic: bool | None = None,
+        replay_safe: bool | None = None,
+        degraded: bool | None = None,
         details: ErrorDetails | None = None,
         origin: ErrorOrigin | None = None,
         cause: ErrorCause | None = None,
+        semantics: tuple[ErrorSemantics, ...] | None = None,
     ) -> ArvisError:
+        merged_details = dict(self.details)
+
+        if details:
+            merged_details.update(details)
+
         return self.__class__(
-            self.message,
+            message or self.message,
             code=code or self.code,
-            domain=self.domain,
-            category=self.category,
-            severity=self.severity,
-            policy=self.policy,
-            retryable=self.retryable,
-            deterministic=self.deterministic,
-            replay_safe=self.replay_safe,
-            degraded=self.degraded,
-            details=details or self.details,
-            semantics=tuple(self.metadata.semantics),
+            domain=domain or self.domain,
+            category=category or self.category,
+            severity=severity or self.severity,
+            policy=policy or self.policy,
+            retryable=(self.retryable if retryable is None else retryable),
+            deterministic=(
+                self.deterministic if deterministic is None else deterministic
+            ),
+            replay_safe=(self.replay_safe if replay_safe is None else replay_safe),
+            degraded=(self.degraded if degraded is None else degraded),
+            semantics=semantics or tuple(self.metadata.semantics),
+            details=merged_details,
             origin=origin or self.origin,
             cause=cause or self.cause,
             fingerprint=self.fingerprint,

@@ -173,10 +173,10 @@ def test_tool_execute_syscall_failure(monkeypatch):
     assert result.error.message == "boom"
 
     assert result.error.cause is not None
-    assert result.error.cause.code == "invariant_violation"
+    assert result.error.cause.code == "ValueError"
     assert result.error.cause.message == "boom"
 
-    entry = ctx.extra["syscall_results"][0]
+    entry = ctx.extra["syscall_results"][-1]
 
     assert entry["syscall"] == "tool.execute"
     assert entry["success"] is False
@@ -191,10 +191,7 @@ def test_tool_execute_syscall_failure(monkeypatch):
 
     assert entry["error"]["domain"] == "tool"
 
-    assert entry["error"]["cause"]["code"] == "invariant_violation"
-    assert entry["error"]["cause"]["message"] == "boom"
-
-    assert entry["error"]["details"]["wrapped_error_code"] == "invariant_violation"
+    assert entry["error"]["details"]["classification"] == "external"
 
     assert "error" in entry
 

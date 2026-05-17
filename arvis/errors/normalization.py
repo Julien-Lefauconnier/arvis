@@ -21,6 +21,7 @@ from arvis.errors.classification import (
     classify_exception,
 )
 from arvis.errors.codes import ErrorCode
+from arvis.errors.messages import safe_exception_message
 from arvis.errors.provenance import cause_from_exception
 from arvis.errors.runtime import RuntimeDegradationError
 
@@ -43,6 +44,7 @@ def normalize_error(
     tb = "".join(format_exception(exc))
     cause = cause_from_exception(exc)
     classification = classify_exception(exc, boundary=boundary)
+    message = safe_exception_message(exc)
 
     details: dict[str, str | int | float | bool | None] = {
         "exception_type": type(exc).__name__,
@@ -61,7 +63,7 @@ def normalize_error(
         or classification.kind == ErrorClassificationKind.EXTERNAL
     ):
         return ArvisExternalError(
-            str(exc),
+            message,
             code=ErrorCode.EXTERNAL_ERROR,
             details=details,
             cause=cause,
@@ -72,7 +74,7 @@ def normalize_error(
         classification.kind == ErrorClassificationKind.INVALID_PAYLOAD
     ):
         return InvalidIRPayloadError(
-            str(exc),
+            message,
             details={
                 **details,
                 "json_error": isinstance(exc, json.JSONDecodeError),
@@ -84,7 +86,7 @@ def normalize_error(
 
     if classification.kind == ErrorClassificationKind.CONTRACT:
         return ArvisRuntimeError(
-            str(exc),
+            message,
             code=ErrorCode.RUNTIME_ERROR,
             domain=classification.domain,
             policy=classification.policy,
@@ -103,7 +105,7 @@ def normalize_error(
 
     if classification.kind == ErrorClassificationKind.INVARIANT:
         return ArvisInvariantViolation(
-            str(exc) or "Invariant violated",
+            message or "Invariant violated",
             code=ErrorCode.INVARIANT_VIOLATION,
             domain=classification.domain,
             policy=classification.policy,
@@ -122,7 +124,7 @@ def normalize_error(
 
     if classification.kind == ErrorClassificationKind.COMPUTATION:
         return RuntimeDegradationError(
-            str(exc),
+            message,
             code=ErrorCode.RUNTIME_DEGRADATION,
             domain=classification.domain,
             policy=classification.policy,
@@ -139,7 +141,7 @@ def normalize_error(
         )
 
     return ArvisRuntimeError(
-        str(exc),
+        message,
         code=ErrorCode.RUNTIME_ERROR,
         domain=classification.domain,
         policy=classification.policy,

@@ -6,6 +6,7 @@ from typing import Any, Protocol
 
 from arvis.errors import normalize_error
 from arvis.errors.manager import ErrorManager
+from arvis.errors.types import ErrorPayload
 from arvis.kernel_core.process.process import CognitiveProcess
 
 
@@ -15,7 +16,11 @@ class ProcessHook(Protocol):
         self, process: CognitiveProcess, score: float | None
     ) -> None: ...
     def on_process_completed(self, process: CognitiveProcess, result: Any) -> None: ...
-    def on_process_aborted(self, process: CognitiveProcess, error: str) -> None: ...
+    def on_process_aborted(
+        self,
+        process: CognitiveProcess,
+        error: ErrorPayload,
+    ) -> None: ...
     def on_process_blocked(self, process: CognitiveProcess, reason: str) -> None: ...
     def on_process_suspended(self, process: CognitiveProcess, reason: str) -> None: ...
     def on_process_waiting_confirmation(self, process: CognitiveProcess) -> None: ...
@@ -50,7 +55,11 @@ class ProcessHookManager:
             except Exception as e:
                 self._emit_error("on_process_completed", process, e)
 
-    def on_aborted(self, process: CognitiveProcess, error: str) -> None:
+    def on_aborted(
+        self,
+        process: CognitiveProcess,
+        error: ErrorPayload,
+    ) -> None:
         for h in self._hooks:
             try:
                 h.on_process_aborted(process, error)

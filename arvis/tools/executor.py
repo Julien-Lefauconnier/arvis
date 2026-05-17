@@ -5,7 +5,6 @@ from typing import Any
 
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.errors import normalize_error
-from arvis.errors.provenance import cause_from_exception
 from arvis.errors.tool_runtime import (
     ToolAuthorizationError,
     ToolExecutionError,
@@ -100,10 +99,8 @@ class ToolExecutor:
             normalized_error = normalize_error(e)
             error = ToolExecutionError(
                 normalized_error.message,
-                cause=cause_from_exception(normalized_error),
+                cause=normalized_error.cause,
                 details={
-                    "wrapped_error_code": normalized_error.code,
-                    "wrapped_error_domain": normalized_error.domain.value,
                     "exception_type": type(e).__name__,
                 },
             )

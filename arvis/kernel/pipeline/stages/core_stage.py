@@ -7,6 +7,7 @@ from typing import Any
 import numpy as np
 
 from arvis.errors.boundaries.observability import capture_observability_failure
+from arvis.errors.boundaries.pipeline import capture_pipeline_degraded_failure
 from arvis.errors.manager import ErrorManager
 from arvis.errors.observability import (
     FastDynamicsSnapshotFailure,
@@ -281,6 +282,12 @@ class CoreStage:
         # -----------------------------------------
         # Optional paper-aligned slow dynamics
         # z_{t+1} = (1-eta) z_t + eta T(x_t)
+        #
+        # Kernel policy:
+        # - this path is optional / experimental
+        # - failure must degrade the scientific extension
+        # - failure must NOT abort the core stage
+        # - the previously computed slow_state remains the fallback
         # -----------------------------------------
         try:
             if (
@@ -314,10 +321,16 @@ class CoreStage:
                     eta=eta,
                 )
         except Exception as exc:
-            ErrorManager.capture_exception(
+            capture_pipeline_degraded_failure(
                 ctx,
                 exc,
-                code="paper_slow_dynamics_update_failure",
+                component="CoreStage.paper_slow_dynamics",
+                message="Optional paper-aligned slow dynamics update failed",
+                details={
+                    "fallback": "preserve_current_slow_state",
+                    "optional_path": True,
+                    "retry_class": "permanent",
+                },
             )
 
         # Example future activation:

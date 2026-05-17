@@ -121,10 +121,7 @@ def test_non_schedulable_process_is_skipped():
 
     scheduler.enqueue(normal)
     runtime_state.processes[exhausted.process_id] = exhausted
-    runtime_state.scheduler_state.append_unique(
-        runtime_state.scheduler_state.ready_queue,
-        exhausted.process_id,
-    )
+    runtime_state.scheduler_state.ready_queue.append(exhausted.process_id)
 
     decision = scheduler.tick()
 

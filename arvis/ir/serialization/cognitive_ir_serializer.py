@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, fields, is_dataclass
-from typing import Any
+from typing import Any, cast
 
 
 class CognitiveIRSerializer:
@@ -97,6 +97,8 @@ class CognitiveIRSerializer:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Any:
         from arvis.ir.cognitive_ir import CognitiveIR
+        from arvis.ir.context import CognitiveContextIR
+        from arvis.ir.input import CognitiveInputIR
 
         # -----------------------------------------
         # Remove API-level fields
@@ -109,17 +111,29 @@ class CognitiveIRSerializer:
         # Minimal reconstruction for runtime
         # -----------------------------------------
 
+        def _dataclass_kwargs(
+            cls_: type[Any], payload: dict[str, Any]
+        ) -> dict[str, Any]:
+            allowed = {f.name for f in fields(cls_)}
+            return {k: v for k, v in payload.items() if k in allowed}
+
         context = clean_data.get("context")
         if isinstance(context, dict):
-            context = type("IRContext", (), context)
+            context = CognitiveContextIR(
+                **_dataclass_kwargs(CognitiveContextIR, context),
+            )
 
+        input_obj: CognitiveInputIR | None
         input_data = clean_data.get("input")
         if isinstance(input_data, dict):
-            input_obj = type("IRInput", (), {})()
-            for k, v in input_data.items():
-                setattr(input_obj, k, v)
+            input_obj = CognitiveInputIR(
+                **_dataclass_kwargs(CognitiveInputIR, input_data),
+            )
         else:
-            input_obj = input_data
+            input_obj = cast(
+                CognitiveInputIR | None,
+                input_data,
+            )
 
         # -----------------------------------------
         # Build ONLY allowed fields dynamically

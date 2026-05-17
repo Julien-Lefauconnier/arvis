@@ -14,7 +14,6 @@ from arvis.errors.base import ArvisRuntimeError, ErrorDomain
 from arvis.errors.boundaries.pipeline import (
     capture_pipeline_contract_failure,
     capture_pipeline_degraded_failure,
-    capture_pipeline_runtime_failure,
 )
 from arvis.errors.codes import ErrorCode
 from arvis.errors.pipeline import PipelineStageDegradedError
@@ -183,12 +182,14 @@ class PipelineFinalizeService:
         try:
             pipeline._refresh_ir_context_extra(ctx)
         except Exception as exc:
-            capture_pipeline_runtime_failure(
+            capture_pipeline_contract_failure(
                 ctx,
                 exc,
                 component="PipelineIRContextRefresh",
                 message="IR context refresh failure",
             )
+            raise
+
         PipelineIRService.run(ctx)
 
         # -----------------------------------------------------

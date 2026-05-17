@@ -8,8 +8,8 @@ from typing import Any, Protocol
 from arvis.errors import ErrorOrigin
 from arvis.errors.codes import ErrorCode
 from arvis.errors.manager import ErrorManager
+from arvis.errors.messages import safe_exception_message
 from arvis.errors.normalization import normalize_error
-from arvis.errors.provenance import cause_from_exception
 from arvis.errors.syscall import SyscallExecutionError, SyscallValidationError
 from arvis.errors.types import ErrorPayload
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
@@ -88,7 +88,7 @@ class SyscallHandler:
             error_result = self._failure_from_error(
                 ctx,
                 SyscallValidationError(
-                    str(exc),
+                    safe_exception_message(exc, fallback="invalid syscall arguments"),
                     code=ErrorCode.INVALID_SYSCALL_ARGS,
                     origin=ErrorOrigin(
                         component="SyscallHandler",
@@ -340,10 +340,8 @@ class SyscallHandler:
             details={
                 "syscall": syscall_name,
                 "exception_type": type(exc).__name__,
-                "wrapped_error_code": normalized.code,
-                "wrapped_error_domain": normalized.domain.value,
             },
-            cause=cause_from_exception(normalized),
+            cause=normalized.cause,
         )
         return self._failure_from_error(ctx, arvis_error)
 

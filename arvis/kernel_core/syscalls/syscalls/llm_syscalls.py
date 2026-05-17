@@ -9,12 +9,11 @@ from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.tracing import LLMTrace, serialize_response, serialize_trace
 from arvis.errors.base import (
-    ArvisExternalError,
     ArvisRuntimeError,
     ErrorDomain,
 )
-from arvis.errors.normalization import normalize_error
-from arvis.errors.provenance import cause_from_exception
+from arvis.errors.manager import ErrorManager
+from arvis.errors.provenance import ErrorOrigin
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
@@ -81,23 +80,22 @@ def llm_generate(
             preferred_provider=preferred_provider,
         )
     except Exception as exc:
-        normalized = normalize_error(exc)
-
-        return SyscallResult.failure(
-            ArvisExternalError(
-                normalized.message,
-                code="llm_execution_failed",
-                domain=ErrorDomain.LLM,
-                details={
-                    "exception": type(exc).__name__,
-                    "wrapped_error_code": normalized.code,
-                    "wrapped_error_domain": normalized.domain.value,
-                    "retry_class": "transient",
-                },
-                cause=cause_from_exception(exc),
-                replay_safe=False,
-            )
+        error = ErrorManager.normalize_for_boundary(
+            exc,
+            boundary="external",
+            code="llm_execution_failed",
+            domain=ErrorDomain.LLM,
+            origin=ErrorOrigin(
+                component="llm.generate",
+                subsystem="kernel.syscall",
+                syscall="llm.generate",
+            ),
+            details={
+                "retry_class": "transient",
+            },
         )
+
+        return SyscallResult.failure(error)
 
     response = execution.response
 

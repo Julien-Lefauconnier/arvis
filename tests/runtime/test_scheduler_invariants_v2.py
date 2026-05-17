@@ -83,9 +83,7 @@ def test_completed_process_is_not_rescheduled():
 
     p_completed = make_process("p-completed", status=CognitiveProcessStatus.COMPLETED)
     runtime_state.processes[p_completed.process_id] = p_completed
-    runtime_state.scheduler_state.append_unique(
-        runtime_state.scheduler_state.ready_queue, p_completed.process_id
-    )
+    runtime_state.scheduler_state.ready_queue.append(p_completed.process_id)
 
     decision = scheduler._select_next_process()
 
@@ -101,9 +99,7 @@ def test_blocked_process_is_not_selected_even_if_in_ready_queue():
 
     proc = make_process("p-blocked", status=CognitiveProcessStatus.BLOCKED)
     runtime_state.processes[proc.process_id] = proc
-    runtime_state.scheduler_state.append_unique(
-        runtime_state.scheduler_state.ready_queue, proc.process_id
-    )
+    runtime_state.scheduler_state.ready_queue.append(proc.process_id)
 
     decision = scheduler._select_next_process()
 

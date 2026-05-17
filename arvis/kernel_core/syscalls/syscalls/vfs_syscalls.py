@@ -9,7 +9,6 @@ from arvis.errors.base import (
     ErrorDomain,
 )
 from arvis.errors.normalization import normalize_error
-from arvis.errors.provenance import cause_from_exception
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
@@ -83,11 +82,9 @@ def _vfs_error(
         details.update(
             {
                 "exception": type(exc).__name__,
-                "wrapped_error_code": normalized.code,
-                "wrapped_error_domain": normalized.domain.value,
             }
         )
-        cause = cause_from_exception(exc)
+        cause = normalized.cause
         message = normalized.message
 
     return ArvisRuntimeError(

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from arvis.errors.runtime_scheduler import SchedulerInvariantViolation
 from arvis.kernel_core.process.budget import BudgetConsumption, CognitiveBudget
 from arvis.kernel_core.process.priority import CognitivePriority
 from arvis.kernel_core.process.process_descriptor import ProcessDescriptor
@@ -256,6 +257,32 @@ class CognitiveProcess:
         self.runtime.consumed_elapsed_ms += consumption.elapsed_ms
         self.runtime.consumed_memory_span += consumption.memory_span_used
 
+        if (
+            self.runtime.consumed_reasoning_steps > self.budget.reasoning_steps
+            or self.runtime.consumed_attention_tokens > self.budget.attention_tokens
+            or self.runtime.consumed_uncertainty > self.budget.uncertainty_budget
+            or self.runtime.consumed_elapsed_ms > self.budget.time_slice_ms
+            or self.runtime.consumed_memory_span > self.budget.memory_span
+        ):
+            raise SchedulerInvariantViolation(
+                "Process budget underflow detected",
+                details={
+                    "invariant": "budget_non_negative",
+                    "process_id": self.process_id.value,
+                    "retry_class": "permanent",
+                    "consumed_reasoning_steps": self.runtime.consumed_reasoning_steps,
+                    "budget_reasoning_steps": self.budget.reasoning_steps,
+                    "consumed_attention_tokens": self.runtime.consumed_attention_tokens,
+                    "budget_attention_tokens": self.budget.attention_tokens,
+                    "consumed_uncertainty": self.runtime.consumed_uncertainty,
+                    "budget_uncertainty": self.budget.uncertainty_budget,
+                    "consumed_elapsed_ms": self.runtime.consumed_elapsed_ms,
+                    "budget_time_slice_ms": self.budget.time_slice_ms,
+                    "consumed_memory_span": self.runtime.consumed_memory_span,
+                    "budget_memory_span": self.budget.memory_span,
+                },
+            )
+
     # -------------------------
     # STATE
     # -------------------------
@@ -320,7 +347,15 @@ class CognitiveProcess:
 
     def set_total_stage_count(self, count: int) -> None:
         if count < 0:
-            raise ValueError("total stage count must be >= 0")
+            raise SchedulerInvariantViolation(
+                "Process total stage count must be >= 0",
+                details={
+                    "process_id": self.process_id.value,
+                    "total_stage_count": count,
+                    "invariant": "non_negative_total_stage_count",
+                    "retry_class": "permanent",
+                },
+            )
         self.execution.total_stage_count = count
 
     def has_remaining_stages(self) -> bool:
@@ -345,16 +380,46 @@ class CognitiveProcess:
     def validate(self) -> None:
         self.budget.validate()
         if not self.process_id.value:
-            raise ValueError("process_id.value must not be empty")
+            raise SchedulerInvariantViolation(
+                "Process id must not be empty",
+                details={
+                    "invariant": "process_id_non_empty",
+                    "retry_class": "permanent",
+                },
+            )
         if self.priority.normalized() < 0.0:
-            raise ValueError("priority must be >= 0")
+            raise SchedulerInvariantViolation(
+                "Process priority must be >= 0",
+                details={
+                    "process_id": self.process_id.value,
+                    "priority": self.priority.normalized(),
+                    "invariant": "non_negative_priority",
+                    "retry_class": "permanent",
+                },
+            )
         if self.execution.current_stage_index < 0:
-            raise ValueError("current_stage_index must be >= 0")
+            raise SchedulerInvariantViolation(
+                "Process current_stage_index must be >= 0",
+                details={
+                    "process_id": self.process_id.value,
+                    "current_stage_index": self.execution.current_stage_index,
+                    "invariant": "non_negative_current_stage_index",
+                    "retry_class": "permanent",
+                },
+            )
         if (
             self.execution.total_stage_count is not None
             and self.execution.total_stage_count < 0
         ):
-            raise ValueError("total_stage_count must be >= 0")
+            raise SchedulerInvariantViolation(
+                "Process total_stage_count must be >= 0",
+                details={
+                    "process_id": self.process_id.value,
+                    "total_stage_count": self.execution.total_stage_count,
+                    "invariant": "non_negative_total_stage_count",
+                    "retry_class": "permanent",
+                },
+            )
 
     # -------------------------
     # BACKWARD COMPAT - RUNTIME

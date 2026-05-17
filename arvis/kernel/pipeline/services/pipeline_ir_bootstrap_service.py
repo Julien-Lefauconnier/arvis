@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import is_dataclass, replace
 from typing import Any
 
 from arvis.ir.context import CognitiveContextIR
@@ -195,6 +195,9 @@ class PipelineIRBootstrapService:
 
         if ir_context is None:
             return
+
+        if not is_dataclass(ir_context) or isinstance(ir_context, type):
+            raise TypeError("ctx.ir_context must be a dataclass instance, not a class")
 
         current_extra = dict(ir_context.extra or {})
 

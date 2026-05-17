@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from arvis.errors.base import (
@@ -283,3 +285,59 @@ def test_runtime_degradation_tracking(ctx):
     assert runtime["active"] is True
     assert runtime["count"] == 1
     assert runtime["last_code"] == "TEST_ERROR"
+
+
+def test_capture_normalized_external_boundary(ctx):
+    payload = ErrorManager.capture_normalized(
+        ctx,
+        TimeoutError("provider timeout"),
+        boundary="external",
+    )
+
+    assert payload["category"] == "external"
+    assert payload["retryable"] is True
+    assert payload["deterministic"] is False
+    assert payload["replay_safe"] is False
+    assert payload["details"]["classification"] == "external"
+
+
+def test_capture_normalized_contract_boundary(ctx):
+    payload = ErrorManager.capture_normalized(
+        ctx,
+        TypeError("bad contract"),
+        boundary="contract",
+    )
+
+    assert payload["policy"] == "fail_closed"
+    assert payload["details"]["classification"] == "contract"
+    assert payload["details"]["contract_failure"] is True
+
+
+def test_capture_normalized_invalid_payload(ctx):
+    exc = json.JSONDecodeError("bad json", "{", 0)
+
+    payload = ErrorManager.capture_normalized(
+        ctx,
+        exc,
+    )
+
+    assert payload["details"]["classification"] == "invalid_payload"
+
+
+def test_normalize_for_boundary_can_override_replay_safe() -> None:
+    error = ErrorManager.normalize_for_boundary(
+        TimeoutError("timeout"),
+        boundary="external",
+        replay_safe=True,
+    )
+
+    assert error.replay_safe is True
+
+
+def test_normalize_for_boundary_preserves_existing_replay_safe_by_default() -> None:
+    error = ErrorManager.normalize_for_boundary(
+        TimeoutError("timeout"),
+        boundary="external",
+    )
+
+    assert error.replay_safe is False
