@@ -67,16 +67,17 @@ class LifecycleManager:
             self.queue_manager.move_to_completed(pid)
 
         elif target == CognitiveProcessStatus.ABORTED:
-            if tick is not None:
-                process.last_run_tick = tick
-            process.run_count += 1
-            if score is not None:
-                process.last_score = score
+            process.last_error = error
             self.queue_manager.move_to_aborted(pid)
 
         elif target == CognitiveProcessStatus.RUNNING:
             self.queue_manager.remove_from_all(pid)
             state.active_process_id = pid
+            if tick is not None:
+                process.last_run_tick = tick
+            process.run_count += 1
+            if score is not None:
+                process.last_score = score
             return
 
         if state.active_process_id == pid:

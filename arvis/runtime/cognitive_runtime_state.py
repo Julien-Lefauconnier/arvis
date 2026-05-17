@@ -22,6 +22,8 @@ from arvis.signals.signal_journal import SignalJournal
 from arvis.timeline.timeline_commitment import (
     TimelineCommitment,
 )
+from arvis.types.identifiers import EntityID
+from arvis.types.time import LogicalTimestamp
 
 
 @dataclass
@@ -31,10 +33,12 @@ class CognitiveRuntimeState:
     processes: dict[CognitiveProcessId, CognitiveProcess] = field(default_factory=dict)
     memory_topology: Any | None = None
     control_state: Any | None = None
-    timeline: Any = field(default_factory=SignalJournal)
+    timeline: SignalJournal = field(default_factory=SignalJournal)
     _local_counter: int = 0
     _last_tick: int = -1
-    _last_ts_local: float = 0.0
+    _last_ts_local: LogicalTimestamp = field(
+        default_factory=lambda: LogicalTimestamp(0.0)
+    )
     interrupt_bus: CognitiveInterruptBus = field(default_factory=CognitiveInterruptBus)
 
     def register_process(self, process: CognitiveProcess) -> None:
@@ -54,8 +58,18 @@ class CognitiveRuntimeState:
                 f"Unknown process id: {process_id.value}",
             ) from exc
 
-    def append_event(self, event_type: str, payload: dict[str, Any]) -> None:
-        signal = self._map_runtime_event(event_type, payload)
+    def append_event(
+        self,
+        event_type: str,
+        payload: dict[str, Any],
+        *,
+        causal_id: EntityID | None = None,
+    ) -> None:
+        signal = self._map_runtime_event(
+            event_type,
+            payload,
+            causal_id=causal_id,
+        )
         self.timeline.append(signal)
 
     # -----------------------------------------------------
@@ -76,7 +90,11 @@ class CognitiveRuntimeState:
     }
 
     def _map_runtime_event(
-        self, event_type: str, payload: dict[str, Any]
+        self,
+        event_type: str,
+        payload: dict[str, Any],
+        *,
+        causal_id: EntityID | None = None,
     ) -> CanonicalSignal:
         code = self._EVENT_TO_CODE.get(event_type)
 
@@ -93,11 +111,11 @@ class CognitiveRuntimeState:
 
         self._local_counter += 1
 
-        ts = float(current_tick) + (self._local_counter * 1e-6)
+        ts = LogicalTimestamp(float(current_tick) + (self._local_counter * 1e-6))
 
         # SAFETY: enforce monotonicity vs factory
         if ts <= self._last_ts_local:
-            ts = self._last_ts_local + 1e-6
+            ts = type(self._last_ts_local)(self._last_ts_local.value + 1e-6)
 
         self._last_ts_local = ts
 
@@ -105,8 +123,8 @@ class CognitiveRuntimeState:
             code,
             subject_ref=f"process:{payload.get('process_id', 'unknown')}",
             temporal_anchor=f"tick:{self.scheduler_state.tick_count}",
-            timestamp=ts,
-            signal_id=payload.get("causal_id"),
+            timestamp=ts.value,
+            signal_id=causal_id,
         )
 
         return signal

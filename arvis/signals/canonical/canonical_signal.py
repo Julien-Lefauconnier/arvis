@@ -1,6 +1,7 @@
 # arvis/signals/canonical/canonical_signal.py
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from .canonical_signal_key import CanonicalSignalKey
 from .canonical_signal_registry import CanonicalSignalRegistry
@@ -9,6 +10,7 @@ from .canonical_signal_registry import CanonicalSignalRegistry
 @dataclass(frozen=True)
 class CanonicalSignal:
     signal_id: str
+    timestamp: datetime
     key: CanonicalSignalKey
     state: str
     subject_ref: str

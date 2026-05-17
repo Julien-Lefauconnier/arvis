@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from time import perf_counter
-from typing import Any, cast
+from typing import cast
 
 from arvis.errors.runtime_pipeline import (
+    InvalidPipelineContextError,
     PipelineExecutionContractViolation,
     PipelineExecutionReturnedNone,
     PipelineFinalizeContractViolation,
@@ -19,6 +20,8 @@ from arvis.kernel.pipeline.pipeline_contract import (
 )
 from arvis.kernel_core.contracts.execution_contract import ProcessExecutionOutcome
 from arvis.kernel_core.process import BudgetConsumption, CognitiveProcess
+
+PipelineExecutionResult = object
 
 
 class PipelineExecutor:
@@ -34,7 +37,9 @@ class PipelineExecutor:
     def execute_process(self, process: CognitiveProcess) -> ProcessExecutionOutcome:
         ctx = process.local_state
         if not isinstance(ctx, CognitivePipelineContext):
-            raise TypeError("process.local_state must be a CognitivePipelineContext")
+            raise InvalidPipelineContextError(
+                "process.local_state must be a CognitivePipelineContext"
+            )
 
         start = perf_counter()
 
@@ -97,7 +102,10 @@ class PipelineExecutor:
             stage_name=stage_name,
         )
 
-    def _normalize_finalize_result(self, finalize_result: Any) -> Any:
+    def _normalize_finalize_result(
+        self,
+        finalize_result: object,
+    ) -> PipelineExecutionResult:
         if isinstance(finalize_result, PipelineFinalizeSignal):
             if not finalize_result.completed:
                 raise PipelineFinalizeContractViolation(

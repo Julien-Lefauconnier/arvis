@@ -2,11 +2,9 @@
 
 
 from arvis.ir.cognitive_ir import CognitiveIR
-from arvis.signals.signal import Signal
+from arvis.signals.canonical.canonical_signal import CanonicalSignal
 from arvis.signals.signal_journal import get_signal_journal
 
-from .canonical_to_event import canonical_to_event
-from .event_to_signal import event_to_signal
 from .mappers.ir_to_canonical import ir_to_canonical
 
 
@@ -31,14 +29,10 @@ class KernelAdapter:
         self.journal = get_signal_journal()
         self.deterministic_mode = deterministic_mode
 
-    def ingest_ir(self, ir: CognitiveIR) -> list[Signal]:
+    def ingest_ir(self, ir: CognitiveIR) -> list[CanonicalSignal]:
         canonicals = ir_to_canonical(ir)
 
-        signals: list[Signal] = []
-        for c in canonicals:
-            event = canonical_to_event(c)
-            signal = event_to_signal(event)
-            self.journal.append(signal)
-            signals.append(signal)
+        for canonical in canonicals:
+            self.journal.append(canonical)
 
-        return signals
+        return canonicals

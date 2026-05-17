@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvis.signals.signal import Signal
+from arvis.signals.canonical.canonical_signal import CanonicalSignal
 
 
 class SignalSemantics:
@@ -25,15 +25,15 @@ class SignalSemantics:
     """
 
     @staticmethod
-    def fingerprint(signal: Signal) -> tuple[str, Any, tuple[Any, Any, Any]]:
-        payload: dict[str, Any] = signal.payload
-
-        signal_type = payload["type"]
-
+    def fingerprint(
+        signal: CanonicalSignal,
+    ) -> tuple[str, str, str, str, str]:
         return (
-            signal.origin or "unknown",
-            signal_type,
-            SignalSemantics._normalize_payload(payload.get("payload", {})),
+            signal.key.code,
+            signal.state,
+            signal.subject_ref,
+            signal.temporal_anchor,
+            signal.origin,
         )
 
     @staticmethod

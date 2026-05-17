@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from arvis.runtime.cognitive_process import CognitiveBudget, CognitiveProcessId
+from arvis.runtime.runtime_decision_record import RuntimeDecisionRecord
 
 
 @dataclass
@@ -16,6 +17,7 @@ class SchedulerDecision:
     preempted_process_id: CognitiveProcessId | None = None
     score: float | None = None
     result: Any | None = None
+    decision_record: RuntimeDecisionRecord | None = None
 
     @property
     def is_noop(self) -> bool:

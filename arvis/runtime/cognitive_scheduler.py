@@ -19,8 +19,10 @@ from arvis.kernel_core.process import (
 )
 from arvis.kernel_core.process.lifecycle.lifecycle_manager import LifecycleManager
 from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
+from arvis.runtime.invariants import SchedulerInvariantValidator
 from arvis.runtime.process_hooks import ProcessHookManager
 from arvis.runtime.resource_model import ResourcePressure
+from arvis.runtime.runtime_decision_record import RuntimeDecisionRecord
 from arvis.runtime.scheduler_decision import SchedulerDecision
 
 
@@ -79,6 +81,7 @@ class CognitiveScheduler:
         self.policy = policy or SchedulingPolicyConfig()
         self._interrupt_wakeup_pending = False
         self.lifecycle = LifecycleManager(runtime_state)
+        self.invariants = SchedulerInvariantValidator(runtime_state)
         # -----------------------------------------
         # Hooks are ALWAYS available (never None)
         # -----------------------------------------
@@ -171,10 +174,23 @@ class CognitiveScheduler:
         self._validate_invariants()
 
         decision = self._select_next_process()
+        decision.decision_record = RuntimeDecisionRecord.create(
+            tick=state.tick_count,
+            selected_process_id=(
+                decision.selected_process_id.value
+                if decision.selected_process_id is not None
+                else None
+            ),
+            rationale=decision.rationale,
+            score=decision.score,
+        )
         if decision.is_noop:
             self.runtime_state.append_event(
                 "scheduler_noop",
                 {"reason": decision.rationale},
+                causal_id=decision.decision_record.decision_id
+                if decision.decision_record is not None
+                else None,
             )
             return decision
 
@@ -208,6 +224,9 @@ class CognitiveScheduler:
                 "score": decision.score,
                 "rationale": decision.rationale,
             },
+            causal_id=decision.decision_record.decision_id
+            if decision.decision_record is not None
+            else None,
         )
 
         self.hooks.on_selected(process, decision.score)
@@ -273,6 +292,9 @@ class CognitiveScheduler:
                         "process_id": process.process_id.value,
                         "stage_name": outcome.stage_name,
                     },
+                    causal_id=decision.decision_record.decision_id
+                    if decision.decision_record is not None
+                    else None,
                 )
 
                 self.hooks.on_completed(process, result)
@@ -298,6 +320,9 @@ class CognitiveScheduler:
                             process, "current_stage_index", None
                         ),
                     },
+                    causal_id=decision.decision_record.decision_id
+                    if decision.decision_record is not None
+                    else None,
                 )
 
                 return decision
@@ -343,6 +368,9 @@ class CognitiveScheduler:
                     "error": error.to_safe_dict(),
                     "error_type": type(exc).__name__,
                 },
+                causal_id=decision.decision_record.decision_id
+                if decision.decision_record is not None
+                else None,
             )
 
             self.hooks.on_aborted(process, error.to_safe_dict())
@@ -410,14 +438,7 @@ class CognitiveScheduler:
         return priority_score + age_bonus - pressure_penalty - confirmation_penalty
 
     def _validate_invariants(self) -> None:
-        running_count = sum(
-            1
-            for process in self.runtime_state.processes.values()
-            if process.status == CognitiveProcessStatus.RUNNING
-        )
-        self.runtime_state.scheduler_state.validate_single_running_invariant(
-            running_count
-        )
+        self.invariants.validate()
 
     def set_resource_pressure(self, pressure: ResourcePressure) -> None:
         pressure.validate()

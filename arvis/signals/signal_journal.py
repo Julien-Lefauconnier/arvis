@@ -3,7 +3,9 @@
 from _thread import LockType
 from threading import Lock
 
-from arvis.signals.signal import Signal
+from arvis.signals.canonical.canonical_signal import CanonicalSignal
+
+JournalSignal = CanonicalSignal
 
 
 class SignalJournal:
@@ -24,14 +26,14 @@ class SignalJournal:
     """
 
     def __init__(self) -> None:
-        self._signals: list[Signal] = []
+        self._signals: list[JournalSignal] = []
         self._lock: LockType = Lock()
 
     # ------------------------------------------------------------------
     # Write API
     # ------------------------------------------------------------------
 
-    def append(self, signal: Signal) -> None:
+    def append(self, signal: JournalSignal) -> None:
         """
         Append a signal to the journal.
 
@@ -49,7 +51,7 @@ class SignalJournal:
     # Read API
     # ------------------------------------------------------------------
 
-    def list_signals(self) -> list[Signal]:
+    def list_signals(self) -> list[JournalSignal]:
         """
         Return all recorded signals.
 
@@ -86,7 +88,7 @@ def get_signal_journal() -> SignalJournal:
     return _DEFAULT_SIGNAL_JOURNAL
 
 
-def list_signals() -> list[Signal]:
+def list_signals() -> list[JournalSignal]:
     """
     Convenience function for inspection layers.
     """

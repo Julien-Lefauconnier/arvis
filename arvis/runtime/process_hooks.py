@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import Protocol
 
 from arvis.errors import normalize_error
 from arvis.errors.manager import ErrorManager
 from arvis.errors.types import ErrorPayload
 from arvis.kernel_core.process.process import CognitiveProcess
+from arvis.runtime.cognitive_runtime_state import CognitiveRuntimeState
+
+RuntimeHookResult = object
 
 
 class ProcessHook(Protocol):
@@ -15,7 +18,11 @@ class ProcessHook(Protocol):
     def on_process_selected(
         self, process: CognitiveProcess, score: float | None
     ) -> None: ...
-    def on_process_completed(self, process: CognitiveProcess, result: Any) -> None: ...
+    def on_process_completed(
+        self,
+        process: CognitiveProcess,
+        result: RuntimeHookResult,
+    ) -> None: ...
     def on_process_aborted(
         self,
         process: CognitiveProcess,
@@ -27,7 +34,10 @@ class ProcessHook(Protocol):
 
 
 class ProcessHookManager:
-    def __init__(self, runtime_state: Any | None = None) -> None:
+    def __init__(
+        self,
+        runtime_state: CognitiveRuntimeState | None = None,
+    ) -> None:
         self._hooks: list[ProcessHook] = []
         self.runtime_state = runtime_state
 
@@ -48,7 +58,11 @@ class ProcessHookManager:
             except Exception as e:
                 self._emit_error("on_process_selected", process, e)
 
-    def on_completed(self, process: CognitiveProcess, result: Any) -> None:
+    def on_completed(
+        self,
+        process: CognitiveProcess,
+        result: RuntimeHookResult,
+    ) -> None:
         for h in self._hooks:
             try:
                 h.on_process_completed(process, result)

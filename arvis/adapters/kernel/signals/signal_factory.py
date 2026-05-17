@@ -60,22 +60,11 @@ class SignalFactory:
                 temporal_anchor,
             )
 
-        signal = CanonicalSignal(
-            signal_id=signal_id,
-            key=spec.key,
-            state=state,
-            subject_ref=subject_ref,
-            temporal_anchor=temporal_anchor,
-            origin=origin,
-            supersedes=None,
-        )
-
         if timestamp is None:
             raise RuntimeError(
                 "SignalFactory requires explicit timestamp (runtime-controlled)"
             )
-        else:
-            ts = float(timestamp)
+        ts = float(timestamp)
 
         # GLOBAL MONOTONIC GUARANTEE
         if ts <= cls._last_ts:
@@ -85,7 +74,16 @@ class SignalFactory:
 
         dt = datetime(1970, 1, 1, tzinfo=UTC) + timedelta(seconds=ts)
 
-        object.__setattr__(signal, "timestamp", dt)
+        signal = CanonicalSignal(
+            signal_id=signal_id,
+            timestamp=dt,
+            key=spec.key,
+            state=state,
+            subject_ref=subject_ref,
+            temporal_anchor=temporal_anchor,
+            origin=origin,
+            supersedes=None,
+        )
 
         return signal
 

@@ -116,20 +116,39 @@ class ErrorCode(StrEnum):
 
     PIPELINE_RUNTIME_ERROR = "pipeline_runtime_error"
 
+    PIPELINE_INVALID_CONTEXT = "pipeline_invalid_context"
+
     PIPELINE_EXECUTION_CONTRACT_VIOLATION = "pipeline_execution_contract_violation"
 
     PIPELINE_FINALIZE_CONTRACT_VIOLATION = "pipeline_finalize_contract_violation"
 
     PIPELINE_EXECUTION_RETURNED_NONE = "pipeline_execution_returned_none"
 
+    PIPELINE_STAGE_RETURNED_NONE = "pipeline_stage_returned_none"
+
+    PIPELINE_STAGE_INVALID_RESULT = "pipeline_stage_invalid_result"
+
+    PIPELINE_FINALIZE_RETURNED_NONE = "pipeline_finalize_returned_none"
+
+    PIPELINE_FINALIZE_INVALID_RESULT = "pipeline_finalize_invalid_result"
+
     # =========================================================
     # Runtime Execution
     # =========================================================
 
     RUNTIME_EXECUTION_ERROR = "runtime_execution_error"
+
     PROCESS_EXECUTION_ABORTED = "process_execution_aborted"
 
     RUNTIME_EXECUTION_CONTRACT_VIOLATION = "runtime_execution_contract_violation"
+
+    PROCESS_HOOK_FAILURE = "process_hook_failure"
+
+    PROCESS_INVALID_STATE = "process_invalid_state"
+
+    PROCESS_BUDGET_EXHAUSTED = "process_budget_exhausted"
+
+    PROCESS_PREEMPTED = "process_preempted"
 
     # =========================================================
     # Tool Runtime
@@ -164,3 +183,9 @@ class ErrorCode(StrEnum):
     FAST_DYNAMICS_SNAPSHOT_FAILURE = "fast_dynamics_snapshot_failure"
 
     QUADRATIC_LYAPUNOV_SNAPSHOT_FAILURE = "quadratic_lyapunov_snapshot_failure"
+
+    OBSERVABILITY_EXPORT_FAILURE = "observability_export_failure"
+
+    OBSERVABILITY_SERIALIZATION_FAILURE = "observability_serialization_failure"
+
+    OBSERVABILITY_TIMELINE_FAILURE = "observability_timeline_failure"

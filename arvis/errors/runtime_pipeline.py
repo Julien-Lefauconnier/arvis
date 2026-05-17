@@ -24,6 +24,11 @@ class PipelineStageRuntimeError(PipelineRuntimeError):
     severity = ArvisErrorSeverity.ERROR
 
 
+class InvalidPipelineContextError(PipelineRuntimeError):
+    default_code = ErrorCode.PIPELINE_INVALID_CONTEXT
+    severity = ArvisErrorSeverity.ERROR
+
+
 class PipelineExecutionContractViolation(PipelineRuntimeError):
     default_code = ErrorCode.PIPELINE_EXECUTION_CONTRACT_VIOLATION
     severity = ArvisErrorSeverity.FATAL
