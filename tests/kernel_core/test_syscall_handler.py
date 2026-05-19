@@ -295,3 +295,33 @@ def test_tool_execute_syscall_success(monkeypatch):
 
     assert result.success is True
     assert result.result.output["ok"] is True
+
+
+def test_syscall_handler_suppresses_journal_failure(monkeypatch):
+    ctx = make_ctx()
+    handler = SyscallHandler(
+        runtime_state=None,
+        scheduler=None,
+        services=KernelServiceRegistry(),
+    )
+
+    monkeypatch.setattr(
+        handler,
+        "_journal",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("journal boom")),
+    )
+
+    result = handler.handle(Syscall(name="unknown.test", args={"ctx": ctx}))
+
+    assert result.success is False
+    assert result.error is not None
+    assert result.error.code == "unknown_syscall"
+
+    errors = ctx.extra.get("errors", [])
+
+    assert any(
+        err.get("details", {}).get("component") == "SyscallHandler._journal"
+        and err.get("details", {}).get("recovery") == "journal_failure_suppressed"
+        for err in errors
+        if isinstance(err, dict)
+    )

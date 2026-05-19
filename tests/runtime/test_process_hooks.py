@@ -311,3 +311,88 @@ def test_hook_manager_is_bound_to_runtime_state():
     os = CognitiveOS(config=CognitiveOSConfig(enable_trace=False))
 
     assert os.runtime.hooks.runtime_state is os.runtime.runtime_state
+
+
+def test_hook_error_event_failure_is_isolated(monkeypatch):
+    class BadHook:
+        def on_process_enqueued(self, process):
+            pass
+
+        def on_process_selected(self, process, score):
+            pass
+
+        def on_process_completed(self, process, result):
+            raise RuntimeError("hook boom")
+
+        def on_process_aborted(self, process, error):
+            pass
+
+        def on_process_blocked(self, process, reason):
+            pass
+
+        def on_process_suspended(self, process, reason):
+            pass
+
+        def on_process_waiting_confirmation(self, process):
+            pass
+
+    os = _make_os_with_fake_executor(FakeExecutorComplete())
+    os.runtime.hooks.register(BadHook())
+
+    original_append = os.runtime.runtime_state.append_event
+
+    def flaky_append(event_type, payload, **kwargs):
+        if event_type == "hook_error":
+            raise RuntimeError("append boom")
+
+        return original_append(
+            event_type,
+            payload,
+            **kwargs,
+        )
+
+    monkeypatch.setattr(
+        os.runtime.runtime_state,
+        "append_event",
+        flaky_append,
+    )
+
+    result = os.run(user_id="u1", cognitive_input={})
+
+    assert result is not None
+
+
+def test_hook_error_attachment_failure_is_isolated(monkeypatch):
+    class BadHook:
+        def on_process_enqueued(self, process):
+            pass
+
+        def on_process_selected(self, process, score):
+            pass
+
+        def on_process_completed(self, process, result):
+            raise RuntimeError("hook boom")
+
+        def on_process_aborted(self, process, error):
+            pass
+
+        def on_process_blocked(self, process, reason):
+            pass
+
+        def on_process_suspended(self, process, reason):
+            pass
+
+        def on_process_waiting_confirmation(self, process):
+            pass
+
+    os = _make_os_with_fake_executor(FakeExecutorComplete())
+    os.runtime.hooks.register(BadHook())
+
+    monkeypatch.setattr(
+        "arvis.runtime.process_hooks.ErrorManager.capture_exception",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("capture boom")),
+    )
+
+    result = os.run(user_id="u1", cognitive_input={})
+
+    assert result is not None

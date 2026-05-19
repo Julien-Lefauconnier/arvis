@@ -372,7 +372,7 @@ def test_global_guard_exception(monkeypatch):
             raise RuntimeError()
 
     monkeypatch.setattr(
-        "arvis.kernel.pipeline.stages.gate_stage.GlobalStabilityGuard",
+        "arvis.kernel.pipeline.stages.gate.stability.GlobalStabilityGuard",
         lambda: BrokenGuard(),
     )
 
@@ -392,6 +392,14 @@ def test_global_guard_exception(monkeypatch):
     GateStage().run(None, ctx)
 
     assert ctx.global_stability_safe is True
+    errors = ctx.extra.get("errors", [])
+
+    assert any(
+        err.get("details", {}).get("component") == "compute_global_stability"
+        and err.get("details", {}).get("fallback") == "global_safe=True"
+        for err in errors
+        if isinstance(err, dict)
+    )
 
 
 def test_adaptive_fallback(monkeypatch):
@@ -982,8 +990,8 @@ def test_validity_envelope_exception_real(monkeypatch):
     ctx = make_ctx()
 
     monkeypatch.setattr(
-        "arvis.kernel.pipeline.stages.gate_stage.build_validity_envelope",
-        lambda **k: (_ for _ in ()).throw(RuntimeError()),
+        "arvis.kernel.pipeline.stages.gate.stability.build_math_validity_envelope",
+        lambda **_: (_ for _ in ()).throw(RuntimeError()),
     )
 
     monkeypatch.setattr(
@@ -1002,6 +1010,15 @@ def test_validity_envelope_exception_real(monkeypatch):
     GateStage().run(None, ctx)
 
     assert ctx.validity_envelope is None
+
+    errors = ctx.extra.get("errors", [])
+
+    assert any(
+        err.get("details", {}).get("component") == "build_validity_envelope"
+        and err.get("details", {}).get("fallback") == "validity_envelope=None"
+        for err in errors
+        if isinstance(err, dict)
+    )
 
 
 def test_no_observer_branch(monkeypatch):

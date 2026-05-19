@@ -232,7 +232,7 @@ ARVIS is validated like infrastructure.
 
 Current suite includes:
 
-* 1600+ passing tests
+* 1700+ passing tests
 * unit tests
 * integration tests
 * deterministic replay verification

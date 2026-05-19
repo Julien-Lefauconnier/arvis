@@ -113,7 +113,15 @@ class PipelineFinalizeService:
         # -----------------------------------------------------
         # OBSERVABILITY
         # -----------------------------------------------------
-        PipelineObservabilityService.run(pipeline, ctx)
+        try:
+            PipelineObservabilityService.run(pipeline, ctx)
+        except Exception as exc:
+            capture_pipeline_degraded_failure(
+                ctx,
+                exc,
+                component="PipelineObservabilityService",
+                message="Pipeline observability failure",
+            )
 
         # -----------------------------------------------------
         # DECISION TRACE
@@ -233,8 +241,7 @@ class PipelineFinalizeService:
                 component="CognitiveStateContract",
                 message="Cognitive state contract validation failure",
             )
-
-            ctx.cognitive_state = None
+            raise
 
         # -----------------------------------------------------
         # STATE IR

@@ -2,15 +2,28 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from typing import Any
 
 from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR
+from arvis.ir.input import CognitiveInputIR
 from arvis.ir.state import CognitiveRiskIR, CognitiveStateIR
+from arvis.kernel.execution.cognitive_execution_state import (
+    CognitiveExecutionState,
+)
+from arvis.kernel.execution.execution_gate_status import (
+    ExecutionGateStatus,
+)
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
 from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
+
+
+@dataclass
+class DummyIRContext:
+    extra: dict[str, object] = field(default_factory=dict)
 
 
 def build_test_context(
@@ -79,3 +92,23 @@ def attach_test_ir(
 
 def build_test_context_with_ir() -> CognitivePipelineContext:
     return attach_test_ir(build_test_context())
+
+
+def build_finalize_compatible_context() -> CognitivePipelineContext:
+    ctx = build_test_context_with_ir()
+
+    # ---------------------------------------------------------
+    # Runtime execution authority
+    # ---------------------------------------------------------
+    ctx.execution_state = CognitiveExecutionState()
+    ctx.execution_status = ExecutionGateStatus.READY
+
+    ctx.ir_input = CognitiveInputIR(
+        input_id="i1",
+        actor_id="test-user",
+        surface_kind="linguistic",
+    )
+
+    ctx.ir_context = DummyIRContext()
+
+    return ctx

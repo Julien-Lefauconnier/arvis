@@ -107,16 +107,24 @@ class ProcessHookManager:
     def _emit_error(
         self, hook_name: str, process: CognitiveProcess, exc: Exception
     ) -> None:
-        if self.runtime_state:
-            self.runtime_state.append_event(
-                "hook_error",
-                {
-                    "process_id": process.process_id.value,
-                    "hook": hook_name,
-                    "error": normalize_error(exc).to_safe_dict(),
-                    "error_type": type(exc).__name__,
-                },
-            )
+        normalized = normalize_error(exc)
+
+        if self.runtime_state is not None:
+            try:
+                self.runtime_state.append_event(
+                    "hook_error",
+                    {
+                        "process_id": process.process_id.value,
+                        "hook": hook_name,
+                        "error": normalized.to_safe_dict(),
+                        "error_type": type(exc).__name__,
+                    },
+                )
+            except Exception:
+                # Hook failure reporting must never destabilize runtime execution.
+                pass
+
+        try:
             ErrorManager.capture_exception(
                 process.local_state,
                 exc,
@@ -125,3 +133,6 @@ class ProcessHookManager:
                     "hook": hook_name,
                 },
             )
+        except Exception:
+            # Error attachment is best-effort for hook boundaries.
+            pass

@@ -81,6 +81,7 @@ class ErrorCode(StrEnum):
     SYSCALL_VALIDATION_ERROR = "syscall_validation_error"
     SYSCALL_REPLAY_ERROR = "syscall_replay_error"
     SYSCALL_EXTERNAL_DEPENDENCY_ERROR = "syscall_external_dependency_error"
+    SYSCALL_BOUNDARY_VIOLATION = "syscall_boundary_violation"
 
     # =========================================================
     # Artifact

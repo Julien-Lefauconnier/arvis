@@ -1,4 +1,4 @@
-# zrvis/cognition/events/__init__.py
+# arvis/cognition/events/__init__.py
 
 from .base_event import BaseEvent
 

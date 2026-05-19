@@ -13,8 +13,16 @@ from arvis.types.timestamps import utcnow
 
 class IntentStage:
     def _debug(self, ctx: Any, *parts: object) -> None:
-        if getattr(ctx, "debug", False):
-            print(*parts)
+        if not getattr(ctx, "debug", False):
+            return
+
+        extra = getattr(ctx, "extra", None)
+        if not isinstance(extra, dict):
+            return
+
+        extra.setdefault("debug_events", []).append(
+            " ".join(str(part) for part in parts)
+        )
 
     def run(self, pipeline: Any, ctx: Any) -> None:
         if getattr(ctx, "_tool_forced_execution", False):

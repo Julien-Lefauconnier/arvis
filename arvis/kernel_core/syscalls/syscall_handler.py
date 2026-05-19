@@ -73,12 +73,7 @@ class SyscallHandler:
                     details={"syscall": syscall.name},
                 ),
             )
-            self._journal(
-                ctx=ctx,
-                syscall=syscall,
-                result=missing_result,
-                started_tick=started_tick,
-            )
+            self._safe_journal(ctx, syscall, missing_result, started_tick)
             return missing_result
 
         sig = inspect.signature(fn)
@@ -102,12 +97,7 @@ class SyscallHandler:
                     cause=None,
                 ),
             )
-            self._journal(
-                ctx=ctx,
-                syscall=syscall,
-                result=error_result,
-                started_tick=started_tick,
-            )
+            self._safe_journal(ctx, syscall, error_result, started_tick)
             return error_result
 
         causal_id = self._build_syscall_id(
@@ -130,12 +120,7 @@ class SyscallHandler:
                 exc,
                 syscall_name=syscall.name,
             )
-            self._journal(
-                ctx=ctx,
-                syscall=syscall,
-                result=error_result,
-                started_tick=started_tick,
-            )
+            self._safe_journal(ctx, syscall, error_result, started_tick)
             return error_result
 
         if not isinstance(syscall_result, SyscallResult):
@@ -156,13 +141,38 @@ class SyscallHandler:
                 ),
             )
 
-        self._journal(
-            ctx=ctx,
-            syscall=syscall,
-            result=syscall_result,
-            started_tick=started_tick,
-        )
+        self._safe_journal(ctx, syscall, syscall_result, started_tick)
         return syscall_result
+
+    def _safe_journal(
+        self,
+        ctx: PipelineContextLike | None,
+        syscall: Syscall,
+        result: SyscallResult,
+        started_tick: int,
+    ) -> None:
+        try:
+            self._journal(ctx, syscall, result, started_tick)
+        except Exception as exc:
+            if ctx is not None:
+                ErrorManager.attach(
+                    ctx,
+                    SyscallExecutionError(
+                        "Syscall journaling failure",
+                        origin=ErrorOrigin(
+                            component="SyscallHandler",
+                            subsystem="kernel.syscall",
+                            syscall=syscall.name,
+                        ),
+                        details={
+                            "syscall": syscall.name,
+                            "component": "SyscallHandler._journal",
+                            "exception_type": type(exc).__name__,
+                            "recovery": "journal_failure_suppressed",
+                        },
+                        cause=normalize_error(exc).cause,
+                    ),
+                )
 
     def _journal(
         self,

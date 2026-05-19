@@ -863,3 +863,71 @@ def test_vfs_zip_plan_basic():
 
     assert res.success
     assert res.result is not None
+
+
+class ExplodingVFSService:
+    def get_item(self, *args, **kwargs):
+        raise RuntimeError("unexpected corruption")
+
+
+class ExplodingZipService(StubZipIngestService):
+    def execute_from_path(self, **kwargs):
+        raise RuntimeError("unexpected zip corruption")
+
+
+def test_vfs_get_syscall_maps_unexpected_boundary_violation() -> None:
+    handler = _make_handler(
+        vfs_service=ExplodingVFSService(),
+    )
+
+    result = handler.handle(
+        Syscall(
+            name="vfs.get",
+            args={
+                "user_id": USER_ID,
+                "item_id": "x",
+            },
+        )
+    )
+
+    assert result.success is False
+    assert result.error is not None
+
+    assert result.error.code == "syscall_boundary_violation"
+
+    assert result.error.details["syscall"] == "vfs.get"
+
+    assert result.error.details["subsystem"] == "kernel.syscall.vfs"
+
+    assert result.error.details["retry_class"] == "unknown"
+
+    assert result.error.details["exception_type"] == "RuntimeError"
+
+
+def test_vfs_zip_execute_syscall_maps_unexpected_boundary_violation() -> None:
+    handler = _make_handler(
+        zip_ingest_service=ExplodingZipService(),
+    )
+
+    result = handler.handle(
+        Syscall(
+            name="vfs.zip.execute",
+            args={
+                "zip_path": "/tmp/test.zip",
+                "user_id": USER_ID,
+            },
+        )
+    )
+
+    assert result.success is False
+    assert result.error is not None
+
+    assert result.error.code == "syscall_boundary_violation"
+
+    assert result.error.details["syscall"] == "vfs.zip.execute"
+
+    assert result.error.details["subsystem"] == "kernel.syscall.vfs.zip"
+
+    assert result.error.details["retry_class"] == "unknown"
+
+    assert result.error.details["exception_type"] == "RuntimeError"

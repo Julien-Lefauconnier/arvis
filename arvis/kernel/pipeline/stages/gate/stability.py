@@ -85,8 +85,19 @@ def compute_global_stability(ctx: Any, delta_w: float | None) -> bool:
     try:
         guard = GlobalStabilityGuard()
         global_safe = guard.check(history)
-    except Exception:
+    except Exception as exc:
         global_safe = True
+        ErrorManager.attach(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "compute_global_stability",
+                    "fallback": "global_safe=True",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
 
     ctx.global_stability_safe = global_safe
     return global_safe
@@ -262,11 +273,23 @@ def build_validity_envelope(
             ctx.extra.setdefault("fusion_reasons", []).append("switching_soft_warning")
 
         ctx.extra["validity_envelope"] = validity_envelope.__dict__.copy()
-    except Exception:
+    except Exception as exc:
         if scientific is not None:
             scientific.adaptive.validity_envelope = None
 
         ctx.validity_envelope = None
+
+        ErrorManager.attach(
+            ctx,
+            PipelineStageDegradedError(
+                message=str(exc),
+                details={
+                    "component": "build_validity_envelope",
+                    "fallback": "validity_envelope=None",
+                    "exception_type": type(exc).__name__,
+                },
+            ),
+        )
 
 
 def apply_validity_enforcement(

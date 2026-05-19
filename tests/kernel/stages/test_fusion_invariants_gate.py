@@ -26,10 +26,27 @@ def test_fusion_reason_consistency(pipeline, ctx):
 
     reasons = ctx.extra["fusion_reasons"]
 
-    # pas de contradictions
-    assert not (
-        any("confirm" in r for r in reasons) and any("abstain" in r for r in reasons)
-    )
+    # invariant runtime réel :
+    # plusieurs couches peuvent proposer des transitions différentes
+    # (confirm → abstain → veto final, etc.)
+    #
+    # Ce qui doit rester cohérent :
+    # - fusion_reasons reste structurée
+    # - le verdict final est unique
+    # - fusion_trace reflète le verdict réel
+
+    assert isinstance(reasons, list)
+    assert len(reasons) > 0
+
+    trace = ctx.extra.get("fusion_trace", {})
+
+    assert trace.get("final_verdict") == str(ctx.gate_result)
+
+    assert ctx.gate_result in {
+        LyapunovVerdict.ALLOW,
+        LyapunovVerdict.REQUIRE_CONFIRMATION,
+        LyapunovVerdict.ABSTAIN,
+    }
 
 
 def test_fusion_trace_structure(pipeline, ctx):

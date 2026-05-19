@@ -9,6 +9,8 @@ from arvis.errors.base import (
     ErrorDomain,
 )
 from arvis.errors.normalization import normalize_error
+from arvis.errors.provenance import cause_from_exception
+from arvis.errors.syscall import SyscallBoundaryViolationError
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import register_syscall
@@ -206,6 +208,23 @@ def _map_zip_error(exc: Exception) -> ArvisRuntimeError:
     return _vfs_error(code="zip_unknown_error", message=str(exc), exc=exc)
 
 
+VFS_EXPECTED_ERRORS = (
+    VFSItemNotFoundError,
+    VFSParentNotFoundError,
+    VFSParentNotFolderError,
+    VFSNameConflictError,
+    VFSFolderNotEmptyError,
+    VFSCycleError,
+    VFSInvalidNameError,
+)
+
+
+ZIP_EXPECTED_ERRORS = (
+    ZipRejectedError,
+    ZipConflictError,
+)
+
+
 # =====================================================
 # VFS SYSCALLS
 # =====================================================
@@ -231,8 +250,21 @@ def vfs_get(
 
     try:
         item = vfs.get_item(user_id=user_id, item_id=item_id)
-    except Exception as exc:
+    except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
+    except Exception as exc:
+        return SyscallResult.failure(
+            SyscallBoundaryViolationError(
+                "Unexpected VFS syscall boundary error",
+                details={
+                    "syscall": "vfs.get",
+                    "subsystem": "kernel.syscall.vfs",
+                    "retry_class": "unknown",
+                    "exception_type": type(exc).__name__,
+                },
+                cause=cause_from_exception(exc),
+            )
+        )
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -261,8 +293,21 @@ def vfs_create_folder(
 
     try:
         item = vfs.create_folder(user_id=user_id, name=name, parent_id=parent_id)
-    except Exception as exc:
+    except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
+    except Exception as exc:
+        return SyscallResult.failure(
+            SyscallBoundaryViolationError(
+                "Unexpected VFS syscall boundary error",
+                details={
+                    "syscall": "vfs.create.folder",
+                    "subsystem": "kernel.syscall.vfs",
+                    "retry_class": "unknown",
+                    "exception_type": type(exc).__name__,
+                },
+                cause=cause_from_exception(exc),
+            )
+        )
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -289,8 +334,21 @@ def vfs_create_file(
             size=size,
             mime=mime,
         )
-    except Exception as exc:
+    except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
+    except Exception as exc:
+        return SyscallResult.failure(
+            SyscallBoundaryViolationError(
+                "Unexpected VFS syscall boundary error",
+                details={
+                    "syscall": "vfs.create.file",
+                    "subsystem": "kernel.syscall.vfs",
+                    "retry_class": "unknown",
+                    "exception_type": type(exc).__name__,
+                },
+                cause=cause_from_exception(exc),
+            )
+        )
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -308,8 +366,21 @@ def vfs_delete_item(
 
     try:
         vfs.delete_item(user_id=user_id, item_id=item_id)
-    except Exception as exc:
+    except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
+    except Exception as exc:
+        return SyscallResult.failure(
+            SyscallBoundaryViolationError(
+                "Unexpected VFS syscall boundary error",
+                details={
+                    "syscall": "vfs.delete.item",
+                    "subsystem": "kernel.syscall.vfs",
+                    "retry_class": "unknown",
+                    "exception_type": type(exc).__name__,
+                },
+                cause=cause_from_exception(exc),
+            )
+        )
 
     return SyscallResult(success=True, result={"deleted": True, "item_id": item_id})
 
@@ -328,8 +399,21 @@ def vfs_rename_item(
 
     try:
         item = vfs.rename_item(user_id=user_id, item_id=item_id, new_name=new_name)
-    except Exception as exc:
+    except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
+    except Exception as exc:
+        return SyscallResult.failure(
+            SyscallBoundaryViolationError(
+                "Unexpected VFS syscall boundary error",
+                details={
+                    "syscall": "vfs.rename.item",
+                    "subsystem": "kernel.syscall.vfs",
+                    "retry_class": "unknown",
+                    "exception_type": type(exc).__name__,
+                },
+                cause=cause_from_exception(exc),
+            )
+        )
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -348,8 +432,21 @@ def vfs_move_item(
 
     try:
         item = vfs.move_item(user_id=user_id, item_id=item_id, parent_id=parent_id)
-    except Exception as exc:
+    except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
+    except Exception as exc:
+        return SyscallResult.failure(
+            SyscallBoundaryViolationError(
+                "Unexpected VFS syscall boundary error",
+                details={
+                    "syscall": "vfs.move.item",
+                    "subsystem": "kernel.syscall.vfs",
+                    "retry_class": "unknown",
+                    "exception_type": type(exc).__name__,
+                },
+                cause=cause_from_exception(exc),
+            )
+        )
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
@@ -402,8 +499,21 @@ def vfs_zip_execute(
             keep_zip=keep_zip,
             plan=plan,
         )
-    except Exception as exc:
+    except ZIP_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_zip_error(exc))
+    except Exception as exc:
+        return SyscallResult.failure(
+            SyscallBoundaryViolationError(
+                "Unexpected ZIP syscall boundary error",
+                details={
+                    "syscall": "vfs.zip.execute",
+                    "subsystem": "kernel.syscall.vfs.zip",
+                    "retry_class": "unknown",
+                    "exception_type": type(exc).__name__,
+                },
+                cause=cause_from_exception(exc),
+            )
+        )
 
     return SyscallResult(success=True, result=result)
 
@@ -450,8 +560,21 @@ def vfs_zip_plan(
             plan=plan_obj,
         )
 
-    except Exception as exc:
+    except ZIP_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_zip_error(exc))
+    except Exception as exc:
+        return SyscallResult.failure(
+            SyscallBoundaryViolationError(
+                "Unexpected ZIP syscall boundary error",
+                details={
+                    "syscall": "vfs.zip.plan",
+                    "subsystem": "kernel.syscall.vfs.zip",
+                    "retry_class": "unknown",
+                    "exception_type": type(exc).__name__,
+                },
+                cause=cause_from_exception(exc),
+            )
+        )
 
     return SyscallResult(
         success=True,

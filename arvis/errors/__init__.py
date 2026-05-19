@@ -119,6 +119,7 @@ from arvis.errors.runtime_scheduler import (
     UnknownProcessError,
 )
 from arvis.errors.syscall import (
+    SyscallBoundaryViolationError,
     SyscallExecutionError,
     SyscallExternalDependencyError,
     SyscallReplayError,
@@ -183,6 +184,7 @@ __all__ = [
     "ReplayGlobalCommitmentMismatch",
     "ReplayCognitiveStateMissing",
     "SyscallExecutionError",
+    "SyscallBoundaryViolationError",
     "SyscallValidationError",
     "SyscallReplayError",
     "SyscallExternalDependencyError",

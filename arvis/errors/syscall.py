@@ -34,3 +34,20 @@ class SyscallExternalDependencyError(SyscallExecutionError):
     retryable = True
     deterministic = False
     policy = ErrorPolicy.RETRY
+
+
+class SyscallBoundaryViolationError(SyscallExecutionError):
+    """
+    Raised when a syscall boundary catches an unexpected internal exception
+    outside the declared semantic contract.
+    """
+
+    default_code = ErrorCode.SYSCALL_BOUNDARY_VIOLATION
+
+    severity = ArvisErrorSeverity.FATAL
+
+    replay_safe = False
+
+    deterministic = False
+
+    policy = ErrorPolicy.FAIL_CLOSED
