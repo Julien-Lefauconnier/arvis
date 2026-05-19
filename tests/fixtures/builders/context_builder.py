@@ -100,8 +100,8 @@ def build_finalize_compatible_context() -> CognitivePipelineContext:
     # ---------------------------------------------------------
     # Runtime execution authority
     # ---------------------------------------------------------
-    ctx.execution_state = CognitiveExecutionState()
-    ctx.execution_status = ExecutionGateStatus.READY
+    ctx.execution.execution_state = CognitiveExecutionState()
+    ctx.execution.execution_state.execution_status = ExecutionGateStatus.READY
 
     ctx.ir_input = CognitiveInputIR(
         input_id="i1",

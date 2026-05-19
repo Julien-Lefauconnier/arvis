@@ -46,19 +46,26 @@ class DecisionStage:
         # -----------------------------------------
         # TOOL RETRY INJECTION (post-decision override)
         # -----------------------------------------
-        if ctx.extra.get("retry_tool"):
-            previous_results = ctx.extra.get("tool_results", [])
+        runtime_policy = getattr(ctx, "runtime_policy", None)
+        retry_requested = (
+            runtime_policy.retry_requested if runtime_policy is not None else False
+        )
+
+        if retry_requested:
+            previous_results = ctx.tooling.tool_results
             if previous_results:
                 last = previous_results[-1]
                 last_tool = getattr(last, "tool_name", None)
 
                 if last_tool:
-                    payloads = ctx.extra.get("tool_payloads", [])
+                    payloads = ctx.tooling.tool_payloads
                     last_payload = payloads[-1]["payload"] if payloads else {}
 
-                    ctx.extra["tool_override"] = {
-                        "tool": last_tool,
-                        "payload": last_payload,
+                    ctx.tooling.tool_feedback = {
+                        "tool_override": {
+                            "tool": last_tool,
+                            "payload": last_payload,
+                        }
                     }
 
         try:

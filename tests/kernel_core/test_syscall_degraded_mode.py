@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
@@ -60,3 +61,24 @@ def test_syscall_handler_keeps_journal_even_on_failure():
     assert len(entries) == 2
     assert entries[0]["syscall"] == "unknown.one"
     assert entries[1]["syscall"] == "unknown.two"
+
+
+def test_syscall_handler_writes_to_execution_state_journal() -> None:
+    runtime = CognitiveExecutionState()
+    ctx = SimpleNamespace(
+        extra={},
+        execution=SimpleNamespace(execution_state=runtime),
+    )
+
+    handler = SyscallHandler(
+        runtime_state=None,
+        scheduler=None,
+        services=KernelServiceRegistry(),
+    )
+
+    handler.handle(Syscall(name="unknown.one", args={"ctx": ctx}))
+
+    assert len(runtime.syscall_results) == 1
+    assert runtime.syscall_results[0]["syscall"] == "unknown.one"
+    assert ctx.extra["syscall_results"] is runtime.syscall_results
+    assert runtime.metadata["last_syscall_result"] is runtime.syscall_results[0]

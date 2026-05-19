@@ -13,7 +13,7 @@ from arvis.action.action_resolver import resolve_action
 
 class ActionStage:
     def run(self, pipeline: Any, ctx: Any) -> None:
-        runtime = getattr(ctx, "execution_state", None)
+        runtime = ctx.execution.execution_state
 
         can_execute = runtime.can_execute if runtime is not None else False
 
@@ -23,21 +23,30 @@ class ActionStage:
         # -----------------------------------------
         # RETRY RESOLUTION (EARLY)
         # -----------------------------------------
-        force_tool = ctx.extra.get("force_tool")
-        retry_tool_flag = ctx.extra.get("execution_policy", {}).get(
-            "retry"
-        ) or ctx.extra.get("retry_tool")
+        runtime_policy = getattr(ctx, "runtime_policy", None)
+
+        force_tool = (
+            runtime_policy.force_tool
+            if runtime_policy is not None
+            else ctx.extra.get("force_tool")
+        )
+
+        retry_tool_flag = (
+            runtime_policy.retry_requested
+            if runtime_policy is not None
+            else bool(ctx.extra.get("retry_tool", False))
+        )
 
         retry_tool: str | None = None
         retry_payload: dict[str, Any] = {}
 
         # fallback BEFORE guard
         if retry_tool_flag:
-            previous_results = ctx.extra.get("tool_results", [])
+            previous_results = ctx.tooling.tool_results
             if previous_results:
                 retry_tool = getattr(previous_results[-1], "tool_name", None)
 
-            payloads = ctx.extra.get("tool_payloads", [])
+            payloads = ctx.tooling.tool_payloads
             if payloads:
                 retry_payload = payloads[-1].get("payload", {}) or {}
 
@@ -69,7 +78,8 @@ class ActionStage:
             )
 
             # lock downstream stages (IntentStage, etc.)
-            ctx._tool_forced_execution = True
+            if runtime_policy is not None:
+                runtime_policy.force_execution = True
             return
 
         action_template = resolve_action(ctx.decision_layer.decision_result)

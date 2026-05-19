@@ -94,6 +94,7 @@ from arvis.uncertainty.uncertainty_frame_registry import UncertaintyFrameRegistr
 # Product layer
 # -----------------------------------------------------
 from .engine import ArvisEngine
+from .execution import ExecutionTraceView
 
 # -----------------------------------------------------
 # IR Helpers
@@ -123,6 +124,7 @@ __all__ = [
     "CognitiveOS",
     "CognitiveOSConfig",
     "CognitiveResultView",
+    "ExecutionTraceView",
     "DecisionTraceView",
     "TimelineView",
     "StabilityView",

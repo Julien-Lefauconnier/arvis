@@ -126,10 +126,10 @@ class ConfirmationStage:
         # -----------------------------------------
         # 3. NEEDS CONFIRMATION (include Gate signal)
         # -----------------------------------------
-        if ctx.execution_state is None:
-            ctx.execution_state = CognitiveExecutionState()
+        if ctx.execution.execution_state is None:
+            ctx.execution.execution_state = CognitiveExecutionState()
 
-        runtime = ctx.execution_state
+        runtime = ctx.execution.execution_state
 
         gate_requires_confirmation = runtime.requires_confirmation
 

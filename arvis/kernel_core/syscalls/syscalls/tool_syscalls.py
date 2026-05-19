@@ -163,6 +163,9 @@ def tool_execute(
         metadata={
             "tool": tool_name,
             "seq": getattr(handler, "_local_counter", 0),
+            "retry_attempt": int(kwargs.get("retry_attempt") or 0),
+            "retry_chain_id": kwargs.get("retry_chain_id"),
+            "retry_parent_syscall_id": kwargs.get("retry_parent_syscall_id"),
         },
         replay_policy="journal_only_replay",
         process_id=kwargs.get("process_id"),

@@ -28,6 +28,15 @@ class PipelineContextLike(Protocol):
     extra: dict[str, Any]
 
 
+def _execution_state_from_ctx(ctx: Any) -> Any | None:
+    execution = getattr(ctx, "execution", None)
+    runtime = getattr(execution, "execution_state", None)
+    if runtime is not None:
+        return runtime
+
+    return getattr(ctx, "execution_state", None)
+
+
 class SyscallHandler:
     def __init__(
         self,
@@ -186,7 +195,13 @@ class SyscallHandler:
 
         end_tick = self._get_tick()
         elapsed_ticks = self._compute_elapsed_ticks(started_tick, end_tick)
-        results = ctx.extra.setdefault("syscall_results", [])
+        execution_state = _execution_state_from_ctx(ctx)
+
+        if execution_state is not None:
+            results = execution_state.syscall_results
+            ctx.extra["syscall_results"] = results
+        else:
+            results = ctx.extra.setdefault("syscall_results", [])
 
         syscall_id = self._build_syscall_id(
             syscall,
@@ -225,6 +240,9 @@ class SyscallHandler:
 
         process_id = syscall.args.get("process_id")
         tick = syscall.args.get("tick")
+        retry_attempt = syscall.args.get("retry_attempt")
+        retry_chain_id = syscall.args.get("retry_chain_id")
+        retry_parent_syscall_id = syscall.args.get("retry_parent_syscall_id")
 
         if process_id is not None:
             entry["process_id"] = process_id
@@ -232,10 +250,27 @@ class SyscallHandler:
         if tick is not None:
             entry["tick"] = tick
 
+        if retry_attempt is not None:
+            entry["retry_attempt"] = int(retry_attempt)
+
+        if retry_chain_id is not None:
+            entry["retry_chain_id"] = str(retry_chain_id)
+
+        if retry_parent_syscall_id is not None:
+            entry["retry_parent_syscall_id"] = str(retry_parent_syscall_id)
+
         if isinstance(result.result, ExecutionArtifact):
             entry["artifact"] = result.result.to_dict()
             entry["artifact_timestamp"] = result.result.timestamp
             entry["artifact"]["causal_id"] = entry["syscall_id"]
+            if retry_attempt is not None:
+                entry["artifact"]["metadata"]["retry_attempt"] = int(retry_attempt)
+            if retry_chain_id is not None:
+                entry["artifact"]["metadata"]["retry_chain_id"] = str(retry_chain_id)
+            if retry_parent_syscall_id is not None:
+                entry["artifact"]["metadata"]["retry_parent_syscall_id"] = str(
+                    retry_parent_syscall_id
+                )
 
         # -----------------------------------------
         # MEMORY SNAPSHOT — ZK-safe logging
@@ -259,6 +294,9 @@ class SyscallHandler:
 
         if isinstance(results, list):
             results.append(entry)
+
+        if execution_state is not None:
+            execution_state.metadata["last_syscall_result"] = entry
 
         ctx.extra["last_syscall_result"] = entry
 

@@ -65,8 +65,8 @@ class PipelinePreparationService:
         # -----------------------------------------
         # Runtime execution bootstrap
         # -----------------------------------------
-        if ctx.execution_state is None:
-            ctx.execution_state = CognitiveExecutionState()
+        if ctx.execution.execution_state is None:
+            ctx.execution.execution_state = CognitiveExecutionState()
 
         # -----------------------------------------
         # Switching runtime bootstrap

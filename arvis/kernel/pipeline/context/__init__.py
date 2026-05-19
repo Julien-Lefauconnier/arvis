@@ -15,6 +15,9 @@ from arvis.kernel.pipeline.context.projection_context import (
 from arvis.kernel.pipeline.context.runtime_bindings_context import (
     PipelineRuntimeBindingsContext,
 )
+from arvis.kernel.pipeline.context.runtime_policy_context import (
+    PipelineRuntimePolicyContext,
+)
 from arvis.kernel.pipeline.context.scientific_context import (
     PipelineAdaptiveContext,
     PipelineCompositeContext,
@@ -40,6 +43,7 @@ __all__ = [
     "PipelineLyapunovContext",
     "PipelineRegimeContext",
     "PipelineRuntimeBindingsContext",
+    "PipelineRuntimePolicyContext",
     "PipelineScientificContext",
     "PipelineScientificCoreContext",
     "PipelineSwitchingContext",

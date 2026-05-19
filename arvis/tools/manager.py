@@ -8,7 +8,6 @@ from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.errors.tool_runtime import ToolAuthorizationError
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
-from arvis.tools.retry_policy import ToolRetryPolicy
 from arvis.tools.runtime.runtime_bindings import resolve_process_id
 from arvis.tools.tool_result import ToolResult
 
@@ -21,18 +20,19 @@ class ToolManager:
     - build invocation
     - evaluate policy
     - execute tool
-    - handle retry
+    - execute a single authorized tool invocation
+
+    Retry orchestration is owned by CognitiveRuntime and must pass
+    through SyscallHandler for audit/replay consistency.
     """
 
     def __init__(
         self,
         registry: ToolRegistry,
         executor: ToolExecutor,
-        retry_policy: ToolRetryPolicy | None = None,
     ) -> None:
         self.registry = registry
         self.executor = executor
-        self.retry_policy = retry_policy or ToolRetryPolicy()
 
     def run(self, result: Any, ctx: Any) -> ToolResult | None:
         if result is None or ctx is None:
@@ -51,8 +51,13 @@ class ToolManager:
         # -----------------------------------------
         # FORCE EXECUTION OVERRIDE (kernel-level)
         # -----------------------------------------
-        force_tool = ctx.extra.get("force_tool")
-        force_execution = ctx.extra.get("_force_execution", False)
+        runtime_policy = getattr(ctx, "runtime_policy", None)
+
+        force_tool = runtime_policy.force_tool if runtime_policy is not None else None
+
+        force_execution = (
+            runtime_policy.force_execution if runtime_policy is not None else False
+        )
 
         bypass_policy = (
             force_execution and force_tool is not None and tool_name == force_tool
@@ -86,12 +91,5 @@ class ToolManager:
 
         # --- execution ---
         result_exec = self.executor.execute_authorized(result, ctx)
-
-        # --- retry logic ---
-        self.retry_policy.evaluate(ctx)
-
-        if ctx.extra.get("execution_policy", {}).get("retry"):
-            result_retry = self.executor.execute_authorized(result, ctx)
-            return result_retry
 
         return result_exec

@@ -28,15 +28,18 @@ class ToolRetryPolicy:
         if risk > 0.6:
             return
 
-        retries = ctx.extra.get("tool_retry_count", 0)
+        runtime_policy = getattr(ctx, "runtime_policy", None)
+
+        retries = (
+            runtime_policy.retry_count
+            if runtime_policy is not None
+            else int(ctx.extra.get("tool_retry_count", 0))
+        )
 
         if retries >= 2:
             return
 
         # inject retry signal
-        ctx.extra.setdefault("execution_policy", {})
-        ctx.extra["execution_policy"]["retry"] = True
-
-        # backward compatibility (temp)
-        ctx.extra["retry_tool"] = True
-        ctx.extra["tool_retry_count"] = retries + 1
+        if runtime_policy is not None:
+            runtime_policy.retry_requested = True
+            runtime_policy.retry_count = retries + 1

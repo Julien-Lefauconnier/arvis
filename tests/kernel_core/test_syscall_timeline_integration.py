@@ -5,6 +5,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
+from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
@@ -57,7 +58,11 @@ def test_syscall_emits_runtime_signal(monkeypatch):
         services=services,
     )
 
-    ctx = type("Ctx", (), {"extra": {}})()
+    runtime = CognitiveExecutionState()
+    ctx = SimpleNamespace(
+        extra={},
+        execution=SimpleNamespace(execution_state=runtime),
+    )
 
     class DummyDecision:
         tool = "dummy"
@@ -84,6 +89,8 @@ def test_syscall_emits_runtime_signal(monkeypatch):
 
     syscall_results = ctx.extra.get("syscall_results", [])
     assert len(syscall_results) == 1
+    assert runtime.syscall_results is syscall_results
+    assert runtime.metadata["last_syscall_result"] is syscall_results[0]
 
     entry = syscall_results[0]
     assert entry["syscall"] == "tool.execute"

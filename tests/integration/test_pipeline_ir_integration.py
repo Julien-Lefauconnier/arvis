@@ -109,10 +109,10 @@ def test_pipeline_run_from_input_exports_ir(monkeypatch) -> None:
         pipeline.execution_stage,
         "run",
         lambda _p, ctx: (
-            setattr(ctx.execution_state, "requires_confirmation", False),
-            setattr(ctx.execution_state, "can_execute", True),
+            setattr(ctx.execution.execution_state, "requires_confirmation", False),
+            setattr(ctx.execution.execution_state, "can_execute", True),
             setattr(
-                ctx.execution_state,
+                ctx.execution.execution_state,
                 "execution_status",
                 ExecutionGateStatus.READY,
             ),

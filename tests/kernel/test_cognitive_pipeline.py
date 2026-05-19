@@ -6,6 +6,9 @@ from arvis.cognition.confirmation.confirmation_result import (
     ConfirmationResult,
     ConfirmationStatus,
 )
+from arvis.kernel.execution.cognitive_execution_state import (
+    CognitiveExecutionState,
+)
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
@@ -108,14 +111,10 @@ def force_runtime_confirmation(ctx):
     confirmation BEFORE pipeline execution.
     """
 
-    if ctx.execution_state is None:
-        from arvis.kernel.execution.cognitive_execution_state import (
-            CognitiveExecutionState,
-        )
+    if ctx.execution.execution_state is None:
+        ctx.execution.execution_state = CognitiveExecutionState()
 
-        ctx.execution_state = CognitiveExecutionState()
-
-    ctx.execution_state.needs_confirmation = True
+    ctx.execution.execution_state.needs_confirmation = True
 
 
 # =========================================================

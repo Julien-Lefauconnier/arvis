@@ -35,7 +35,7 @@ class CognitiveOSInternals:
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
     ) -> CognitivePipelineContext:
-        return CognitivePipelineContext(
+        ctx = CognitivePipelineContext(
             user_id=user_id,
             cognitive_input=cognitive_input,
             conversation_context=conversation_context,
@@ -43,6 +43,15 @@ class CognitiveOSInternals:
             confirmation_result=confirmation_result,
             extra=extra if extra is not None else {},
         )
+
+        runtime_policy = ctx.runtime_policy
+
+        runtime_policy.force_tool = ctx.extra.get("force_tool")
+        runtime_policy.force_execution = bool(ctx.extra.get("_force_execution", False))
+        runtime_policy.retry_requested = bool(ctx.extra.get("retry_tool", False))
+        runtime_policy.retry_count = int(ctx.extra.get("tool_retry_count", 0) or 0)
+
+        return ctx
 
     def _execute(
         self,

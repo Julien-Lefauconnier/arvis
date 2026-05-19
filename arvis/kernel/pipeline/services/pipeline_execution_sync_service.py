@@ -37,7 +37,7 @@ class PipelineExecutionSyncService:
         This service remains as a lifecycle hook for older
         pipeline callers but no longer mirrors mutable state.
         """
-        runtime = ctx.execution_state
+        runtime = ctx.execution.execution_state
 
         if runtime is None:
             return

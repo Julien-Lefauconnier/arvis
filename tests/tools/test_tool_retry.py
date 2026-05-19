@@ -16,6 +16,7 @@ def test_tool_retry_flow(monkeypatch):
             reason=None,
         ),
     )
+
     calls = {"count": 0}
 
     class FailingThenSuccessTool(BaseTool):
@@ -23,68 +24,51 @@ def test_tool_retry_flow(monkeypatch):
 
         def execute(self, input_data):
             calls["count"] += 1
-
-            # first call fails
             if calls["count"] == 1:
                 raise Exception("fail")
-
-            # second call succeeds
             return {"ok": True}
 
     os = CognitiveOS()
     os.register_tool(FailingThenSuccessTool())
 
-    # -------------------------
-    # RUN 1 → fail
-    # -------------------------
-    ctx_extra = {}
-    ctx_extra["force_tool"] = "retry_tool"
-
-    # -----------------------------------------
-    # FORCE EXECUTION (bypass confirmation gate)
-    # -----------------------------------------
-    ctx_extra["_force_execution"] = True
-
-    os.run(
-        user_id="u1",
-        cognitive_input={"tool": "retry_tool", "spec": {"name": "retry_tool"}},
-        extra=ctx_extra,
-    )
-    # check failure stored
-    tool_results = ctx_extra.get("syscall_results", [])
-    tool_exec_results = [
-        r for r in tool_results if "tool.execute" in str(r.get("causal_id", ""))
-    ]
-
-    assert len(tool_exec_results) == 1
-    assert tool_results[0]["syscall"] == "tool.execute"
-
-    # -------------------------
-    # PREPARE RETRY
-    # -------------------------
-    next_extra = {
-        "syscall_results": tool_results,
+    extra = {
         "force_tool": "retry_tool",
         "_force_execution": True,
     }
 
-    # -------------------------
-    # RUN 2 → second forced execution should succeed
-    # -------------------------
-    os.run(
+    result = os.run(
         user_id="u1",
-        cognitive_input={"tool": "retry_tool", "spec": {"name": "retry_tool"}},
-        extra=next_extra,
+        cognitive_input={
+            "tool": "retry_tool",
+            "spec": {"name": "retry_tool"},
+        },
+        extra=extra,
     )
 
-    tool_results_2 = next_extra.get("syscall_results", [])
+    assert result.execution_view is not None
 
-    # now we should have 2 results
-    assert len(tool_results_2) == 2
+    # ---------------------------------------------------------
+    # Public execution observability
+    # ---------------------------------------------------------
 
-    # second syscall succeeds
-    assert any(r["success"] is True for r in tool_results_2)
-    assert calls["count"] >= 2
-    assert len(tool_results_2) >= 2
-    assert tool_results_2[0]["syscall"] == "tool.execute"
-    assert tool_results_2[1]["syscall"] == "tool.execute"
+    execution_view = result.execution_view
+
+    # retry must emit TWO syscall executions
+    assert execution_view.syscall_count == 2
+
+    # tool failures are not yet projected into
+    # execution_state.errors (runtime ownership model)
+    assert execution_view.error_count == 0
+
+    # retry path executed
+    assert calls["count"] == 2
+
+    # execution finalized correctly
+    assert execution_view.execution_status is not None
+
+    # retry policy observability
+    runtime_policy = getattr(result.trace, "runtime_policy", None)
+
+    if runtime_policy is not None:
+        assert runtime_policy.retry_requested is True
+        assert runtime_policy.retry_count == 1

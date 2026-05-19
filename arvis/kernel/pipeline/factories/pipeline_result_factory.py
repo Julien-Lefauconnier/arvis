@@ -38,6 +38,7 @@ class PipelineResultFactory:
                 executable_intent=ctx.executable_intent,
                 action_decision=ctx.execution.action_decision,
                 confirmation_request=ctx.confirmation_request,
+                execution_state=ctx.execution.execution_state,
             ),
             ir=PipelineIRResult(
                 ir_input=ctx.ir_input,

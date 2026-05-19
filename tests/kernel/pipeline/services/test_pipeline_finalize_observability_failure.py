@@ -31,6 +31,14 @@ def test_pipeline_finalize_observability_failure_is_degraded() -> None:
     # ---------------------------------------------------------
     ctx.gate_result = LyapunovVerdict.ALLOW
 
+    runtime = ctx.execution.execution_state
+
+    assert runtime is not None
+
+    runtime.can_execute = True
+    runtime.requires_confirmation = False
+    runtime.execution_status = ExecutionGateStatus.READY
+
     # ---------------------------------------------------------
     # Observability crash
     # ---------------------------------------------------------
@@ -63,6 +71,8 @@ def test_pipeline_finalize_observability_failure_is_degraded() -> None:
     # ---------------------------------------------------------
     # Runtime authority still finalized
     # ---------------------------------------------------------
-    assert ctx.execution_status == ExecutionGateStatus.READY
+    runtime = ctx.execution.execution_state
 
-    assert ctx.can_execute is not None
+    assert runtime is not None
+    assert runtime.execution_status == ExecutionGateStatus.READY
+    assert runtime.can_execute is True

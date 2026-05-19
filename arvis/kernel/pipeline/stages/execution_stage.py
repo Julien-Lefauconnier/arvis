@@ -16,10 +16,10 @@ class ExecutionStage:
         # -------------------------------------------------
         # Runtime execution state bootstrap
         # -------------------------------------------------
-        if ctx.execution_state is None:
-            ctx.execution_state = CognitiveExecutionState()
+        if ctx.execution.execution_state is None:
+            ctx.execution.execution_state = CognitiveExecutionState()
 
-        runtime = ctx.execution_state
+        runtime = ctx.execution.execution_state
 
         # -------------------------------------------------
         # Runtime authority resolution

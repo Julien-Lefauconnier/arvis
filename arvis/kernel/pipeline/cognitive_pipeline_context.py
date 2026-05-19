@@ -43,6 +43,9 @@ from arvis.kernel.pipeline.context.projection_context import (
 from arvis.kernel.pipeline.context.runtime_bindings_context import (
     PipelineRuntimeBindingsContext,
 )
+from arvis.kernel.pipeline.context.runtime_policy_context import (
+    PipelineRuntimePolicyContext,
+)
 from arvis.kernel.pipeline.context.scientific_context import (
     PipelineScientificContext,
 )
@@ -107,6 +110,14 @@ class CognitivePipelineContext:
 
     runtime_bindings: PipelineRuntimeBindingsContext = field(
         default_factory=PipelineRuntimeBindingsContext,
+    )
+
+    # -------------------------
+    # Runtime policy context
+    # -------------------------
+
+    runtime_policy: PipelineRuntimePolicyContext = field(
+        default_factory=PipelineRuntimePolicyContext,
     )
 
     # -------------------------
@@ -853,3 +864,35 @@ class CognitivePipelineContext:
     @_last_tool_spec.setter
     def _last_tool_spec(self, value: Any | None) -> None:
         self.tooling.last_tool_spec = value
+
+    @property
+    def force_tool(self) -> str | None:
+        return self.runtime_policy.force_tool
+
+    @force_tool.setter
+    def force_tool(self, value: str | None) -> None:
+        self.runtime_policy.force_tool = value
+
+    @property
+    def _force_execution(self) -> bool:
+        return self.runtime_policy.force_execution
+
+    @_force_execution.setter
+    def _force_execution(self, value: bool) -> None:
+        self.runtime_policy.force_execution = value
+
+    @property
+    def retry_tool(self) -> bool:
+        return self.runtime_policy.retry_requested
+
+    @retry_tool.setter
+    def retry_tool(self, value: bool) -> None:
+        self.runtime_policy.retry_requested = value
+
+    @property
+    def tool_retry_count(self) -> int:
+        return self.runtime_policy.retry_count
+
+    @tool_retry_count.setter
+    def tool_retry_count(self, value: int) -> None:
+        self.runtime_policy.retry_count = value

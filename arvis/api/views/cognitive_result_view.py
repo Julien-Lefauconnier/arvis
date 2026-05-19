@@ -12,6 +12,7 @@ from typing import Any, cast
 from arvis.adapters.kernel.timeline_from_signals import (
     signal_journal_to_timeline_snapshot,
 )
+from arvis.api.execution import ExecutionTraceView
 from arvis.api.ir import build_ir_view
 from arvis.api.stability import StabilityView
 from arvis.api.timeline import TimelineView
@@ -35,6 +36,7 @@ class CognitiveResultView:
     global_commitment: str | None = None
     _ir: dict[str, Any] | None = None
     reflexive: dict[str, Any] | None = None
+    execution_view: ExecutionTraceView | None = None
 
     @staticmethod
     def from_state(
@@ -54,6 +56,14 @@ class CognitiveResultView:
         timeline_journal = state.timeline
 
         ir_payload = build_ir_view(state)
+
+        execution_state = getattr(execution, "execution_state", None)
+
+        execution_view = (
+            ExecutionTraceView.from_execution_state(execution_state)
+            if execution_state is not None
+            else None
+        )
 
         try:
             ir_bytes = json.dumps(
@@ -122,6 +132,7 @@ class CognitiveResultView:
             global_commitment=global_commitment,
             _ir=ir_payload,
             reflexive=reflexive_payload,
+            execution_view=execution_view,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -144,6 +155,11 @@ class CognitiveResultView:
             "global_commitment": self.global_commitment,
             "trace": (self.trace_view.to_dict() if self.trace_view else None),
             "timeline": (self.timeline_view.to_dict() if self.timeline_view else None),
+            "execution": (
+                self.execution_view.to_dict()
+                if self.execution_view is not None
+                else None
+            ),
         }
 
     def to_ir(self) -> dict[str, Any] | None:

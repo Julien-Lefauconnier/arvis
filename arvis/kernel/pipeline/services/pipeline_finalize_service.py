@@ -51,7 +51,7 @@ class PipelineFinalizeService:
         # -----------------------------------------------------
         # Runtime-owned execution authority
         # -----------------------------------------------------
-        runtime = ctx.execution_state
+        runtime = ctx.execution.execution_state
 
         if runtime is None:
             contract_error = ArvisRuntimeError(
@@ -104,11 +104,6 @@ class PipelineFinalizeService:
         requires_confirmation = runtime.requires_confirmation
         can_execute = runtime.can_execute
         execution_status = runtime.execution_status
-
-        # -----------------------------------------------------
-        # Public compatibility mirror
-        # -----------------------------------------------------
-        ctx.requires_confirmation = requires_confirmation
 
         # -----------------------------------------------------
         # OBSERVABILITY
@@ -260,8 +255,7 @@ class PipelineFinalizeService:
         # -----------------------------------------------------
         # Sync canonical projections
         # -----------------------------------------------------
-        ctx.can_execute = can_execute
-        ctx.execution_status = execution_status
+
         ctx.control = ctx.control_snapshot
 
         result = PipelineResultFactory.build(

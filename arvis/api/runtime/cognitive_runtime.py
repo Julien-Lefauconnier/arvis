@@ -12,6 +12,9 @@ from arvis.errors.runtime_execution import (
     RuntimeExecutionContractViolation,
     RuntimeExecutionError,
 )
+from arvis.kernel.execution.cognitive_execution_state import (
+    CognitiveExecutionState,
+)
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
@@ -37,6 +40,7 @@ from arvis.runtime.process_hooks import ProcessHookManager
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.manager import ToolManager
 from arvis.tools.registry import ToolRegistry
+from arvis.tools.retry_policy import ToolRetryPolicy
 
 
 @dataclass(frozen=True)
@@ -71,6 +75,7 @@ class CognitiveRuntime:
             registry=self.tool_registry,
             executor=self.tool_executor,
         )
+        self.tool_retry_policy = ToolRetryPolicy()
         self.services = KernelServiceRegistry(
             tool_executor=self.tool_executor,
             tool_manager=self.tool_manager,
@@ -148,6 +153,35 @@ class CognitiveRuntime:
             state=ctx.cognitive_state,
         )
 
+    # ---------------------------------------------------------
+    # Runtime execution state ownership
+    # ---------------------------------------------------------
+    #
+    # Some runtime-direct execution paths bypass the full
+    # pipeline bootstrap lifecycle.
+    #
+    # Runtime remains authoritative for ensuring that
+    # execution_state exists before syscall orchestration.
+    # ---------------------------------------------------------
+    def _ensure_execution_state(
+        self,
+        ctx: CognitivePipelineContext,
+    ) -> CognitiveExecutionState:
+        execution = getattr(ctx, "execution", None)
+
+        if execution is None:
+            raise RuntimeExecutionContractViolation(
+                "pipeline context missing execution context"
+            )
+
+        runtime = getattr(execution, "execution_state", None)
+
+        if runtime is None:
+            runtime = CognitiveExecutionState()
+            execution.execution_state = runtime
+
+        return runtime
+
     def _execute_tool_if_needed(
         self,
         *,
@@ -158,10 +192,18 @@ class CognitiveRuntime:
         action = getattr(result, "action_decision", None)
         effective_result = result
 
-        force_tool = ctx.extra.get("force_tool")
-        force_execution = ctx.extra.get(
-            "_force_execution",
-            False,
+        # ---------------------------------------------------------
+        # Runtime-owned retry policy state
+        # ---------------------------------------------------------
+        runtime_policy = getattr(ctx, "runtime_policy", None)
+        retry_policy = self.tool_retry_policy
+
+        runtime_policy = getattr(ctx, "runtime_policy", None)
+
+        force_tool = runtime_policy.force_tool if runtime_policy is not None else None
+
+        force_execution = (
+            runtime_policy.force_execution if runtime_policy is not None else False
         )
 
         if action and force_tool and action.tool == force_tool and force_execution:
@@ -181,22 +223,83 @@ class CognitiveRuntime:
         ):
             return
 
-        syscall_result = self.syscall_handler.handle(
-            Syscall(
-                name="tool.execute",
-                args={
-                    "result": effective_result,
-                    "ctx": ctx,
-                    "process_id": process.process_id.value,
-                },
-            )
-        )
+        # ---------------------------------------------------------
+        #  syscall-governed retry orchestration
+        # ---------------------------------------------------------
+        #
+        # IMPORTANT:
+        # - retries MUST pass again through syscall layer
+        # - every retry MUST emit:
+        #   - new syscall_id
+        #   - new causal chain
+        #   - new artifact
+        #   - new runtime event
+        # - ToolManager is intentionally stateless
+        # ---------------------------------------------------------
 
-        if not syscall_result.success:
-            ctx.extra.setdefault(
-                "errors",
-                [],
-            ).append("tool_execution_failure")
+        max_attempts = 3
+        attempts = 0
+        retry_chain_id: str | None = None
+        parent_syscall_id: str | None = None
+
+        while attempts < max_attempts:
+            attempts += 1
+
+            syscall_result = self.syscall_handler.handle(
+                Syscall(
+                    name="tool.execute",
+                    args={
+                        "result": effective_result,
+                        "ctx": ctx,
+                        "process_id": process.process_id.value,
+                        "retry_attempt": attempts - 1,
+                        "retry_chain_id": retry_chain_id,
+                        "retry_parent_syscall_id": parent_syscall_id,
+                    },
+                )
+            )
+
+            execution_state = self._ensure_execution_state(ctx)
+
+            last_entry = execution_state.metadata.get("last_syscall_result")
+
+            if isinstance(last_entry, dict):
+                current_syscall_id = last_entry.get("syscall_id")
+
+                if isinstance(current_syscall_id, str):
+                    retry_chain_id = retry_chain_id or current_syscall_id
+                    parent_syscall_id = current_syscall_id
+
+            # -----------------------------------------------------
+            # Retry evaluation (runtime-owned)
+            # -----------------------------------------------------
+            retry_policy.evaluate(ctx)
+
+            retry_requested = (
+                runtime_policy.retry_requested if runtime_policy is not None else False
+            )
+
+            # -----------------------------------------------------
+            # Success / no retry requested
+            # -----------------------------------------------------
+            if syscall_result.success or not retry_requested:
+                if not syscall_result.success:
+                    ctx.extra.setdefault(
+                        "errors",
+                        [],
+                    ).append("tool_execution_failure")
+
+                break
+
+            # -----------------------------------------------------
+            # Reset retry edge trigger
+            # -----------------------------------------------------
+            #
+            # Retry request is consumed by runtime loop.
+            # Next retry decision must be re-evaluated explicitly.
+            # -----------------------------------------------------
+            if runtime_policy is not None:
+                runtime_policy.retry_requested = False
 
     def _is_exit_process_state(
         self,

@@ -557,8 +557,10 @@ def test_pipeline_llm_service_records_runtime_metadata_into_execution_state():
 
     assert ctx.extra["llm_evaluation"]["risk"] == 0.2
 
-    assert ctx.execution_state is not None
+    runtime = ctx.execution.execution_state
 
-    assert ctx.execution_state.llm.observation == ctx.extra["llm_observation"]
+    assert runtime is not None
 
-    assert ctx.execution_state.llm.evaluation == ctx.extra["llm_evaluation"]
+    assert runtime.llm.observation == ctx.extra["llm_observation"]
+
+    assert runtime.llm.evaluation == ctx.extra["llm_evaluation"]
