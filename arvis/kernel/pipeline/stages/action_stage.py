@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from typing import Any
 
 from arvis.action.action_context import ActionContext
@@ -29,19 +28,25 @@ class ActionStage:
             "retry"
         ) or ctx.extra.get("retry_tool")
 
-        retry_tool = getattr(ctx.decision_layer.decision_result, "tool", None)
+        retry_tool: str | None = None
+        retry_payload: dict[str, Any] = {}
 
         # fallback BEFORE guard
-        if retry_tool_flag and not retry_tool:
+        if retry_tool_flag:
             previous_results = ctx.extra.get("tool_results", [])
             if previous_results:
                 retry_tool = getattr(previous_results[-1], "tool_name", None)
-        # 🔥 SOURCE OF TRUTH = LOCAL VARIABLE
+
+            payloads = ctx.extra.get("tool_payloads", [])
+            if payloads:
+                retry_payload = payloads[-1].get("payload", {}) or {}
+
+        #  SOURCE OF TRUTH = LOCAL VARIABLE
         resolved_tool = retry_tool or force_tool
 
         # HARD GUARD
         if not can_execute and not resolved_tool:
-            ctx.action_decision = ActionDecision(
+            ctx.execution.action_decision = ActionDecision(
                 allowed=False,
                 requires_user_validation=requires_confirmation,
                 denied_reason="execution_blocked",
@@ -51,28 +56,20 @@ class ActionStage:
             return
 
         verdict = ctx.gate_result
-        retry_tool = getattr(ctx.decision_layer.decision_result, "tool", None)
 
         if resolved_tool:
-            ctx.action_decision = ActionDecision(
+            ctx.execution.action_decision = ActionDecision(
                 allowed=True,
                 requires_user_validation=False,
                 denied_reason=None,
                 audit_required=True,
                 action_mode=ActionMode.AUTOMATIC,
                 tool=resolved_tool,
-                tool_payload=(
-                    getattr(
-                        ctx.decision_layer.decision_result,
-                        "tool_payload",
-                        {},
-                    )
-                    or {}
-                ),
+                tool_payload=retry_payload,
             )
+
             # lock downstream stages (IntentStage, etc.)
             ctx._tool_forced_execution = True
-
             return
 
         action_template = resolve_action(ctx.decision_layer.decision_result)
@@ -90,13 +87,6 @@ class ActionStage:
         # FORCE TOOL EXECUTION (pre-evaluation override)
         # -----------------------------------------
 
-        if force_tool:
-            ctx.decision_layer.decision_result.tool = force_tool
-
-        # optional sync (not required anymore)
-        if resolved_tool:
-            ctx.decision_layer.decision_result.tool = resolved_tool
-
         action_decision = evaluate_action(
             verdict=verdict,
             template=action_template,
@@ -112,59 +102,9 @@ class ActionStage:
                 action_mode=ActionMode.MANUAL,
             )
 
-        if resolved_tool:
-            action_decision = replace(
-                action_decision,
-                allowed=True,
-                tool=resolved_tool,
-                tool_payload=(
-                    getattr(
-                        ctx.decision_layer.decision_result,
-                        "tool_payload",
-                        {},
-                    )
-                    or {}
-                ),
-            )
-
-        # -----------------------------------------
-        # TOOL RETRY OVERRIDE
-        # -----------------------------------------
-        retry_tool = getattr(ctx.decision_layer.decision_result, "tool", None)
-
-        if retry_tool:
-            action_decision = replace(
-                action_decision,
-                allowed=True,
-                tool=retry_tool,
-                tool_payload=(
-                    getattr(
-                        ctx.decision_layer.decision_result,
-                        "tool_payload",
-                        {},
-                    )
-                    or {}
-                ),
-            )
-
-        tool_name = None
-        tool_payload = None
-
-        decision_result = getattr(ctx.decision_layer, "decision_result", None)
-        if decision_result is not None:
-            tool_name = getattr(decision_result, "tool", None)
-            tool_payload = getattr(decision_result, "tool_payload", None)
-
-        if tool_name and getattr(action_decision, "allowed", False):
-            action_decision = replace(
-                action_decision,
-                tool=tool_name,
-                tool_payload=tool_payload or {},
-            )
-
         action_decision = pipeline.action_policy.apply(
             decision=action_decision,
             risk=ctx.collapse_risk,
         )
 
-        ctx.action_decision = action_decision
+        ctx.execution.action_decision = action_decision

@@ -2,6 +2,9 @@
 
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from tests.fixtures.builders.bundle_builder import (
+    build_test_bundle,
+)
 
 
 def test_memory_pressure_hard_abstain():
@@ -10,16 +13,10 @@ def test_memory_pressure_hard_abstain():
     ctx = type("Ctx", (), {})()
     ctx.extra = {}
     ctx.decision_layer = type("DL", (), {})()
-    ctx.decision_layer.bundle = type(
-        "B",
-        (),
-        {
-            "memory_features": {
-                "memory_pressure": 0.9,
-                "has_constraints": False,
-            }
-        },
-    )()
+    ctx.decision_layer.bundle = build_test_bundle(
+        memory_pressure=0.9,
+        has_constraints=False,
+    )
 
     verdict = stage._apply_memory_policy(ctx, LyapunovVerdict.ALLOW)
 
@@ -33,16 +30,9 @@ def test_memory_pressure_moderate_confirmation():
     ctx = type("Ctx", (), {})()
     ctx.extra = {}
     ctx.decision_layer = type("DL", (), {})()
-    ctx.decision_layer.bundle = type(
-        "B",
-        (),
-        {
-            "memory_features": {
-                "memory_pressure": 0.6,
-                "has_constraints": False,
-            }
-        },
-    )()
+    ctx.decision_layer.bundle = build_test_bundle(
+        memory_pressure=0.6,
+    )
 
     verdict = stage._apply_memory_policy(ctx, LyapunovVerdict.ALLOW)
 
@@ -55,16 +45,10 @@ def test_memory_constraints_force_confirmation():
     ctx = type("Ctx", (), {})()
     ctx.extra = {}
     ctx.decision_layer = type("DL", (), {})()
-    ctx.decision_layer.bundle = type(
-        "B",
-        (),
-        {
-            "memory_features": {
-                "memory_pressure": 0.0,
-                "has_constraints": True,
-            }
-        },
-    )()
+    ctx.decision_layer.bundle = build_test_bundle(
+        memory_pressure=0.0,
+        has_constraints=True,
+    )
 
     verdict = stage._apply_memory_policy(ctx, LyapunovVerdict.ALLOW)
 

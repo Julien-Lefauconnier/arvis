@@ -120,8 +120,8 @@ def test_runtime_adapter_injection():
 
     os.runtime.execute(ctx)
 
-    assert "adapters" in ctx.extra
-    assert ctx.extra["adapters"]["llm"] == "dummy"
+    assert ctx.runtime_bindings.adapters is not None
+    assert ctx.runtime_bindings.adapters["llm"] == "dummy"
 
 
 # =====================================================

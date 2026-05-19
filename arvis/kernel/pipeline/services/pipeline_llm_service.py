@@ -18,6 +18,9 @@ from arvis.errors.factories import (
     build_llm_retryable_error,
 )
 from arvis.errors.manager import ErrorManager
+from arvis.kernel.pipeline.context.runtime_bindings_context import (
+    PipelineRuntimeBindingsContext,
+)
 from arvis.kernel.pipeline.runtime_bindings import PipelineRuntimeBindings
 from arvis.kernel.pipeline.services.pipeline_retry_budget import PipelineRetryBudget
 from arvis.kernel.pipeline.services.pipeline_retry_policy import PipelineRetryPolicy
@@ -27,6 +30,7 @@ from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 
 class PipelineContextLike(Protocol):
     extra: dict[str, Any]
+    runtime_bindings: PipelineRuntimeBindingsContext
 
 
 class SyscallHandlerLike(Protocol):
@@ -359,7 +363,7 @@ class PipelineLLMService:
 
     @staticmethod
     def _get_tick(ctx: PipelineContextLike) -> int:
-        runtime = ctx.extra.get("_runtime")
+        runtime = getattr(ctx.runtime_bindings, "runtime", None)
 
         if runtime is not None and hasattr(runtime, "syscall_handler"):
             handler = runtime.syscall_handler
@@ -374,17 +378,22 @@ class PipelineLLMService:
     def _resolve_runtime_bindings(
         ctx: PipelineContextLike,
     ) -> PipelineRuntimeBindings | None:
-        runtime = ctx.extra.get("_runtime")
+        bindings = getattr(ctx, "runtime_bindings", None)
+
+        if bindings is None:
+            return None
+
+        runtime = bindings.runtime
 
         if isinstance(runtime, PipelineRuntimeBindings):
             return runtime
 
-        handler_obj = ctx.extra.get("_syscall_handler")
-        process_id_obj = ctx.extra.get("_process_id")
+        handler_obj = bindings.syscall_handler
+        process_id_obj = bindings.process_id
 
         if handler_obj is None or not hasattr(handler_obj, "handle"):
             # allow mocked syscall path (tests / injection)
-            if "_allow_mock_runtime" in ctx.extra:
+            if ctx.extra.get("_allow_mock_runtime"):
                 if not isinstance(process_id_obj, str):
                     return None
                 return PipelineRuntimeBindings(

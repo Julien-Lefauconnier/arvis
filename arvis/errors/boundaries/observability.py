@@ -43,4 +43,17 @@ def capture_observability_failure(
         cause=cause_from_exception(exc),
     )
 
+    diagnostics = getattr(
+        getattr(ctx, "observability", None),
+        "diagnostics",
+        None,
+    )
+
+    if diagnostics is not None:
+        if component not in diagnostics.degraded_components:
+            diagnostics.degraded_components.append(component)
+
+        if message not in diagnostics.warnings:
+            diagnostics.warnings.append(message)
+
     return ErrorManager.attach(ctx, wrapped)

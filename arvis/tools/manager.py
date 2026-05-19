@@ -9,6 +9,7 @@ from arvis.errors.tool_runtime import ToolAuthorizationError
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.retry_policy import ToolRetryPolicy
+from arvis.tools.runtime.runtime_bindings import resolve_process_id
 from arvis.tools.tool_result import ToolResult
 
 
@@ -61,7 +62,7 @@ class ToolManager:
         invocation = ToolInvocation(
             tool_name=tool_name,
             payload=payload,
-            process_id=getattr(ctx, "_process_id", "unknown"),
+            process_id=resolve_process_id(ctx),
             context=ctx,
         )
 

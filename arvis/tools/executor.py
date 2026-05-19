@@ -11,6 +11,7 @@ from arvis.errors.tool_runtime import (
     UnknownToolError,
 )
 from arvis.tools.registry import ToolRegistry
+from arvis.tools.runtime.runtime_bindings import resolve_process_id
 from arvis.tools.tool_result import ToolResult
 
 
@@ -47,7 +48,7 @@ class ToolExecutor:
         invocation = ToolInvocation(
             tool_name=tool_name,
             payload=tool_payload,
-            process_id=getattr(ctx, "_process_id", "unknown"),
+            process_id=resolve_process_id(ctx),
             context=ctx,
         )
 

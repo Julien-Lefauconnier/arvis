@@ -88,7 +88,7 @@ class CognitiveRuntime:
         ctx: CognitivePipelineContext,
     ) -> RuntimeExecutionResult:
         if self.adapters:
-            ctx.extra["adapters"] = self.adapters
+            ctx.runtime_bindings.adapters = self.adapters
 
         process = ProcessFactory.create(
             process_id=CognitiveProcessId(
@@ -106,20 +106,15 @@ class CognitiveRuntime:
             local_state=ctx,
         )
 
-        ctx.extra["_syscall_handler"] = self.syscall_handler
-        ctx.extra["_process_id"] = process.process_id.value
+        ctx.runtime_bindings.syscall_handler = self.syscall_handler
+        ctx.runtime_bindings.process_id = process.process_id.value
 
         runtime_bindings = PipelineRuntimeBindings(
             syscall_handler=self.syscall_handler,
             process_id=process.process_id.value,
         )
 
-        ctx.extra["_runtime"] = runtime_bindings
-
-        # Backward-compatible aliases.
-        # À supprimer plus tard quand tout sera migré.
-        ctx.extra["_syscall_handler"] = self.syscall_handler
-        ctx.extra["_process_id"] = process.process_id.value
+        ctx.runtime_bindings.runtime = runtime_bindings
 
         self.scheduler.enqueue(process)
 

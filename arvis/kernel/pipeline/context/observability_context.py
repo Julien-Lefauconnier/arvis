@@ -2,41 +2,46 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
 
-from arvis.ir.state import CognitiveStateIR
+from arvis.kernel.pipeline.context.observability.diagnostic_context import (
+    ObservabilityDiagnosticContext,
+)
+from arvis.kernel.pipeline.context.observability.projections_context import (
+    ObservabilityProjectionContext,
+)
+from arvis.kernel.pipeline.context.observability.state_context import (
+    ObservabilityStateContext,
+)
+from arvis.kernel.pipeline.context.observability.symbolic_context import (
+    ObservabilitySymbolicContext,
+)
 
 
 @dataclass
 class PipelineObservabilityContext:
     """
-    Read-only observability projection space.
+    Canonical observability bounded context.
 
-    Contains:
-    - predictive projections
-    - global stability projections
+    Responsibilities:
+    - projections
     - symbolic observability
-    - derived stability statistics
-
-    No runtime authority.
-    No decision authority.
-    No execution authority.
+    - diagnostics
+    - replay-safe state exposure
     """
 
-    predictive_snapshot: Any | None = None
-    global_forecast: Any | None = None
-    global_stability: Any | None = None
-    multi_horizon: Any | None = None
+    projections: ObservabilityProjectionContext = field(
+        default_factory=ObservabilityProjectionContext,
+    )
 
-    stability_stats: Any | None = None
-    stability_projection: Any | None = None
-    stability_statistics: Any | None = None
+    symbolic: ObservabilitySymbolicContext = field(
+        default_factory=ObservabilitySymbolicContext,
+    )
 
-    symbolic_drift: Any | None = None
-    symbolic_features: Any | None = None
+    state: ObservabilityStateContext = field(
+        default_factory=ObservabilityStateContext,
+    )
 
-    system_tension: Any | None = None
-
-    ir_state: CognitiveStateIR | None = None
-    cognitive_state: Any | None = None
+    diagnostics: ObservabilityDiagnosticContext = field(
+        default_factory=ObservabilityDiagnosticContext,
+    )

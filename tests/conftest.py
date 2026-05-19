@@ -7,6 +7,9 @@ import pytest
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from tests.fixtures.builders.bundle_builder import (
+    build_test_bundle,
+)
 from tests.fixtures.builders.context_builder import (
     build_test_context,
     build_test_context_with_ir,
@@ -35,6 +38,11 @@ def ctx():
     return CognitivePipelineContext(
         user_id="test-user", cognitive_input={"query": "test"}
     )
+
+
+@pytest.fixture
+def minimal_bundle():
+    return build_test_bundle()
 
 
 class DummyIR:

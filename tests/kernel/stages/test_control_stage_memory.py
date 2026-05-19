@@ -3,6 +3,9 @@
 from arvis.kernel.pipeline.stages.control_stage import ControlStage
 from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.math.signals import DriftSignal, RiskSignal
+from tests.fixtures.builders.bundle_builder import (
+    build_test_bundle,
+)
 from tests.fixtures.builders.context_builder import build_test_context
 
 
@@ -28,17 +31,10 @@ def test_memory_pressure_reduces_epsilon():
     ctx.timeline = []
 
     # 👉 memory pressure HIGH
-    ctx.decision_layer = type("DL", (), {})()
-    ctx.decision_layer.bundle = type(
-        "B",
-        (),
-        {
-            "memory_features": {
-                "memory_pressure": 0.9,
-                "has_constraints": False,
-            }
-        },
-    )()
+    ctx.decision_layer.bundle = build_test_bundle(
+        memory_pressure=0.9,
+        has_constraints=False,
+    )
 
     stage.run(DummyPipeline(), ctx)
 
@@ -66,17 +62,10 @@ def test_memory_constraints_reduce_epsilon():
     ctx.scientific.regime_state.regime = "neutral"
     ctx.scientific.regime_state.stable = True
     ctx.timeline = []
-    ctx.decision_layer = type("DL", (), {})()
-    ctx.decision_layer.bundle = type(
-        "B",
-        (),
-        {
-            "memory_features": {
-                "memory_pressure": 0.0,
-                "has_constraints": True,
-            }
-        },
-    )()
+    ctx.decision_layer.bundle = build_test_bundle(
+        memory_pressure=0.0,
+        has_constraints=True,
+    )
 
     stage.run(DummyPipeline(), ctx)
 
@@ -104,7 +93,6 @@ def test_no_memory_features_safe_fallback():
     ctx.scientific.regime_state.regime = "neutral"
     ctx.scientific.regime_state.stable = True
     ctx.timeline = []
-    ctx.decision_layer = type("DL", (), {})()
     ctx.decision_layer.bundle = None
 
     stage.run(DummyPipeline(), ctx)
@@ -132,17 +120,10 @@ def test_memory_pressure_moderate_mode():
     ctx.scientific.regime_state.regime = "neutral"
     ctx.scientific.regime_state.stable = True
     ctx.timeline = []
-    ctx.decision_layer = type("DL", (), {})()
-    ctx.decision_layer.bundle = type(
-        "B",
-        (),
-        {
-            "memory_features": {
-                "memory_pressure": 0.5,
-                "has_constraints": False,
-            }
-        },
-    )()
+    ctx.decision_layer.bundle = build_test_bundle(
+        memory_pressure=0.5,
+        has_constraints=False,
+    )
 
     stage.run(DummyPipeline(), ctx)
 

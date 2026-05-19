@@ -36,7 +36,7 @@ class IntentStage:
             runtime.requires_confirmation if runtime is not None else False
         )
 
-        action_decision = ctx.action_decision
+        action_decision = ctx.execution.action_decision
         verdict = getattr(ctx, "gate_result", None)
 
         self._debug(ctx, "\n[INTENT DEBUG] START")
@@ -58,7 +58,7 @@ class IntentStage:
             return
 
         ctx.executable_intent = ExecutableIntent(
-            bundle_id=str(getattr(ctx.decision_layer.bundle, "bundle_id", "bundle")),
+            bundle_id=str(ctx.decision_layer.bundle_id),
             user_id=ctx.user_id,
             intent_signature=str(
                 getattr(

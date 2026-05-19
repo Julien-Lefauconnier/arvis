@@ -4,10 +4,14 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from arvis.action.action_decision import ActionDecision
+from arvis.cognition.bundle.cognitive_bundle_snapshot import (
+    CognitiveBundleSnapshot,
+)
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationResult
 from arvis.cognition.conversation.conversation_context import ConversationContext
 from arvis.cognition.conversation.conversation_signal import ConversationSignal
+from arvis.cognition.decision.decision_result import DecisionResult
 from arvis.cognition.events.base_event import BaseEvent
 from arvis.cognition.governance.governance_decision import GovernanceDecision
 from arvis.cognition.pending.pending_cognitive_action import PendingCognitiveAction
@@ -36,8 +40,14 @@ from arvis.kernel.pipeline.context.observability_context import (
 from arvis.kernel.pipeline.context.projection_context import (
     PipelineProjectionContext,
 )
+from arvis.kernel.pipeline.context.runtime_bindings_context import (
+    PipelineRuntimeBindingsContext,
+)
 from arvis.kernel.pipeline.context.scientific_context import (
     PipelineScientificContext,
+)
+from arvis.kernel.pipeline.context.tooling_context import (
+    PipelineToolingContext,
 )
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.trace.decision_trace import DecisionTrace
@@ -91,6 +101,19 @@ class CognitivePipelineContext:
         default_factory=PipelineScientificContext,
     )
 
+    # -------------------------
+    # Runtime bindings context
+    # -------------------------
+
+    runtime_bindings: PipelineRuntimeBindingsContext = field(
+        default_factory=PipelineRuntimeBindingsContext,
+    )
+
+    # -------------------------
+    # Tooling context
+    # -------------------------
+
+    tooling: PipelineToolingContext = field(default_factory=PipelineToolingContext)
     # -----------------------------------------------------
     # NOTE(arvis-runtime-v3):
     # # Scientific runtime ownership is now canonicalized under:
@@ -176,21 +199,6 @@ class CognitivePipelineContext:
     # Extensions
     # -------------------------
     extra: dict[str, Any] = field(default_factory=dict)
-
-    predictive_snapshot: Any | None = None
-    global_forecast: Any | None = None
-    global_stability: Any | None = None
-    multi_horizon: Any | None = None
-
-    stability_stats: Any | None = None
-    stability_projection: Any | None = None
-    stability_statistics: Any | None = None
-
-    symbolic_drift: Any | None = None
-    symbolic_features: Any | None = None
-
-    ir_state: CognitiveStateIR | None = None
-    cognitive_state: Any | None = None
 
     # -------------------------
     # Observability
@@ -323,11 +331,6 @@ class CognitivePipelineContext:
     # -------------------------
     gate_overrides: GateOverrides | None = None
 
-    # -------------------------
-    # Runtime
-    # -------------------------
-    control_runtime: Any | None = None
-
     # -----------------------------------------------------
     # Execution authority projection
     # -----------------------------------------------------
@@ -346,27 +349,101 @@ class CognitivePipelineContext:
         if self.legacy_execution_state is not None:
             self.execution.execution_state = self.legacy_execution_state
 
-        self.observability.predictive_snapshot = self.predictive_snapshot
+    @property
+    def predictive_snapshot(self) -> Any | None:
+        return self.observability.projections.predictive_snapshot
 
-        self.observability.global_forecast = self.global_forecast
+    @predictive_snapshot.setter
+    def predictive_snapshot(self, value: Any | None) -> None:
+        self.observability.projections.predictive_snapshot = value
 
-        self.observability.global_stability = self.global_stability
+    @property
+    def global_forecast(self) -> Any | None:
+        return self.observability.projections.global_forecast
 
-        self.observability.multi_horizon = self.multi_horizon
+    @global_forecast.setter
+    def global_forecast(self, value: Any | None) -> None:
+        self.observability.projections.global_forecast = value
 
-        self.observability.stability_stats = self.stability_stats
+    @property
+    def global_stability(self) -> Any | None:
+        return self.observability.projections.global_stability
 
-        self.observability.stability_projection = self.stability_projection
+    @global_stability.setter
+    def global_stability(self, value: Any | None) -> None:
+        self.observability.projections.global_stability = value
 
-        self.observability.stability_statistics = self.stability_statistics
+    @property
+    def multi_horizon(self) -> Any | None:
+        return self.observability.projections.multi_horizon
 
-        self.observability.symbolic_drift = self.symbolic_drift
+    @multi_horizon.setter
+    def multi_horizon(self, value: Any | None) -> None:
+        self.observability.projections.multi_horizon = value
 
-        self.observability.symbolic_features = self.symbolic_features
+    @property
+    def stability_stats(self) -> Any | None:
+        return self.observability.projections.stability_stats
 
-        self.observability.ir_state = self.ir_state
+    @stability_stats.setter
+    def stability_stats(self, value: Any | None) -> None:
+        self.observability.projections.stability_stats = value
 
-        self.observability.cognitive_state = self.cognitive_state
+    @property
+    def stability_projection(self) -> Any | None:
+        return self.observability.projections.stability_projection
+
+    @stability_projection.setter
+    def stability_projection(self, value: Any | None) -> None:
+        self.observability.projections.stability_projection = value
+
+    @property
+    def stability_statistics(self) -> Any | None:
+        return self.observability.projections.stability_statistics
+
+    @stability_statistics.setter
+    def stability_statistics(self, value: Any | None) -> None:
+        self.observability.projections.stability_statistics = value
+
+    @property
+    def symbolic_drift(self) -> Any | None:
+        return self.observability.symbolic.symbolic_drift
+
+    @symbolic_drift.setter
+    def symbolic_drift(self, value: Any | None) -> None:
+        self.observability.symbolic.symbolic_drift = value
+
+    @property
+    def symbolic_features(self) -> Any | None:
+        return self.observability.symbolic.symbolic_features
+
+    @symbolic_features.setter
+    def symbolic_features(self, value: Any | None) -> None:
+        self.observability.symbolic.symbolic_features = value
+
+    @property
+    def ir_state(self) -> CognitiveStateIR | None:
+        return self.observability.state.ir_state
+
+    @ir_state.setter
+    def ir_state(self, value: CognitiveStateIR | None) -> None:
+        self.observability.state.ir_state = value
+
+    @property
+    def cognitive_state(self) -> Any | None:
+        return self.observability.state.cognitive_state
+
+    @cognitive_state.setter
+    def cognitive_state(self, value: Any | None) -> None:
+        self.observability.state.cognitive_state = value
+
+    @property
+    def system_tension(self) -> Any | None:
+        return self.observability.diagnostics.system_tension
+
+    @system_tension.setter
+    def system_tension(self, value: Any | None) -> None:
+        self.observability.diagnostics.system_tension = value
 
     def _ensure_execution_state(
         self,
@@ -446,11 +523,11 @@ class CognitivePipelineContext:
     # -----------------------------------------------------
 
     @property
-    def decision_result(self) -> Any | None:
+    def decision_result(self) -> DecisionResult | None:
         return self.decision_layer.decision_result
 
     @decision_result.setter
-    def decision_result(self, value: Any | None) -> None:
+    def decision_result(self, value: DecisionResult | None) -> None:
         self.decision_layer.decision_result = value
 
     @property
@@ -462,11 +539,11 @@ class CognitivePipelineContext:
         self.decision_layer.ir_decision = value
 
     @property
-    def bundle(self) -> Any | None:
+    def bundle(self) -> CognitiveBundleSnapshot | None:
         return self.decision_layer.bundle
 
     @bundle.setter
-    def bundle(self, value: Any | None) -> None:
+    def bundle(self, value: CognitiveBundleSnapshot | None) -> None:
         self.decision_layer.bundle = value
 
     # -----------------------------------------------------
@@ -741,3 +818,38 @@ class CognitivePipelineContext:
     @property
     def errors(self) -> list[ArvisError]:
         return self.error_state.errors
+
+    # -------------------------
+    # Runtime
+    # -------------------------
+    @property
+    def control_runtime(self) -> Any | None:
+        return self.runtime_bindings.control_runtime
+
+    @control_runtime.setter
+    def control_runtime(self, value: Any | None) -> None:
+        self.runtime_bindings.control_runtime = value
+
+    @property
+    def _tool_success(self) -> bool | None:
+        return self.tooling.tool_success
+
+    @_tool_success.setter
+    def _tool_success(self, value: bool | None) -> None:
+        self.tooling.tool_success = value
+
+    @property
+    def _tool_failure(self) -> bool | None:
+        return self.tooling.tool_failure
+
+    @_tool_failure.setter
+    def _tool_failure(self, value: bool | None) -> None:
+        self.tooling.tool_failure = value
+
+    @property
+    def _last_tool_spec(self) -> Any | None:
+        return self.tooling.last_tool_spec
+
+    @_last_tool_spec.setter
+    def _last_tool_spec(self, value: Any | None) -> None:
+        self.tooling.last_tool_spec = value

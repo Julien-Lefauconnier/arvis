@@ -166,9 +166,7 @@ class ConfirmationStage:
                     ),
                     reason,
                 ),
-                target_id=str(
-                    getattr(ctx.decision_layer.bundle, "bundle_id", "bundle")
-                ),
+                target_id=str(ctx.decision_layer.bundle_id),
                 reason=reason,
             )
 

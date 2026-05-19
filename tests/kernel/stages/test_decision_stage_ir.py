@@ -5,6 +5,9 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from arvis.kernel.pipeline.context.decision_context import PipelineDecisionContext
+from arvis.kernel.pipeline.context.runtime_bindings_context import (
+    PipelineRuntimeBindingsContext,
+)
 from arvis.kernel.pipeline.stages.decision_stage import DecisionStage
 
 
@@ -30,6 +33,7 @@ def test_decision_stage_populates_ir_decision() -> None:
         user_id="user-1",
         extra={},
         decision_layer=PipelineDecisionContext(),
+        runtime_bindings=PipelineRuntimeBindingsContext(),
     )
 
     stage = DecisionStage()
@@ -38,4 +42,4 @@ def test_decision_stage_populates_ir_decision() -> None:
     assert ctx.decision_layer.decision_result.reason == "informational_query"
     assert ctx.decision_layer.ir_decision is not None
     assert ctx.decision_layer.ir_decision.decision_kind == "informational"
-    assert ctx.control_runtime == "runtime-for-user-1"
+    assert ctx.runtime_bindings.control_runtime == "runtime-for-user-1"

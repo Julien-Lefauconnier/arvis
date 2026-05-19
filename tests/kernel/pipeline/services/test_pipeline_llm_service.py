@@ -25,6 +25,9 @@ from arvis.kernel.pipeline.services.pipeline_retry_policy import (
 )
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import SyscallResult
+from tests.fixtures.builders.runtime_bindings_builder import (
+    build_runtime_bindings,
+)
 
 _EXECUTE_LLM_SYSCALL = (
     "arvis.kernel.pipeline.services.pipeline_llm_service."
@@ -169,10 +172,10 @@ class NonRetryableFailureHandler:
 
 def test_pipeline_llm_service_returns_text() -> None:
     ctx = SimpleNamespace(
-        extra={
-            "_syscall_handler": DummyHandler(),
-            "_process_id": "proc-1",
-        }
+        extra={},
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=DummyHandler(),
+        ),
     )
 
     content = PipelineLLMService.generate_text(
@@ -203,10 +206,10 @@ def test_pipeline_llm_service_missing_handler_records_error() -> None:
 
 def test_pipeline_llm_service_failure_records_error() -> None:
     ctx = SimpleNamespace(
-        extra={
-            "_syscall_handler": FailingHandler(),
-            "_process_id": "proc-1",
-        }
+        extra={},
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=FailingHandler(),
+        ),
     )
 
     content = PipelineLLMService.generate_text(
@@ -224,10 +227,10 @@ def test_pipeline_llm_service_retries_retryable_failure_then_succeeds() -> None:
     handler = RetryThenSuccessHandler()
 
     ctx = SimpleNamespace(
-        extra={
-            "_syscall_handler": handler,
-            "_process_id": "proc-1",
-        }
+        extra={},
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=handler,
+        ),
     )
 
     content = PipelineLLMService.generate_text(
@@ -253,10 +256,10 @@ def test_pipeline_llm_service_stops_after_retry_limit() -> None:
     handler = AlwaysRetryableFailureHandler()
 
     ctx = SimpleNamespace(
-        extra={
-            "_syscall_handler": handler,
-            "_process_id": "proc-1",
-        }
+        extra={},
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=handler,
+        ),
     )
 
     content = PipelineLLMService.generate_text(
@@ -278,10 +281,10 @@ def test_pipeline_llm_service_does_not_retry_non_retryable_failure() -> None:
     handler = NonRetryableFailureHandler()
 
     ctx = SimpleNamespace(
-        extra={
-            "_syscall_handler": handler,
-            "_process_id": "proc-1",
-        }
+        extra={},
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=handler,
+        ),
     )
 
     content = PipelineLLMService.generate_text(
@@ -303,10 +306,10 @@ def test_pipeline_llm_service_stops_when_retry_budget_exhausted() -> None:
     handler = AlwaysRetryableFailureHandler()
 
     ctx = SimpleNamespace(
-        extra={
-            "_syscall_handler": handler,
-            "_process_id": "proc-1",
-        }
+        extra={},
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=handler,
+        ),
     )
 
     content = PipelineLLMService.generate_text(
@@ -330,10 +333,11 @@ def test_pipeline_llm_service_stops_when_retry_budget_exhausted() -> None:
 def test_llm_service_retries_until_success(mocker):
     ctx = SimpleNamespace(
         extra={
-            "_syscall_handler": object(),
-            "_process_id": "proc-1",
             "_allow_mock_runtime": True,
-        }
+        },
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=object(),
+        ),
     )
 
     calls = []
@@ -363,10 +367,11 @@ def test_llm_service_retries_until_success(mocker):
 def test_llm_service_applies_delay(mocker):
     ctx = SimpleNamespace(
         extra={
-            "_syscall_handler": object(),
-            "_process_id": "proc-1",
             "_allow_mock_runtime": True,
-        }
+        },
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=object(),
+        ),
     )
 
     sleep_mock = mocker.patch(
@@ -393,10 +398,11 @@ def test_llm_service_applies_delay(mocker):
 def test_llm_service_stops_when_budget_exhausted(mocker):
     ctx = SimpleNamespace(
         extra={
-            "_syscall_handler": object(),
-            "_process_id": "proc-1",
             "_allow_mock_runtime": True,
-        }
+        },
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=object(),
+        ),
     )
 
     mocker.patch(
@@ -417,10 +423,11 @@ def test_llm_service_stops_when_budget_exhausted(mocker):
 def test_llm_service_no_retry_on_permanent_error(mocker):
     ctx = SimpleNamespace(
         extra={
-            "_syscall_handler": object(),
-            "_process_id": "proc-1",
             "_allow_mock_runtime": True,
-        }
+        },
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=object(),
+        ),
     )
 
     error = ArvisExternalError(
@@ -447,10 +454,10 @@ def test_llm_service_no_retry_on_permanent_error(mocker):
 
 def test_pipeline_llm_service_records_structured_output() -> None:
     ctx = SimpleNamespace(
-        extra={
-            "_syscall_handler": StructuredHandler(),
-            "_process_id": "proc-1",
-        }
+        extra={},
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=StructuredHandler(),
+        ),
     )
 
     content = PipelineLLMService.generate_text(
@@ -478,10 +485,11 @@ def test_pipeline_llm_service_records_llm_runtime_metadata(
 ) -> None:
     ctx = SimpleNamespace(
         extra={
-            "_syscall_handler": object(),
-            "_process_id": "proc-1",
             "_allow_mock_runtime": True,
-        }
+        },
+        runtime_bindings=build_runtime_bindings(
+            syscall_handler=object(),
+        ),
     )
 
     mocker.patch(

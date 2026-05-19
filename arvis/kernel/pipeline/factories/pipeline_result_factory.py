@@ -36,7 +36,7 @@ class PipelineResultFactory:
                 can_execute=can_execute,
                 requires_confirmation=requires_confirmation,
                 executable_intent=ctx.executable_intent,
-                action_decision=ctx.action_decision,
+                action_decision=ctx.execution.action_decision,
                 confirmation_request=ctx.confirmation_request,
             ),
             ir=PipelineIRResult(

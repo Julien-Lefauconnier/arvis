@@ -45,5 +45,5 @@ def test_runtime_isolation_between_instances():
 def test_pipeline_assigns_runtime(ctx, pipeline):
     pipeline.run(ctx)
 
-    assert hasattr(ctx, "control_runtime")
-    assert ctx.control_runtime is not None
+    assert hasattr(ctx, "runtime_bindings")
+    assert ctx.runtime_bindings.control_runtime is not None

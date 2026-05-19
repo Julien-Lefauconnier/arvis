@@ -1,7 +1,9 @@
 # tests/kernel/stages/test_runtime_stage.py
 
-
 from arvis.kernel.pipeline.stages.runtime_stage import RuntimeStage
+from tests.fixtures.builders.runtime_builder import (
+    build_runtime_test_context,
+)
 
 # ============================================================
 # Helpers
@@ -38,10 +40,6 @@ class BrokenObserver:
         raise ValueError
 
 
-class DummyCtx:
-    pass
-
-
 class DummyPipeline:
     def __init__(self, observer=None):
         self.global_stability_observer = observer
@@ -53,10 +51,11 @@ class DummyPipeline:
 
 
 def test_runtime_full():
-    ctx = DummyCtx()
-    ctx.control_runtime = DummyRuntime()
+    ctx = build_runtime_test_context()
+
+    ctx.runtime_bindings.control_runtime = DummyRuntime()
     ctx.collapse_risk = 0.3
-    ctx.action_decision = DummyAction("RUN")
+    ctx.execution.action_decision = DummyAction("RUN")
     ctx.switching_runtime = DummySwitchingRuntime()
     ctx.regime = "stable"
 
@@ -65,9 +64,12 @@ def test_runtime_full():
     RuntimeStage().run(pipeline, ctx)
 
     # runtime
-    assert ctx.control_runtime.last_risk == 0.3
-    assert ctx.control_runtime.inertia_risk == 0.3
-    assert ctx.control_runtime.last_action == "RUN"
+    runtime = ctx.runtime_bindings.control_runtime
+
+    assert runtime is not None
+    assert runtime.last_risk == 0.3
+    assert runtime.inertia_risk == 0.3
+    assert runtime.last_action == "RUN"
 
     # switching
     assert ctx.switching_runtime.updated == "stable"
@@ -82,12 +84,12 @@ def test_runtime_full():
 
 
 def test_runtime_exception():
-    ctx = DummyCtx()
+    ctx = build_runtime_test_context()
 
     # force failure
-    ctx.control_runtime = None
+    ctx.runtime_bindings.control_runtime = None
     ctx.collapse_risk = 0.3
-    ctx.action_decision = None
+    ctx.execution.action_decision = None
 
     pipeline = DummyPipeline()
 
@@ -101,7 +103,7 @@ def test_runtime_exception():
 
 
 def test_switching_missing_runtime():
-    ctx = DummyCtx()
+    ctx = build_runtime_test_context()
     ctx.regime = "stable"
 
     pipeline = DummyPipeline()
@@ -117,7 +119,7 @@ def test_switching_missing_runtime():
 
 
 def test_switching_missing_regime():
-    ctx = DummyCtx()
+    ctx = build_runtime_test_context()
     ctx.switching_runtime = DummySwitchingRuntime()
 
     pipeline = DummyPipeline()
@@ -137,7 +139,7 @@ def test_switching_exception():
         def update(self, *a, **k):
             raise ValueError
 
-    ctx = DummyCtx()
+    ctx = build_runtime_test_context()
     ctx.switching_runtime = BrokenSwitch()
     ctx.regime = "stable"
 
@@ -152,7 +154,7 @@ def test_switching_exception():
 
 
 def test_observer_none():
-    ctx = DummyCtx()
+    ctx = build_runtime_test_context()
 
     pipeline = DummyPipeline(observer=None)
 
@@ -168,7 +170,7 @@ def test_observer_none():
 
 
 def test_observer_exception():
-    ctx = DummyCtx()
+    ctx = build_runtime_test_context()
 
     pipeline = DummyPipeline(observer=BrokenObserver())
 

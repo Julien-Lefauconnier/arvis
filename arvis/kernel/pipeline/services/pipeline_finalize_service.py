@@ -157,18 +157,14 @@ class PipelineFinalizeService:
         if isinstance(ctx.gate_result, LyapunovVerdict):
             normalized_gate_result = CognitiveGateResult.from_lyapunov(
                 ctx.gate_result,
-                bundle_id=str(
-                    getattr(ctx.decision_layer.bundle, "bundle_id", "bundle")
-                ),
+                bundle_id=str(ctx.decision_layer.bundle_id),
                 reason_codes=final_reason_codes,
                 decision_trace=gate_decision_trace,
             )
         else:
             normalized_gate_result = CognitiveGateResult.from_lyapunov(
                 LyapunovVerdict.ABSTAIN,
-                bundle_id=str(
-                    getattr(ctx.decision_layer.bundle, "bundle_id", "bundle")
-                ),
+                bundle_id=str(ctx.decision_layer.bundle_id),
                 reason_codes=final_reason_codes or ("fallback_abstain",),
                 decision_trace=gate_decision_trace,
             )

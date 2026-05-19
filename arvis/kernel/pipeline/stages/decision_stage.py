@@ -74,4 +74,6 @@ class DecisionStage:
             )
 
         # Control Runtime (stateful per user)
-        ctx.control_runtime = pipeline._get_control_runtime(ctx.user_id)
+        ctx.runtime_bindings.control_runtime = pipeline._get_control_runtime(
+            ctx.user_id
+        )

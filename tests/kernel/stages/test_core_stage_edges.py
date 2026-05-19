@@ -3,6 +3,9 @@
 
 from arvis.kernel.pipeline.stages.core_stage import CoreStage
 from arvis.math.lyapunov.lyapunov import LyapunovState
+from tests.fixtures.builders.bundle_builder import (
+    build_test_bundle,
+)
 from tests.fixtures.builders.context_builder import build_test_context
 
 # ============================================================
@@ -33,7 +36,7 @@ class DummyScientific:
 
 def make_core_ctx():
     ctx = build_test_context(regime="test")
-    ctx.decision_layer.bundle = {}
+    ctx.decision_layer.bundle = build_test_bundle()
     return ctx
 
 
