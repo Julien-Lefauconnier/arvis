@@ -27,6 +27,11 @@ from arvis.kernel.pipeline.stages.gate.enforcement import (
     apply_kappa_hard_block,
     apply_projection_enforcement,
 )
+from arvis.kernel.pipeline.stages.gate.gating_regime import (
+    GatingRegime,
+    apply_answer_gate,
+    select_gating_regime,
+)
 from arvis.kernel.pipeline.stages.gate.memory_policy import apply_memory_policy
 from arvis.kernel.pipeline.stages.gate.mid_traces import write_mid_traces
 from arvis.kernel.pipeline.stages.gate.models import (
@@ -172,6 +177,38 @@ class GateDecisionStack:
             kernel_result=kernel_result,
             adaptive_metrics=assessment.adaptive_metrics,
         )
+
+        # --- Gating regime selection -------------------------------------
+        # Everything below (validity, projection, kappa, global stability,
+        # adaptive veto, memory policy, pi-gate) governs the safe EXECUTION of
+        # actions. A purely informational/conversational turn proposes no
+        # action, so it is governed by the lighter ANSWER regime instead. The
+        # stability assessment computed above is kept for observability under a
+        # dedicated key; it does not gate an answer. Fail-safe: any turn not
+        # positively classified as answer-only stays in the ACTION regime.
+        regime = select_gating_regime(ctx)
+        ctx.extra["gating_regime"] = regime.value
+        if regime is GatingRegime.ANSWER:
+            ctx.extra["action_assessment_reasons"] = list(
+                dict.fromkeys(ctx.extra.get("fusion_reasons", []))
+            )
+            ctx.extra["fusion_reasons"] = []
+            verdict = apply_answer_gate(ctx, verdict=verdict)
+            sync_confirmation_flags(ctx, verdict)
+            if "fusion_trace" in ctx.extra:
+                ctx.extra["fusion_trace"]["final_verdict"] = str(verdict)
+            reason_codes = tuple(
+                str(code).strip()
+                for code in dict.fromkeys(ctx.extra.get("fusion_reasons", []))
+                if str(code).strip()
+            )
+            ctx.extra["final_reason_codes"] = reason_codes
+            return GateDecisionResult(
+                verdict=verdict,
+                pre_verdict=pre_verdict,
+                kernel_result=kernel_result,
+                stability_certificate=stability_certificate,
+            )
 
         hook = _get_gate_stage_hook("build_validity_envelope")
         validity_fn = hook or build_validity_envelope

@@ -17,6 +17,8 @@ class DecisionEvaluator:
 
         cognitive_input = getattr(ctx, "cognitive_input", None)
         intent_type = getattr(cognitive_input, "intent_type", None)
+        if intent_type is None and isinstance(cognitive_input, dict):
+            intent_type = cognitive_input.get("intent_type")
 
         # -----------------------------------------------------
         # Memory influence (ZK-safe projection)
