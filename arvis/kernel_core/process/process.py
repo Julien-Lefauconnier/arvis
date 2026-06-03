@@ -247,7 +247,12 @@ class CognitiveProcess:
 
     def has_budget(self) -> bool:
         remaining = self.remaining_budget()
-        return remaining.reasoning_steps > 0 and remaining.time_slice_ms > 0
+        # Wall-clock time is an observability metric, not a cognitive-governance
+        # invariant: it is non-deterministic (machine/load dependent) and must not
+        # gate schedulability. Runaway is bounded deterministically by
+        # reasoning_steps; elapsed time stays measured (remaining_budget /
+        # consumed_elapsed_ms) purely for audit.
+        return remaining.reasoning_steps > 0
 
     def consume(self, consumption: BudgetConsumption) -> None:
         consumption.validate()
@@ -261,7 +266,6 @@ class CognitiveProcess:
             self.runtime.consumed_reasoning_steps > self.budget.reasoning_steps
             or self.runtime.consumed_attention_tokens > self.budget.attention_tokens
             or self.runtime.consumed_uncertainty > self.budget.uncertainty_budget
-            or self.runtime.consumed_elapsed_ms > self.budget.time_slice_ms
             or self.runtime.consumed_memory_span > self.budget.memory_span
         ):
             raise SchedulerInvariantViolation(
