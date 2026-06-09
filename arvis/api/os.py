@@ -8,6 +8,9 @@ from typing import Any
 from arvis.api.os_internals import CognitiveOSInternals
 from arvis.api.views.cognitive_result_view import CognitiveResultView
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+from arvis.stability.stability_snapshot import StabilitySnapshot
+from arvis.telemetry.adapters.stability import stability_event
+from arvis.telemetry.sink import NullTelemetrySink, TelemetrySink
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
@@ -22,6 +25,7 @@ class CognitiveOSConfig:
     strict_mode: bool = False
     adapter_registry: dict[str, Any] | None = None
     runtime_mode: str = "local"
+    telemetry_sink: TelemetrySink | None = None
 
 
 # -----------------------------------------------------
@@ -38,6 +42,11 @@ class CognitiveOS(CognitiveOSInternals):
         self.tool_registry = ToolRegistry()
         self.tool_executor = ToolExecutor(self.tool_registry)
         self.pipeline = pipeline or CognitivePipeline()
+        self.telemetry_sink: TelemetrySink = (
+            self.config.telemetry_sink
+            if self.config.telemetry_sink is not None
+            else NullTelemetrySink()
+        )
         self.runtime = self._build_runtime()
 
     # -------------------------------------------------
@@ -76,7 +85,34 @@ class CognitiveOS(CognitiveOSInternals):
             confirmation_result=confirmation_result,
             extra=extra,
         )
+        self._emit_stability_telemetry(result)
         return result
+
+    def _emit_stability_telemetry(
+        self,
+        result: CognitiveResultView | dict[str, Any],
+    ) -> None:
+        """
+        Emit a STABILITY telemetry event for a completed run.
+
+        Observe-only and fail-safe: a misbehaving sink must never affect
+        a cognitive run, and emission happens after the result (and its
+        IR / commitment) are finalized, so it cannot influence
+        determinism or replay. The default NullTelemetrySink makes this
+        a no-op.
+        """
+        if isinstance(self.telemetry_sink, NullTelemetrySink):
+            return
+        if not isinstance(result, CognitiveResultView):
+            return
+        snapshot = result.stability
+        if not isinstance(snapshot, StabilitySnapshot):
+            return
+        try:
+            self.telemetry_sink.emit(stability_event(snapshot))
+        except Exception:
+            # Telemetry is observe-only; never propagate sink failures.
+            return
 
     # -------------------------------------------------
     # IR Export
