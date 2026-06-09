@@ -34,6 +34,10 @@ from arvis.telemetry.adapters.stability import (
     STABILITY_COMPONENT,
     stability_event,
 )
+from arvis.telemetry.adapters.stats import (
+    STATS_COMPONENT,
+    stats_event,
+)
 from arvis.telemetry.adapters.tension import (
     SYSTEM_TENSION_COMPONENT,
     system_tension_event,
@@ -56,4 +60,6 @@ __all__ = [
     "multi_horizon_event",
     "FORECAST_COMPONENT",
     "forecast_event",
+    "STATS_COMPONENT",
+    "stats_event",
 ]

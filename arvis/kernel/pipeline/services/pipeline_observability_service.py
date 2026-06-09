@@ -21,6 +21,7 @@ from arvis.telemetry.adapters.forecast import forecast_event
 from arvis.telemetry.adapters.multi import multi_horizon_event
 from arvis.telemetry.adapters.predictive import predictive_event
 from arvis.telemetry.adapters.stability import stability_event
+from arvis.telemetry.adapters.stats import stats_event
 from arvis.telemetry.adapters.tension import system_tension_event
 from arvis.telemetry.sink import NullTelemetrySink
 
@@ -115,6 +116,9 @@ class PipelineObservabilityService:
                 forecast = obs.get("forecast")
                 if forecast is not None:
                     sink.emit(forecast_event(forecast))
+                stats = obs.get("stats")
+                if stats is not None:
+                    sink.emit(stats_event(stats))
             except Exception:
                 # Telemetry must never affect a run.
                 return
