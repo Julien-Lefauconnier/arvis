@@ -38,6 +38,18 @@ from arvis.telemetry.adapters.stats import (
     STATS_COMPONENT,
     stats_event,
 )
+from arvis.telemetry.adapters.symbolic_drift import (
+    SYMBOLIC_DRIFT_COMPONENT,
+    symbolic_drift_event,
+)
+from arvis.telemetry.adapters.symbolic_features import (
+    SYMBOLIC_FEATURES_COMPONENT,
+    symbolic_features_event,
+)
+from arvis.telemetry.adapters.symbolic_state import (
+    SYMBOLIC_STATE_COMPONENT,
+    symbolic_state_event,
+)
 from arvis.telemetry.adapters.tension import (
     SYSTEM_TENSION_COMPONENT,
     system_tension_event,
@@ -62,4 +74,10 @@ __all__ = [
     "forecast_event",
     "STATS_COMPONENT",
     "stats_event",
+    "SYMBOLIC_DRIFT_COMPONENT",
+    "symbolic_drift_event",
+    "SYMBOLIC_FEATURES_COMPONENT",
+    "symbolic_features_event",
+    "SYMBOLIC_STATE_COMPONENT",
+    "symbolic_state_event",
 ]

@@ -22,6 +22,9 @@ from arvis.telemetry.adapters.multi import multi_horizon_event
 from arvis.telemetry.adapters.predictive import predictive_event
 from arvis.telemetry.adapters.stability import stability_event
 from arvis.telemetry.adapters.stats import stats_event
+from arvis.telemetry.adapters.symbolic_drift import symbolic_drift_event
+from arvis.telemetry.adapters.symbolic_features import symbolic_features_event
+from arvis.telemetry.adapters.symbolic_state import symbolic_state_event
 from arvis.telemetry.adapters.tension import system_tension_event
 from arvis.telemetry.sink import NullTelemetrySink
 
@@ -119,6 +122,15 @@ class PipelineObservabilityService:
                 stats = obs.get("stats")
                 if stats is not None:
                     sink.emit(stats_event(stats))
+                symbolic_state = obs.get("symbolic_state")
+                if symbolic_state is not None:
+                    sink.emit(symbolic_state_event(symbolic_state))
+                symbolic_drift = obs.get("symbolic_drift")
+                if symbolic_drift is not None:
+                    sink.emit(symbolic_drift_event(symbolic_drift))
+                symbolic_features = obs.get("symbolic_features")
+                if symbolic_features is not None:
+                    sink.emit(symbolic_features_event(symbolic_features))
             except Exception:
                 # Telemetry must never affect a run.
                 return
