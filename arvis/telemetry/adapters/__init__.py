@@ -18,6 +18,10 @@ from arvis.telemetry.adapters.errors import (
     error_event,
     escalation_event,
 )
+from arvis.telemetry.adapters.predictive import (
+    PREDICTIVE_COMPONENT,
+    predictive_event,
+)
 from arvis.telemetry.adapters.stability import (
     STABILITY_COMPONENT,
     stability_event,
@@ -38,4 +42,6 @@ __all__ = [
     "error_event",
     "SYSTEM_TENSION_COMPONENT",
     "system_tension_event",
+    "PREDICTIVE_COMPONENT",
+    "predictive_event",
 ]

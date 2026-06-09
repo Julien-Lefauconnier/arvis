@@ -17,6 +17,7 @@ from arvis.stability.stability_statistics import (
     StabilityStatistics,
     StabilityStatsSnapshot,
 )
+from arvis.telemetry.adapters.predictive import predictive_event
 from arvis.telemetry.adapters.stability import stability_event
 from arvis.telemetry.adapters.tension import system_tension_event
 from arvis.telemetry.sink import NullTelemetrySink
@@ -103,6 +104,9 @@ class PipelineObservabilityService:
                 tension = obs.get("system_tension")
                 if tension is not None:
                     sink.emit(system_tension_event(tension))
+                predictive = obs.get("predictive")
+                if predictive is not None:
+                    sink.emit(predictive_event(predictive))
             except Exception:
                 # Telemetry must never affect a run.
                 return
