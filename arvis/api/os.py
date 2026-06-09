@@ -105,11 +105,18 @@ class CognitiveOS(CognitiveOSInternals):
             return
         if not isinstance(result, CognitiveResultView):
             return
+        from arvis.cognition.core.cognitive_core_result import CognitiveCoreResult
+        from arvis.telemetry.adapters.core import core_stability_event
+
         snapshot = result.stability
-        if not isinstance(snapshot, StabilitySnapshot):
+        if isinstance(snapshot, StabilitySnapshot):
+            event = stability_event(snapshot)
+        elif isinstance(snapshot, CognitiveCoreResult):
+            event = core_stability_event(snapshot)
+        else:
             return
         try:
-            self.telemetry_sink.emit(stability_event(snapshot))
+            self.telemetry_sink.emit(event)
         except Exception:
             # Telemetry is observe-only; never propagate sink failures.
             return

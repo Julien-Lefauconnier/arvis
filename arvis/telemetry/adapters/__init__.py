@@ -8,6 +8,10 @@ internals). They are kept out of ``arvis.telemetry`` top-level exports so
 that importing the telemetry core never pulls in domain packages.
 """
 
+from arvis.telemetry.adapters.core import (
+    CORE_STABILITY_COMPONENT,
+    core_stability_event,
+)
 from arvis.telemetry.adapters.errors import (
     ERROR_COMPONENT,
     degradation_event,
@@ -20,6 +24,8 @@ from arvis.telemetry.adapters.stability import (
 )
 
 __all__ = [
+    "CORE_STABILITY_COMPONENT",
+    "core_stability_event",
     "STABILITY_COMPONENT",
     "stability_event",
     "ERROR_COMPONENT",
