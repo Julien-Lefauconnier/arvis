@@ -22,6 +22,10 @@ from arvis.telemetry.adapters.stability import (
     STABILITY_COMPONENT,
     stability_event,
 )
+from arvis.telemetry.adapters.tension import (
+    SYSTEM_TENSION_COMPONENT,
+    system_tension_event,
+)
 
 __all__ = [
     "CORE_STABILITY_COMPONENT",
@@ -32,4 +36,6 @@ __all__ = [
     "escalation_event",
     "degradation_event",
     "error_event",
+    "SYSTEM_TENSION_COMPONENT",
+    "system_tension_event",
 ]

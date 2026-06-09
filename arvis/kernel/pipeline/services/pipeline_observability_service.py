@@ -18,6 +18,7 @@ from arvis.stability.stability_statistics import (
     StabilityStatsSnapshot,
 )
 from arvis.telemetry.adapters.stability import stability_event
+from arvis.telemetry.adapters.tension import system_tension_event
 from arvis.telemetry.sink import NullTelemetrySink
 
 if TYPE_CHECKING:
@@ -99,6 +100,9 @@ class PipelineObservabilityService:
         if not isinstance(sink, NullTelemetrySink):
             try:
                 sink.emit(stability_event(obs["stability"]))
+                tension = obs.get("system_tension")
+                if tension is not None:
+                    sink.emit(system_tension_event(tension))
             except Exception:
                 # Telemetry must never affect a run.
                 return
