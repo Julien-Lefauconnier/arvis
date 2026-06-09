@@ -47,6 +47,7 @@ class CognitiveOS(CognitiveOSInternals):
             if self.config.telemetry_sink is not None
             else NullTelemetrySink()
         )
+        self.pipeline.telemetry_sink = self.telemetry_sink
         self.runtime = self._build_runtime()
 
     # -------------------------------------------------
@@ -85,7 +86,6 @@ class CognitiveOS(CognitiveOSInternals):
             confirmation_result=confirmation_result,
             extra=extra,
         )
-        self._emit_stability_telemetry(result)
         return result
 
     def _emit_stability_telemetry(

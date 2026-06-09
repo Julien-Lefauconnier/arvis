@@ -17,6 +17,8 @@ from arvis.stability.stability_statistics import (
     StabilityStatistics,
     StabilityStatsSnapshot,
 )
+from arvis.telemetry.adapters.stability import stability_event
+from arvis.telemetry.sink import NullTelemetrySink
 
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
@@ -89,3 +91,14 @@ class PipelineObservabilityService:
                 message="Stability projection failed",
                 component="PipelineObservabilityService.stability_projection",
             )
+
+        # Surface the rich stability snapshot via telemetry (observe-only,
+        # fail-safe; NullTelemetrySink is a no-op). obs["stability"] is the
+        # full StabilitySnapshot, the authoritative stability source.
+        sink = pipeline.telemetry_sink
+        if not isinstance(sink, NullTelemetrySink):
+            try:
+                sink.emit(stability_event(obs["stability"]))
+            except Exception:
+                # Telemetry must never affect a run.
+                return

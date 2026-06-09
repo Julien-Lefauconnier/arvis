@@ -40,6 +40,7 @@ from arvis.kernel.pipeline.services.pipeline_stage_registry_service import (
     PipelineStageRegistryService,
 )
 from arvis.math.switching.switching_params import SwitchingParams
+from arvis.telemetry.sink import NullTelemetrySink, TelemetrySink
 
 DEFAULT_SWITCHING_PARAMS = SwitchingParams(
     alpha=0.15,
@@ -112,6 +113,7 @@ class CognitivePipeline:
             self,
             core_model,
         )
+        self.telemetry_sink: TelemetrySink = NullTelemetrySink()
 
     # -----------------------------------------------------
     # ITERATIVE PIPELINE SUPPORT (non-breaking)
