@@ -18,6 +18,10 @@ from arvis.telemetry.adapters.errors import (
     error_event,
     escalation_event,
 )
+from arvis.telemetry.adapters.multi import (
+    MULTI_HORIZON_COMPONENT,
+    multi_horizon_event,
+)
 from arvis.telemetry.adapters.predictive import (
     PREDICTIVE_COMPONENT,
     predictive_event,
@@ -44,4 +48,6 @@ __all__ = [
     "system_tension_event",
     "PREDICTIVE_COMPONENT",
     "predictive_event",
+    "MULTI_HORIZON_COMPONENT",
+    "multi_horizon_event",
 ]
