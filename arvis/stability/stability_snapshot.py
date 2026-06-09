@@ -1,7 +1,10 @@
 # arvis/stability/stability_snapshot.py
 
 from dataclasses import dataclass
-from typing import Any
+
+from arvis.math.observability.global_stability_snapshot import (
+    GlobalStabilitySnapshot,
+)
 
 
 @dataclass(frozen=True)
@@ -27,7 +30,7 @@ class StabilitySnapshot:
     reasons: list[str]
 
     @staticmethod
-    def from_global(snapshot: Any) -> "StabilitySnapshot":
+    def from_global(snapshot: GlobalStabilitySnapshot) -> "StabilitySnapshot":
         """
         Adapter from internal GlobalStabilitySnapshot.
         """

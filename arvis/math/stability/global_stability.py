@@ -21,7 +21,7 @@ class GlobalStabilityParams:
 
 
 @dataclass(frozen=True)
-class GlobalStabilitySnapshot:
+class GlobalStabilityFusionResult:
     global_risk: float
     regime: str | None
     verdict: str
@@ -38,7 +38,7 @@ class GlobalStabilityFusion:
         trajectory: TrajectorySnapshot,
         probabilistic: ProbLyapunovSnapshot,
         regime: RegimeSnapshot | None,
-    ) -> GlobalStabilitySnapshot:
+    ) -> GlobalStabilityFusionResult:
         instant_v = V(state)
 
         steps = int(getattr(predictive, "window_size", 0) or 0)
@@ -118,7 +118,7 @@ class GlobalStabilityFusion:
         elif global_risk > 0.6:
             verdict = "WARN"
 
-        return GlobalStabilitySnapshot(
+        return GlobalStabilityFusionResult(
             global_risk=global_risk,
             regime=regime.regime if regime else None,
             verdict=verdict,

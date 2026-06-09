@@ -5,7 +5,7 @@ from arvis.math.predictive.predictive_stability import PredictiveSnapshot
 from arvis.math.predictive.trajectory_observer import TrajectorySnapshot
 from arvis.math.stability.global_stability import (
     GlobalStabilityFusion,
-    GlobalStabilitySnapshot,
+    GlobalStabilityFusionResult,
 )
 from arvis.math.stability.hybrid_risk_observer import HybridRiskObserver
 from arvis.math.stability.multi_horizon_stability import MultiHorizonStabilityObserver
@@ -77,6 +77,6 @@ def test_global_stability_output_bounds():
         regime=None,
     )
 
-    assert isinstance(snap, GlobalStabilitySnapshot)
+    assert isinstance(snap, GlobalStabilityFusionResult)
     assert 0.0 <= snap.global_risk <= 1.0
     assert snap.verdict in {"OK", "WARN", "CRITICAL"}
