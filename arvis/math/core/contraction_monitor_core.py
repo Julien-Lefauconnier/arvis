@@ -51,6 +51,8 @@ class MonitorConfig:
     governance_default: float = 0.6
     risk_window: int = 200
     risk_delta: float = 0.01
+    verdict_ok_ceiling: float = 0.15
+    verdict_critical_ceiling: float = 0.40
     regime_window: int = 40
     regime_min_samples: int = 10
     intent_governance: Mapping[str, float] = field(
@@ -266,7 +268,21 @@ class ContractionMonitorCore:
             snap = bound.push(bool(event))
         if snap is None:
             return 0.0, 0.0, "OK"
-        return float(snap.p_hat), float(snap.p_ucb), str(snap.verdict)
+        p_ucb = float(snap.p_ucb)
+        return float(snap.p_hat), p_ucb, self._verdict(p_ucb)
+
+    def _verdict(self, p_ucb: float) -> str:
+        """Calibrated verdict on the certified ceiling (risk_ucb).
+
+        OK only once the ceiling is tight enough to certify low risk;
+        CRITICAL while it stays high (observed risk and/or insufficient
+        evidence); WARN in between. Tunable via MonitorConfig.
+        """
+        if p_ucb <= self._cfg.verdict_ok_ceiling:
+            return "OK"
+        if p_ucb >= self._cfg.verdict_critical_ceiling:
+            return "CRITICAL"
+        return "WARN"
 
     def _regime(self, window: tuple[float, ...]) -> str:
         estimator = CognitiveRegimeEstimator(
