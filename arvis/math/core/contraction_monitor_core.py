@@ -21,6 +21,10 @@ from typing import Any
 from arvis.math.core.normalization import clamp01
 from arvis.math.drift.drift import hybrid_drift
 from arvis.math.lyapunov.lyapunov import LyapunovState, lyapunov_value
+from arvis.math.risk.confidence_sequence import (
+    ConfidenceSequenceParams,
+    ConfidenceSequenceRiskBound,
+)
 from arvis.math.risk.risk_bound import (
     HoeffdingRiskBound,
     RiskBoundParams,
@@ -51,6 +55,8 @@ class MonitorConfig:
     governance_default: float = 0.6
     risk_window: int = 200
     risk_delta: float = 0.01
+    risk_bound: str = "hoeffding"  # or "confidence_sequence" (cumulative, anytime)
+    risk_horizon: int = 200  # CS lambda tuned tight at this many turns
     verdict_ok_ceiling: float = 0.15
     verdict_critical_ceiling: float = 0.40
     regime_window: int = 40
@@ -73,6 +79,7 @@ class ScientificState:
     risk_window: tuple[int, ...]
     regime_window: tuple[float, ...]
     turn_index: int
+    risk_violations: int = 0  # cumulative count for the confidence-sequence path
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -81,6 +88,7 @@ class ScientificState:
             "risk_window": list(self.risk_window),
             "regime_window": list(self.regime_window),
             "turn_index": self.turn_index,
+            "risk_violations": self.risk_violations,
         }
 
     @classmethod
@@ -102,6 +110,7 @@ class ScientificState:
             risk_window=tuple(int(x) for x in raw.get("risk_window", ())),
             regime_window=tuple(float(x) for x in raw.get("regime_window", ())),
             turn_index=int(raw.get("turn_index", 0)),
+            risk_violations=int(raw.get("risk_violations", 0)),
         )
 
 
@@ -132,6 +141,8 @@ class ContractionMonitorCore:
 
     def __init__(self, config: MonitorConfig | None = None) -> None:
         self._cfg = config or MonitorConfig()
+        if self._cfg.risk_bound not in ("hoeffding", "confidence_sequence"):
+            raise ValueError("risk_bound must be 'hoeffding' or 'confidence_sequence'")
 
     def compute(
         self, bundle: Any, prior_in: Mapping[str, Any] | None
@@ -194,11 +205,18 @@ class ContractionMonitorCore:
         else:
             drift_score = 0.0
 
-        # --- risk: empirical windowed rate (collapse_risk) + PAC ceiling (risk_ucb) ---
+        # --- risk: empirical rate (collapse_risk) + certified ceiling (risk_ucb) ---
         violation = (risk >= cfg.tau_risk) or (uncertainty > 0.0)
         prior_risk_window = prior.risk_window if prior is not None else ()
         risk_window = (prior_risk_window + (1 if violation else 0,))[-cfg.risk_window :]
-        collapse_risk, risk_ucb, risk_verdict = self._pac_risk(risk_window)
+        # cumulative (n, violations) over the whole session, for the CS path.
+        cum_n = (prior.turn_index + 2) if prior is not None else 1
+        cum_violations = (prior.risk_violations if prior is not None else 0) + (
+            1 if violation else 0
+        )
+        collapse_risk, risk_ucb, risk_verdict = self._pac_risk(
+            risk_window, cum_n, cum_violations
+        )
 
         # --- empirical regime over the delta_v history ---
         prior_regime_window = prior.regime_window if prior is not None else ()
@@ -224,6 +242,7 @@ class ContractionMonitorCore:
             risk_window=risk_window,
             regime_window=regime_window,
             turn_index=(prior.turn_index + 1) if prior is not None else 0,
+            risk_violations=cum_violations,
         )
         return snapshot, nxt.to_dict()
 
@@ -251,13 +270,27 @@ class ContractionMonitorCore:
         level = self._cfg.intent_governance.get(reason, self._cfg.governance_default)
         return clamp01(float(level))
 
-    def _pac_risk(self, window: tuple[int, ...]) -> tuple[float, float, str]:
+    def _pac_risk(
+        self, window: tuple[int, ...], cum_n: int, cum_violations: int
+    ) -> tuple[float, float, str]:
         """Return (empirical_rate p_hat, certified_ceiling p_ucb, verdict).
 
-        p_hat is the observed violation rate over the window (moves immediately,
-        discriminates nominal vs risky). p_ucb is the Hoeffding upper-confidence
-        ceiling: honest about sampling, stays cautious until enough evidence.
+        "hoeffding" (default): windowed Hoeffding ceiling over the last
+        ``risk_window`` turns -- a *recent* rate, valid for a fixed window under
+        i.i.d. "confidence_sequence": cumulative, anytime-valid, i.i.d.-free
+        ceiling over the whole session (see ``confidence_sequence.py``). Both
+        feed the same calibrated verdict on the ceiling.
         """
+        if self._cfg.risk_bound == "confidence_sequence":
+            cs = ConfidenceSequenceRiskBound(
+                ConfidenceSequenceParams(
+                    horizon=self._cfg.risk_horizon, delta=self._cfg.risk_delta
+                )
+            )
+            cs_snap = cs.evaluate(cum_n, cum_violations)
+            cs_ucb = float(cs_snap.p_ucb)
+            return float(cs_snap.p_hat), cs_ucb, self._verdict(cs_ucb)
+
         bound = HoeffdingRiskBound(
             RiskBoundParams(
                 window_size=self._cfg.risk_window, delta=self._cfg.risk_delta

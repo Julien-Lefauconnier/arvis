@@ -97,14 +97,18 @@ class ConfidenceSequenceRiskBound:
             return 1.0
         return self._log_inv_delta / (self._lambda * n) + self._lambda / 8.0
 
-    def push(self, violation: bool) -> RiskBoundSnapshot:
-        self._n += 1
-        if violation:
-            self._violations += 1
+    def evaluate(self, n: int, violations: int) -> RiskBoundSnapshot:
+        """Pure CS snapshot from aggregate counts -- no mutation.
 
-        n = self._n
-        v = self._violations
-        p_hat = v / n
+        A caller that already tracks cumulative ``(n, violations)`` (e.g. the
+        contraction monitor) gets the anytime-valid ceiling without replaying
+        the event stream.
+        """
+        if n <= 0:
+            return RiskBoundSnapshot(
+                n=0, violations=0, p_hat=0.0, p_ucb=0.0, verdict="OK"
+            )
+        p_hat = violations / n
         p_ucb = min(1.0, p_hat + self.radius(n))
 
         verdict = "OK"
@@ -115,8 +119,14 @@ class ConfidenceSequenceRiskBound:
 
         return RiskBoundSnapshot(
             n=n,
-            violations=v,
+            violations=violations,
             p_hat=float(p_hat),
             p_ucb=float(p_ucb),
             verdict=verdict,
         )
+
+    def push(self, violation: bool) -> RiskBoundSnapshot:
+        self._n += 1
+        if violation:
+            self._violations += 1
+        return self.evaluate(self._n, self._violations)
