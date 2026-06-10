@@ -132,8 +132,9 @@ class ContractionMonitorCore:
         self._cfg = config or MonitorConfig()
 
     def compute(
-        self, bundle: Any, prior: ScientificState | None
-    ) -> tuple[MonitorSnapshot, ScientificState]:
+        self, bundle: Any, prior_in: Mapping[str, Any] | None
+    ) -> tuple[MonitorSnapshot, dict[str, Any]]:
+        prior = ScientificState.from_dict(prior_in)
         cfg = self._cfg
         retr = getattr(bundle, "retrieval_snapshot", None)
         decision = getattr(bundle, "decision_result", None)
@@ -222,7 +223,7 @@ class ContractionMonitorCore:
             regime_window=regime_window,
             turn_index=(prior.turn_index + 1) if prior is not None else 0,
         )
-        return snapshot, nxt
+        return snapshot, nxt.to_dict()
 
     # ------------------------------------------------------------------
     # Signal extraction (v0 formulas; all outputs clamped to [0, 1])

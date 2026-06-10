@@ -53,7 +53,7 @@ def _bundle(
 
 def _run(core: ContractionMonitorCore, bundles: list[Any]) -> list[MonitorSnapshot]:
     snapshots: list[MonitorSnapshot] = []
-    state: ScientificState | None = None
+    state: dict[str, Any] | None = None
     for bundle in bundles:
         snapshot, state = core.compute(bundle, state)
         snapshots.append(snapshot)
@@ -66,7 +66,7 @@ def test_first_turn_is_neutral() -> None:
     assert snapshot.delta_v == 0.0
     assert snapshot.drift_score == 0.0
     assert snapshot.prev_lyap is None
-    assert nxt.turn_index == 0
+    assert nxt["turn_index"] == 0
     assert isinstance(snapshot.cur_lyap, LyapunovState)
 
 
@@ -139,12 +139,23 @@ def test_governance_orders_intents() -> None:
 
 def test_serialization_round_trip_is_exact() -> None:
     core = ContractionMonitorCore()
-    # turn 1 (prev_lyap is None), then turn 2 (populated windows)
     _, s1 = core.compute(_bundle(confidence=0.2, n_axes=1), None)
     _, s2 = core.compute(_bundle(confidence=0.8, roles=("r",)), s1)
     for state in (s1, s2):
-        restored = ScientificState.from_dict(json.loads(json.dumps(state.to_dict())))
-        assert restored == state
+        # the next state crosses the boundary as a JSON-stable dict
+        assert json.loads(json.dumps(state)) == state
+        restored = ScientificState.from_dict(state)
+        assert restored is not None
+        assert restored.to_dict() == state
+    # the None-prev_lyap branch round-trips too
+    empty = ScientificState(
+        prev_lyap=None,
+        prev_roles=(),
+        risk_window=(),
+        regime_window=(),
+        turn_index=0,
+    )
+    assert ScientificState.from_dict(empty.to_dict()) == empty
 
 
 def test_from_dict_handles_empty() -> None:
@@ -165,9 +176,9 @@ def test_pure_transition_is_deterministic() -> None:
 def test_windows_are_bounded() -> None:
     cfg = MonitorConfig(risk_window=3, regime_window=3, regime_min_samples=2)
     core = ContractionMonitorCore(cfg)
-    state: ScientificState | None = None
+    state: dict[str, Any] | None = None
     for _ in range(6):
         _, state = core.compute(_bundle(confidence=0.1, n_axes=1), state)
     assert state is not None
-    assert len(state.risk_window) <= 3
-    assert len(state.regime_window) <= 3
+    assert len(state["risk_window"]) <= 3
+    assert len(state["regime_window"]) <= 3
