@@ -1,0 +1,122 @@
+# arvis/math/risk/confidence_sequence.py
+"""Anytime-valid, distribution-free confidence sequence for the violation risk.
+
+The Hoeffding bound in :mod:`arvis.math.risk.risk_bound` adds a term
+``sqrt(log(1/delta) / (2 n))`` that is a valid confidence bound only when the
+violation events are i.i.d. *and* ``n`` is fixed in advance. The contraction
+monitor honours neither assumption: it thresholds the bound at *every* turn
+(sequential evaluation / optional stopping), and adversarial input makes the
+events neither independent nor identically distributed.
+
+This module replaces that fixed-``n`` term with a *confidence sequence* (CS):
+an upper bound that holds simultaneously for all ``n`` and without an i.i.d.
+assumption.
+
+Construction (fixed-``lambda`` conditional Hoeffding supermartingale). Let
+``X_s in {0, 1}`` be the violation at turn ``s`` and
+``p_s = P(X_s = 1 | F_{s-1})`` its conditional propensity given the history --
+well defined even for an adaptive adversary. For any fixed ``lambda`` the
+conditional Hoeffding lemma gives, with no independence assumption,
+
+    E[exp(lambda * (p_s - X_s)) | F_{s-1}] <= exp(lambda ** 2 / 8),
+
+so ``M_n = exp(lambda * sum_{s<=n} (p_s - X_s) - n * lambda ** 2 / 8)`` is a
+non-negative supermartingale with ``M_0 = 1``. Ville's inequality then gives
+``P(exists n : M_n >= 1 / delta) <= delta``, hence with probability
+``>= 1 - delta``, *simultaneously for all n*,
+
+    (1 / n) * sum_{s<=n} p_s  <=  p_hat_n + R(n),
+    R(n) = log(1 / delta) / (lambda * n) + lambda / 8.
+
+We fix ``lambda = sqrt(8 * log(1/delta) / horizon)``, which makes ``R`` tight at
+``n = horizon`` (there it equals the Hoeffding term ``sqrt(log(1/delta)/(2n))``)
+and only mildly looser elsewhere. A horizon-free boundary (stitching; Howard,
+Ramdas et al., 2021) is a future tightening.
+
+What is bounded is the running average *conditional* violation propensity -- the
+honest target under an adaptive adversary. The estimate is cumulative (no sliding
+window): the session as a whole is certified. Reacting to non-stationarity (a
+predictable-weight discounted CS) is deferred to a later increment.
+
+NOT claimed: factual correctness of answers, nor a global Lyapunov contraction.
+This bounds how often the monitored guard fires, with a guarantee that survives
+both sequential evaluation and adversarial inputs.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from math import log, sqrt
+
+from arvis.math.risk.risk_bound import RiskBoundSnapshot
+
+
+@dataclass(frozen=True)
+class ConfidenceSequenceParams:
+    """Parameters for :class:`ConfidenceSequenceRiskBound`.
+
+    horizon:
+        ``lambda`` is tuned so the bound is tight at this many turns. Pick it
+        near the expected session length / operating scale.
+    delta:
+        Time-uniform error level: the bound holds for ALL ``n`` with
+        probability ``>= 1 - delta`` (not per-``n``).
+    warn_p_ucb / critical_p_ucb:
+        Verdict thresholds on the upper confidence bound.
+    """
+
+    horizon: int = 200
+    delta: float = 0.01
+    warn_p_ucb: float = 0.10
+    critical_p_ucb: float = 0.25
+
+
+class ConfidenceSequenceRiskBound:
+    """Anytime-valid, i.i.d.-free upper bound on the violation rate.
+
+    Drop-in alternative to :class:`HoeffdingRiskBound`: identical ``push``
+    signature and :class:`RiskBoundSnapshot` output, but the confidence radius
+    is valid simultaneously for all ``n`` and under adversarial (adapted)
+    sequences. Cumulative -- tracks the whole session, not a sliding window.
+    """
+
+    def __init__(self, params: ConfidenceSequenceParams | None = None) -> None:
+        self.params = params or ConfidenceSequenceParams()
+        if not (0.0 < self.params.delta < 1.0):
+            raise ValueError("delta must be in (0,1)")
+        if self.params.horizon <= 0:
+            raise ValueError("horizon must be positive")
+        self._n = 0
+        self._violations = 0
+        self._log_inv_delta = log(1.0 / self.params.delta)
+        self._lambda = sqrt(8.0 * self._log_inv_delta / self.params.horizon)
+
+    def radius(self, n: int) -> float:
+        """Confidence radius ``R(n)``; valid for all ``n`` by Ville's inequality."""
+        if n <= 0:
+            return 1.0
+        return self._log_inv_delta / (self._lambda * n) + self._lambda / 8.0
+
+    def push(self, violation: bool) -> RiskBoundSnapshot:
+        self._n += 1
+        if violation:
+            self._violations += 1
+
+        n = self._n
+        v = self._violations
+        p_hat = v / n
+        p_ucb = min(1.0, p_hat + self.radius(n))
+
+        verdict = "OK"
+        if p_ucb >= self.params.critical_p_ucb:
+            verdict = "CRITICAL"
+        elif p_ucb >= self.params.warn_p_ucb:
+            verdict = "WARN"
+
+        return RiskBoundSnapshot(
+            n=n,
+            violations=v,
+            p_hat=float(p_hat),
+            p_ucb=float(p_ucb),
+            verdict=verdict,
+        )
