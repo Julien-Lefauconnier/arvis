@@ -23,3 +23,6 @@ class CognitiveCoreResult:
     drift_score: float = 0.0
     regime: str | None = None
     stable: bool | None = None
+
+    # Replayable cross-turn scientific state (option b-i)
+    next_scientific_state: Any | None = None

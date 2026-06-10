@@ -1,5 +1,6 @@
 # arvis/cognition/core/cognitive_core_engine.py
 
+import inspect
 from typing import Any
 
 from arvis.cognition.core.cognitive_core_result import CognitiveCoreResult
@@ -9,7 +10,7 @@ class CognitiveCoreEngine:
     def __init__(self, core_model: Any | None) -> None:
         self.core_model = core_model
 
-    def process(self, bundle: Any) -> CognitiveCoreResult:
+    def process(self, bundle: Any, prior: Any | None = None) -> CognitiveCoreResult:
         if self.core_model is None:
             # fallback minimal pour kernel + tests
             return CognitiveCoreResult(
@@ -19,7 +20,23 @@ class CognitiveCoreEngine:
                 reflexive_state=None,
             )
 
-        core_snapshot = self.core_model.compute(bundle=bundle)
+        # Backward compatible call: legacy cores expose compute(bundle)
+        # returning a single snapshot; stateful cores expose
+        # compute(bundle, prior) returning (snapshot, next_state).
+        compute = self.core_model.compute
+        try:
+            accepts_prior = len(inspect.signature(compute).parameters) >= 2
+        except (TypeError, ValueError):
+            accepts_prior = False
+
+        core_output = (
+            compute(bundle, prior) if accepts_prior else compute(bundle=bundle)
+        )
+
+        if isinstance(core_output, tuple) and len(core_output) == 2:
+            core_snapshot, next_state = core_output
+        else:
+            core_snapshot, next_state = core_output, None
 
         # Core exposes current scientific observables.
         # Causal history is owned by the pipeline.
@@ -72,4 +89,5 @@ class CognitiveCoreEngine:
             dv=float(dv or 0.0),
             core_snapshot=core_snapshot,
             reflexive_state=reflexive_state,
+            next_scientific_state=next_state,
         )
