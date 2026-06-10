@@ -26,6 +26,7 @@ class CognitiveOSConfig:
     adapter_registry: dict[str, Any] | None = None
     runtime_mode: str = "local"
     telemetry_sink: TelemetrySink | None = None
+    core_model: Any | None = None
 
 
 # -----------------------------------------------------
@@ -41,7 +42,7 @@ class CognitiveOS(CognitiveOSInternals):
         self.config = config or CognitiveOSConfig()
         self.tool_registry = ToolRegistry()
         self.tool_executor = ToolExecutor(self.tool_registry)
-        self.pipeline = pipeline or CognitivePipeline()
+        self.pipeline = pipeline or CognitivePipeline(core_model=self.config.core_model)
         self.telemetry_sink: TelemetrySink = (
             self.config.telemetry_sink
             if self.config.telemetry_sink is not None
