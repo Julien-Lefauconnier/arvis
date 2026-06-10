@@ -92,6 +92,7 @@ class CoreStage:
             _turn_index = (
                 next_state.get("turn_index") if isinstance(next_state, dict) else None
             )
+            _cl = getattr(core_snapshot, "cur_lyap", None)
             extra["monitor_snapshot"] = {
                 "turn_index": _turn_index,
                 "energy_v": getattr(core_snapshot, "energy_v", None),
@@ -102,6 +103,10 @@ class CoreStage:
                 "drift_score": getattr(core_snapshot, "drift_score", None),
                 "regime": getattr(core_snapshot, "regime", None),
                 "stable": getattr(core_snapshot, "stable", None),
+                "budget_used": getattr(_cl, "budget_used", None),
+                "risk": getattr(_cl, "risk", None),
+                "uncertainty": getattr(_cl, "uncertainty", None),
+                "governance": getattr(_cl, "governance", None),
             }
 
         core_ctx.collapse_risk = RiskSignal(
