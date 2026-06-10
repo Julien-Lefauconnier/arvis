@@ -17,7 +17,7 @@ class DummyCore:
     def __init__(self, result):
         self._result = result
 
-    def process(self, bundle):
+    def process(self, bundle, prior=None):
         return self._result
 
 

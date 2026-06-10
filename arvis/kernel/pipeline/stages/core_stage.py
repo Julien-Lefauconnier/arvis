@@ -63,8 +63,19 @@ class CoreStage:
         # -----------------------------------------
         # 1. Core processing
         # -----------------------------------------
-        scientific_snapshot = pipeline.core.process(bundle)
+        # Opaque cross-turn state: the host injects the prior blob under
+        # ctx.extra["scientific_state"] and reads the next one back under
+        # ctx.extra["scientific_state_next"]. The pipeline never inspects
+        # its schema; each core_model owns its own (de)serialization.
+        extra = getattr(ctx, "extra", None)
+        prior_state = extra.get("scientific_state") if isinstance(extra, dict) else None
+
+        scientific_snapshot = pipeline.core.process(bundle, prior_state)
         core_ctx.scientific_snapshot = scientific_snapshot
+
+        next_state = getattr(scientific_snapshot, "next_scientific_state", None)
+        if next_state is not None and isinstance(extra, dict):
+            extra["scientific_state_next"] = next_state
 
         core_snapshot = (
             getattr(scientific_snapshot, "core_snapshot", None) or scientific_snapshot
