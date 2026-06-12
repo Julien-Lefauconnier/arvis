@@ -50,6 +50,7 @@ class MonitorConfig:
     """Calibratable v0 constants. Defaults match the v0 contract."""
 
     tau_risk: float = 0.5
+    tau_uncertainty: float = 0.5  # violation when uncertainty >= this
     uncertainty_saturation: int = 4
     drift_alpha: float = 0.5
     governance_default: float = 0.6
@@ -209,7 +210,7 @@ class ContractionMonitorCore:
             drift_score = 0.0
 
         # --- risk: empirical rate (collapse_risk) + certified ceiling (risk_ucb) ---
-        violation = (risk >= cfg.tau_risk) or (uncertainty > 0.0)
+        violation = (risk >= cfg.tau_risk) or (uncertainty >= cfg.tau_uncertainty)
         prior_risk_window = prior.risk_window if prior is not None else ()
         risk_window = (prior_risk_window + (1 if violation else 0,))[-cfg.risk_window :]
         # cumulative (n, violations) over the whole session, for the CS path.

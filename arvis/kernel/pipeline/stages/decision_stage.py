@@ -32,8 +32,18 @@ class DecisionStage:
             decision_result = raw_result
         else:
             # backward compatibility (SimpleNamespace / dict / etc.)
+            # Carry the declarative uncertainty frames across the lean
+            # DecisionResult boundary so the contraction monitor sees
+            # decision-layer uncertainty (the kernel DecisionResult
+            # intentionally drops gaps/conflicts).
             decision_result = DecisionResult(
                 reason=getattr(raw_result, "reason", "unknown"),
+                uncertainty_frames=list(
+                    getattr(raw_result, "uncertainty_frames", []) or []
+                ),
+                reasoning_intents=list(
+                    getattr(raw_result, "reasoning_intents", []) or []
+                ),
             )
 
         # -----------------------------------------------------

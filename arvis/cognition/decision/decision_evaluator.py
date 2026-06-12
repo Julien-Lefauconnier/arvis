@@ -3,12 +3,16 @@
 from typing import Any
 
 from arvis.cognition.decision.decision_signal import DecisionSignal
+from arvis.uncertainty.uncertainty_inference import UncertaintyInference
 
 
 class DecisionEvaluator:
     """
     Pure decision evaluator.
     """
+
+    def __init__(self, uncertainty: UncertaintyInference | None = None) -> None:
+        self._uncertainty = uncertainty or UncertaintyInference()
 
     def evaluate(self, ctx: Any) -> DecisionSignal:
         """
@@ -32,24 +36,27 @@ class DecisionEvaluator:
         }
 
         if intent_type == "action":
-            return DecisionSignal(
-                reason="action_request",
-                memory_influence=memory_influence,
-            )
+            reason = "action_request"
+        elif intent_type == "search":
+            reason = "search"
+        elif intent_type == "question":
+            reason = "informational_query"
+        else:
+            reason = "unknown"
 
-        if intent_type == "search":
-            return DecisionSignal(
-                reason="search",
-                memory_influence=memory_influence,
-            )
-
-        if intent_type == "question":
-            return DecisionSignal(
-                reason="informational_query",
-                memory_influence=memory_influence,
-            )
+        # Decision-layer uncertainty (decision B): perception passes a
+        # ZK-safe referential-ambiguity scalar; we turn it into
+        # declarative gaps/frames. Absent => 0.0 => no frame.
+        if isinstance(cognitive_input, dict):
+            raw_ra = cognitive_input.get("referential_ambiguity", 0.0)
+        else:
+            raw_ra = getattr(cognitive_input, "referential_ambiguity", 0.0)
+        referential = float(raw_ra or 0.0)
+        inferred = self._uncertainty.infer(referential_ambiguity=referential)
 
         return DecisionSignal(
-            reason="unknown",
+            reason=reason,
             memory_influence=memory_influence,
+            gaps=inferred.gaps,
+            uncertainty_frames=inferred.frames,
         )
