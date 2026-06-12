@@ -59,6 +59,7 @@ class DecisionEvaluator:
             referential_ambiguity=referential,
             context_dependent=contextual,
             memory_present=bool(memory_influence["memory_present"]),
+            reason=reason,
         )
 
         return DecisionSignal(
@@ -66,4 +67,5 @@ class DecisionEvaluator:
             memory_influence=memory_influence,
             gaps=inferred.gaps,
             uncertainty_frames=inferred.frames,
+            conflicts=inferred.conflicts,
         )

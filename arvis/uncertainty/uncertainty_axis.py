@@ -17,3 +17,4 @@ class UncertaintyAxis(StrEnum):
     AMBIGUOUS_REFERENCE = "ambiguous_reference"
     USER_SENSITIVE = "user_sensitive"
     DOMAIN_SPECIFIC = "domain_specific"
+    INTERNAL_CONFLICT = "internal_conflict"
