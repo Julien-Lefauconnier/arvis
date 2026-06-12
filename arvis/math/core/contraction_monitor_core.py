@@ -57,6 +57,7 @@ class MonitorConfig:
     risk_delta: float = 0.01
     risk_bound: str = "hoeffding"  # or "confidence_sequence" (cumulative, anytime)
     risk_horizon: int = 200  # CS lambda tuned tight at this many turns
+    cs_boundary: str = "fixed_lambda"  # CS radius: "fixed_lambda" or "stitched"
     verdict_ok_ceiling: float = 0.15
     verdict_critical_ceiling: float = 0.40
     regime_window: int = 40
@@ -143,6 +144,8 @@ class ContractionMonitorCore:
         self._cfg = config or MonitorConfig()
         if self._cfg.risk_bound not in ("hoeffding", "confidence_sequence"):
             raise ValueError("risk_bound must be 'hoeffding' or 'confidence_sequence'")
+        if self._cfg.cs_boundary not in ("fixed_lambda", "stitched"):
+            raise ValueError("cs_boundary must be 'fixed_lambda' or 'stitched'")
 
     def compute(
         self, bundle: Any, prior_in: Mapping[str, Any] | None
@@ -284,7 +287,9 @@ class ContractionMonitorCore:
         if self._cfg.risk_bound == "confidence_sequence":
             cs = ConfidenceSequenceRiskBound(
                 ConfidenceSequenceParams(
-                    horizon=self._cfg.risk_horizon, delta=self._cfg.risk_delta
+                    horizon=self._cfg.risk_horizon,
+                    delta=self._cfg.risk_delta,
+                    boundary=self._cfg.cs_boundary,
                 )
             )
             cs_snap = cs.evaluate(cum_n, cum_violations)

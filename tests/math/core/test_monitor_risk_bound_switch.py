@@ -80,3 +80,37 @@ def test_cumulative_counter_survives_state_roundtrip() -> None:
     restored = ScientificState.from_dict(state)
     assert restored is not None
     assert restored.risk_violations == 7
+
+
+def _drive_cs(boundary: str, n_clean: int) -> Any:
+    """Drive only clean turns through the CS path with a given radius boundary."""
+    core = ContractionMonitorCore(
+        MonitorConfig(risk_bound="confidence_sequence", cs_boundary=boundary)
+    )
+    state: dict[str, Any] | None = None
+    snap: Any = None
+    for _ in range(n_clean):
+        snap, state = core.compute(_bundle(0.95), state)
+    return snap
+
+
+def test_invalid_cs_boundary_raises() -> None:
+    with pytest.raises(ValueError):
+        ContractionMonitorCore(MonitorConfig(cs_boundary="bogus"))
+
+
+def test_default_cs_boundary_is_fixed_lambda() -> None:
+    assert MonitorConfig().cs_boundary == "fixed_lambda"
+
+
+def test_stitched_boundary_informative_on_short_session() -> None:
+    # Motivating finding: on a short clean session the fixed-lambda CS ceiling
+    # stays near 1 (uninformative); the stitched ceiling is lower and usable.
+    # Both still upper-bound the (zero) empirical violation rate.
+    fixed = _drive_cs("fixed_lambda", n_clean=12)
+    stitched = _drive_cs("stitched", n_clean=12)
+    assert fixed.collapse_risk == 0.0
+    assert stitched.collapse_risk == 0.0
+    assert stitched.risk_ucb + 1e-12 >= stitched.collapse_risk
+    assert stitched.risk_ucb < fixed.risk_ucb
+    assert stitched.risk_ucb < 0.7
