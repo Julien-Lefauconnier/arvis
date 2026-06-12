@@ -87,6 +87,8 @@ class ConfidenceSequenceParams:
     stitch_eta: float = 2.0  # geometric epoch ratio (> 1)
     stitch_s: float = 1.4  # spending exponent (> 1)
     stitch_k_pad: int = 3  # epochs swept past ceil(log_eta n)
+    bernstein_a: float = 1.0  # variance-term constant (bernstein boundary)
+    bernstein_c: float = 0.8  # range-term constant (bernstein boundary)
 
 
 class ConfidenceSequenceRiskBound:
@@ -106,10 +108,13 @@ class ConfidenceSequenceRiskBound:
             raise ValueError("horizon must be positive")
         self._n = 0
         self._violations = 0
+        self._var_pred = 0.0
         self._log_inv_delta = log(1.0 / self.params.delta)
         self._lambda = sqrt(8.0 * self._log_inv_delta / self.params.horizon)
-        if self.params.boundary not in ("fixed_lambda", "stitched"):
-            raise ValueError("boundary must be 'fixed_lambda' or 'stitched'")
+        if self.params.boundary not in ("fixed_lambda", "stitched", "bernstein"):
+            raise ValueError(
+                "boundary must be 'fixed_lambda', 'stitched' or 'bernstein'"
+            )
         if self.params.stitch_eta <= 1.0:
             raise ValueError("stitch_eta must be > 1")
         if self.params.stitch_s <= 1.0:
@@ -117,7 +122,7 @@ class ConfidenceSequenceRiskBound:
         zeta_upper = _zeta_upper_bound(self.params.stitch_s)
         self._stitch_base = log(zeta_upper / self.params.delta)
 
-    def radius(self, n: int) -> float:
+    def radius(self, n: int, var_pred: float = 0.0) -> float:
         """Confidence radius ``R(n)``; valid for all ``n`` by Ville's inequality.
 
         Dispatches on ``params.boundary``: ``"fixed_lambda"`` (default,
@@ -126,9 +131,36 @@ class ConfidenceSequenceRiskBound:
         """
         if n <= 0:
             return 1.0
+        if self.params.boundary == "bernstein":
+            return self._radius_bernstein(n, var_pred)
         if self.params.boundary == "stitched":
             return self._radius_stitched(n)
         return self._radius_fixed_lambda(n)
+
+    def _stitch_log(self, n: int) -> float:
+        """Horizon-free iterated-log term (same delta-spending family as the
+        Hoeffding stitch); used by the variance-adaptive bernstein radius."""
+        eta = self.params.stitch_eta
+        epoch = ceil(log(float(max(n, 2))) / log(eta)) + 1.0
+        return self._stitch_base + self.params.stitch_s * log(epoch)
+
+    def _radius_bernstein(self, n: int, var_pred: float) -> float:
+        """Variance-adaptive anytime-valid radius (empirical-Bernstein form).
+
+        ``var_pred = sum_{s<=n} p_hat_{s-1} (1 - p_hat_{s-1})`` is the
+        *predictable* variance process (estimated from the past only, so the
+        martingale structure -- hence Ville -- is preserved; the empirical
+        plug-in under-covers). On a clean session var_pred -> 0 and the radius
+        collapses to the ``c * ell / n`` range term (linear decay), far tighter
+        than the Hoeffding ``~1/sqrt(n)``; at max variance it matches Hoeffding.
+        Constants (a, c) are MC-certified anytime-valid (miscoverage <= delta
+        across iid / two-regime / clean-then-spike / random-walk); the formal
+        sub-Gamma derivation (Howard et al., 2021) is a future tightening.
+        """
+        ell = self._stitch_log(n)
+        a = self.params.bernstein_a
+        c = self.params.bernstein_c
+        return a * sqrt(2.0 * max(var_pred, 0.0) * ell) / n + c * ell / n
 
     def _radius_fixed_lambda(self, n: int) -> float:
         """Single-``lambda`` radius, tight at ``n == horizon`` (historical)."""
@@ -162,7 +194,9 @@ class ConfidenceSequenceRiskBound:
             best = min(best, val)
         return best
 
-    def evaluate(self, n: int, violations: int) -> RiskBoundSnapshot:
+    def evaluate(
+        self, n: int, violations: int, var_pred: float = 0.0
+    ) -> RiskBoundSnapshot:
         """Pure CS snapshot from aggregate counts -- no mutation.
 
         A caller that already tracks cumulative ``(n, violations)`` (e.g. the
@@ -174,7 +208,7 @@ class ConfidenceSequenceRiskBound:
                 n=0, violations=0, p_hat=0.0, p_ucb=0.0, verdict="OK"
             )
         p_hat = violations / n
-        p_ucb = min(1.0, p_hat + self.radius(n))
+        p_ucb = min(1.0, p_hat + self.radius(n, var_pred))
 
         verdict = "OK"
         if p_ucb >= self.params.critical_p_ucb:
@@ -191,7 +225,9 @@ class ConfidenceSequenceRiskBound:
         )
 
     def push(self, violation: bool) -> RiskBoundSnapshot:
+        p_prev = self._violations / self._n if self._n > 0 else 0.0
+        self._var_pred += p_prev * (1.0 - p_prev)
         self._n += 1
         if violation:
             self._violations += 1
-        return self.evaluate(self._n, self._violations)
+        return self.evaluate(self._n, self._violations, self._var_pred)

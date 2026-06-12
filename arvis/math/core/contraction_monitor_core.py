@@ -82,6 +82,7 @@ class ScientificState:
     regime_window: tuple[float, ...]
     turn_index: int
     risk_violations: int = 0  # cumulative count for the confidence-sequence path
+    risk_var_pred: float = 0.0  # predictable variance sum (bernstein boundary)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -91,6 +92,7 @@ class ScientificState:
             "regime_window": list(self.regime_window),
             "turn_index": self.turn_index,
             "risk_violations": self.risk_violations,
+            "risk_var_pred": self.risk_var_pred,
         }
 
     @classmethod
@@ -113,6 +115,7 @@ class ScientificState:
             regime_window=tuple(float(x) for x in raw.get("regime_window", ())),
             turn_index=int(raw.get("turn_index", 0)),
             risk_violations=int(raw.get("risk_violations", 0)),
+            risk_var_pred=float(raw.get("risk_var_pred", 0.0)),
         )
 
 
@@ -145,8 +148,10 @@ class ContractionMonitorCore:
         self._cfg = config or MonitorConfig()
         if self._cfg.risk_bound not in ("hoeffding", "confidence_sequence"):
             raise ValueError("risk_bound must be 'hoeffding' or 'confidence_sequence'")
-        if self._cfg.cs_boundary not in ("fixed_lambda", "stitched"):
-            raise ValueError("cs_boundary must be 'fixed_lambda' or 'stitched'")
+        if self._cfg.cs_boundary not in ("fixed_lambda", "stitched", "bernstein"):
+            raise ValueError(
+                "cs_boundary must be 'fixed_lambda', 'stitched' or 'bernstein'"
+            )
 
     def compute(
         self, bundle: Any, prior_in: Mapping[str, Any] | None
@@ -218,8 +223,16 @@ class ContractionMonitorCore:
         cum_violations = (prior.risk_violations if prior is not None else 0) + (
             1 if violation else 0
         )
+        # predictable variance process for the bernstein CS boundary:
+        # increment with p_hat_{s-1}(1 - p_hat_{s-1}) (past-only => martingale-safe).
+        prev_n = (prior.turn_index + 1) if prior is not None else 0
+        prev_viol = prior.risk_violations if prior is not None else 0
+        p_prev = (prev_viol / prev_n) if prev_n > 0 else 0.0
+        cum_var_pred = (prior.risk_var_pred if prior is not None else 0.0) + (
+            p_prev * (1.0 - p_prev)
+        )
         collapse_risk, risk_ucb, risk_verdict = self._pac_risk(
-            risk_window, cum_n, cum_violations
+            risk_window, cum_n, cum_violations, cum_var_pred
         )
 
         # --- empirical regime over the delta_v history ---
@@ -247,6 +260,7 @@ class ContractionMonitorCore:
             regime_window=regime_window,
             turn_index=(prior.turn_index + 1) if prior is not None else 0,
             risk_violations=cum_violations,
+            risk_var_pred=cum_var_pred,
         )
         return snapshot, nxt.to_dict()
 
@@ -275,7 +289,11 @@ class ContractionMonitorCore:
         return clamp01(float(level))
 
     def _pac_risk(
-        self, window: tuple[int, ...], cum_n: int, cum_violations: int
+        self,
+        window: tuple[int, ...],
+        cum_n: int,
+        cum_violations: int,
+        cum_var_pred: float = 0.0,
     ) -> tuple[float, float, str]:
         """Return (empirical_rate p_hat, certified_ceiling p_ucb, verdict).
 
@@ -293,7 +311,7 @@ class ContractionMonitorCore:
                     boundary=self._cfg.cs_boundary,
                 )
             )
-            cs_snap = cs.evaluate(cum_n, cum_violations)
+            cs_snap = cs.evaluate(cum_n, cum_violations, cum_var_pred)
             cs_ucb = float(cs_snap.p_ucb)
             return float(cs_snap.p_hat), cs_ucb, self._verdict(cs_ucb)
 
