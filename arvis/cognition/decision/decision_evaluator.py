@@ -49,10 +49,17 @@ class DecisionEvaluator:
         # declarative gaps/frames. Absent => 0.0 => no frame.
         if isinstance(cognitive_input, dict):
             raw_ra = cognitive_input.get("referential_ambiguity", 0.0)
+            raw_cd = cognitive_input.get("context_dependent", 0.0)
         else:
             raw_ra = getattr(cognitive_input, "referential_ambiguity", 0.0)
+            raw_cd = getattr(cognitive_input, "context_dependent", 0.0)
         referential = float(raw_ra or 0.0)
-        inferred = self._uncertainty.infer(referential_ambiguity=referential)
+        contextual = float(raw_cd or 0.0)
+        inferred = self._uncertainty.infer(
+            referential_ambiguity=referential,
+            context_dependent=contextual,
+            memory_present=bool(memory_influence["memory_present"]),
+        )
 
         return DecisionSignal(
             reason=reason,
