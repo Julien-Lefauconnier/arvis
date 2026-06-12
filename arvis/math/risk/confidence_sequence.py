@@ -46,9 +46,23 @@ both sequential evaluation and adversarial inputs.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import log, sqrt
+from math import ceil, fsum, inf, log, sqrt
 
 from arvis.math.risk.risk_bound import RiskBoundSnapshot
+
+
+def _zeta_upper_bound(s: float, terms: int = 1000) -> float:
+    """Upper bound on the Riemann zeta ``zeta(s)`` for ``s > 1``.
+
+    Partial sum plus the integral tail bound
+    ``sum_{j > J} j ** -s <= int_J^inf x ** -s dx = J ** (1 - s) / (s - 1)``.
+    Rounding *up* keeps the stitching spend conservative
+    (``sum_k delta_k <= delta``), so the union bound -- hence the
+    anytime-validity -- is preserved.
+    """
+    partial = fsum((j + 1.0) ** (-s) for j in range(terms))
+    tail: float = float(terms) ** (1.0 - s) / (s - 1.0)
+    return partial + tail
 
 
 @dataclass(frozen=True)
@@ -69,6 +83,10 @@ class ConfidenceSequenceParams:
     delta: float = 0.01
     warn_p_ucb: float = 0.10
     critical_p_ucb: float = 0.25
+    boundary: str = "fixed_lambda"  # or "stitched" (horizon-free)
+    stitch_eta: float = 2.0  # geometric epoch ratio (> 1)
+    stitch_s: float = 1.4  # spending exponent (> 1)
+    stitch_k_pad: int = 3  # epochs swept past ceil(log_eta n)
 
 
 class ConfidenceSequenceRiskBound:
@@ -90,12 +108,59 @@ class ConfidenceSequenceRiskBound:
         self._violations = 0
         self._log_inv_delta = log(1.0 / self.params.delta)
         self._lambda = sqrt(8.0 * self._log_inv_delta / self.params.horizon)
+        if self.params.boundary not in ("fixed_lambda", "stitched"):
+            raise ValueError("boundary must be 'fixed_lambda' or 'stitched'")
+        if self.params.stitch_eta <= 1.0:
+            raise ValueError("stitch_eta must be > 1")
+        if self.params.stitch_s <= 1.0:
+            raise ValueError("stitch_s must be > 1")
+        zeta_upper = _zeta_upper_bound(self.params.stitch_s)
+        self._stitch_base = log(zeta_upper / self.params.delta)
 
     def radius(self, n: int) -> float:
-        """Confidence radius ``R(n)``; valid for all ``n`` by Ville's inequality."""
+        """Confidence radius ``R(n)``; valid for all ``n`` by Ville's inequality.
+
+        Dispatches on ``params.boundary``: ``"fixed_lambda"`` (default,
+        historical, tight only at ``horizon``) or ``"stitched"``
+        (horizon-free, informative at small *and* large ``n``).
+        """
         if n <= 0:
             return 1.0
+        if self.params.boundary == "stitched":
+            return self._radius_stitched(n)
+        return self._radius_fixed_lambda(n)
+
+    def _radius_fixed_lambda(self, n: int) -> float:
+        """Single-``lambda`` radius, tight at ``n == horizon`` (historical)."""
         return self._log_inv_delta / (self._lambda * n) + self._lambda / 8.0
+
+    def _radius_stitched(self, n: int) -> float:
+        """Horizon-free stitched radius (Howard, Ramdas, McAuliffe &
+        Sekhon, 2021): the min over geometric epochs ``m_k = eta ** k``
+        of fixed-lambda bounds, union-bounded by a polynomial spending
+        sequence ``delta_k = delta / (zeta(s) (k + 1) ** s)`` (so
+        ``sum_k delta_k <= delta``; a conservative *upper* bound on
+        ``zeta`` is used). Epoch ``k`` contributes
+        ``sqrt(L_k / (8 m_k)) * (1 + m_k / n)`` with
+        ``L_k = log(zeta(s) / delta) + s * log(k + 1)``. Tight to
+        within a log-log factor at *every* ``n``; cumulative and
+        anytime-valid.
+
+        Sweeping ``k`` only to ``ceil(log_eta n) + stitch_k_pad``
+        keeps the optimiser in range; truncating the (infinite) union
+        only raises the min, so the bound stays valid regardless of
+        the cap.
+        """
+        eta = self.params.stitch_eta
+        s = self.params.stitch_s
+        k_max = ceil(log(float(n)) / log(eta)) + self.params.stitch_k_pad
+        best = inf
+        for k in range(k_max + 1):
+            m_k = eta**k
+            l_k = self._stitch_base + s * log(k + 1.0)
+            val = sqrt(l_k / (8.0 * m_k)) * (1.0 + m_k / n)
+            best = min(best, val)
+        return best
 
     def evaluate(self, n: int, violations: int) -> RiskBoundSnapshot:
         """Pure CS snapshot from aggregate counts -- no mutation.
