@@ -13,7 +13,10 @@ from arvis.errors.manager import ErrorManager
 from arvis.errors.provenance import ErrorOrigin
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import SyscallResult
-from arvis.kernel_core.syscalls.syscall_registry import register_syscall
+from arvis.kernel_core.syscalls.syscall_registry import (
+    SyscallEffect,
+    register_syscall,
+)
 
 
 @runtime_checkable
@@ -53,7 +56,12 @@ def _compute_artifact_timestamp(
     return 0.0
 
 
-@register_syscall("tool.execute")
+@register_syscall(
+    "tool.execute",
+    effect=SyscallEffect.EFFECT,
+    triggers_external=True,
+    summary="Execute an external tool.",
+)
 def tool_execute(
     handler: SyscallHandlerLike,
     result: Any,

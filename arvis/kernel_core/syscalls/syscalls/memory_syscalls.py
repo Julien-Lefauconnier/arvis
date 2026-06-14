@@ -17,7 +17,10 @@ from arvis.kernel_core.memory.service import MemoryService
 from arvis.kernel_core.memory.snapshot import MemorySnapshot
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
-from arvis.kernel_core.syscalls.syscall_registry import register_syscall
+from arvis.kernel_core.syscalls.syscall_registry import (
+    SyscallEffect,
+    register_syscall,
+)
 
 
 class SyscallHandlerLike(Protocol):
@@ -119,7 +122,11 @@ def _serialize_snapshot(snapshot: MemorySnapshot) -> dict[str, Any]:
     }
 
 
-@register_syscall("memory.get")
+@register_syscall(
+    "memory.get",
+    effect=SyscallEffect.READ,
+    summary="Read a stored memory entry.",
+)
 def memory_get(
     handler: SyscallHandlerLike,
     user_id: str,
@@ -161,7 +168,11 @@ def memory_get(
         )
 
 
-@register_syscall("memory.put")
+@register_syscall(
+    "memory.put",
+    effect=SyscallEffect.EFFECT,
+    summary="Store or update a memory entry.",
+)
 def memory_put(
     handler: SyscallHandlerLike,
     user_id: str,
@@ -199,7 +210,11 @@ def memory_put(
     return SyscallResult(success=True, result=_serialize_record(record))
 
 
-@register_syscall("memory.delete")
+@register_syscall(
+    "memory.delete",
+    effect=SyscallEffect.EFFECT,
+    summary="Delete or revoke a memory entry.",
+)
 def memory_delete(
     handler: SyscallHandlerLike,
     user_id: str,
@@ -246,7 +261,11 @@ def memory_delete(
         return SyscallResult(success=True, result=None)
 
 
-@register_syscall("memory.list")
+@register_syscall(
+    "memory.list",
+    effect=SyscallEffect.READ,
+    summary="List stored memory entries (metadata).",
+)
 def memory_list(
     handler: SyscallHandlerLike,
     user_id: str,
@@ -282,7 +301,11 @@ def memory_list(
     )
 
 
-@register_syscall("memory.snapshot")
+@register_syscall(
+    "memory.snapshot",
+    effect=SyscallEffect.READ,
+    summary="Return a metadata snapshot of stored memory.",
+)
 def memory_snapshot(
     handler: SyscallHandlerLike,
     user_id: str,

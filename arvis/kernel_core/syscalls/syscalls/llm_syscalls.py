@@ -16,7 +16,10 @@ from arvis.errors.manager import ErrorManager
 from arvis.errors.provenance import ErrorOrigin
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import SyscallResult
-from arvis.kernel_core.syscalls.syscall_registry import register_syscall
+from arvis.kernel_core.syscalls.syscall_registry import (
+    SyscallEffect,
+    register_syscall,
+)
 
 
 class LLMAdapterLike(Protocol):
@@ -52,7 +55,12 @@ def _compute_artifact_timestamp(
     return 0.0
 
 
-@register_syscall("llm.generate")
+@register_syscall(
+    "llm.generate",
+    effect=SyscallEffect.EFFECT,
+    triggers_external=True,
+    summary="Invoke the language model to realize text.",
+)
 def llm_generate(
     handler: SyscallHandlerLike,
     request: LLMRequest,

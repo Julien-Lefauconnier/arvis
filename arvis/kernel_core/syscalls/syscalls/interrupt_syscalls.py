@@ -9,7 +9,10 @@ from arvis.errors.base import (
     ErrorDomain,
 )
 from arvis.kernel_core.syscalls.syscall import SyscallResult
-from arvis.kernel_core.syscalls.syscall_registry import register_syscall
+from arvis.kernel_core.syscalls.syscall_registry import (
+    SyscallEffect,
+    register_syscall,
+)
 
 
 class InterruptBusLike(Protocol):
@@ -24,7 +27,11 @@ class SyscallHandlerLike(Protocol):
     runtime_state: RuntimeStateLike | None
 
 
-@register_syscall("interrupt.emit")
+@register_syscall(
+    "interrupt.emit",
+    effect=SyscallEffect.EFFECT,
+    summary="Emit a runtime interrupt signal.",
+)
 def interrupt_emit(
     handler: SyscallHandlerLike,
     interrupt: Any,
