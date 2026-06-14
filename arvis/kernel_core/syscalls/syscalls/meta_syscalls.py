@@ -32,6 +32,61 @@ _LIMITATIONS: tuple[str, ...] = (
 
 _SELF_MODEL_VERSION = "v0"
 
+# Authored, factual description of HOW arvis operates at the kernel level.
+# Like _LIMITATIONS these are stable structural facts (not generated prose):
+# the self-model explains the mechanism and is explicit about what is NOT
+# claimed, so the kernel can describe its own mathematics without
+# confabulating.
+_ARCHITECTURE_KIND = "governed cognitive kernel"
+_ARCHITECTURE_SUMMARY = (
+    "arvis decides and governs reasoning under bounded governed signals; it "
+    "does not author the final user-facing text (ZKCS, performed by the host)."
+)
+_MECHANISMS: tuple[tuple[str, str], ...] = (
+    (
+        "contraction monitor",
+        "Tracks a composite Lyapunov energy over bounded governed signals "
+        "and its turn-to-turn contraction, so the reasoning state is pulled "
+        "toward a stable region rather than drifting.",
+    ),
+    (
+        "stability certificate",
+        "Establishes a compact bounded-input/bounded-state invariant and a "
+        "bounded adversarial leverage (Lipschitz constant), machine-checked "
+        "under adversarial search.",
+    ),
+    (
+        "anytime-valid risk bound",
+        "A confidence sequence (no i.i.d. assumption) upper-bounds the "
+        "risk-violation rate and stays valid under sequential, open-ended "
+        "evaluation rather than only at a single fixed horizon.",
+    ),
+    (
+        "governance gate",
+        "Resolves each turn to allow, require-confirmation, or abstain; "
+        "abstention is the fail-safe outcome.",
+    ),
+)
+_NOT_CLAIMED: tuple[str, ...] = (
+    "This is not a global Lyapunov stability proof; the guarantee is "
+    "practical and holds under the certified operating conditions.",
+    "The risk bound limits the observed violation rate (a PAC-style "
+    "guarantee), not the factual correctness of any individual answer.",
+    "The kernel does not verify external truth; grounding and provenance "
+    "are the responsibility of the host product.",
+)
+
+
+def _architecture() -> dict[str, Any]:
+    return {
+        "kind": _ARCHITECTURE_KIND,
+        "summary": _ARCHITECTURE_SUMMARY,
+        "mechanisms": [
+            {"name": name, "summary": summary} for name, summary in _MECHANISMS
+        ],
+        "not_claimed": list(_NOT_CLAIMED),
+    }
+
 
 def _capability(descriptor: SyscallDescriptor) -> dict[str, Any]:
     return {
@@ -60,5 +115,6 @@ def describe_self(handler: Any, **_: Any) -> SyscallResult:
         "capability_count": len(capabilities),
         "capabilities": capabilities,
         "limitations": list(_LIMITATIONS),
+        "architecture": _architecture(),
     }
     return SyscallResult(success=True, result=self_model)

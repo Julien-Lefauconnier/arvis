@@ -70,3 +70,28 @@ def test_describe_self_reports_external_effects_truthfully() -> None:
     for name in ("llm.generate", "tool.execute"):
         if name in SYSCALL_DESCRIPTORS:
             assert name in external
+
+
+def test_describe_self_explains_its_architecture() -> None:
+    # arvis can describe HOW it works (its mathematics + governance) as
+    # authored facts, and must stay explicit about what it does NOT claim.
+    model = _describe_self().result
+    architecture = model["architecture"]
+
+    assert architecture["kind"] == "governed cognitive kernel"
+    assert isinstance(architecture["summary"], str) and architecture["summary"]
+
+    mechanisms = architecture["mechanisms"]
+    assert len(mechanisms) >= 1
+    for mechanism in mechanisms:
+        assert set(mechanism.keys()) == {"name", "summary"}
+        assert mechanism["name"] and mechanism["summary"]
+    names = {mechanism["name"] for mechanism in mechanisms}
+    assert {"contraction monitor", "anytime-valid risk bound"} <= names
+
+    # HONESTY: the kernel discloses the boundary of its guarantee rather
+    # than overclaiming a global proof or factual correctness.
+    assert architecture["not_claimed"]
+    not_claimed = " ".join(architecture["not_claimed"]).lower()
+    assert "global lyapunov" in not_claimed
+    assert "violation rate" in not_claimed
