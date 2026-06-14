@@ -13,7 +13,10 @@ from arvis.errors.provenance import cause_from_exception
 from arvis.errors.syscall import SyscallBoundaryViolationError
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
-from arvis.kernel_core.syscalls.syscall_registry import register_syscall
+from arvis.kernel_core.syscalls.syscall_registry import (
+    SyscallEffect,
+    register_syscall,
+)
 from arvis.kernel_core.vfs.exceptions import (
     VFSCycleError,
     VFSFolderNotEmptyError,
@@ -230,7 +233,11 @@ ZIP_EXPECTED_ERRORS = (
 # =====================================================
 
 
-@register_syscall("vfs.list")
+@register_syscall(
+    "vfs.list",
+    effect=SyscallEffect.READ,
+    summary="List the items in the user's governed VFS scope.",
+)
 def vfs_list(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
@@ -240,7 +247,11 @@ def vfs_list(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResu
     return SyscallResult(success=True, result=[_serialize_vfs_item(i) for i in items])
 
 
-@register_syscall("vfs.get")
+@register_syscall(
+    "vfs.get",
+    effect=SyscallEffect.READ,
+    summary="Read metadata for a single VFS item.",
+)
 def vfs_get(
     handler: SyscallHandlerLike, user_id: str, item_id: str, **_: Any
 ) -> SyscallResult:
@@ -269,7 +280,11 @@ def vfs_get(
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
 
-@register_syscall("vfs.tree")
+@register_syscall(
+    "vfs.tree",
+    effect=SyscallEffect.READ,
+    summary="Return the user's VFS as a tree projection.",
+)
 def vfs_tree(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
@@ -279,7 +294,11 @@ def vfs_tree(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResu
     return SyscallResult(success=True, result=_serialize_tree(tree))
 
 
-@register_syscall("vfs.create_folder")
+@register_syscall(
+    "vfs.create_folder",
+    effect=SyscallEffect.EFFECT,
+    summary="Create a folder in the governed VFS.",
+)
 def vfs_create_folder(
     handler: SyscallHandlerLike,
     user_id: str,
@@ -312,7 +331,11 @@ def vfs_create_folder(
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
 
-@register_syscall("vfs.create_file")
+@register_syscall(
+    "vfs.create_file",
+    effect=SyscallEffect.EFFECT,
+    summary="Create a logical file entry in the governed VFS.",
+)
 def vfs_create_file(
     handler: SyscallHandlerLike,
     user_id: str,
@@ -353,7 +376,11 @@ def vfs_create_file(
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
 
-@register_syscall("vfs.delete_item")
+@register_syscall(
+    "vfs.delete_item",
+    effect=SyscallEffect.EFFECT,
+    summary="Delete a VFS item.",
+)
 def vfs_delete_item(
     handler: SyscallHandlerLike,
     user_id: str,
@@ -385,7 +412,11 @@ def vfs_delete_item(
     return SyscallResult(success=True, result={"deleted": True, "item_id": item_id})
 
 
-@register_syscall("vfs.rename_item")
+@register_syscall(
+    "vfs.rename_item",
+    effect=SyscallEffect.EFFECT,
+    summary="Rename a VFS item.",
+)
 def vfs_rename_item(
     handler: SyscallHandlerLike,
     user_id: str,
@@ -418,7 +449,11 @@ def vfs_rename_item(
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
 
 
-@register_syscall("vfs.move_item")
+@register_syscall(
+    "vfs.move_item",
+    effect=SyscallEffect.EFFECT,
+    summary="Move a VFS item to another parent.",
+)
 def vfs_move_item(
     handler: SyscallHandlerLike,
     user_id: str,
@@ -456,7 +491,11 @@ def vfs_move_item(
 # =====================================================
 
 
-@register_syscall("vfs.zip.analyze")
+@register_syscall(
+    "vfs.zip.analyze",
+    effect=SyscallEffect.READ,
+    summary="Analyze a zip archive without modifying the VFS.",
+)
 def vfs_zip_analyze(
     handler: SyscallHandlerLike,
     zip_path: str,
@@ -477,7 +516,11 @@ def vfs_zip_analyze(
     return SyscallResult(success=True, result=_serialize_zip_decision(decision))
 
 
-@register_syscall("vfs.zip.execute")
+@register_syscall(
+    "vfs.zip.execute",
+    effect=SyscallEffect.EFFECT,
+    summary="Execute a planned zip import into the VFS.",
+)
 def vfs_zip_execute(
     handler: SyscallHandlerLike,
     zip_path: str,
@@ -540,7 +583,11 @@ def _deserialize_zip_plan(data: dict[str, Any]) -> ZipImportPlan:
 # =====================================================
 
 
-@register_syscall("vfs.zip.plan")
+@register_syscall(
+    "vfs.zip.plan",
+    effect=SyscallEffect.READ,
+    summary="Compute a zip import plan without modifying the VFS.",
+)
 def vfs_zip_plan(
     handler: SyscallHandlerLike,
     zip_root: dict[str, Any],
