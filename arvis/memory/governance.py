@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import TypeVar
 
 
 class GovernanceVisibility(StrEnum):
@@ -60,3 +61,36 @@ class Governance:
     retention: GovernanceRetention = GovernanceRetention.PERSISTENT
     encryption: GovernanceEncryption = GovernanceEncryption.AT_REST
     principal: GovernancePrincipal = GovernancePrincipal.USER
+
+
+_StrEnumT = TypeVar("_StrEnumT", bound=StrEnum)
+
+
+def _stricter(a: _StrEnumT, b: _StrEnumT) -> _StrEnumT:
+    """Return the stricter of two members, by declaration order.
+
+    Each lever enum is declared least to most restrictive, so a higher
+    index means a stricter value.
+    """
+    order = list(type(a))
+    return a if order.index(a) >= order.index(b) else b
+
+
+def compose_strictest(
+    personal: Governance,
+    organization: Governance,
+) -> Governance:
+    """Compose a personal regime with an organization policy lever-by-lever,
+    keeping the stricter value of each lever.
+
+    Used when a personal fact enters an organization scope: the organization
+    acts as a non-negotiable floor. The composed regime is bound by the
+    organization principal.
+    """
+    return Governance(
+        visibility=_stricter(personal.visibility, organization.visibility),
+        sharing=_stricter(personal.sharing, organization.sharing),
+        retention=_stricter(personal.retention, organization.retention),
+        encryption=_stricter(personal.encryption, organization.encryption),
+        principal=GovernancePrincipal.ORGANIZATION,
+    )

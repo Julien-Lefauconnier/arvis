@@ -2,6 +2,10 @@
 
 from datetime import timedelta
 
+from arvis.memory.governance import (
+    Governance,
+    compose_strictest,
+)
 from arvis.memory.memory_long_entry import (
     MemoryLongEntry,
 )
@@ -24,6 +28,9 @@ class MemoryLongPolicyGate:
     """
 
     MAX_TTL_DAYS = 30
+
+    # User-authored sources own their declared keys (bypass key whitelist)
+    USER_AUTHORED_SOURCES = frozenset({"explicit_user", "onboarding"})
 
     # Only system-generated tags allowed
     ALLOWED_NOTES = {
@@ -48,8 +55,9 @@ class MemoryLongPolicyGate:
         # -------------------------------------------------
         # Key must be declared in registry
         # -------------------------------------------------
-        if not self.registry.is_allowed(entry.key):
-            raise ValueError(f"MemoryLong key '{entry.key}' is not allowed")
+        if entry.source not in self.USER_AUTHORED_SOURCES:
+            if not self.registry.is_allowed(entry.key):
+                raise ValueError(f"MemoryLong key '{entry.key}' is not allowed")
 
         # -------------------------------------------------
         # Source must be explicit or governance-approved
@@ -84,3 +92,15 @@ class MemoryLongPolicyGate:
 
         # Declarative only
         return
+
+    def compose(
+        self,
+        *,
+        personal: Governance,
+        organization: Governance,
+    ) -> Governance:
+        """Compose a personal regime with an organization policy, taking the
+        strictest value lever-by-lever. The organization is a non-negotiable
+        floor when a personal fact enters its scope.
+        """
+        return compose_strictest(personal, organization)
