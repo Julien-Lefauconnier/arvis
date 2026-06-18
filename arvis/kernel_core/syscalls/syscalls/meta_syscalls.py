@@ -78,13 +78,25 @@ _MECHANISMS: tuple[tuple[str, str, str], ...] = (
         "first, or to hold back, and when in doubt it holds back.",
     ),
 )
-_NOT_CLAIMED: tuple[str, ...] = (
-    "This is not a global Lyapunov stability proof; the guarantee is "
-    "practical and holds under the certified operating conditions.",
-    "The risk bound limits the observed violation rate (a PAC-style "
-    "guarantee), not the factual correctness of any individual answer.",
-    "The kernel does not verify external truth; grounding and provenance "
-    "are the responsibility of the host product.",
+_NOT_CLAIMED: tuple[tuple[str, str], ...] = (
+    (
+        "This is not a global Lyapunov stability proof; the guarantee is "
+        "practical and holds under the certified operating conditions.",
+        "This is not an absolute, universal guarantee; it holds in practice "
+        "under the conditions it was checked against, not everywhere.",
+    ),
+    (
+        "The risk bound limits the observed violation rate (a PAC-style "
+        "guarantee), not the factual correctness of any individual answer.",
+        "It caps how often it may be wrong over many turns; it does not "
+        "promise that any single answer is factually correct.",
+    ),
+    (
+        "The kernel does not verify external truth; grounding and provenance "
+        "are the responsibility of the host product.",
+        "It does not check claims against the outside world; making sure "
+        "answers are grounded and sourced is the host product's job.",
+    ),
 )
 
 
@@ -96,7 +108,9 @@ def _architecture() -> dict[str, Any]:
             {"name": name, "summary": summary, "plain": plain}
             for name, summary, plain in _MECHANISMS
         ],
-        "not_claimed": list(_NOT_CLAIMED),
+        "not_claimed": [
+            {"summary": summary, "plain": plain} for summary, plain in _NOT_CLAIMED
+        ],
     }
 
 

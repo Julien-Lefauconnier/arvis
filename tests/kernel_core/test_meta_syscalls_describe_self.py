@@ -96,7 +96,11 @@ def test_describe_self_explains_its_architecture() -> None:
 
     # HONESTY: the kernel discloses the boundary of its guarantee rather
     # than overclaiming a global proof or factual correctness.
-    assert architecture["not_claimed"]
-    not_claimed = " ".join(architecture["not_claimed"]).lower()
-    assert "global lyapunov" in not_claimed
-    assert "violation rate" in not_claimed
+    nc = architecture["not_claimed"]
+    assert nc and all(set(x.keys()) == {"summary", "plain"} for x in nc)
+    technical = " ".join(x["summary"] for x in nc).lower()
+    assert "global lyapunov" in technical
+    assert "violation rate" in technical
+    nc_plain = " ".join(x["plain"] for x in nc).lower()
+    for jargon in ("lyapunov", "lipschitz", "pac", "i.i.d"):
+        assert jargon not in nc_plain
