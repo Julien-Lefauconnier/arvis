@@ -82,17 +82,5 @@ class MemoryLongPolicyGate:
             if entry.notes not in self.ALLOWED_NOTES:
                 raise ValueError("notes field is system-only and must be whitelisted")
 
-        # -------------------------------------------------
-        # value_plain must be strictly whitelisted (ZK-safe)
-        # -------------------------------------------------
-        value_plain = getattr(entry, "value_plain", None)
-
-        if value_plain is not None:
-            if not self.registry.validate_value_plain(
-                key=entry.key,
-                value=value_plain,
-            ):
-                raise ValueError(f"value_plain not allowed for key={entry.key}")
-
         # Declarative only
         return
