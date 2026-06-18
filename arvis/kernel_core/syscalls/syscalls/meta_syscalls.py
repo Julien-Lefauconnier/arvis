@@ -42,29 +42,40 @@ _ARCHITECTURE_SUMMARY = (
     "arvis decides and governs reasoning under bounded governed signals; it "
     "does not author the final user-facing text (ZKCS, performed by the host)."
 )
-_MECHANISMS: tuple[tuple[str, str], ...] = (
+_MECHANISMS: tuple[tuple[str, str, str], ...] = (
     (
         "contraction monitor",
         "Tracks a composite Lyapunov energy over bounded governed signals "
         "and its turn-to-turn contraction, so the reasoning state is pulled "
         "toward a stable region rather than drifting.",
+        "It continuously checks how settled its own reasoning is from one "
+        "turn to the next, and nudges it back toward a steady, consistent "
+        "state instead of letting it wander.",
     ),
     (
         "stability certificate",
         "Establishes a compact bounded-input/bounded-state invariant and a "
         "bounded adversarial leverage (Lipschitz constant), machine-checked "
         "under adversarial search.",
+        "It verifies, even against deliberately hostile inputs, that a small "
+        "change in what goes in can only cause a limited change in what comes "
+        "out, so its behaviour stays predictable.",
     ),
     (
         "anytime-valid risk bound",
         "A confidence sequence (no i.i.d. assumption) upper-bounds the "
         "risk-violation rate and stays valid under sequential, open-ended "
         "evaluation rather than only at a single fixed horizon.",
+        "It keeps a running, always-valid ceiling on how often it is allowed "
+        "to be wrong, and that ceiling holds no matter how long you keep "
+        "questioning it, not just on a one-off test.",
     ),
     (
         "governance gate",
         "Resolves each turn to allow, require-confirmation, or abstain; "
         "abstention is the fail-safe outcome.",
+        "For every turn it decides whether to answer, to ask you to confirm "
+        "first, or to hold back, and when in doubt it holds back.",
     ),
 )
 _NOT_CLAIMED: tuple[str, ...] = (
@@ -82,7 +93,8 @@ def _architecture() -> dict[str, Any]:
         "kind": _ARCHITECTURE_KIND,
         "summary": _ARCHITECTURE_SUMMARY,
         "mechanisms": [
-            {"name": name, "summary": summary} for name, summary in _MECHANISMS
+            {"name": name, "summary": summary, "plain": plain}
+            for name, summary, plain in _MECHANISMS
         ],
         "not_claimed": list(_NOT_CLAIMED),
     }

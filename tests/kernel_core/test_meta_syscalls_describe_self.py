@@ -84,8 +84,13 @@ def test_describe_self_explains_its_architecture() -> None:
     mechanisms = architecture["mechanisms"]
     assert len(mechanisms) >= 1
     for mechanism in mechanisms:
-        assert set(mechanism.keys()) == {"name", "summary"}
-        assert mechanism["name"] and mechanism["summary"]
+        assert set(mechanism.keys()) == {"name", "summary", "plain"}
+        assert mechanism["name"] and mechanism["summary"] and mechanism["plain"]
+    # The plain register is jargon-free: it never restates the maths as the
+    # explanation, so a small host model can speak it verbatim.
+    plain_text = " ".join(m["plain"] for m in mechanisms).lower()
+    for jargon in ("lyapunov", "lipschitz", "pac", "i.i.d"):
+        assert jargon not in plain_text
     names = {mechanism["name"] for mechanism in mechanisms}
     assert {"contraction monitor", "anytime-valid risk bound"} <= names
 
