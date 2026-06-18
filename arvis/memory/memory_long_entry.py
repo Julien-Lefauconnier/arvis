@@ -1,8 +1,10 @@
 # arvis/memory/memory_long_entry.py
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
+
+from arvis.memory.governance import Governance
 
 
 class MemoryLongType(StrEnum):
@@ -45,3 +47,5 @@ class MemoryLongEntry:
 
     expires_at: datetime | None = None
     revoked_at: datetime | None = None
+
+    governance: Governance = field(default_factory=Governance)
