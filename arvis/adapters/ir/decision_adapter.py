@@ -137,7 +137,7 @@ class DecisionIRAdapter:
             return "memory"
         if "conversation" in tokens:
             return "conversational"
-        if "informational_query" in tokens:
+        if "search" in tokens or "informational_query" in tokens:
             return "informational"
         if "meta_query" in tokens:
             return "meta"
