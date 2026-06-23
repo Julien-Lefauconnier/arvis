@@ -29,8 +29,11 @@ class MemoryLongPolicyGate:
 
     MAX_TTL_DAYS = 30
 
-    # User-authored sources own their declared keys (bypass key whitelist)
-    USER_AUTHORED_SOURCES = frozenset({"explicit_user", "onboarding"})
+    # User-authored sources own their declared keys (bypass key whitelist).
+    # "proposed" is an extraction candidate the user explicitly accepted via
+    # the candidate accept action; the engine never writes this source
+    # autonomously, so the no-self-authored-memory invariant is preserved.
+    USER_AUTHORED_SOURCES = frozenset({"explicit_user", "onboarding", "proposed"})
 
     # Only system-generated tags allowed
     ALLOWED_NOTES = {
@@ -62,7 +65,12 @@ class MemoryLongPolicyGate:
         # -------------------------------------------------
         # Source must be explicit or governance-approved
         # -------------------------------------------------
-        if entry.source not in {"explicit_user", "onboarding", "governance"}:
+        if entry.source not in {
+            "explicit_user",
+            "onboarding",
+            "governance",
+            "proposed",
+        }:
             raise ValueError(f"Invalid memory_long source: {entry.source}")
 
         # -------------------------------------------------

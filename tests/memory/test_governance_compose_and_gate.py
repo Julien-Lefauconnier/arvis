@@ -59,7 +59,7 @@ def test_compose_user_can_be_stricter_than_org_floor() -> None:
 
 def test_gate_accepts_arbitrary_key_for_user_authored_sources() -> None:
     gate = MemoryLongPolicyGate()
-    for source in ("explicit_user", "onboarding"):
+    for source in ("explicit_user", "onboarding", "proposed"):
         gate.validate_append(
             MemoryLongEntry(
                 memory_type=MemoryLongType.CONTEXT,
