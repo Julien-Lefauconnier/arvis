@@ -72,7 +72,6 @@ Changelog = "https://github.com/Julien-Lefauconnier/arvis/releases"
 include = ["arvis*"]
 
 [tool.mypy]
-python_version = "3.11"
 strict = true
 warn_unused_configs = true
 show_error_codes = true
