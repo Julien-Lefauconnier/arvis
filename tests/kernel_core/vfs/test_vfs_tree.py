@@ -13,6 +13,7 @@ def test_build_vfs_tree_single_root_file() -> None:
             display_name="file.txt",
             item_type="file",
             parent_id=None,
+            owner_id="u1",
             mime="text/plain",
             file_size=10,
             created_at=123,
@@ -33,12 +34,14 @@ def test_build_vfs_tree_folder_with_child() -> None:
             display_name="docs",
             item_type="folder",
             parent_id=None,
+            owner_id="u1",
         ),
         VFSItem(
             item_id="file",
             display_name="a.txt",
             item_type="file",
             parent_id="folder",
+            owner_id="u1",
             mime="text/plain",
             file_size=5,
         ),
@@ -59,18 +62,21 @@ def test_build_vfs_tree_deep_tree() -> None:
             display_name="root",
             item_type="folder",
             parent_id=None,
+            owner_id="u1",
         ),
         VFSItem(
             item_id="child",
             display_name="child",
             item_type="folder",
             parent_id="root",
+            owner_id="u1",
         ),
         VFSItem(
             item_id="leaf",
             display_name="leaf.txt",
             item_type="file",
             parent_id="child",
+            owner_id="u1",
             mime="text/plain",
             file_size=3,
         ),
@@ -89,6 +95,7 @@ def test_build_vfs_tree_orphan_becomes_root() -> None:
             display_name="orphan.txt",
             item_type="file",
             parent_id="missing-parent",
+            owner_id="u1",
             mime="text/plain",
             file_size=1,
         )
@@ -103,9 +110,27 @@ def test_build_vfs_tree_orphan_becomes_root() -> None:
 
 def test_build_vfs_tree_is_deterministic_for_roots() -> None:
     items = [
-        VFSItem(item_id="3", display_name="b.txt", item_type="file", parent_id=None),
-        VFSItem(item_id="2", display_name="a.txt", item_type="file", parent_id=None),
-        VFSItem(item_id="1", display_name="Docs", item_type="folder", parent_id=None),
+        VFSItem(
+            item_id="3",
+            display_name="b.txt",
+            item_type="file",
+            parent_id=None,
+            owner_id="u1",
+        ),
+        VFSItem(
+            item_id="2",
+            display_name="a.txt",
+            item_type="file",
+            parent_id=None,
+            owner_id="u1",
+        ),
+        VFSItem(
+            item_id="1",
+            display_name="Docs",
+            item_type="folder",
+            parent_id=None,
+            owner_id="u1",
+        ),
     ]
 
     tree = build_vfs_tree(items)
@@ -117,11 +142,33 @@ def test_build_vfs_tree_is_deterministic_for_roots() -> None:
 def test_build_vfs_tree_is_deterministic_for_children() -> None:
     items = [
         VFSItem(
-            item_id="root", display_name="root", item_type="folder", parent_id=None
+            item_id="root",
+            display_name="root",
+            item_type="folder",
+            parent_id=None,
+            owner_id="u1",
         ),
-        VFSItem(item_id="3", display_name="b.txt", item_type="file", parent_id="root"),
-        VFSItem(item_id="2", display_name="a.txt", item_type="file", parent_id="root"),
-        VFSItem(item_id="1", display_name="docs", item_type="folder", parent_id="root"),
+        VFSItem(
+            item_id="3",
+            display_name="b.txt",
+            item_type="file",
+            parent_id="root",
+            owner_id="u1",
+        ),
+        VFSItem(
+            item_id="2",
+            display_name="a.txt",
+            item_type="file",
+            parent_id="root",
+            owner_id="u1",
+        ),
+        VFSItem(
+            item_id="1",
+            display_name="docs",
+            item_type="folder",
+            parent_id="root",
+            owner_id="u1",
+        ),
     ]
 
     tree = build_vfs_tree(items)
@@ -133,8 +180,20 @@ def test_build_vfs_tree_is_deterministic_for_children() -> None:
 
 def test_build_vfs_tree_breaks_ties_with_item_id() -> None:
     items = [
-        VFSItem(item_id="b", display_name="same.txt", item_type="file", parent_id=None),
-        VFSItem(item_id="a", display_name="same.txt", item_type="file", parent_id=None),
+        VFSItem(
+            item_id="b",
+            display_name="same.txt",
+            item_type="file",
+            parent_id=None,
+            owner_id="u1",
+        ),
+        VFSItem(
+            item_id="a",
+            display_name="same.txt",
+            item_type="file",
+            parent_id=None,
+            owner_id="u1",
+        ),
     ]
 
     tree = build_vfs_tree(items)

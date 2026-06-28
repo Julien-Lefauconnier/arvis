@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from typing import Any, Protocol
 
 from arvis.errors.base import (
@@ -11,6 +12,8 @@ from arvis.errors.base import (
 from arvis.errors.normalization import normalize_error
 from arvis.errors.provenance import cause_from_exception
 from arvis.errors.syscall import SyscallBoundaryViolationError
+from arvis.kernel_core.access.identity import principal_from_context
+from arvis.kernel_core.access.models import AccessContext, Principal
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
@@ -58,6 +61,89 @@ def _get_vfs(handler: SyscallHandlerLike) -> VFSService | None:
 
 def _get_zip(handler: SyscallHandlerLike) -> ZipIngestService | None:
     return handler.services.zip_ingest_service
+
+
+# =====================================================
+# ACCESS RESOLVERS
+# =====================================================
+
+_AccessResolver = Callable[[Mapping[str, Any], KernelServiceRegistry], AccessContext]
+
+
+def _scope_owner_resolver(effect: SyscallEffect, syscall_name: str) -> _AccessResolver:
+    """Resolve the resource owner as the calling user's own scope.
+
+    Used by syscalls that act on the caller's whole VFS scope (list, tree)
+    rather than a referenced item. Under the owner-scoped policy this is
+    behaviour-neutral, since the caller is the owner of its own scope.
+    """
+
+    def _resolve(
+        args: Mapping[str, Any], services: KernelServiceRegistry
+    ) -> AccessContext:
+        user_id: str = args["user_id"]
+        principal = principal_from_context(args.get("ctx"))
+        if principal is None:
+            principal = Principal(user_id=user_id)
+        return AccessContext(
+            principal=principal,
+            effect=effect,
+            resource_owner_id=user_id,
+            syscall_name=syscall_name,
+        )
+
+    return _resolve
+
+
+def _item_owner_resolver(
+    effect: SyscallEffect, syscall_name: str, *, id_arg: str
+) -> _AccessResolver:
+    """Resolve the resource owner as the owner of a referenced VFS item.
+
+    ``id_arg`` names the syscall argument holding the target item or parent
+    id (for example ``item_id`` or ``parent_id``). The real ``owner_id`` is
+    read from the item through the VFS service, so a principal acting on a
+    resource it does not own is denied by the owner-scoped policy.
+
+    Owner resolution is best-effort. When the reference is absent (creation at
+    the root) or the item cannot be read for any reason, ownership falls back
+    to the caller and dispatch proceeds. The syscall body stays the single
+    authority for executing the operation and mapping its errors: an
+    unexpected VFS failure must surface as a boundary violation raised by the
+    body, never be pre-empted or recast as an authorization denial here.
+    """
+
+    def _resolve(
+        args: Mapping[str, Any], services: KernelServiceRegistry
+    ) -> AccessContext:
+        user_id: str = args["user_id"]
+        principal = principal_from_context(args.get("ctx"))
+        if principal is None:
+            principal = Principal(user_id=user_id)
+        reference = args.get(id_arg)
+        owner_id = user_id
+        organization_id: str | None = None
+
+        vfs: VFSService | None = services.vfs_service
+        if vfs is not None and isinstance(reference, str):
+            try:
+                item = vfs.get_item(user_id=user_id, item_id=reference)
+                owner_id = item.owner_id
+                organization_id = item.organization_id
+            except Exception:
+                owner_id = user_id
+                organization_id = None
+
+        return AccessContext(
+            principal=principal,
+            effect=effect,
+            resource_owner_id=owner_id,
+            resource_organization_id=organization_id,
+            resource_id=reference if isinstance(reference, str) else None,
+            syscall_name=syscall_name,
+        )
+
+    return _resolve
 
 
 def _missing_service_error(service_name: str) -> SyscallResult:
@@ -237,6 +323,7 @@ ZIP_EXPECTED_ERRORS = (
     "vfs.list",
     effect=SyscallEffect.READ,
     summary="List the items in the user's governed VFS scope.",
+    access=_scope_owner_resolver(SyscallEffect.READ, "vfs.list"),
 )
 def vfs_list(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResult:
     vfs = _get_vfs(handler)
@@ -251,6 +338,7 @@ def vfs_list(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResu
     "vfs.get",
     effect=SyscallEffect.READ,
     summary="Read metadata for a single VFS item.",
+    access=_item_owner_resolver(SyscallEffect.READ, "vfs.get", id_arg="item_id"),
 )
 def vfs_get(
     handler: SyscallHandlerLike, user_id: str, item_id: str, **_: Any
@@ -284,6 +372,7 @@ def vfs_get(
     "vfs.tree",
     effect=SyscallEffect.READ,
     summary="Return the user's VFS as a tree projection.",
+    access=_scope_owner_resolver(SyscallEffect.READ, "vfs.tree"),
 )
 def vfs_tree(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResult:
     vfs = _get_vfs(handler)
@@ -298,6 +387,9 @@ def vfs_tree(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResu
     "vfs.create_folder",
     effect=SyscallEffect.EFFECT,
     summary="Create a folder in the governed VFS.",
+    access=_item_owner_resolver(
+        SyscallEffect.EFFECT, "vfs.create_folder", id_arg="parent_id"
+    ),
 )
 def vfs_create_folder(
     handler: SyscallHandlerLike,
@@ -335,6 +427,9 @@ def vfs_create_folder(
     "vfs.create_file",
     effect=SyscallEffect.EFFECT,
     summary="Create a logical file entry in the governed VFS.",
+    access=_item_owner_resolver(
+        SyscallEffect.EFFECT, "vfs.create_file", id_arg="parent_id"
+    ),
 )
 def vfs_create_file(
     handler: SyscallHandlerLike,
@@ -380,6 +475,9 @@ def vfs_create_file(
     "vfs.delete_item",
     effect=SyscallEffect.EFFECT,
     summary="Delete a VFS item.",
+    access=_item_owner_resolver(
+        SyscallEffect.EFFECT, "vfs.delete_item", id_arg="item_id"
+    ),
 )
 def vfs_delete_item(
     handler: SyscallHandlerLike,
@@ -416,6 +514,9 @@ def vfs_delete_item(
     "vfs.rename_item",
     effect=SyscallEffect.EFFECT,
     summary="Rename a VFS item.",
+    access=_item_owner_resolver(
+        SyscallEffect.EFFECT, "vfs.rename_item", id_arg="item_id"
+    ),
 )
 def vfs_rename_item(
     handler: SyscallHandlerLike,
@@ -453,6 +554,9 @@ def vfs_rename_item(
     "vfs.move_item",
     effect=SyscallEffect.EFFECT,
     summary="Move a VFS item to another parent.",
+    access=_item_owner_resolver(
+        SyscallEffect.EFFECT, "vfs.move_item", id_arg="item_id"
+    ),
 )
 def vfs_move_item(
     handler: SyscallHandlerLike,
@@ -495,6 +599,9 @@ def vfs_move_item(
     "vfs.zip.analyze",
     effect=SyscallEffect.READ,
     summary="Analyze a zip archive without modifying the VFS.",
+    access=_item_owner_resolver(
+        SyscallEffect.READ, "vfs.zip.analyze", id_arg="target_parent_id"
+    ),
 )
 def vfs_zip_analyze(
     handler: SyscallHandlerLike,
@@ -520,6 +627,9 @@ def vfs_zip_analyze(
     "vfs.zip.execute",
     effect=SyscallEffect.EFFECT,
     summary="Execute a planned zip import into the VFS.",
+    access=_item_owner_resolver(
+        SyscallEffect.EFFECT, "vfs.zip.execute", id_arg="target_parent_id"
+    ),
 )
 def vfs_zip_execute(
     handler: SyscallHandlerLike,

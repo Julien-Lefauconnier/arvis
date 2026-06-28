@@ -38,6 +38,8 @@ class ReasonCodeRegistry:
         "fusion_fallback",
         "gate_policy_adjustment",
         "unknown_reason",  # fallback safe
+        # --- Access ---
+        "access_denied",
     }
 
     # -----------------------------------------

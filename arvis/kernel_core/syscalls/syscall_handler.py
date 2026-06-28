@@ -6,16 +6,26 @@ import inspect
 from typing import Any, Protocol
 
 from arvis.errors import ErrorOrigin
+from arvis.errors.base import ArvisSecurityError
 from arvis.errors.codes import ErrorCode
 from arvis.errors.manager import ErrorManager
 from arvis.errors.messages import safe_exception_message
 from arvis.errors.normalization import normalize_error
 from arvis.errors.syscall import SyscallExecutionError, SyscallValidationError
 from arvis.errors.types import ErrorPayload
+from arvis.kernel_core.access.policy import (
+    ACCESS_DENIED_REASON_CODE,
+    AuthorizationPolicy,
+    OwnerScopedAuthorization,
+)
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
-from arvis.kernel_core.syscalls.syscall_registry import SyscallFn, get_syscall
+from arvis.kernel_core.syscalls.syscall_registry import (
+    SyscallFn,
+    get_descriptor,
+    get_syscall,
+)
 
 
 class RuntimeStateLike(Protocol):
@@ -56,6 +66,9 @@ class SyscallHandler:
         self.zip_ingest_service = self.services.zip_ingest_service
         self.memory_service = self.services.memory_service
         self.memory_policy_service = self.services.memory_policy_service
+        self.authorization_service: AuthorizationPolicy = (
+            self.services.authorization_service or OwnerScopedAuthorization()
+        )
 
     def handle(self, syscall: Syscall) -> SyscallResult:
         ctx: PipelineContextLike | None = syscall.args.get("ctx")
@@ -108,6 +121,30 @@ class SyscallHandler:
             )
             self._safe_journal(ctx, syscall, error_result, started_tick)
             return error_result
+
+        descriptor = get_descriptor(syscall.name)
+        if descriptor is not None and descriptor.access is not None:
+            access_ctx = descriptor.access(syscall.args, self.services)
+            verdict = self.authorization_service.decide(access_ctx)
+            if not verdict.allowed:
+                denied_result = self._failure_from_error(
+                    ctx,
+                    ArvisSecurityError(
+                        "access denied",
+                        origin=ErrorOrigin(
+                            component="SyscallHandler",
+                            subsystem="kernel.syscall",
+                            syscall=syscall.name,
+                        ),
+                        details={
+                            "syscall": syscall.name,
+                            "reason_code": verdict.reason_code
+                            or ACCESS_DENIED_REASON_CODE,
+                        },
+                    ),
+                )
+                self._safe_journal(ctx, syscall, denied_result, started_tick)
+                return denied_result
 
         causal_id = self._build_syscall_id(
             syscall,

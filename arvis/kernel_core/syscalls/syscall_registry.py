@@ -5,11 +5,21 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from arvis.errors.kernel_runtime import (
     DuplicateSyscallRegistrationError,
 )
 from arvis.kernel_core.syscalls.syscall import SyscallResult
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from typing import Any
+
+    from arvis.kernel_core.access.models import AccessContext
+    from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
+
+    AccessResolver = Callable[[Mapping[str, Any], KernelServiceRegistry], AccessContext]
 
 SyscallFn = Callable[..., SyscallResult]
 
@@ -45,6 +55,7 @@ class SyscallDescriptor:
     effect: SyscallEffect
     triggers_external: bool = False
     summary: str = ""
+    access: AccessResolver | None = None
 
 
 SYSCALL_REGISTRY: dict[str, SyscallFn] = {}
@@ -88,6 +99,7 @@ def register_syscall(
     effect: SyscallEffect | None = None,
     triggers_external: bool | None = None,
     summary: str = "",
+    access: AccessResolver | None = None,
 ) -> Callable[[SyscallFn], SyscallFn]:
     def decorator(fn: SyscallFn) -> SyscallFn:
         # HARDENING: prevent silent override
@@ -113,6 +125,7 @@ def register_syscall(
             effect=resolved_effect,
             triggers_external=resolved_external,
             summary=summary,
+            access=access,
         )
         return fn
 

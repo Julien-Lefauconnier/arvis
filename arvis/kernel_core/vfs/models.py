@@ -14,6 +14,8 @@ class VFSItem:
     display_name: str
     item_type: VFSItemType
     parent_id: str | None
+    owner_id: str
+    organization_id: str | None = None
     mime: str | None = None
     file_size: int | None = None
     created_at: int | None = None

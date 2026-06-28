@@ -22,3 +22,4 @@ class KernelServiceRegistry:
     memory_service: Any | None = None
     memory_policy_service: Any | None = None
     llm_adapter: Any | None = None
+    authorization_service: Any | None = None
