@@ -5,7 +5,6 @@ from __future__ import annotations
 from . import (
     interrupt_syscalls,
     llm_syscalls,
-    memory_syscalls,
     meta_syscalls,
     process_syscalls,
     tool_syscalls,
@@ -15,7 +14,6 @@ from . import (
 __all__ = [
     "interrupt_syscalls",
     "llm_syscalls",
-    "memory_syscalls",
     "meta_syscalls",
     "process_syscalls",
     "tool_syscalls",

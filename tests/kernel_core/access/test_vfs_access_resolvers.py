@@ -3,7 +3,6 @@
 import inspect
 from types import SimpleNamespace
 
-import arvis.kernel_core.syscalls.syscalls.memory_syscalls  # noqa: F401
 from arvis.kernel_core.access.identity import principal_from_context
 from arvis.kernel_core.access.models import Principal
 from arvis.kernel_core.access.policy import (
@@ -19,20 +18,6 @@ from arvis.kernel_core.syscalls.syscall_registry import (
 )
 from arvis.kernel_core.syscalls.syscalls.vfs_syscalls import _item_owner_resolver
 from arvis.kernel_core.vfs.models import VFSItem
-
-# memory.* is governed by its own MemoryPolicyService (see
-# memory_syscalls._authorize), a dedicated and richer authorization layer, so
-# it is intentionally NOT routed through the generic syscall-boundary resolver.
-# This allowlist keeps that exemption explicit and tracked rather than silent.
-_MEMORY_GOVERNED_ELSEWHERE = frozenset(
-    {
-        "memory.get",
-        "memory.put",
-        "memory.delete",
-        "memory.list",
-        "memory.snapshot",
-    }
-)
 
 
 class _FakeVFS:
@@ -75,16 +60,6 @@ def test_stateless_vfs_plan_is_exempt():
     params = inspect.signature(descriptor.fn).parameters
     assert "user_id" not in params
     assert descriptor.access is None
-
-
-def test_memory_syscalls_use_dedicated_policy_not_generic_resolver():
-    for name in _MEMORY_GOVERNED_ELSEWHERE:
-        descriptor = SYSCALL_DESCRIPTORS.get(name)
-        assert descriptor is not None, f"expected {name} to be registered"
-        assert descriptor.access is None, (
-            f"{name} is governed by MemoryPolicyService and must not also "
-            f"declare a generic access resolver"
-        )
 
 
 def test_vfs_get_denies_cross_owner_item():

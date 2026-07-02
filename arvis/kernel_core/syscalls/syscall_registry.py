@@ -72,9 +72,6 @@ _DEFAULT_READ_SYSCALLS: frozenset[str] = frozenset(
         "vfs.tree",
         "vfs.zip.analyze",
         "vfs.zip.plan",
-        "memory.get",
-        "memory.list",
-        "memory.snapshot",
     }
 )
 

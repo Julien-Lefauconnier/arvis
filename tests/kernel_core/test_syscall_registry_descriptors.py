@@ -27,10 +27,14 @@ def _ok(handler: Any, **_: Any) -> SyscallResult:
 def test_default_effect_classifies_reads_and_effects() -> None:
     from arvis.kernel_core.syscalls.syscall_registry import _default_effect
 
-    for read_name in ("vfs.list", "vfs.get", "vfs.tree", "memory.snapshot"):
+    for read_name in (
+        "vfs.list",
+        "vfs.get",
+        "vfs.tree",
+    ):
         assert _default_effect(read_name) is SyscallEffect.READ
 
-    for effect_name in ("vfs.move_item", "memory.put", "process.spawn"):
+    for effect_name in ("vfs.move_item", "process.spawn"):
         assert _default_effect(effect_name) is SyscallEffect.EFFECT
 
 
@@ -93,7 +97,7 @@ def test_live_registry_is_self_describing() -> None:
     # The real syscalls registered on import must each expose a descriptor
     # whose effect class matches their structural behavior.
     expected_reads = {"vfs.list", "vfs.get", "vfs.tree", "vfs.zip.analyze"}
-    expected_effects = {"vfs.create_file", "vfs.move_item", "memory.put"}
+    expected_effects = {"vfs.create_file", "vfs.move_item"}
 
     for name in expected_reads:
         descriptor = get_descriptor(name)
