@@ -17,6 +17,11 @@ def test_ir_golden_snapshot(dummy_pipeline_result):
         "context": {},
         "decision": {},
         "state": {},
+        "projection": None,
+        "validity": None,
+        "stability": None,
+        "adaptive": None,
+        "tools": None,
         "gate": {},
         "meta": {},
     }
@@ -37,6 +42,11 @@ def test_ir_golden_snapshot_keys_are_exact(dummy_pipeline_result):
         "context",
         "decision",
         "state",
+        "projection",
+        "validity",
+        "stability",
+        "adaptive",
+        "tools",
         "gate",
         "meta",
     ]

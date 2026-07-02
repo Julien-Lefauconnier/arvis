@@ -23,7 +23,11 @@ def build_ir_view(obj: Any) -> dict[str, Any]:
     """
     Canonical IR view (stable public contract).
 
-    This is the future-proof API surface.
+    This is the future-proof API surface. The projection / validity /
+    stability / adaptive / tools axes are part of the stable shape even when a
+    given turn does not populate them (they serialize to null): keeping them
+    present lets consumers rely on a fixed schema and see the governance axes
+    ARVIS reasons over.
     """
 
     ir = {
@@ -33,6 +37,11 @@ def build_ir_view(obj: Any) -> dict[str, Any]:
         "context": _serialize_ir(getattr(ir_result, "ir_context", None)),
         "decision": _serialize_ir(getattr(ir_result, "ir_decision", None)),
         "state": _serialize_ir(getattr(ir_result, "ir_state", None)),
+        "projection": _serialize_ir(getattr(ir_result, "ir_projection", None)),
+        "validity": _serialize_ir(getattr(ir_result, "ir_validity", None)),
+        "stability": _serialize_ir(getattr(ir_result, "ir_stability", None)),
+        "adaptive": _serialize_ir(getattr(ir_result, "ir_adaptive", None)),
+        "tools": _serialize_ir(getattr(ir_result, "ir_tools", None)),
         "gate": _serialize_ir(getattr(ir_result, "ir_gate", None)),
         # extension zone
         "meta": {},

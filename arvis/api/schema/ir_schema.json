@@ -9,6 +9,11 @@
     "context",
     "decision",
     "state",
+    "projection",
+    "validity",
+    "stability",
+    "adaptive",
+    "tools",
     "gate",
     "meta"
   ],
@@ -31,18 +36,33 @@
     "state": {
       "type": ["object", "null"]
     },
+    "projection": {
+      "type": ["object", "null"]
+    },
+    "validity": {
+      "type": ["object", "null"]
+    },
+    "stability": {
+      "type": ["object", "null"]
+    },
+    "adaptive": {
+      "type": ["object", "null"]
+    },
+    "tools": {
+      "type": ["array", "object", "null"]
+    },
     "gate": {
       "type": ["object", "null"]
     },
     "meta": {
-		 "type": "object",
-		       "properties": {
-		         "canonical_hash": {
-		           "type": "string",
-		           "pattern": "^[a-f0-9]{64}$"
-		         }
-		       },
-		       "additionalProperties": true
+      "type": "object",
+      "properties": {
+        "canonical_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": true
     }
   }
 }

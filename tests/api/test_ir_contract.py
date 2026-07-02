@@ -84,6 +84,11 @@ EXPECTED_KEYS = {
     "context",
     "decision",
     "state",
+    "projection",
+    "validity",
+    "stability",
+    "adaptive",
+    "tools",
     "gate",
     "meta",
 }
