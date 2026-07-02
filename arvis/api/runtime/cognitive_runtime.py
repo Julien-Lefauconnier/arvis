@@ -81,6 +81,7 @@ class CognitiveRuntime:
             tool_manager=self.tool_manager,
             vfs_service=None,
             zip_ingest_service=None,
+            llm_adapter=self.adapters.get("llm"),
         )
         self.syscall_handler = SyscallHandler(
             runtime_state=self.runtime_state,

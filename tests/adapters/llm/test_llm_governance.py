@@ -93,6 +93,6 @@ def test_guarded_adapter_adds_governance_metadata() -> None:
 
     response = adapter.generate(LLMRequest(prompt="hello"))
 
-    assert response.content == "ok:hello"
-    assert response.metadata["provider"] == "fake"
-    assert response.metadata["llm_governance"]["allowed"] is True
+    assert response.response.content == "ok:hello"
+    assert response.response.metadata["provider"] == "fake"
+    assert response.response.metadata["llm_governance"]["allowed"] is True

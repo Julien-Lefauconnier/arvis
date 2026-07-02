@@ -7,6 +7,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from arvis.adapters.llm.contracts.errors import LLMPolicyViolation
+from arvis.adapters.llm.contracts.execution_result import (
+    LLMExecutionResult,
+    LLMExecutionStatus,
+)
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.contracts.response import LLMResponse
 from arvis.adapters.llm.governance.budget import LLMBudget
@@ -34,7 +38,7 @@ class GuardedLLMAdapter:
         request: LLMRequest,
         *,
         preferred_provider: str | None = None,
-    ) -> LLMResponse:
+    ) -> LLMExecutionResult:
         # --------------------------------------------------
         # 1. POLICY
         # --------------------------------------------------
@@ -101,9 +105,12 @@ class GuardedLLMAdapter:
             }
 
         # --------------------------------------------------
-        # 6. FINAL RESPONSE
+        # 6. FINAL RESULT
         # --------------------------------------------------
-        return LLMResponse(
+        # The governed runtime result is an LLMExecutionResult: it is the
+        # canonical contract consumed by the ``llm.generate`` syscall (the raw
+        # provider LLMResponse is carried under ``.response``).
+        final_response = LLMResponse(
             content=response.content,
             usage=response.usage,
             provider=response.provider,
@@ -111,6 +118,20 @@ class GuardedLLMAdapter:
             finish_reason=response.finish_reason,
             trace_id=response.trace_id,
             metadata=metadata,
+        )
+
+        return LLMExecutionResult(
+            status=LLMExecutionStatus.SUCCESS,
+            response=final_response,
+            retry_count=0,
+            fallback_used=False,
+            provider_attempts=(),
+            evaluation={},
+            observation={},
+            error=None,
+            degraded=False,
+            replay_safe=True,
+            require_confirmation=False,
         )
 
     # --------------------------------------------------

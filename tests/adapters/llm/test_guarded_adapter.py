@@ -44,8 +44,8 @@ def test_guarded_adapter_success() -> None:
 
     response = adapter.generate(LLMRequest(prompt="hello"))
 
-    assert response.content == "ok"
-    assert response.metadata["llm_governance"]["allowed"] is True
+    assert response.response.content == "ok"
+    assert response.response.metadata["llm_governance"]["allowed"] is True
 
 
 def test_guarded_adapter_policy_block() -> None:
@@ -97,5 +97,5 @@ def test_guarded_adapter_metadata_enrichment():
 
     response = adapter.generate(request)
 
-    assert "llm_governance" in response.metadata
-    assert "llm" in response.metadata
+    assert "llm_governance" in response.response.metadata
+    assert "llm" in response.response.metadata
