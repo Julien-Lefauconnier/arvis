@@ -24,7 +24,9 @@ def test_api_contract_shape():
 
 
 def test_api_version_locked():
-    assert API_VERSION == "1.0.0"
+    # 0.1.0-alpha: the public API contract is intentionally "0.1",
+    # not "1.0.0", to avoid over-promising a stable public API.
+    assert API_VERSION == "0.1"
 
 
 def test_api_fingerprint_stable():

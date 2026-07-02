@@ -4,6 +4,11 @@
 
 > Python 3.11+ • Deterministic • Replayable • Governed • Auditable
 
+> **Status: `0.1.0-alpha` (preview).** The public API is not yet stable.
+> The projection layer is partial, LLM governance is mock-first, and formal
+> guarantees apply only to the documented projected domains. See
+> [Known Limitations](#known-limitations-010-alpha).
+
 ARVIS is a deterministic runtime layer that treats reasoning as **critical infrastructure**.
 
 It provides governed cognition, replayable decisions, inspectable state transitions, controlled execution, explicit uncertainty handling, and verifiable audit trails.
@@ -23,7 +28,7 @@ Most AI systems still follow:
 input → model → output
 ```
 
-Useful for many tasks — but weak when systems must be:
+Useful for many tasks, but weak when systems must be:
 
 * reproducible
 * auditable
@@ -52,9 +57,17 @@ Outputs are not assumed valid.
 
 ## Quick Start
 
+Install from source (works today):
+
 ```bash
-pip install arvis
+git clone https://github.com/Julien-Lefauconnier/arvis
+cd arvis
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
 ```
+
+PyPI (`pip install arvis`) is planned once the alpha stabilizes.
 
 ```python
 from arvis import ArvisEngine
@@ -84,7 +97,7 @@ result = os.run(
 print(result.summary())
 ```
 
-Example outcome:
+High-risk input is refused before execution:
 
 ```text
 Status        : BLOCKED
@@ -92,20 +105,24 @@ Approval Need : YES
 Commitment    : 8642d95cfdb73c16...
 ```
 
+> Note (0.1.0-alpha): the low-risk nominal path (low → ALLOW, medium →
+> REQUIRE_CONFIRMATION) is being stabilized as part of the projection and gate
+> work. High-risk refusal is the demonstrable path today.
+
 ---
 
 ## Public API Levels
 
-ARVIS exposes two stable entrypoints:
+ARVIS exposes two entrypoints:
 
 | API | Intended Use |
 |-----|--------------|
-| ArvisEngine | Recommended developer-facing standard API |
+| ArvisEngine | Recommended developer-facing API |
 | CognitiveOS | Advanced low-level runtime control |
 
 For most integrations, start with:
 
-```python 
+```python
 from arvis import ArvisEngine
 ```
 
@@ -299,9 +316,53 @@ ARVIS is about **trustworthy operation under constraints**.
 
 ---
 
+## Known Limitations (0.1.0-alpha)
+
+This is an early alpha of a deterministic cognitive kernel. What is stable,
+experimental, and out of scope for 0.1:
+
+**Stable (documented, tested):**
+
+* governed decision pipeline and admissibility gate
+* deterministic, replayable IR and timeline commitment
+* syscall boundary for external effects
+* tool authorization boundary
+* typed runtime error model
+
+**Experimental (present, not part of the stable public API):**
+
+* long-term memory
+* conversation orchestration
+* full LLM provider production stack (governance is mock-first)
+
+**Out of scope for 0.1:**
+
+* the full cognitive projection Pi (the 0.1 projection is partial and
+  certification-oriented)
+* general formal guarantees over arbitrary LLM behavior
+* a frozen public API surface
+
+Formal guarantees apply only to the documented projected domains and their
+assumptions.
+
+---
+
+## Versioning
+
+ARVIS tracks three distinct version axes, each honestly labeled:
+
+| Axis | Value | Meaning |
+|------|-------|---------|
+| Package version | `0.1.0a1` | the distributed artifact (PEP 440) |
+| API version | `0.1` | the public Python API contract (not yet stable) |
+| Standard version | `draft-v1` | the ARVIS decision / IR specification |
+
+---
+
 ## Project Status
 
-**Beta** — actively developed with a validation-first engineering approach.
+**`0.1.0-alpha` (preview)** — actively developed with a validation-first
+engineering approach. The public API is not yet stable.
 
 ---
 

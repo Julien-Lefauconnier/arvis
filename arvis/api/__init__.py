@@ -113,6 +113,7 @@ from .version import (
     API_VERSION,
     PACKAGE_VERSION,
     PUBLIC_API_FINGERPRINT,
+    STANDARD_VERSION,
 )
 from .views.cognitive_result_view import CognitiveResultView
 
@@ -132,6 +133,7 @@ __all__ = [
     # Versioning
     "PACKAGE_VERSION",
     "API_VERSION",
+    "STANDARD_VERSION",
     "PUBLIC_API_FINGERPRINT",
     # IR
     "build_ir_view",

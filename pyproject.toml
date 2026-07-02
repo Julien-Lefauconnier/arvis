@@ -1,6 +1,6 @@
 [project]
 name = "arvis"
-version = "0.1.0"
+version = "0.1.0a1"
 description = "Cognitive Operating System kernel for trustworthy AI systems"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,7 +23,7 @@ keywords = [
 ]
 
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: Apache Software License",
