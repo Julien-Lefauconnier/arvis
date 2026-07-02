@@ -6,7 +6,6 @@ registry and is actually invoked through the full pipeline (the intent stage
 enriches a non-ABSTAIN turn via the ``llm.generate`` syscall).
 """
 
-
 from arvis.adapters.llm.contracts.execution_result import (
     LLMExecutionResult,
     LLMExecutionStatus,
