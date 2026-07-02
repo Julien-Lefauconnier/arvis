@@ -11,6 +11,7 @@ from arvis.kernel.pipeline.cognitive_pipeline_context import (
 from arvis.kernel.pipeline.services.pipeline_ir_bootstrap_service import (
     PipelineIRBootstrapService,
 )
+from arvis.kernel.projection.certificate import minimal_projection_certificate
 from arvis.math.switching.switching_params import (
     SwitchingParams,
 )
@@ -96,6 +97,20 @@ class PipelinePreparationService:
                 L_T=float(p.L_T),
                 J=float(comp.J),
             )
+
+        # -----------------------------------------
+        # Minimal projection for bare informational inputs
+        # -----------------------------------------
+        # A plain-text prompt carries no structured signals to project. Attach a
+        # minimal certificate so the turn is governed by the gate rather than
+        # hard-blocked on an empty projection.
+        cognitive_input = getattr(ctx, "cognitive_input", None)
+        if isinstance(cognitive_input, str) and ctx.projection.certificate is None:
+            cert = minimal_projection_certificate()
+            ctx.projection.certificate = cert
+            ctx.projection_certificate = cert
+            ctx.projection.domain_valid = cert.domain_valid
+            ctx.projection.margin = cert.margin_to_boundary
 
         # -----------------------------------------
         # Lifecycle prepared marker
