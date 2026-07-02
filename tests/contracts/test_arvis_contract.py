@@ -30,7 +30,7 @@ import pytest
 # ---------------------------------------------------------------------------
 FROZEN_ARVIS_SURFACE: dict[str, tuple[str, ...]] = {
     "arvis": ("ArvisEngine", "CognitiveOSConfig"),
-    "arvis.adapters.llm.contracts.response": ("LLMResponse",),
+    "arvis.adapters.llm.contracts": ("LLMResponse",),
     "arvis.cognition.control": (
         "exploration_controller",
         "mode_hysteresis",
