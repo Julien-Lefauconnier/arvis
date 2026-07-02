@@ -8,6 +8,13 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+### Removed
+
+- Unused kernel key-value memory substrate (`kernel_core/memory/*`, `memory.*`
+  syscalls, observation-long journal). No consumer, and its plaintext record
+  model was off-thesis relative to the ZKCS long-term declarative memory
+  (`arvis/memory/*`), which remains the memory of arvis.
+
 ### Notes / next
 
 - Unify the emitted IR version string (currently divergent across
