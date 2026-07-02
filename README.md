@@ -105,9 +105,11 @@ Approval Need : YES
 Commitment    : 8642d95cfdb73c16...
 ```
 
-> Note (0.1.0-alpha): the low-risk nominal path (low → ALLOW, medium →
-> REQUIRE_CONFIRMATION) is being stabilized as part of the projection and gate
-> work. High-risk refusal is the demonstrable path today.
+> Note (0.1.0-alpha): the gate grades an explicit top-level `risk` scalar —
+> low → ALLOWED, medium → REQUIRES_CONFIRMATION, high → BLOCKED (see
+> `examples/09_multi_run_batch.py`). This risk policy applies only to an
+> explicit `risk` field; a bare text prompt is governed with a minimal
+> projection (REQUIRES_CONFIRMATION), not a full natural-language projection.
 
 ---
 
@@ -323,21 +325,31 @@ experimental, and out of scope for 0.1:
 **Stable (documented, tested):**
 
 * governed decision pipeline and admissibility gate
-* deterministic, replayable IR and timeline commitment
-* syscall boundary for external effects
-* tool authorization boundary
+* graded risk gate for an explicit top-level `risk` scalar
+  (low → ALLOWED, medium → REQUIRES_CONFIRMATION, high → BLOCKED)
+* deterministic, replayable IR (projection / validity / stability / adaptive /
+  tools axes exposed in the public view) and timeline commitment
+* syscall boundary for external effects, including a governed `llm.generate`
+  path wired end to end
+* tool authorization boundary (per-spec risk budget)
 * typed runtime error model
 
 **Experimental (present, not part of the stable public API):**
 
 * long-term memory
 * conversation orchestration
-* full LLM provider production stack (governance is mock-first)
+* natural-language input surface — a bare text prompt is governed with a
+  *minimal* projection (REQUIRES_CONFIRMATION), not a full cognitive projection
+* real LLM providers — the governed adapter path is wired end to end, but the
+  bundled provider is a deterministic stub; production providers must be
+  configured via the adapter registry
 
 **Out of scope for 0.1:**
 
 * the full cognitive projection Pi (the 0.1 projection is partial and
-  certification-oriented)
+  certification-oriented; sparse inputs receive a minimal certificate)
+* risk gating beyond an explicit top-level `risk` scalar (nested signals,
+  structured tool requests, and free text do not yet drive a full projection)
 * general formal guarantees over arbitrary LLM behavior
 * a frozen public API surface
 
