@@ -30,7 +30,7 @@ def _detect_recovery(
         if w_prev is not None and w_current is not None:
             if float(w_current) < float(w_prev):
                 return True
-    except Exception:
+    except (TypeError, ValueError):
         pass
     return False
 
