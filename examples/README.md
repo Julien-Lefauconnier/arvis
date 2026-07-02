@@ -79,7 +79,6 @@ Structured Output:
 | `04_human_confirmation.py`      | Human approval for sensitive actions         |
 | `05_tool_authorization.py`      | External tools require authorization         |
 | `06_finance_risk_screening.py`  | Trade / risk pre-execution controls          |
-| `07_memory_governed_context.py` | Context-aware decisions with governed memory |
 | `08_timeline_audit.py`          | Hash-linked timeline commitments             |
 | `09_multi_run_batch.py`         | Batch decision processing at scale           |
 | `10_runtime_inspection.py`      | Production observability & inspection        |

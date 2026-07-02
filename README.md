@@ -278,7 +278,6 @@ Included examples:
 4. Human approval
 5. Tool governance
 6. Finance risk screening
-7. Governed memory context
 8. Timeline audit trail
 9. Batch decision engine
 10. Runtime inspection
