@@ -32,6 +32,7 @@ from arvis.kernel.pipeline.stages.gate.gating_regime import (
     apply_answer_gate,
     select_gating_regime,
 )
+from arvis.kernel.pipeline.stages.gate.input_risk_gate import apply_input_risk_gate
 from arvis.kernel.pipeline.stages.gate.memory_policy import apply_memory_policy
 from arvis.kernel.pipeline.stages.gate.mid_traces import write_mid_traces
 from arvis.kernel.pipeline.stages.gate.models import (
@@ -323,6 +324,7 @@ class GateDecisionStack:
 
         verdict = apply_memory_policy(ctx, verdict)
         verdict = apply_pi_gate_override(ctx, verdict)
+        verdict = apply_input_risk_gate(ctx, verdict)
         sync_confirmation_flags(ctx, verdict)
 
         if "fusion_trace" in ctx.extra:

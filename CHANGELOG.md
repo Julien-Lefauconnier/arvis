@@ -14,6 +14,14 @@ versioning during the alpha.
   syscalls, observation-long journal). No consumer, and its plaintext record
   model was off-thesis relative to the ZKCS long-term declarative memory
   (`arvis/memory/*`), which remains the memory of arvis.
+  
+### Added
+
+- Governed input-risk gate: an explicit top-level `risk` scalar in the cognitive
+  input is graded by a three-band policy (low -> ALLOW, medium ->
+  REQUIRE_CONFIRMATION, high -> ABSTAIN). It supersedes the sparse-projection
+  fail-closed for pure risk-scalar inputs while never relaxing a real safety
+  veto (kappa / adaptive instability), and keeps the emitted IR consistent.
 
 ### Notes / next
 
