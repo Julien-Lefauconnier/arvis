@@ -165,6 +165,20 @@ class CognitiveResultView:
     def to_ir(self) -> dict[str, Any] | None:
         return self._ir
 
+    @staticmethod
+    def _public_status(*, allowed: bool, requires_validation: bool) -> str:
+        """Tri-state public status.
+
+        A confirmation-required decision is neither a clean pass nor a hard
+        block: it is surfaced as REQUIRES_CONFIRMATION so the medium-risk band
+        is visibly distinct from an outright ABSTAIN/BLOCK.
+        """
+        if allowed:
+            return "ALLOWED"
+        if requires_validation:
+            return "REQUIRES_CONFIRMATION"
+        return "BLOCKED"
+
     def quickstart_payload(self) -> dict[str, Any]:
         """
         Compact structured payload intended for examples,
@@ -178,7 +192,9 @@ class CognitiveResultView:
 
         return {
             "version": API_VERSION,
-            "status": ("ALLOWED" if allowed else "BLOCKED"),
+            "status": self._public_status(
+                allowed=allowed, requires_validation=requires_validation
+            ),
             "approval_required": requires_validation,
             "reason": denied_reason,
             "has_trace": self.trace_view is not None,
@@ -219,7 +235,9 @@ class CognitiveResultView:
         requires_validation = bool(getattr(decision, "requires_user_validation", False))
         denied_reason = getattr(decision, "denied_reason", None) or "-"
 
-        status = "ALLOWED" if allowed else "BLOCKED"
+        status = self._public_status(
+            allowed=allowed, requires_validation=requires_validation
+        )
         approval = "YES" if requires_validation else "NO"
         commitment = (
             f"{self.global_commitment[:16]}..." if self.global_commitment else "-"
