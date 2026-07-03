@@ -1,3 +1,4 @@
+
 # Changelog
 
 All notable changes to ARVIS are documented in this file.
@@ -17,6 +18,16 @@ versioning during the alpha.
   
 ### Added
 
+- Capability manifest on `ToolSpec`: declarative governance metadata so a host
+  can govern sovereignty, egress and consent uniformly across local and external
+  (e.g. MCP) tools. New fields: `provider` (third-party identity), `data_egress`
+  (outbound data flow), `data_class` (host-defined sensitivity),
+  `required_consent` (opaque consent key) and `reversible` (undo-ability), plus
+  the derived `crosses_trust_boundary` property. ARVIS does not interpret the
+  opaque labels; the host maps them onto its consent system, data taxonomy and
+  egress policy. Defaults preserve prior tool behavior. `examples/05` extended
+  to contrast a sovereign tool with a connected/egress one, and the tool docs
+  (authoring guide, tool system spec) document the manifest.
 - Governed input-risk gate: an explicit top-level `risk` scalar in the cognitive
   input is graded by a three-band policy (low -> ALLOW, medium ->
   REQUIRE_CONFIRMATION, high -> ABSTAIN). It supersedes the sparse-projection

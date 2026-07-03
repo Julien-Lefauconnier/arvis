@@ -1,3 +1,4 @@
+
 # ARVIS Examples
 
 Production-ready examples showing how ARVIS governs decisions, tools, memory, replayability, runtime controls, and auditability.
@@ -77,7 +78,7 @@ Structured Output:
 | `02_deterministic_replay.py`    | Same input → same verified decision          |
 | `03_ir_export.py`               | Portable IR records for replay & audit       |
 | `04_human_confirmation.py`      | Human approval for sensitive actions         |
-| `05_tool_authorization.py`      | External tools require authorization         |
+| `05_tool_authorization.py`      | Tool authorization + capability manifest (sovereignty/egress/consent) |
 | `06_finance_risk_screening.py`  | Trade / risk pre-execution controls          |
 | `08_timeline_audit.py`          | Hash-linked timeline commitments             |
 | `09_multi_run_batch.py`         | Batch decision processing at scale           |

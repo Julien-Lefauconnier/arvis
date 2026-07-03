@@ -1,3 +1,4 @@
+
 # ARVIS — Tool System V1 (Syscall-Aligned)
 
 ## Overview
@@ -245,6 +246,35 @@ Additionally:
 - Syscalls are the ONLY entry point for side-effects
 - Tool execution is strictly post-decision
 - Execution is fully observable and replay-safe
+
+---
+
+## Governance and Capability Manifest
+
+Every tool carries a `ToolSpec` whose fields govern its execution. The
+`ToolPolicyEvaluator` enforces the risk ceiling (`max_risk`) and the
+confirmation requirement (`requires_confirmation`) before a syscall runs; the
+`tool.execute` syscall journals an `ExecutionArtifact` unconditionally, so
+`audit_required` is a declarative flag rather than a journaling gate.
+
+The spec also carries a **capability manifest**: declarative metadata describing
+where a tool's data goes and what gates it, so a host can govern sovereignty,
+egress and consent uniformly across local and external (e.g. MCP) tools.
+
+| Field | Meaning |
+|-------|---------|
+| `provider` | Third-party service identity, or `None` for a local tool. |
+| `data_egress` | Whether the tool sends the caller's data outbound. |
+| `data_class` | Host-defined sensitivity of the data handled. |
+| `required_consent` | Opaque consent key the host must have granted. |
+| `reversible` | Whether the effect can be undone. |
+
+The derived `crosses_trust_boundary` property (`provider is not None`) separates
+sovereign tools from connected ones. ARVIS does not interpret the opaque labels
+(`provider`, `data_class`, `required_consent`); a host maps them onto its consent
+system, data taxonomy and egress policy. Because governance is read from the
+manifest rather than hard-coded per tool, adding a new local or external tool is
+a declaration, not a policy change.
 
 ---
 
