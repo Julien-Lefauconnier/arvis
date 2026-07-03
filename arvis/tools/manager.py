@@ -3,6 +3,7 @@
 from typing import Any
 
 from arvis.adapters.tools.authorization import ToolAuthorizationDecision
+from arvis.adapters.tools.gates import ConsentGate, EgressGate
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.errors.tool_runtime import ToolAuthorizationError
@@ -30,9 +31,14 @@ class ToolManager:
         self,
         registry: ToolRegistry,
         executor: ToolExecutor,
+        *,
+        consent_gate: ConsentGate | None = None,
+        egress_gate: EgressGate | None = None,
     ) -> None:
         self.registry = registry
         self.executor = executor
+        self._consent_gate = consent_gate
+        self._egress_gate = egress_gate
 
     def run(self, result: Any, ctx: Any) -> ToolResult | None:
         if result is None or ctx is None:
@@ -77,8 +83,17 @@ class ToolManager:
                 allowed=True,
                 reason="forced_execution",
             )
-        else:
+        elif self._consent_gate is None and self._egress_gate is None:
+            # No gates configured: call the evaluator with its base signature,
+            # so any host or test that replaces evaluate() stays compatible.
             policy = ToolPolicyEvaluator.evaluate(invocation, self.registry)
+        else:
+            policy = ToolPolicyEvaluator.evaluate(
+                invocation,
+                self.registry,
+                consent_gate=self._consent_gate,
+                egress_gate=self._egress_gate,
+            )
 
         if not policy.allowed:
             error = ToolAuthorizationError(policy.reason or "tool_policy_denied")
