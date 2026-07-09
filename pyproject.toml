@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "arvis"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Cognitive Operating System kernel for trustworthy AI systems"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -70,6 +74,9 @@ Changelog = "https://github.com/Julien-Lefauconnier/arvis/releases"
 
 [tool.setuptools.packages.find]
 include = ["arvis*"]
+
+[tool.setuptools.package-data]
+arvis = ["py.typed"]
 
 [tool.mypy]
 strict = true

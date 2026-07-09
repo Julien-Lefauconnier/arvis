@@ -91,3 +91,38 @@ jobs:
 
       - name: Run examples smoke (stable examples)
         run: bash scripts/run_examples_smoke.sh
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install build tooling
+        run: |
+          pip install --upgrade pip
+          pip install build twine
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - name: Twine metadata check
+        run: twine check dist/*
+
+      - name: Verify py.typed ships in the wheel
+        run: python -c "import glob, zipfile; w = glob.glob('dist/*.whl')[0]; assert 'arvis/py.typed' in zipfile.ZipFile(w).namelist(), 'py.typed missing from wheel'; print('py.typed present in', w)"
+
+      - name: Install built wheel in a clean env and smoke-import
+        run: |
+          python -m venv /tmp/wheelenv
+          /tmp/wheelenv/bin/pip install --upgrade pip
+          /tmp/wheelenv/bin/pip install "$(ls dist/*.whl)"
+          cd /tmp
+          /tmp/wheelenv/bin/python -c "import arvis; print('arvis', arvis.__version__); from arvis import ArvisEngine, CognitiveOS, CognitiveOSConfig; print('public API import OK')"

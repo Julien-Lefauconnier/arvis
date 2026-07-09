@@ -9,6 +9,8 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a2] - 2026-07-09
+
 ### Removed
 
 - Unused kernel key-value memory substrate (`kernel_core/memory/*`, `memory.*`
@@ -18,6 +20,13 @@ versioning during the alpha.
   
 ### Added
 
+- **Packaging and typing.** Declared `[build-system]` (setuptools +
+  `setuptools.build_meta`); ship a PEP 561 `py.typed` marker so downstream type
+  checkers (starting with veramem) see arvis as a typed package; expose the
+  top-level `arvis.__version__`, single-sourced from the installed package
+  metadata; add a CI `build` job that produces the wheel and sdist, runs
+  `twine check`, asserts `py.typed` is present in the wheel, and smoke-imports
+  the built wheel in a clean virtual environment. First tag-consumable release.
 - Capability manifest on `ToolSpec`: declarative governance metadata so a host
   can govern sovereignty, egress and consent uniformly across local and external
   (e.g. MCP) tools. New fields: `provider` (third-party identity), `data_egress`

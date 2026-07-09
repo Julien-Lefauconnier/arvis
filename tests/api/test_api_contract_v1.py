@@ -93,3 +93,12 @@ def test_fingerprint_matches_contract():
     expected_hash = hashlib.sha256(expected.encode()).hexdigest()
 
     assert compute_api_fingerprint() == expected_hash
+
+
+def test_version_is_exposed_and_single_sourced():
+    import arvis
+    from arvis.api.version import PACKAGE_VERSION
+
+    assert isinstance(arvis.__version__, str)
+    assert arvis.__version__
+    assert arvis.__version__ == PACKAGE_VERSION
