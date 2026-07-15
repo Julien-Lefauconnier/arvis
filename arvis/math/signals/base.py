@@ -53,7 +53,7 @@ class BaseSignal:
     def __eq__(self, other: object) -> bool:
         try:
             return self.value == float(other)  # type: ignore[arg-type]
-        except Exception:
+        except Exception:  # arvis-broad: __eq__ total over arbitrary operands
             return False
 
     # -----------------------------------------

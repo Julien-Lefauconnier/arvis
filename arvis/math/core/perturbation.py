@@ -41,5 +41,5 @@ def compute_perturbation(ctx: Any) -> PerturbationSnapshot | None:
             symbolic=symbolic,
         )
 
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return None

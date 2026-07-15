@@ -16,7 +16,7 @@ DEFAULT_RISK_CALIBRATION: dict[str, tuple[float, float]] = {
 def clamp01(x: float) -> float:
     try:
         v = float(x)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return 0.0
     if v < 0.0:
         return 0.0

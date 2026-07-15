@@ -30,7 +30,7 @@ def switching_lhs(runtime: SwitchingRuntime | None, params: SwitchingParams) -> 
 
     try:
         tau_d = max(float(runtime.dwell_time()), 1e-6)
-    except Exception:
+    except Exception:  # arvis-broad: fail-soft runtime probe
         tau_d = 1e-6
 
     J = max(params.J, 1e-6)

@@ -43,7 +43,7 @@ class PiOperator:
         delta_v = getattr(ctx, "_dv", 0.0) if ctx is not None else 0.0
         try:
             dv = float(delta_v)
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             dv = 0.0
 
         # If system diverges → increase contraction

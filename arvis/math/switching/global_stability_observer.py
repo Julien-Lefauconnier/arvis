@@ -72,7 +72,7 @@ class GlobalStabilityObserver:
 
         try:
             tau_d = float(runtime.dwell_time())
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft stability observer
             tau_d = 0.0
 
         k_eff = kappa_eff(params)
@@ -86,7 +86,7 @@ class GlobalStabilityObserver:
         try:
             self._W_window.append(float(W))
             self._switch_window.append(N)
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft stability observer
             pass
 
         # Local anchor over the current window
@@ -103,7 +103,7 @@ class GlobalStabilityObserver:
                 N_local = max(self._switch_window[-1] - self._switch_window[0], 0)
             else:
                 N_local = 0
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft stability observer
             W_anchor = W
             N_local = 0
             dt_local = 0
@@ -118,7 +118,7 @@ class GlobalStabilityObserver:
                     * (one_minus_k ** max(dt_local - N_local, 0))
                     * W_anchor
                 )
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft stability observer
             W_bound = None
 
         ratio = None
@@ -147,8 +147,7 @@ class GlobalStabilityObserver:
                 adaptive_margin = adaptive.margin
                 adaptive_regime = adaptive.regime
 
-            except Exception:
-                # fail-soft: never break stability observer
+            except Exception:  # arvis-broad: fail-soft adaptive update
                 adaptive_kappa = None
                 adaptive_margin = None
                 adaptive_regime = None
@@ -167,7 +166,7 @@ class GlobalStabilityObserver:
                         adaptive_regime = "stable"
                     else:
                         adaptive_regime = "critical"
-            except Exception:
+            except Exception:  # arvis-broad: fail-soft stability observer
                 adaptive_kappa = None
                 adaptive_margin = None
                 adaptive_regime = None
@@ -185,7 +184,7 @@ class GlobalStabilityObserver:
             try:
                 kappa_gap = float(adaptive_kappa - k_eff)
                 kappa_violation = kappa_gap > 0.0
-            except Exception:
+            except Exception:  # arvis-broad: fail-soft stability observer
                 kappa_gap = None
                 kappa_violation = False
 

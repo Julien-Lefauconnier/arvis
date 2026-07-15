@@ -51,12 +51,12 @@ MARKER = "# arvis-broad:"
 
 # Zones fully classified by the A1 campaign (ratchet tooth 1).
 TREATED_ZONES = frozenset(
-    {"adapters", "api", "ir", "kernel_core", "telemetry", "tools"}
+    {"adapters", "api", "ir", "kernel_core", "math", "stability", "telemetry", "tools"}
 )
 
 # Non-compliant handlers tolerated in the not-yet-treated zones
 # (ratchet tooth 2). Lower this with every A1 lot; target is 0.
-UNTREATED_CEILING = 102
+UNTREATED_CEILING = 82
 
 
 def _catches_broad(handler: ast.ExceptHandler) -> bool:

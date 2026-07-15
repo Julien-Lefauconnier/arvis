@@ -30,7 +30,7 @@ class StabilityStateProjector:
                 cur = float(stab.get("current_changes", 0.0))
                 mx = float(stab.get("max_changes", 0.0))
                 budget_used = budget_ratio01(cur, mx)
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             budget_used = 0.0
 
         # -------------------------
@@ -38,7 +38,7 @@ class StabilityStateProjector:
         # -------------------------
         try:
             risk = clamp01(float(state.collapse_risk))
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OverflowError):
             risk = 0.0
 
         # -------------------------
@@ -46,7 +46,7 @@ class StabilityStateProjector:
         # -------------------------
         try:
             uncertainty = clamp01(1.0 - float(state.confidence))
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OverflowError):
             uncertainty = 0.0
 
         # -------------------------
@@ -54,7 +54,7 @@ class StabilityStateProjector:
         # -------------------------
         try:
             governance = clamp01(float(state.drift_score))
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OverflowError):
             governance = 0.0
 
         return LyapunovState(

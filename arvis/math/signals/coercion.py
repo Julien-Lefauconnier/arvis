@@ -48,7 +48,7 @@ def to_float(value: Any, default: float = 0.0) -> float:
             return float(value)
 
         return float(value)
-    except Exception:
+    except Exception:  # arvis-broad: total coercion primitive
         return float(default)
 
 

@@ -108,7 +108,7 @@ class MultiHorizonPredictiveObserver:
         # slope estimate (mean signed delta)
         try:
             slope = sum(deltas) / max(1, len(deltas))
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             slope = 0.0
 
         short_h, med_h, long_h = self.params.horizons

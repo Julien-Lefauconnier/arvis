@@ -94,14 +94,14 @@ class PredictiveStabilityObserver:
         try:
             for i in range(1, len(self._values)):
                 deltas.append(float(self._values[i] - self._values[i - 1]))
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             deltas = []
 
         # slope estimate (mean signed delta)
         slope = 0.0
         try:
             slope = sum(deltas) / max(1, len(deltas))
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             slope = 0.0
 
         # prediction
