@@ -84,7 +84,7 @@ class ZipIngestService:
                 zip_root=zip_root,
             )
 
-        except Exception as exc:
+        except Exception as exc:  # arvis-broad: ingest validation boundary
             return ZipIngestDecision(
                 status="rejected",
                 reason=str(exc),

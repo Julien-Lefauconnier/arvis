@@ -138,7 +138,7 @@ class ZipExecutor:
 
             imported_files.append(zip_node.name)
 
-        except Exception:
+        except Exception:  # arvis-broad: per-entry isolation of the batch import
             skipped_files.append(
                 {"name": zip_node.name, "reason": "content_import_failed"}
             )

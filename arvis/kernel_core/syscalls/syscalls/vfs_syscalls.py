@@ -130,7 +130,7 @@ def _item_owner_resolver(
                 item = vfs.get_item(user_id=user_id, item_id=reference)
                 owner_id = item.owner_id
                 organization_id = item.organization_id
-            except Exception:
+            except Exception:  # arvis-broad: best-effort owner resolution
                 owner_id = user_id
                 organization_id = None
 
