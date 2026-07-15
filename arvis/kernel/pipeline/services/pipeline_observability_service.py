@@ -131,6 +131,5 @@ class PipelineObservabilityService:
                 symbolic_features = obs.get("symbolic_features")
                 if symbolic_features is not None:
                     sink.emit(symbolic_features_event(symbolic_features))
-            except Exception:
-                # Telemetry must never affect a run.
+            except Exception:  # arvis-broad: telemetry must never affect a run
                 return

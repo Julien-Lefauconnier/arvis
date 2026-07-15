@@ -229,13 +229,13 @@ class GateObserver:
             if w_current is not None and delta_w is not None:
                 denom = max(abs(w_current), 1e-6)
                 disturbance["projection_disturbance"] = float(abs(delta_w) / denom)
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             pass
 
         try:
             if not switching_safe:
                 disturbance["switching_disturbance"] = True
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft gate observer
             pass
 
         if adaptive_metrics and adaptive_metrics.margin is not None:

@@ -72,7 +72,7 @@ class ProjectionDomain:
         if self.custom_validator is not None:
             try:
                 checks["custom"] = self.custom_validator(projected)
-            except Exception:
+            except Exception:  # arvis-broad: custom validator isolation
                 checks["custom"] = False
 
         is_valid = all(checks.values()) if checks else True

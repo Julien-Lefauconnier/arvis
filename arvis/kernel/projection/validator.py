@@ -69,7 +69,7 @@ class ProjectionValidator:
                         delta += abs(float(current) - float(previous))
                 local_lipschitz = delta
                 lipschitz_ok = delta <= self.lipschitz_threshold
-            except Exception:
+            except (AttributeError, TypeError, ValueError, OverflowError):
                 lipschitz_ok = False
 
         # --- noise robustness (placeholder simple) ---
@@ -106,7 +106,7 @@ class ProjectionValidator:
                 else:
                     checks_detail["lyapunov_signal_available"] = False
                     lyapunov_ok = True
-            except Exception:
+            except (TypeError, ValueError, OverflowError):
                 lyapunov_ok = False
                 checks_detail["lyapunov_check_error"] = False
 
