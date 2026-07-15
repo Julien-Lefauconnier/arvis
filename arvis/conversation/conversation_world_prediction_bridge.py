@@ -38,5 +38,5 @@ class ConversationWorldPredictionBridge:
                 None,
             )
 
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft prediction bridge
             pass

@@ -30,7 +30,7 @@ class ConversationMemoryBridge:
                 if user_id is not None:
                     snapshot = service.get_snapshot(user_id=user_id)
                     context.memory_snapshot = snapshot  # keep backward compatibility
-            except Exception:
+            except Exception:  # arvis-broad: fail-soft memory bridge
                 snapshot = None
 
         # --------------------------------------------
@@ -91,6 +91,5 @@ class ConversationMemoryBridge:
             # runtime / tests / API
             context.long_memory = long_memory
 
-        except Exception:
-            # ZKCS: never break pipeline because of memory
+        except Exception:  # arvis-broad: ZKCS, never break pipeline on memory
             pass

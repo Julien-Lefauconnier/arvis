@@ -93,7 +93,7 @@ class ConversationCognitiveBridge:
 
                 context.state.world_prediction = world
 
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft signal propagation
             pass
 
         return snapshot

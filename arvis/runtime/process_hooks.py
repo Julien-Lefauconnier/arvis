@@ -120,8 +120,7 @@ class ProcessHookManager:
                         "error_type": type(exc).__name__,
                     },
                 )
-            except Exception:
-                # Hook failure reporting must never destabilize runtime execution.
+            except Exception:  # arvis-broad: hook reporting is fail-soft
                 pass
 
         try:
@@ -133,6 +132,5 @@ class ProcessHookManager:
                     "hook": hook_name,
                 },
             )
-        except Exception:
-            # Error attachment is best-effort for hook boundaries.
+        except Exception:  # arvis-broad: best-effort error attachment
             pass

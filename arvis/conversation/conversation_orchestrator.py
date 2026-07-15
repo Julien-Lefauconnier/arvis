@@ -80,7 +80,7 @@ class ConversationOrchestrator:
             feedback = ConversationFeedbackSignal.build(context.state) or {}
             context.state.signals["feedback"] = feedback
             ConversationAdaptiveController.adapt(cast(_StateProtocol, context.state))
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft feedback adaptation
             pass
 
     @staticmethod
@@ -98,7 +98,7 @@ class ConversationOrchestrator:
         if getattr(context, "control_state", None):
             try:
                 context.state.cognitive_snapshot = context.control_state
-            except Exception:
+            except (AttributeError, TypeError):
                 pass
 
         # Ensure snapshot is accessible from state
@@ -165,7 +165,7 @@ class ConversationOrchestrator:
                     context=context,
                     strategy=strategy,
                 )
-            except Exception:
+            except Exception:  # arvis-broad: memory write hook isolation
                 _log.warning("memory_write_hook.failed", exc_info=True)
 
         # ------------------------------------------------

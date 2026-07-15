@@ -35,7 +35,7 @@ class StrategyField:
                         0.25 * (1.0 - float(collapse_risk)),
                     ),
                 )
-            except Exception:
+            except (TypeError, ValueError, OverflowError):
                 pass
 
         for s in self.distribution:

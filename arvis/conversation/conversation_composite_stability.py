@@ -38,5 +38,5 @@ class ConversationCompositeStability:
                     symbolic_next=symbolic_next,
                 )
             )
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             return 0.0

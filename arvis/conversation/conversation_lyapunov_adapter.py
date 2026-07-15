@@ -20,5 +20,5 @@ class ConversationLyapunovAdapter:
 
         try:
             return LyapunovVerdict(verdict)
-        except Exception:
+        except ValueError:
             return None
