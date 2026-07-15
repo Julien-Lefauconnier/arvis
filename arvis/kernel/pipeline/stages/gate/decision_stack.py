@@ -62,7 +62,7 @@ def _get_gate_stage_hook(name: str) -> Callable[..., Any] | None:
     try:
         module = importlib.import_module("arvis.kernel.pipeline.stages.gate_stage")
         return getattr(module, name, None)
-    except Exception:
+    except ImportError:
         return None
 
 

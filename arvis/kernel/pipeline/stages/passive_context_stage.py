@@ -74,7 +74,7 @@ class PassiveContextStage:
                 )
             else:
                 ctx.governance = None
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft passive enrichment
             ctx.governance = None
 
         # -----------------------------------------------------
@@ -82,7 +82,7 @@ class PassiveContextStage:
         # -----------------------------------------------------
         try:
             ctx.pending_actions = []
-        except Exception:
+        except (AttributeError, TypeError):
             ctx.pending_actions = None
 
         # -----------------------------------------------------
@@ -90,7 +90,7 @@ class PassiveContextStage:
         # -----------------------------------------------------
         try:
             ctx.events = []
-        except Exception:
+        except (AttributeError, TypeError):
             ctx.events = None
 
         # -----------------------------------------------------
@@ -116,7 +116,7 @@ class PassiveContextStage:
 
             ctx.coherence_policy = [result] if result else []
 
-        except Exception:
+        except Exception:  # arvis-broad: fail-soft passive enrichment
             ctx.coherence_policy = None
 
         # -----------------------------------------------------

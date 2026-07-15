@@ -362,7 +362,7 @@ def compute_composite_recommendation(
                 composite_recommendation = "strong_increase"
             else:
                 composite_recommendation = "stable"
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         composite_recommendation = None
     return composite_recommendation
 

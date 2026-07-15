@@ -108,7 +108,7 @@ def _exploration_scalar(value: Any) -> float:
     if hasattr(value, "exploration_factor"):
         try:
             return float(value.exploration_factor)
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OverflowError):
             return 1.0
 
     return 1.0
@@ -145,7 +145,7 @@ def _scale_exploration(value: Any, factor: float) -> Any:
                 value,
                 exploration_factor=float(value.exploration_factor) * factor,
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OverflowError):
             return value
 
     return value

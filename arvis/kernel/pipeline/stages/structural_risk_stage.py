@@ -18,7 +18,7 @@ class StructuralRiskStage:
             try:
                 dz = cur_slow.as_vector() - prev_slow.as_vector()
                 slow_divergence = float(np.dot(dz, dz))
-            except Exception:
+            except (TypeError, ValueError, OverflowError):
                 slow_divergence = None
 
         # -----------------------------------------

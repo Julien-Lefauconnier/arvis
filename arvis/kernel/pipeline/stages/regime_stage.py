@@ -22,7 +22,7 @@ class RegimeStage:
                 from arvis.math.switching.switching_runtime import SwitchingRuntime
 
                 runtime = SwitchingRuntime()
-            except Exception:
+            except ImportError:
                 runtime = None
 
         if switching_ctx is not None:
@@ -47,7 +47,7 @@ class RegimeStage:
                 regime_ctx.regime,
                 regime_ctx.regime_confidence,
             )
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             theoretical_regime = None
 
         regime_ctx.theoretical_regime = theoretical_regime
@@ -61,5 +61,5 @@ class RegimeStage:
         ):
             try:
                 switching_ctx.switching_runtime.update(regime_ctx.regime)
-            except Exception:
+            except Exception:  # arvis-broad: fail-soft runtime probe
                 pass

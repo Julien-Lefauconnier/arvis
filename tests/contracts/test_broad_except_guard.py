@@ -48,6 +48,8 @@ SANCTIONED_CALLS = {
     # canonical boundary adapters (arvis/errors/boundaries/)
     "capture_pipeline_degraded_failure",
     "capture_observability_failure",
+    # mid-trace degradation attachment (ErrorManager.attach inside)
+    "_attach_mid_trace_failure",
     # taxonomy entry point (ErrorManager.normalize / provider fallback)
     "normalize_error",
 }
@@ -62,6 +64,7 @@ TREATED_ZONES = frozenset(
         "cognition",
         "conversation",
         "ir",
+        "kernel",
         "kernel_core",
         "math",
         "runtime",
@@ -73,7 +76,7 @@ TREATED_ZONES = frozenset(
 
 # Non-compliant handlers tolerated in the not-yet-treated zones
 # (ratchet tooth 2). Lower this with every A1 lot; target is 0.
-UNTREATED_CEILING = 18
+UNTREATED_CEILING = 0
 
 
 def _catches_broad(handler: ast.ExceptHandler) -> bool:

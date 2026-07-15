@@ -57,7 +57,7 @@ class ControlStage:
             ctx.scientific.core.uncertainty_intent = map_uncertainty_to_intent(
                 ctx.scientific.core.uncertainty
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OverflowError):
             ctx.scientific.core.uncertainty_intent = None
 
         # -----------------------------------------
@@ -138,7 +138,7 @@ class ControlStage:
             else:
                 ctx.memory_constraints_active = False
 
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OverflowError):
             ctx.memory_mode = None
             ctx.memory_constraints_active = False
 
@@ -193,8 +193,7 @@ class ControlStage:
                 # Optional: enrich context for downstream stages
                 ctx.adaptive_control = ctrl
 
-            except Exception:
-                # fail-soft: never break control stage
+            except Exception:  # arvis-broad: fail-soft control stage
                 ctx.adaptive_control = None
         else:
             ctx.adaptive_control = None
