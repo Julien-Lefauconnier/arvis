@@ -9,6 +9,46 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a3] - 2026-07-15
+
+### Added
+
+- **Broad-except classification guard**
+  (`tests/contracts/test_broad_except_guard.py`). Every broad handler in
+  `arvis/` must now re-raise or build a typed error (C1), route through the
+  sanctioned error machinery (C2: `ErrorManager` methods, `normalize_error`,
+  the syscall failure helpers, `_attach_degraded`, the canonical boundary
+  adapters of `arvis/errors/boundaries/`, `_attach_mid_trace_failure`), or
+  carry a normalized `# arvis-broad: <reason>` justification marker (C3).
+  The zone ratchet is closed at ceiling 0: no zone is exempt.
+- **Context facade shrink ratchet**
+  (`tests/contracts/test_context_facade_ratchet.py`). Freezes the 63
+  compatibility properties of `CognitivePipelineContext`: new code must use
+  the sub-contexts directly, and the facade can only shrink until the
+  callsite migration tracked in-code as TODO(arvis-projection-v2).
+
+### Changed
+
+- 37 broad `except Exception` handlers narrowed to their actual failure
+  contracts (numeric coercion triples/quadruples, `ImportError` on designed
+  import fallbacks, `ValueError` on enum construction,
+  `AttributeError`/`TypeError` on duck-typed assignment guards) across the
+  api, adapters, ir, telemetry, math, stability, conversation, runtime,
+  cognition, kernel_core and kernel zones.
+- Around 40 deliberate fail-soft boundaries now carry the machine-checkable
+  `# arvis-broad:` marker (total coercion primitives, observe-only
+  telemetry, defensive view enrichment, replay boundary, the global
+  stability observer, the conversation bridges, hook isolation,
+  per-rule/per-entry isolation, best-effort owner resolution).
+
+### Removed
+
+- Five dead compatibility aliases on `CognitivePipelineContext`
+  (`control_runtime`, `quadratic_lyap_snapshot`, `runtime_projection`,
+  `structured_projection`, `use_paper_slow_dynamics`), each verified to
+  have zero attribute access and zero string/getattr access across arvis,
+  tests and compliance (898 -> 854 lines).
+
 ## [0.1.0a2] - 2026-07-09
 
 ### Removed
