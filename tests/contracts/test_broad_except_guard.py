@@ -43,16 +43,20 @@ SANCTIONED_CALLS = {
     "failure",
     # runtime hook isolation
     "_emit_error",
+    # taxonomy entry point (ErrorManager.normalize / provider fallback)
+    "normalize_error",
 }
 
 MARKER = "# arvis-broad:"
 
 # Zones fully classified by the A1 campaign (ratchet tooth 1).
-TREATED_ZONES = frozenset({"kernel_core"})
+TREATED_ZONES = frozenset(
+    {"adapters", "api", "ir", "kernel_core", "telemetry", "tools"}
+)
 
 # Non-compliant handlers tolerated in the not-yet-treated zones
 # (ratchet tooth 2). Lower this with every A1 lot; target is 0.
-UNTREATED_CEILING = 113
+UNTREATED_CEILING = 102
 
 
 def _catches_broad(handler: ast.ExceptHandler) -> bool:

@@ -24,7 +24,7 @@ def _coerce_float(value: object) -> float | None:
     if callable(level):
         try:
             return float(level())
-        except Exception:
+        except Exception:  # arvis-broad: observe-only telemetry probe
             return None
     return None
 

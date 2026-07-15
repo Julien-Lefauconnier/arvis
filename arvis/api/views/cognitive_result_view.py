@@ -73,7 +73,7 @@ class CognitiveResultView:
                 ensure_ascii=True,
             ).encode("utf-8")
             ir_hash = sha256(ir_bytes).hexdigest()
-        except Exception:
+        except (TypeError, ValueError):
             ir_hash = None
 
         if not isinstance(timeline_journal, SignalJournal):
@@ -88,7 +88,7 @@ class CognitiveResultView:
 
                 commitment = TimelineCommitment.from_snapshot(timeline_snapshot)
                 timeline_commitment = commitment.commitment
-            except Exception:
+            except Exception:  # arvis-broad: defensive view enrichment
                 timeline_commitment = None
 
         if timeline_commitment and ir_hash:
@@ -96,7 +96,7 @@ class CognitiveResultView:
                 global_commitment = sha256(
                     (timeline_commitment + ir_hash).encode("utf-8")
                 ).hexdigest()
-            except Exception:
+            except Exception:  # arvis-broad: defensive view enrichment
                 global_commitment = None
         else:
             global_commitment = None
@@ -111,7 +111,7 @@ class CognitiveResultView:
             )
             snapshot = typed_get_snapshot(state)
             reflexive_payload = snapshot.to_dict()
-        except Exception:
+        except Exception:  # arvis-broad: optional reflexive enrichment
             reflexive_payload = None
 
         return CognitiveResultView(

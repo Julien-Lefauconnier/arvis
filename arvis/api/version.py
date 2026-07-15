@@ -55,7 +55,7 @@ def compute_public_api_fingerprint() -> str:
         if not exported:
             raise RuntimeError
         payload = "|".join(sorted(exported))
-    except Exception:
+    except (ImportError, RuntimeError):
         payload = f"bootstrap:{PACKAGE_VERSION}:{API_VERSION}"
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
@@ -72,7 +72,7 @@ def compute_api_fingerprint() -> str:
         if not exported:
             raise RuntimeError
         payload = "|".join(sorted(exported))
-    except Exception:
+    except (ImportError, RuntimeError):
         payload = f"bootstrap:{PACKAGE_VERSION}:{API_VERSION}"
     return hashlib.sha256(payload.encode()).hexdigest()
 

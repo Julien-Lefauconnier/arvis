@@ -72,7 +72,7 @@ class ReplayValidator:
                 reason=None,
             )
 
-        except Exception as e:
+        except Exception as e:  # arvis-broad: replay boundary, failure is a result
             return ReplayResult(
                 is_deterministic=False,
                 original_hash="",

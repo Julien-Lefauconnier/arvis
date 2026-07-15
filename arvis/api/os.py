@@ -118,8 +118,7 @@ class CognitiveOS(CognitiveOSInternals):
             return
         try:
             self.telemetry_sink.emit(event)
-        except Exception:
-            # Telemetry is observe-only; never propagate sink failures.
+        except Exception:  # arvis-broad: observe-only telemetry sink
             return
 
     # -------------------------------------------------
