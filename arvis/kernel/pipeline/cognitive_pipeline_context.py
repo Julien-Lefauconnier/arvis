@@ -256,26 +256,6 @@ class CognitivePipelineContext:
         default_factory=PipelineProjectionContext,
     )
     # -----------------------------------------------------
-    # Projection compatibility layer
-    # -----------------------------------------------------
-
-    @property
-    def runtime_projection(self) -> Any | None:
-        return self.projection.runtime_projection
-
-    @runtime_projection.setter
-    def runtime_projection(self, value: Any | None) -> None:
-        self.projection.runtime_projection = value
-
-    @property
-    def structured_projection(self) -> Any | None:
-        return self.projection.structured_projection
-
-    @structured_projection.setter
-    def structured_projection(self, value: Any | None) -> None:
-        self.projection.structured_projection = value
-
-    # -----------------------------------------------------
     # Legacy aliases
     # TODO(arvis-projection-v2):
     # remove once all callsites migrated
@@ -743,14 +723,6 @@ class CognitivePipelineContext:
         self.scientific.regime_state.theoretical_regime = value
 
     @property
-    def quadratic_lyap_snapshot(self) -> Any | None:
-        return self.scientific.lyapunov.quadratic_lyap_snapshot
-
-    @quadratic_lyap_snapshot.setter
-    def quadratic_lyap_snapshot(self, value: Any | None) -> None:
-        self.scientific.lyapunov.quadratic_lyap_snapshot = value
-
-    @property
     def quadratic_comparability(self) -> Any | None:
         return self.scientific.lyapunov.quadratic_comparability
 
@@ -814,14 +786,6 @@ class CognitivePipelineContext:
     def validity_envelope(self, value: Any | None) -> None:
         self.scientific.adaptive.validity_envelope = value
 
-    @property
-    def use_paper_slow_dynamics(self) -> bool:
-        return self.scientific.adaptive.use_paper_slow_dynamics
-
-    @use_paper_slow_dynamics.setter
-    def use_paper_slow_dynamics(self, value: bool) -> None:
-        self.scientific.adaptive.use_paper_slow_dynamics = value
-
     # -----------------------------------------------------
     # Error compatibility layer
     # -----------------------------------------------------
@@ -833,14 +797,6 @@ class CognitivePipelineContext:
     # -------------------------
     # Runtime
     # -------------------------
-    @property
-    def control_runtime(self) -> Any | None:
-        return self.runtime_bindings.control_runtime
-
-    @control_runtime.setter
-    def control_runtime(self, value: Any | None) -> None:
-        self.runtime_bindings.control_runtime = value
-
     @property
     def _tool_success(self) -> bool | None:
         return self.tooling.tool_success
