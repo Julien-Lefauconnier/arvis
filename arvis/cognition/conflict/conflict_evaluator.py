@@ -40,7 +40,7 @@ class ConflictEvaluator:
                     new_results = rule(results, conflict)
                     if new_results is not None:
                         results = new_results
-                except Exception:
+                except Exception:  # arvis-broad: per-rule isolation
                     continue
 
         return results

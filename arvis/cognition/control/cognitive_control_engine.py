@@ -121,7 +121,7 @@ class CognitiveControlEngine:
     def _budget_ratio(budget: Any) -> float:
         try:
             return float(budget.current_changes / max(1, budget.max_changes))
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OverflowError):
             return 0.0
 
     @staticmethod

@@ -54,7 +54,7 @@ class ObservabilityBuilder:
                 return 0.0
             try:
                 return float(x)
-            except Exception:
+            except (TypeError, ValueError, OverflowError):
                 return float(getattr(x, "value", 0.0))
 
         current_lyap = cur_lyap(ctx)
@@ -165,9 +165,9 @@ class ObservabilityBuilder:
         if hasattr(x, "level"):
             try:
                 return float(x.level())
-            except Exception:
+            except Exception:  # arvis-broad: fail-soft observability probe
                 return default
         try:
             return float(x)
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             return default

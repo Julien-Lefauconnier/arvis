@@ -21,7 +21,7 @@ def extract_conflicts_from_bundle(bundle: Any) -> list[ConflictSignal]:
         try:
             decision_str = str(decision_reason)
             explanation_str = str(explanation)
-        except Exception:
+        except Exception:  # arvis-broad: total str coercion
             return conflicts
 
         if decision_str and decision_str not in explanation_str:

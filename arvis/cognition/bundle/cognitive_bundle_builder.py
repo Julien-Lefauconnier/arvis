@@ -54,7 +54,7 @@ class CognitiveBundleBuilder:
                     "memory_pressure": float(memory.get("memory_pressure", 0.0) or 0.0),
                     "preference_count": int(len(memory.get("preferences", {}))),
                 }
-            except Exception:
+            except (TypeError, ValueError, OverflowError):
                 memory_features = {}
 
         if introspection is None:

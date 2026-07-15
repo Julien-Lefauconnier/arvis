@@ -43,6 +43,8 @@ SANCTIONED_CALLS = {
     "failure",
     # runtime hook isolation
     "_emit_error",
+    # control engine degradation attachment (ErrorManager.attach inside)
+    "_attach_degraded",
     # taxonomy entry point (ErrorManager.normalize / provider fallback)
     "normalize_error",
 }
@@ -54,6 +56,7 @@ TREATED_ZONES = frozenset(
     {
         "adapters",
         "api",
+        "cognition",
         "conversation",
         "ir",
         "kernel_core",
@@ -67,7 +70,7 @@ TREATED_ZONES = frozenset(
 
 # Non-compliant handlers tolerated in the not-yet-treated zones
 # (ratchet tooth 2). Lower this with every A1 lot; target is 0.
-UNTREATED_CEILING = 70
+UNTREATED_CEILING = 42
 
 
 def _catches_broad(handler: ast.ExceptHandler) -> bool:

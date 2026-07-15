@@ -40,7 +40,7 @@ class CoherencePolicy:
         try:
             current = int(budget.current_changes)
             maximum = int(budget.max_changes)
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OverflowError):
             return None
 
         if current > maximum:

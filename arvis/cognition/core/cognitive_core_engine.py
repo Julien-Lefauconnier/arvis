@@ -81,7 +81,7 @@ class CognitiveCoreEngine:
                             "uncertainty_drift", None
                         ),
                     }
-        except Exception:
+        except Exception:  # arvis-broad: optional reflexive enrichment
             reflexive_state = None
 
         return CognitiveCoreResult(
