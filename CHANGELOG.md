@@ -9,6 +9,94 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a5] - 2026-07-16
+
+Consolidation release (campaign 2): closes the composition-scope
+findings of the 0.1.0a4 external audit around one invariant: the
+enforcement phase of the gate stack is monotone
+(ALLOW < REQUIRE_CONFIRMATION < ABSTAIN), and every sanctioned
+exception is provenance-checked, traced and bounded.
+
+### Added
+
+- **Canonical verdict order and provenance (F-001 completion)**.
+  `arvis/math/lyapunov/verdict_order.py` (strictness order,
+  `max_strictness`, `is_relaxation`); provenance ledger and
+  `enforce_monotone` guard in the gate trace helpers, wired around six
+  enforcement gates; pipeline-level hypothesis property: the verdict
+  transition trace never contains a relaxation outside the sanctioned,
+  documented channels.
+- **Versioned hard_block severity table (F-003)**
+  (`arvis/math/stability/hard_block_policy.py`): stability reasons map
+  to warning / confirmation / hard block; unknown reasons fail closed;
+  the default table preserves the pre-A5 runtime behaviour and the
+  applied table version is recorded in the trace.
+- **Closed runtime mode set (F-008)** (`arvis/api/runtime_mode.py`,
+  exported from `arvis.api` and the root): LOCAL, TEST, RESEARCH,
+  PRODUCTION; unknown values are refused at configuration time.
+- **Closed PRODUCTION profile (F-002, F-017, F-018, F-019)**.
+  `CognitiveOSConfig.production()` fixes the mode and defaults the
+  audit commitment policy to REQUIRED; production forces
+  `global_stability_action="confirm"` and
+  `switching_envelope_mode="enforce"` on every context, denies a tool
+  declaring `required_consent` or `data_egress` when the matching gate
+  is missing (config gains `consent_gate` / `egress_gate`), and
+  freezes the tool registry automatically at the first run.
+- **Tool effect governance (F-014, F-016, F-020)**. `timeout_seconds`
+  is now a deadline on result acceptance (late result rejected with
+  `ToolTimeoutError`; the effect may still have happened, interruption
+  is a later chantier); automatic retry requires declared idempotence
+  (a side-effectful, non-idempotent effect is never replayed, a
+  missing spec means no automatic retry); declared input schemas are
+  validated before the call and output schemas after it, each with its
+  specific failure status, surfacing structural paths only (ZK).
+- **Version coherence guard** (`tests/api/test_version_coherence.py`):
+  the README Versioning table and the source-checkout fallback must
+  equal `pyproject.toml`. **Runtime lifecycle contract**
+  (`docs/architecture/RUNTIME_LIFECYCLE.md`): instance-per-request,
+  unbounded reused-instance state (documentation side of F-022/F-023).
+
+### Changed
+
+- **Global stability policy is monotone (doctrine amendment)**. Under
+  `action="confirm"`, global instability now hardens ALLOW to
+  REQUIRE_CONFIRMATION (it previously did not), and the
+  ABSTAIN -> REQUIRE_CONFIRMATION reinterpretation only applies to an
+  ABSTAIN produced by the global stability axis itself (provenance
+  checked, unknown provenance fails closed); a foreign veto
+  (projection, kappa, memory, adaptive) is never relaxed. The
+  campaign 1 doctrine of a blanket product transition is amended
+  accordingly. The `gate_policy` confirm branch composes through
+  `max_strictness`.
+- **Fail-closed composition (F-005)**: a fusion failure abstains
+  instead of falling back to the pre-fusion verdict; an unavailable
+  validity envelope abstains; the input-risk gate abstains on
+  exception and only relaxes sparse-projection artifacts (F-006,
+  provenance checked); the PI override trace records applied
+  transitions only.
+- **Switching safety is honest (F-004)**: the hardcoded
+  `effective_switching_safe = True` is replaced by a
+  `switching_envelope_mode` knob ("soft" by default, unknown modes
+  fail closed into enforcement; production sets "enforce").
+- **Runtime configuration (F-007, F-009, F-012)**: `CognitiveOSConfig`
+  is frozen; `force_tool` only selects a tool and execution requires
+  an explicit `force_execution=True` (retries keep executing);
+  `audit_commitment_policy=REQUIRED` with `enable_trace=False` is
+  refused.
+- **One registry**: the runtime and its `ToolManager` now govern the
+  registry the host registered tools on (the runtime previously built
+  its own empty registry and evaluated the tool policy against it).
+- **Reproducible gate tooling**: `ruff==0.14.3`, `mypy==1.19.1`,
+  `pytest==8.4.2` pinned in the dev extras (plugins stay unpinned
+  until the dev lockfile lands); `types-jsonschema` added for the new
+  runtime `jsonschema` use.
+
+### Deferred
+
+- Execution commitment chain (F-010, F-011, F-013, F-021, F-032):
+  campaign 3, targeted at 0.1.0a6.
+- LLM runtime governance (F-024 to F-031): dedicated campaign.
+
 ## [0.1.0a4] - 2026-07-16
 
 Hardening release: the seven kernel-scope findings of the external
