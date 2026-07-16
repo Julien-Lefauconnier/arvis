@@ -79,6 +79,13 @@ class CognitiveOS(CognitiveOSInternals):
     def register_tool(self, tool: Any) -> None:
         self.tool_registry.register(tool)
 
+    def freeze_tools(self) -> str:
+        """Freeze the tool registry after bootstrap (F-004).
+
+        Returns the registry fingerprint for host-side pinning.
+        """
+        return self.tool_registry.freeze()
+
     def list_tools(self) -> list[str]:
         return self.tool_registry.list()
 

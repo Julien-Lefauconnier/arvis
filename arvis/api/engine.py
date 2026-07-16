@@ -118,6 +118,10 @@ class ArvisEngine:
         """Register a tool."""
         self._os.register_tool(tool)
 
+    def freeze_tools(self) -> str:
+        """Freeze the tool registry after bootstrap (F-004)."""
+        return self._os.freeze_tools()
+
     def list_tools(self) -> list[str]:
         """List registered tools."""
         return self._os.list_tools()
