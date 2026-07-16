@@ -63,6 +63,16 @@ def apply_global_stability_policy(
                 },
             ),
         )
+        # F-002: a failing guarantee mechanism can never relax; an
+        # exception inside the gate forces ABSTAIN (fail-closed).
+        record_verdict_transition(
+            ctx,
+            stage=f"{stage_prefix}_fail_closed",
+            before=verdict,
+            after=LyapunovVerdict.ABSTAIN,
+            reason="gate_exception",
+        )
+        return LyapunovVerdict.ABSTAIN
 
     return verdict
 
@@ -86,14 +96,15 @@ def compute_global_stability(ctx: Any, delta_w: float | None) -> bool:
         guard = GlobalStabilityGuard()
         global_safe = guard.check(history)
     except Exception as exc:
-        global_safe = True
+        # F-002: unknown stability is not safe (fail-closed).
+        global_safe = False
         ErrorManager.attach(
             ctx,
             PipelineStageDegradedError(
                 message=str(exc),
                 details={
                     "component": "compute_global_stability",
-                    "fallback": "global_safe=True",
+                    "fallback": "global_safe=False (fail-closed)",
                     "exception_type": type(exc).__name__,
                 },
             ),
@@ -343,6 +354,16 @@ def apply_validity_enforcement(
                 },
             ),
         )
+        # F-002: a failing guarantee mechanism can never relax; an
+        # exception inside the gate forces ABSTAIN (fail-closed).
+        record_verdict_transition(
+            ctx,
+            stage="validity_gate_fail_closed",
+            before=verdict,
+            after=LyapunovVerdict.ABSTAIN,
+            reason="gate_exception",
+        )
+        return LyapunovVerdict.ABSTAIN
     return verdict
 
 

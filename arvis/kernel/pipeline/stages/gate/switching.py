@@ -30,12 +30,13 @@ def compute_switching_safety(ctx: Any, overrides: GateOverrides) -> bool:
                 message=str(exc),
                 details={
                     "component": "compute_switching_safety",
-                    "fallback": "switching_safe=True",
+                    "fallback": "switching_safe=False (fail-closed)",
                     "exception_type": type(exc).__name__,
                 },
             ),
         )
-        switching_safe = True
+        # F-002: unknown switching safety is not safe (fail-closed).
+        switching_safe = False
 
     if overrides.force_safe_switching:
         switching_safe = True

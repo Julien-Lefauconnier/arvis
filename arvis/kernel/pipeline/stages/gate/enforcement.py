@@ -150,6 +150,16 @@ def apply_projection_enforcement(
             exc,
             code="projection_gate_adjustment_failure",
         )
+        # F-002: a failing guarantee mechanism can never relax; an
+        # exception inside the gate forces ABSTAIN (fail-closed).
+        record_verdict_transition(
+            ctx,
+            stage="projection_gate_fail_closed",
+            before=verdict,
+            after=LyapunovVerdict.ABSTAIN,
+            reason="gate_exception",
+        )
+        return LyapunovVerdict.ABSTAIN
     return verdict
 
 
@@ -181,4 +191,14 @@ def apply_kappa_hard_block(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
             exc,
             code="kappa_hard_block_failure",
         )
+        # F-002: a failing guarantee mechanism can never relax; an
+        # exception inside the gate forces ABSTAIN (fail-closed).
+        record_verdict_transition(
+            ctx,
+            stage="kappa_gate_fail_closed",
+            before=verdict,
+            after=LyapunovVerdict.ABSTAIN,
+            reason="gate_exception",
+        )
+        return LyapunovVerdict.ABSTAIN
     return verdict

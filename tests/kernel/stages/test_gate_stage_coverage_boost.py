@@ -391,12 +391,14 @@ def test_global_guard_exception(monkeypatch):
 
     GateStage().run(None, ctx)
 
-    assert ctx.global_stability_safe is True
+    # F-002: guard failure is fail-closed, unknown stability is
+    # unsafe.
+    assert ctx.global_stability_safe is False
     errors = ctx.extra.get("errors", [])
 
     assert any(
         err.get("details", {}).get("component") == "compute_global_stability"
-        and err.get("details", {}).get("fallback") == "global_safe=True"
+        and err.get("details", {}).get("fallback") == "global_safe=False (fail-closed)"
         for err in errors
         if isinstance(err, dict)
     )
