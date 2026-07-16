@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from arvis.api.os import CognitiveOS
+from arvis.api.os import CognitiveOS, CognitiveOSConfig
+from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.tools.base import BaseTool
 
 
@@ -14,16 +15,19 @@ class DummyTool(BaseTool):
 
 
 def test_force_tool_execution_triggers_syscall():
-    os = CognitiveOS()
+    os = CognitiveOS(
+        CognitiveOSConfig(
+            runtime_controls=TrustedRuntimeControls(
+                force_tool="dummy_force",
+                force_execution=True,
+            )
+        )
+    )
     os.register_tool(DummyTool())
 
     result = os.run(
         user_id="u1",
         cognitive_input={},
-        extra={
-            "force_tool": "dummy_force",
-            "_force_execution": True,
-        },
     )
 
     # Force path only matters when a matching tool action exists.
@@ -34,32 +38,38 @@ def test_force_tool_execution_triggers_syscall():
 
 
 def test_force_tool_does_not_crash_without_matching_tool_action():
-    os = CognitiveOS()
+    os = CognitiveOS(
+        CognitiveOSConfig(
+            runtime_controls=TrustedRuntimeControls(
+                force_tool="dummy_force",
+                force_execution=True,
+            )
+        )
+    )
     os.register_tool(DummyTool())
 
     result = os.run(
         user_id="u1",
         cognitive_input={"text": "hello"},
-        extra={
-            "force_tool": "dummy_force",
-            "_force_execution": True,
-        },
     )
 
     assert result is not None
 
 
 def test_no_force_execution_keeps_normal_path():
-    os = CognitiveOS()
+    os = CognitiveOS(
+        CognitiveOSConfig(
+            runtime_controls=TrustedRuntimeControls(
+                force_tool="dummy_force",
+                force_execution=False,
+            )
+        )
+    )
     os.register_tool(DummyTool())
 
     result = os.run(
         user_id="u1",
         cognitive_input={"text": "hello"},
-        extra={
-            "force_tool": "dummy_force",
-            "_force_execution": False,
-        },
     )
 
     assert result is not None

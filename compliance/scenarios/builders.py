@@ -1,6 +1,7 @@
 # compliance/scenarios/builders.py
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.projection.certificate import (
     ProjectionCertificate,
     ProjectionCertificationLevel,
@@ -154,10 +155,12 @@ def build_context_from_yaml(data):
     # -----------------------------------------
     # Optional test overrides
     # -----------------------------------------
-    if data.get("force_safe_switching", False):
-        ctx.extra["force_safe_switching"] = True
-
-    if data.get("force_safe_projection", False):
-        ctx.extra["force_safe_projection"] = True
+    if data.get("force_safe_switching", False) or data.get(
+        "force_safe_projection", False
+    ):
+        ctx.gate_overrides = GateOverrides(
+            force_safe_projection=bool(data.get("force_safe_projection", False)),
+            force_safe_switching=bool(data.get("force_safe_switching", False)),
+        )
 
     return ctx

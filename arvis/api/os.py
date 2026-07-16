@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from arvis.api.os_internals import CognitiveOSInternals
+from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.api.views.cognitive_result_view import CognitiveResultView
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.stability.stability_snapshot import StabilitySnapshot
@@ -33,6 +34,10 @@ class CognitiveOSConfig:
     runtime_mode: str = "local"
     telemetry_sink: TelemetrySink | None = None
     core_model: Any | None = None
+    # F-001: host-only controls injected by composition; never read
+    # from request payloads or ctx.extra. Rejected in the production
+    # runtime profile.
+    runtime_controls: TrustedRuntimeControls | None = None
 
 
 # -----------------------------------------------------
@@ -46,6 +51,14 @@ class CognitiveOS(CognitiveOSInternals):
         pipeline: CognitivePipeline | None = None,
     ):
         self.config = config or CognitiveOSConfig()
+        if (
+            self.config.runtime_controls is not None
+            and self.config.runtime_mode == "production"
+        ):
+            raise ValueError(
+                "TrustedRuntimeControls are not permitted in the "
+                "production runtime profile"
+            )
         self.tool_registry = ToolRegistry()
         self.tool_executor = ToolExecutor(self.tool_registry)
         self.pipeline = pipeline or CognitivePipeline(

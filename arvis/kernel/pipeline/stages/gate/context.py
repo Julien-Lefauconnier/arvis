@@ -21,11 +21,9 @@ def resolve_overrides(ctx: Any) -> GateOverrides:
     if overrides is not None:
         return cast(GateOverrides, overrides)
 
-    extra = getattr(ctx, "extra", {})
-    return GateOverrides(
-        force_safe_projection=extra.get("force_safe_projection", False),
-        force_safe_switching=extra.get("force_safe_switching", False),
-    )
+    # F-001: gate overrides are host-injected first-class context
+    # state; the request-facing extra channel never carries them.
+    return GateOverrides()
 
 
 def _sync_legacy_runtime_mirrors(ctx: Any) -> None:

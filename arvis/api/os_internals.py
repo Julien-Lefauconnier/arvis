@@ -11,6 +11,7 @@ from arvis.cognition.state.cognitive_state import CognitiveState
 from arvis.ir.cognitive_ir import CognitiveIR
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.replay_engine import ReplayEngine
 from arvis.tools.executor import ToolExecutor
 
@@ -46,8 +47,16 @@ class CognitiveOSInternals:
 
         runtime_policy = ctx.runtime_policy
 
-        runtime_policy.force_tool = ctx.extra.get("force_tool")
-        runtime_policy.force_execution = bool(ctx.extra.get("_force_execution", False))
+        # F-001: host controls come from composition (config), never
+        # from the request-facing extra channel.
+        controls = getattr(self.config, "runtime_controls", None)
+        if controls is not None:
+            runtime_policy.force_tool = controls.force_tool
+            runtime_policy.force_execution = controls.force_execution
+            ctx.gate_overrides = GateOverrides(
+                force_safe_projection=controls.force_safe_projection,
+                force_safe_switching=controls.force_safe_switching,
+            )
         runtime_policy.retry_requested = bool(ctx.extra.get("retry_tool", False))
         runtime_policy.retry_count = int(ctx.extra.get("tool_retry_count", 0) or 0)
 

@@ -25,11 +25,9 @@ class ActionStage:
         # -----------------------------------------
         runtime_policy = getattr(ctx, "runtime_policy", None)
 
-        force_tool = (
-            runtime_policy.force_tool
-            if runtime_policy is not None
-            else ctx.extra.get("force_tool")
-        )
+        # F-001: force_tool is host-injected runtime policy state;
+        # the request-facing extra channel never carries it.
+        force_tool = runtime_policy.force_tool if runtime_policy is not None else None
 
         retry_tool_flag = (
             runtime_policy.retry_requested

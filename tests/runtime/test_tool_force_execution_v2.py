@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from arvis.api.os import CognitiveOS
+from arvis.api.os import CognitiveOS, CognitiveOSConfig
+from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.tools.base import BaseTool
 
 
@@ -21,16 +22,16 @@ class DummySpec:
 
 
 def test_force_tool_executes_when_matching_action_exists():
-    os = CognitiveOS()
-    os.register_tool(DummyTool())
-    ctx = os._build_context(
-        "u1",
-        {},
-        extra={
-            "force_tool": "dummy_force_v3",
-            "_force_execution": True,
-        },
+    os = CognitiveOS(
+        CognitiveOSConfig(
+            runtime_controls=TrustedRuntimeControls(
+                force_tool="dummy_force_v3",
+                force_execution=True,
+            )
+        )
     )
+    os.register_tool(DummyTool())
+    ctx = os._build_context("u1", {}, extra={})
 
     # 🔑 inject a fake decision to simulate pipeline output
     fake_action = SimpleNamespace(

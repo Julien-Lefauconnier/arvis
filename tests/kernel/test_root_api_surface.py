@@ -8,4 +8,5 @@ def test_root_api_is_minimal():
         "ArvisEngine",
         "CognitiveOS",
         "CognitiveOSConfig",
+        "TrustedRuntimeControls",
     }

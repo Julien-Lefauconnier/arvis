@@ -3,7 +3,8 @@
 from types import SimpleNamespace
 
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
-from arvis.api.os import CognitiveOS
+from arvis.api.os import CognitiveOS, CognitiveOSConfig
+from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.tools.base import BaseTool
 
 
@@ -28,13 +29,15 @@ def test_tool_retry_flow(monkeypatch):
                 raise Exception("fail")
             return {"ok": True}
 
-    os = CognitiveOS()
+    os = CognitiveOS(
+        CognitiveOSConfig(
+            runtime_controls=TrustedRuntimeControls(
+                force_tool="retry_tool",
+                force_execution=True,
+            )
+        )
+    )
     os.register_tool(FailingThenSuccessTool())
-
-    extra = {
-        "force_tool": "retry_tool",
-        "_force_execution": True,
-    }
 
     result = os.run(
         user_id="u1",
@@ -42,7 +45,6 @@ def test_tool_retry_flow(monkeypatch):
             "tool": "retry_tool",
             "spec": {"name": "retry_tool"},
         },
-        extra=extra,
     )
 
     assert result.execution_view is not None
