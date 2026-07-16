@@ -12,6 +12,7 @@ from typing import Any, cast
 from arvis.adapters.kernel.timeline_from_signals import (
     signal_journal_to_timeline_snapshot,
 )
+from arvis.api.audit import AuditCommitmentPolicy
 from arvis.api.execution import ExecutionTraceView
 from arvis.api.ir import build_ir_view
 from arvis.api.stability import StabilityView
@@ -19,6 +20,7 @@ from arvis.api.timeline import TimelineView
 from arvis.api.trace import DecisionTraceView
 from arvis.api.version import API_FINGERPRINT, API_VERSION
 from arvis.cognition.state.cognitive_state import CognitiveState
+from arvis.errors.base import ArvisSecurityError
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
 from arvis.signals.signal_journal import SignalJournal
 
@@ -37,11 +39,19 @@ class CognitiveResultView:
     _ir: dict[str, Any] | None = None
     reflexive: dict[str, Any] | None = None
     execution_view: ExecutionTraceView | None = None
+    # F-015: audit commitment accounting. Absence of a commitment is
+    # never silent: applied policy, reason code when missing, and an
+    # explicit degradation flag under the DEGRADED policy.
+    commitment_policy: str | None = None
+    commitment_reason: str | None = None
+    commitment_degraded: bool = False
 
     @staticmethod
     def from_state(
         state: CognitiveState,
         result: Any,
+        *,
+        commitment_policy: AuditCommitmentPolicy = AuditCommitmentPolicy.DEGRADED,
     ) -> CognitiveResultView:
         observability = getattr(result, "observability", None)
         execution = getattr(result, "execution", result)
@@ -65,6 +75,9 @@ class CognitiveResultView:
             else None
         )
 
+        # F-015: track why an audit commitment could not be produced.
+        commitment_reason: str | None = None
+
         try:
             ir_bytes = json.dumps(
                 ir_payload,
@@ -75,10 +88,13 @@ class CognitiveResultView:
             ir_hash = sha256(ir_bytes).hexdigest()
         except (TypeError, ValueError):
             ir_hash = None
+            commitment_reason = "ir_not_serializable"
 
         if not isinstance(timeline_journal, SignalJournal):
             timeline_snapshot = None
             timeline_commitment = None
+            if commitment_reason is None:
+                commitment_reason = "timeline_not_journal"
         else:
             timeline_snapshot = signal_journal_to_timeline_snapshot(timeline_journal)
             try:
@@ -90,6 +106,8 @@ class CognitiveResultView:
                 timeline_commitment = commitment.commitment
             except Exception:  # arvis-broad: defensive view enrichment
                 timeline_commitment = None
+                if commitment_reason is None:
+                    commitment_reason = "timeline_commitment_failure"
 
         if timeline_commitment and ir_hash:
             try:
@@ -98,8 +116,23 @@ class CognitiveResultView:
                 ).hexdigest()
             except Exception:  # arvis-broad: defensive view enrichment
                 global_commitment = None
+                if commitment_reason is None:
+                    commitment_reason = "commitment_hash_failure"
         else:
             global_commitment = None
+
+        # F-015: the absence of an audit commitment is never silent.
+        commitment_degraded = False
+        if global_commitment is None:
+            if commitment_reason is None:
+                commitment_reason = "commitment_unavailable"
+            if commitment_policy is AuditCommitmentPolicy.REQUIRED:
+                raise ArvisSecurityError(
+                    "audit commitment is required but missing "
+                    f"(reason={commitment_reason})",
+                    details={"reason": commitment_reason},
+                )
+            commitment_degraded = commitment_policy is AuditCommitmentPolicy.DEGRADED
 
         reflexive_payload = None
         try:
@@ -133,6 +166,9 @@ class CognitiveResultView:
             _ir=ir_payload,
             reflexive=reflexive_payload,
             execution_view=execution_view,
+            commitment_policy=commitment_policy.value,
+            commitment_reason=commitment_reason,
+            commitment_degraded=commitment_degraded,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -153,6 +189,9 @@ class CognitiveResultView:
             "has_timeline": self.timeline is not None,
             "timeline_commitment": self.timeline_commitment,
             "global_commitment": self.global_commitment,
+            "commitment_policy": self.commitment_policy,
+            "commitment_reason": self.commitment_reason,
+            "commitment_degraded": self.commitment_degraded,
             "trace": (self.trace_view.to_dict() if self.trace_view else None),
             "timeline": (self.timeline_view.to_dict() if self.timeline_view else None),
             "execution": (

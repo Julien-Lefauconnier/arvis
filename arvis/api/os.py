@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from arvis.api.audit import AuditCommitmentPolicy
 from arvis.api.os_internals import CognitiveOSInternals
 from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.api.views.cognitive_result_view import CognitiveResultView
@@ -38,6 +39,10 @@ class CognitiveOSConfig:
     # from request payloads or ctx.extra. Rejected in the production
     # runtime profile.
     runtime_controls: TrustedRuntimeControls | None = None
+    # F-015: how a missing audit commitment is handled. Set REQUIRED
+    # for profiles where runs have effects: an unauditable run must
+    # not pass.
+    audit_commitment_policy: AuditCommitmentPolicy = AuditCommitmentPolicy.DEGRADED
 
 
 # -----------------------------------------------------

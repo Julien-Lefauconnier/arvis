@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.api.audit import AuditCommitmentPolicy
 from arvis.api.ir import build_ir_view
 from arvis.api.runtime.cognitive_runtime import CognitiveRuntime
 from arvis.api.views.cognitive_result_view import CognitiveResultView
@@ -208,6 +209,7 @@ class CognitiveOSInternals:
         return CognitiveResultView.from_state(
             typed_state,
             result,
+            commitment_policy=self._commitment_policy(),
         )
 
     def _verify_replay_view(
@@ -273,7 +275,14 @@ class CognitiveOSInternals:
         return CognitiveResultView.from_state(
             typed_state,
             result,
+            commitment_policy=self._commitment_policy(),
         )
+
+    def _commitment_policy(self) -> AuditCommitmentPolicy:
+        policy = getattr(self.config, "audit_commitment_policy", None)
+        if isinstance(policy, AuditCommitmentPolicy):
+            return policy
+        return AuditCommitmentPolicy.DEGRADED
 
     def _require_state(
         self,
