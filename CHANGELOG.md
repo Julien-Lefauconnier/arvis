@@ -9,6 +9,22 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+### Security
+
+- **F-001-a5: a caller-declared risk never relaxes the verdict on a
+  mixed payload.** The pure-scalar precondition of the input-risk policy
+  is now coded (`is_pure_risk_payload`): the grading path (which may
+  relax a sparse-projection artifact) is active only for a payload
+  exclusively dedicated to the risk scalar (`{"risk": x}`). Any mixed
+  payload is harden-only: the declared risk composes through
+  `max_strictness`, the hardening is traced (`input_risk_harden`), and
+  existing reasons are never superseded. The production profile sets the
+  `harden_only` posture (`ctx.input_risk_mode`), so in production a
+  declared risk never relaxes at all, pure payload included; unknown
+  posture values fail closed to harden-only. Examples 02/04/09 moved to
+  pure risk payloads; example 06 now demonstrates the harden-only
+  doctrine on a real trade payload.
+
 ## [0.1.0a5] - 2026-07-16
 
 Consolidation release (campaign 2): closes the composition-scope

@@ -6,7 +6,7 @@ Applied once, near the end of the action-path gate composition (immediately
 before confirmation flags are synced), so the resulting verdict propagates
 correctly to execution.
 
-Behaviour:
+Behaviour (audit F-001-a5):
 - No explicit top-level risk in the input -> verdict unchanged (the common
   case; structured/observational turns are unaffected).
 - A real safety veto already fired (kappa / adaptive instability, or any
@@ -14,16 +14,24 @@ Behaviour:
   artifact set) -> the incoming verdict is kept. The input-risk policy
   never relaxes a real veto (audit F-006), and an exception inside the
   gate forces ABSTAIN (fail-closed).
-- Otherwise the governed input-risk policy determines the verdict (low ->
-  ALLOW, medium -> REQUIRE_CONFIRMATION, high -> ABSTAIN). This makes a pure
-  risk assertion gradeable instead of being dominated by the sparse-projection
-  fail-closed.
+- Mixed payload (any key besides "risk"), or an ``input_risk_mode``
+  posture other than "graded" (production sets "harden_only"; unknown
+  modes fail closed to harden-only): the declared risk is untrusted
+  input and may only harden. The verdict is composed through
+  ``max_strictness``, the hardening is traced, existing reasons are
+  kept, and a governing signal is appended only when the verdict
+  actually changes.
+- Pure risk payload (``{"risk": x}`` and nothing else) under the
+  "graded" posture: the governed input-risk policy determines the
+  verdict (low -> ALLOW, medium -> REQUIRE_CONFIRMATION, high ->
+  ABSTAIN). This makes a pure risk assertion gradeable instead of being
+  dominated by the sparse-projection fail-closed.
 
-When the policy governs the decision, it supersedes the sparse-projection
-artifact: projection-derived veto reasons (which are an artifact of running the
-kernel projection on a contentless risk scalar) are dropped and a single
-governing reason ("input_risk_gate") is recorded, so the emitted IR stays
-consistent with the verdict.
+When the policy governs the decision (pure payload only), it supersedes the
+sparse-projection artifact: projection-derived veto reasons (which are an
+artifact of running the kernel projection on a contentless risk scalar) are
+dropped and a single governing reason ("input_risk_gate") is recorded, so the
+emitted IR stays consistent with the verdict.
 """
 
 from __future__ import annotations
@@ -31,13 +39,17 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.errors.manager import ErrorManager
-from arvis.kernel.gate.input_risk import read_input_risk, resolve_input_risk_verdict
+from arvis.kernel.gate.input_risk import (
+    is_pure_risk_payload,
+    read_input_risk,
+    resolve_input_risk_verdict,
+)
 from arvis.kernel.pipeline.stages.gate.trace_helpers import (
     record_verdict_transition,
     verdict_provenance,
 )
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
-from arvis.math.lyapunov.verdict_order import is_relaxation
+from arvis.math.lyapunov.verdict_order import is_relaxation, max_strictness
 
 _VERDICT_BY_NAME: dict[str, LyapunovVerdict] = {
     "allow": LyapunovVerdict.ALLOW,
@@ -78,11 +90,18 @@ _RELAXABLE_PROVENANCE: frozenset[str] = frozenset(
 )
 
 _GOVERNING_REASON = "input_risk_gate"
+_HARDEN_STAGE = "input_risk_harden"
+
+# Posture under which the pure-scalar grading path is active. Any other
+# value of ctx.input_risk_mode (production sets "harden_only", unknown
+# values included) fails closed to harden-only.
+_GRADED_MODE = "graded"
 
 
 def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict:
     try:
-        risk = read_input_risk(getattr(ctx, "cognitive_input", None))
+        cognitive_input = getattr(ctx, "cognitive_input", None)
+        risk = read_input_risk(cognitive_input)
         if risk is None:
             return verdict
 
@@ -104,6 +123,26 @@ def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict
             return verdict
 
         risk_verdict = _VERDICT_BY_NAME[resolve_input_risk_verdict(risk)]
+
+        # F-001-a5: grading (which may relax) requires BOTH a payload
+        # exclusively dedicated to the risk scalar AND the "graded"
+        # posture. Anything else (mixed payload, production posture,
+        # unknown mode) is harden-only: an untrusted declared risk may
+        # only make the verdict stricter, never weaker.
+        mode = getattr(ctx, "input_risk_mode", _GRADED_MODE)
+        if mode != _GRADED_MODE or not is_pure_risk_payload(cognitive_input):
+            hardened = max_strictness(verdict, risk_verdict)
+            if hardened != verdict:
+                record_verdict_transition(
+                    ctx,
+                    stage=_HARDEN_STAGE,
+                    before=verdict,
+                    after=hardened,
+                    reason="input_risk_policy",
+                )
+                if _HARDEN_STAGE not in current_reasons:
+                    extra["fusion_reasons"] = [*current_reasons, _HARDEN_STAGE]
+            return hardened
 
         if is_relaxation(verdict, risk_verdict):
             provenance = verdict_provenance(ctx, verdict)

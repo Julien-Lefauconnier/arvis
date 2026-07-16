@@ -9,6 +9,7 @@ These pin the three-band mapping and the gate helper behaviour deterministically
 from types import SimpleNamespace
 
 from arvis.kernel.gate.input_risk import (
+    is_pure_risk_payload,
     read_input_risk,
     resolve_input_risk_verdict,
 )
@@ -156,3 +157,86 @@ def test_gate_records_input_risk_in_extra():
     assert ctx.extra["input_risk"] == 0.5
     # governing reason recorded even without prior fusion reasons
     assert "input_risk_gate" in ctx.extra["fusion_reasons"]
+
+
+# --- F-001-a5: pure-scalar precondition and harden-only doctrine ---
+
+
+def test_is_pure_risk_payload():
+    assert is_pure_risk_payload({"risk": 0.5}) is True
+    assert is_pure_risk_payload({"risk": 0}) is True
+    assert is_pure_risk_payload({"risk": 0.1, "action": "x"}) is False
+    assert is_pure_risk_payload({"action": "x"}) is False
+    assert is_pure_risk_payload({"risk": "invalid"}) is False
+    assert is_pure_risk_payload({"risk": True}) is False
+    assert is_pure_risk_payload({}) is False
+    assert is_pure_risk_payload(None) is False
+
+
+def test_gate_mixed_payload_never_relaxes():
+    # Audit F-001-a5 reproduction: a mixed payload with content produces a
+    # projection ABSTAIN whose provenance is in the relaxable artifact set;
+    # a declared low risk must NOT relax it.
+    ctx = _ctx(
+        {"action": "delete_everything", "risk": 0.1},
+        extra={VERDICT_PROVENANCE_KEY: {"ABSTAIN": "projection_hard_block"}},
+    )
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ABSTAIN)
+    assert out == LyapunovVerdict.ABSTAIN
+
+
+def test_gate_mixed_payload_hardens_and_traces():
+    # Harden-only path: max_strictness, traced, governing signal appended.
+    ctx = _ctx({"action": "x", "risk": 0.9})
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ALLOW)
+    assert out == LyapunovVerdict.ABSTAIN
+    trace = ctx.extra["verdict_transition_trace"]
+    assert trace[-1]["stage"] == "input_risk_harden"
+    assert "input_risk_harden" in ctx.extra["fusion_reasons"]
+
+
+def test_gate_mixed_payload_low_risk_keeps_verdict_and_reasons():
+    # No relaxation, no supersession: the existing reasons stay intact.
+    ctx = _ctx(
+        {"query": "approve", "risk": 0.1},
+        extra={"fusion_reasons": ["projection_invalid"]},
+    )
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.REQUIRE_CONFIRMATION)
+    assert out == LyapunovVerdict.REQUIRE_CONFIRMATION
+    assert ctx.extra["fusion_reasons"] == ["projection_invalid"]
+
+
+def test_gate_mixed_payload_medium_risk_hardens_allow():
+    ctx = _ctx({"request_id": "REQ-1", "risk": 0.5})
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ALLOW)
+    assert out == LyapunovVerdict.REQUIRE_CONFIRMATION
+
+
+def test_gate_harden_only_mode_blocks_pure_payload_relaxation():
+    # Production posture: even a pure {"risk": x} payload never relaxes.
+    ctx = _ctx(
+        {"risk": 0.1},
+        extra={VERDICT_PROVENANCE_KEY: {"ABSTAIN": "projection_hard_block"}},
+    )
+    ctx.input_risk_mode = "harden_only"
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ABSTAIN)
+    assert out == LyapunovVerdict.ABSTAIN
+
+
+def test_gate_harden_only_mode_still_hardens_pure_payload():
+    # Decision 2.2-a: hardening by a pure payload stays available in
+    # production; only relaxation is forbidden.
+    ctx = _ctx({"risk": 0.9})
+    ctx.input_risk_mode = "harden_only"
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ALLOW)
+    assert out == LyapunovVerdict.ABSTAIN
+
+
+def test_gate_unknown_mode_fails_closed_to_harden_only():
+    ctx = _ctx(
+        {"risk": 0.1},
+        extra={VERDICT_PROVENANCE_KEY: {"ABSTAIN": "projection_hard_block"}},
+    )
+    ctx.input_risk_mode = "definitely_not_a_mode"
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ABSTAIN)
+    assert out == LyapunovVerdict.ABSTAIN

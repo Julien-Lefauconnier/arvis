@@ -11,6 +11,13 @@ it is graded by thresholds rather than by energy dynamics.
 Only a numeric *top-level* ``risk`` key qualifies. Nested ``numeric_signals``
 (used by other layers and by compliance scenarios) are deliberately NOT read
 here, so this policy never interferes with structured/observational inputs.
+
+Security doctrine (audit F-001-a5): a caller-declared risk is untrusted
+input. It may harden the verdict, request confirmation, or add a signal;
+it never relaxes the verdict and never supersedes reasons, except for a
+payload exclusively dedicated to the risk scalar (``{"risk": x}`` and
+nothing else). A mixed payload carries content: the projection verdict
+on that content is real, and a declared risk may only harden it.
 """
 
 from __future__ import annotations
@@ -44,6 +51,22 @@ def read_input_risk(cognitive_input: Any) -> float | None:
         return clamp01(float(value))
 
     return None
+
+
+def is_pure_risk_payload(cognitive_input: Any) -> bool:
+    """Whether the payload is exclusively dedicated to the risk scalar.
+
+    True only for a dict whose keys are exactly ``{"risk"}`` and whose
+    value qualifies under :func:`read_input_risk`. This is the coded form
+    of the pure-scalar precondition (audit F-001-a5): only such a payload
+    may be graded, and therefore relaxed, by the input-risk policy; any
+    other shape is harden-only.
+    """
+    if not isinstance(cognitive_input, dict):
+        return False
+    if set(cognitive_input.keys()) != {"risk"}:
+        return False
+    return read_input_risk(cognitive_input) is not None
 
 
 def resolve_input_risk_verdict(risk: float) -> str:

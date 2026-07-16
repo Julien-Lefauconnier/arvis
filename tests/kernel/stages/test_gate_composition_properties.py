@@ -253,12 +253,20 @@ class _StableCore:
     ),
     action=st.sampled_from(["ignore", "confirm", "abstain"]),
     risk=st.one_of(st.none(), st.floats(min_value=0.0, max_value=1.0)),
+    content_key=st.sampled_from([None, "action", "query"]),
 )
-def test_pipeline_trace_has_no_unsanctioned_relaxation(history, action, risk):
+def test_pipeline_trace_has_no_unsanctioned_relaxation(
+    history, action, risk, content_key
+):
     pipeline = CognitivePipeline()
     pipeline.core = pipeline.core.__class__(core_model=_StableCore())
 
-    cognitive_input = {"risk": risk} if risk is not None else {}
+    cognitive_input: dict = {}
+    if risk is not None:
+        cognitive_input["risk"] = risk
+    if content_key is not None:
+        cognitive_input[content_key] = "payload_content"
+    pure_risk_payload = set(cognitive_input.keys()) == {"risk"}
     ctx = CognitivePipelineContext(
         user_id="u",
         cognitive_input=cognitive_input,
@@ -274,3 +282,7 @@ def test_pipeline_trace_has_no_unsanctioned_relaxation(history, action, risk):
         after = _STRICTNESS_BY_NAME[transition["after"]]
         if after < before:
             assert transition["stage"] in SANCTIONED_RELAXATION_STAGES, transition
+            if transition["stage"] == "input_risk_gate":
+                # F-001-a5: the grading channel is sanctioned only for a
+                # payload exclusively dedicated to the risk scalar.
+                assert pure_risk_payload, transition

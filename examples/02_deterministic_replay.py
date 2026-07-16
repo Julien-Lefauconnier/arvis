@@ -1,13 +1,13 @@
 # examples/02_deterministic_replay.py
 
-# examples/02_deterministic_replay.py
-
 from arvis import CognitiveOS
 
 os = CognitiveOS()
 
+# A payload exclusively dedicated to a declared risk scalar is graded by
+# the governed three-band policy (F-001-a5: any other content makes the
+# declared risk harden-only).
 payload = {
-    "query": "approve request",
     "risk": 0.10,
 }
 

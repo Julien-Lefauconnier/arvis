@@ -149,6 +149,11 @@ class CognitivePipelineContext:
     # observability only; any other value feeds the measured switching
     # safety into the validity envelope. Production sets "enforce".
     switching_envelope_mode: str = "soft"
+    # F-001-a5: input-risk posture. "graded" allows the pure-scalar
+    # grading path of the input-risk gate; any other value (production
+    # sets "harden_only", unknown values included) restricts a declared
+    # risk to harden-only.
+    input_risk_mode: str = "graded"
     # -------------------------
     # Control layer
     # -------------------------

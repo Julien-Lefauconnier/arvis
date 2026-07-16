@@ -67,6 +67,10 @@ class CognitiveOSInternals:
             # and feeds switching safety into the validity envelope.
             ctx.global_stability_action = "confirm"
             ctx.switching_envelope_mode = "enforce"
+            # F-001-a5: in production a caller-declared risk never
+            # relaxes, even for a pure {"risk": x} payload; it may only
+            # harden the verdict.
+            ctx.input_risk_mode = "harden_only"
 
         runtime_policy.retry_requested = bool(ctx.extra.get("retry_tool", False))
         runtime_policy.retry_count = int(ctx.extra.get("tool_retry_count", 0) or 0)

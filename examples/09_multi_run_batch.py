@@ -4,10 +4,13 @@ from arvis import CognitiveOS
 
 os = CognitiveOS()
 
+# Each request is a pure declared-risk payload, graded by the governed
+# three-band policy (F-001-a5: mixed payloads are harden-only).
+request_ids = ["REQ-001", "REQ-002", "REQ-003"]
 payloads = [
-    {"request_id": "REQ-001", "risk": 0.10},
-    {"request_id": "REQ-002", "risk": 0.50},
-    {"request_id": "REQ-003", "risk": 0.90},
+    {"risk": 0.10},
+    {"risk": 0.50},
+    {"risk": 0.90},
 ]
 
 results = os.run_multi(
@@ -41,7 +44,7 @@ for i, r in enumerate(results, start=1):
     rows.append(
         (
             i,
-            payloads[i - 1]["request_id"],
+            request_ids[i - 1],
             payloads[i - 1]["risk"],
             status,
             r.global_commitment[:10] + "...",

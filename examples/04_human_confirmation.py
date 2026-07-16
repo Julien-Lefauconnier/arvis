@@ -4,10 +4,11 @@ from arvis import CognitiveOS
 
 os = CognitiveOS()
 
+# A medium declared risk (pure {"risk": x} payload) is graded by the
+# governed policy and routed to human confirmation.
 result = os.run(
     "user_1",
     {
-        "action": "delete_customer_account",
         "risk": 0.55,
     },
 )
@@ -20,11 +21,10 @@ allowed = "allowed=True" in decision
 
 print("\nARVIS Example 04 — Human Approval Gate")
 print("-" * 44)
-print("Action        : delete_customer_account")
-print("Risk Score    : 0.55")
+print("Declared Risk : 0.55")
 print("Auto Execute  :", "YES" if allowed else "NO")
 print("Approval Need :", "YES" if needs_confirm else "NO")
 print("Trace         :", "AVAILABLE" if data["has_trace"] else "NO")
 print("Timeline      :", "VERIFIED" if data["has_timeline"] else "NO")
 print()
-print("Takeaway      : Sensitive actions require human approval.")
+print("Takeaway      : Medium-risk decisions require human approval.")
