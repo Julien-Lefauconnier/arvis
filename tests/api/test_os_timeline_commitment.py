@@ -142,10 +142,10 @@ def test_commitment_does_not_break_api_contract():
 
 
 def test_no_trace_mode_no_commitment():
-    from arvis.api import CognitiveOS
+    from arvis.api import CognitiveOS, CognitiveOSConfig
 
-    os = CognitiveOS()
-    os.config.enable_trace = False
+    # F-007: the config is frozen; no-trace mode is set at construction.
+    os = CognitiveOS(CognitiveOSConfig(enable_trace=False))
 
     result = os.run(user_id="u1", cognitive_input={})
 

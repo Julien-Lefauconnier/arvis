@@ -9,6 +9,7 @@ from .api.audit import AuditCommitmentPolicy
 from .api.engine import ArvisEngine
 from .api.os import CognitiveOS, CognitiveOSConfig
 from .api.runtime_controls import TrustedRuntimeControls
+from .api.runtime_mode import RuntimeMode
 from .api.version import PACKAGE_VERSION
 
 __version__ = PACKAGE_VERSION
@@ -18,5 +19,6 @@ __all__ = [
     "AuditCommitmentPolicy",
     "CognitiveOS",
     "CognitiveOSConfig",
+    "RuntimeMode",
     "TrustedRuntimeControls",
 ]

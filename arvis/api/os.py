@@ -8,6 +8,7 @@ from typing import Any
 from arvis.api.audit import AuditCommitmentPolicy
 from arvis.api.os_internals import CognitiveOSInternals
 from arvis.api.runtime_controls import TrustedRuntimeControls
+from arvis.api.runtime_mode import RuntimeMode, coerce_runtime_mode
 from arvis.api.views.cognitive_result_view import CognitiveResultView
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.stability.stability_snapshot import StabilitySnapshot
@@ -21,7 +22,9 @@ from arvis.tools.spec import ToolSpec
 # -----------------------------------------------------
 # Runtime Configuration
 # -----------------------------------------------------
-@dataclass(slots=True)
+# F-007: frozen so the construction-time validation cannot be bypassed
+# by mutating the configuration after the runtime is built.
+@dataclass(frozen=True, slots=True)
 class CognitiveOSConfig:
     enable_trace: bool = True
     # Strict stability profile. When True, stability bootstrap
@@ -32,7 +35,7 @@ class CognitiveOSConfig:
     # own setting.
     strict_mode: bool = False
     adapter_registry: dict[str, Any] | None = None
-    runtime_mode: str = "local"
+    runtime_mode: RuntimeMode | str = RuntimeMode.LOCAL
     telemetry_sink: TelemetrySink | None = None
     core_model: Any | None = None
     # F-001: host-only controls injected by composition; never read
@@ -43,6 +46,22 @@ class CognitiveOSConfig:
     # for profiles where runs have effects: an unauditable run must
     # not pass.
     audit_commitment_policy: AuditCommitmentPolicy = AuditCommitmentPolicy.DEGRADED
+
+    def __post_init__(self) -> None:
+        # F-008: the runtime mode set is closed; unknown values are
+        # refused instead of silently running with a permissive posture.
+        object.__setattr__(self, "runtime_mode", coerce_runtime_mode(self.runtime_mode))
+        # F-012: REQUIRED audit commitment needs the trace machinery.
+        # With enable_trace=False no commitment can ever be produced, so
+        # the combination is a configuration contradiction.
+        if (
+            not self.enable_trace
+            and self.audit_commitment_policy is AuditCommitmentPolicy.REQUIRED
+        ):
+            raise ValueError(
+                "audit_commitment_policy=REQUIRED requires enable_trace=True: "
+                "without the trace no audit commitment can be produced"
+            )
 
 
 # -----------------------------------------------------
@@ -58,7 +77,7 @@ class CognitiveOS(CognitiveOSInternals):
         self.config = config or CognitiveOSConfig()
         if (
             self.config.runtime_controls is not None
-            and self.config.runtime_mode == "production"
+            and self.config.runtime_mode is RuntimeMode.PRODUCTION
         ):
             raise ValueError(
                 "TrustedRuntimeControls are not permitted in the "

@@ -102,6 +102,7 @@ from .execution import ExecutionTraceView
 from .ir import build_ir_view
 from .ir_canonical import canonicalize_ir, hash_ir
 from .os import CognitiveOS, CognitiveOSConfig
+from .runtime_mode import RuntimeMode
 from .stability import StabilityView
 from .timeline import TimelineView
 from .trace import DecisionTraceView
@@ -124,6 +125,7 @@ __all__ = [
     # Core Runtime
     "CognitiveOS",
     "CognitiveOSConfig",
+    "RuntimeMode",
     "CognitiveResultView",
     "ExecutionTraceView",
     "DecisionTraceView",

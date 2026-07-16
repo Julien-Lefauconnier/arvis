@@ -9,5 +9,8 @@ def test_root_api_is_minimal():
         "AuditCommitmentPolicy",
         "CognitiveOS",
         "CognitiveOSConfig",
+        # Lot B1 (F-008): deliberate extension, RuntimeMode is part of
+        # the configuration-building family like AuditCommitmentPolicy.
+        "RuntimeMode",
         "TrustedRuntimeControls",
     }

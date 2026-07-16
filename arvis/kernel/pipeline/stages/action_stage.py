@@ -65,19 +65,41 @@ class ActionStage:
         verdict = ctx.gate_result
 
         if resolved_tool:
+            # F-009: forcing a tool selects it; execution authority is
+            # never implied. A retry is a re-execution request and keeps
+            # executing; a host force_tool executes only if the host
+            # explicitly set force_execution=True.
+            host_force_execution = (
+                runtime_policy.force_execution if runtime_policy is not None else False
+            )
+            executes = bool(retry_tool) or host_force_execution
+
+            if executes:
+                ctx.execution.action_decision = ActionDecision(
+                    allowed=True,
+                    requires_user_validation=False,
+                    denied_reason=None,
+                    audit_required=True,
+                    action_mode=ActionMode.AUTOMATIC,
+                    tool=resolved_tool,
+                    tool_payload=retry_payload,
+                )
+                # lock downstream stages (IntentStage, etc.)
+                if runtime_policy is not None:
+                    runtime_policy.force_execution = True
+                return
+
+            # Selection only: the forced tool is carried on the decision,
+            # execution authority stays with the gate verdict.
             ctx.execution.action_decision = ActionDecision(
-                allowed=True,
-                requires_user_validation=False,
-                denied_reason=None,
+                allowed=bool(can_execute),
+                requires_user_validation=requires_confirmation,
+                denied_reason=None if can_execute else "execution_blocked",
                 audit_required=True,
                 action_mode=ActionMode.AUTOMATIC,
                 tool=resolved_tool,
                 tool_payload=retry_payload,
             )
-
-            # lock downstream stages (IntentStage, etc.)
-            if runtime_policy is not None:
-                runtime_policy.force_execution = True
             return
 
         action_template = resolve_action(ctx.decision_layer.decision_result)

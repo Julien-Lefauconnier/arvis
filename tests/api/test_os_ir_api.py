@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from arvis.api import CognitiveOS
+from arvis.api import CognitiveOS, CognitiveOSConfig
 
 
 def test_run_returns_result_view_with_ir_access() -> None:
@@ -70,8 +70,8 @@ def test_to_dict_does_not_expose_internal_ir_field() -> None:
 
 
 def test_run_without_trace_keeps_backward_compatible_output() -> None:
-    os = CognitiveOS()
-    os.config.enable_trace = False
+    # F-007: the config is frozen; no-trace mode is set at construction.
+    os = CognitiveOS(CognitiveOSConfig(enable_trace=False))
 
     result = os.run(
         user_id="u1",

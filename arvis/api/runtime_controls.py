@@ -17,6 +17,8 @@ class TrustedRuntimeControls:
     can never relax a verdict that is already stricter.
     """
 
+    # F-009: force_tool only selects the tool; execution authority is
+    # never implied and requires force_execution=True explicitly.
     force_tool: str | None = None
     force_execution: bool = False
     force_safe_projection: bool = False
