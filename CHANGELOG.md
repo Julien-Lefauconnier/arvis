@@ -9,6 +9,112 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a4] - 2026-07-16
+
+Hardening release: the seven kernel-scope findings of the external
+audit (F-001, F-002, F-004, F-009, F-010, F-013, F-015) plus the end
+of the A2 context decomposition. One principle ties the safety lots
+together: a failing guarantee mechanism can never relax.
+
+### Added
+
+- **TrustedRuntimeControls (F-001)**
+  (`arvis/api/runtime_controls.py`, root export). Host-only controls
+  (`force_tool`, `force_execution`, `force_safe_projection`,
+  `force_safe_switching`) are injected by composition through
+  `CognitiveOSConfig.runtime_controls` and rejected in the production
+  runtime profile. Abuse tests assert that injecting any of the four
+  keys through the request-facing `extra` channel is inert and that an
+  ABSTAIN verdict can never be relaxed by overrides.
+- **Governed tool registry (F-004, kernel part)**. `ToolRegistry.register`
+  refuses re-registering an existing name unless an explicit
+  `replace=True` is passed; `freeze()` locks the registry after
+  bootstrap (any further mutation refused, explicit replacement
+  included) and returns a deterministic, order-independent sha256
+  fingerprint of the tool surface; `freeze_tools()` exposed on
+  `CognitiveOS` and `ArvisEngine` for host-side pinning.
+- **AuditCommitmentPolicy (F-015)** (`arvis/api/audit.py`, root
+  export). The absence of an audit commitment is never silent: every
+  result view carries the applied policy, a reason code when the
+  commitment is missing (`ir_not_serializable`, `timeline_not_journal`,
+  `timeline_commitment_failure`, `commitment_hash_failure`) and an
+  explicit degradation flag. REQUIRED refuses an unauditable run
+  (`ArvisSecurityError`), DEGRADED (default) records the visible
+  degradation, OPTIONAL records the reason only. Threaded through
+  `CognitiveOSConfig.audit_commitment_policy` to both the run and
+  replay paths.
+- **Packaging contract for the IR schema (F-010)**.
+  `arvis/api/schema/ir_schema.json` now ships in the wheel
+  (package-data) and the sdist (MANIFEST.in); the CI build job asserts
+  the schema inside the built wheel and reads it back from an
+  installed wheel through `importlib.resources`; pytest locks the
+  canonical resource access path and both packaging declarations.
+- **Fail-closed gate contract tests**
+  (`tests/kernel/stages/test_gate_fail_closed.py`), including
+  hypothesis property tests of the monotone strictness invariant
+  ALLOW < REQUIRE_CONFIRMATION < ABSTAIN on the enforcement gates.
+- **Audit artifact mutation guard**
+  (`tests/api/test_audit_structures_immutable.py`): recursive mutation
+  of an exported IR can never diverge the view from its commitment;
+  replay does not mutate its input.
+
+### Changed
+
+- **Gates are fail-closed (F-002)**. An exception inside a verdict
+  gate (projection enforcement, kappa hard block, global stability
+  policy, validity enforcement) now forces ABSTAIN with a traced
+  verdict transition (`*_fail_closed`, reason `gate_exception`)
+  instead of returning the upstream verdict; failing safety
+  computations report unsafe (`global_safe=False`,
+  `switching_safe=False`) instead of safe. The A1 error routing is
+  unchanged; only the returned value hardens.
+- **strict_mode has one coherent channel (F-009)**.
+  `CognitiveOSConfig.strict_mode` is now wired through
+  `CognitivePipeline` to the stability bootstrap and merged
+  monotonically with the `ARVIS_STRICT_STABILITY` env var: either
+  channel can enable the strict profile, neither can disable the
+  other.
+- **Audit artifacts are sealed at the commitment boundary (F-013)**.
+  The stored IR of a result view is detached at hash time (rebuilt
+  from the exact hashed bytes) so no upstream alias can diverge the
+  payload from its hash, and `to_ir()` exports a defensive deep copy.
+  Probe conclusion recorded: 69 frozen dataclasses carry mutable
+  containers, but the reproducibility break happens through aliasing
+  of the hashed artifact; mass container conversion deliberately
+  avoided.
+- **A2 complete (arvis-projection-v2)**. The seven projection legacy
+  aliases on `CognitivePipelineContext` (`projection_certificate`,
+  `projection_domain_valid`, `projection_margin`, `projected_state`,
+  `pi_state`, `projection_view`, `projection_view_raw`) were removed
+  after migrating every callsite (854 -> 792 lines): canonical writers
+  write `ctx.projection.*` only, duck-typed readers adopt the
+  projection-first dual pattern with a plain-attribute fallback for
+  mock contexts, and the PI resolver now reads the canonical
+  `ctx.projection.structured_projection` (it silently depended on the
+  facade before). `FROZEN_FACADE_PROPERTIES` shrinks by exactly those
+  seven names.
+- `arvis/api/version.py`: the source-checkout `PACKAGE_VERSION`
+  fallback, which had silently stayed at `0.1.0a2` since the a3 bump
+  (an F-018 instance), now mirrors the package version again.
+
+### Removed
+
+- The request-facing `extra` channel for `force_tool`,
+  `_force_execution`, `force_safe_projection` and
+  `force_safe_switching` (F-001): no gate or runtime path reads these
+  keys from `ctx.extra` anymore; replaying an old IR carrying them is
+  inert by construction.
+- The projection legacy alias block and its
+  `TODO(arvis-projection-v2)` marker (A2).
+
+### Notes / next
+
+- veramem follow-ups once the pin is bumped: call
+  `engine.freeze_tools()` at the end of backend bootstrap and log the
+  fingerprint (ZK-safe scalar); evaluate
+  `AuditCommitmentPolicy.REQUIRED` for the governed agent path (the
+  effectful profile).
+
 ## [0.1.0a3] - 2026-07-15
 
 ### Added

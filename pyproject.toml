@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arvis"
-version = "0.1.0a3"
+version = "0.1.0a4"
 description = "Cognitive Operating System kernel for trustworthy AI systems"
 readme = "README.md"
 requires-python = ">=3.11"
