@@ -12,7 +12,7 @@ from typing import Final
 # Three distinct axes are tracked, each honestly labeled and mutually
 # consistent. They are NOT the same string on purpose:
 #
-#   PACKAGE_VERSION  -> the distributed artifact (PEP 440).      "0.1.0a1"
+#   PACKAGE_VERSION  -> the distributed artifact (PEP 440), from pyproject.
 #   API_VERSION      -> the public Python API contract.          "0.1"
 #   STANDARD_VERSION -> the ARVIS decision/IR standard spec.     "draft-v1"
 #
