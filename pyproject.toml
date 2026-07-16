@@ -77,6 +77,7 @@ include = ["arvis*"]
 
 [tool.setuptools.package-data]
 arvis = ["py.typed"]
+"arvis.api" = ["schema/*.json"]
 
 [tool.mypy]
 strict = true

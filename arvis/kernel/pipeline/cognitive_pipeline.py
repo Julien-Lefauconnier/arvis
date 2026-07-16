@@ -108,10 +108,16 @@ class CognitivePipeline:
     projection_domain: Any
     projection_validator: Any
 
-    def __init__(self, core_model: Any | None = None) -> None:
+    def __init__(
+        self,
+        core_model: Any | None = None,
+        *,
+        strict_mode: bool = False,
+    ) -> None:
         PipelineBootstrapService.run(
             self,
             core_model,
+            strict_mode=strict_mode,
         )
         self.telemetry_sink: TelemetrySink = NullTelemetrySink()
 

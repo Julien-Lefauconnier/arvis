@@ -113,8 +113,13 @@ class PipelineBootstrapService:
     def run(
         pipeline: CognitivePipeline,
         core_model: Any | None,
+        *,
+        strict_mode: bool = False,
     ) -> None:
-        strict_mode = (
+        # Strict profile: either channel (explicit argument or the
+        # ARVIS_STRICT_STABILITY env var) can enable strict mode;
+        # neither can disable the other (monotone strengthening).
+        strict_mode = strict_mode or (
             os.getenv(
                 "ARVIS_STRICT_STABILITY",
                 "false",

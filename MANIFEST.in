@@ -2,3 +2,4 @@ include LICENSE
 include NOTICE
 include README.md
 include arvis/py.typed
+recursive-include arvis/api/schema *.json

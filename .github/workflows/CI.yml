@@ -119,6 +119,9 @@ jobs:
       - name: Verify py.typed ships in the wheel
         run: python -c "import glob, zipfile; w = glob.glob('dist/*.whl')[0]; assert 'arvis/py.typed' in zipfile.ZipFile(w).namelist(), 'py.typed missing from wheel'; print('py.typed present in', w)"
 
+      - name: Verify ir_schema.json ships in the wheel
+        run: python -c "import glob, zipfile; w = glob.glob('dist/*.whl')[0]; assert 'arvis/api/schema/ir_schema.json' in zipfile.ZipFile(w).namelist(), 'ir_schema.json missing from wheel'; print('ir_schema.json present in', w)"
+
       - name: Install built wheel in a clean env and smoke-import
         run: |
           python -m venv /tmp/wheelenv
@@ -126,3 +129,4 @@ jobs:
           /tmp/wheelenv/bin/pip install "$(ls dist/*.whl)"
           cd /tmp
           /tmp/wheelenv/bin/python -c "import arvis; print('arvis', arvis.__version__); from arvis import ArvisEngine, CognitiveOS, CognitiveOSConfig; print('public API import OK')"
+          /tmp/wheelenv/bin/python -c "import json; from importlib import resources; s = json.loads(resources.files('arvis.api').joinpath('schema/ir_schema.json').read_text(encoding='utf-8')); assert s.get('type') == 'object'; print('ir_schema.json loadable from installed wheel')"

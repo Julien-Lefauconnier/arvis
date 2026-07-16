@@ -22,6 +22,12 @@ from arvis.tools.spec import ToolSpec
 @dataclass(slots=True)
 class CognitiveOSConfig:
     enable_trace: bool = True
+    # Strict stability profile. When True, stability bootstrap
+    # invariant violations raise instead of warning. Monotone with
+    # the ARVIS_STRICT_STABILITY env var: either channel can enable
+    # strict mode, neither can disable the other. Applies to the
+    # pipeline built by CognitiveOS; an injected pipeline keeps its
+    # own setting.
     strict_mode: bool = False
     adapter_registry: dict[str, Any] | None = None
     runtime_mode: str = "local"
@@ -42,7 +48,10 @@ class CognitiveOS(CognitiveOSInternals):
         self.config = config or CognitiveOSConfig()
         self.tool_registry = ToolRegistry()
         self.tool_executor = ToolExecutor(self.tool_registry)
-        self.pipeline = pipeline or CognitivePipeline(core_model=self.config.core_model)
+        self.pipeline = pipeline or CognitivePipeline(
+            core_model=self.config.core_model,
+            strict_mode=self.config.strict_mode,
+        )
         self.telemetry_sink: TelemetrySink = (
             self.config.telemetry_sink
             if self.config.telemetry_sink is not None
