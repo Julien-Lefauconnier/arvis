@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -89,6 +90,13 @@ class CognitiveResultView:
         except (TypeError, ValueError):
             ir_hash = None
             commitment_reason = "ir_not_serializable"
+
+        if ir_hash is not None:
+            # F-013: detach the audit artifact at commitment time.
+            # The stored IR is rebuilt from the exact hashed bytes,
+            # so no upstream alias can diverge the payload from its
+            # hash.
+            ir_payload = json.loads(ir_bytes.decode("utf-8"))
 
         if not isinstance(timeline_journal, SignalJournal):
             timeline_snapshot = None
@@ -202,7 +210,11 @@ class CognitiveResultView:
         }
 
     def to_ir(self) -> dict[str, Any] | None:
-        return self._ir
+        # F-013: export a defensive deep copy; mutating the export
+        # can never diverge the view from its audit commitment.
+        if self._ir is None:
+            return None
+        return copy.deepcopy(self._ir)
 
     @staticmethod
     def _public_status(*, allowed: bool, requires_validation: bool) -> str:
