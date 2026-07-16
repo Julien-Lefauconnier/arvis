@@ -26,7 +26,12 @@ def test_global_stability_policy_confirm(pipeline, ctx):
     pipeline.run(ctx)
 
     if ctx.stability_certificate["global"] is False:
-        assert ctx.gate_result == LyapunovVerdict.REQUIRE_CONFIRMATION
+        # Monotone policy (F-001): confirm is a floor, it never relaxes a
+        # foreign ABSTAIN, so confirmation or stricter is expected.
+        assert ctx.gate_result in {
+            LyapunovVerdict.REQUIRE_CONFIRMATION,
+            LyapunovVerdict.ABSTAIN,
+        }
         reasons = ctx.extra.get("fusion_reasons", [])
         assert any("global_instability_confirm" in r for r in reasons)
 

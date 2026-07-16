@@ -57,7 +57,11 @@ def test_gate_global_policy_confirm():
     result = pipeline.run(ctx)
 
     if getattr(ctx, "global_stability_safe", True) is False:
-        assert result.gate_result == LyapunovVerdict.REQUIRE_CONFIRMATION
+        # Monotone policy (F-001): confirm is a floor, not a ceiling.
+        assert result.gate_result in {
+            LyapunovVerdict.REQUIRE_CONFIRMATION,
+            LyapunovVerdict.ABSTAIN,
+        }
 
 
 def test_gate_global_policy_abstain():

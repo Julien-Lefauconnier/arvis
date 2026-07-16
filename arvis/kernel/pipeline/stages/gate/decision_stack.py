@@ -47,7 +47,9 @@ from arvis.kernel.pipeline.stages.gate.stability import (
     build_validity_envelope,
 )
 from arvis.kernel.pipeline.stages.gate.trace_helpers import (
+    enforce_monotone,
     record_verdict_transition,
+    seed_verdict_provenance,
     sync_confirmation_flags,
 )
 from arvis.math.gate.gate_adapter import ensure_lyapunov_state
@@ -211,6 +213,10 @@ class GateDecisionStack:
                 stability_certificate=stability_certificate,
             )
 
+        # F-001: attribute the assessment-phase verdict before enforcement
+        # runs (provenance-checked relaxations only from here on).
+        seed_verdict_provenance(ctx, verdict)
+
         hook = _get_gate_stage_hook("build_validity_envelope")
         validity_fn = hook or build_validity_envelope
 
@@ -298,17 +304,32 @@ class GateDecisionStack:
                 reason="gate_policy_adjustment",
             )
 
-        verdict = apply_validity_enforcement(ctx, verdict, overrides)
-        verdict = apply_projection_enforcement(
-            pipeline=pipeline,
-            ctx=ctx,
-            verdict=verdict,
-            overrides=overrides,
-            delta_w=composite.delta_w,
-            global_safe=assessment.global_safe,
-            switching_safe=assessment.switching_safe,
+        verdict = enforce_monotone(
+            ctx,
+            "validity_enforcement",
+            verdict,
+            apply_validity_enforcement(ctx, verdict, overrides),
         )
-        verdict = apply_kappa_hard_block(ctx, verdict)
+        verdict = enforce_monotone(
+            ctx,
+            "projection_enforcement",
+            verdict,
+            apply_projection_enforcement(
+                pipeline=pipeline,
+                ctx=ctx,
+                verdict=verdict,
+                overrides=overrides,
+                delta_w=composite.delta_w,
+                global_safe=assessment.global_safe,
+                switching_safe=assessment.switching_safe,
+            ),
+        )
+        verdict = enforce_monotone(
+            ctx,
+            "kappa_hard_block",
+            verdict,
+            apply_kappa_hard_block(ctx, verdict),
+        )
 
         verdict = apply_global_stability_policy(
             ctx,
@@ -316,14 +337,25 @@ class GateDecisionStack:
             assessment.global_safe,
         )
 
-        verdict = apply_final_adaptive_veto(
+        verdict = enforce_monotone(
             ctx,
+            "final_adaptive_veto",
             verdict,
-            assessment.adaptive_metrics,
+            apply_final_adaptive_veto(ctx, verdict, assessment.adaptive_metrics),
         )
 
-        verdict = apply_memory_policy(ctx, verdict)
-        verdict = apply_pi_gate_override(ctx, verdict)
+        verdict = enforce_monotone(
+            ctx,
+            "memory_policy",
+            verdict,
+            apply_memory_policy(ctx, verdict),
+        )
+        verdict = enforce_monotone(
+            ctx,
+            "pi_gate_override",
+            verdict,
+            apply_pi_gate_override(ctx, verdict),
+        )
         verdict = apply_input_risk_gate(ctx, verdict)
         sync_confirmation_flags(ctx, verdict)
 

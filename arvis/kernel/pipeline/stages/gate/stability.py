@@ -8,14 +8,23 @@ from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.models import StabilityEnvelope
-from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
+from arvis.kernel.pipeline.stages.gate.trace_helpers import (
+    GLOBAL_STABILITY_PROVENANCE,
+    record_verdict_transition,
+    verdict_provenance,
+)
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.lyapunov.verdict_order import max_strictness
 from arvis.math.stability.global_guard import GlobalStabilityGuard
 from arvis.math.stability.validity_envelope import (
     build_validity_envelope as build_math_validity_envelope,
 )
 from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
+
+# Provenance labels whose ABSTAIN the confirm action may reinterpret:
+# only an abstention produced by the global stability axis itself.
+_RELAXABLE_ABSTAIN_PROVENANCE = frozenset({GLOBAL_STABILITY_PROVENANCE})
 
 
 def apply_global_stability_policy(
@@ -24,6 +33,20 @@ def apply_global_stability_policy(
     global_safe: bool,
     stage_prefix: str = "global_policy",
 ) -> LyapunovVerdict:
+    """Global stability policy, monotone (audit F-001, lot A2).
+
+    Under global instability the configured action contributes a
+    requirement composed through max_strictness: "confirm" hardens up
+    to REQUIRE_CONFIRMATION, "abstain" hardens to ABSTAIN, "ignore"
+    leaves the verdict untouched.
+
+    The single sanctioned relaxation is provenance-checked: an incoming
+    ABSTAIN produced by the global stability axis itself may be
+    reinterpreted as REQUIRE_CONFIRMATION under action="confirm" (the
+    traced product transition). An ABSTAIN of unknown or foreign
+    provenance (projection, kappa, memory, adaptive, ...) is never
+    relaxed; unknown provenance fails closed.
+    """
     if ctx.extra.get("_hard_adaptive_veto", False):
         return verdict
 
@@ -37,19 +60,52 @@ def apply_global_stability_policy(
         if action != "ignore" and "global_instability_confirm" not in reasons:
             reasons.append("global_instability_confirm")
 
-        if action == "confirm" and verdict == LyapunovVerdict.ABSTAIN:
-            record_verdict_transition(
-                ctx,
-                stage=f"{stage_prefix}_confirm",
-                before=verdict,
-                after=LyapunovVerdict.REQUIRE_CONFIRMATION,
-                reason="global_instability_confirm",
-            )
-            return LyapunovVerdict.REQUIRE_CONFIRMATION
+        if action == "confirm":
+            if verdict == LyapunovVerdict.ABSTAIN:
+                provenance = verdict_provenance(ctx, LyapunovVerdict.ABSTAIN)
+                relaxable = provenance in _RELAXABLE_ABSTAIN_PROVENANCE and not (
+                    ctx.extra.get("kappa_hard_block")
+                )
+                if relaxable:
+                    record_verdict_transition(
+                        ctx,
+                        stage=f"{stage_prefix}_confirm",
+                        before=verdict,
+                        after=LyapunovVerdict.REQUIRE_CONFIRMATION,
+                        reason="global_instability_confirm",
+                    )
+                    return LyapunovVerdict.REQUIRE_CONFIRMATION
+                record_verdict_transition(
+                    ctx,
+                    stage=f"{stage_prefix}_confirm_denied",
+                    before=verdict,
+                    after=verdict,
+                    reason="abstain_provenance_not_global",
+                )
+                return verdict
+
+            hardened = max_strictness(verdict, LyapunovVerdict.REQUIRE_CONFIRMATION)
+            if hardened != verdict:
+                record_verdict_transition(
+                    ctx,
+                    stage=f"{stage_prefix}_confirm",
+                    before=verdict,
+                    after=hardened,
+                    reason="global_instability_confirm",
+                )
+            return hardened
 
         if action == "abstain":
             if "global_instability_abstain" not in reasons:
                 reasons.append("global_instability_abstain")
+            if verdict != LyapunovVerdict.ABSTAIN:
+                record_verdict_transition(
+                    ctx,
+                    stage=f"{stage_prefix}_abstain",
+                    before=verdict,
+                    after=LyapunovVerdict.ABSTAIN,
+                    reason="global_instability_abstain",
+                )
             return LyapunovVerdict.ABSTAIN
 
     except Exception as exc:

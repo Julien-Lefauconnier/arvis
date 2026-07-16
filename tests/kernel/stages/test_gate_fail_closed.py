@@ -12,9 +12,11 @@ mechanism can never relax.
    strictness order ALLOW < REQUIRE_CONFIRMATION < ABSTAIN: they can
    only escalate, never relax (property-based).
 
-The explicit ABSTAIN -> REQUIRE_CONFIRMATION transition of the global
-stability policy under action="confirm" is a designed, traced product
-transition and is intentionally outside the monotonicity property.
+The ABSTAIN -> REQUIRE_CONFIRMATION transition of the global stability
+policy under action="confirm" is provenance-checked since lot A2: it
+only reinterprets an ABSTAIN produced by the global stability axis
+itself and never relaxes a foreign veto (see verdict_order and
+test_verdict_monotonic).
 """
 
 from types import SimpleNamespace

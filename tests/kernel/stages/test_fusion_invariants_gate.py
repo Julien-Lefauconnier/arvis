@@ -15,7 +15,11 @@ def test_gate_single_decision_point(pipeline, ctx):
 
     # cohérence verdict ↔ fusion
     if any("global_instability_confirm" in r for r in ctx.extra["fusion_reasons"]):
-        assert ctx.gate_result == LyapunovVerdict.REQUIRE_CONFIRMATION
+        # Monotone policy (F-001): confirm is a floor, not a ceiling.
+        assert ctx.gate_result in {
+            LyapunovVerdict.REQUIRE_CONFIRMATION,
+            LyapunovVerdict.ABSTAIN,
+        }
 
 
 def test_fusion_reason_consistency(pipeline, ctx):
