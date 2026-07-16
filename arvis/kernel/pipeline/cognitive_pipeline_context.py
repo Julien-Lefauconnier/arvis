@@ -145,6 +145,10 @@ class CognitivePipelineContext:
     # "ignore" | "confirm" | "abstain"
     # -----------------------------------------
     global_stability_action: str = "ignore"
+    # A4/B5: switching safety envelope mode. "soft" keeps switching as
+    # observability only; any other value feeds the measured switching
+    # safety into the validity envelope. Production sets "enforce".
+    switching_envelope_mode: str = "soft"
     # -------------------------
     # Control layer
     # -------------------------

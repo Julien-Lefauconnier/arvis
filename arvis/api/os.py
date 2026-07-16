@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from arvis.adapters.tools.gates import ConsentGate, EgressGate
 from arvis.api.audit import AuditCommitmentPolicy
 from arvis.api.os_internals import CognitiveOSInternals
 from arvis.api.runtime_controls import TrustedRuntimeControls
@@ -42,6 +43,12 @@ class CognitiveOSConfig:
     # from request payloads or ctx.extra. Rejected in the production
     # runtime profile.
     runtime_controls: TrustedRuntimeControls | None = None
+    # F-017/F-018: host-provided tool gates. In the PRODUCTION profile a
+    # tool declaring required_consent or data_egress is denied when the
+    # matching gate is missing (deny-by-default); other profiles leave
+    # enforcement to the host (documented fail-open).
+    consent_gate: ConsentGate | None = None
+    egress_gate: EgressGate | None = None
     # F-015: how a missing audit commitment is handled. Set REQUIRED
     # for profiles where runs have effects: an unauditable run must
     # not pass.
@@ -62,6 +69,27 @@ class CognitiveOSConfig:
                 "audit_commitment_policy=REQUIRED requires enable_trace=True: "
                 "without the trace no audit commitment can be produced"
             )
+
+    @classmethod
+    def production(cls, **overrides: Any) -> CognitiveOSConfig:
+        """Closed production profile.
+
+        Doctrine: deny-by-default is an attribute of the PRODUCTION
+        profile, not of the library. The factory fixes
+        runtime_mode=PRODUCTION and defaults the audit commitment
+        policy to REQUIRED; every other field can be overridden.
+        """
+        if "runtime_mode" in overrides:
+            raise ValueError(
+                "CognitiveOSConfig.production() fixes runtime_mode; "
+                "use CognitiveOSConfig(...) directly for other modes"
+            )
+        params: dict[str, Any] = {
+            "audit_commitment_policy": AuditCommitmentPolicy.REQUIRED,
+        }
+        params.update(overrides)
+        params["runtime_mode"] = RuntimeMode.PRODUCTION
+        return cls(**params)
 
 
 # -----------------------------------------------------
@@ -96,6 +124,15 @@ class CognitiveOS(CognitiveOSInternals):
         )
         self.pipeline.telemetry_sink = self.telemetry_sink
         self.runtime = self._build_runtime()
+
+    def _ensure_production_ready(self) -> None:
+        """F-019: in the PRODUCTION profile the tool registry freezes
+        automatically at the first run; late registration is then
+        refused by the frozen registry itself."""
+        if self.config.runtime_mode is not RuntimeMode.PRODUCTION:
+            return
+        if not self.tool_registry.frozen:
+            self.tool_registry.freeze()
 
     # -------------------------------------------------
     # Tools API
@@ -132,6 +169,7 @@ class CognitiveOS(CognitiveOSInternals):
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
     ) -> CognitiveResultView | dict[str, Any]:
+        self._ensure_production_ready()
         result = self._run_single(
             user_id=user_id,
             cognitive_input=cognitive_input,
@@ -187,6 +225,7 @@ class CognitiveOS(CognitiveOSInternals):
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        self._ensure_production_ready()
         return self._build_ir_from_input(
             user_id=user_id,
             cognitive_input=cognitive_input,
@@ -248,6 +287,7 @@ class CognitiveOS(CognitiveOSInternals):
         *,
         user_id: str = "multi",
     ) -> list[CognitiveResultView | dict[str, Any]]:
+        self._ensure_production_ready()
         return self._run_batch(
             inputs=inputs,
             user_id=user_id,

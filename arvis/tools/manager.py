@@ -34,11 +34,16 @@ class ToolManager:
         *,
         consent_gate: ConsentGate | None = None,
         egress_gate: EgressGate | None = None,
+        require_gates: bool = False,
     ) -> None:
         self.registry = registry
         self.executor = executor
         self._consent_gate = consent_gate
         self._egress_gate = egress_gate
+        # F-017/F-018: when True (production profile), a tool declaring
+        # required_consent or data_egress is denied if the matching gate
+        # is missing, instead of leaving enforcement to the host.
+        self._require_gates = require_gates
 
     def run(self, result: Any, ctx: Any) -> ToolResult | None:
         if result is None or ctx is None:
@@ -83,7 +88,11 @@ class ToolManager:
                 allowed=True,
                 reason="forced_execution",
             )
-        elif self._consent_gate is None and self._egress_gate is None:
+        elif (
+            self._consent_gate is None
+            and self._egress_gate is None
+            and not self._require_gates
+        ):
             # No gates configured: call the evaluator with its base signature,
             # so any host or test that replaces evaluate() stays compatible.
             policy = ToolPolicyEvaluator.evaluate(invocation, self.registry)
@@ -93,6 +102,7 @@ class ToolManager:
                 self.registry,
                 consent_gate=self._consent_gate,
                 egress_gate=self._egress_gate,
+                require_gates=self._require_gates,
             )
 
         if not policy.allowed:

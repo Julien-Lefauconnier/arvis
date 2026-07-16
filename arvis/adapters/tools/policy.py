@@ -14,6 +14,7 @@ class ToolPolicyEvaluator:
         *,
         consent_gate: ConsentGate | None = None,
         egress_gate: EgressGate | None = None,
+        require_gates: bool = False,
     ) -> ToolAuthorizationDecision:
         tool = registry.get(invocation.tool_name)
 
@@ -39,18 +40,33 @@ class ToolPolicyEvaluator:
             )
 
         # --- consent gating (manifest: required_consent) ---
-        # Enforced only when the tool declares a consent and the host supplies a
-        # gate; otherwise consent is the host's concern elsewhere (no gate here).
-        if spec.required_consent is not None and consent_gate is not None:
-            if not consent_gate.is_granted(invocation, spec.required_consent):
+        # With require_gates (production profile), a declared consent
+        # without an installed gate is denied (F-017, deny-by-default).
+        # Otherwise consent stays the host's concern (documented
+        # fail-open for non-production profiles).
+        if spec.required_consent is not None:
+            if consent_gate is None:
+                if require_gates:
+                    return ToolAuthorizationDecision(
+                        allowed=False,
+                        reason="consent_gate_missing",
+                    )
+            elif not consent_gate.is_granted(invocation, spec.required_consent):
                 return ToolAuthorizationDecision(
                     allowed=False,
                     reason="consent_required",
                 )
 
         # --- egress gating (manifest: data_egress) ---
-        if spec.data_egress and egress_gate is not None:
-            if not egress_gate.is_allowed(invocation, spec):
+        # Same mechanics as consent (F-018).
+        if spec.data_egress:
+            if egress_gate is None:
+                if require_gates:
+                    return ToolAuthorizationDecision(
+                        allowed=False,
+                        reason="egress_gate_missing",
+                    )
+            elif not egress_gate.is_allowed(invocation, spec):
                 return ToolAuthorizationDecision(
                     allowed=False,
                     reason="egress_denied",

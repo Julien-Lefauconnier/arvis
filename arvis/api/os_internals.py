@@ -7,6 +7,7 @@ from typing import Any
 from arvis.api.audit import AuditCommitmentPolicy
 from arvis.api.ir import build_ir_view
 from arvis.api.runtime.cognitive_runtime import CognitiveRuntime
+from arvis.api.runtime_mode import RuntimeMode
 from arvis.api.views.cognitive_result_view import CognitiveResultView
 from arvis.cognition.state.cognitive_state import CognitiveState
 from arvis.ir.cognitive_ir import CognitiveIR
@@ -15,6 +16,7 @@ from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineCo
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.replay_engine import ReplayEngine
 from arvis.tools.executor import ToolExecutor
+from arvis.tools.registry import ToolRegistry
 
 
 class CognitiveOSInternals:
@@ -22,6 +24,7 @@ class CognitiveOSInternals:
     pipeline: CognitivePipeline
     runtime: CognitiveRuntime
     tool_executor: ToolExecutor
+    tool_registry: ToolRegistry
 
     @staticmethod
     def _result_execution(result: Any) -> Any:
@@ -58,6 +61,13 @@ class CognitiveOSInternals:
                 force_safe_projection=controls.force_safe_projection,
                 force_safe_switching=controls.force_safe_switching,
             )
+        if self.config.runtime_mode is RuntimeMode.PRODUCTION:
+            # F-002 / A4: the permissive defaults are research settings;
+            # the production profile enforces the global stability axis
+            # and feeds switching safety into the validity envelope.
+            ctx.global_stability_action = "confirm"
+            ctx.switching_envelope_mode = "enforce"
+
         runtime_policy.retry_requested = bool(ctx.extra.get("retry_tool", False))
         runtime_policy.retry_count = int(ctx.extra.get("tool_retry_count", 0) or 0)
 
@@ -90,6 +100,15 @@ class CognitiveOSInternals:
             pipeline=self.pipeline,
             adapters=self.config.adapter_registry,
             tool_executor=self.tool_executor,
+            # One registry: the runtime and its tool manager govern the
+            # same tool surface the host registered on (previously the
+            # runtime built its own empty registry and the policy was
+            # evaluated against it).
+            tool_registry=self.tool_registry,
+            consent_gate=self.config.consent_gate,
+            egress_gate=self.config.egress_gate,
+            # F-017/F-018: deny-by-default gates in the PRODUCTION profile.
+            require_gates=self.config.runtime_mode is RuntimeMode.PRODUCTION,
         )
 
     def _format_run_output(

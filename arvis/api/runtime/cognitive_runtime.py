@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any
 
+from arvis.adapters.tools.gates import ConsentGate, EgressGate
 from arvis.cognition.state.cognitive_state import CognitiveState
 from arvis.errors.runtime_execution import (
     ProcessExecutionAborted,
@@ -56,6 +57,9 @@ class CognitiveRuntime:
         adapters: dict[str, Any] | None = None,
         tool_executor: Any | None = None,
         tool_registry: ToolRegistry | None = None,
+        consent_gate: ConsentGate | None = None,
+        egress_gate: EgressGate | None = None,
+        require_gates: bool = False,
     ) -> None:
         self.pipeline = pipeline
         self.adapters = adapters or {}
@@ -74,6 +78,9 @@ class CognitiveRuntime:
         self.tool_manager = ToolManager(
             registry=self.tool_registry,
             executor=self.tool_executor,
+            consent_gate=consent_gate,
+            egress_gate=egress_gate,
+            require_gates=require_gates,
         )
         self.tool_retry_policy = ToolRetryPolicy()
         self.services = KernelServiceRegistry(
