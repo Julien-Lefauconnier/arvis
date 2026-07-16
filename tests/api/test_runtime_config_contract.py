@@ -27,7 +27,10 @@ from arvis.kernel.pipeline.stages.action_stage import ActionStage
 
 
 def test_runtime_mode_strings_are_normalized():
-    config = CognitiveOSConfig(runtime_mode="production")
+    config = CognitiveOSConfig(
+        runtime_mode="production",
+        audit_commitment_policy=AuditCommitmentPolicy.REQUIRED,
+    )
     assert config.runtime_mode is RuntimeMode.PRODUCTION
 
 

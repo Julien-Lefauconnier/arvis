@@ -69,6 +69,22 @@ class CognitiveOSConfig:
                 "audit_commitment_policy=REQUIRED requires enable_trace=True: "
                 "without the trace no audit commitment can be produced"
             )
+        # F-002/F-003/F-004-a5: production invariants hold whatever the
+        # constructor. Enforced here as the single source of truth, so
+        # neither direct construction nor factory overrides can weaken
+        # the profile; violations fail closed at construction.
+        if self.runtime_mode is RuntimeMode.PRODUCTION:
+            if self.audit_commitment_policy is not AuditCommitmentPolicy.REQUIRED:
+                raise ValueError(
+                    "the production profile requires "
+                    "audit_commitment_policy=REQUIRED: an unauditable run "
+                    "must not pass (use CognitiveOSConfig.production())"
+                )
+            if self.runtime_controls is not None:
+                raise ValueError(
+                    "TrustedRuntimeControls are not permitted in the "
+                    "production runtime profile"
+                )
 
     @classmethod
     def production(cls, **overrides: Any) -> CognitiveOSConfig:
@@ -77,7 +93,10 @@ class CognitiveOSConfig:
         Doctrine: deny-by-default is an attribute of the PRODUCTION
         profile, not of the library. The factory fixes
         runtime_mode=PRODUCTION and defaults the audit commitment
-        policy to REQUIRED; every other field can be overridden.
+        policy to REQUIRED. Other fields can be overridden, but the
+        production invariants enforced by __post_init__ cannot be
+        weakened: an override that relaxes them is refused at
+        construction (F-003-a5).
         """
         if "runtime_mode" in overrides:
             raise ValueError(
@@ -102,7 +121,7 @@ class CognitiveOS(CognitiveOSInternals):
         *,
         pipeline: CognitivePipeline | None = None,
     ):
-        self.config = config or CognitiveOSConfig()
+        self._config = config or CognitiveOSConfig()
         if (
             self.config.runtime_controls is not None
             and self.config.runtime_mode is RuntimeMode.PRODUCTION
@@ -124,6 +143,16 @@ class CognitiveOS(CognitiveOSInternals):
         )
         self.pipeline.telemetry_sink = self.telemetry_sink
         self.runtime = self._build_runtime()
+
+    @property
+    def config(self) -> CognitiveOSConfig:
+        """Effective runtime configuration (F-004-a5).
+
+        Frozen at construction and not reassignable: the configuration
+        the runtime was built with is the configuration it governs
+        under, for the whole lifetime of the instance.
+        """
+        return self._config
 
     def _ensure_production_ready(self) -> None:
         """F-019: in the PRODUCTION profile the tool registry freezes

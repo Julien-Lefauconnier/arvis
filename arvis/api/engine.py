@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 
@@ -59,7 +59,7 @@ class ArvisEngine:
     @property
     def config(self) -> CognitiveOSConfig:
         """Runtime configuration."""
-        return cast(CognitiveOSConfig, self._os.config)
+        return self._os.config
 
     @property
     def version(self) -> str:

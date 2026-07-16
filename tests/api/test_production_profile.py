@@ -19,6 +19,7 @@ from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.api.audit import AuditCommitmentPolicy
 from arvis.api.os import CognitiveOS, CognitiveOSConfig
+from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.api.runtime_mode import RuntimeMode
 from arvis.errors.base import ArvisSecurityError
 from arvis.tools.base import BaseTool
@@ -45,6 +46,68 @@ def test_production_factory_accepts_field_overrides():
 def test_production_factory_refuses_runtime_mode_override():
     with pytest.raises(ValueError, match="fixes runtime_mode"):
         CognitiveOSConfig.production(runtime_mode="local")
+
+
+# ---------------------------------------------------------------
+# F-002/F-003/F-004-a5: unified production invariants
+# ---------------------------------------------------------------
+
+
+def test_direct_construction_cannot_weaken_production_audit():
+    # F-002-a5: the direct constructor carries the same invariants as
+    # the factory; a PRODUCTION config with the DEGRADED default is
+    # refused at construction.
+    with pytest.raises(ValueError, match="REQUIRED"):
+        CognitiveOSConfig(runtime_mode="production")
+
+
+def test_direct_construction_with_required_audit_is_accepted():
+    config = CognitiveOSConfig(
+        runtime_mode="production",
+        audit_commitment_policy=AuditCommitmentPolicy.REQUIRED,
+    )
+    assert config.runtime_mode is RuntimeMode.PRODUCTION
+
+
+def test_factory_override_cannot_weaken_audit_policy():
+    # F-003-a5: an override that relaxes a production invariant is
+    # refused, not silently clamped.
+    with pytest.raises(ValueError, match="REQUIRED"):
+        CognitiveOSConfig.production(
+            audit_commitment_policy=AuditCommitmentPolicy.DEGRADED
+        )
+
+
+def test_factory_override_cannot_disable_trace():
+    # REQUIRED audit without the trace machinery is the F-012
+    # configuration contradiction.
+    with pytest.raises(ValueError, match="enable_trace"):
+        CognitiveOSConfig.production(enable_trace=False)
+
+
+def test_production_config_rejects_runtime_controls_at_construction():
+    # The invariant now lives in the config itself: the invalid
+    # combination cannot exist, whatever composes it.
+    with pytest.raises(ValueError, match="production"):
+        CognitiveOSConfig(
+            runtime_mode="production",
+            audit_commitment_policy=AuditCommitmentPolicy.REQUIRED,
+            runtime_controls=TrustedRuntimeControls(force_execution=True),
+        )
+
+
+def test_os_config_is_not_reassignable():
+    # F-004-a5: the runtime governs under the configuration it was
+    # built with, for its whole lifetime.
+    os = CognitiveOS()
+    with pytest.raises(AttributeError):
+        os.config = CognitiveOSConfig()  # type: ignore[misc]
+
+
+def test_os_config_returns_the_injected_config():
+    config = CognitiveOSConfig.production()
+    os = CognitiveOS(config)
+    assert os.config is config
 
 
 # ---------------------------------------------------------------

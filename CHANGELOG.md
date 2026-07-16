@@ -25,6 +25,19 @@ versioning during the alpha.
   pure risk payloads; example 06 now demonstrates the harden-only
   doctrine on a real trade payload.
 
+### Changed
+
+- **F-002/F-003/F-004-a5: unified production invariants.** The
+  PRODUCTION invariants now live in `CognitiveOSConfig.__post_init__`
+  as the single source of truth: `audit_commitment_policy=REQUIRED` and
+  no `runtime_controls`, whatever the constructor. A direct
+  `CognitiveOSConfig(runtime_mode="production")` with the DEGRADED
+  default is refused at construction, and a `production()` override
+  that relaxes an invariant is refused rather than silently clamped.
+  `CognitiveOS.config` is now a read-only property backed by a private
+  `_config`: the runtime governs under the configuration it was built
+  with, for its whole lifetime.
+
 ## [0.1.0a5] - 2026-07-16
 
 Consolidation release (campaign 2): closes the composition-scope
