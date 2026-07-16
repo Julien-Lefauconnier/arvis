@@ -56,6 +56,8 @@ dev = [
   "ruff==0.14.3",
   "pytest==8.4.2",
   # Plugins stay unpinned until the dev lockfile lands (backlog P2).
+  # Stubs for the runtime jsonschema dependency (tool schema validation).
+  "types-jsonschema",
   "pytest-cov",
   "pytest-mock",
   "hypothesis",

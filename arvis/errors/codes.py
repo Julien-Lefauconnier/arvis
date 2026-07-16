@@ -158,6 +158,9 @@ class ErrorCode(StrEnum):
     TOOL_EXECUTION_ERROR = "tool_execution_error"
     TOOL_AUTHORIZATION_ERROR = "tool_authorization_error"
     TOOL_UNKNOWN = "tool_unknown"
+    TOOL_TIMEOUT = "tool_timeout"
+    TOOL_INPUT_INVALID = "tool_input_invalid"
+    TOOL_OUTPUT_INVALID = "tool_output_invalid"
 
     # =========================================================
     # LLM Runtime

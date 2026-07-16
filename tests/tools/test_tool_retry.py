@@ -6,6 +6,7 @@ from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.api.os import CognitiveOS, CognitiveOSConfig
 from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.tools.base import BaseTool
+from arvis.tools.spec import ToolSpec
 
 
 def test_tool_retry_flow(monkeypatch):
@@ -22,6 +23,8 @@ def test_tool_retry_flow(monkeypatch):
 
     class FailingThenSuccessTool(BaseTool):
         name = "retry_tool"
+        # F-016: automatic retry now requires declared idempotence.
+        spec = ToolSpec(name="retry_tool", description="", idempotent=True)
 
         def execute(self, input_data):
             calls["count"] += 1

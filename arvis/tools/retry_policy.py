@@ -16,11 +16,20 @@ class ToolRetryPolicy:
         if not getattr(ctx, "_tool_failure", False):
             return
 
-        # --- respect tool spec if present ---
+        # --- respect tool spec (F-016: retry requires idempotence) ---
         last_tool = getattr(ctx, "_last_tool_spec", None)
-        if last_tool is not None:
-            if not last_tool.retryable:
-                return
+        if last_tool is None:
+            # Unknown effect semantics: an automatic replay could
+            # re-fire a non-idempotent effect, so no spec means no
+            # automatic retry (fail-closed). The explicit host retry
+            # channel is unaffected.
+            return
+        if not last_tool.retryable:
+            return
+        if last_tool.side_effectful and not last_tool.idempotent:
+            # F-016: a side-effectful, non-idempotent effect is never
+            # replayed automatically (double e-mail, double payment).
+            return
 
         # retry only if system is safe enough
         risk = float(getattr(ctx, "collapse_risk", 0.0))

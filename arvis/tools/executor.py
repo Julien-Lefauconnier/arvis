@@ -3,16 +3,39 @@
 import time
 from typing import Any
 
+import jsonschema
+
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.errors import normalize_error
 from arvis.errors.tool_runtime import (
     ToolAuthorizationError,
     ToolExecutionError,
+    ToolInputValidationError,
+    ToolOutputValidationError,
+    ToolTimeoutError,
     UnknownToolError,
 )
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.runtime.runtime_bindings import resolve_process_id
 from arvis.tools.tool_result import ToolResult
+
+
+def _schema_violation(instance: Any, schema: dict[str, Any]) -> str | None:
+    """Validate an instance against a declared JSON schema (F-020).
+
+    Returns a structural path on violation and None when valid. ZK: the
+    description carries schema paths only, never the offending values.
+    A malformed declared schema cannot validate anything, so it counts
+    as a violation on the tool side (fail-closed).
+    """
+    try:
+        jsonschema.validate(instance=instance, schema=schema)
+    except jsonschema.ValidationError as exc:
+        path = "/".join(str(part) for part in exc.absolute_path)
+        return path or "<root>"
+    except jsonschema.SchemaError:
+        return "<invalid_schema>"
+    return None
 
 
 class ToolExecutor:
@@ -75,8 +98,26 @@ class ToolExecutor:
                     latency_ms=None,
                 )
 
-            if tool.spec is not None:
-                ctx._last_tool_spec = tool.spec
+            spec = tool.spec
+            if spec is not None:
+                ctx._last_tool_spec = spec
+
+            # F-020: the declared input schema is validated before the
+            # call; a violating payload never reaches the tool.
+            if spec is not None and spec.input_schema:
+                violation = _schema_violation(tool_payload, spec.input_schema)
+                if violation is not None:
+                    ctx._tool_failure = True
+                    return ToolResult(
+                        tool_name=tool_name,
+                        success=False,
+                        error=ToolInputValidationError(
+                            f"tool {tool_name!r} input violates its "
+                            "declared input_schema",
+                            details={"schema_path": violation},
+                        ),
+                        latency_ms=None,
+                    )
 
             tool.validate(payload_runtime)
             # --- NEW: dual execution support ---
@@ -86,6 +127,49 @@ class ToolExecutor:
                 output = tool.execute(payload_runtime)
 
             latency = (time.perf_counter() - start) * 1000
+
+            # F-014: deadline semantics. The tool ran to completion but
+            # past its declared budget; the late result is rejected
+            # instead of being used, and the violation is surfaced. The
+            # effect may still have happened: this is a deadline on
+            # result acceptance, not an interruption (process isolation
+            # is a later chantier).
+            if (
+                spec is not None
+                and spec.timeout_seconds is not None
+                and latency > float(spec.timeout_seconds) * 1000.0
+            ):
+                ctx._tool_failure = True
+                return ToolResult(
+                    tool_name=tool_name,
+                    success=False,
+                    error=ToolTimeoutError(
+                        f"tool {tool_name!r} exceeded its declared timeout",
+                        details={
+                            "timeout_seconds": spec.timeout_seconds,
+                            "elapsed_ms": round(latency, 3),
+                        },
+                    ),
+                    latency_ms=latency,
+                )
+
+            # F-020: the declared output schema is validated after the
+            # call; an invalid response gets its specific failure status
+            # instead of flowing downstream as a success.
+            if spec is not None and spec.output_schema:
+                violation = _schema_violation(output, spec.output_schema)
+                if violation is not None:
+                    ctx._tool_failure = True
+                    return ToolResult(
+                        tool_name=tool_name,
+                        success=False,
+                        error=ToolOutputValidationError(
+                            f"tool {tool_name!r} output violates its "
+                            "declared output_schema",
+                            details={"schema_path": violation},
+                        ),
+                        latency_ms=latency,
+                    )
 
             return ToolResult(
                 tool_name=tool_name,
