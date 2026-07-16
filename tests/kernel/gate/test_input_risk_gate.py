@@ -13,6 +13,7 @@ from arvis.kernel.gate.input_risk import (
     resolve_input_risk_verdict,
 )
 from arvis.kernel.pipeline.stages.gate.input_risk_gate import apply_input_risk_gate
+from arvis.kernel.pipeline.stages.gate.trace_helpers import VERDICT_PROVENANCE_KEY
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 # --- read_input_risk: only a numeric top-level "risk" qualifies ---
@@ -108,6 +109,45 @@ def test_gate_supersedes_projection_artifact_and_keeps_ir_consistent():
     assert "projection_boundary" not in reasons
     assert "input_risk_gate" in reasons
     assert len(reasons) >= 1  # never empty -> reason_codes validation holds
+
+
+def test_gate_relax_denied_by_non_artifact_provenance():
+    # A traced hardening outside the sparse-projection artifact set is a
+    # real veto: a declared low risk never relaxes it (audit F-006).
+    ctx = _ctx(
+        {"risk": 0.1},
+        extra={VERDICT_PROVENANCE_KEY: {"ABSTAIN": "memory_hard_block"}},
+    )
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ABSTAIN)
+    assert out == LyapunovVerdict.ABSTAIN
+    trace = ctx.extra["verdict_transition_trace"]
+    assert trace[-1]["stage"] == "input_risk_relax_denied"
+
+
+def test_gate_relaxes_sparse_projection_artifact():
+    ctx = _ctx(
+        {"risk": 0.1},
+        extra={VERDICT_PROVENANCE_KEY: {"ABSTAIN": "projection_hard_block"}},
+    )
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ABSTAIN)
+    assert out == LyapunovVerdict.ALLOW
+
+
+def test_gate_exception_forces_abstain():
+    class _BoomInputCtx:
+        def __init__(self):
+            self.extra = {}
+
+        @property
+        def cognitive_input(self):
+            raise RuntimeError("boom")
+
+    ctx = _BoomInputCtx()
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ALLOW)
+    assert out is LyapunovVerdict.ABSTAIN
+    trace = ctx.extra["verdict_transition_trace"]
+    assert trace[-1]["stage"] == "input_risk_fail_closed"
+    assert trace[-1]["reason"] == "gate_exception"
 
 
 def test_gate_records_input_risk_in_extra():

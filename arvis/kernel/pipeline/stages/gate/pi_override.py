@@ -56,27 +56,31 @@ def apply_pi_gate_override(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
                 kernel_verdict = getattr(kernel_verdict, "final_verdict", None)
 
             if pi_verdict != verdict:
-                record_verdict_transition(
-                    ctx,
-                    stage="pi_gate_override",
-                    before=verdict,
-                    after=pi_verdict,
-                    reason="pi_structured_decision",
-                )
-
                 # ---- HARD SAFETY RULE ----
                 # PI cannot relax a stricter verdict (especially ABSTAIN)
                 if kernel_verdict == LyapunovVerdict.ABSTAIN:
-                    return LyapunovVerdict.ABSTAIN
-
-                # ---- Allowed overrides ----
-                if pi_verdict == LyapunovVerdict.ABSTAIN:
-                    verdict = LyapunovVerdict.ABSTAIN
+                    applied = LyapunovVerdict.ABSTAIN
+                elif pi_verdict == LyapunovVerdict.ABSTAIN:
+                    applied = LyapunovVerdict.ABSTAIN
                 elif (
                     pi_verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
                     and verdict == LyapunovVerdict.ALLOW
                 ):
-                    verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
+                    applied = LyapunovVerdict.REQUIRE_CONFIRMATION
+                else:
+                    applied = verdict
+
+                # Trace fidelity: only applied transitions are recorded,
+                # a proposed-but-rejected relaxation is not a transition.
+                if applied != verdict:
+                    record_verdict_transition(
+                        ctx,
+                        stage="pi_gate_override",
+                        before=verdict,
+                        after=applied,
+                        reason="pi_structured_decision",
+                    )
+                verdict = applied
 
     except Exception as exc:
         ErrorManager.capture_exception(

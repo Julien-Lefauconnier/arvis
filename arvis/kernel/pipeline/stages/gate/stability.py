@@ -17,6 +17,10 @@ from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.lyapunov.verdict_order import max_strictness
 from arvis.math.stability.global_guard import GlobalStabilityGuard
+from arvis.math.stability.hard_block_policy import (
+    HARD_BLOCK_TABLE_VERSION,
+    resolve_hard_block,
+)
 from arvis.math.stability.validity_envelope import (
     build_validity_envelope as build_math_validity_envelope,
 )
@@ -221,8 +225,10 @@ def build_stability_envelope(
     if w_ratio is not None and w_ratio > w_bound_tol:
         reasons.append("exponential_bound")
 
-    hard_block = False
-    hard_reason = "_".join(reasons) if reasons else None
+    # F-003: hard_block is resolved by the versioned severity table
+    # instead of being hardcoded (unknown reasons fail closed).
+    hard_block, hard_reason = resolve_hard_block(reasons)
+    ctx.extra["hard_block_table_version"] = HARD_BLOCK_TABLE_VERSION
 
     if hard_block:
         ctx.extra.setdefault("warnings", []).append(
@@ -310,13 +316,19 @@ def build_validity_envelope(
         adaptive_band = ctx.extra.get("kappa_band")
 
         # -----------------------------------------------------
-        # Switching safety is currently treated as a SOFT signal.
+        # Switching safety envelope mode (audit F-004, lot A4).
         #
-        # It should not invalidate the mathematical validity
-        # envelope unless explicitly escalated to a hard block.
+        # "soft" (default): switching stays observability only and
+        # does not invalidate the mathematical validity envelope.
+        # Any other value feeds the measured switching safety into
+        # the envelope, so unknown modes fail closed into
+        # enforcement.
         # -----------------------------------------------------
 
-        effective_switching_safe = True
+        switching_mode = getattr(ctx, "switching_envelope_mode", "soft")
+        effective_switching_safe = (
+            True if switching_mode == "soft" else bool(switching_safe)
+        )
 
         validity_envelope = build_math_validity_envelope(
             projection_available=bool(projection_available),

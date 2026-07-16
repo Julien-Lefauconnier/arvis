@@ -6,6 +6,7 @@ from typing import Any
 
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.lyapunov.verdict_order import max_strictness
 
 
 def apply_gate_policy(
@@ -49,7 +50,9 @@ def apply_gate_policy(
                 return LyapunovVerdict.ABSTAIN
             elif action == "confirm":
                 reasons.append("global_instability_confirm")
-                return LyapunovVerdict.REQUIRE_CONFIRMATION
+                # Monotone (F-001): confirm is a floor, it never
+                # overwrites a stricter verdict.
+                return max_strictness(verdict, LyapunovVerdict.REQUIRE_CONFIRMATION)
         else:
             reasons.append(f"hard_block_policy_{action}_{envelope.hard_reason}")
 

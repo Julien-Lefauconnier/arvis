@@ -9,8 +9,11 @@ correctly to execution.
 Behaviour:
 - No explicit top-level risk in the input -> verdict unchanged (the common
   case; structured/observational turns are unaffected).
-- A real safety veto already fired (kappa / adaptive instability) -> the
-  incoming verdict is kept. The input-risk policy never relaxes a real veto.
+- A real safety veto already fired (kappa / adaptive instability, or any
+  traced hardening whose provenance is outside the sparse-projection
+  artifact set) -> the incoming verdict is kept. The input-risk policy
+  never relaxes a real veto (audit F-006), and an exception inside the
+  gate forces ABSTAIN (fail-closed).
 - Otherwise the governed input-risk policy determines the verdict (low ->
   ALLOW, medium -> REQUIRE_CONFIRMATION, high -> ABSTAIN). This makes a pure
   risk assertion gradeable instead of being dominated by the sparse-projection
@@ -29,8 +32,12 @@ from typing import Any
 
 from arvis.errors.manager import ErrorManager
 from arvis.kernel.gate.input_risk import read_input_risk, resolve_input_risk_verdict
-from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
+from arvis.kernel.pipeline.stages.gate.trace_helpers import (
+    record_verdict_transition,
+    verdict_provenance,
+)
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.lyapunov.verdict_order import is_relaxation
 
 _VERDICT_BY_NAME: dict[str, LyapunovVerdict] = {
     "allow": LyapunovVerdict.ALLOW,
@@ -52,6 +59,21 @@ _PROJECTION_ARTIFACT_REASONS: frozenset[str] = frozenset(
         "projection_boundary",
         "projection_unsafe",
         "projection_lyapunov_incompatible",
+    }
+)
+
+# Provenance stages whose hardening the policy may supersede when it
+# governs a pure risk scalar: sparse-projection artifacts and the
+# validity envelope they invalidate. A verdict hardened by any other
+# stage (memory, global policy, pi, kappa, adaptive, fail-closed paths)
+# is a real veto and is never relaxed (audit F-006).
+_RELAXABLE_PROVENANCE: frozenset[str] = frozenset(
+    {
+        "projection_hard_block",
+        "projection_lyapunov_enforcement",
+        "projection_boundary_enforcement",
+        "projection_unsafe_soft",
+        "validity_envelope_enforcement",
     }
 )
 
@@ -83,6 +105,20 @@ def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict
 
         risk_verdict = _VERDICT_BY_NAME[resolve_input_risk_verdict(risk)]
 
+        if is_relaxation(verdict, risk_verdict):
+            provenance = verdict_provenance(ctx, verdict)
+            if provenance is not None and provenance not in _RELAXABLE_PROVENANCE:
+                # A real veto (traced provenance outside the artifact
+                # set) is never relaxed by a declared input risk.
+                record_verdict_transition(
+                    ctx,
+                    stage="input_risk_relax_denied",
+                    before=verdict,
+                    after=verdict,
+                    reason="verdict_provenance_not_artifact",
+                )
+                return verdict
+
         if risk_verdict != verdict:
             record_verdict_transition(
                 ctx,
@@ -111,7 +147,16 @@ def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict
             exc,
             code="input_risk_gate_failure",
         )
-        return verdict
+        # F-002: a failing guarantee mechanism can never relax; an
+        # exception inside the gate forces ABSTAIN (fail-closed).
+        record_verdict_transition(
+            ctx,
+            stage="input_risk_fail_closed",
+            before=verdict,
+            after=LyapunovVerdict.ABSTAIN,
+            reason="gate_exception",
+        )
+        return LyapunovVerdict.ABSTAIN
 
 
 __all__ = ["apply_input_risk_gate"]

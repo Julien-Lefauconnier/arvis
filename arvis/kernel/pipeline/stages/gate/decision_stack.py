@@ -304,6 +304,24 @@ class GateDecisionStack:
                 reason="gate_policy_adjustment",
             )
 
+        scientific = getattr(ctx, "scientific", None)
+        built_envelope = (
+            getattr(getattr(scientific, "adaptive", None), "validity_envelope", None)
+            if scientific is not None
+            else getattr(ctx, "validity_envelope", None)
+        )
+        if envelope is None and built_envelope is None:
+            # F-005: an envelope that could not be built is unknown
+            # validity; unknown validity gates nothing and fails closed.
+            record_verdict_transition(
+                ctx,
+                stage="validity_envelope_unavailable",
+                before=verdict,
+                after=LyapunovVerdict.ABSTAIN,
+                reason="gate_exception",
+            )
+            verdict = LyapunovVerdict.ABSTAIN
+
         verdict = enforce_monotone(
             ctx,
             "validity_enforcement",
@@ -455,7 +473,8 @@ def run_gate_fusion(
                         )
                         verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
         except Exception as exc:
-            verdict = pre_verdict or LyapunovVerdict.ABSTAIN
+            # F-005: a failing soft filter must not discard the fused
+            # verdict; reverting to pre_verdict could relax it.
             ErrorManager.attach(
                 ctx,
                 PipelineStageDegradedError(
@@ -468,17 +487,31 @@ def run_gate_fusion(
             )
         return verdict
     except Exception as exc:
-        verdict = pre_verdict or LyapunovVerdict.ABSTAIN
+        # F-005: fusion is a guarantee mechanism; its failure can not
+        # fall back to the pre-fusion verdict (fail-closed).
+        before = (
+            pre_verdict
+            if isinstance(pre_verdict, LyapunovVerdict)
+            else LyapunovVerdict.ABSTAIN
+        )
+        verdict = LyapunovVerdict.ABSTAIN
         ErrorManager.attach(
             ctx,
             PipelineStageDegradedError(
                 message=str(exc),
                 details={
                     "component": "run_gate_fusion",
-                    "fallback": "pre_verdict",
+                    "fallback": "abstain_fail_closed",
                     "exception_type": type(exc).__name__,
                 },
             ),
+        )
+        record_verdict_transition(
+            ctx,
+            stage="fusion_fail_closed",
+            before=before,
+            after=LyapunovVerdict.ABSTAIN,
+            reason="gate_exception",
         )
         existing = list(ctx.extra.get("fusion_reasons", []))
         ctx.extra["fusion_reasons"] = list(
