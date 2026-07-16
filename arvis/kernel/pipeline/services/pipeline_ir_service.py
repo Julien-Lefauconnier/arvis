@@ -37,7 +37,7 @@ class PipelineIRService:
         # -----------------------------------------
         try:
             ctx.ir_projection = ProjectionIRAdapter.from_projection(
-                getattr(ctx, "projection_certificate", None)
+                ctx.projection.certificate
             )
         except Exception as exc:
             ctx.ir_projection = None

@@ -91,6 +91,16 @@ class StateIRAdapter:
         )
 
     @staticmethod
+    def _projection_attr(ctx: object, field: str, legacy: str) -> Any:
+        # arvis-projection-v2: canonical projection reads go through
+        # the projection sub-context; the plain attribute remains as a
+        # fallback for lightweight mock contexts.
+        projection = getattr(ctx, "projection", None)
+        if projection is not None:
+            return getattr(projection, field, None)
+        return getattr(ctx, legacy, None)
+
+    @staticmethod
     def from_context(ctx: object) -> CognitiveStateIR:
         bundle = getattr(ctx, "bundle", None)
         bundle_id = str(getattr(bundle, "bundle_id", "bundle"))
@@ -183,6 +193,10 @@ class StateIRAdapter:
             stable=getattr(ctx, "stable", None),
             system_tension=getattr(ctx, "system_tension", None),
             drift=getattr(ctx, "drift_score", None),
-            projection_valid=getattr(ctx, "projection_domain_valid", None),
-            projection_margin=getattr(ctx, "projection_margin", None),
+            projection_valid=StateIRAdapter._projection_attr(
+                ctx, "domain_valid", "projection_domain_valid"
+            ),
+            projection_margin=StateIRAdapter._projection_attr(
+                ctx, "margin", "projection_margin"
+            ),
         )

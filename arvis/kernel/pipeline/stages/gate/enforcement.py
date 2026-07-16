@@ -20,9 +20,19 @@ def apply_projection_enforcement(
     switching_safe: bool,
 ) -> LyapunovVerdict:
     try:
-        projection_cert = getattr(ctx, "projection_certificate", None)
-        projection_view = getattr(ctx, "projection_view", None)
-        projected_state = getattr(ctx, "projected_state", None)
+        # arvis-projection-v2: canonical reads go through the
+        # projection sub-context (getattr-tolerant for partial mock
+        # contexts, same pattern as gate_observer); plain attributes
+        # remain as a fallback when no sub-context exists.
+        projection = getattr(ctx, "projection", None)
+        if projection is not None:
+            projection_cert = getattr(projection, "certificate", None)
+            projection_view = getattr(projection, "view", None)
+            projected_state = getattr(projection, "runtime_projection", None)
+        else:
+            projection_cert = getattr(ctx, "projection_certificate", None)
+            projection_view = getattr(ctx, "projection_view", None)
+            projected_state = getattr(ctx, "projected_state", None)
 
         if projection_cert is not None:
             domain_valid = bool(getattr(projection_cert, "domain_valid", False))

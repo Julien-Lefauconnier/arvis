@@ -14,15 +14,18 @@ def _resolve_pi_state(ctx: Any) -> Any:
     """
     Canonical Π-state resolver.
 
-    New projection architecture stores Π artifacts under:
-        ctx.projection.pi_state
+    The canonical Π artifact lives under:
+        ctx.projection.structured_projection
 
-    Legacy compatibility still supports:
-        ctx.pi_state
+    Mock/legacy compatibility still supports:
+        ctx.projection.pi_state and ctx.pi_state
     """
     projection = getattr(ctx, "projection", None)
 
     if projection is not None:
+        structured = getattr(projection, "structured_projection", None)
+        if structured is not None:
+            return structured
         pi_state = getattr(projection, "pi_state", None)
         if pi_state is not None:
             return pi_state

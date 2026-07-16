@@ -3,9 +3,9 @@
 
 The context is already decomposed into sub-contexts (the
 arvis/kernel/pipeline/context/ package); the property layer on
-CognitivePipelineContext is a DELIBERATE compatibility facade kept until
-the callsite migration named in-code as TODO(arvis-projection-v2). This
-test freezes the exact set of facade properties:
+CognitivePipelineContext is a DELIBERATE compatibility facade. The
+projection alias family (arvis-projection-v2) was migrated and removed
+in Lot 4b. This test freezes the exact set of facade properties:
 
   - adding a new facade property fails this test (new code must use the
     sub-context directly, e.g. ctx.projection.certificate);
@@ -54,15 +54,8 @@ FROZEN_FACADE_PROPERTIES = frozenset(
         "ir_state",
         "multi_horizon",
         "perturbation",
-        "pi_state",
         "predictive_snapshot",
         "prev_lyap",
-        "projected_state",
-        "projection_certificate",
-        "projection_domain_valid",
-        "projection_margin",
-        "projection_view",
-        "projection_view_raw",
         "quadratic_comparability",
         "regime",
         "requires_confirmation",

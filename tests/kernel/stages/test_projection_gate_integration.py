@@ -15,7 +15,7 @@ def test_projection_invalid_blocks_allow():
     )
 
     # Force invalid projection
-    ctx.projection_domain_valid = False
+    ctx.projection.domain_valid = False
 
     result = pipeline.run(ctx)
 

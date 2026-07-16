@@ -107,7 +107,7 @@ def build_context_from_yaml(data):
         except KeyError:
             level = ProjectionCertificationLevel.NONE
 
-        ctx.projection_certificate = ProjectionCertificate(
+        cert = ProjectionCertificate(
             domain_valid=bool(proj.get("domain_valid", True)),
             boundedness_ok=bool(proj.get("boundedness_ok", True)),
             lipschitz_ok=bool(proj.get("lipschitz_ok", True)),
@@ -121,21 +121,13 @@ def build_context_from_yaml(data):
             checks_detail=proj.get("checks_detail", {}),
         )
 
-        # Keep legacy/root projection injection and canonical
-        # ctx.projection.* state in sync.
-        #
-        # Gate validity / observability stages primarily read
-        # ctx.projection.certificate when the projection container exists.
-        # Compliance YAML scenarios inject projection data directly, so
-        # without this mirror the runtime sees an unavailable/invalid
-        # projection even when the scenario explicitly provides a valid one.
-        ctx.projection.certificate = ctx.projection_certificate
-        ctx.projection.domain_valid = ctx.projection_certificate.domain_valid
-        ctx.projection.margin = ctx.projection_certificate.margin_to_boundary
-
-        # Projection observability hints used by IR adapters
-        ctx.projection_domain_valid = bool(proj.get("domain_valid", True))
-        ctx.projection_margin = float(proj.get("margin_to_boundary", 1.0))
+        # Canonical projection state (arvis-projection-v2): gate
+        # validity / observability stages and IR adapters read
+        # ctx.projection.* directly; the legacy root aliases were
+        # removed from the context facade.
+        ctx.projection.certificate = cert
+        ctx.projection.domain_valid = cert.domain_valid
+        ctx.projection.margin = cert.margin_to_boundary
         ctx.projection_safe = bool(proj.get("is_projection_safe", True))
         ctx.projection_lyapunov_compatible = bool(
             proj.get("lyapunov_compatibility_ok", True)

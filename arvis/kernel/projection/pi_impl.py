@@ -106,7 +106,11 @@ class PiImpl:
         """
         Return the previous flat projection view when available.
         """
-        previous = getattr(ctx, "projection_view", None)
+        projection = getattr(ctx, "projection", None)
+        if projection is not None:
+            previous = getattr(projection, "view", None)
+        else:
+            previous = getattr(ctx, "projection_view", None)
 
         if isinstance(previous, ProjectionView):
             return previous
@@ -261,9 +265,12 @@ class PiImpl:
                 if isinstance(conf, (int, float)) and conf < 0.3:
                     verdict = "require_confirmation"
 
-        safety_margin = self._coerce(
-            getattr(ctx, "projection_margin", getattr(ctx, "m_t", None)), 0.0
-        )
+        projection = getattr(ctx, "projection", None)
+        if projection is not None and getattr(projection, "margin", None) is not None:
+            margin_source = projection.margin
+        else:
+            margin_source = getattr(ctx, "projection_margin", getattr(ctx, "m_t", None))
+        safety_margin = self._coerce(margin_source, 0.0)
 
         z_gate = ZGateState(
             verdict=verdict,

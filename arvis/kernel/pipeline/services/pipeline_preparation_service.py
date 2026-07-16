@@ -108,7 +108,6 @@ class PipelinePreparationService:
         if isinstance(cognitive_input, str) and ctx.projection.certificate is None:
             cert = minimal_projection_certificate()
             ctx.projection.certificate = cert
-            ctx.projection_certificate = cert
             ctx.projection.domain_valid = cert.domain_valid
             ctx.projection.margin = cert.margin_to_boundary
 
