@@ -7,10 +7,36 @@ from arvis.adapters.tools.gates import ConsentGate, EgressGate
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.errors.tool_runtime import ToolAuthorizationError
+from arvis.kernel_core.access.identity import principal_from_context
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.runtime.runtime_bindings import resolve_process_id
 from arvis.tools.tool_result import ToolResult
+
+
+def _resolve_turn_risk(ctx: Any) -> float:
+    """Real risk of the current turn, for the invocation (F-006-a5).
+
+    Hardening composition of the available signals: the declared input
+    risk (untrusted, may only make policy stricter) and the assessed
+    collapse risk. Returns 0.0 only when no signal is available, which
+    keeps the max_risk policy conservative rather than silent.
+    """
+    candidates: list[float] = []
+    extra = getattr(ctx, "extra", None)
+    if isinstance(extra, dict):
+        declared = extra.get("input_risk")
+        if isinstance(declared, (int, float)) and not isinstance(declared, bool):
+            candidates.append(float(declared))
+    assessed = getattr(ctx, "collapse_risk", None)
+    if assessed is not None:
+        try:
+            candidates.append(float(assessed))
+        except (TypeError, ValueError):
+            pass
+    if not candidates:
+        return 0.0
+    return max(0.0, min(1.0, max(candidates)))
 
 
 class ToolManager:
@@ -75,10 +101,18 @@ class ToolManager:
         )
 
         # --- build invocation ---
+        # F-006-a5: the invocation carries the real turn context.
+        # Identity comes from the trusted context channel only (a
+        # stamped Principal), never from request-facing extra.
+        stamped = principal_from_context(ctx)
         invocation = ToolInvocation(
             tool_name=tool_name,
             payload=payload,
             process_id=resolve_process_id(ctx),
+            user_id=getattr(ctx, "user_id", None),
+            risk_score=_resolve_turn_risk(ctx),
+            principal=stamped.user_id if stamped is not None else None,
+            tenant=stamped.organization_id if stamped is not None else None,
             context=ctx,
         )
 

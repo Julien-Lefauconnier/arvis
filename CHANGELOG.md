@@ -64,6 +64,15 @@ versioning during the alpha.
   this release: hosts pinning the old name+qualname digest must re-pin
   (veramem: the `tool_registry_frozen` log hash changes, no functional
   impact, the engine-side registry is empty).
+- **F-006-a5: complete invocation context (skeleton).** `ToolInvocation`
+  gains opaque `principal`, `tenant` and `consent_granted` fields (host
+  semantics, same doctrine as capability grants). The tool manager
+  threads identity from the trusted context channel only (a stamped
+  `Principal`; never request-facing extra), the bare `user_id` for
+  owner scoping, and `risk_score` as the real turn risk: hardening
+  composition of the declared input risk and the assessed collapse
+  risk. The dormant `max_risk` spec policy becomes live and
+  conservative: 0.0 only when no signal exists.
 
 ## [0.1.0a5] - 2026-07-16
 
