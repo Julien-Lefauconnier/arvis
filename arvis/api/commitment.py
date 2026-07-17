@@ -39,14 +39,14 @@ from arvis.kernel.gate.input_risk import (
 # the API layer. Re-exported here so the public surface is unchanged.
 from arvis.kernel_core.syscalls.engagement import (
     REDACTION_POLICY_VERSION,
-    _strip_volatile,
     redact_for_commitment,
     stable_hash,
+    strip_envelope_volatile,
 )
 from arvis.math.stability.hard_block_policy import HARD_BLOCK_TABLE_VERSION
 from arvis.tools.registry import MANIFEST_SCHEMA_VERSION
 
-COMMITMENT_VERSION = 2
+COMMITMENT_VERSION = 3
 
 
 def syscall_journal_digest(
@@ -55,17 +55,20 @@ def syscall_journal_digest(
 ) -> str:
     """Digest of the normalized, redacted syscall journals.
 
-    Volatile per-run fields are dropped first (see ``_VOLATILE_KEYS``),
-    then content-bearing fields are replaced by digest markers. The
+    Each journal entry is an envelope: its volatile per-run top-level
+    fields (wall-clock, random ids, ticks) are dropped by
+    ``strip_envelope_volatile`` at the envelope level only, then
+    content-bearing fields are replaced by injective digest markers. A
+    business payload nested inside an entry keeps every field. The
     ordered sequence, syscall names, outcomes and error codes remain
     fully bound.
     """
     material = {
         "intents": redact_for_commitment(
-            _strip_volatile(intents if intents is not None else [])
+            strip_envelope_volatile(intents if intents is not None else [])
         ),
         "results": redact_for_commitment(
-            _strip_volatile(results if results is not None else [])
+            strip_envelope_volatile(results if results is not None else [])
         ),
     }
     return stable_hash(material)

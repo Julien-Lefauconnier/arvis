@@ -23,20 +23,23 @@ from dataclasses import dataclass
 from typing import Any
 
 from arvis.kernel_core.syscalls.engagement import (
-    _strip_volatile,
-    deep_material,
     redact_for_commitment,
     stable_hash,
 )
 
 
 def payload_commitment(payload: Any) -> str:
-    """Canonical hash of a redacted tool payload.
+    """Injective canonical hash of a redacted tool payload (campaign 5).
 
-    Same canonicalization as the pre-effect engagement: deterministic,
-    content committed by hash only.
+    A tool payload is a business object, not a journal envelope: it is
+    canonicalized injectively (type-preserving) with content-bearing
+    fields redacted to their canonical hash. No volatile stripping is
+    applied - the a7 collision where two payloads differing only by a
+    business ``id`` produced the same commitment (and let a confirmation
+    for record-A authorize record-B) is closed at the root. A
+    non-canonicalizable payload raises rather than aliasing.
     """
-    return stable_hash(redact_for_commitment(_strip_volatile(deep_material(payload))))
+    return stable_hash(redact_for_commitment(payload))
 
 
 @dataclass(frozen=True, slots=True)

@@ -13,8 +13,8 @@ from types import SimpleNamespace
 
 from arvis.api.commitment import compose_global_commitment, syscall_journal_digest
 from arvis.kernel_core.access.models import AccessContext, Principal
+from arvis.kernel_core.canonicalization import canonical_hash
 from arvis.kernel_core.syscalls.engagement import (
-    deep_material,
     effect_engagement_digest,
 )
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
@@ -78,26 +78,28 @@ def test_engagement_digest_excludes_the_trusted_ctx_object():
     assert a == b
 
 
-def test_deep_material_distinguishes_object_payloads():
-    # P1-12 direction: unlike the type-only fallback, object attributes
-    # stay distinguishable in the engagement material.
+def test_object_payloads_are_distinguished():
+    # Campaign 5: object attributes stay distinguishable in the effect
+    # material through the injective canonical encoder (which now owns
+    # this responsibility, tested exhaustively in
+    # tests/kernel_core/test_canonicalization.py).
     class Command:
         def __init__(self, target: str) -> None:
             self.target = target
 
-    a = deep_material(Command("A"))
-    b = deep_material(Command("B"))
+    assert canonical_hash(Command("A")) != canonical_hash(Command("B"))
+
+
+def test_engagement_digest_binds_object_argument_attributes():
+    # End to end through the digest: two effects whose object argument
+    # differs only by an attribute must not collapse.
+    class Command:
+        def __init__(self, target: str) -> None:
+            self.target = target
+
+    a = _digest(args={"cmd": Command("A")})
+    b = _digest(args={"cmd": Command("B")})
     assert a != b
-    assert a["fields"]["target"] == "A"
-
-
-def test_deep_material_is_cycle_safe_and_depth_capped():
-    node = SimpleNamespace(name="n")
-    node.self_ref = node
-    material = deep_material(node)
-    assert material["fields"]["name"] == "n"
-    # The cycle collapses to a type marker instead of recursing.
-    assert material["fields"]["self_ref"] == {"__type__": "SimpleNamespace"}
 
 
 # ---------------------------------------------------------------
