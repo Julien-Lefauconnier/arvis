@@ -9,6 +9,8 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a7] - 2026-07-17
+
 ### Security
 
 - **P0-2-a6: strict commitment_inputs validation.** The
