@@ -201,3 +201,40 @@ def test_replay_on_divergent_environment_holds_the_declared_commitment():
     local_registry_fp = plain.tool_registry.fingerprint()
     declared_registry_fp = exported["commitment_inputs"]["registry_fingerprint"]
     assert local_registry_fp != declared_registry_fp  # divergence detectable
+
+
+def test_production_replay_reproduces_the_governing_postures():
+    # Release fix: the postures that governed the run (harden-only
+    # input risk, enforced envelope) are recorded in the context IR and
+    # reapplied on replay from the record; a production run replays
+    # verified even though replay bypasses the fresh-run context
+    # builder.
+    from arvis import CognitiveOSConfig
+
+    os_p = CognitiveOS(config=CognitiveOSConfig.production())
+    r1 = os_p.run("u1", {"risk": 0.9})
+    r2 = os_p.replay(r1.to_ir(), expected_global_commitment=r1.global_commitment)
+    assert r2.global_commitment == r1.global_commitment
+
+
+def test_replay_across_environments_uses_the_recorded_profile():
+    # D-a extended to postures: a production run replayed on a local OS
+    # (and the reverse) recomposes identically, because both the
+    # commitment inputs and the governing postures come from the
+    # record, never from the replayer's environment.
+    from arvis import CognitiveOSConfig
+
+    os_p = CognitiveOS(config=CognitiveOSConfig.production())
+    os_l = CognitiveOS()
+
+    prod_run = os_p.run("u1", {"risk": 0.9})
+    replayed_on_local = os_l.replay(
+        prod_run.to_ir(), expected_global_commitment=prod_run.global_commitment
+    )
+    assert replayed_on_local.global_commitment == prod_run.global_commitment
+
+    local_run = os_l.run("u1", {"risk": 0.1})
+    replayed_on_prod = os_p.replay(
+        local_run.to_ir(), expected_global_commitment=local_run.global_commitment
+    )
+    assert replayed_on_prod.global_commitment == local_run.global_commitment

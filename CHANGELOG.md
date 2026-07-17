@@ -9,6 +9,21 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a6] - 2026-07-17
+
+### Fixed
+
+- **Replay reproduces the governing postures.** The runtime profile
+  that governed a run ("local", "production") is now recorded in
+  `CognitiveContextIR.runtime_mode`, and the replay context builder
+  reapplies the derived postures (global stability action, switching
+  envelope, input-risk harden-only) from the record through a single
+  shared helper (`apply_runtime_postures`), never from the replayer's
+  environment (decision D-a extended to postures). Before this fix a
+  production run whose verdict depended on a posture replayed with the
+  permissive defaults and failed commitment verification. IR shape
+  gains one context field; IR hash values change accordingly.
+
 ### Security
 
 - **F-001-a5: a caller-declared risk never relaxes the verdict on a

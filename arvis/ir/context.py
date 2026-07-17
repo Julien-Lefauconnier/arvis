@@ -15,6 +15,12 @@ class CognitiveContextIR:
     session_id: str | None = None
     conversation_mode: str | None = None
 
+    # Governance profile that governed the run ("local", "production").
+    # Part of the record: the replay context builder reapplies the same
+    # postures from this field (D-a), never from the replayer's
+    # environment.
+    runtime_mode: str | None = None
+
     long_memory_constraints: tuple[str, ...] = ()
     long_memory_preferences: Mapping[str, Any] = field(default_factory=dict)
 

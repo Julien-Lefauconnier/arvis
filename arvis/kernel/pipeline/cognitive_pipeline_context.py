@@ -154,6 +154,12 @@ class CognitivePipelineContext:
     # sets "harden_only", unknown values included) restricts a declared
     # risk to harden-only.
     input_risk_mode: str = "graded"
+
+    # Governance profile that set the postures above ("local",
+    # "production"). Recorded into CognitiveContextIR.runtime_mode so a
+    # replay reapplies the same postures from the record (D-a), never
+    # from the replayer's environment.
+    runtime_profile: str = "local"
     # -------------------------
     # Control layer
     # -------------------------
@@ -799,3 +805,27 @@ class CognitivePipelineContext:
     @tool_retry_count.setter
     def tool_retry_count(self, value: int) -> None:
         self.runtime_policy.retry_count = value
+
+
+PRODUCTION_PROFILE = "production"
+
+
+def apply_runtime_postures(
+    ctx: "CognitivePipelineContext", runtime_profile: str | None
+) -> None:
+    """Apply the governing postures derived from the runtime profile.
+
+    Single source of truth used by the fresh-run context builder AND
+    the replay context builder: the postures that governed a run are
+    part of the record and are reapplied on replay from the recorded
+    profile, never from the replayer's environment (decision D-a). The
+    permissive defaults are research settings; the production profile
+    enforces the global stability axis, feeds switching safety into the
+    validity envelope (F-002 / A4), and restricts a caller-declared
+    risk to harden-only (F-001-a5).
+    """
+    ctx.runtime_profile = runtime_profile or "local"
+    if ctx.runtime_profile == PRODUCTION_PROFILE:
+        ctx.global_stability_action = "confirm"
+        ctx.switching_envelope_mode = "enforce"
+        ctx.input_risk_mode = "harden_only"

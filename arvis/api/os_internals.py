@@ -17,7 +17,10 @@ from arvis.api.views.cognitive_result_view import CognitiveResultView
 from arvis.cognition.state.cognitive_state import CognitiveState
 from arvis.ir.cognitive_ir import CognitiveIR
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
-from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+    apply_runtime_postures,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.replay_engine import ReplayEngine
 from arvis.tools.executor import ToolExecutor
@@ -66,16 +69,10 @@ class CognitiveOSInternals:
                 force_safe_projection=controls.force_safe_projection,
                 force_safe_switching=controls.force_safe_switching,
             )
-        if self.config.runtime_mode is RuntimeMode.PRODUCTION:
-            # F-002 / A4: the permissive defaults are research settings;
-            # the production profile enforces the global stability axis
-            # and feeds switching safety into the validity envelope.
-            ctx.global_stability_action = "confirm"
-            ctx.switching_envelope_mode = "enforce"
-            # F-001-a5: in production a caller-declared risk never
-            # relaxes, even for a pure {"risk": x} payload; it may only
-            # harden the verdict.
-            ctx.input_risk_mode = "harden_only"
+        # Postures are applied through the shared helper so the replay
+        # context builder reproduces the exact same block from the
+        # recorded profile (D-a; single source of truth).
+        apply_runtime_postures(ctx, self.config.runtime_mode.value)
 
         runtime_policy.retry_requested = bool(ctx.extra.get("retry_tool", False))
         runtime_policy.retry_count = int(ctx.extra.get("tool_retry_count", 0) or 0)

@@ -26,7 +26,7 @@ from typing import Final
 try:
     PACKAGE_VERSION = version("arvis")
 except PackageNotFoundError:
-    PACKAGE_VERSION = "0.1.0a5"
+    PACKAGE_VERSION = "0.1.0a6"
 
 
 # -----------------------------------------------------

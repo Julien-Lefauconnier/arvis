@@ -165,6 +165,7 @@ class PipelineIRBootstrapService:
 
         ctx.ir_context = CognitiveContextIR(
             user_id=ctx.user_id,
+            runtime_mode=getattr(ctx, "runtime_profile", None),
             session_id=getattr(
                 ctx,
                 "extra",

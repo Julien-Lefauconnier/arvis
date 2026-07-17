@@ -8,6 +8,7 @@ from arvis.ir.cognitive_ir import CognitiveIR
 from arvis.ir.context import CognitiveContextIR
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
+    apply_runtime_postures,
 )
 
 
@@ -53,6 +54,10 @@ class PipelineReplayService:
             user_id=ir_context.user_id,
             cognitive_input=ir.input.metadata,
         )
+        # D-a: the postures that governed the original run are part of
+        # the record; the replay reapplies them from the recorded
+        # profile, never from the replayer's environment.
+        apply_runtime_postures(ctx, getattr(ir_context, "runtime_mode", None))
 
         ctx.ir_input = ir.input
         ctx.ir_context = ir_context
