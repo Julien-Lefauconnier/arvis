@@ -60,6 +60,7 @@ class CognitiveRuntime:
         consent_gate: ConsentGate | None = None,
         egress_gate: EgressGate | None = None,
         require_gates: bool = False,
+        audit_intent_sink: Any | None = None,
     ) -> None:
         self.pipeline = pipeline
         self.adapters = adapters or {}
@@ -89,6 +90,7 @@ class CognitiveRuntime:
             vfs_service=None,
             zip_ingest_service=None,
             llm_adapter=self.adapters.get("llm"),
+            audit_intent_sink=audit_intent_sink,
         )
         self.syscall_handler = SyscallHandler(
             runtime_state=self.runtime_state,

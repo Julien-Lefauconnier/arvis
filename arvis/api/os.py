@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -53,6 +54,12 @@ class CognitiveOSConfig:
     # for profiles where runs have effects: an unauditable run must
     # not pass.
     audit_commitment_policy: AuditCommitmentPolicy = AuditCommitmentPolicy.DEGRADED
+    # F-008-a5: host sink for durable audit intents (outbox). When set,
+    # it is called synchronously with the intent entry BEFORE any effect
+    # syscall runs; a failing sink refuses the syscall (fail-closed).
+    # None keeps the intent journal in-memory only (the host owns real
+    # durability).
+    audit_intent_sink: Callable[[dict[str, Any]], None] | None = None
 
     def __post_init__(self) -> None:
         # F-008: the runtime mode set is closed; unknown values are

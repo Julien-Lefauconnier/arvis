@@ -87,6 +87,8 @@ class CognitiveRuntimeState:
         "hook_error": "ghost_signal",
         "syscall_succeeded": "decision_emitted",
         "syscall_failed": "ghost_signal",
+        # F-008-a5: pre-effect audit intent (outbox).
+        "syscall_intent": "decision_emitted",
     }
 
     def _map_runtime_event(

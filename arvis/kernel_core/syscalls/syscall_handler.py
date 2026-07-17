@@ -22,6 +22,7 @@ from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
+    SyscallEffect,
     SyscallFn,
     get_descriptor,
     get_syscall,
@@ -150,6 +151,18 @@ class SyscallHandler:
             self._local_counter,
         )
 
+        # F-008-a5 (outbox): the intent precedes the effect. For any
+        # EFFECT syscall a durable intent entry is recorded BEFORE the
+        # call; an intent that cannot be recorded refuses the syscall
+        # (fail-closed). An intent without a paired artifact afterwards
+        # signals a crash during the effect: the uncertainty is bounded
+        # and visible, never silent.
+        if descriptor is not None and descriptor.effect is SyscallEffect.EFFECT:
+            intent_refusal = self._record_intent(ctx, syscall, causal_id, started_tick)
+            if intent_refusal is not None:
+                self._safe_journal(ctx, syscall, intent_refusal, started_tick)
+                return intent_refusal
+
         try:
             syscall_result = fn(
                 self,
@@ -187,6 +200,74 @@ class SyscallHandler:
 
         self._safe_journal(ctx, syscall, syscall_result, started_tick)
         return syscall_result
+
+    def _record_intent(
+        self,
+        ctx: PipelineContextLike | None,
+        syscall: Syscall,
+        causal_id: str,
+        started_tick: int,
+    ) -> SyscallResult | None:
+        """Record a durable audit intent before an effect syscall.
+
+        The entry carries structural metadata only (syscall name, causal
+        id, tick, process id): no payload material enters the journal
+        (ZK; the redacted payload hash is a lot-6 enrichment once the
+        redaction policy exists). The entry is appended to the ordered
+        ``ctx.extra["syscall_intents"]`` channel (paired with the result
+        journal through the shared causal id), emitted as a
+        ``syscall_intent`` runtime event, and handed to the host
+        ``audit_intent_sink`` when configured. ANY failure to record
+        refuses the syscall: an intent that cannot be made durable must
+        not be followed by its effect (fail-closed).
+        """
+        intent: dict[str, Any] = {
+            "kind": "syscall_intent",
+            "syscall": syscall.name,
+            "causal_id": causal_id,
+            "tick": started_tick,
+            "process_id": syscall.args.get("process_id") or "none",
+        }
+        try:
+            if ctx is not None:
+                intents = ctx.extra.setdefault("syscall_intents", [])
+                if isinstance(intents, list):
+                    intents.append(intent)
+            if self.runtime_state is not None:
+                self.runtime_state.append_event(
+                    "syscall_intent",
+                    {
+                        "process_id": intent["process_id"],
+                        "syscall_id": causal_id,
+                        "syscall_name": syscall.name,
+                        "tick": started_tick,
+                        "causal_id": causal_id,
+                    },
+                )
+            sink = self.services.audit_intent_sink
+            if sink is not None:
+                # The host receives a copy: mutating it never rewrites
+                # the journaled entry.
+                sink(dict(intent))
+        except Exception as exc:
+            return self._failure_from_error(
+                ctx,
+                ArvisSecurityError(
+                    "audit intent could not be recorded before the "
+                    "effect; the syscall is refused (fail-closed)",
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "audit_intent_failed",
+                        "exception_type": type(exc).__name__,
+                    },
+                ),
+            )
+        return None
 
     def _safe_journal(
         self,

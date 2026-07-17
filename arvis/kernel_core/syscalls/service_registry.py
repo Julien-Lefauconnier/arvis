@@ -21,3 +21,8 @@ class KernelServiceRegistry:
     zip_ingest_service: Any | None = None
     llm_adapter: Any | None = None
     authorization_service: Any | None = None
+    # F-008-a5: host sink for durable audit intents. Called
+    # synchronously BEFORE any effect syscall runs; a failing sink
+    # refuses the syscall (fail-closed): an intent that cannot be made
+    # durable must not be followed by its effect.
+    audit_intent_sink: Any | None = None

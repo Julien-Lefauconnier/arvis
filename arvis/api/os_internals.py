@@ -113,6 +113,7 @@ class CognitiveOSInternals:
             egress_gate=self.config.egress_gate,
             # F-017/F-018: deny-by-default gates in the PRODUCTION profile.
             require_gates=self.config.runtime_mode is RuntimeMode.PRODUCTION,
+            audit_intent_sink=self.config.audit_intent_sink,
         )
 
     def _format_run_output(

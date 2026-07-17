@@ -73,6 +73,22 @@ versioning during the alpha.
   composition of the declared input risk and the assessed collapse
   risk. The dormant `max_risk` spec policy becomes live and
   conservative: 0.0 only when no signal exists.
+- **F-008-a5: durable audit intent before effect (outbox).** For any
+  EFFECT syscall, the handler journals a `syscall_intent` entry BEFORE
+  the call: structural metadata only (syscall name, causal id, tick,
+  process id; no payload material), appended to the ordered
+  `ctx.extra["syscall_intents"]` channel (paired with the result
+  journal through the shared causal id) and emitted as a runtime event.
+  A host `audit_intent_sink` (new `CognitiveOSConfig` field) is called
+  synchronously with a copy of the entry before the effect; ANY failure
+  to record the intent refuses the syscall
+  (`reason_code=audit_intent_failed`, fail-closed). An intent without a
+  paired artifact afterwards signals a crash during the effect: bounded,
+  visible uncertainty. Authorization runs before the outbox: a denied
+  effect never reaches it. Known gap carried to the composed-commitment
+  lot: the timeline the current global commitment hashes is empty on a
+  standard run (runtime events never reach `ctx.timeline`), so the
+  intent/result journals will enter the commitment explicitly there.
 
 ## [0.1.0a5] - 2026-07-16
 
