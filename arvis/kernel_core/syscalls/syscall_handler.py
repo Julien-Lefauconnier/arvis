@@ -233,6 +233,10 @@ class SyscallHandler:
                 intents = ctx.extra.setdefault("syscall_intents", [])
                 if isinstance(intents, list):
                     intents.append(intent)
+                execution_state = _execution_state_from_ctx(ctx)
+                state_intents = getattr(execution_state, "syscall_intents", None)
+                if isinstance(state_intents, list):
+                    state_intents.append(intent)
             if self.runtime_state is not None:
                 self.runtime_state.append_event(
                     "syscall_intent",

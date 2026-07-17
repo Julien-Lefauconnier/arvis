@@ -26,6 +26,9 @@ class CognitiveExecutionState:
     llm: ExecutionLLMState = field(default_factory=ExecutionLLMState)
 
     syscall_results: list[dict[str, Any]] = field(default_factory=list)
+    # F-008-a5: pre-effect audit intents, mirrored by the syscall
+    # handler so the view layer reads both journals from one place.
+    syscall_intents: list[dict[str, Any]] = field(default_factory=list)
     errors: list[dict[str, Any]] = field(default_factory=list)
 
     # ---------------------------------

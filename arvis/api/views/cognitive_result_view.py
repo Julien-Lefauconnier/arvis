@@ -14,6 +14,7 @@ from arvis.adapters.kernel.timeline_from_signals import (
     signal_journal_to_timeline_snapshot,
 )
 from arvis.api.audit import AuditCommitmentPolicy
+from arvis.api.commitment import compose_global_commitment
 from arvis.api.execution import ExecutionTraceView
 from arvis.api.ir import build_ir_view
 from arvis.api.stability import StabilityView
@@ -53,6 +54,7 @@ class CognitiveResultView:
         result: Any,
         *,
         commitment_policy: AuditCommitmentPolicy = AuditCommitmentPolicy.DEGRADED,
+        commitment_inputs: dict[str, Any] | None = None,
     ) -> CognitiveResultView:
         observability = getattr(result, "observability", None)
         execution = getattr(result, "execution", result)
@@ -117,17 +119,33 @@ class CognitiveResultView:
                 if commitment_reason is None:
                     commitment_reason = "timeline_commitment_failure"
 
-        if timeline_commitment and ir_hash:
+        # F-007-a5: composed v2 commitment. Binds the cognitive IR, the
+        # timeline, the redacted syscall journals, the registry manifest
+        # fingerprint, the effective configuration and the active policy
+        # tables (explicit named components, version embedded). The
+        # non-cognitive components come from the caller: computed from
+        # the live environment on a fresh run, reused verbatim from the
+        # exported IR on replay (decision D-a).
+        if timeline_commitment and ir_hash and commitment_inputs is not None:
             try:
-                global_commitment = sha256(
-                    (timeline_commitment + ir_hash).encode("utf-8")
-                ).hexdigest()
+                global_commitment = compose_global_commitment(
+                    ir_hash=ir_hash,
+                    timeline_commitment=timeline_commitment,
+                    commitment_inputs=commitment_inputs,
+                )
             except Exception:  # arvis-broad: defensive view enrichment
                 global_commitment = None
                 if commitment_reason is None:
                     commitment_reason = "commitment_hash_failure"
         else:
             global_commitment = None
+            if (
+                commitment_reason is None
+                and timeline_commitment
+                and ir_hash
+                and commitment_inputs is None
+            ):
+                commitment_reason = "commitment_inputs_unavailable"
 
         # F-015: the absence of an audit commitment is never silent.
         commitment_degraded = False
@@ -154,6 +172,14 @@ class CognitiveResultView:
             reflexive_payload = snapshot.to_dict()
         except Exception:  # arvis-broad: optional reflexive enrichment
             reflexive_payload = None
+
+        # D-a: the non-cognitive components ride in the exported IR as a
+        # sibling block, outside the cognitively hashed sections (the
+        # ir_hash was computed before this injection, and the IR
+        # deserializer ignores unknown top-level keys), so a replay can
+        # recompose the same commitment from the declared environment.
+        if commitment_inputs is not None and isinstance(ir_payload, dict):
+            ir_payload = {**ir_payload, "commitment_inputs": dict(commitment_inputs)}
 
         return CognitiveResultView(
             decision=getattr(execution, "action_decision", None),

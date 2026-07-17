@@ -49,19 +49,28 @@ def test_recursive_mutation_of_export_cannot_diverge_commitment():
 
 
 def test_view_ir_is_exactly_the_hashed_canonical_payload():
+    from arvis.api.commitment import compose_global_commitment
+
     os = CognitiveOS()
     view = os.run(user_id="u1", cognitive_input={"text": "hello"})
     assert view.timeline_commitment is not None
 
+    exported = view.to_ir()
+    declared = exported.pop("commitment_inputs")
+
     ir_bytes = json.dumps(
-        view.to_ir(),
+        exported,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=True,
     ).encode("utf-8")
     ir_hash = sha256(ir_bytes).hexdigest()
 
-    expected = sha256((view.timeline_commitment + ir_hash).encode("utf-8")).hexdigest()
+    expected = compose_global_commitment(
+        ir_hash=ir_hash,
+        timeline_commitment=view.timeline_commitment,
+        commitment_inputs=declared,
+    )
     assert view.global_commitment == expected
 
 

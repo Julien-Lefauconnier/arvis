@@ -89,6 +89,26 @@ versioning during the alpha.
   lot: the timeline the current global commitment hashes is empty on a
   standard run (runtime events never reach `ctx.timeline`), so the
   intent/result journals will enter the commitment explicitly there.
+- **F-007/F-018-a5: composed v2 global commitment with redaction before
+  hash.** `arvis/api/commitment.py`: the global commitment is now the
+  canonical hash of explicit named components with the version embedded:
+  cognitive `ir_hash`, `timeline_commitment`, the digest of the REDACTED
+  syscall journals (intents and results; content-bearing fields replaced
+  by sha256 markers under the versioned `REDACTION_POLICY_VERSION`, so
+  the audit gap of an environment-blind commitment over an empty
+  timeline is closed by the journals entering explicitly), the registry
+  manifest `fingerprint()`, the effective configuration fingerprint
+  (governance fields; injected objects by presence and type identity
+  only) and the active policy tables fingerprint. Replay (decision
+  D-a): the non-cognitive components ride in the exported IR as a
+  `commitment_inputs` block outside the cognitively hashed sections
+  (`run_ir` carries it too; `run_ir == to_ir` holds); a replay
+  recomposes from the declared block, never from the replayer's
+  environment, so identical replay yields an identical commitment and a
+  divergent environment stays detectable by comparison. Commitment
+  VALUES change with this release. A missing component set yields
+  `commitment_reason=commitment_inputs_unavailable` under the existing
+  absence machinery (REQUIRED refuses, DEGRADED flags).
 
 ## [0.1.0a5] - 2026-07-16
 

@@ -185,16 +185,22 @@ def test_global_commitment_changes_with_input():
 
 
 def test_global_commitment_recomputable():
+    # External verification recipe for the composed v2 commitment: the
+    # declared commitment_inputs block rides in the export outside the
+    # cognitively hashed sections; strip it, hash the cognitive IR, and
+    # recompose.
     import json
     from hashlib import sha256
 
     from arvis.api import CognitiveOS
+    from arvis.api.commitment import compose_global_commitment
 
     os = CognitiveOS()
 
     result = os.run(user_id="u1", cognitive_input={})
 
     ir = result.to_ir()
+    declared = ir.pop("commitment_inputs")
 
     ir_bytes = json.dumps(
         ir,
@@ -205,6 +211,10 @@ def test_global_commitment_recomputable():
 
     ir_hash = sha256(ir_bytes).hexdigest()
 
-    recomputed = sha256((result.timeline_commitment + ir_hash).encode()).hexdigest()
+    recomputed = compose_global_commitment(
+        ir_hash=ir_hash,
+        timeline_commitment=result.timeline_commitment,
+        commitment_inputs=declared,
+    )
 
     assert recomputed == result.global_commitment

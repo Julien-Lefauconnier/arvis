@@ -5,6 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.api.audit import AuditCommitmentPolicy
+from arvis.api.commitment import (
+    config_fingerprint,
+    policies_fingerprint,
+    syscall_journal_digest,
+)
 from arvis.api.ir import build_ir_view
 from arvis.api.runtime.cognitive_runtime import CognitiveRuntime
 from arvis.api.runtime_mode import RuntimeMode
@@ -190,7 +195,7 @@ class CognitiveOSInternals:
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        state, _ = self._execute(
+        state, result = self._execute(
             user_id=user_id,
             cognitive_input=cognitive_input,
             conversation_context=conversation_context,
@@ -198,7 +203,7 @@ class CognitiveOSInternals:
             confirmation_result=confirmation_result,
             extra=extra,
         )
-        return self._export_ir(
+        exported = self._export_ir(
             self._require_state(
                 state,
                 message=(
@@ -206,6 +211,12 @@ class CognitiveOSInternals:
                 ),
             ),
         )
+        # D-a: run_ir carries the same commitment_inputs block as the
+        # result view export (public contract: run_ir == to_ir).
+        inputs = self._build_commitment_inputs(result)
+        if inputs is not None and isinstance(exported, dict):
+            exported = {**exported, "commitment_inputs": inputs}
+        return exported
 
     def _replay_ir(
         self,
@@ -230,10 +241,16 @@ class CognitiveOSInternals:
             message="Replay result missing cognitive_state",
         )
 
+        # D-a: on replay the non-cognitive components are reused
+        # verbatim from the exported IR, never recomputed from the
+        # replayer's environment. A divergent environment stays
+        # detectable by comparing the declared block to the local one.
+        declared = ir.get("commitment_inputs")
         return CognitiveResultView.from_state(
             typed_state,
             result,
             commitment_policy=self._commitment_policy(),
+            commitment_inputs=declared if isinstance(declared, dict) else None,
         )
 
     def _verify_replay_view(
@@ -300,7 +317,32 @@ class CognitiveOSInternals:
             typed_state,
             result,
             commitment_policy=self._commitment_policy(),
+            commitment_inputs=self._build_commitment_inputs(result),
         )
+
+    def _build_commitment_inputs(self, result: Any) -> dict[str, Any] | None:
+        """Non-cognitive commitment components, from the live environment.
+
+        F-007-a5: registry manifest fingerprint, effective config
+        fingerprint, active policy tables, and the digest of the
+        redacted syscall journals (intents and results). Returns None
+        when a component cannot be produced: the commitment machinery
+        then records the absence (REQUIRED refuses, DEGRADED flags),
+        never a partially bound commitment.
+        """
+        try:
+            execution = getattr(result, "execution", result)
+            execution_state = getattr(execution, "execution_state", None)
+            intents = getattr(execution_state, "syscall_intents", None)
+            results = getattr(execution_state, "syscall_results", None)
+            return {
+                "registry_fingerprint": self.tool_registry.fingerprint(),
+                "config_fingerprint": config_fingerprint(self.config),
+                "policies_fingerprint": policies_fingerprint(),
+                "syscall_journal_sha256": syscall_journal_digest(intents, results),
+            }
+        except Exception:  # arvis-broad: commitment absence is governed
+            return None
 
     def _commitment_policy(self) -> AuditCommitmentPolicy:
         policy = getattr(self.config, "audit_commitment_policy", None)
