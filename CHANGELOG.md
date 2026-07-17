@@ -52,6 +52,18 @@ versioning during the alpha.
   arguments); turn-scoped syscalls (`tool.execute`, `llm.generate`) are
   owned by the turn's user, a stamped foreign principal is denied, and
   a call without an identifiable owner is denied fail-closed.
+- **F-010-a5: governance manifest and enriched registry fingerprint.**
+  `ToolRegistry.manifest()` describes the registered surface completely
+  for governance: identity (registry name, implementation qualname,
+  declared spec name) and every governance-relevant spec field
+  (schemas as canonical sha256 hashes, never in clear; execution
+  semantics; policy flags; capability manifest fields). The registry
+  `fingerprint()` is now the sha256 of the canonical JSON manifest,
+  versioned (`MANIFEST_SCHEMA_VERSION`); a non-canonicalizable declared
+  schema refuses pinning (fail-closed). Fingerprint VALUES change with
+  this release: hosts pinning the old name+qualname digest must re-pin
+  (veramem: the `tool_registry_frozen` log hash changes, no functional
+  impact, the engine-side registry is empty).
 
 ## [0.1.0a5] - 2026-07-16
 

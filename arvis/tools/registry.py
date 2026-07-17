@@ -2,10 +2,39 @@
 
 
 import hashlib
+import json
+from typing import Any
 
 from arvis.errors.base import ArvisSecurityError
 from arvis.tools.base import BaseTool
 from arvis.tools.spec import ToolSpec
+
+# Version of the manifest structure, embedded in the fingerprint: a
+# change in what the manifest covers is a change in what the host has
+# pinned, and must be visible as a fingerprint change.
+MANIFEST_SCHEMA_VERSION = 1
+
+
+def _schema_sha256(name: str, which: str, schema: dict[str, Any]) -> str | None:
+    """Hash a declared tool schema for the manifest (F-018 coherence).
+
+    The manifest never carries schema content in clear, only a
+    canonical hash. A schema that cannot be canonicalized cannot be
+    committed to: pinning an unpinnable surface is refused.
+    """
+    if not schema:
+        return None
+    try:
+        canonical = json.dumps(
+            schema, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+        )
+    except (TypeError, ValueError) as exc:
+        raise ArvisSecurityError(
+            f"tool {name!r} declares a non-canonicalizable {which} schema; "
+            "the registry surface cannot be pinned",
+            details={"tool": name, "schema": which},
+        ) from exc
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 class ToolRegistry:
@@ -47,16 +76,70 @@ class ToolRegistry:
     def frozen(self) -> bool:
         return self._frozen
 
-    def fingerprint(self) -> str:
-        """Deterministic hash of the registered tool surface."""
-        digest = hashlib.sha256()
+    def manifest(self) -> dict[str, Any]:
+        """Canonical, governance-complete description of the surface.
+
+        One entry per registered tool: identity (registry name,
+        implementation qualname, declared spec name) and every
+        governance-relevant spec field. Declared schemas appear as
+        canonical sha256 hashes, never in clear (F-018 coherence): the
+        manifest commits to the schemas without carrying content. Tools
+        without a spec expose ``"spec": None``.
+        """
+        tools: list[dict[str, Any]] = []
         for name in sorted(self._tools):
             tool = self._tools[name]
-            digest.update(name.encode("utf-8"))
-            digest.update(b"\x00")
-            digest.update(type(tool).__qualname__.encode("utf-8"))
-            digest.update(b"\x01")
-        return digest.hexdigest()
+            spec = getattr(tool, "spec", None)
+            spec_entry: dict[str, Any] | None = None
+            if isinstance(spec, ToolSpec):
+                spec_entry = {
+                    "declared_name": spec.name,
+                    "input_schema_sha256": _schema_sha256(
+                        name, "input", spec.input_schema
+                    ),
+                    "output_schema_sha256": _schema_sha256(
+                        name, "output", spec.output_schema
+                    ),
+                    "idempotent": spec.idempotent,
+                    "retryable": spec.retryable,
+                    "side_effectful": spec.side_effectful,
+                    "timeout_seconds": spec.timeout_seconds,
+                    "max_risk": spec.max_risk,
+                    "requires_confirmation": spec.requires_confirmation,
+                    "audit_required": spec.audit_required,
+                    "reversible": spec.reversible,
+                    "provider": spec.provider,
+                    "data_egress": spec.data_egress,
+                    "data_class": spec.data_class,
+                    "required_consent": spec.required_consent,
+                }
+            tools.append(
+                {
+                    "name": name,
+                    "qualname": type(tool).__qualname__,
+                    "spec": spec_entry,
+                }
+            )
+        return {
+            "manifest_schema_version": MANIFEST_SCHEMA_VERSION,
+            "tools": tools,
+        }
+
+    def fingerprint(self) -> str:
+        """Deterministic hash of the governance manifest of the surface.
+
+        sha256 of the canonical JSON serialization of :meth:`manifest`.
+        Any governance-relevant change (a tool added or replaced, a spec
+        flag, a schema, the manifest structure version) changes the
+        fingerprint the host has pinned.
+        """
+        canonical = json.dumps(
+            self.manifest(),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        )
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     def get(self, name: str) -> BaseTool | None:
         return self._tools.get(name)
