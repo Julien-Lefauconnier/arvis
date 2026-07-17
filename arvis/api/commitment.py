@@ -25,6 +25,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+from dataclasses import dataclass
 from typing import Any
 
 from arvis.api.ir import IR_VERSION
@@ -223,23 +225,87 @@ COMMITMENT_INPUT_KEYS: frozenset[str] = frozenset(
     }
 )
 
+_SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+class CommitmentInputsValidationError(ValueError):
+    """The commitment_inputs block is malformed (P0-2-a6).
+
+    An incomplete or forged proof block must never yield a formally
+    valid commitment: validation is strict (exact keys, canonical
+    sha256 hex values) and fail-closed.
+    """
+
+
+@dataclass(frozen=True, slots=True)
+class CommitmentInputs:
+    """Validated non-cognitive commitment components (P0-2-a6)."""
+
+    registry_fingerprint: str
+    config_fingerprint: str
+    policies_fingerprint: str
+    syscall_journal_sha256: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "registry_fingerprint": self.registry_fingerprint,
+            "config_fingerprint": self.config_fingerprint,
+            "policies_fingerprint": self.policies_fingerprint,
+            "syscall_journal_sha256": self.syscall_journal_sha256,
+        }
+
+
+def validate_commitment_inputs(raw: Any) -> CommitmentInputs:
+    """Validate a commitment_inputs block, fail-closed.
+
+    Requirements: a mapping with EXACTLY the four component keys (no
+    missing key, no extra key) and canonical lowercase sha256 hex
+    values. Anything else raises CommitmentInputsValidationError: an
+    absent component must surface as an absent commitment under the
+    governed machinery, never compose into a formally valid hash.
+    """
+    if isinstance(raw, CommitmentInputs):
+        raw = raw.to_dict()
+    if not isinstance(raw, dict):
+        raise CommitmentInputsValidationError("commitment_inputs must be a mapping")
+    keys = set(raw.keys())
+    missing = COMMITMENT_INPUT_KEYS - keys
+    extra = keys - COMMITMENT_INPUT_KEYS
+    if missing or extra:
+        raise CommitmentInputsValidationError(
+            "commitment_inputs keys mismatch: "
+            f"missing={sorted(missing)} extra={sorted(extra)}"
+        )
+    values: dict[str, str] = {}
+    for key in sorted(COMMITMENT_INPUT_KEYS):
+        value = raw[key]
+        if not isinstance(value, str) or _SHA256_HEX_RE.fullmatch(value) is None:
+            raise CommitmentInputsValidationError(
+                f"commitment_inputs[{key!r}] is not a canonical sha256 hex value"
+            )
+        values[key] = value
+    return CommitmentInputs(**values)
+
 
 def compose_global_commitment(
     *,
     ir_hash: str,
     timeline_commitment: str,
-    commitment_inputs: dict[str, Any],
+    commitment_inputs: dict[str, Any] | CommitmentInputs,
 ) -> str:
-    """Compose the v2 global commitment from its components.
+    """Compose the v2 global commitment from its validated components.
 
     Explicit named components under canonical JSON: no ambiguous string
     concatenation, and the version is embedded in the hashed material.
+    The inputs block is strictly validated first (P0-2-a6): a missing,
+    extra or malformed component raises instead of composing over None.
     """
+    validated = validate_commitment_inputs(commitment_inputs)
     material = {
         "commitment_version": COMMITMENT_VERSION,
         "ir_hash": ir_hash,
         "timeline_commitment": timeline_commitment,
-        **{key: commitment_inputs.get(key) for key in sorted(COMMITMENT_INPUT_KEYS)},
+        **validated.to_dict(),
     }
     return stable_hash(material)
 
@@ -247,6 +313,9 @@ def compose_global_commitment(
 __all__ = [
     "COMMITMENT_INPUT_KEYS",
     "COMMITMENT_VERSION",
+    "CommitmentInputs",
+    "CommitmentInputsValidationError",
+    "validate_commitment_inputs",
     "REDACTION_POLICY_VERSION",
     "compose_global_commitment",
     "config_fingerprint",

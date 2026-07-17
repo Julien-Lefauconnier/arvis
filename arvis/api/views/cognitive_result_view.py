@@ -14,7 +14,12 @@ from arvis.adapters.kernel.timeline_from_signals import (
     signal_journal_to_timeline_snapshot,
 )
 from arvis.api.audit import AuditCommitmentPolicy
-from arvis.api.commitment import compose_global_commitment
+from arvis.api.commitment import (
+    CommitmentInputs,
+    CommitmentInputsValidationError,
+    compose_global_commitment,
+    validate_commitment_inputs,
+)
 from arvis.api.execution import ExecutionTraceView
 from arvis.api.ir import build_ir_view
 from arvis.api.stability import StabilityView
@@ -126,12 +131,27 @@ class CognitiveResultView:
         # non-cognitive components come from the caller: computed from
         # the live environment on a fresh run, reused verbatim from the
         # exported IR on replay (decision D-a).
-        if timeline_commitment and ir_hash and commitment_inputs is not None:
+        # P0-2-a6: the inputs block is strictly validated before any
+        # composition, whether it comes from the live environment or
+        # from a replayed export. A forged, incomplete or malformed
+        # block never composes into a formally valid commitment; it
+        # surfaces as an absent commitment with a dedicated reason and
+        # the governed absence machinery applies (REQUIRED refuses).
+        validated_inputs: CommitmentInputs | None = None
+        if commitment_inputs is not None:
+            try:
+                validated_inputs = validate_commitment_inputs(commitment_inputs)
+            except CommitmentInputsValidationError:
+                validated_inputs = None
+                if commitment_reason is None:
+                    commitment_reason = "commitment_inputs_invalid"
+
+        if timeline_commitment and ir_hash and validated_inputs is not None:
             try:
                 global_commitment = compose_global_commitment(
                     ir_hash=ir_hash,
                     timeline_commitment=timeline_commitment,
-                    commitment_inputs=commitment_inputs,
+                    commitment_inputs=validated_inputs,
                 )
             except Exception:  # arvis-broad: defensive view enrichment
                 global_commitment = None
@@ -143,7 +163,7 @@ class CognitiveResultView:
                 commitment_reason is None
                 and timeline_commitment
                 and ir_hash
-                and commitment_inputs is None
+                and validated_inputs is None
             ):
                 commitment_reason = "commitment_inputs_unavailable"
 
@@ -178,8 +198,11 @@ class CognitiveResultView:
         # ir_hash was computed before this injection, and the IR
         # deserializer ignores unknown top-level keys), so a replay can
         # recompose the same commitment from the declared environment.
-        if commitment_inputs is not None and isinstance(ir_payload, dict):
-            ir_payload = {**ir_payload, "commitment_inputs": dict(commitment_inputs)}
+        if validated_inputs is not None and isinstance(ir_payload, dict):
+            ir_payload = {
+                **ir_payload,
+                "commitment_inputs": validated_inputs.to_dict(),
+            }
 
         return CognitiveResultView(
             decision=getattr(execution, "action_decision", None),

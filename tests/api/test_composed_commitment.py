@@ -119,11 +119,14 @@ def test_policies_fingerprint_is_stable():
 
 
 def test_compose_embeds_the_version():
+    # P0-2-a6: composition validates its inputs, so the fixture uses
+    # canonical sha256 hex values.
+    r, c, p, s = "1" * 64, "2" * 64, "3" * 64, "4" * 64
     inputs = {
-        "registry_fingerprint": "r",
-        "config_fingerprint": "c",
-        "policies_fingerprint": "p",
-        "syscall_journal_sha256": "s",
+        "registry_fingerprint": r,
+        "config_fingerprint": c,
+        "policies_fingerprint": p,
+        "syscall_journal_sha256": s,
     }
     c1 = compose_global_commitment(
         ir_hash="i", timeline_commitment="t", commitment_inputs=inputs
@@ -134,10 +137,10 @@ def test_compose_embeds_the_version():
         "commitment_version": COMMITMENT_VERSION,
         "ir_hash": "i",
         "timeline_commitment": "t",
-        "config_fingerprint": "c",
-        "policies_fingerprint": "p",
-        "registry_fingerprint": "r",
-        "syscall_journal_sha256": "s",
+        "config_fingerprint": c,
+        "policies_fingerprint": p,
+        "registry_fingerprint": r,
+        "syscall_journal_sha256": s,
     }
     assert c1 == stable_hash(material)
 

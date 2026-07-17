@@ -9,6 +9,19 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+### Security
+
+- **P0-2-a6: strict commitment_inputs validation.** The
+  `commitment_inputs` block is validated fail-closed before any
+  composition (`CommitmentInputs` frozen type,
+  `validate_commitment_inputs`): exactly the four component keys, no
+  extras, canonical lowercase sha256 hex values. A forged, incomplete
+  or malformed block never composes into a formally valid commitment:
+  it surfaces as an absent commitment with the dedicated reason
+  `commitment_inputs_invalid`, refused under REQUIRED and flagged under
+  DEGRADED. The permissive `.get(key)` composition is gone, and the
+  exported block is the canonical validated form.
+
 ## [0.1.0a6] - 2026-07-17
 
 ### Fixed
