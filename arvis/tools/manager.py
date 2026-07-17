@@ -8,6 +8,7 @@ from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.errors.tool_runtime import ToolAuthorizationError
 from arvis.kernel_core.access.identity import principal_from_context
+from arvis.tools.confirmation import ConfirmationRegistry, ToolConfirmation
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.runtime.runtime_bindings import resolve_process_id
@@ -61,6 +62,7 @@ class ToolManager:
         consent_gate: ConsentGate | None = None,
         egress_gate: EgressGate | None = None,
         require_gates: bool = False,
+        confirmation_registry: ConfirmationRegistry | None = None,
     ) -> None:
         self.registry = registry
         self.executor = executor
@@ -70,6 +72,7 @@ class ToolManager:
         # required_consent or data_egress is denied if the matching gate
         # is missing, instead of leaving enforcement to the host.
         self._require_gates = require_gates
+        self._confirmation_registry = confirmation_registry
 
     def run(self, result: Any, ctx: Any) -> ToolResult | None:
         if result is None or ctx is None:
@@ -105,6 +108,17 @@ class ToolManager:
         # Identity comes from the trusted context channel only (a
         # stamped Principal), never from request-facing extra.
         stamped = principal_from_context(ctx)
+        principal_id = (
+            stamped.user_id if stamped is not None else getattr(ctx, "user_id", None)
+        )
+        tenant_id = stamped.organization_id if stamped is not None else None
+        confirmation = self._resolve_confirmation(
+            ctx,
+            tool_name=tool_name,
+            payload=payload,
+            principal=principal_id,
+            tenant=tenant_id,
+        )
         invocation = ToolInvocation(
             tool_name=tool_name,
             payload=payload,
@@ -113,6 +127,13 @@ class ToolManager:
             risk_score=_resolve_turn_risk(ctx),
             principal=stamped.user_id if stamped is not None else None,
             tenant=stamped.organization_id if stamped is not None else None,
+            confirmed=confirmation is not None,
+            confirmation_id=(
+                confirmation.confirmation_id if confirmation is not None else None
+            ),
+            confirmation_commitment=(
+                confirmation.payload_sha256 if confirmation is not None else None
+            ),
             context=ctx,
         )
 
@@ -155,3 +176,35 @@ class ToolManager:
         result_exec = self.executor.execute_invocation(invocation, result, ctx)
 
         return result_exec
+
+    def _resolve_confirmation(
+        self,
+        ctx: Any,
+        *,
+        tool_name: str,
+        payload: Any,
+        principal: str | None,
+        tenant: str | None,
+    ) -> ToolConfirmation | None:
+        """Consume a bound confirmation for this exact invocation.
+
+        The confirmation id travels on the trusted composition channel
+        (``ctx.confirmation_result``), never on request-facing extra.
+        Consumption requires the registry record to match the tool, the
+        canonical payload hash, the principal and the tenant; it is
+        single use. No registry, no id, or any mismatch: the invocation
+        stays unconfirmed.
+        """
+        if self._confirmation_registry is None:
+            return None
+        carrier = getattr(ctx, "confirmation_result", None)
+        confirmation_id = getattr(carrier, "confirmation_id", None)
+        if not isinstance(confirmation_id, str):
+            return None
+        return self._confirmation_registry.consume(
+            confirmation_id=confirmation_id,
+            tool_name=tool_name,
+            payload=payload,
+            principal=principal,
+            tenant=tenant,
+        )

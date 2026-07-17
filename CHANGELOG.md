@@ -84,6 +84,20 @@ versioning during the alpha.
   tool without reconstruction. `execute_authorized` remains as a
   deprecated compatibility path that rebuilds a minimal invocation and
   delegates. The direct-execution prohibition is unchanged.
+- **P1-10-a6: bound, satisfiable tool confirmation (full object,
+  decision D4-d).** New `arvis/tools/confirmation.py`:
+  `ToolConfirmation` (frozen) binds a confirmation to the tool, the
+  redacted payload hash, the principal, the tenant and a monotonic
+  expiry; `ConfirmationRegistry` issues and consumes them with strict
+  semantics (exact match on every binding, single use, expired records
+  purged, a mismatch does NOT burn the record). `ToolInvocation` gains
+  `confirmed`, `confirmation_id` and `confirmation_commitment`; the
+  manager resolves the confirmation from the trusted composition
+  channel (`ctx.confirmation_result`) against the registry, and the
+  policy accepts a `requires_confirmation` spec only for a confirmed
+  invocation. A tool declaring `requires_confirmation=True` was
+  previously refused unconditionally; the host wires a registry through
+  `CognitiveOSConfig.confirmation_registry`.
 
 ## [0.1.0a6] - 2026-07-17
 

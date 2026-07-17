@@ -30,6 +30,14 @@ class ToolInvocation:
     tenant: str | None = None
     consent_granted: tuple[str, ...] = ()
 
+    # P1-10-a6 (decision D4-d): bound confirmation. Set by the tool
+    # manager after consuming a registry record that matches this exact
+    # invocation (tool, canonical payload hash, principal, tenant);
+    # never derived from request-facing extra.
+    confirmed: bool = False
+    confirmation_id: str | None = None
+    confirmation_commitment: str | None = None
+
     # execution semantics
     idempotency_key: str | None = None
     context: Any | None = None

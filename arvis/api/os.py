@@ -54,6 +54,13 @@ class CognitiveOSConfig:
     # for profiles where runs have effects: an unauditable run must
     # not pass.
     audit_commitment_policy: AuditCommitmentPolicy = AuditCommitmentPolicy.DEGRADED
+    # P1-10-a6: host registry of bound tool confirmations. When set,
+    # a spec-declared confirmation requirement becomes satisfiable: the
+    # manager consumes a record matching the exact invocation (tool,
+    # canonical payload hash, principal, tenant; single use, optional
+    # expiry) whose id travels on the trusted composition channel
+    # (run(confirmation_result=...)).
+    confirmation_registry: Any | None = None
     # F-008-a5: host sink for durable audit intents (outbox). When set,
     # it is called synchronously with the intent entry BEFORE any effect
     # syscall runs; a failing sink refuses the syscall (fail-closed).

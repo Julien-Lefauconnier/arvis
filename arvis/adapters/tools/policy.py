@@ -73,7 +73,11 @@ class ToolPolicyEvaluator:
                 )
 
         # --- confirmation ---
-        if spec.requires_confirmation:
+        # P1-10-a6: a declared confirmation requirement is satisfiable.
+        # The invocation carries a bound confirmation consumed from the
+        # registry (exact tool, payload hash, principal, tenant match,
+        # single use); anything else stays refused.
+        if spec.requires_confirmation and not invocation.confirmed:
             return ToolAuthorizationDecision(
                 allowed=False,
                 reason="confirmation_required",

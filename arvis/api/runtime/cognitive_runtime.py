@@ -61,6 +61,7 @@ class CognitiveRuntime:
         egress_gate: EgressGate | None = None,
         require_gates: bool = False,
         audit_intent_sink: Any | None = None,
+        confirmation_registry: Any | None = None,
     ) -> None:
         self.pipeline = pipeline
         self.adapters = adapters or {}
@@ -82,6 +83,7 @@ class CognitiveRuntime:
             consent_gate=consent_gate,
             egress_gate=egress_gate,
             require_gates=require_gates,
+            confirmation_registry=confirmation_registry,
         )
         self.tool_retry_policy = ToolRetryPolicy()
         self.services = KernelServiceRegistry(
