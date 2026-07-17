@@ -149,6 +149,9 @@ class ToolManager:
             )
 
         # --- execution ---
-        result_exec = self.executor.execute_authorized(result, ctx)
+        # P1-5-a6: the executor receives the SAME invocation the policy
+        # evaluated; nothing is rebuilt between authorization and the
+        # tool.
+        result_exec = self.executor.execute_invocation(invocation, result, ctx)
 
         return result_exec

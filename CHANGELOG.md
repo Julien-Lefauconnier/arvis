@@ -76,6 +76,14 @@ versioning during the alpha.
   `audit_incomplete`. The audit scenario (effect executed, journal
   down, REQUIRED commitment still produced) is closed and pinned by
   tests.
+- **P1-5-a6: single invocation object from authorization to the tool.**
+  The executor's canonical entry is now
+  `execute_invocation(invocation, result, ctx)`: it receives the SAME
+  `ToolInvocation` the policy evaluated, so user, principal, tenant,
+  real turn risk, consent, audit and idempotency fields travel to the
+  tool without reconstruction. `execute_authorized` remains as a
+  deprecated compatibility path that rebuilds a minimal invocation and
+  delegates. The direct-execution prohibition is unchanged.
 
 ## [0.1.0a6] - 2026-07-17
 

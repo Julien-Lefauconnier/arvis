@@ -47,9 +47,13 @@ class ToolExecutor:
         result: Any,
         ctx: Any,
     ) -> ToolResult | None:
-        """
-        Authorized runtime execution only.
-        Must be called from syscall layer.
+        """Compatibility entrypoint (deprecated, P1-5-a6).
+
+        Rebuilds a MINIMAL invocation and delegates. The authorized
+        path must use :meth:`execute_invocation` with the invocation
+        object the policy actually evaluated, so identity, tenant, real
+        risk, consent and idempotency are never lost between
+        authorization and execution.
         """
 
         if result is None or ctx is None:
@@ -63,17 +67,38 @@ class ToolExecutor:
         if not isinstance(tool_name_raw, str):
             return None
 
-        tool_name: str = tool_name_raw
-
-        tool_payload = getattr(decision, "tool_payload", {}) or {}
-
-        # --- NEW: canonical invocation ---
         invocation = ToolInvocation(
-            tool_name=tool_name,
-            payload=tool_payload,
+            tool_name=tool_name_raw,
+            payload=getattr(decision, "tool_payload", {}) or {},
             process_id=resolve_process_id(ctx),
             context=ctx,
         )
+        return self.execute_invocation(invocation, result, ctx)
+
+    def execute_invocation(
+        self,
+        invocation: ToolInvocation,
+        result: Any,
+        ctx: Any,
+    ) -> ToolResult | None:
+        """Authorized runtime execution of an already-evaluated invocation.
+
+        P1-5-a6: the executor receives the SAME `ToolInvocation` the
+        policy authorized, without reconstruction. The context the tool
+        sees is the context that was authorized: user, principal,
+        tenant, real turn risk, consent, audit and idempotency fields
+        all travel to the tool. Must be called from the syscall layer.
+        """
+
+        if result is None or ctx is None:
+            return None
+
+        decision = getattr(result, "action_decision", None)
+        if decision is None:
+            return None
+
+        tool_name: str = invocation.tool_name
+        tool_payload = invocation.payload or {}
 
         # legacy payload (kept for compatibility)
         payload_runtime: dict[str, Any] = {
