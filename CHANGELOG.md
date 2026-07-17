@@ -39,6 +39,30 @@ versioning during the alpha.
   fail-closed refusal with the stable reason code
   `authorization_failure`.
 
+### Added
+
+- **P0-3-a6: pre-effect engagement of exact parameters.** The intent
+  outbox entry now carries `commitment_sha256`, computed BEFORE the
+  effect runs: it binds the syscall, its materialized redacted
+  arguments (`deep_material` walks object attributes so distinct
+  payloads never collapse into a type marker), the principal, the
+  tenant, the turn owner and the authorization outcome. Two effects
+  with different parameters and identical results yield different
+  composed commitments. Redaction policy bumps to v2 (tool and LLM
+  payload fields covered: `tool_payload`, `arguments`, `messages`,
+  `input_data`); the redaction primitives move to the kernel boundary
+  (`arvis/kernel_core/syscalls/engagement.py`, re-exported unchanged
+  from `arvis.api.commitment`). Commitment VALUES change (policy
+  version is part of the hashed material). This closes the deferral
+  documented at campaign-3 Lot 5.
+- **Deterministic LLM prompt rendering (surfaced by the engagement
+  digest).** The intent-enrichment prompt embedded a dataclass repr
+  carrying `decided_at` (wall clock), making the LLM request, hence the
+  pre-effect engagement, non-deterministic across identical runs. The
+  prompt now renders the intent through an explicit deterministic
+  projection excluding wall-clock fields; the `run_ir == to_ir`
+  contract and cross-run commitment determinism hold again.
+
 ## [0.1.0a6] - 2026-07-17
 
 ### Fixed

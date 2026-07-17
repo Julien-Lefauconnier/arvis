@@ -13,12 +13,14 @@ from arvis.errors.messages import safe_exception_message
 from arvis.errors.normalization import normalize_error
 from arvis.errors.syscall import SyscallExecutionError, SyscallValidationError
 from arvis.errors.types import ErrorPayload
+from arvis.kernel_core.access.identity import principal_from_context
 from arvis.kernel_core.access.policy import (
     ACCESS_DENIED_REASON_CODE,
     AuthorizationPolicy,
     OwnerScopedAuthorization,
 )
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
+from arvis.kernel_core.syscalls.engagement import effect_engagement_digest
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
@@ -122,6 +124,7 @@ class SyscallHandler:
             return error_result
 
         descriptor = get_descriptor(syscall.name)
+        authorization_reason_code: str | None = None
         if descriptor is not None and descriptor.access is not None:
             # P1-13-a6: a failing resolver or policy never leaks a raw
             # exception through the syscall boundary. The refusal is
@@ -150,6 +153,7 @@ class SyscallHandler:
                 )
                 self._safe_journal(ctx, syscall, machinery_failure, started_tick)
                 return machinery_failure
+            authorization_reason_code = verdict.reason_code
             if not verdict.allowed:
                 denied_result = self._failure_from_error(
                     ctx,
@@ -183,7 +187,13 @@ class SyscallHandler:
         # signals a crash during the effect: the uncertainty is bounded
         # and visible, never silent.
         if descriptor is not None and descriptor.effect is SyscallEffect.EFFECT:
-            intent_refusal = self._record_intent(ctx, syscall, causal_id, started_tick)
+            intent_refusal = self._record_intent(
+                ctx,
+                syscall,
+                causal_id,
+                started_tick,
+                authorization_reason_code=authorization_reason_code,
+            )
             if intent_refusal is not None:
                 self._safe_journal(ctx, syscall, intent_refusal, started_tick)
                 return intent_refusal
@@ -232,6 +242,8 @@ class SyscallHandler:
         syscall: Syscall,
         causal_id: str,
         started_tick: int,
+        *,
+        authorization_reason_code: str | None = None,
     ) -> SyscallResult | None:
         """Record a durable audit intent before an effect syscall.
 
@@ -254,6 +266,25 @@ class SyscallHandler:
             "process_id": syscall.args.get("process_id") or "none",
         }
         try:
+            # P0-3-a6: engage the exact parameters of the effect BEFORE
+            # it runs. The digest binds the materialized redacted
+            # arguments, the principal, the tenant, the turn owner and
+            # the authorization outcome; only the hash enters the
+            # journal, never the parameters themselves (ZKCS).
+            args_ctx = syscall.args.get("ctx")
+            principal = principal_from_context(args_ctx)
+            intent["commitment_sha256"] = effect_engagement_digest(
+                syscall_name=syscall.name,
+                args=dict(syscall.args),
+                principal_user_id=(
+                    principal.user_id if principal is not None else None
+                ),
+                principal_organization_id=(
+                    principal.organization_id if principal is not None else None
+                ),
+                turn_user_id=getattr(args_ctx, "user_id", None),
+                authorization_reason_code=authorization_reason_code,
+            )
             if ctx is not None:
                 intents = ctx.extra.setdefault("syscall_intents", [])
                 if isinstance(intents, list):

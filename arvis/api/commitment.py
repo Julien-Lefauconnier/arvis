@@ -23,8 +23,6 @@ environment.
 
 from __future__ import annotations
 
-import hashlib
-import json
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -34,118 +32,21 @@ from arvis.kernel.gate.input_risk import (
     INPUT_RISK_ABSTAIN_THRESHOLD,
     INPUT_RISK_CONFIRM_THRESHOLD,
 )
+
+# Redaction primitives live at the kernel boundary
+# (arvis/kernel_core/syscalls/engagement.py) since P0-3-a6: the syscall
+# handler engages effect parameters before the effect and cannot import
+# the API layer. Re-exported here so the public surface is unchanged.
+from arvis.kernel_core.syscalls.engagement import (
+    REDACTION_POLICY_VERSION,
+    _strip_volatile,
+    redact_for_commitment,
+    stable_hash,
+)
 from arvis.math.stability.hard_block_policy import HARD_BLOCK_TABLE_VERSION
 from arvis.tools.registry import MANIFEST_SCHEMA_VERSION
 
 COMMITMENT_VERSION = 2
-
-# Redaction policy v1: fields whose values are content, not structure.
-# Their values are replaced by a digest marker before any journal
-# material is serialized for hashing.
-REDACTION_POLICY_VERSION = 1
-_CONTENT_KEYS: frozenset[str] = frozenset(
-    {"output", "payload", "result", "content", "text", "prompt"}
-)
-
-_REDACTED_MARKER_KEY = "__redacted__"
-_TYPE_MARKER_KEY = "__type__"
-
-# Volatile per-run identity and wall-clock fields, dropped from the
-# journal material before digesting. The commitment binds WHAT the run
-# did (which syscalls, in what order, with what redacted content and
-# which outcome codes), never wall-clock instants, random ids or the
-# process ordinal: the composed commitment is a deterministic function
-# of (input, environment, policies), aligned with deterministic replay.
-_VOLATILE_KEYS: frozenset[str] = frozenset(
-    {
-        "created_at",
-        "monotonic_ns",
-        "error_id",
-        "timestamp",
-        "artifact_timestamp",
-        "elapsed_ticks",
-        "latency_ms",
-        "process_id",
-        "causal_id",
-        "syscall_id",
-        "id",
-        # Scheduler ticks are monotonic per instance, not per run; the
-        # journal's list order already binds the sequence.
-        "tick",
-        "tick_start",
-        "tick_end",
-    }
-)
-
-
-def _strip_volatile(obj: Any) -> Any:
-    """Drop volatile per-run fields, recursively (digest material only)."""
-    if isinstance(obj, dict):
-        return {
-            k: _strip_volatile(v)
-            for k, v in obj.items()
-            if not (isinstance(k, str) and k in _VOLATILE_KEYS)
-        }
-    if isinstance(obj, (list, tuple)):
-        return [_strip_volatile(v) for v in obj]
-    return obj
-
-
-def _type_marker(obj: Any) -> dict[str, str]:
-    """JSON fallback for non-serializable objects: type identity only.
-
-    Deterministic and ZK-safe: no repr, no address, no content.
-    """
-    return {_TYPE_MARKER_KEY: type(obj).__qualname__}
-
-
-def stable_hash(obj: Any) -> str:
-    """Deterministic sha256 of the canonical JSON serialization."""
-    canonical = json.dumps(
-        obj,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=True,
-        default=_type_marker,
-    )
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-
-
-def _content_digest(value: Any) -> dict[str, Any]:
-    """Digest marker replacing a content value under redaction."""
-    canonical = json.dumps(
-        value,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=True,
-        default=_type_marker,
-    )
-    return {
-        _REDACTED_MARKER_KEY: {
-            "sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
-            "bytes": len(canonical.encode("utf-8")),
-            "policy": REDACTION_POLICY_VERSION,
-        }
-    }
-
-
-def redact_for_commitment(obj: Any) -> Any:
-    """Replace content-bearing fields by digest markers, recursively.
-
-    Structure (keys, nesting, ordering material) is preserved; values
-    under the policy's content keys are committed to by hash only.
-    """
-    if isinstance(obj, dict):
-        redacted: dict[str, Any] = {}
-        for key, value in obj.items():
-            if isinstance(key, str) and key in _CONTENT_KEYS:
-                redacted[key] = _content_digest(value)
-            else:
-                redacted[key] = redact_for_commitment(value)
-        return redacted
-    if isinstance(obj, (list, tuple)):
-        return [redact_for_commitment(v) for v in obj]
-    return obj
 
 
 def syscall_journal_digest(

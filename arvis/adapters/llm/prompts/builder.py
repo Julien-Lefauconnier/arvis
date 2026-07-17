@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import fields, is_dataclass
 from typing import Any
 
 from arvis.adapters.llm.contracts.context import ARVISContext
@@ -53,6 +54,29 @@ def _build_linguistic_frame_block(frame: LinguisticGenerationFrame | None) -> st
     return "\n".join(parts)
 
 
+# Wall-clock fields excluded from the prompt rendering: a repr embedding
+# them makes the prompt, hence the LLM call and its pre-effect
+# engagement digest, non-deterministic across identical runs.
+_VOLATILE_INTENT_FIELDS = frozenset({"decided_at", "created_at", "timestamp"})
+
+
+def _render_intent(intent: Any) -> str:
+    """Deterministic rendering of the intent for the prompt.
+
+    Explicit dataclass fields, volatile wall-clock fields excluded. The
+    prompt content is part of what the run engages (P0-3-a6): it must
+    be a deterministic function of the run, never of the clock.
+    """
+    if is_dataclass(intent) and not isinstance(intent, type):
+        pairs = [
+            f"{f.name}={getattr(intent, f.name, None)!r}"
+            for f in fields(intent)
+            if f.name not in _VOLATILE_INTENT_FIELDS
+        ]
+        return f"{type(intent).__qualname__}({', '.join(pairs)})"
+    return str(intent)
+
+
 class PromptBuilder:
     @staticmethod
     def build_intent_enrichment_prompt(
@@ -69,7 +93,7 @@ class PromptBuilder:
 
 {frame_block}
 
-{INTENT_ENRICHMENT_USER_TEMPLATE.format(intent=str(intent))}
+{INTENT_ENRICHMENT_USER_TEMPLATE.format(intent=_render_intent(intent))}
 """
 
         constraints = [
