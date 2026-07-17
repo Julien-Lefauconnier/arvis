@@ -23,6 +23,7 @@ from arvis.kernel.pipeline.cognitive_pipeline_context import (
 )
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.replay_engine import ReplayEngine
+from arvis.kernel_core.host_declaration import resolve_host_context
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 
@@ -123,6 +124,11 @@ class CognitiveOSInternals:
             require_durable_intent_sink=(
                 self.config.runtime_mode is RuntimeMode.PRODUCTION
             ),
+            # Campaign 5 (D-1): opaque host-declared governance context,
+            # resolved (canonical) and threaded to the kernel service
+            # registry; the conventional instance label is stamped on
+            # every governed intent.
+            host_context=resolve_host_context(self.config.host_context),
         )
 
     def _format_run_output(

@@ -21,6 +21,7 @@ from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
 from arvis.kernel.pipeline.runtime_bindings import PipelineRuntimeBindings
+from arvis.kernel_core.host_declaration import instance_label_of
 from arvis.kernel_core.process import (
     CognitiveBudget,
     CognitivePriority,
@@ -63,6 +64,7 @@ class CognitiveRuntime:
         audit_intent_sink: Any | None = None,
         require_durable_intent_sink: bool = False,
         confirmation_registry: Any | None = None,
+        host_context: dict[str, Any] | None = None,
     ) -> None:
         self.pipeline = pipeline
         self.adapters = adapters or {}
@@ -95,6 +97,10 @@ class CognitiveRuntime:
             llm_adapter=self.adapters.get("llm"),
             audit_intent_sink=audit_intent_sink,
             require_durable_intent_sink=require_durable_intent_sink,
+            # Campaign 5 (D-1): opaque host context and the instance
+            # label ARVIS stamps from it, opaque otherwise.
+            host_context=host_context,
+            instance_label=instance_label_of(host_context),
         )
         self.syscall_handler = SyscallHandler(
             runtime_state=self.runtime_state,

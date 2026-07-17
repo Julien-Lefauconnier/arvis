@@ -37,6 +37,7 @@ from arvis.kernel.gate.input_risk import (
 # (arvis/kernel_core/syscalls/engagement.py) since P0-3-a6: the syscall
 # handler engages effect parameters before the effect and cannot import
 # the API layer. Re-exported here so the public surface is unchanged.
+from arvis.kernel_core.host_declaration import component_fingerprint_material
 from arvis.kernel_core.syscalls.engagement import (
     REDACTION_POLICY_VERSION,
     redact_for_commitment,
@@ -74,16 +75,15 @@ def syscall_journal_digest(
     return stable_hash(material)
 
 
-def _qualname_or_none(obj: Any) -> str | None:
-    return type(obj).__qualname__ if obj is not None else None
-
-
 def config_fingerprint(config: Any) -> str:
     """Fingerprint of the effective governance configuration.
 
-    Governance-relevant fields only. Injected objects (gates, sinks,
-    models) are represented by presence and type identity, never by
-    content: the fingerprint commits to WHAT governs, not to payloads.
+    Governance-relevant fields only. Injected components (gates, sinks,
+    models) are bound by their declared ``governance_manifest()`` when
+    they expose one, so two differently configured instances of the
+    same class no longer collide (audit constat 17); a component
+    without a manifest falls back to class identity, as in a7. The
+    fingerprint commits to WHAT governs, never to payloads.
     """
     adapter_registry = getattr(config, "adapter_registry", None)
     material = {
@@ -93,12 +93,18 @@ def config_fingerprint(config: Any) -> str:
         "audit_commitment_policy": str(getattr(config, "audit_commitment_policy", "")),
         "runtime_controls_present": getattr(config, "runtime_controls", None)
         is not None,
-        "consent_gate": _qualname_or_none(getattr(config, "consent_gate", None)),
-        "egress_gate": _qualname_or_none(getattr(config, "egress_gate", None)),
-        "audit_intent_sink": _qualname_or_none(
+        "consent_gate": component_fingerprint_material(
+            getattr(config, "consent_gate", None)
+        ),
+        "egress_gate": component_fingerprint_material(
+            getattr(config, "egress_gate", None)
+        ),
+        "audit_intent_sink": component_fingerprint_material(
             getattr(config, "audit_intent_sink", None)
         ),
-        "core_model": _qualname_or_none(getattr(config, "core_model", None)),
+        "core_model": component_fingerprint_material(
+            getattr(config, "core_model", None)
+        ),
         "adapter_keys": (
             sorted(adapter_registry) if isinstance(adapter_registry, dict) else None
         ),

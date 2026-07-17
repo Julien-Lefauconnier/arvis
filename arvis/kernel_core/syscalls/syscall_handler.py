@@ -298,6 +298,14 @@ class SyscallHandler:
             "tick": started_tick,
             "process_id": syscall.args.get("process_id") or "none",
         }
+        # Campaign 5 (D-1): boundary provenance from the host context.
+        # Absent when the host declares none, so the journaled entry
+        # stays byte-identical. The label never enters the engagement
+        # digest (which binds effect parameters, not boundary identity)
+        # nor the timeline commitment; it lives only on the journaled
+        # intent and the sink copy.
+        if self.services.instance_label is not None:
+            intent["instance_label"] = self.services.instance_label
         try:
             # P0-3-a6: engage the exact parameters of the effect BEFORE
             # it runs. The digest binds the materialized redacted

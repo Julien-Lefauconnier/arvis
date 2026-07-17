@@ -67,6 +67,14 @@ class CognitiveOSConfig:
     # None keeps the intent journal in-memory only (the host owns real
     # durability).
     audit_intent_sink: Callable[[dict[str, Any]], None] | None = None
+    # Campaign 5 (D-1): opaque host-declared governance context. A
+    # JSON-safe mapping of declarative attributes the host attaches to
+    # every governed intent (the boundary instance label today, other
+    # provenance tomorrow). ARVIS never interprets it beyond reading the
+    # conventional `instance_label` key to stamp it; every other key is
+    # transported verbatim, canonicalized injectively. None keeps
+    # intents byte-identical to a run without it.
+    host_context: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         # F-008: the runtime mode set is closed; unknown values are
