@@ -267,6 +267,30 @@ class SyscallHandler:
         refuses the syscall: an intent that cannot be made durable must
         not be followed by its effect (fail-closed).
         """
+        if (
+            self.services.require_durable_intent_sink
+            and self.services.audit_intent_sink is None
+        ):
+            # D4-e: the intent could not be made durable in a profile
+            # that requires it; the effect is refused before anything
+            # runs and before anything is recorded.
+            return self._failure_from_error(
+                ctx,
+                ArvisSecurityError(
+                    "effect refused: the production profile requires a "
+                    "durable audit intent sink and none is configured",
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "durable_sink_required",
+                    },
+                ),
+            )
+
         intent: dict[str, Any] = {
             "kind": "syscall_intent",
             "syscall": syscall.name,

@@ -26,3 +26,9 @@ class KernelServiceRegistry:
     # refuses the syscall (fail-closed): an intent that cannot be made
     # durable must not be followed by its effect.
     audit_intent_sink: Any | None = None
+    # D4-e (P1-a6): production posture. When set, an effect syscall
+    # with no durable sink configured is refused at the point of use
+    # (reason durable_sink_required): effectful production requires
+    # durability, production without effects stays valid without a
+    # sink.
+    require_durable_intent_sink: bool = False

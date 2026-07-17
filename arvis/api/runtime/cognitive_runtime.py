@@ -61,6 +61,7 @@ class CognitiveRuntime:
         egress_gate: EgressGate | None = None,
         require_gates: bool = False,
         audit_intent_sink: Any | None = None,
+        require_durable_intent_sink: bool = False,
         confirmation_registry: Any | None = None,
     ) -> None:
         self.pipeline = pipeline
@@ -93,6 +94,7 @@ class CognitiveRuntime:
             zip_ingest_service=None,
             llm_adapter=self.adapters.get("llm"),
             audit_intent_sink=audit_intent_sink,
+            require_durable_intent_sink=require_durable_intent_sink,
         )
         self.syscall_handler = SyscallHandler(
             runtime_state=self.runtime_state,

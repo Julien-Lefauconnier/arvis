@@ -98,6 +98,12 @@ versioning during the alpha.
   invocation. A tool declaring `requires_confirmation=True` was
   previously refused unconditionally; the host wires a registry through
   `CognitiveOSConfig.confirmation_registry`.
+- **D4-e (P1-a6): effectful production requires a durable sink.** In
+  the production profile, the first EFFECT syscall with no
+  `audit_intent_sink` configured is refused at the point of use
+  (reason `durable_sink_required`), before the intent is recorded and
+  before the effect runs. A production profile without effects stays
+  valid without a sink; local profiles never require one.
 
 ## [0.1.0a6] - 2026-07-17
 

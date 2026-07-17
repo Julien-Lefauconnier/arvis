@@ -117,6 +117,12 @@ class CognitiveOSInternals:
             require_gates=self.config.runtime_mode is RuntimeMode.PRODUCTION,
             audit_intent_sink=self.config.audit_intent_sink,
             confirmation_registry=self.config.confirmation_registry,
+            # D4-e: effectful production requires a durable sink; the
+            # refusal happens at the first effect, not at boot, so a
+            # production profile without effects stays valid.
+            require_durable_intent_sink=(
+                self.config.runtime_mode is RuntimeMode.PRODUCTION
+            ),
         )
 
     def _format_run_output(
