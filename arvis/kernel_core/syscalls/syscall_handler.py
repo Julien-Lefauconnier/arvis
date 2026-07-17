@@ -123,8 +123,33 @@ class SyscallHandler:
 
         descriptor = get_descriptor(syscall.name)
         if descriptor is not None and descriptor.access is not None:
-            access_ctx = descriptor.access(syscall.args, self.services)
-            verdict = self.authorization_service.decide(access_ctx)
+            # P1-13-a6: a failing resolver or policy never leaks a raw
+            # exception through the syscall boundary. The refusal is
+            # normalized (stable reason code, journaled) and stays
+            # fail-closed.
+            try:
+                access_ctx = descriptor.access(syscall.args, self.services)
+                verdict = self.authorization_service.decide(access_ctx)
+            except Exception as exc:
+                machinery_failure = self._failure_from_error(
+                    ctx,
+                    ArvisSecurityError(
+                        "authorization machinery failure; the syscall "
+                        "is refused (fail-closed)",
+                        origin=ErrorOrigin(
+                            component="SyscallHandler",
+                            subsystem="kernel.syscall",
+                            syscall=syscall.name,
+                        ),
+                        details={
+                            "syscall": syscall.name,
+                            "reason_code": "authorization_failure",
+                            "exception_type": type(exc).__name__,
+                        },
+                    ),
+                )
+                self._safe_journal(ctx, syscall, machinery_failure, started_tick)
+                return machinery_failure
             if not verdict.allowed:
                 denied_result = self._failure_from_error(
                     ctx,

@@ -37,6 +37,9 @@ class SyscallHandlerLike(Protocol):
 def process_spawn(
     handler: SyscallHandlerLike,
     process: Any,
+    *,
+    ctx: Any = None,
+    causal_id: str | None = None,
 ) -> SyscallResult:
     try:
         handler.scheduler.enqueue(process)
@@ -68,6 +71,9 @@ def process_spawn(
 def process_suspend(
     handler: SyscallHandlerLike,
     process_id: CognitiveProcessId,
+    *,
+    ctx: Any = None,
+    causal_id: str | None = None,
 ) -> SyscallResult:
     try:
         handler.scheduler.suspend(process_id)
@@ -100,6 +106,9 @@ def process_suspend(
 def process_resume(
     handler: SyscallHandlerLike,
     process_id: CognitiveProcessId,
+    *,
+    ctx: Any = None,
+    causal_id: str | None = None,
 ) -> SyscallResult:
     try:
         handler.scheduler.resume(process_id)

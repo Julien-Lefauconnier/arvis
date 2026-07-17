@@ -22,6 +22,23 @@ versioning during the alpha.
   DEGRADED. The permissive `.get(key)` composition is gone, and the
   exported block is the canonical validated form.
 
+### Fixed
+
+- **P0-4-a6: kernel-internal syscalls are functionally reachable.**
+  `process.spawn`, `process.suspend`, `process.resume` and
+  `interrupt.emit` now accept the uniform boundary contract
+  (`ctx=None`, `causal_id=None`): the kernel principal on the trusted
+  context channel reaches them, the intent outbox pairs with their
+  results, and anything else stays denied. They were governed
+  structurally but unreachable (denied without ctx, invalid-args with
+  ctx). End-to-end tests now exercise the REAL registered syscalls with
+  runtime objects, not probes (campaign-3 lesson applied).
+- **P1-13-a6: normalized authorization boundary.** An exception raised
+  by an access resolver or by the authorization policy no longer leaks
+  through the syscall boundary: it is normalized into a journaled,
+  fail-closed refusal with the stable reason code
+  `authorization_failure`.
+
 ## [0.1.0a6] - 2026-07-17
 
 ### Fixed

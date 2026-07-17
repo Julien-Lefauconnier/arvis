@@ -37,6 +37,9 @@ class SyscallHandlerLike(Protocol):
 def interrupt_emit(
     handler: SyscallHandlerLike,
     interrupt: Any,
+    *,
+    ctx: Any = None,
+    causal_id: str | None = None,
 ) -> SyscallResult:
     if handler.runtime_state is None:
         return SyscallResult.failure(
