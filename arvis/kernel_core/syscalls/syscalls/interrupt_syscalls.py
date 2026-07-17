@@ -8,6 +8,7 @@ from arvis.errors.base import (
     ArvisRuntimeError,
     ErrorDomain,
 )
+from arvis.kernel_core.access.resolvers import kernel_internal_resolver
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
     SyscallEffect,
@@ -31,6 +32,7 @@ class SyscallHandlerLike(Protocol):
     "interrupt.emit",
     effect=SyscallEffect.EFFECT,
     summary="Emit a runtime interrupt signal.",
+    access=kernel_internal_resolver("interrupt.emit"),
 )
 def interrupt_emit(
     handler: SyscallHandlerLike,

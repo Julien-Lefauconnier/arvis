@@ -9,6 +9,7 @@ from arvis.errors.base import (
 )
 from arvis.errors.manager import ErrorManager
 from arvis.errors.provenance import ErrorOrigin
+from arvis.kernel_core.access.resolvers import kernel_internal_resolver
 from arvis.kernel_core.process import CognitiveProcessId
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
@@ -31,6 +32,7 @@ class SyscallHandlerLike(Protocol):
     "process.spawn",
     effect=SyscallEffect.EFFECT,
     summary="Spawn a new cognitive process.",
+    access=kernel_internal_resolver("process.spawn"),
 )
 def process_spawn(
     handler: SyscallHandlerLike,
@@ -61,6 +63,7 @@ def process_spawn(
     "process.suspend",
     effect=SyscallEffect.EFFECT,
     summary="Suspend a running cognitive process.",
+    access=kernel_internal_resolver("process.suspend"),
 )
 def process_suspend(
     handler: SyscallHandlerLike,
@@ -92,6 +95,7 @@ def process_suspend(
     "process.resume",
     effect=SyscallEffect.EFFECT,
     summary="Resume a suspended cognitive process.",
+    access=kernel_internal_resolver("process.resume"),
 )
 def process_resume(
     handler: SyscallHandlerLike,

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from arvis.errors.kernel_runtime import (
     DuplicateSyscallRegistrationError,
+    UngovernedSyscallRegistrationError,
 )
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 
@@ -114,6 +115,19 @@ def register_syscall(
             if triggers_external is not None
             else _default_triggers_external(name)
         )
+
+        # F-009-a5 (closes the deferred B6 guard): an effect capability
+        # cannot exist without its governance. Registering an EFFECT
+        # syscall without an access resolver is refused at import time,
+        # so an ungoverned effect is structurally unreachable, not
+        # merely unchecked at runtime.
+        if resolved_effect is SyscallEffect.EFFECT and access is None:
+            raise UngovernedSyscallRegistrationError(
+                f"syscall {name!r} declares EFFECT without an access "
+                "resolver; an effect capability cannot be registered "
+                "without its governance",
+                details={"syscall": name},
+            )
 
         SYSCALL_REGISTRY[name] = fn
         SYSCALL_DESCRIPTORS[name] = SyscallDescriptor(

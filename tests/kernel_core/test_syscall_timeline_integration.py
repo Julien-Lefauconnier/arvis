@@ -60,6 +60,7 @@ def test_syscall_emits_runtime_signal(monkeypatch):
 
     runtime = CognitiveExecutionState()
     ctx = SimpleNamespace(
+        user_id="u1",
         extra={},
         execution=SimpleNamespace(execution_state=runtime),
     )

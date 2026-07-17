@@ -14,6 +14,7 @@ from arvis.errors.base import (
 )
 from arvis.errors.manager import ErrorManager
 from arvis.errors.provenance import ErrorOrigin
+from arvis.kernel_core.access.resolvers import turn_owner_resolver
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
@@ -60,6 +61,7 @@ def _compute_artifact_timestamp(
     effect=SyscallEffect.EFFECT,
     triggers_external=True,
     summary="Invoke the language model to realize text.",
+    access=turn_owner_resolver(SyscallEffect.EFFECT, "llm.generate"),
 )
 def llm_generate(
     handler: SyscallHandlerLike,

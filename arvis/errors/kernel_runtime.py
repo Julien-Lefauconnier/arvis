@@ -23,5 +23,14 @@ class SyscallRegistryError(KernelRuntimeError):
     default_code = ErrorCode.SYSCALL_REGISTRY_ERROR
 
 
+class UngovernedSyscallRegistrationError(SyscallRegistryError):
+    """An EFFECT syscall was registered without an access resolver.
+
+    An effect capability cannot exist without its governance: the
+    registration is refused at import time (audit F-009-a5, closes the
+    B6 guard deferred from campaign 2).
+    """
+
+
 class DuplicateSyscallRegistrationError(SyscallRegistryError):
     default_code = ErrorCode.DUPLICATE_SYSCALL_REGISTRATION

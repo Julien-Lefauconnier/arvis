@@ -13,7 +13,9 @@ from arvis.tools.registry import ToolRegistry
 
 
 def make_ctx():
-    return SimpleNamespace(extra={})
+    # F-009-a5: effect syscalls resolve their turn owner from
+    # ctx.user_id; a ctx without an identifiable owner is denied.
+    return SimpleNamespace(extra={}, user_id="u1")
 
 
 class DummyTool(BaseTool):
@@ -148,7 +150,7 @@ def test_tool_execute_syscall_failure(monkeypatch):
         ),
     )
 
-    ctx = type("Ctx", (), {"extra": {}})()
+    ctx = type("Ctx", (), {"extra": {}, "user_id": "u1"})()
 
     class DummyDecision:
         tool = "fail"

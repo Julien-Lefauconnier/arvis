@@ -48,10 +48,17 @@ def test_default_triggers_external_for_llm_and_tool() -> None:
     assert _default_triggers_external("vfs.list") is False
 
 
+def _dummy_access(args, services):  # pragma: no cover - inert resolver
+    raise AssertionError("probe resolver must not be invoked")
+
+
 def test_registration_populates_descriptor_with_bootstrap_default() -> None:
     name = _PREFIX + "bootstrap"
 
-    decorated = register_syscall(name)(_ok)
+    # F-009-a5: the bootstrap default is EFFECT, and an EFFECT
+    # registration requires an access resolver; the probe provides an
+    # inert one to observe the default metadata.
+    decorated = register_syscall(name, access=_dummy_access)(_ok)
 
     assert get_syscall(name) is decorated  # unchanged lookup behavior
     descriptor = get_descriptor(name)
@@ -82,10 +89,10 @@ def test_registration_honors_explicit_metadata() -> None:
 
 def test_duplicate_registration_still_raises() -> None:
     name = _PREFIX + "dup"
-    register_syscall(name)(_ok)
+    register_syscall(name, access=_dummy_access)(_ok)
 
     with pytest.raises(DuplicateSyscallRegistrationError):
-        register_syscall(name)(_ok)
+        register_syscall(name, access=_dummy_access)(_ok)
 
 
 def test_all_descriptors_is_sorted_by_name() -> None:

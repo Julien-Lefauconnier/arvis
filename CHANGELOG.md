@@ -38,6 +38,21 @@ versioning during the alpha.
   `_config`: the runtime governs under the configuration it was built
   with, for its whole lifetime.
 
+### Added
+
+- **F-009-a5: mandatory access resolver for effect syscalls (closes the
+  deferred B6 guard).** `register_syscall` refuses an EFFECT
+  registration without an access resolver at import time: an ungoverned
+  effect capability is structurally unreachable. Reference resolvers
+  (`arvis/kernel_core/access/resolvers.py`) express each class's real
+  rule under the single owner-scoped policy: kernel-internal syscalls
+  (`interrupt.emit`, `process.*`) are owned by the runtime itself
+  (reserved `KERNEL_OWNER_ID`; only `KERNEL_PRINCIPAL` on the trusted
+  context channel passes, identity is never read from syscall
+  arguments); turn-scoped syscalls (`tool.execute`, `llm.generate`) are
+  owned by the turn's user, a stamped foreign principal is denied, and
+  a call without an identifiable owner is denied fail-closed.
+
 ## [0.1.0a5] - 2026-07-16
 
 Consolidation release (campaign 2): closes the composition-scope
