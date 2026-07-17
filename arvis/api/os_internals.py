@@ -210,7 +210,7 @@ class CognitiveOSInternals:
         )
         # D-a: run_ir carries the same commitment_inputs block as the
         # result view export (public contract: run_ir == to_ir).
-        inputs = self._build_commitment_inputs(result)
+        inputs, _unavailable_reason = self._build_commitment_inputs(result)
         if inputs is not None and isinstance(exported, dict):
             exported = {**exported, "commitment_inputs": inputs}
         return exported
@@ -310,36 +310,63 @@ class CognitiveOSInternals:
             ),
         )
 
+        inputs, unavailable_reason = self._build_commitment_inputs(result)
         return CognitiveResultView.from_state(
             typed_state,
             result,
             commitment_policy=self._commitment_policy(),
-            commitment_inputs=self._build_commitment_inputs(result),
+            commitment_inputs=inputs,
+            commitment_inputs_reason=unavailable_reason,
         )
 
-    def _build_commitment_inputs(self, result: Any) -> dict[str, Any] | None:
+    def _build_commitment_inputs(
+        self, result: Any
+    ) -> tuple[dict[str, Any] | None, str | None]:
         """Non-cognitive commitment components, from the live environment.
 
         F-007-a5: registry manifest fingerprint, effective config
         fingerprint, active policy tables, and the digest of the
-        redacted syscall journals (intents and results). Returns None
-        when a component cannot be produced: the commitment machinery
-        then records the absence (REQUIRED refuses, DEGRADED flags),
-        never a partially bound commitment.
+        redacted syscall journals (intents and results).
+
+        P0-1-a6 (decision D4-c): the intent/result bijection is
+        verified here, where the journals are read, before any
+        composition. An effect intent without its journaled result, or
+        an execution marked audit-incomplete by the handler, yields no
+        commitment with the dedicated reason "audit_incomplete": the
+        effect happened, and arvis refuses to pretend it proved it.
+
+        Returns (inputs, unavailable_reason); (None, None) when a
+        component cannot be produced for any other cause. The
+        commitment machinery records the absence (REQUIRED refuses,
+        DEGRADED flags), never a partially bound commitment.
         """
         try:
             execution = getattr(result, "execution", result)
             execution_state = getattr(execution, "execution_state", None)
-            intents = getattr(execution_state, "syscall_intents", None)
-            results = getattr(execution_state, "syscall_results", None)
+            intents = getattr(execution_state, "syscall_intents", None) or []
+            results = getattr(execution_state, "syscall_results", None) or []
+
+            metadata = getattr(execution_state, "metadata", None)
+            if isinstance(metadata, dict) and metadata.get("audit_incomplete"):
+                return None, "audit_incomplete"
+
+            journaled_ids = {
+                entry.get("syscall_id") for entry in results if isinstance(entry, dict)
+            }
+            for intent in intents:
+                if not isinstance(intent, dict):
+                    continue
+                if intent.get("causal_id") not in journaled_ids:
+                    return None, "audit_incomplete"
+
             return {
                 "registry_fingerprint": self.tool_registry.fingerprint(),
                 "config_fingerprint": config_fingerprint(self.config),
                 "policies_fingerprint": policies_fingerprint(),
                 "syscall_journal_sha256": syscall_journal_digest(intents, results),
-            }
+            }, None
         except Exception:  # arvis-broad: commitment absence is governed
-            return None
+            return None, None
 
     def _commitment_policy(self) -> AuditCommitmentPolicy:
         policy = getattr(self.config, "audit_commitment_policy", None)

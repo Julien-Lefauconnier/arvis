@@ -186,7 +186,8 @@ class SyscallHandler:
         # (fail-closed). An intent without a paired artifact afterwards
         # signals a crash during the effect: the uncertainty is bounded
         # and visible, never silent.
-        if descriptor is not None and descriptor.effect is SyscallEffect.EFFECT:
+        is_effect = descriptor is not None and descriptor.effect is SyscallEffect.EFFECT
+        if is_effect:
             intent_refusal = self._record_intent(
                 ctx,
                 syscall,
@@ -212,7 +213,12 @@ class SyscallHandler:
                 exc,
                 syscall_name=syscall.name,
             )
-            self._safe_journal(ctx, syscall, error_result, started_tick)
+            # P0-1-a6: past the fn call the effect may have happened;
+            # the result journal is mandatory on the effect path.
+            if is_effect:
+                self._journal_effect_result(ctx, syscall, error_result, started_tick)
+            else:
+                self._safe_journal(ctx, syscall, error_result, started_tick)
             return error_result
 
         if not isinstance(syscall_result, SyscallResult):
@@ -233,7 +239,10 @@ class SyscallHandler:
                 ),
             )
 
-        self._safe_journal(ctx, syscall, syscall_result, started_tick)
+        if is_effect:
+            self._journal_effect_result(ctx, syscall, syscall_result, started_tick)
+        else:
+            self._safe_journal(ctx, syscall, syscall_result, started_tick)
         return syscall_result
 
     def _record_intent(
@@ -328,6 +337,70 @@ class SyscallHandler:
                 ),
             )
         return None
+
+    def _journal_effect_result(
+        self,
+        ctx: PipelineContextLike | None,
+        syscall: Syscall,
+        result: SyscallResult,
+        started_tick: int,
+    ) -> None:
+        """Mandatory result journal after an effect (P0-1-a6).
+
+        The effect has happened; a journaling failure cannot refuse it
+        retroactively. It marks the run AUDIT_INCOMPLETE instead: the
+        intent/result bijection check refuses the commitment
+        downstream, REQUIRED refuses the public result, and the
+        incompleteness is never silent.
+        """
+        try:
+            self._journal(ctx, syscall, result, started_tick)
+        except Exception as exc:  # arvis-broad: marks audit incompleteness
+            self._mark_audit_incomplete(ctx, syscall, exc)
+
+    def _mark_audit_incomplete(
+        self,
+        ctx: PipelineContextLike | None,
+        syscall: Syscall,
+        exc: Exception,
+    ) -> None:
+        if ctx is None:
+            return
+        try:
+            ctx.extra["audit_incomplete"] = True
+            entries = ctx.extra.setdefault("audit_incomplete_syscalls", [])
+            if isinstance(entries, list):
+                entries.append(
+                    {
+                        "syscall": syscall.name,
+                        "exception_type": type(exc).__name__,
+                    }
+                )
+            execution_state = _execution_state_from_ctx(ctx)
+            if execution_state is not None:
+                execution_state.metadata["audit_incomplete"] = True
+            ErrorManager.attach(
+                ctx,
+                SyscallExecutionError(
+                    "Effect result journaling failure: audit incomplete",
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "audit_incomplete",
+                        "exception_type": type(exc).__name__,
+                    },
+                    cause=normalize_error(exc).cause,
+                ),
+            )
+        except Exception:  # arvis-broad: last resort, context unwritable
+            # The orphan-intent bijection check still catches the
+            # missing pair downstream, so the incompleteness stays
+            # detectable.
+            pass
 
     def _safe_journal(
         self,

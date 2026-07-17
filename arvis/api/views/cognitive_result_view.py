@@ -60,6 +60,7 @@ class CognitiveResultView:
         *,
         commitment_policy: AuditCommitmentPolicy = AuditCommitmentPolicy.DEGRADED,
         commitment_inputs: dict[str, Any] | None = None,
+        commitment_inputs_reason: str | None = None,
     ) -> CognitiveResultView:
         observability = getattr(result, "observability", None)
         execution = getattr(result, "execution", result)
@@ -165,7 +166,12 @@ class CognitiveResultView:
                 and ir_hash
                 and validated_inputs is None
             ):
-                commitment_reason = "commitment_inputs_unavailable"
+                # P0-1-a6: the caller can name why the inputs are
+                # unavailable (audit_incomplete: an effect happened
+                # whose result could not be journaled and paired).
+                commitment_reason = (
+                    commitment_inputs_reason or "commitment_inputs_unavailable"
+                )
 
         # F-015: the absence of an audit commitment is never silent.
         commitment_degraded = False
@@ -249,6 +255,7 @@ class CognitiveResultView:
             "commitment_policy": self.commitment_policy,
             "commitment_reason": self.commitment_reason,
             "commitment_degraded": self.commitment_degraded,
+            "audit_incomplete": self.commitment_reason == "audit_incomplete",
             "trace": (self.trace_view.to_dict() if self.trace_view else None),
             "timeline": (self.timeline_view.to_dict() if self.timeline_view else None),
             "execution": (

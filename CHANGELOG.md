@@ -62,6 +62,20 @@ versioning during the alpha.
   prompt now renders the intent through an explicit deterministic
   projection excluding wall-clock fields; the `run_ir == to_ir`
   contract and cross-run commitment determinism hold again.
+- **P0-1-a6: mandatory post-effect audit and intent/result bijection.**
+  On the effect path the result journal is no longer best-effort: a
+  journaling failure after an effect marks the execution
+  AUDIT_INCOMPLETE (the effect happened; arvis refuses to pretend it
+  proved it, never denies it retroactively). The intent/result
+  bijection is verified where the journals are read
+  (`_build_commitment_inputs`, decision D4-c): an effect intent without
+  its paired journaled result, or the handler incompleteness flag,
+  yields no commitment with the dedicated reason `audit_incomplete`;
+  REQUIRED refuses the public result through the existing absence
+  machinery (decision D4-b), DEGRADED flags it, and the view exposes
+  `audit_incomplete`. The audit scenario (effect executed, journal
+  down, REQUIRED commitment still produced) is closed and pinned by
+  tests.
 
 ## [0.1.0a6] - 2026-07-17
 
