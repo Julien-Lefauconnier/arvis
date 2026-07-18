@@ -5,7 +5,6 @@ from typing import Any
 
 import jsonschema
 
-from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.errors import normalize_error
 from arvis.errors.tool_runtime import (
     ToolAuthorizationError,
@@ -15,8 +14,12 @@ from arvis.errors.tool_runtime import (
     ToolTimeoutError,
     UnknownToolError,
 )
+from arvis.tools.authorized_invocation import (
+    AuthorizedInvocation,
+    InvocationAuthority,
+    UnauthorizedExecutionError,
+)
 from arvis.tools.registry import ToolRegistry
-from arvis.tools.runtime.runtime_bindings import resolve_process_id
 from arvis.tools.tool_result import ToolResult
 
 
@@ -41,54 +44,39 @@ def _schema_violation(instance: Any, schema: dict[str, Any]) -> str | None:
 class ToolExecutor:
     def __init__(self, registry: ToolRegistry) -> None:
         self.registry = registry
-
-    def execute_authorized(
-        self,
-        result: Any,
-        ctx: Any,
-    ) -> ToolResult | None:
-        """Compatibility entrypoint (deprecated, P1-5-a6).
-
-        Rebuilds a MINIMAL invocation and delegates. The authorized
-        path must use :meth:`execute_invocation` with the invocation
-        object the policy actually evaluated, so identity, tenant, real
-        risk, consent and idempotency are never lost between
-        authorization and execution.
-        """
-
-        if result is None or ctx is None:
-            return None
-
-        decision = getattr(result, "action_decision", None)
-        if decision is None:
-            return None
-
-        tool_name_raw = getattr(decision, "tool", None)
-        if not isinstance(tool_name_raw, str):
-            return None
-
-        invocation = ToolInvocation(
-            tool_name=tool_name_raw,
-            payload=getattr(decision, "tool_payload", {}) or {},
-            process_id=resolve_process_id(ctx),
-            context=ctx,
-        )
-        return self.execute_invocation(invocation, result, ctx)
+        # D-7: the single minting authority for this executor. The
+        # manager reads it to mint capabilities after policy; the
+        # executor honours only the capabilities this authority minted.
+        self.authority = InvocationAuthority()
 
     def execute_invocation(
         self,
-        invocation: ToolInvocation,
+        authorized: AuthorizedInvocation,
         result: Any,
         ctx: Any,
     ) -> ToolResult | None:
-        """Authorized runtime execution of an already-evaluated invocation.
+        """Execute a tool from a verified authorization capability (D-7).
 
-        P1-5-a6: the executor receives the SAME `ToolInvocation` the
-        policy authorized, without reconstruction. The context the tool
-        sees is the context that was authorized: user, principal,
-        tenant, real turn risk, consent, audit and idempotency fields
-        all travel to the tool. Must be called from the syscall layer.
+        The executor runs a tool ONLY when handed an
+        :class:`AuthorizedInvocation` this executor's authority minted.
+        A bare invocation, a forged capability or one from a different
+        authority raises :class:`UnauthorizedExecutionError` and the
+        effect never runs: there is no path to an effect that the
+        manager's policy did not authorize.
+
+        The wrapped ``ToolInvocation`` is the exact object the policy
+        evaluated, without reconstruction, so identity, tenant, real
+        risk, consent and idempotency are never lost between
+        authorization and execution.
         """
+        if not isinstance(
+            authorized, AuthorizedInvocation
+        ) or not self.authority.verifies(authorized):
+            raise UnauthorizedExecutionError(
+                "tool execution requires a verified AuthorizedInvocation "
+                "minted by the tool manager's policy"
+            )
+        invocation = authorized.invocation
 
         if result is None or ctx is None:
             return None
@@ -223,14 +211,15 @@ class ToolExecutor:
             )
 
     def execute(self, arg1: Any, arg2: Any | None = None) -> ToolResult | None:
-        """
-        Backward-compatible entrypoint.
-        Direct production execution is forbidden.
-        """
-        if isinstance(arg1, str):
-            raise ToolAuthorizationError(
-                "direct_tool_execution_forbidden: "
-                "use syscall authority via SyscallHandler"
-            )
+        """Direct execution is forbidden (D-7).
 
-        return self.execute_authorized(arg1, arg2)
+        There is no unauthorized path to an effect. A tool runs only
+        through :meth:`execute_invocation` handed a capability the tool
+        manager minted after its policy authorized the invocation. Every
+        direct form raises, so neither a tool name nor a rebuilt
+        result/ctx can drive an effect that policy never evaluated.
+        """
+        raise ToolAuthorizationError(
+            "direct_tool_execution_forbidden: a tool runs only from an "
+            "AuthorizedInvocation minted by the tool manager's policy"
+        )

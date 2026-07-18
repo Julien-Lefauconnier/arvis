@@ -17,6 +17,7 @@ violations surface structural paths only, never offending values.
 import time
 from types import SimpleNamespace
 
+from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.errors.codes import ErrorCode
 from arvis.tools.base import BaseTool
 from arvis.tools.executor import ToolExecutor
@@ -41,6 +42,19 @@ def _executor_with(tool: BaseTool) -> ToolExecutor:
     return ToolExecutor(registry)
 
 
+def _run(executor: ToolExecutor, tool: str, ctx, payload: dict | None = None):
+    """Execute through a legitimately minted capability (D-7).
+
+    The executor no longer runs a bare invocation; a test exercising
+    executor governance mints a capability from the executor's own
+    authority, exactly as the manager does after policy.
+    """
+    invocation = ToolInvocation(tool_name=tool, payload=payload or {}, process_id="p")
+    authorized = executor.authority.authorize(invocation)
+    result = _decision(tool, payload)
+    return executor.execute_invocation(authorized, result, ctx)
+
+
 # ---------------------------------------------------------------
 # F-014: deadline on result acceptance
 # ---------------------------------------------------------------
@@ -60,7 +74,7 @@ class _SlowTool(BaseTool):
 
 def test_late_result_is_rejected_by_the_deadline():
     ctx = _ctx()
-    result = _executor_with(_SlowTool()).execute_authorized(_decision("slow_tool"), ctx)
+    result = _run(_executor_with(_SlowTool()), "slow_tool", ctx)
     assert result.success is False
     assert result.error.code == ErrorCode.TOOL_TIMEOUT
     assert result.latency_ms is not None
@@ -79,9 +93,7 @@ class _FastTool(BaseTool):
 
 
 def test_result_within_the_deadline_is_accepted():
-    result = _executor_with(_FastTool()).execute_authorized(
-        _decision("fast_tool"), _ctx()
-    )
+    result = _run(_executor_with(_FastTool()), "fast_tool", _ctx())
     assert result.success is True
 
 
@@ -125,8 +137,11 @@ def _schema_tool(output, calls):
 def test_invalid_input_is_denied_before_the_call():
     calls = {"n": 0}
     ctx = _ctx()
-    result = _executor_with(_schema_tool({"ok": True}, calls)).execute_authorized(
-        _decision("schema_tool", payload={"amount": "not_a_number"}), ctx
+    result = _run(
+        _executor_with(_schema_tool({"ok": True}, calls)),
+        "schema_tool",
+        ctx,
+        {"amount": "not_a_number"},
     )
     assert result.success is False
     assert result.error.code == ErrorCode.TOOL_INPUT_INVALID
@@ -138,8 +153,11 @@ def test_invalid_input_is_denied_before_the_call():
 
 def test_valid_input_reaches_the_tool():
     calls = {"n": 0}
-    result = _executor_with(_schema_tool({"ok": True}, calls)).execute_authorized(
-        _decision("schema_tool", payload={"amount": 3}), _ctx()
+    result = _run(
+        _executor_with(_schema_tool({"ok": True}, calls)),
+        "schema_tool",
+        _ctx(),
+        {"amount": 3},
     )
     assert result.success is True
     assert calls["n"] == 1
@@ -148,8 +166,11 @@ def test_valid_input_reaches_the_tool():
 def test_invalid_output_gets_its_specific_status():
     calls = {"n": 0}
     ctx = _ctx()
-    result = _executor_with(_schema_tool({"nope": 1}, calls)).execute_authorized(
-        _decision("schema_tool", payload={"amount": 3}), ctx
+    result = _run(
+        _executor_with(_schema_tool({"nope": 1}, calls)),
+        "schema_tool",
+        ctx,
+        {"amount": 3},
     )
     assert result.success is False
     assert result.error.code == ErrorCode.TOOL_OUTPUT_INVALID
@@ -169,8 +190,11 @@ class _UnconstrainedTool(BaseTool):
 
 
 def test_empty_schemas_do_not_constrain():
-    result = _executor_with(_UnconstrainedTool()).execute_authorized(
-        _decision("free_tool", payload={"whatever": True}), _ctx()
+    result = _run(
+        _executor_with(_UnconstrainedTool()),
+        "free_tool",
+        _ctx(),
+        {"whatever": True},
     )
     assert result.success is True
 

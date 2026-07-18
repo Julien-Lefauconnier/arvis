@@ -200,10 +200,12 @@ class ToolManager:
         self._attach_authorization_snapshot(ctx, authorization_snapshot)
 
         # --- execution ---
-        # P1-5-a6: the executor receives the SAME invocation the policy
-        # evaluated; nothing is rebuilt between authorization and the
-        # tool.
-        result_exec = self.executor.execute_invocation(invocation, result, ctx)
+        # D-7: the executor runs a tool ONLY from a capability minted
+        # here, after the policy allowed the invocation. The manager is
+        # the single authority; the executor the single consumer. There
+        # is no path to an effect the policy did not authorize.
+        authorized = self.executor.authority.authorize(invocation)
+        result_exec = self.executor.execute_invocation(authorized, result, ctx)
 
         # Campaign 5 (D-4): the effect has run; finalize the reservation
         # (single use). A commit failure is not an effect-refusal path;

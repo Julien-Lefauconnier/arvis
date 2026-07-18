@@ -35,7 +35,7 @@ class CognitiveOSInternals:
     config: Any
     pipeline: CognitivePipeline
     runtime: CognitiveRuntime
-    tool_executor: ToolExecutor
+    _tool_executor: ToolExecutor
     tool_registry: ToolRegistry
 
     @staticmethod
@@ -109,7 +109,7 @@ class CognitiveOSInternals:
         return CognitiveRuntime(
             pipeline=self.pipeline,
             adapters=self.config.adapter_registry,
-            tool_executor=self.tool_executor,
+            tool_executor=self._tool_executor,
             # One registry: the runtime and its tool manager govern the
             # same tool surface the host registered on (previously the
             # runtime built its own empty registry and the policy was

@@ -2,6 +2,7 @@
 
 import pytest
 
+from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.tools.base import BaseTool
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
@@ -49,7 +50,11 @@ def test_tool_called_from_runtime():
 
     ctx = DummyCtx()
 
-    executor.execute(DummyResult(), ctx)
+    invocation = ToolInvocation(
+        tool_name="dummy", payload={}, process_id="p", context=ctx
+    )
+    authorized = executor.authority.authorize(invocation)
+    executor.execute_invocation(authorized, DummyResult(), ctx)
 
     assert ctx.extra.get("called") is True
 
@@ -73,7 +78,11 @@ def test_tool_execution_authorized():
 
     ctx = DummyCtx()
 
-    result = executor.execute_authorized(DummyResult(), ctx)
+    invocation = ToolInvocation(
+        tool_name="dummy", payload={"x": 1}, process_id="p", context=ctx
+    )
+    authorized = executor.authority.authorize(invocation)
+    result = executor.execute_invocation(authorized, DummyResult(), ctx)
 
     assert result.success is True
     assert result.output["ok"] is True

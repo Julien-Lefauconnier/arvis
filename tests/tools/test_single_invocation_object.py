@@ -4,7 +4,7 @@
 The executor receives the SAME `ToolInvocation` the policy evaluated:
 identity, tenant, real turn risk, consent, audit and idempotency fields
 travel to the tool without reconstruction. The deprecated
-`execute_authorized` compatibility path still works and delegates.
+The a7 execute_authorized bypass is removed (D-7).
 """
 
 from types import SimpleNamespace
@@ -74,21 +74,12 @@ def test_tool_receives_principal_tenant_and_risk():
     assert invocation.consent_granted == ()
 
 
-def test_execute_authorized_compatibility_path_still_works():
-    registry = ToolRegistry()
-    tool = _CapturingTool()
-    registry.register(tool)
-    executor = ToolExecutor(registry)
-    ctx = SimpleNamespace(extra={}, user_id="u1")
-    decision = SimpleNamespace(tool="capture_tool", tool_payload={"q": 2})
-    result = SimpleNamespace(action_decision=decision)
-    outcome = executor.execute_authorized(result, ctx)
-    assert outcome is not None and outcome.success is True
-    # The compatibility path rebuilds a MINIMAL invocation: enriched
-    # identity fields stay at their safe defaults.
-    invocation = tool.seen[0]
-    assert invocation.principal is None
-    assert invocation.risk_score == 0.0
+def test_execute_authorized_bypass_path_is_removed():
+    # D-7: the a7 execute_authorized rebuild-and-run bypass is gone.
+    # There is no method that rebuilds an invocation and executes it
+    # outside the manager's minted capability.
+    executor = ToolExecutor(ToolRegistry())
+    assert not hasattr(executor, "execute_authorized")
 
 
 def test_direct_execution_stays_forbidden():

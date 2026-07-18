@@ -153,7 +153,7 @@ class CognitiveOS(CognitiveOSInternals):
                 "production runtime profile"
             )
         self.tool_registry = ToolRegistry()
-        self.tool_executor = ToolExecutor(self.tool_registry)
+        self._tool_executor = ToolExecutor(self.tool_registry)
         self.pipeline = pipeline or CognitivePipeline(
             core_model=self.config.core_model,
             strict_mode=self.config.strict_mode,
