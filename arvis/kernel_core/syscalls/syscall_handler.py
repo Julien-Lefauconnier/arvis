@@ -33,6 +33,7 @@ from arvis.kernel_core.syscalls.syscall_registry import (
     get_descriptor,
     get_syscall,
 )
+from arvis.tools.manager import ToolAuthorizationOutcome
 
 
 class RuntimeStateLike(Protocol):
@@ -207,6 +208,21 @@ class SyscallHandler:
                 self._safe_journal(ctx, syscall, denied_result, started_tick)
                 return denied_result
 
+        validated_tool_authorization: ToolAuthorizationOutcome | None = None
+        if syscall.name == "tool.execute":
+            (
+                validated_tool_authorization,
+                authorization_failure,
+            ) = self._validate_tool_authorization_outcome(ctx, syscall)
+            if authorization_failure is not None:
+                self._safe_journal(
+                    ctx,
+                    syscall,
+                    authorization_failure,
+                    started_tick,
+                )
+                return authorization_failure
+
         causal_id = self._build_syscall_id(
             syscall,
             started_tick,
@@ -227,19 +243,22 @@ class SyscallHandler:
                 causal_id,
                 started_tick,
                 authorization_reason_code=authorization_reason_code,
+                tool_authorization=validated_tool_authorization,
             )
             if intent_refusal is not None:
                 self._safe_journal(ctx, syscall, intent_refusal, started_tick)
                 return intent_refusal
 
         try:
-            syscall_result = fn(
-                self,
-                **{
-                    **syscall.args,
-                    "causal_id": causal_id,
-                },
-            )
+            call_args = {
+                **syscall.args,
+                "causal_id": causal_id,
+            }
+            if validated_tool_authorization is not None:
+                # Kernel-owned copy: callbacks holding the caller's original
+                # outcome cannot swap the capability between intent and effect.
+                call_args["authorization"] = validated_tool_authorization
+            syscall_result = fn(self, **call_args)
         except Exception as exc:
             error_result = self._failure_from_exception(
                 ctx,
@@ -278,6 +297,87 @@ class SyscallHandler:
             self._safe_journal(ctx, syscall, syscall_result, started_tick)
         return syscall_result
 
+    def _validate_tool_authorization_outcome(
+        self,
+        ctx: PipelineContextLike | None,
+        syscall: Syscall,
+    ) -> tuple[ToolAuthorizationOutcome | None, SyscallResult | None]:
+        """Copy one trusted authorization outcome into the kernel boundary.
+
+        The caller-owned object is never reused after validation. This closes a
+        TOCTOU window where a callback retaining the original outcome could swap
+        its capability after the intent digest but before the syscall body.
+        """
+        candidate = syscall.args.get("authorization")
+        if type(candidate) is not ToolAuthorizationOutcome:
+            return None, self._failure_from_error(
+                ctx,
+                SyscallValidationError(
+                    "tool.execute requires an exact authorization outcome",
+                    code=ErrorCode.INVALID_SYSCALL_ARGS,
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "invalid_tool_authorization_outcome",
+                        "authorization_type": type(candidate).__name__,
+                    },
+                ),
+            )
+
+        try:
+            if candidate.authorized is not None:
+                trusted = ToolAuthorizationOutcome(
+                    authorized=candidate.authorized,
+                )
+            else:
+                trusted = ToolAuthorizationOutcome(
+                    refusal=candidate.refusal,
+                    refusal_snapshot=candidate.refusal_snapshot,
+                )
+        except (TypeError, ValueError) as exc:
+            return None, self._failure_from_error(
+                ctx,
+                SyscallValidationError(
+                    "tool authorization outcome violates its invariant",
+                    code=ErrorCode.INVALID_SYSCALL_ARGS,
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "invalid_tool_authorization_outcome",
+                        "exception_type": type(exc).__name__,
+                    },
+                ),
+            )
+
+        tool_manager = self.services.tool_manager
+        owns_outcome = getattr(tool_manager, "owns_outcome", None)
+        if not callable(owns_outcome) or not owns_outcome(trusted):
+            return None, self._failure_from_error(
+                ctx,
+                ArvisSecurityError(
+                    "tool authorization outcome is not owned by the configured manager",
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "untrusted_tool_authorization_outcome",
+                    },
+                ),
+            )
+
+        return trusted, None
+
     def _record_intent(
         self,
         ctx: PipelineContextLike | None,
@@ -286,6 +386,7 @@ class SyscallHandler:
         started_tick: int,
         *,
         authorization_reason_code: str | None = None,
+        tool_authorization: ToolAuthorizationOutcome | None = None,
     ) -> SyscallResult | None:
         """Record a durable audit intent before an effect syscall.
 
@@ -362,14 +463,21 @@ class SyscallHandler:
             # channel is gone; a stale decision from an earlier call is
             # not reachable by construction.
             authorization_snapshot: dict[str, Any] | None = None
-            outcome = syscall.args.get("authorization")
             effect_invocation = None
-            if outcome is not None:
-                snapshot_material = getattr(outcome, "snapshot_material", None)
-                if isinstance(snapshot_material, dict) and snapshot_material:
-                    authorization_snapshot = snapshot_material
-                authorized_cap = getattr(outcome, "authorized", None)
-                effect_invocation = getattr(authorized_cap, "invocation", None)
+            if syscall.name == "tool.execute":
+                # The strict, manager-owned, kernel-copied outcome was resolved
+                # before the intent phase. Never re-read the caller-owned object.
+                assert tool_authorization is not None
+                if tool_authorization.authorized is not None:
+                    effect_invocation = tool_authorization.authorized.invocation
+                    authorization_snapshot = dict(
+                        tool_authorization.authorized.authorization_snapshot
+                    )
+                else:
+                    assert tool_authorization.refusal_snapshot is not None
+                    authorization_snapshot = (
+                        tool_authorization.refusal_snapshot.to_material()
+                    )
             # Campaign 6 (Lot 0/1): runtime objects (pipeline result,
             # authorization outcome) are runtime bindings with no
             # injective encoding; the digest binds the extracted effect

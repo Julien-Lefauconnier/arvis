@@ -45,6 +45,7 @@ from arvis.errors.tool_runtime import (
 )
 from arvis.kernel_core.access.identity import principal_from_context
 from arvis.kernel_core.syscalls.engagement import stable_hash
+from arvis.tools.authorized_invocation import AuthorizedInvocation
 from arvis.tools.confirmation import (
     ConfirmationRegistry,
     ToolConfirmation,
@@ -84,30 +85,65 @@ def _resolve_turn_risk(ctx: Any) -> float:
     return max(0.0, min(1.0, max(candidates)))
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ToolAuthorizationOutcome:
-    """Frozen outcome of the pre-syscall authorization phase.
+    """Strict result of the pre-syscall authorization phase.
 
-    Exactly one of ``authorized`` / ``refusal`` is set. For an
-    authorized invocation the snapshot material travels ON the sealed
-    capability (pairing a capability with a different snapshot is not
-    constructible); for a refusal it travels here, so the intent binds
-    the true denial verdict rather than any earlier decision.
+    Exactly one path exists:
+
+    - an exact :class:`AuthorizedInvocation`, whose own immutable snapshot
+      is the sole source of allowed authorization material; or
+    - a pre-effect :class:`ToolResult` refusal paired with the immutable
+      denial snapshot that produced it.
+
+    The invariant is enforced at construction. Generic wrappers and
+    partially populated outcomes are not valid transport objects.
     """
 
-    authorized: Any | None = None
+    authorized: AuthorizedInvocation | None = None
     refusal: ToolResult | None = None
-    refusal_snapshot: dict[str, Any] | None = None
+    refusal_snapshot: ToolAuthorizationSnapshot | None = None
+
+    def __post_init__(self) -> None:
+        has_authorized = self.authorized is not None
+        has_refusal = self.refusal is not None
+
+        if has_authorized == has_refusal:
+            raise ValueError(
+                "a tool authorization outcome must contain exactly one of "
+                "authorized or refusal"
+            )
+
+        if has_authorized:
+            if type(self.authorized) is not AuthorizedInvocation:
+                raise TypeError("authorized must be an exact AuthorizedInvocation")
+            if self.refusal_snapshot is not None:
+                raise ValueError(
+                    "an authorized outcome cannot carry a separate refusal snapshot"
+                )
+            return
+
+        if type(self.refusal) is not ToolResult:
+            raise TypeError("refusal must be an exact ToolResult")
+        if type(self.refusal_snapshot) is not ToolAuthorizationSnapshot:
+            raise TypeError(
+                "a refusal outcome requires an exact ToolAuthorizationSnapshot"
+            )
+        if self.refusal_snapshot.allowed:
+            raise ValueError("a refusal snapshot cannot be allowed")
+        if self.refusal_snapshot.tool_name != self.refusal.tool_name:
+            raise ValueError(
+                "the refusal result and refusal snapshot must name the same tool"
+            )
 
     @property
-    def snapshot_material(self) -> dict[str, Any] | None:
-        """JSON-safe authorization material for the effect commitment."""
+    def snapshot_material(self) -> dict[str, Any]:
+        """Return material derived only from the selected strict path."""
         if self.authorized is not None:
-            snapshot = getattr(self.authorized, "authorization_snapshot", None)
-            if snapshot:
-                return dict(snapshot)
-            return None
-        return self.refusal_snapshot
+            return dict(self.authorized.authorization_snapshot)
+
+        assert self.refusal_snapshot is not None
+        return self.refusal_snapshot.to_material()
 
 
 class ToolManager:
@@ -358,7 +394,7 @@ class ToolManager:
                     latency_ms=None,
                     effect_boundary=PRE_EFFECT_REFUSAL,
                 ),
-                refusal_snapshot=denial.to_material(),
+                refusal_snapshot=denial,
             )
 
         # --- immutable snapshot, sealed capability (D-4 + section 8) ---
@@ -377,6 +413,20 @@ class ToolManager:
             authorization_snapshot.to_material(),
         )
         return ToolAuthorizationOutcome(authorized=authorized)
+
+    def owns_outcome(self, outcome: ToolAuthorizationOutcome) -> bool:
+        """Whether an exact outcome is admissible for this manager.
+
+        Allowed outcomes must carry the exact intact capability registered by
+        this manager's private authority. Refusal outcomes have no executable
+        capability; their constructor-level invariant is sufficient because
+        they can only produce a pre-effect refusal.
+        """
+        if type(outcome) is not ToolAuthorizationOutcome:
+            return False
+        if outcome.authorized is None:
+            return True
+        return self._authority.verifies(outcome.authorized)
 
     # ------------------------------------------------------------------
     # Phase 2: sealed execution behind the syscall boundary
@@ -465,7 +515,7 @@ class ToolManager:
                 latency_ms=None,
                 effect_boundary=PRE_EFFECT_REFUSAL,
             ),
-            refusal_snapshot=denial.to_material(),
+            refusal_snapshot=denial,
         )
 
     def _reserve_confirmation(

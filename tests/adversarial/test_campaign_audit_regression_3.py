@@ -139,7 +139,6 @@ def test_payload_mutation_after_authorization_does_not_change_effect() -> None:
     assert tool.payloads == [{"target": "A", "nested": {"value": 1}}]
 
 
-@pytest.mark.xfail(strict=True, reason="Campaign 7 Lot 3 pending")
 def test_handler_refuses_arbitrary_authorization_wrapper(monkeypatch) -> None:
     tool = _RecordingTool("wrapped")
     handler, manager, _executor = _rig(tool)

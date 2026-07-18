@@ -18,6 +18,7 @@ from arvis.kernel_core.syscalls.syscall_registry import (
     SyscallEffect,
     register_syscall,
 )
+from arvis.tools.manager import ToolAuthorizationOutcome
 
 
 @runtime_checkable
@@ -89,17 +90,17 @@ def tool_execute(
     # from the sealed capability. A bare tool.execute without an
     # outcome is refused (fail-closed): there is no path where the
     # authorization happens after the intent.
-    if authorization is None:
+    if type(authorization) is not ToolAuthorizationOutcome:
         return SyscallResult.failure(
             ArvisRuntimeError(
-                "Tool execution returned no result",
-                code="no_tool_execution",
+                "Tool execution requires an exact authorization outcome",
+                code="invalid_tool_authorization_outcome",
                 domain=ErrorDomain.TOOL,
             )
         )
 
-    refusal = getattr(authorization, "refusal", None)
-    authorized = getattr(authorization, "authorized", None)
+    refusal = authorization.refusal
+    authorized = authorization.authorized
 
     try:
         if refusal is not None:
