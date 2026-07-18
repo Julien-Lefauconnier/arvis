@@ -82,7 +82,33 @@ def test_effect_without_sink_is_refused_under_production_posture():
         _cleanup()
 
 
-def test_effect_with_sink_succeeds_under_production_posture():
+def test_effect_with_durable_sink_succeeds_under_production_posture():
+    # Campaign 6 (Lot 6, closes a8 section 14): a durability-requiring
+    # profile needs a sink that PROVES persistence (receipts), so the
+    # probe uses the reference DurableAuditSink; a bare callable is
+    # refused below.
+    from arvis.kernel_core.syscalls.audit_sink import InMemoryAuditSink
+
+    calls: list = []
+    sink = InMemoryAuditSink()
+    _register_effect_probe(calls)
+    try:
+        ctx = SimpleNamespace(extra={}, user_id="u1")
+        result = _handler(require_sink=True, sink=sink).handle(
+            Syscall(name=_PROBE, args={"ctx": ctx})
+        )
+        assert result.success is True
+        assert len(calls) == 1
+        assert len(sink.entries) == 1
+        assert len(sink.receipts) == 1
+    finally:
+        _cleanup()
+
+
+def test_legacy_callable_sink_is_refused_under_production_posture():
+    # The a8 section 14 finding verbatim: ``lambda intent: None``
+    # satisfied every control. It no longer does where durability is
+    # required.
     calls: list = []
     sink_entries: list = []
     _register_effect_probe(calls)
@@ -90,6 +116,23 @@ def test_effect_with_sink_succeeds_under_production_posture():
         ctx = SimpleNamespace(extra={}, user_id="u1")
         result = _handler(
             require_sink=True, sink=lambda entry: sink_entries.append(entry)
+        ).handle(Syscall(name=_PROBE, args={"ctx": ctx}))
+        assert result.success is False
+        assert result.error is not None
+        assert calls == []
+        assert sink_entries == []
+    finally:
+        _cleanup()
+
+
+def test_legacy_callable_sink_still_accepted_outside_durability_profiles():
+    calls: list = []
+    sink_entries: list = []
+    _register_effect_probe(calls)
+    try:
+        ctx = SimpleNamespace(extra={}, user_id="u1")
+        result = _handler(
+            require_sink=False, sink=lambda entry: sink_entries.append(entry)
         ).handle(Syscall(name=_PROBE, args={"ctx": ctx}))
         assert result.success is True
         assert len(calls) == 1

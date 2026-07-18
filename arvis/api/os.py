@@ -13,6 +13,7 @@ from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.api.runtime_mode import RuntimeMode, coerce_runtime_mode
 from arvis.api.views.cognitive_result_view import CognitiveResultView
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+from arvis.kernel_core.syscalls.audit_sink import DurableAuditSink
 from arvis.stability.stability_snapshot import StabilitySnapshot
 from arvis.telemetry.adapters.stability import stability_event
 from arvis.telemetry.sink import NullTelemetrySink, TelemetrySink
@@ -66,7 +67,9 @@ class CognitiveOSConfig:
     # syscall runs; a failing sink refuses the syscall (fail-closed).
     # None keeps the intent journal in-memory only (the host owns real
     # durability).
-    audit_intent_sink: Callable[[dict[str, Any]], None] | None = None
+    # Campaign 6 (Lot 6): a DurableAuditSink (returning receipts) or a
+    # legacy callable; profiles requiring durability refuse the latter.
+    audit_intent_sink: DurableAuditSink | Callable[[dict[str, Any]], None] | None = None
     # Campaign 5 (D-1): opaque host-declared governance context. A
     # JSON-safe mapping of declarative attributes the host attaches to
     # every governed intent (the boundary instance label today, other

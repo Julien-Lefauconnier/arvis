@@ -20,6 +20,7 @@ from arvis.kernel_core.access.policy import (
     OwnerScopedAuthorization,
 )
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
+from arvis.kernel_core.syscalls.audit_sink import validate_receipt
 from arvis.kernel_core.syscalls.engagement import (
     effect_engagement_digest,
     effect_parameters_from_result,
@@ -299,13 +300,15 @@ class SyscallHandler:
         refuses the syscall: an intent that cannot be made durable must
         not be followed by its effect (fail-closed).
         """
-        if (
-            self.services.require_durable_intent_sink
-            and self.services.audit_intent_sink is None
+        sink = self.services.audit_intent_sink
+        if self.services.require_durable_intent_sink and (
+            sink is None or not callable(getattr(sink, "append", None))
         ):
-            # D4-e: the intent could not be made durable in a profile
-            # that requires it; the effect is refused before anything
-            # runs and before anything is recorded.
+            # D4-e, hardened campaign 6 (Lot 6, closes a8 section 14):
+            # a profile requiring durability requires a sink that
+            # PROVES it (DurableAuditSink returning receipts); a bare
+            # callable only declares. The effect is refused before
+            # anything runs and before anything is recorded.
             return self._failure_from_error(
                 ctx,
                 ArvisSecurityError(
@@ -419,11 +422,46 @@ class SyscallHandler:
                         "causal_id": causal_id,
                     },
                 )
-            sink = self.services.audit_intent_sink
             if sink is not None:
-                # The host receives a copy: mutating it never rewrites
-                # the journaled entry.
-                sink(dict(intent))
+                append = getattr(sink, "append", None)
+                if callable(append):
+                    # Campaign 6 (Lot 6, closes a8 section 14): the
+                    # durable sink ANSWERS. The receipt must bind
+                    # exactly this intent (engagement digest, run
+                    # identity) and be well-formed; anything else
+                    # refuses the effect fail-closed. The host receives
+                    # a copy: mutating it never rewrites the journaled
+                    # entry.
+                    receipt = append(dict(intent))
+                    invalid_reason = validate_receipt(receipt, intent)
+                    if invalid_reason is not None:
+                        return self._failure_from_error(
+                            ctx,
+                            ArvisSecurityError(
+                                "effect refused: the durable sink did "
+                                "not return a valid receipt for this "
+                                "intent (fail-closed)",
+                                origin=ErrorOrigin(
+                                    component="SyscallHandler",
+                                    subsystem="kernel.syscall",
+                                    syscall=syscall.name,
+                                ),
+                                details={
+                                    "syscall": syscall.name,
+                                    "reason_code": "invalid_audit_receipt",
+                                    "receipt_reason": invalid_reason,
+                                },
+                            ),
+                        )
+                    # Journaled as ENVELOPE material on the intent
+                    # entry (stripped from the hashed digest, like the
+                    # run identity): the commitment binds WHAT ran, the
+                    # receipt binds WHERE the proof durably lives.
+                    intent["audit_receipt"] = receipt.to_material()
+                else:
+                    # Legacy callable sink: accepted only outside
+                    # durability-requiring profiles (checked above).
+                    sink(dict(intent))
         except Exception as exc:
             return self._failure_from_error(
                 ctx,

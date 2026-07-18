@@ -90,6 +90,11 @@ _ENVELOPE_VOLATILE_KEYS: frozenset[str] = frozenset(
         # The run <-> commitment anchoring is the durable sink's job
         # (receipt, Lot 6), never the digest's.
         "run_id",
+        # Campaign 6 (Lot 6): the sink receipt is the durable-anchoring
+        # envelope of the intent (position, store, acknowledgement
+        # time): journaled for reconciliation, stripped from the hashed
+        # material for the same determinism contract.
+        "audit_receipt",
         "id",
         "tick",
         "tick_start",
