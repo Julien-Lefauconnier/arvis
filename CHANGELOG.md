@@ -9,6 +9,94 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a8] - 2026-07-17
+
+Campaign 5: external-audit remediation. An external audit of 0.1.0a7
+found a class of collision vulnerabilities in the effect-path
+commitment machinery, plus gaps in confirmation lifecycle, journal
+bijection, replay authentication and executor reachability. This
+release closes them and moves the effect path from "high-level alpha"
+toward an integrable kernel beta. Every reported P0 and P1 is closed
+with a reproduced attack vector pinned as a regression test.
+
+### Security
+
+- **P0: injective canonicalization of effect material (Lot 0-1).** The
+  a7 chain `deep_material -> _strip_volatile -> redact_for_commitment`
+  reduced distinct business payloads to the same digest before
+  SHA-256, so a confirmation granted to act on record-A could be
+  consumed to act on record-B. A single injective encoder
+  (`arvis.kernel_core.canonicalization`) now feeds every effect-path
+  hash: type-preserving (`bytes`, `datetime`, `Decimal`, `UUID`,
+  `Path`, `Enum`, sets, dataclasses each map distinctly), key-type
+  preserving (`{1: x}` != `{"1": x}`), fail-closed on non-encodable
+  values. `payload_commitment` and `effect_engagement_digest` are
+  rebuilt on it; volatile stripping is confined to declared journal
+  envelopes and never rewrites a business payload. A latent
+  non-determinism (`process_id` in the engagement material) surfaced by
+  the injective encoder is fixed by excluding runtime bindings
+  explicitly. Bumps: `REDACTION_POLICY_VERSION` 2->3, `COMMITMENT_VERSION`
+  2->3, `engagement_version` 1->2.
+
+- **Generic host declaration channel (Lot 2).** New
+  `arvis.kernel_core.host_declaration`: an opaque `host_context`
+  (JSON-safe, canonicalized injectively) the host attaches to every
+  governed intent, with `instance_label` as the one conventional key
+  ARVIS reads (only to stamp boundary provenance on journaled intents,
+  never in committed materials). Injected components may expose
+  `governance_manifest()`, which `config_fingerprint` binds in full, so
+  two differently configured components of the same class no longer
+  share a fingerprint (audit constat 17).
+
+- **P1-5: versioned, transactional confirmations (Lot 3).** Confirmation
+  records carry an explicit `CONFIRMATION_FORMAT_VERSION` (starts at 2);
+  a record of any other version is refused at reservation, so no a7-era
+  confirmation is honoured. The lifecycle is two-phase
+  `reserve -> commit / release`: the tool manager reserves before the
+  policy, commits after the effect runs, and releases on a pre-effect
+  denial, so a legitimate confirmation is never burned by a policy
+  refusal and never double-spent. A `ToolAuthorizationSnapshot` (policy
+  verdict, principal, tenant, risk, bound confirmation commitment) is
+  bound into the effect engagement, so two identical effects authorized
+  differently no longer share a commitment (audit constat 11).
+
+- **P1-6: strict intent/result bijection (Lot 4).** New
+  `arvis.kernel_core.syscalls.intent_result_bijection`: the commitment
+  binds the journals only under an exact one-to-one correspondence.
+  The a7 set-membership check missed duplicate intents, orphan results
+  and syscall mismatches; the strict verifier requires exactly one
+  intent and one result per causal id, agreeing on the syscall name,
+  and fails closed as `audit_incomplete` on any deviation.
+
+- **P1-7: authenticated replay (Lot 5).** BREAKING. The a7 `replay()`
+  (optional expected commitment, so `replay_verified(ir)` accepted
+  arbitrary fingerprints) is removed. `replay_verified(ir, *,
+  expected_global_commitment)` makes the external anchor mandatory and
+  authenticates the recomposed commitment against it;
+  `replay_recomposed(ir)` recomposes without authenticating and is
+  named for it. The expected commitment must come from a durable source
+  outside the IR; the host owns that source's durability (documented
+  host requirement).
+
+- **P1-8: uncircumventable executor (Lot 6).** BREAKING. New opaque
+  capability `AuthorizedInvocation`, minted only by the tool manager's
+  `InvocationAuthority` after policy. `ToolExecutor.execute_invocation`
+  runs a tool only from a verified capability; a bare invocation, a
+  forged capability or one from another authority is refused. The
+  `execute_authorized` rebuild-and-run bypass is removed, `execute()`
+  forbids all direct execution, and `CognitiveOS.tool_executor` is no
+  longer public. There is no path to an effect the policy did not
+  authorize.
+
+### Changed
+
+- `CognitiveOS.replay(...)` removed; use `replay_verified(...)` (with a
+  mandatory external commitment) or `replay_recomposed(...)`.
+- `ToolExecutor.execute_authorized(...)` removed; tools run only through
+  a manager-minted `AuthorizedInvocation`.
+- `CognitiveOSConfig` gains `host_context`; `KernelServiceRegistry`
+  gains `host_context` and `instance_label`.
+
 ## [0.1.0a7] - 2026-07-17
 
 ### Security
