@@ -42,15 +42,31 @@ def _executor_with(tool: BaseTool) -> ToolExecutor:
     return ToolExecutor(registry)
 
 
+# Campaign 6 (Lot 3): the mint is claimable exactly once per executor;
+# the test helper claims on first use and memoizes, exactly as the
+# manager holds the claimed authority for the executor's lifetime.
+# Keyed by the executor OBJECT (identity hash), never by id(): a
+# garbage-collected executor's id can be reused by a fresh one, which
+# would hand the fresh executor a foreign authority.
+_CLAIMED_MINTS: dict[ToolExecutor, object] = {}
+
+
+def _mint(executor: ToolExecutor):
+    if executor not in _CLAIMED_MINTS:
+        _CLAIMED_MINTS[executor] = executor.claim_minting_authority()
+    return _CLAIMED_MINTS[executor]
+
+
 def _run(executor: ToolExecutor, tool: str, ctx, payload: dict | None = None):
     """Execute through a legitimately minted capability (D-7).
 
     The executor no longer runs a bare invocation; a test exercising
-    executor governance mints a capability from the executor's own
-    authority, exactly as the manager does after policy.
+    executor governance mints a single-use capability from the
+    executor's claimed authority, exactly as the manager does after
+    policy.
     """
     invocation = ToolInvocation(tool_name=tool, payload=payload or {}, process_id="p")
-    authorized = executor.authority.authorize(invocation)
+    authorized = _mint(executor).authorize(invocation)
     result = _decision(tool, payload)
     return executor.execute_invocation(authorized, result, ctx)
 

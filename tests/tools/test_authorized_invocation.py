@@ -1,10 +1,14 @@
 # tests/tools/test_authorized_invocation.py
-"""Opaque execution capability (campaign 5, Lot 6, closes P1-8).
+"""Opaque, single-use execution capability (campaign 6, Lot 3).
 
-The executor runs a tool only from an AuthorizedInvocation its own
-authority minted. A bare invocation, a forged capability, or one from a
-different authority is refused and the effect never runs. There is no
-public tool_executor and no execute_authorized bypass.
+The executor runs a tool only from an AuthorizedInvocation minted by
+its PRIVATE authority, and only on its FIRST presentation. A bare
+invocation, a forged capability, one from a different authority, or a
+replayed one is refused and the effect never runs. The a8 audit
+(section 10) proved the campaign-5 authority was publicly mintable and
+the capability reusable; both are pinned closed here: the authority is
+not a public attribute, the mint handle is claimable exactly once, and
+the nonce is consumed at execution.
 """
 
 from __future__ import annotations
@@ -41,10 +45,12 @@ class _Tool(BaseTool):
 
 
 def _executor():
+    """Executor + tool + claimed mint (the test plays the manager role)."""
     registry = ToolRegistry()
     tool = _Tool()
     registry.register(tool)
-    return ToolExecutor(registry), tool
+    executor = ToolExecutor(registry)
+    return executor, tool, executor.claim_minting_authority()
 
 
 def _invocation():
@@ -61,9 +67,9 @@ def _result():
 # ---------------------------------------------------------------
 
 
-def test_capability_minted_by_the_executor_authority_runs():
-    executor, tool = _executor()
-    authorized = executor.authority.authorize(_invocation())
+def test_capability_minted_by_the_claimed_authority_runs():
+    executor, tool, mint = _executor()
+    authorized = mint.authorize(_invocation())
     result = executor.execute_invocation(
         authorized, _result(), SimpleNamespace(extra={})
     )
@@ -83,14 +89,14 @@ def test_authority_verifies_its_own_capability():
 
 
 def test_bare_invocation_is_refused():
-    executor, tool = _executor()
+    executor, tool, _mint = _executor()
     with pytest.raises(UnauthorizedExecutionError):
         executor.execute_invocation(_invocation(), _result(), SimpleNamespace(extra={}))  # type: ignore[arg-type]
     assert tool.ran is False
 
 
 def test_capability_from_a_different_authority_is_refused():
-    executor, tool = _executor()
+    executor, tool, _mint = _executor()
     foreign = InvocationAuthority()
     forged = foreign.authorize(_invocation())
     with pytest.raises(UnauthorizedExecutionError):
@@ -108,7 +114,7 @@ def test_authority_does_not_verify_a_foreign_capability():
 def test_direct_execute_is_forbidden():
     from arvis.errors.tool_runtime import ToolAuthorizationError
 
-    executor, _ = _executor()
+    executor, _tool, _mint = _executor()
     with pytest.raises(ToolAuthorizationError, match="direct_tool_execution_forbidden"):
         executor.execute("probe_tool", {})
     with pytest.raises(ToolAuthorizationError, match="direct_tool_execution_forbidden"):
@@ -116,7 +122,7 @@ def test_direct_execute_is_forbidden():
 
 
 def test_execute_authorized_bypass_is_removed():
-    executor, _ = _executor()
+    executor, _tool, _mint = _executor()
     assert not hasattr(executor, "execute_authorized")
 
 
@@ -170,3 +176,74 @@ def test_capability_is_end_to_end_through_the_manager():
     # proved is required. The registration and construction succeeding
     # is the structural guarantee.
     assert os_ is not None
+
+
+# ---------------------------------------------------------------
+# The a8 section 10 findings, pinned closed (campaign 6, Lot 3)
+# ---------------------------------------------------------------
+
+
+def test_executor_authority_is_not_public():
+    executor, _tool, _mint = _executor()
+    # The a8 bypass read `executor.authority` and minted freely; the
+    # attribute no longer exists on the public surface.
+    assert not hasattr(executor, "authority")
+
+
+def test_minting_authority_is_claimable_exactly_once():
+    registry = ToolRegistry()
+    registry.register(_Tool())
+    executor = ToolExecutor(registry)
+    first = executor.claim_minting_authority()
+    assert first is not None
+    with pytest.raises(UnauthorizedExecutionError):
+        executor.claim_minting_authority()
+
+
+def test_authorized_invocation_is_single_use():
+    executor, tool, mint = _executor()
+    authorized = mint.authorize(_invocation())
+    first = executor.execute_invocation(
+        authorized, _result(), SimpleNamespace(extra={})
+    )
+    assert first is not None and first.success is True
+    # Second presentation of the SAME capability: refused, no effect.
+    with pytest.raises(UnauthorizedExecutionError):
+        executor.execute_invocation(authorized, _result(), SimpleNamespace(extra={}))
+
+
+def test_two_capabilities_for_the_same_invocation_are_independent():
+    executor, _tool, mint = _executor()
+    inv = _invocation()
+    cap_a = mint.authorize(inv)
+    cap_b = mint.authorize(inv)
+    assert cap_a.nonce != cap_b.nonce
+    assert (
+        executor.execute_invocation(cap_a, _result(), SimpleNamespace(extra={})).success
+        is True
+    )
+    # cap_b is its own single-use authorization: still valid.
+    assert (
+        executor.execute_invocation(cap_b, _result(), SimpleNamespace(extra={})).success
+        is True
+    )
+
+
+def test_consume_is_single_use_at_the_authority_level():
+    authority = InvocationAuthority()
+    cap = authority.authorize(_invocation())
+    assert authority.consume(cap) is True
+    assert authority.consume(cap) is False
+    # Read-only verification never consumes.
+    assert authority.verifies(cap) is True
+
+
+def test_capability_without_nonce_is_not_consumable():
+    authority = InvocationAuthority()
+    minted = authority.authorize(_invocation())
+    forged = AuthorizedInvocation(
+        _authority_token=minted._authority_token,
+        invocation=_invocation(),
+        nonce="",
+    )
+    assert authority.consume(forged) is False

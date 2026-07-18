@@ -80,7 +80,6 @@ from arvis.stability.stability_snapshot import StabilitySnapshot
 # Tools
 # -----------------------------------------------------
 from arvis.tools.base import BaseTool
-from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 
 # -----------------------------------------------------
@@ -178,6 +177,5 @@ __all__ = [
     "LLMRuntimeExecutor",
     # Tools
     "BaseTool",
-    "ToolExecutor",
     "ToolRegistry",
 ]

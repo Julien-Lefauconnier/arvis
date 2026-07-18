@@ -22,7 +22,10 @@ def test_host_context_reaches_the_service_registry():
             host_context={"instance_label": "tool_runner", "region": "eu-west"},
         )
     )
-    runtime = os_._build_runtime()
+    # Campaign 6 (Lot 3): the mint is claimed once per executor, so a
+    # second runtime on the same executor is refused by design; the
+    # test inspects the runtime the OS constructor already composed.
+    runtime = os_.runtime
     assert runtime.services.instance_label == "tool_runner"
     assert runtime.services.host_context == {
         "instance_label": "tool_runner",
@@ -32,7 +35,10 @@ def test_host_context_reaches_the_service_registry():
 
 def test_absent_host_context_leaves_registry_fields_none():
     os_ = CognitiveOS(CognitiveOSConfig(runtime_mode="local"))
-    runtime = os_._build_runtime()
+    # Campaign 6 (Lot 3): the mint is claimed once per executor, so a
+    # second runtime on the same executor is refused by design; the
+    # test inspects the runtime the OS constructor already composed.
+    runtime = os_.runtime
     assert runtime.services.host_context is None
     assert runtime.services.instance_label is None
 
@@ -41,7 +47,10 @@ def test_host_context_without_label_yields_no_label():
     os_ = CognitiveOS(
         CognitiveOSConfig(runtime_mode="local", host_context={"region": "eu"})
     )
-    runtime = os_._build_runtime()
+    # Campaign 6 (Lot 3): the mint is claimed once per executor, so a
+    # second runtime on the same executor is refused by design; the
+    # test inspects the runtime the OS constructor already composed.
+    runtime = os_.runtime
     assert runtime.services.instance_label is None
     assert runtime.services.host_context == {"region": "eu"}
 

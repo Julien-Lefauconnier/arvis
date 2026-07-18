@@ -135,6 +135,10 @@ class ToolManager:
         # is missing, instead of leaving enforcement to the host.
         self._require_gates = require_gates
         self._confirmation_registry = confirmation_registry
+        # Campaign 6 (Lot 3, closes a8 section 10): the manager is the
+        # single minter. The claim is exactly-once per executor, so no
+        # later caller can obtain the mint from the public graph.
+        self._authority = executor.claim_minting_authority()
 
     # ------------------------------------------------------------------
     # Phase 1: pre-syscall authorization
@@ -299,7 +303,7 @@ class ToolManager:
             confirmed=invocation.confirmed,
             confirmation_commitment=invocation.confirmation_commitment,
         )
-        authorized = self.executor.authority.authorize(
+        authorized = self._authority.authorize(
             invocation,
             authorization_snapshot.to_material(),
         )

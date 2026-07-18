@@ -66,10 +66,31 @@ def _schema_violation(instance: Any, schema: dict[str, Any]) -> str | None:
 class ToolExecutor:
     def __init__(self, registry: ToolRegistry) -> None:
         self.registry = registry
-        # D-7: the single minting authority for this executor. The
-        # manager reads it to mint capabilities after policy; the
-        # executor honours only the capabilities this authority minted.
-        self.authority = InvocationAuthority()
+        # D-7, hardened campaign 6 (Lot 3, closes a8 section 10): the
+        # single minting authority for this executor is PRIVATE. The a8
+        # audit proved a public `authority` let any holder of the
+        # executor mint its own capability, bypassing confirmation,
+        # policy, manager, syscall and audit. The only handle is
+        # claim_minting_authority(), claimable exactly once (the
+        # manager claims it at construction).
+        self._authority = InvocationAuthority()
+        self._minting_claimed = False
+
+    def claim_minting_authority(self) -> InvocationAuthority:
+        """Hand over the minting authority, EXACTLY ONCE (Lot 3).
+
+        The ToolManager calls this at construction; once the system is
+        composed there is no reachable mint on the public object graph.
+        A second claim raises: two components cannot both hold the
+        mint, and a later caller cannot obtain it.
+        """
+        if self._minting_claimed:
+            raise UnauthorizedExecutionError(
+                "the minting authority of this executor was already "
+                "claimed; there is exactly one minter per executor"
+            )
+        self._minting_claimed = True
+        return self._authority
 
     def execute_invocation(
         self,
@@ -91,12 +112,17 @@ class ToolExecutor:
         risk, consent and idempotency are never lost between
         authorization and execution.
         """
+        # Campaign 6 (Lot 3, closes a8 section 10): the capability is
+        # CONSUMED here, single use. A bare invocation, a forged or
+        # foreign capability, or a second presentation of an already
+        # executed one is refused and the effect never runs.
         if not isinstance(
             authorized, AuthorizedInvocation
-        ) or not self.authority.verifies(authorized):
+        ) or not self._authority.consume(authorized):
             raise UnauthorizedExecutionError(
-                "tool execution requires a verified AuthorizedInvocation "
-                "minted by the tool manager's policy"
+                "tool execution requires a verified, unused "
+                "AuthorizedInvocation minted by the tool manager's "
+                "policy (single use)"
             )
         invocation = authorized.invocation
 
