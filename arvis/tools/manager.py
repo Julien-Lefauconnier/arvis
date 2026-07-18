@@ -224,8 +224,12 @@ class ToolManager:
             tenant=stamped.organization_id if stamped is not None else None,
             confirmed=confirmation is not None,
             confirmation_id=confirmation_id,
+            # Campaign 6 (Lot 4, closes a8 section 12): the proof binds
+            # the UNIQUE record commitment of this human decision, never
+            # the payload hash alone; two decisions on the same effect
+            # commit differently.
             confirmation_commitment=(
-                confirmation.payload_sha256 if confirmation is not None else None
+                confirmation.record_commitment if confirmation is not None else None
             ),
             context=ctx,
         )

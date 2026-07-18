@@ -168,7 +168,10 @@ def test_confirmed_invocation_satisfies_the_requirement():
     invocation = tool.executed[0]
     assert invocation.confirmed is True
     assert invocation.confirmation_id == record.confirmation_id
-    assert invocation.confirmation_commitment == payload_commitment({"cmd": "go"})
+    # Campaign 6 (Lot 4): the proof binds the unique record commitment
+    # of THIS human decision, not the payload hash alone.
+    assert invocation.confirmation_commitment == record.record_commitment
+    assert invocation.confirmation_commitment != payload_commitment({"cmd": "go"})
 
 
 def test_unconfirmed_invocation_stays_refused():
@@ -211,3 +214,45 @@ def test_consumed_confirmation_cannot_authorize_a_second_turn():
     second = _turn(manager, ctx)
     assert second is not None and second.success is False
     assert len(tool.executed) == 1
+
+
+# ---------------------------------------------------------------
+# The a8 section 12 findings, pinned closed (campaign 6, Lot 4)
+# ---------------------------------------------------------------
+
+
+def test_confirmation_record_commitment_is_unique():
+    # Two DISTINCT human decisions on the SAME (tool, payload,
+    # principal, tenant): pre-fix they shared the payload-hash
+    # commitment; now each record commits uniquely (fresh nonce, issue
+    # metadata).
+    registry = ConfirmationRegistry()
+    a = registry.issue(tool_name="t", payload={"cmd": "go"}, principal="u1")
+    b = registry.issue(tool_name="t", payload={"cmd": "go"}, principal="u1")
+    assert a.payload_sha256 == b.payload_sha256
+    assert a.record_commitment != b.record_commitment
+    assert a.nonce != b.nonce
+
+
+def test_ttl_is_mandatory_and_strictly_positive():
+    registry = ConfirmationRegistry()
+    record = registry.issue(tool_name="t", payload={}, principal="u1")
+    # The default TTL applies: every record expires.
+    assert record.ttl_seconds > 0.0
+    assert record.expires_at_monotonic > 0.0
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError):
+        registry.issue(tool_name="t", payload={}, principal="u1", ttl_seconds=0.0)
+    with _pytest.raises(ValueError):
+        registry.issue(tool_name="t", payload={}, principal="u1", ttl_seconds=-1.0)
+
+
+def test_issuer_is_bound_in_the_record_commitment():
+    registry = ConfirmationRegistry()
+    a = registry.issue(tool_name="t", payload={}, principal="u1", issuer="ui_button")
+    b = registry.issue(
+        tool_name="t", payload={}, principal="u1", issuer="conversational"
+    )
+    assert a.record_commitment != b.record_commitment
+    assert a.issuer == "ui_button"

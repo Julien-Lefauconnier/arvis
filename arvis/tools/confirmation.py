@@ -28,13 +28,33 @@ Campaign 5, Lot 3, two additions on top of the a7 bound record:
 ``consume`` is kept as a convenience (reserve immediately followed by
 commit) for callers that authorize and act atomically.
 
-The registry is host-provided runtime state (wall clock is acceptable
-here; it never enters commitment material). Confirmation ids are opaque
-and unguessable.
+Campaign 6, Lot 4 (closes a8 section 12), two more additions:
+
+- **Unique record commitment.** The proof used to bind the
+  confirmation by its payload hash only, so two DISTINCT human
+  decisions on the same (tool, payload, principal, tenant) were
+  indistinguishable in the commitment. Every record now computes, at
+  issue time, ``record_commitment = H(version, nonce, tool,
+  payload_sha256, principal, tenant, issued_at, ttl, issuer)`` with a
+  fresh unguessable nonce: one human decision, one commitment. The
+  manager binds THIS value into the authorization snapshot and the
+  effect intent.
+- **Mandatory TTL.** Every record now expires:
+  ``ttl_seconds`` defaults to ``DEFAULT_CONFIRMATION_TTL_SECONDS`` and
+  must be strictly positive; expiry is checked (and expired records
+  purged) at reservation. A confirmation is a time-bounded human
+  decision, never an eternal token.
+
+The registry is host-provided runtime state. The wall clock enters the
+record commitment as issue metadata of the human decision (the value is
+computed once at issue and carried as a hash); the monotonic clock
+keeps driving expiry. Confirmation ids and nonces are opaque and
+unguessable.
 """
 
 from __future__ import annotations
 
+import secrets
 import time
 import uuid
 from dataclasses import dataclass
@@ -53,6 +73,11 @@ from arvis.kernel_core.syscalls.engagement import (
 # canonicalization v2, so this is 3: no a8 (v2) record is honoured.
 CONFIRMATION_FORMAT_VERSION = 3
 
+# Default and mandatory expiry (campaign 6, Lot 4): a confirmation is a
+# time-bounded human decision. Hosts pass an explicit ttl_seconds for
+# stricter or looser windows; it must be strictly positive.
+DEFAULT_CONFIRMATION_TTL_SECONDS = 300.0
+
 
 def payload_commitment(payload: Any) -> str:
     """Injective canonical hash of a redacted tool payload (campaign 5).
@@ -70,14 +95,25 @@ def payload_commitment(payload: Any) -> str:
 
 @dataclass(frozen=True, slots=True)
 class ToolConfirmation:
-    """A confirmation bound to one exact effect."""
+    """A confirmation bound to one exact effect and one human decision.
+
+    ``record_commitment`` (campaign 6, Lot 4) is the unique commitment
+    of THIS decision: version, nonce, tool, payload hash, principal,
+    tenant, issue time, ttl and issuer. Two decisions on the same
+    effect never share it.
+    """
 
     confirmation_id: str
     tool_name: str
     payload_sha256: str
     principal: str | None
     tenant: str | None
-    expires_at_monotonic: float | None
+    expires_at_monotonic: float
+    nonce: str
+    issued_at_unix: float
+    ttl_seconds: float
+    issuer: str | None
+    record_commitment: str
     format_version: int = CONFIRMATION_FORMAT_VERSION
 
 
@@ -121,20 +157,48 @@ class ConfirmationRegistry:
         payload: Any,
         principal: str | None,
         tenant: str | None = None,
-        ttl_seconds: float | None = None,
+        ttl_seconds: float = DEFAULT_CONFIRMATION_TTL_SECONDS,
+        issuer: str | None = None,
     ) -> ToolConfirmation:
-        """Issue a confirmation bound to (tool, payload, principal, tenant)."""
+        """Issue a confirmation bound to (tool, payload, principal, tenant).
+
+        Campaign 6 (Lot 4): the TTL is mandatory and strictly positive
+        (a confirmation always expires), and the record computes its
+        unique ``record_commitment`` at issue time: two decisions on
+        the same effect never share a commitment.
+        """
+        ttl = float(ttl_seconds)
+        if not ttl > 0.0:
+            raise ValueError("ttl_seconds must be strictly positive")
+        payload_sha256 = payload_commitment(payload)
+        nonce = secrets.token_hex(16)
+        issued_at_unix = time.time()
+        record_commitment = stable_hash(
+            {
+                "confirmation_record_version": 1,
+                "format_version": CONFIRMATION_FORMAT_VERSION,
+                "nonce": nonce,
+                "tool_name": tool_name,
+                "payload_sha256": payload_sha256,
+                "principal": principal,
+                "tenant": tenant,
+                "issued_at_unix": issued_at_unix,
+                "ttl_seconds": ttl,
+                "issuer": issuer,
+            }
+        )
         record = ToolConfirmation(
             confirmation_id=uuid.uuid4().hex,
             tool_name=tool_name,
-            payload_sha256=payload_commitment(payload),
+            payload_sha256=payload_sha256,
             principal=principal,
             tenant=tenant,
-            expires_at_monotonic=(
-                time.monotonic() + float(ttl_seconds)
-                if ttl_seconds is not None
-                else None
-            ),
+            expires_at_monotonic=time.monotonic() + ttl,
+            nonce=nonce,
+            issued_at_unix=issued_at_unix,
+            ttl_seconds=ttl,
+            issuer=issuer,
+            record_commitment=record_commitment,
             format_version=CONFIRMATION_FORMAT_VERSION,
         )
         self._records[record.confirmation_id] = _StoredConfirmation(record)
@@ -159,10 +223,9 @@ class ConfirmationRegistry:
         if stored is None:
             return None, "unknown_confirmation"
         record = stored.confirmation
-        if (
-            record.expires_at_monotonic is not None
-            and time.monotonic() > record.expires_at_monotonic
-        ):
+        if time.monotonic() > record.expires_at_monotonic:
+            # Mandatory TTL (campaign 6, Lot 4): every record expires;
+            # an expired one is purged and refused at reservation.
             del self._records[confirmation_id]
             return None, "expired_confirmation"
         if record.format_version != CONFIRMATION_FORMAT_VERSION:
@@ -272,6 +335,7 @@ class ConfirmationRegistry:
 
 __all__ = [
     "CONFIRMATION_FORMAT_VERSION",
+    "DEFAULT_CONFIRMATION_TTL_SECONDS",
     "ConfirmationMismatchError",
     "ConfirmationRegistry",
     "ToolConfirmation",

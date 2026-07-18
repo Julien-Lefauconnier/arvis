@@ -275,5 +275,7 @@ def test_successful_effect_commits_the_confirmation():
     assert outcome is not None and outcome.authorized is not None
     snap = dict(outcome.authorized.authorization_snapshot)
     assert snap["confirmed"] is True
-    assert snap["confirmation_commitment"] == conf2.payload_sha256
+    # Campaign 6 (Lot 4): the snapshot binds the unique record
+    # commitment of the decision, not the payload hash.
+    assert snap["confirmation_commitment"] == conf2.record_commitment
     assert outcome.snapshot_material == snap
