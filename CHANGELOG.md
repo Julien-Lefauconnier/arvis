@@ -9,6 +9,117 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a9] - 2026-07-18
+
+Campaign 6: external-audit remediation. An external audit of 0.1.0a8
+(consolidated 9.3/10) left four thresholds open on the effect path:
+the pre-effect intent was recorded before the business authorization
+existed, results were not cryptographically bound to their intents,
+the canonicalization domain was not fully injective, and the execution
+capability was publicly mintable and reusable. This release closes all
+four, plus the confirmation, durability, run-identity and hygiene
+findings, each pinned with its reproduced attack vector in
+`tests/adversarial/test_campaign6_audit_regression.py`.
+
+### Security
+
+- **P0: authorization before intent (Lot 1, a8 section 8).** The full
+  business authorization (extraction, tool lookup, input schema,
+  principal/tenant, confirmation reservation, ToolPolicy) now runs
+  BEFORE the `tool.execute` syscall is issued
+  (`ToolManager.authorize`); the verdict travels sealed on the minted
+  `AuthorizedInvocation`; the pre-effect intent binds that exact
+  verdict; the mutable `ctx.extra["tool_authorization_snapshot"]`
+  channel is removed and a bare `tool.execute` without an
+  authorization outcome is refused fail-closed. Every retry attempt is
+  re-authorized, so a stale snapshot is unreachable by construction.
+- **P0: result bound to its exact intent (Lot 2, a8 section 9).**
+  Every journaled effect result carries the engagement digest of ITS
+  intent (`intent_commitment_sha256`, stamped single-use by the
+  handler); the bijection verifies the full tuple and refuses any
+  permutation of same-syscall results; the journal digest (v2) binds
+  ordered per-pair commitments, so a permutation changes the digest
+  even though causal ids are envelope-stripped.
+- **P0/P1: injective canonicalization domain closed (Lot 0, a8
+  section 7).** Canonicalization v2: `bytearray` gets its own tag,
+  path types and class identities are module-qualified, non-finite
+  floats are refused, and underscore-prefixed private state is REFUSED
+  rather than silently dropped (the explicit `__arvis_canonical__`
+  serializer hook is the contract for private state). Downstream
+  bumps: `REDACTION_POLICY_VERSION` 4, `COMMITMENT_VERSION` 4,
+  `CONFIRMATION_FORMAT_VERSION` 3. No a8-era hash or confirmation is
+  honoured. Property-based injectivity is enforced with Hypothesis.
+- **P1: private, single-use capability (Lot 3, a8 section 10).
+  BREAKING.** The minting authority is no longer a public attribute of
+  `ToolExecutor`; the only handle is `claim_minting_authority()`,
+  claimable exactly once (the `ToolManager` claims it at
+  construction). Every capability carries a fresh nonce CONSUMED at
+  execution: one authorization, one effect; a replayed capability is
+  refused. `ToolExecutor` is removed from the `arvis.api` public
+  exports.
+- **P1: unique confirmation record commitment, mandatory TTL (Lot 4,
+  a8 section 12).** Every issued confirmation computes
+  `record_commitment = H(version, nonce, tool, payload_sha256,
+  principal, tenant, issued_at, ttl, issuer)`; the proof binds THIS
+  value, so two human decisions on the same effect never share a
+  commitment. The TTL is mandatory and strictly positive (default
+  300s); expired records are purged at reservation.
+- **P1: durability proven, not declared (Lot 6, a8 section 14).
+  BREAKING in durability-requiring profiles.** A durable sink now
+  ANSWERS: `DurableAuditSink.append(intent)` returns an `AuditReceipt`
+  binding exactly the persisted intent (engagement digest, run
+  identity) and where it durably lives; the syscall boundary validates
+  every receipt fail-closed. A bare callable sink is refused where
+  durability is required; `InMemoryAuditSink` is the reference
+  implementation. Exported on `arvis.api` for hosts.
+- **Global run identity (Lot 5, a8 section 17).** A fresh unguessable
+  `run_id` is generated at run entry, prefixes every causal id
+  (global uniqueness across runs in a shared sink) and is journaled on
+  every intent and result. It is ENVELOPE identity, stripped from the
+  hashed material: the deterministic-commitment contract holds; the
+  run <-> proof anchoring is the sink receipt's job. An accidental
+  determinism (the raw artifact digest coinciding only through the id
+  collision itself) is made intentional via the artifact's explicit
+  canonical encoding.
+- **Effect boundary classification (Lots 1/4, a8 constat 11).**
+  `ToolResult.effect_boundary` distinguishes pre-effect refusals from
+  crossed-boundary outcomes; a reserved confirmation is committed only
+  when the boundary was crossed and released on any pre-effect refusal
+  (schema violation, unknown tool, tool.validate refusal, policy
+  denial): a human confirmation is never burned for an effect that
+  never ran.
+
+### Changed
+
+- Invocation governance fields are filled (Lot 7, a8 section 13):
+  `audit_required` travels from the tool spec; `consent_granted` comes
+  from the trusted host composition channel `ctx.consent_granted`
+  (host-stamped, string keys only, never request-facing extra);
+  `idempotency_key` is derived deterministically and is stable across
+  re-authorized retry attempts of the same logical action.
+- The `assert` at the host declaration boundary is an explicit
+  fail-closed raise (an assert vanishes under `python -O`; Bandit
+  B101, a8 section 20).
+- The engagement digest binds extracted effect parameters (tool name
+  and payload, from the sealed invocation) instead of a lossy partial
+  view of the runtime result object.
+
+### Migration notes (hosts, veramem re-pin)
+
+- `executor.authority` no longer exists; one `ToolManager` per
+  executor; `from arvis.api import ToolExecutor` no longer resolves.
+- A capability cannot be executed twice; syscall results carry
+  `intent_commitment_sha256` and `run_id`.
+- All commitments changed (canonicalization v2): any anchor stored
+  under a8 is invalid; no a8 confirmation record is honoured.
+- PRODUCTION-posture hosts must provide a `DurableAuditSink`
+  (receipts), not a callable; the veramem realization is the
+  PostgreSQL sink (chantier D4-e).
+- `ToolConfirmation` gains `nonce`, `issued_at_unix`, `ttl_seconds`,
+  `issuer` and `record_commitment`; `expires_at_monotonic` is no
+  longer optional; `issue` refuses non-positive TTLs.
+
+
 ## [0.1.0a8] - 2026-07-17
 
 Campaign 5: external-audit remediation. An external audit of 0.1.0a7
