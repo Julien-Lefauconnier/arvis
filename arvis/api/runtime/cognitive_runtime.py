@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any
@@ -112,6 +113,17 @@ class CognitiveRuntime:
         self,
         ctx: CognitivePipelineContext,
     ) -> RuntimeExecutionResult:
+        # Campaign 6 (Lot 5, closes a8 section 17): a fresh unguessable
+        # run identity is generated at run entry and threaded to the
+        # syscall boundary: it prefixes every causal id (global
+        # uniqueness across runs in a shared sink) and is journaled on
+        # every intent and result. It is envelope identity, stripped
+        # from the hashed material like the causal ids it prefixes: the
+        # commitment stays deterministic, and the run <-> commitment
+        # anchoring belongs to the durable sink (receipt, Lot 6).
+        run_id = uuid.uuid4().hex
+        self.syscall_handler.begin_run(run_id)
+
         if self.adapters:
             ctx.runtime_bindings.adapters = self.adapters
 

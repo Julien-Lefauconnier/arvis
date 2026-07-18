@@ -83,6 +83,13 @@ _ENVELOPE_VOLATILE_KEYS: frozenset[str] = frozenset(
         "process_id",
         "causal_id",
         "syscall_id",
+        # Campaign 6 (Lot 5): the run identity is envelope identity,
+        # exactly like the causal id it prefixes: journaled and sinked
+        # for reconciliation, stripped from the hashed material so the
+        # commitment keeps binding WHAT the run did, deterministically.
+        # The run <-> commitment anchoring is the durable sink's job
+        # (receipt, Lot 6), never the digest's.
+        "run_id",
         "id",
         "tick",
         "tick_start",

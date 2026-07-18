@@ -106,3 +106,21 @@ class ExecutionArtifact:
             "tick": self.tick,
             "timestamp": self.timestamp,
         }
+
+    def __arvis_canonical__(self) -> dict[str, Any]:
+        """Canonical encoding of the artifact CONTENT (campaign 6, Lot 5).
+
+        The raw artifact object travels under the ``result`` content
+        key of the journal entry, so its content digest must bind WHAT
+        the effect produced, never its envelope identity (causal id,
+        timestamp, tick, process ordinal). Pre-Lot-5 the digest of two
+        identical runs coincided only by ACCIDENT: their causal ids
+        collided (the very a8 section 17 finding); once run identities
+        made the ids globally unique, the accidental determinism broke.
+        The explicit serializer applies the envelope-volatile policy to
+        the dict form, making the determinism intentional.
+        """
+        from arvis.kernel_core.syscalls.engagement import strip_envelope_volatile
+
+        stripped = strip_envelope_volatile(self.to_dict())
+        return dict(stripped) if isinstance(stripped, dict) else {"value": stripped}

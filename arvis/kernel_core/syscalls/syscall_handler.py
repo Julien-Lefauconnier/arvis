@@ -72,6 +72,17 @@ class SyscallHandler:
         # by the intents of the current run; runtime lifecycle bounding
         # is a tracked later chantier (a8 section 22).
         self._pending_intent_commitments: dict[str, str] = {}
+        # Campaign 6 (Lot 5, closes a8 section 17): identity of the
+        # current run, set by the runtime at run entry. When set, it
+        # prefixes every causal id (global uniqueness across runs in a
+        # shared sink) and is journaled on every intent and result for
+        # host-side reconciliation. It is ENVELOPE identity: stripped
+        # from the hashed material like the causal ids it prefixes, so
+        # the commitment stays deterministic; the run <-> commitment
+        # anchoring belongs to the durable sink (receipt, Lot 6). None
+        # outside a runtime-entered run (direct handler tests keep the
+        # legacy id shape).
+        self._current_run_id: str | None = None
 
         # Backward-compatible convenience aliases
         self.tool_executor = self.services.tool_executor
@@ -80,6 +91,17 @@ class SyscallHandler:
         self.authorization_service: AuthorizationPolicy = (
             self.services.authorization_service or OwnerScopedAuthorization()
         )
+
+    def begin_run(self, run_id: str) -> None:
+        """Mark the entry of a run (campaign 6, Lot 5).
+
+        Called by the runtime with a fresh unguessable run id before
+        any syscall of the run. Also clears the pending intent
+        commitment map: a run boundary never leaks pairing state into
+        the next run.
+        """
+        self._current_run_id = run_id
+        self._pending_intent_commitments.clear()
 
     def handle(self, syscall: Syscall) -> SyscallResult:
         ctx: PipelineContextLike | None = syscall.args.get("ctx")
@@ -308,6 +330,11 @@ class SyscallHandler:
             "tick": started_tick,
             "process_id": syscall.args.get("process_id") or "none",
         }
+        # Campaign 6 (Lot 5): the run identity is journaled on the
+        # intent (and on the sink copy), so a shared sink can reconcile
+        # entries across runs without causal id ambiguity.
+        if self._current_run_id is not None:
+            intent["run_id"] = self._current_run_id
         # Campaign 5 (D-1): boundary provenance from the host context.
         # Absent when the host declares none, so the journaled entry
         # stays byte-identical. The label never enters the engagement
@@ -549,6 +576,11 @@ class SyscallHandler:
             "tick_end": end_tick,
         }
 
+        # Campaign 6 (Lot 5): the run identity is journaled on every
+        # result, mirroring the intent side.
+        if self._current_run_id is not None:
+            entry["run_id"] = self._current_run_id
+
         # Campaign 6 (Lot 2, closes a8 section 9): an effect result
         # carries the EXACT engagement digest of its intent, popped
         # single-use by causal id. The bijection verifies the equality;
@@ -644,7 +676,18 @@ class SyscallHandler:
         tick: int,
         seq: int,
     ) -> str:
+        """Causal id of a syscall, globally unique across runs (Lot 5).
+
+        The a8 audit (section 17) proved ids built from local elements
+        (syscall, process, tick, counter) repeat between runs, so a
+        shared sink could not reconcile them. When a run identity is
+        set, its prefix makes the id globally unique; outside a
+        runtime-entered run the legacy shape is kept.
+        """
         process_id = syscall.args.get("process_id", "none")
+        if self._current_run_id is not None:
+            run_segment = self._current_run_id[:12]
+            return f"syscall:{run_segment}:{syscall.name}:{process_id}:{tick}:{seq}"
         return f"syscall:{syscall.name}:{process_id}:{tick}:{seq}"
 
     def _append_syscall_runtime_event(self, entry: dict[str, Any]) -> None:
