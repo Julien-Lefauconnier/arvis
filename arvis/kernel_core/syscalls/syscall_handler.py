@@ -20,7 +20,10 @@ from arvis.kernel_core.access.policy import (
     OwnerScopedAuthorization,
 )
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
-from arvis.kernel_core.syscalls.engagement import effect_engagement_digest
+from arvis.kernel_core.syscalls.engagement import (
+    effect_engagement_digest,
+    effect_parameters_from_result,
+)
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
@@ -323,9 +326,18 @@ class SyscallHandler:
                 snap = ctx_extra.get("tool_authorization_snapshot")
                 if isinstance(snap, dict):
                     authorization_snapshot = snap
+            # Campaign 6 (Lot 0): the raw pipeline result object is a
+            # runtime binding with no injective encoding; the digest
+            # binds the extracted effect parameters (tool + payload)
+            # instead, never a partial view of runtime state.
+            digest_args = dict(syscall.args)
+            if "result" in digest_args:
+                digest_args["result"] = effect_parameters_from_result(
+                    digest_args["result"]
+                )
             intent["commitment_sha256"] = effect_engagement_digest(
                 syscall_name=syscall.name,
-                args=dict(syscall.args),
+                args=digest_args,
                 principal_user_id=(
                     principal.user_id if principal is not None else None
                 ),

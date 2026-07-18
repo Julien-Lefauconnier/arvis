@@ -13,7 +13,7 @@ import enum
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from uuid import UUID
 
 import pytest
@@ -215,15 +215,49 @@ def test_plain_object_attributes_are_distinguished():
     assert _distinct(Cmd("A"), Cmd("B"))
 
 
-def test_private_attributes_are_excluded():
+def test_private_operational_state_requires_serializer():
     class Cmd:
         def __init__(self, target, secret):
             self.target = target
             self._secret = secret
 
-    # Underscore-prefixed state is implementation detail: two objects
-    # differing only there canonicalize equal.
-    assert _equal(Cmd("A", 1), Cmd("A", 2))
+    # Campaign 6 (closes a8 finding 7.4): private state can be
+    # operational; an object carrying it is refused, never partially
+    # encoded, so two operationally different objects cannot share a
+    # commitment through a dropped attribute.
+    with pytest.raises(NonCanonicalizableError) as exc:
+        canonical_hash(Cmd("A", 1))
+    assert "_secret" in str(exc.value)
+
+
+def test_serializer_hook_binds_private_state():
+    class Cmd:
+        def __init__(self, target, secret):
+            self.target = target
+            self._secret = secret
+
+        def __arvis_canonical__(self):
+            return {"target": self.target, "secret": self._secret}
+
+    # The explicit serializer is the contract for private state: the
+    # returned representation is bound, so differing private state
+    # yields differing hashes.
+    assert _distinct(Cmd("A", 1), Cmd("A", 2))
+    assert _equal(Cmd("A", 1), Cmd("A", 1))
+
+
+def test_serializer_hook_output_is_type_bound():
+    class CmdA:
+        def __arvis_canonical__(self):
+            return {"v": 1}
+
+    class CmdB:
+        def __arvis_canonical__(self):
+            return {"v": 1}
+
+    # Same serialized payload, different classes: the module-qualified
+    # class identity is part of the material, so no aliasing.
+    assert _distinct(CmdA(), CmdB())
 
 
 # ---------------------------------------------------------------
@@ -293,3 +327,64 @@ def test_unhashable_free_object_still_canonicalizes_by_attributes():
 
     # No exception: plain objects go through the attribute path.
     assert canonical_hash(Cmd())
+
+
+# ---------------------------------------------------------------
+# The exact a8 collisions (audit 0.1.0a8, section 7), pinned as
+# non-collisions (campaign 6, Lot 0)
+# ---------------------------------------------------------------
+
+
+def test_bytes_and_bytearray_do_not_share_commitment():
+    assert _distinct(b"A", bytearray(b"A"))
+    assert _distinct({"blob": b"A"}, {"blob": bytearray(b"A")})
+
+
+def test_path_subtypes_do_not_share_commitment():
+    # Path("/tmp/a") resolves to a concrete PosixPath/WindowsPath while
+    # PurePosixPath is abstract; equal strings, distinct types, distinct
+    # host semantics.
+    assert _distinct(Path("/tmp/a"), PurePosixPath("/tmp/a"))
+
+
+def test_same_qualname_in_different_modules_does_not_collide():
+    def make_record(module: str) -> type:
+        cls = type("Record", (), {})
+        cls.__module__ = module
+        cls.__qualname__ = "Record"
+        return cls
+
+    a = make_record("module_a")()
+    a.value = 1
+    b = make_record("module_b")()
+    b.value = 1
+    assert _distinct(a, b)
+
+
+def test_homonymous_enums_in_different_modules_do_not_collide():
+    class Color(enum.Enum):
+        RED = 1
+
+    class ColorTwin(enum.Enum):
+        RED = 1
+
+    ColorTwin.__qualname__ = Color.__qualname__
+    ColorTwin.__module__ = "somewhere_else"
+    assert _distinct(Color.RED, ColorTwin.RED)
+
+
+def test_non_finite_floats_are_refused():
+    for bad in (float("nan"), float("inf"), float("-inf")):
+        with pytest.raises(NonCanonicalizableError):
+            canonical_hash(bad)
+        with pytest.raises(NonCanonicalizableError):
+            canonical_hash({bad: "x"})
+
+
+def test_mangled_private_attribute_is_refused():
+    class Cmd:
+        def __init__(self):
+            self.__hidden = 1  # mangles to _Cmd__hidden
+
+    with pytest.raises(NonCanonicalizableError):
+        canonical_hash(Cmd())

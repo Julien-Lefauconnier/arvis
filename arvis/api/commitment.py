@@ -47,7 +47,8 @@ from arvis.kernel_core.syscalls.engagement import (
 from arvis.math.stability.hard_block_policy import HARD_BLOCK_TABLE_VERSION
 from arvis.tools.registry import MANIFEST_SCHEMA_VERSION
 
-COMMITMENT_VERSION = 3
+# v4 (campaign 6): canonicalization v2 changed every hash upstream.
+COMMITMENT_VERSION = 4
 
 
 def syscall_journal_digest(

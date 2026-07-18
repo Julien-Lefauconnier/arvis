@@ -49,8 +49,9 @@ from arvis.kernel_core.syscalls.engagement import (
 # material or the payload canonicalization changes; a record of any
 # other version is refused at reservation (reason
 # confirmation_version_mismatch). Campaign 5 Lot 1 changed the payload
-# hash, so this starts at 2: no a7 (implicit v1) record is honoured.
-CONFIRMATION_FORMAT_VERSION = 2
+# hash (v2); campaign 6 Lot 0 changed it again through
+# canonicalization v2, so this is 3: no a8 (v2) record is honoured.
+CONFIRMATION_FORMAT_VERSION = 3
 
 
 def payload_commitment(payload: Any) -> str:

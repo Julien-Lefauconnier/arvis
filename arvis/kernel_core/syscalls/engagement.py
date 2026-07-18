@@ -42,9 +42,11 @@ from arvis.kernel_core.canonicalization import (
     canonical_hash,
 )
 
-# Redaction policy v3 (campaign 5): injective digest + envelope split.
-# Widening the content set or changing the digest is a version bump.
-REDACTION_POLICY_VERSION = 3
+# Redaction policy v4 (campaign 6): canonicalization v2 (module-
+# qualified identities, bytearray tag, path types, strict private
+# state) changed every digest. Widening the content set or changing
+# the digest is a version bump.
+REDACTION_POLICY_VERSION = 4
 
 _CONTENT_KEYS: frozenset[str] = frozenset(
     {
@@ -190,6 +192,30 @@ def strip_envelope_volatile(entry: Any) -> Any:
 _ENGAGEMENT_EXCLUDED_ARG_KEYS: frozenset[str] = frozenset({"ctx", "process_id"})
 
 
+def effect_parameters_from_result(result: Any) -> dict[str, Any] | None:
+    """Extract the effect parameters a ``tool.execute`` syscall acts on.
+
+    Campaign 6 (Lot 0 bridge): the runtime still threads the whole
+    pipeline result object into ``tool.execute`` args. That object is a
+    per-run runtime binding (mutable cognitive state, private
+    attributes): it has no injective encoding, and under the strict
+    canonicalizer it is refused rather than partially encoded. The
+    engagement digest must bind what the tool layer will actually act
+    on, so this extracts the decided tool name and its payload the same
+    way :meth:`ToolManager.run` does. Returns ``None`` when the result
+    decides no tool, binding the absence. Lot 1 replaces this bridge by
+    explicit invocation material carried through the syscall.
+    """
+    decision = getattr(result, "action_decision", None)
+    if decision is None:
+        return None
+    tool_name = getattr(decision, "tool", None)
+    if not isinstance(tool_name, str):
+        return None
+    payload = getattr(decision, "tool_payload", {}) or {}
+    return {"tool": tool_name, "tool_payload": payload}
+
+
 def effect_engagement_digest(
     *,
     syscall_name: str,
@@ -253,6 +279,7 @@ __all__ = [
     "REDACTION_POLICY_VERSION",
     "NonCanonicalizableError",
     "effect_engagement_digest",
+    "effect_parameters_from_result",
     "redact_for_commitment",
     "stable_hash",
     "strip_envelope_volatile",
