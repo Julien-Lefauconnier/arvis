@@ -3,6 +3,7 @@
 from typing import Any
 
 from arvis.adapters.tools.authorization import ToolAuthorizationDecision
+from arvis.adapters.tools.authorization_snapshot import ToolAuthorizationSnapshot
 from arvis.adapters.tools.gates import ConsentGate, EgressGate
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
@@ -112,12 +113,20 @@ class ToolManager:
             stamped.user_id if stamped is not None else getattr(ctx, "user_id", None)
         )
         tenant_id = stamped.organization_id if stamped is not None else None
-        confirmation = self._resolve_confirmation(
+        # Campaign 5 (D-4, closes P1-5): reserve the confirmation, do
+        # NOT consume it yet. The record is validated and locked but
+        # stays in the pool, so a policy denial below can release it
+        # instead of burning a legitimate confirmation for an effect
+        # that never runs. It is committed only after the effect runs.
+        confirmation = self._reserve_confirmation(
             ctx,
             tool_name=tool_name,
             payload=payload,
             principal=principal_id,
             tenant=tenant_id,
+        )
+        confirmation_id = (
+            confirmation.confirmation_id if confirmation is not None else None
         )
         invocation = ToolInvocation(
             tool_name=tool_name,
@@ -128,9 +137,7 @@ class ToolManager:
             principal=stamped.user_id if stamped is not None else None,
             tenant=stamped.organization_id if stamped is not None else None,
             confirmed=confirmation is not None,
-            confirmation_id=(
-                confirmation.confirmation_id if confirmation is not None else None
-            ),
+            confirmation_id=confirmation_id,
             confirmation_commitment=(
                 confirmation.payload_sha256 if confirmation is not None else None
             ),
@@ -161,6 +168,11 @@ class ToolManager:
             )
 
         if not policy.allowed:
+            # Pre-effect refusal: the reserved confirmation is returned
+            # to the pool, not burned, so the legitimate effect can be
+            # authorized again later (closes P1-5).
+            if confirmation_id is not None:
+                self._release_confirmation(confirmation_id)
             error = ToolAuthorizationError(policy.reason or "tool_policy_denied")
             return ToolResult(
                 tool_name=tool_name,
@@ -169,15 +181,39 @@ class ToolManager:
                 latency_ms=None,
             )
 
+        # Campaign 5 (D-4): the full authorization snapshot travels on
+        # the invocation context, so the effect commitment binds not
+        # just the parameters but the decision that permitted them
+        # (verdict, reason, principal, tenant, risk, confirmation
+        # commitment). Two identical effects authorized differently no
+        # longer produce the same commitment.
+        authorization_snapshot = ToolAuthorizationSnapshot(
+            tool_name=tool_name,
+            allowed=True,
+            reason=policy.reason or "allowed",
+            principal=invocation.principal,
+            tenant=invocation.tenant,
+            risk_score=invocation.risk_score,
+            confirmed=invocation.confirmed,
+            confirmation_commitment=invocation.confirmation_commitment,
+        )
+        self._attach_authorization_snapshot(ctx, authorization_snapshot)
+
         # --- execution ---
         # P1-5-a6: the executor receives the SAME invocation the policy
         # evaluated; nothing is rebuilt between authorization and the
         # tool.
         result_exec = self.executor.execute_invocation(invocation, result, ctx)
 
+        # Campaign 5 (D-4): the effect has run; finalize the reservation
+        # (single use). A commit failure is not an effect-refusal path;
+        # the effect already happened.
+        if confirmation_id is not None:
+            self._commit_confirmation(confirmation_id)
+
         return result_exec
 
-    def _resolve_confirmation(
+    def _reserve_confirmation(
         self,
         ctx: Any,
         *,
@@ -186,14 +222,17 @@ class ToolManager:
         principal: str | None,
         tenant: str | None,
     ) -> ToolConfirmation | None:
-        """Consume a bound confirmation for this exact invocation.
+        """Reserve a bound confirmation for this exact invocation (D-4).
 
         The confirmation id travels on the trusted composition channel
         (``ctx.confirmation_result``), never on request-facing extra.
-        Consumption requires the registry record to match the tool, the
-        canonical payload hash, the principal and the tenant; it is
-        single use. No registry, no id, or any mismatch: the invocation
-        stays unconfirmed.
+        Reservation validates the tool, the canonical payload hash, the
+        principal, the tenant and the format version, and locks the
+        record WITHOUT removing it. No registry, no id, or any mismatch:
+        the invocation stays unconfirmed and no record is mutated. The
+        reservation is finalized by :meth:`_commit_confirmation` after
+        the effect runs, or returned by :meth:`_release_confirmation` if
+        the effect is refused before running.
         """
         if self._confirmation_registry is None:
             return None
@@ -201,10 +240,37 @@ class ToolManager:
         confirmation_id = getattr(carrier, "confirmation_id", None)
         if not isinstance(confirmation_id, str):
             return None
-        return self._confirmation_registry.consume(
+        return self._confirmation_registry.reserve(
             confirmation_id=confirmation_id,
             tool_name=tool_name,
             payload=payload,
             principal=principal,
             tenant=tenant,
         )
+
+    def _commit_confirmation(self, confirmation_id: str) -> None:
+        """Finalize a reserved confirmation after the effect ran."""
+        if self._confirmation_registry is None:
+            return
+        self._confirmation_registry.commit(confirmation_id=confirmation_id)
+
+    def _release_confirmation(self, confirmation_id: str) -> None:
+        """Return a reserved confirmation to the pool (pre-effect refusal)."""
+        if self._confirmation_registry is None:
+            return
+        self._confirmation_registry.release(confirmation_id=confirmation_id)
+
+    @staticmethod
+    def _attach_authorization_snapshot(
+        ctx: Any, snapshot: ToolAuthorizationSnapshot
+    ) -> None:
+        """Thread the authorization snapshot to the effect commitment.
+
+        Placed on the trusted context extra channel under a stable key;
+        the syscall boundary reads it to bind the authorization into the
+        effect engagement material. Best-effort: an absent extra channel
+        never blocks the authorized effect.
+        """
+        extra = getattr(ctx, "extra", None)
+        if isinstance(extra, dict):
+            extra["tool_authorization_snapshot"] = snapshot.to_material()

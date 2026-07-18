@@ -314,6 +314,15 @@ class SyscallHandler:
             # journal, never the parameters themselves (ZKCS).
             args_ctx = syscall.args.get("ctx")
             principal = principal_from_context(args_ctx)
+            # D-4: bind the authorization snapshot the tool manager
+            # threaded onto the context, when present, so the effect
+            # commitment binds the decision that permitted it.
+            authorization_snapshot = None
+            ctx_extra = getattr(args_ctx, "extra", None)
+            if isinstance(ctx_extra, dict):
+                snap = ctx_extra.get("tool_authorization_snapshot")
+                if isinstance(snap, dict):
+                    authorization_snapshot = snap
             intent["commitment_sha256"] = effect_engagement_digest(
                 syscall_name=syscall.name,
                 args=dict(syscall.args),
@@ -325,6 +334,7 @@ class SyscallHandler:
                 ),
                 turn_user_id=getattr(args_ctx, "user_id", None),
                 authorization_reason_code=authorization_reason_code,
+                authorization_snapshot=authorization_snapshot,
             )
             if ctx is not None:
                 intents = ctx.extra.setdefault("syscall_intents", [])

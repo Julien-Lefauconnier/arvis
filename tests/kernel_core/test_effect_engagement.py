@@ -174,3 +174,52 @@ def test_engagement_material_never_leaks_content():
     intent = ctx.extra["syscall_intents"][0]
     assert "secret_command_body" not in str(intent)
     assert "secret_command_body" not in str(ctx.extra["syscall_intents"])
+
+
+# ---------------------------------------------------------------
+# Campaign 5 (D-4): the authorization snapshot binds the decision
+# ---------------------------------------------------------------
+
+
+def test_engagement_binds_the_authorization_snapshot():
+    # Same effect, two different bound confirmations: the commitment
+    # must differ, so a confirmation for one authorization cannot be
+    # replayed to justify another.
+    snap_a = {
+        "authorization_version": 1,
+        "tool_name": "t",
+        "allowed": True,
+        "reason": "ok",
+        "principal": "u1",
+        "tenant": None,
+        "risk_bucket": 0.0,
+        "confirmed": True,
+        "confirmation_commitment": "hash-A",
+    }
+    snap_b = {**snap_a, "confirmation_commitment": "hash-B"}
+    a = _digest(authorization_snapshot=snap_a)
+    b = _digest(authorization_snapshot=snap_b)
+    assert a != b
+
+
+def test_engagement_without_snapshot_is_backward_compatible():
+    # A non-tool effect passes no snapshot; an explicit None must equal
+    # the absent argument, so those effects stay byte-identical.
+    assert _digest() == _digest(authorization_snapshot=None)
+
+
+def test_engagement_snapshot_binds_risk_and_principal():
+    base_snap = {
+        "authorization_version": 1,
+        "tool_name": "t",
+        "allowed": True,
+        "reason": "ok",
+        "principal": "u1",
+        "tenant": None,
+        "risk_bucket": 0.0,
+        "confirmed": False,
+        "confirmation_commitment": None,
+    }
+    base = _digest(authorization_snapshot=base_snap)
+    assert _digest(authorization_snapshot={**base_snap, "risk_bucket": 0.9}) != base
+    assert _digest(authorization_snapshot={**base_snap, "principal": "u2"}) != base

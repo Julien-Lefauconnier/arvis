@@ -198,14 +198,20 @@ def effect_engagement_digest(
     principal_organization_id: str | None,
     turn_user_id: str | None,
     authorization_reason_code: str | None,
+    authorization_snapshot: dict[str, Any] | None = None,
 ) -> str:
     """Digest engaging the exact parameters of an effect.
 
     Computed BEFORE the effect runs and carried by the intent entry:
     binds the syscall, its redacted arguments canonicalized injectively
     (per-run runtime bindings are excluded explicitly by name; identity
-    is engaged separately), the principal, the tenant, the turn owner
-    and the authorization outcome.
+    is engaged separately), the principal, the tenant, the turn owner,
+    the authorization outcome, and, when the host tool layer provides
+    one, the full authorization snapshot (D-4): the policy verdict,
+    reason, principal, tenant, risk and the bound confirmation
+    commitment. Binding the snapshot means two identical effects
+    authorized under different confirmations, at different risk, or by
+    different principals no longer share a commitment.
 
     Campaign 5: the arguments are NOT envelope-stripped - they are a
     business payload, not a journal envelope. Only the runtime bindings
@@ -235,6 +241,10 @@ def effect_engagement_digest(
             "allowed": True,
             "reason_code": authorization_reason_code,
         },
+        # D-4: the full authorization snapshot when the tool layer
+        # provided one (already JSON-safe material); absent otherwise so
+        # non-tool effects stay byte-identical.
+        "authorization_snapshot": authorization_snapshot,
     }
     return stable_hash(material)
 
