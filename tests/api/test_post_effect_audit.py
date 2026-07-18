@@ -126,6 +126,58 @@ def test_handler_metadata_flag_refuses_the_commitment():
     assert reason == "audit_incomplete"
 
 
+# --- campaign 5 (D-5): the a7 bijection gaps, now refused end to end ---
+
+
+def test_orphan_result_refuses_the_commitment():
+    # An effect journaled with no pre-effect engagement: a7 never
+    # inspected result ids without a matching intent, so this passed.
+    os_ = CognitiveOS()
+    os_.register_tool(_Probe())
+    state, result = os_._execute(user_id="u1", cognitive_input={"risk": 0.1})
+    execution_state = result.execution.execution_state
+    execution_state.syscall_results.append(
+        {
+            "syscall_id": "syscall:orphan_result:never_engaged:0:0",
+            "causal_id": "syscall:orphan_result:never_engaged:0:0",
+            "syscall": "tool.execute",
+            "success": True,
+        }
+    )
+    inputs, reason = os_._build_commitment_inputs(result)
+    assert inputs is None
+    assert reason == "audit_incomplete"
+
+
+def test_duplicate_intent_refuses_the_commitment():
+    # Two intents at one causal id: a7's set-membership check passed.
+    os_ = CognitiveOS()
+    os_.register_tool(_Probe())
+    state, result = os_._execute(user_id="u1", cognitive_input={"risk": 0.1})
+    execution_state = result.execution.execution_state
+    intents = execution_state.syscall_intents
+    assert intents, "an effect ran, an intent must exist"
+    execution_state.syscall_intents.append(dict(intents[0]))
+    inputs, reason = os_._build_commitment_inputs(result)
+    assert inputs is None
+    assert reason == "audit_incomplete"
+
+
+def test_syscall_mismatch_refuses_the_commitment():
+    # Intent and result at one causal id but different syscalls: a7
+    # never compared the names.
+    os_ = CognitiveOS()
+    os_.register_tool(_Probe())
+    state, result = os_._execute(user_id="u1", cognitive_input={"risk": 0.1})
+    execution_state = result.execution.execution_state
+    results = execution_state.syscall_results
+    assert results, "an effect ran, a result must exist"
+    results[0]["syscall"] = "some.other.syscall"
+    inputs, reason = os_._build_commitment_inputs(result)
+    assert inputs is None
+    assert reason == "audit_incomplete"
+
+
 # ---------------------------------------------------------------
 # Handler-level behaviour
 # ---------------------------------------------------------------

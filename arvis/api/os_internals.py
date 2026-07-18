@@ -24,6 +24,9 @@ from arvis.kernel.pipeline.cognitive_pipeline_context import (
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.replay_engine import ReplayEngine
 from arvis.kernel_core.host_declaration import resolve_host_context
+from arvis.kernel_core.syscalls.intent_result_bijection import (
+    verify_intent_result_bijection,
+)
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 
@@ -363,14 +366,13 @@ class CognitiveOSInternals:
             if isinstance(metadata, dict) and metadata.get("audit_incomplete"):
                 return None, "audit_incomplete"
 
-            journaled_ids = {
-                entry.get("syscall_id") for entry in results if isinstance(entry, dict)
-            }
-            for intent in intents:
-                if not isinstance(intent, dict):
-                    continue
-                if intent.get("causal_id") not in journaled_ids:
-                    return None, "audit_incomplete"
+            # D-5: strict one-to-one intent/result bijection. The a7
+            # membership check missed duplicate intents, orphan results
+            # and syscall mismatches; the dedicated verifier requires an
+            # exact correspondence and fails closed on any deviation.
+            bijection = verify_intent_result_bijection(intents, results)
+            if not bijection.ok:
+                return None, "audit_incomplete"
 
             return {
                 "registry_fingerprint": self.tool_registry.fingerprint(),
