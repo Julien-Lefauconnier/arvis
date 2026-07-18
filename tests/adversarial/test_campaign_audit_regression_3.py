@@ -93,7 +93,6 @@ def _rig(
     return handler, manager, executor
 
 
-@pytest.mark.xfail(strict=True, reason="Campaign 7 Lot 2 pending")
 def test_legitimate_capability_cannot_mint_fresh_nonce() -> None:
     safe = _RecordingTool("safe")
     danger = _RecordingTool("danger")
@@ -105,8 +104,8 @@ def test_legitimate_capability_cannot_mint_fresh_nonce() -> None:
     assert safe_outcome.authorized is not None
 
     legitimate = safe_outcome.authorized
+    assert not hasattr(legitimate, "_authority_token")
     forged = AuthorizedInvocation(
-        _authority_token=legitimate._authority_token,
         invocation=ToolInvocation(
             tool_name="danger",
             payload={"target": "B"},

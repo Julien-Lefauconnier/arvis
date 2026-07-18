@@ -13,13 +13,16 @@ the nonce is consumed at execution.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
 import pytest
 
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.tools.authorized_invocation import (
+    CAPABILITY_FORMAT_VERSION,
     AuthorizedInvocation,
+    CapabilityState,
     InvocationAuthority,
     UnauthorizedExecutionError,
 )
@@ -240,10 +243,156 @@ def test_consume_is_single_use_at_the_authority_level():
 
 def test_capability_without_nonce_is_not_consumable():
     authority = InvocationAuthority()
-    minted = authority.authorize(_invocation())
-    forged = AuthorizedInvocation(
-        _authority_token=minted._authority_token,
-        invocation=_invocation(),
-        nonce="",
-    )
+    forged = AuthorizedInvocation(invocation=_invocation(), nonce="")
     assert authority.consume(forged) is False
+
+
+def test_capability_carries_no_minting_secret():
+    authority = InvocationAuthority()
+    capability = authority.authorize(_invocation())
+    assert not hasattr(capability, "_authority_token")
+    assert "token" not in repr(capability).lower()
+
+
+def test_unregistered_nonce_is_refused():
+    authority = InvocationAuthority()
+    forged = AuthorizedInvocation(
+        invocation=_invocation(),
+        nonce="attacker-selected-unregistered-nonce",
+    )
+    assert authority.verifies(forged) is False
+    assert authority.consume(forged) is False
+
+
+def test_minted_capability_requires_activation():
+    authority = InvocationAuthority()
+    capability = authority.mint(_invocation())
+    assert authority.state_of(capability) is CapabilityState.MINTED
+    assert authority.consume(capability) is False
+    assert authority.activate(capability) is True
+    assert authority.state_of(capability) is CapabilityState.ACTIVATED
+    assert authority.consume(capability) is True
+    assert authority.state_of(capability) is CapabilityState.CONSUMED
+
+
+def test_authorize_returns_an_activated_capability_for_current_compatibility():
+    authority = InvocationAuthority()
+    capability = authority.authorize(_invocation())
+    assert authority.state_of(capability) is CapabilityState.ACTIVATED
+
+
+def test_capability_commitment_binds_exact_invocation():
+    authority = InvocationAuthority()
+    capability = authority.authorize(_invocation())
+    object.__setattr__(
+        capability,
+        "invocation",
+        ToolInvocation(tool_name="other", payload={}, process_id="p"),
+    )
+    assert authority.verifies(capability) is False
+    assert authority.consume(capability) is False
+
+
+def test_capability_commitment_binds_exact_snapshot():
+    authority = InvocationAuthority()
+    capability = authority.authorize(
+        _invocation(),
+        {"allowed": True, "reason": "policy_allowed"},
+    )
+    object.__setattr__(
+        capability,
+        "authorization_snapshot",
+        {"allowed": False, "reason": "attacker_override"},
+    )
+    assert authority.verifies(capability) is False
+    assert authority.consume(capability) is False
+
+
+def test_capability_commitment_detects_mutation_of_registered_invocation():
+    authority = InvocationAuthority()
+    capability = authority.authorize(_invocation())
+    object.__setattr__(capability.invocation, "tool_name", "other")
+    assert authority.verifies(capability) is False
+    assert authority.consume(capability) is False
+
+
+def test_capability_commitment_detects_nested_snapshot_mutation():
+    authority = InvocationAuthority()
+    capability = authority.authorize(
+        _invocation(),
+        {"policy": {"allowed": True}},
+    )
+    policy = capability.authorization_snapshot["policy"]
+    assert isinstance(policy, dict)
+    policy["allowed"] = False
+    assert authority.verifies(capability) is False
+    assert authority.consume(capability) is False
+
+
+def test_capability_commitment_binds_format_version():
+    authority = InvocationAuthority()
+    capability = authority.authorize(_invocation())
+    object.__setattr__(
+        capability,
+        "capability_format_version",
+        CAPABILITY_FORMAT_VERSION + 1,
+    )
+    assert authority.verifies(capability) is False
+    assert authority.consume(capability) is False
+
+
+def test_revoked_capability_is_refused_by_executor():
+    executor, tool, authority = _executor()
+    capability = authority.authorize(_invocation())
+    assert authority.revoke(capability) is True
+    assert authority.state_of(capability) is CapabilityState.REVOKED
+    with pytest.raises(UnauthorizedExecutionError):
+        executor.execute_invocation(
+            capability,
+            _result(),
+            SimpleNamespace(extra={}),
+        )
+    assert tool.ran is False
+
+
+def test_manual_capability_clone_cannot_drive_effect():
+    executor, tool, authority = _executor()
+    minted = authority.authorize(
+        _invocation(),
+        {"allowed": True, "reason": "policy_allowed"},
+    )
+    clone = AuthorizedInvocation(
+        invocation=minted.invocation,
+        authorization_snapshot=minted.authorization_snapshot,
+        nonce=minted.nonce,
+        capability_format_version=minted.capability_format_version,
+    )
+    assert authority.verifies(clone) is False
+    with pytest.raises(UnauthorizedExecutionError):
+        executor.execute_invocation(clone, _result(), SimpleNamespace(extra={}))
+    assert tool.ran is False
+
+
+def test_revoke_is_idempotent_but_cannot_revoke_consumed_capability():
+    authority = InvocationAuthority()
+    revoked = authority.authorize(_invocation())
+    assert authority.revoke(revoked) is True
+    assert authority.revoke(revoked) is True
+
+    consumed = authority.authorize(_invocation())
+    assert authority.consume(consumed) is True
+    assert authority.revoke(consumed) is False
+
+
+def test_concurrent_consume_has_exactly_one_winner():
+    authority = InvocationAuthority()
+    capability = authority.authorize(_invocation())
+
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        outcomes = list(
+            pool.map(lambda _index: authority.consume(capability), range(64))
+        )
+
+    assert outcomes.count(True) == 1
+    assert outcomes.count(False) == 63
+    assert authority.state_of(capability) is CapabilityState.CONSUMED

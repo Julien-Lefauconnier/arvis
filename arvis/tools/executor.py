@@ -120,9 +120,8 @@ class ToolExecutor:
             authorized, AuthorizedInvocation
         ) or not self._authority.consume(authorized):
             raise UnauthorizedExecutionError(
-                "tool execution requires a verified, unused "
-                "AuthorizedInvocation minted by the tool manager's "
-                "policy (single use)"
+                "tool execution requires an active, registered, intact and unused "
+                "AuthorizedInvocation minted by the tool manager's policy"
             )
         invocation = authorized.invocation
 

@@ -1,4 +1,4 @@
-# tests/adversarial/test_campaign5_audit_regression.py
+# tests/adversarial/test_audit_regression.py
 """Campaign 5 audit-remediation smoke: one attack vector per closed finding.
 
 This is the security regression guard for the 0.1.0a7 external audit.
