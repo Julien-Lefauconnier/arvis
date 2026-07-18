@@ -65,6 +65,13 @@ class SyscallHandler:
         self.services = services or KernelServiceRegistry()
         self._local_counter: int = 0
         self._last_tick: int = -1
+        # Campaign 6 (Lot 2, closes a8 section 9): the engagement digest
+        # of each recorded intent, keyed by causal id, popped when the
+        # paired result is journaled so the result carries the EXACT
+        # commitment of its intent (single use per causal id). Bounded
+        # by the intents of the current run; runtime lifecycle bounding
+        # is a tracked later chantier (a8 section 22).
+        self._pending_intent_commitments: dict[str, str] = {}
 
         # Backward-compatible convenience aliases
         self.tool_executor = self.services.tool_executor
@@ -363,6 +370,9 @@ class SyscallHandler:
                 authorization_reason_code=authorization_reason_code,
                 authorization_snapshot=authorization_snapshot,
             )
+            # Campaign 6 (Lot 2): remember this intent's exact digest so
+            # the paired result journals it (cryptographic binding).
+            self._pending_intent_commitments[causal_id] = intent["commitment_sha256"]
             if ctx is not None:
                 intents = ctx.extra.setdefault("syscall_intents", [])
                 if isinstance(intents, list):
@@ -538,6 +548,15 @@ class SyscallHandler:
             "tick_start": started_tick,
             "tick_end": end_tick,
         }
+
+        # Campaign 6 (Lot 2, closes a8 section 9): an effect result
+        # carries the EXACT engagement digest of its intent, popped
+        # single-use by causal id. The bijection verifies the equality;
+        # the journal digest binds the pair; a permuted result can no
+        # longer close a different intent.
+        intent_commitment = self._pending_intent_commitments.pop(syscall_id, None)
+        if intent_commitment is not None:
+            entry["intent_commitment_sha256"] = intent_commitment
 
         process_id = syscall.args.get("process_id")
         tick = syscall.args.get("tick")

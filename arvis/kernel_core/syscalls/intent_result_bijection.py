@@ -18,12 +18,21 @@ appeared somewhere in the set of journaled result ids. It missed:
   but for different syscalls: the names were never compared.
 - **cardinality** — more than one result per causal id.
 
+The a8 audit (section 9) then proved the correspondence was still
+metadata-only: two same-syscall results could be permuted together with
+their causal ids and the check passed, because no result carried the
+engagement digest of ITS intent. Campaign 6 (Lot 2) closes it: every
+intent must carry ``commitment_sha256`` and every paired result must
+carry the EQUAL ``intent_commitment_sha256`` (stamped single-use by the
+handler at journal time). This result closes this intent, provably; a
+permutation is a commitment mismatch.
+
 This module rebuilds strict maps keyed on the causal id, binds the
-syscall name, and requires exact 1:1 cardinality. Any deviation yields a
-structured, opaque reason (no payload content), so the caller refuses
-the commitment as ``audit_incomplete`` (REQUIRED refuses the public
-result, DEGRADED flags) instead of pretending an unprovable effect was
-proved.
+syscall name and the exact intent commitment, and requires exact 1:1
+cardinality. Any deviation yields a structured, opaque reason (no
+payload content), so the caller refuses the commitment as
+``audit_incomplete`` (REQUIRED refuses the public result, DEGRADED
+flags) instead of pretending an unprovable effect was proved.
 """
 
 from __future__ import annotations
@@ -119,6 +128,20 @@ def verify_intent_result_bijection(
         result_syscall = result_map[causal_id].get("syscall")
         if intent_syscall != result_syscall:
             return BijectionResult.failure("syscall_mismatch", detail=causal_id)
+        # Campaign 6 (Lot 2, closes a8 section 9): this exact result
+        # closes this exact intent. An intent without an engagement
+        # digest proves nothing; a result without the equal digest may
+        # close a different intent of the same syscall (permutation).
+        intent_commitment = intent_map[causal_id].get("commitment_sha256")
+        if not isinstance(intent_commitment, str) or not intent_commitment:
+            return BijectionResult.failure(
+                "intent_missing_commitment", detail=causal_id
+            )
+        result_commitment = result_map[causal_id].get("intent_commitment_sha256")
+        if result_commitment != intent_commitment:
+            return BijectionResult.failure(
+                "intent_commitment_mismatch", detail=causal_id
+            )
 
     return BijectionResult.success()
 

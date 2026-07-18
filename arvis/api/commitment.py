@@ -51,6 +51,53 @@ from arvis.tools.registry import MANIFEST_SCHEMA_VERSION
 COMMITMENT_VERSION = 4
 
 
+def syscall_pair_commitments(
+    intents: Any,
+    results: Any,
+) -> list[str]:
+    """Ordered per-pair commitments binding each result to ITS intent.
+
+    Campaign 6 (Lot 2, closes a8 section 9.3): the envelope strip drops
+    the causal ids from the digest material, so before this, permuting
+    two same-syscall results left the journal digest unchanged. Each
+    pair commitment is ``H(pair_version, syscall,
+    intent_commitment_sha256, canonical redacted result)``, ordered by
+    the intent journal order; the journal digest binds the ordered
+    list, so any re-pairing changes the digest.
+
+    Total function: an intent without a paired result contributes a
+    pair with ``result=None`` (the strict bijection upstream refuses
+    such journals before any commitment is composed; the digest stays
+    computable for diagnostics).
+    """
+    intent_entries = intents if isinstance(intents, list) else []
+    result_entries = results if isinstance(results, list) else []
+    result_map: dict[Any, Any] = {}
+    for entry in result_entries:
+        if isinstance(entry, dict):
+            result_map.setdefault(entry.get("syscall_id"), entry)
+    pairs: list[str] = []
+    for intent in intent_entries:
+        if not isinstance(intent, dict):
+            continue
+        paired = result_map.get(intent.get("causal_id"))
+        pairs.append(
+            stable_hash(
+                {
+                    "pair_version": 1,
+                    "syscall": intent.get("syscall"),
+                    "intent_commitment_sha256": intent.get("commitment_sha256"),
+                    "result": (
+                        redact_for_commitment(strip_envelope_volatile(paired))
+                        if paired is not None
+                        else None
+                    ),
+                }
+            )
+        )
+    return pairs
+
+
 def syscall_journal_digest(
     intents: Any,
     results: Any,
@@ -64,14 +111,21 @@ def syscall_journal_digest(
     business payload nested inside an entry keeps every field. The
     ordered sequence, syscall names, outcomes and error codes remain
     fully bound.
+
+    Campaign 6 (Lot 2): the material additionally binds the ordered
+    per-pair commitments (:func:`syscall_pair_commitments`), so a
+    permutation of same-syscall results changes the digest even though
+    the causal ids are envelope-stripped from the entry material.
     """
     material = {
+        "journal_digest_version": 2,
         "intents": redact_for_commitment(
             strip_envelope_volatile(intents if intents is not None else [])
         ),
         "results": redact_for_commitment(
             strip_envelope_volatile(results if results is not None else [])
         ),
+        "pair_commitments": syscall_pair_commitments(intents, results),
     }
     return stable_hash(material)
 
@@ -234,4 +288,5 @@ __all__ = [
     "redact_for_commitment",
     "stable_hash",
     "syscall_journal_digest",
+    "syscall_pair_commitments",
 ]
