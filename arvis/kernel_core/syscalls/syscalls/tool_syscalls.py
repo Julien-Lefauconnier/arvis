@@ -22,7 +22,7 @@ from arvis.kernel_core.syscalls.syscall_registry import (
 
 @runtime_checkable
 class ToolManagerLike(Protocol):
-    def run(self, result: Any, ctx: Any) -> Any: ...
+    def execute_authorized(self, authorized: Any, result: Any, ctx: Any) -> Any: ...
 
 
 class ServiceRegistryLike(Protocol):
@@ -68,6 +68,7 @@ def tool_execute(
     handler: SyscallHandlerLike,
     result: Any,
     ctx: Any,
+    authorization: Any | None = None,
     **kwargs: Any,
 ) -> SyscallResult:
     tool_manager = handler.services.tool_manager
@@ -81,8 +82,36 @@ def tool_execute(
             )
         )
 
+    # Campaign 6 (Lot 1, closes a8 P0 section 8): the syscall consumes
+    # a pre-computed authorization outcome. The full business
+    # authorization ran BEFORE this syscall was issued, so the
+    # pre-effect intent recorded by the handler bound the exact verdict
+    # from the sealed capability. A bare tool.execute without an
+    # outcome is refused (fail-closed): there is no path where the
+    # authorization happens after the intent.
+    if authorization is None:
+        return SyscallResult.failure(
+            ArvisRuntimeError(
+                "Tool execution returned no result",
+                code="no_tool_execution",
+                domain=ErrorDomain.TOOL,
+            )
+        )
+
+    refusal = getattr(authorization, "refusal", None)
+    authorized = getattr(authorization, "authorized", None)
+
     try:
-        tool_result = tool_manager.run(result, ctx)
+        if refusal is not None:
+            # Pre-effect refusal decided at authorization time: no
+            # effect ran; the refusal is journaled through the same
+            # artifact path so observability keeps its intent/result
+            # pair.
+            tool_result = refusal
+        elif authorized is not None:
+            tool_result = tool_manager.execute_authorized(authorized, result, ctx)
+        else:
+            tool_result = None
     except Exception as exc:
         error = ErrorManager.normalize_for_boundary(
             exc,

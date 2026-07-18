@@ -84,6 +84,18 @@ def _run_manager_and_capture_invocation(ctx):
     from arvis.tools.registry import ToolRegistry
 
     registry = ToolRegistry()
+
+    class _ProbeTool:
+        name = "t"
+        spec = None
+
+        def validate(self, payload):
+            return None
+
+        def execute(self, payload):
+            return {"ok": True}
+
+    registry.register(_ProbeTool())
     manager = ToolManager(registry, ToolExecutor(registry))
 
     captured: dict = {}

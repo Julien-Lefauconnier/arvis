@@ -1,5 +1,32 @@
 # arvis/tools/manager.py
+"""Tool lifecycle: authorization BEFORE the syscall intent (campaign 6).
 
+The a8 audit (P0, section 8) proved the pre-effect intent was recorded
+before the business authorization existed: the syscall handler built
+and journaled the intent, THEN the tool body ran the manager, which
+reserved the confirmation, evaluated ToolPolicy and only then attached
+the authorization snapshot to a mutable ``ctx.extra`` channel. The
+intent of call N bound the snapshot of call N-1, or none.
+
+Campaign 6 reorders the chain. :meth:`ToolManager.authorize` runs the
+FULL pre-effect authorization before any syscall is issued:
+
+    extraction -> tool lookup -> input schema -> principal/tenant
+    -> confirmation reservation -> ToolPolicy
+    -> immutable ToolAuthorizationSnapshot
+    -> sealed AuthorizedInvocation carrying the snapshot
+
+and returns a frozen :class:`ToolAuthorizationOutcome` (a sealed
+capability, or a pre-effect refusal with its own denial snapshot). The
+runtime threads the outcome into the ``tool.execute`` syscall args; the
+handler binds the intent from the sealed capability, never from a
+mutable channel; the syscall body then calls
+:meth:`execute_authorized`, which runs the executor and finalizes the
+confirmation on the effect boundary: committed only if the boundary was
+crossed, released on any pre-effect refusal (closes constat 11).
+"""
+
+from dataclasses import dataclass
 from typing import Any
 
 from arvis.adapters.tools.authorization import ToolAuthorizationDecision
@@ -7,13 +34,20 @@ from arvis.adapters.tools.authorization_snapshot import ToolAuthorizationSnapsho
 from arvis.adapters.tools.gates import ConsentGate, EgressGate
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
-from arvis.errors.tool_runtime import ToolAuthorizationError
+from arvis.errors.tool_runtime import (
+    ToolAuthorizationError,
+    ToolInputValidationError,
+    UnknownToolError,
+)
 from arvis.kernel_core.access.identity import principal_from_context
 from arvis.tools.confirmation import ConfirmationRegistry, ToolConfirmation
-from arvis.tools.executor import ToolExecutor
+from arvis.tools.executor import ToolExecutor, _schema_violation
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.runtime.runtime_bindings import resolve_process_id
-from arvis.tools.tool_result import ToolResult
+from arvis.tools.tool_result import (
+    PRE_EFFECT_REFUSAL,
+    ToolResult,
+)
 
 
 def _resolve_turn_risk(ctx: Any) -> float:
@@ -41,18 +75,45 @@ def _resolve_turn_risk(ctx: Any) -> float:
     return max(0.0, min(1.0, max(candidates)))
 
 
+@dataclass(frozen=True)
+class ToolAuthorizationOutcome:
+    """Frozen outcome of the pre-syscall authorization phase.
+
+    Exactly one of ``authorized`` / ``refusal`` is set. For an
+    authorized invocation the snapshot material travels ON the sealed
+    capability (pairing a capability with a different snapshot is not
+    constructible); for a refusal it travels here, so the intent binds
+    the true denial verdict rather than any earlier decision.
+    """
+
+    authorized: Any | None = None
+    refusal: ToolResult | None = None
+    refusal_snapshot: dict[str, Any] | None = None
+
+    @property
+    def snapshot_material(self) -> dict[str, Any] | None:
+        """JSON-safe authorization material for the effect commitment."""
+        if self.authorized is not None:
+            snapshot = getattr(self.authorized, "authorization_snapshot", None)
+            if snapshot:
+                return dict(snapshot)
+            return None
+        return self.refusal_snapshot
+
+
 class ToolManager:
     """
     Unified tool lifecycle orchestrator.
 
     Responsibilities:
-    - build invocation
-    - evaluate policy
-    - execute tool
-    - execute a single authorized tool invocation
+    - authorize an invocation fully BEFORE the effect syscall
+      (:meth:`authorize`)
+    - execute a sealed, authorized invocation and finalize its
+      confirmation on the effect boundary (:meth:`execute_authorized`)
 
     Retry orchestration is owned by CognitiveRuntime and must pass
-    through SyscallHandler for audit/replay consistency.
+    through SyscallHandler for audit/replay consistency; every attempt
+    is re-authorized, so every intent binds its own fresh verdict.
     """
 
     def __init__(
@@ -75,7 +136,22 @@ class ToolManager:
         self._require_gates = require_gates
         self._confirmation_registry = confirmation_registry
 
-    def run(self, result: Any, ctx: Any) -> ToolResult | None:
+    # ------------------------------------------------------------------
+    # Phase 1: pre-syscall authorization
+    # ------------------------------------------------------------------
+    def authorize(self, result: Any, ctx: Any) -> ToolAuthorizationOutcome | None:
+        """Full pre-effect authorization of the decided tool invocation.
+
+        Runs BEFORE the ``tool.execute`` syscall is issued, so the
+        pre-effect intent can bind the exact verdict (closes a8 P0,
+        section 8). Returns None when the result decides no tool.
+
+        Order (audit target chain): tool lookup and input schema come
+        BEFORE the confirmation reservation, so a payload that can
+        never run releases nothing and burns nothing (closes constat
+        11); the policy verdict comes before the snapshot; the sealed
+        capability is minted last, carrying the snapshot.
+        """
         if result is None or ctx is None:
             return None
 
@@ -89,35 +165,40 @@ class ToolManager:
 
         payload = getattr(decision, "tool_payload", {}) or {}
 
-        # -----------------------------------------
-        # FORCE EXECUTION OVERRIDE (kernel-level)
-        # -----------------------------------------
-        runtime_policy = getattr(ctx, "runtime_policy", None)
+        # --- pre-reservation validations (constat 11) ---
+        tool = self.registry.get(tool_name)
+        if tool is None:
+            return self._refusal_outcome(
+                ctx,
+                tool_name=tool_name,
+                reason="unknown_tool",
+                error=UnknownToolError(f"Unknown tool: {tool_name}"),
+            )
 
-        force_tool = runtime_policy.force_tool if runtime_policy is not None else None
+        spec = tool.spec
+        if spec is not None and spec.input_schema:
+            violation = _schema_violation(payload, spec.input_schema)
+            if violation is not None:
+                return self._refusal_outcome(
+                    ctx,
+                    tool_name=tool_name,
+                    reason="input_schema_violation",
+                    error=ToolInputValidationError(
+                        f"tool {tool_name!r} input violates its declared input_schema",
+                        details={"schema_path": violation},
+                    ),
+                )
 
-        force_execution = (
-            runtime_policy.force_execution if runtime_policy is not None else False
-        )
-
-        bypass_policy = (
-            force_execution and force_tool is not None and tool_name == force_tool
-        )
-
-        # --- build invocation ---
-        # F-006-a5: the invocation carries the real turn context.
-        # Identity comes from the trusted context channel only (a
-        # stamped Principal), never from request-facing extra.
+        # --- identity ---
+        # F-006-a5: identity comes from the trusted context channel only
+        # (a stamped Principal), never from request-facing extra.
         stamped = principal_from_context(ctx)
         principal_id = (
             stamped.user_id if stamped is not None else getattr(ctx, "user_id", None)
         )
         tenant_id = stamped.organization_id if stamped is not None else None
-        # Campaign 5 (D-4, closes P1-5): reserve the confirmation, do
-        # NOT consume it yet. The record is validated and locked but
-        # stays in the pool, so a policy denial below can release it
-        # instead of burning a legitimate confirmation for an effect
-        # that never runs. It is committed only after the effect runs.
+
+        # --- confirmation reservation (D-4, after all static checks) ---
         confirmation = self._reserve_confirmation(
             ctx,
             tool_name=tool_name,
@@ -128,6 +209,7 @@ class ToolManager:
         confirmation_id = (
             confirmation.confirmation_id if confirmation is not None else None
         )
+
         invocation = ToolInvocation(
             tool_name=tool_name,
             payload=payload,
@@ -145,6 +227,15 @@ class ToolManager:
         )
 
         # --- policy evaluation ---
+        runtime_policy = getattr(ctx, "runtime_policy", None)
+        force_tool = runtime_policy.force_tool if runtime_policy is not None else None
+        force_execution = (
+            runtime_policy.force_execution if runtime_policy is not None else False
+        )
+        bypass_policy = (
+            force_execution and force_tool is not None and tool_name == force_tool
+        )
+
         if bypass_policy:
             policy = ToolAuthorizationDecision(
                 allowed=True,
@@ -170,23 +261,34 @@ class ToolManager:
         if not policy.allowed:
             # Pre-effect refusal: the reserved confirmation is returned
             # to the pool, not burned, so the legitimate effect can be
-            # authorized again later (closes P1-5).
+            # authorized again later (closes P1-5). The refusal snapshot
+            # binds the DENIAL verdict into the intent, so a denied call
+            # can never appear tied to an earlier allowed decision
+            # (closes the stale-snapshot finding, section 8.4).
             if confirmation_id is not None:
                 self._release_confirmation(confirmation_id)
-            error = ToolAuthorizationError(policy.reason or "tool_policy_denied")
-            return ToolResult(
+            denial = ToolAuthorizationSnapshot(
                 tool_name=tool_name,
-                success=False,
-                error=error,
-                latency_ms=None,
+                allowed=False,
+                reason=policy.reason or "tool_policy_denied",
+                principal=invocation.principal,
+                tenant=invocation.tenant,
+                risk_score=invocation.risk_score,
+                confirmed=invocation.confirmed,
+                confirmation_commitment=invocation.confirmation_commitment,
+            )
+            return ToolAuthorizationOutcome(
+                refusal=ToolResult(
+                    tool_name=tool_name,
+                    success=False,
+                    error=ToolAuthorizationError(policy.reason or "tool_policy_denied"),
+                    latency_ms=None,
+                    effect_boundary=PRE_EFFECT_REFUSAL,
+                ),
+                refusal_snapshot=denial.to_material(),
             )
 
-        # Campaign 5 (D-4): the full authorization snapshot travels on
-        # the invocation context, so the effect commitment binds not
-        # just the parameters but the decision that permitted them
-        # (verdict, reason, principal, tenant, risk, confirmation
-        # commitment). Two identical effects authorized differently no
-        # longer produce the same commitment.
+        # --- immutable snapshot, sealed capability (D-4 + section 8) ---
         authorization_snapshot = ToolAuthorizationSnapshot(
             tool_name=tool_name,
             allowed=True,
@@ -197,23 +299,101 @@ class ToolManager:
             confirmed=invocation.confirmed,
             confirmation_commitment=invocation.confirmation_commitment,
         )
-        self._attach_authorization_snapshot(ctx, authorization_snapshot)
+        authorized = self.executor.authority.authorize(
+            invocation,
+            authorization_snapshot.to_material(),
+        )
+        return ToolAuthorizationOutcome(authorized=authorized)
 
-        # --- execution ---
-        # D-7: the executor runs a tool ONLY from a capability minted
-        # here, after the policy allowed the invocation. The manager is
-        # the single authority; the executor the single consumer. There
-        # is no path to an effect the policy did not authorize.
-        authorized = self.executor.authority.authorize(invocation)
+    # ------------------------------------------------------------------
+    # Phase 2: sealed execution behind the syscall boundary
+    # ------------------------------------------------------------------
+    def execute_authorized(
+        self,
+        authorized: Any,
+        result: Any,
+        ctx: Any,
+    ) -> ToolResult | None:
+        """Execute a sealed invocation; finalize on the effect boundary.
+
+        D-7: the executor runs a tool ONLY from a capability minted by
+        :meth:`authorize` after the policy allowed the invocation. The
+        confirmation reserved at authorization time is committed only
+        when the effect boundary was crossed; a pre-effect refusal
+        inside the executor (defense in depth) releases it (closes
+        constat 11).
+        """
         result_exec = self.executor.execute_invocation(authorized, result, ctx)
 
-        # Campaign 5 (D-4): the effect has run; finalize the reservation
-        # (single use). A commit failure is not an effect-refusal path;
-        # the effect already happened.
-        if confirmation_id is not None:
-            self._commit_confirmation(confirmation_id)
+        confirmation_id = getattr(
+            getattr(authorized, "invocation", None), "confirmation_id", None
+        )
+        if isinstance(confirmation_id, str):
+            boundary = getattr(result_exec, "effect_boundary", None)
+            if boundary == PRE_EFFECT_REFUSAL or result_exec is None:
+                self._release_confirmation(confirmation_id)
+            else:
+                # The boundary was crossed (completed, failed or
+                # unknown): the confirmation is spent (single use). A
+                # commit failure is not an effect-refusal path; the
+                # effect already happened.
+                self._commit_confirmation(confirmation_id)
 
         return result_exec
+
+    # ------------------------------------------------------------------
+    # Composition (unit-test and host convenience)
+    # ------------------------------------------------------------------
+    def run(self, result: Any, ctx: Any) -> ToolResult | None:
+        """Authorize then execute, as one call.
+
+        Convenience composition for direct callers (unit tests, simple
+        hosts). The governed runtime path does NOT use it: the runtime
+        authorizes first, threads the frozen outcome through the
+        syscall, and the syscall body executes the sealed capability,
+        so the intent always precedes the effect and follows the
+        authorization.
+        """
+        outcome = self.authorize(result, ctx)
+        if outcome is None:
+            return None
+        if outcome.refusal is not None:
+            return outcome.refusal
+        return self.execute_authorized(outcome.authorized, result, ctx)
+
+    # ------------------------------------------------------------------
+    # Internals
+    # ------------------------------------------------------------------
+    def _refusal_outcome(
+        self,
+        ctx: Any,
+        *,
+        tool_name: str,
+        reason: str,
+        error: Any,
+    ) -> ToolAuthorizationOutcome:
+        """Pre-reservation refusal: nothing reserved, nothing released."""
+        stamped = principal_from_context(ctx)
+        denial = ToolAuthorizationSnapshot(
+            tool_name=tool_name,
+            allowed=False,
+            reason=reason,
+            principal=stamped.user_id if stamped is not None else None,
+            tenant=stamped.organization_id if stamped is not None else None,
+            risk_score=_resolve_turn_risk(ctx),
+            confirmed=False,
+            confirmation_commitment=None,
+        )
+        return ToolAuthorizationOutcome(
+            refusal=ToolResult(
+                tool_name=tool_name,
+                success=False,
+                error=error,
+                latency_ms=None,
+                effect_boundary=PRE_EFFECT_REFUSAL,
+            ),
+            refusal_snapshot=denial.to_material(),
+        )
 
     def _reserve_confirmation(
         self,
@@ -233,8 +413,8 @@ class ToolManager:
         record WITHOUT removing it. No registry, no id, or any mismatch:
         the invocation stays unconfirmed and no record is mutated. The
         reservation is finalized by :meth:`_commit_confirmation` after
-        the effect runs, or returned by :meth:`_release_confirmation` if
-        the effect is refused before running.
+        the effect boundary was crossed, or returned by
+        :meth:`_release_confirmation` on any pre-effect refusal.
         """
         if self._confirmation_registry is None:
             return None
@@ -251,7 +431,7 @@ class ToolManager:
         )
 
     def _commit_confirmation(self, confirmation_id: str) -> None:
-        """Finalize a reserved confirmation after the effect ran."""
+        """Finalize a reserved confirmation after the effect boundary."""
         if self._confirmation_registry is None:
             return
         self._confirmation_registry.commit(confirmation_id=confirmation_id)
@@ -261,18 +441,3 @@ class ToolManager:
         if self._confirmation_registry is None:
             return
         self._confirmation_registry.release(confirmation_id=confirmation_id)
-
-    @staticmethod
-    def _attach_authorization_snapshot(
-        ctx: Any, snapshot: ToolAuthorizationSnapshot
-    ) -> None:
-        """Thread the authorization snapshot to the effect commitment.
-
-        Placed on the trusted context extra channel under a stable key;
-        the syscall boundary reads it to bind the authorization into the
-        effect engagement material. Best-effort: an absent extra channel
-        never blocks the authorized effect.
-        """
-        extra = getattr(ctx, "extra", None)
-        if isinstance(extra, dict):
-            extra["tool_authorization_snapshot"] = snapshot.to_material()

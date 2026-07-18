@@ -265,6 +265,13 @@ class CognitiveRuntime:
         while attempts < max_attempts:
             attempts += 1
 
+            # Campaign 6 (Lot 1, closes a8 P0 section 8): the FULL
+            # business authorization runs BEFORE the syscall is issued.
+            # Every retry attempt is re-authorized, so every intent
+            # binds its own fresh verdict; a stale snapshot from an
+            # earlier attempt is not reachable by construction.
+            authorization = self.tool_manager.authorize(effective_result, ctx)
+
             syscall_result = self.syscall_handler.handle(
                 Syscall(
                     name="tool.execute",
@@ -272,6 +279,7 @@ class CognitiveRuntime:
                         "result": effective_result,
                         "ctx": ctx,
                         "process_id": process.process_id.value,
+                        "authorization": authorization,
                         "retry_attempt": attempts - 1,
                         "retry_chain_id": retry_chain_id,
                         "retry_parent_syscall_id": parent_syscall_id,

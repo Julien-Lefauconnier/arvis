@@ -189,7 +189,9 @@ def strip_envelope_volatile(entry: Any) -> Any:
 # and the same effect issued on process ordinal 0 or 1 must engage
 # identically. Any other argument (including a business ``id`` or
 # ``timestamp``) is bound in full.
-_ENGAGEMENT_EXCLUDED_ARG_KEYS: frozenset[str] = frozenset({"ctx", "process_id"})
+_ENGAGEMENT_EXCLUDED_ARG_KEYS: frozenset[str] = frozenset(
+    {"ctx", "process_id", "authorization"}
+)
 
 
 def effect_parameters_from_result(result: Any) -> dict[str, Any] | None:

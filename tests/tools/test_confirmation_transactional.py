@@ -261,8 +261,19 @@ def test_successful_effect_commits_the_confirmation():
     assert len(tool.executed) == 1
     # Committed: single use, gone from the pool.
     assert reg.pending_count() == 0
-    # The authorization snapshot was threaded to the effect context.
-    assert "tool_authorization_snapshot" in ctx.extra
-    snap = ctx.extra["tool_authorization_snapshot"]
+    # Campaign 6 (Lot 1): the mutable ctx.extra channel is gone; the
+    # authorization snapshot travels sealed ON the minted capability.
+    assert "tool_authorization_snapshot" not in ctx.extra
+    conf2 = reg.issue(tool_name="sensitive_tool", payload=payload, principal="u1")
+    ctx2 = SimpleNamespace(
+        extra={"input_risk": 0.0},
+        confirmation_result=SimpleNamespace(confirmation_id=conf2.confirmation_id),
+        user_id="u1",
+    )
+    decision = SimpleNamespace(tool="sensitive_tool", tool_payload=payload)
+    outcome = manager.authorize(SimpleNamespace(action_decision=decision), ctx2)
+    assert outcome is not None and outcome.authorized is not None
+    snap = dict(outcome.authorized.authorization_snapshot)
     assert snap["confirmed"] is True
-    assert snap["confirmation_commitment"] == conf.payload_sha256
+    assert snap["confirmation_commitment"] == conf2.payload_sha256
+    assert outcome.snapshot_material == snap

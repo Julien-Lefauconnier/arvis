@@ -317,21 +317,36 @@ class SyscallHandler:
             # journal, never the parameters themselves (ZKCS).
             args_ctx = syscall.args.get("ctx")
             principal = principal_from_context(args_ctx)
-            # D-4: bind the authorization snapshot the tool manager
-            # threaded onto the context, when present, so the effect
-            # commitment binds the decision that permitted it.
-            authorization_snapshot = None
-            ctx_extra = getattr(args_ctx, "extra", None)
-            if isinstance(ctx_extra, dict):
-                snap = ctx_extra.get("tool_authorization_snapshot")
-                if isinstance(snap, dict):
-                    authorization_snapshot = snap
-            # Campaign 6 (Lot 0): the raw pipeline result object is a
-            # runtime binding with no injective encoding; the digest
-            # binds the extracted effect parameters (tool + payload)
-            # instead, never a partial view of runtime state.
+            # Campaign 6 (Lot 1, closes a8 P0 section 8): the intent
+            # binds the authorization verdict from the SEALED outcome
+            # computed before this syscall was issued: the snapshot on
+            # the minted capability for an allowed invocation, the
+            # denial material for a refusal. The mutable ctx.extra
+            # channel is gone; a stale decision from an earlier call is
+            # not reachable by construction.
+            authorization_snapshot: dict[str, Any] | None = None
+            outcome = syscall.args.get("authorization")
+            effect_invocation = None
+            if outcome is not None:
+                snapshot_material = getattr(outcome, "snapshot_material", None)
+                if isinstance(snapshot_material, dict) and snapshot_material:
+                    authorization_snapshot = snapshot_material
+                authorized_cap = getattr(outcome, "authorized", None)
+                effect_invocation = getattr(authorized_cap, "invocation", None)
+            # Campaign 6 (Lot 0/1): runtime objects (pipeline result,
+            # authorization outcome) are runtime bindings with no
+            # injective encoding; the digest binds the extracted effect
+            # parameters instead, from the sealed invocation when one
+            # exists, from the decided action otherwise, never a
+            # partial view of runtime state.
             digest_args = dict(syscall.args)
-            if "result" in digest_args:
+            digest_args.pop("authorization", None)
+            if effect_invocation is not None:
+                digest_args["result"] = {
+                    "tool": effect_invocation.tool_name,
+                    "tool_payload": effect_invocation.payload or {},
+                }
+            elif "result" in digest_args:
                 digest_args["result"] = effect_parameters_from_result(
                     digest_args["result"]
                 )

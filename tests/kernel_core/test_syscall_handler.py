@@ -161,9 +161,11 @@ def test_tool_execute_syscall_failure(monkeypatch):
         action_decision = DummyDecision()
         spec = DummySpec(action_decision.tool)
 
+    dummy_result = DummyResult()
+    authorization = manager.authorize(dummy_result, ctx)
     syscall = Syscall(
         name="tool.execute",
-        args={"result": DummyResult(), "ctx": ctx},
+        args={"result": dummy_result, "ctx": ctx, "authorization": authorization},
     )
 
     result = handler.handle(syscall)
@@ -239,10 +241,15 @@ def test_tool_execute_syscall_success(monkeypatch):
     class DummyResult:
         action_decision = DummyDecision()
 
+    # Campaign 6 (Lot 1): authorization runs BEFORE the syscall; the
+    # frozen outcome travels in the args and the intent binds it.
+    dummy_result = DummyResult()
+    authorization = manager.authorize(dummy_result, ctx)
+
     result = handler.handle(
         Syscall(
             name="tool.execute",
-            args={"result": DummyResult(), "ctx": ctx},
+            args={"result": dummy_result, "ctx": ctx, "authorization": authorization},
         )
     )
 

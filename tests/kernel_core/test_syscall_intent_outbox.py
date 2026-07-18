@@ -227,20 +227,28 @@ def test_real_tool_execution_pairs_intent_and_artifact():
     registry = ToolRegistry()
     registry.register(_Tool())
     executor = ToolExecutor(registry)
+    manager = ToolManager(registry, executor)
     handler = SyscallHandler(
         runtime_state=None,
         scheduler=None,
         services=KernelServiceRegistry(
             tool_executor=executor,
-            tool_manager=ToolManager(registry, executor),
+            tool_manager=manager,
         ),
     )
     ctx = _ctx()
     decision = SimpleNamespace(tool="outbox_tool", tool_payload={})
+    pipeline_result = SimpleNamespace(action_decision=decision)
+    # Campaign 6 (Lot 1): authorization precedes the syscall.
+    authorization = manager.authorize(pipeline_result, ctx)
     result = handler.handle(
         Syscall(
             name="tool.execute",
-            args={"result": SimpleNamespace(action_decision=decision), "ctx": ctx},
+            args={
+                "result": pipeline_result,
+                "ctx": ctx,
+                "authorization": authorization,
+            },
         )
     )
     assert result.success is True

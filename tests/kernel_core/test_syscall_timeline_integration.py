@@ -74,13 +74,16 @@ def test_syscall_emits_runtime_signal(monkeypatch):
         action_decision = DummyDecision()
         spec = DummySpec(action_decision.tool)
 
+    dummy_result = DummyResult()
+    authorization = manager.authorize(dummy_result, ctx)
     syscall = Syscall(
         name="tool.execute",
         args={
-            "result": DummyResult(),
+            "result": dummy_result,
             "ctx": ctx,
             "process_id": "p1",
             "tick": 1,
+            "authorization": authorization,
         },
     )
 

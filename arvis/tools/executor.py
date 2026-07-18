@@ -1,4 +1,21 @@
 # arvis/tools/executor.py
+"""Capability-gated tool executor with effect boundary classification.
+
+Campaign 6 (Lot 1): the authoritative pre-effect validations (tool
+existence, input schema) moved to :meth:`ToolManager.authorize`, BEFORE
+the confirmation is reserved and BEFORE the pre-effect intent is
+recorded. The checks here remain as defense in depth: a capability
+should never reach this point with an unknown tool or a violating
+payload, but if one does, the refusal is classified as pre-effect so
+the confirmation lifecycle never burns a confirmation for an effect
+that did not run (closes a8 constat 11).
+
+Every ToolResult carries an ``effect_boundary``: refusals before the
+tool body are ``PRE_EFFECT_REFUSAL``; once the body was entered the
+boundary is crossed (``EFFECT_COMPLETED``, ``EFFECT_FAILED``) and the
+confirmation is considered spent, conservatively including late results
+and invalid outputs (the external effect happened).
+"""
 
 import time
 from typing import Any
@@ -20,7 +37,12 @@ from arvis.tools.authorized_invocation import (
     UnauthorizedExecutionError,
 )
 from arvis.tools.registry import ToolRegistry
-from arvis.tools.tool_result import ToolResult
+from arvis.tools.tool_result import (
+    EFFECT_COMPLETED,
+    EFFECT_FAILED,
+    PRE_EFFECT_REFUSAL,
+    ToolResult,
+)
 
 
 def _schema_violation(instance: Any, schema: dict[str, Any]) -> str | None:
@@ -93,47 +115,74 @@ class ToolExecutor:
             "decision": decision,
             "context": ctx,
             "tool_payload": tool_payload,
-            "invocation": invocation,  # 👈 NEW BRIDGE
+            "invocation": invocation,
         }
 
-        try:
-            start = time.perf_counter()
+        # --- pre-effect phase: nothing external has happened yet ---
+        tool = self.registry.get(tool_name)
 
-            tool = self.registry.get(tool_name)
+        if tool is None:
+            # Defense in depth: ToolManager.authorize refuses unknown
+            # tools before minting; a capability naming one is a
+            # host-composition error, still a pre-effect refusal.
+            ctx._tool_failure = True
+            return ToolResult(
+                tool_name=tool_name,
+                success=False,
+                error=UnknownToolError(f"Unknown tool: {tool_name}"),
+                latency_ms=None,
+                effect_boundary=PRE_EFFECT_REFUSAL,
+            )
 
-            if tool is None:
+        spec = tool.spec
+        if spec is not None:
+            ctx._last_tool_spec = spec
+
+        # F-020, defense in depth (authoritative check moved to
+        # ToolManager.authorize): a violating payload never reaches the
+        # tool, and the refusal stays pre-effect.
+        if spec is not None and spec.input_schema:
+            violation = _schema_violation(tool_payload, spec.input_schema)
+            if violation is not None:
                 ctx._tool_failure = True
-                unknown_error = UnknownToolError(f"Unknown tool: {tool_name}")
                 return ToolResult(
                     tool_name=tool_name,
                     success=False,
-                    error=unknown_error,
+                    error=ToolInputValidationError(
+                        f"tool {tool_name!r} input violates its declared input_schema",
+                        details={"schema_path": violation},
+                    ),
                     latency_ms=None,
+                    effect_boundary=PRE_EFFECT_REFUSAL,
                 )
 
-            spec = tool.spec
-            if spec is not None:
-                ctx._last_tool_spec = spec
-
-            # F-020: the declared input schema is validated before the
-            # call; a violating payload never reaches the tool.
-            if spec is not None and spec.input_schema:
-                violation = _schema_violation(tool_payload, spec.input_schema)
-                if violation is not None:
-                    ctx._tool_failure = True
-                    return ToolResult(
-                        tool_name=tool_name,
-                        success=False,
-                        error=ToolInputValidationError(
-                            f"tool {tool_name!r} input violates its "
-                            "declared input_schema",
-                            details={"schema_path": violation},
-                        ),
-                        latency_ms=None,
-                    )
-
+        try:
             tool.validate(payload_runtime)
-            # --- NEW: dual execution support ---
+        except Exception as e:
+            # The tool's own validation refused the payload BEFORE any
+            # external effect: pre-effect refusal, confirmation stays
+            # releasable.
+            ctx._tool_failure = True
+            normalized_error = normalize_error(e)
+            return ToolResult(
+                tool_name=tool_name,
+                success=False,
+                error=ToolExecutionError(
+                    normalized_error.message,
+                    cause=normalized_error.cause,
+                    details={
+                        "exception_type": type(e).__name__,
+                        "phase": "tool_validate",
+                    },
+                ),
+                latency_ms=None,
+                effect_boundary=PRE_EFFECT_REFUSAL,
+            )
+
+        # --- effect phase: the boundary is crossed from here on ---
+        try:
+            start = time.perf_counter()
+
             if hasattr(tool, "execute_invocation"):
                 output = tool.execute_invocation(invocation)
             else:
@@ -144,9 +193,9 @@ class ToolExecutor:
             # F-014: deadline semantics. The tool ran to completion but
             # past its declared budget; the late result is rejected
             # instead of being used, and the violation is surfaced. The
-            # effect may still have happened: this is a deadline on
-            # result acceptance, not an interruption (process isolation
-            # is a later chantier).
+            # effect DID happen: this is a deadline on result
+            # acceptance, not an interruption (process isolation is a
+            # later chantier), so the boundary is crossed.
             if (
                 spec is not None
                 and spec.timeout_seconds is not None
@@ -164,11 +213,13 @@ class ToolExecutor:
                         },
                     ),
                     latency_ms=latency,
+                    effect_boundary=EFFECT_COMPLETED,
                 )
 
             # F-020: the declared output schema is validated after the
             # call; an invalid response gets its specific failure status
-            # instead of flowing downstream as a success.
+            # instead of flowing downstream as a success. The effect
+            # happened regardless of the invalid output.
             if spec is not None and spec.output_schema:
                 violation = _schema_violation(output, spec.output_schema)
                 if violation is not None:
@@ -182,6 +233,7 @@ class ToolExecutor:
                             details={"schema_path": violation},
                         ),
                         latency_ms=latency,
+                        effect_boundary=EFFECT_COMPLETED,
                     )
 
             return ToolResult(
@@ -190,9 +242,12 @@ class ToolExecutor:
                 output=output,
                 error=None,
                 latency_ms=latency,
+                effect_boundary=EFFECT_COMPLETED,
             )
 
         except Exception as e:
+            # The tool body raised: the effect may have partially
+            # happened; the boundary is crossed (conservative).
             ctx._tool_failure = True
             normalized_error = normalize_error(e)
             error = ToolExecutionError(
@@ -208,6 +263,7 @@ class ToolExecutor:
                 success=False,
                 error=error,
                 latency_ms=None,
+                effect_boundary=EFFECT_FAILED,
             )
 
     def execute(self, arg1: Any, arg2: Any | None = None) -> ToolResult | None:

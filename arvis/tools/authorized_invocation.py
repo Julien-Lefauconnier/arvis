@@ -27,11 +27,28 @@ single consumer that honours it. There is no other path to an effect.
 from __future__ import annotations
 
 import secrets
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from arvis.adapters.tools.invocation import ToolInvocation
+
+# Immutable empty snapshot for capabilities minted without one (test and
+# legacy paths); production minting by the manager always provides the
+# real authorization material.
+_EMPTY_SNAPSHOT: Mapping[str, Any] = MappingProxyType({})
+
+
+def _empty_snapshot() -> Mapping[str, Any]:
+    """Default factory for the capability snapshot field.
+
+    Python 3.11 refuses a ``mappingproxy`` instance as a dataclass
+    default (3.12 special-cases it as immutable); the factory returns
+    the shared immutable proxy either way.
+    """
+    return _EMPTY_SNAPSHOT
 
 
 class InvocationAuthority:
@@ -49,13 +66,34 @@ class InvocationAuthority:
     def __init__(self) -> None:
         self._token = secrets.token_hex(32)
 
-    def authorize(self, invocation: ToolInvocation) -> AuthorizedInvocation:
+    def authorize(
+        self,
+        invocation: ToolInvocation,
+        authorization_snapshot: Mapping[str, Any] | None = None,
+    ) -> AuthorizedInvocation:
         """Mint a capability wrapping an authorized invocation.
 
         Called by the manager AFTER the policy allowed the invocation.
         The returned capability is the only object the executor accepts.
+
+        Campaign 6 (Lot 1, closes a8 P0 section 8): the capability
+        carries the immutable authorization snapshot of the decision
+        that minted it, so the pre-effect intent binds the exact
+        verdict from the sealed capability, never a mutable channel.
+        The snapshot is frozen at mint time (defensive copy under a
+        read-only proxy): pairing a capability with a different
+        snapshot is not constructible through this authority.
         """
-        return AuthorizedInvocation(_authority_token=self._token, invocation=invocation)
+        snapshot: Mapping[str, Any] = (
+            MappingProxyType(dict(authorization_snapshot))
+            if authorization_snapshot is not None
+            else _EMPTY_SNAPSHOT
+        )
+        return AuthorizedInvocation(
+            _authority_token=self._token,
+            invocation=invocation,
+            authorization_snapshot=snapshot,
+        )
 
     def verifies(self, capability: AuthorizedInvocation) -> bool:
         """True iff this authority minted the capability.
@@ -79,6 +117,10 @@ class AuthorizedInvocation:
 
     _authority_token: str
     invocation: ToolInvocation
+    # Immutable material of the authorization decision that minted this
+    # capability (campaign 6, Lot 1); read by the syscall boundary to
+    # bind the intent to the exact verdict.
+    authorization_snapshot: Mapping[str, Any] = field(default_factory=_empty_snapshot)
 
 
 class UnauthorizedExecutionError(Exception):
