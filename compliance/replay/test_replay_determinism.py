@@ -19,7 +19,7 @@ def test_replay_global_commitment_is_deterministic():
     os = CognitiveOS()
 
     original = os.run(user_id="u1", cognitive_input={"text": "hello"})
-    replayed = os.replay(
+    replayed = os.replay_recomposed(
         original.to_ir(),
     )
 

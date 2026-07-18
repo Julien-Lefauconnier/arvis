@@ -183,7 +183,9 @@ def test_replay_recomposes_identical_commitment():
     os_ = CognitiveOS()
     os_.register_tool(_Probe())
     r1 = os_.run("u1", {"risk": 0.1})
-    r2 = os_.replay(r1.to_ir(), expected_global_commitment=r1.global_commitment)
+    r2 = os_.replay_verified(
+        r1.to_ir(), expected_global_commitment=r1.global_commitment
+    )
     assert r2.global_commitment == r1.global_commitment
 
 
@@ -198,7 +200,9 @@ def test_replay_on_divergent_environment_holds_the_declared_commitment():
     exported = r1.to_ir()
 
     plain = CognitiveOS()
-    replayed = plain.replay(exported, expected_global_commitment=r1.global_commitment)
+    replayed = plain.replay_verified(
+        exported, expected_global_commitment=r1.global_commitment
+    )
     assert replayed.global_commitment == r1.global_commitment
 
     local_registry_fp = plain.tool_registry.fingerprint()
@@ -216,7 +220,9 @@ def test_production_replay_reproduces_the_governing_postures():
 
     os_p = CognitiveOS(config=CognitiveOSConfig.production())
     r1 = os_p.run("u1", {"risk": 0.9})
-    r2 = os_p.replay(r1.to_ir(), expected_global_commitment=r1.global_commitment)
+    r2 = os_p.replay_verified(
+        r1.to_ir(), expected_global_commitment=r1.global_commitment
+    )
     assert r2.global_commitment == r1.global_commitment
 
 
@@ -231,13 +237,13 @@ def test_replay_across_environments_uses_the_recorded_profile():
     os_l = CognitiveOS()
 
     prod_run = os_p.run("u1", {"risk": 0.9})
-    replayed_on_local = os_l.replay(
+    replayed_on_local = os_l.replay_verified(
         prod_run.to_ir(), expected_global_commitment=prod_run.global_commitment
     )
     assert replayed_on_local.global_commitment == prod_run.global_commitment
 
     local_run = os_l.run("u1", {"risk": 0.1})
-    replayed_on_prod = os_p.replay(
+    replayed_on_prod = os_p.replay_verified(
         local_run.to_ir(), expected_global_commitment=local_run.global_commitment
     )
     assert replayed_on_prod.global_commitment == local_run.global_commitment

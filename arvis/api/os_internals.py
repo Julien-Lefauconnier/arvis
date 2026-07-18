@@ -270,7 +270,7 @@ class CognitiveOSInternals:
         self,
         replay_view: CognitiveResultView,
         *,
-        expected_global_commitment: str | None = None,
+        expected_global_commitment: str,
     ) -> CognitiveResultView:
         self._verify_replay_commitment(
             replay_view,
@@ -282,20 +282,36 @@ class CognitiveOSInternals:
         self,
         ir: dict[str, Any],
         *,
-        expected_global_commitment: str | None = None,
+        expected_global_commitment: str,
     ) -> CognitiveResultView:
         return self._verify_replay_view(
             self._replay_view(ir),
             expected_global_commitment=expected_global_commitment,
         )
 
+    def _recomposed_replay_view(
+        self,
+        ir: dict[str, Any],
+    ) -> CognitiveResultView:
+        """Recompose without authentication (D-6, explicitly unverified)."""
+        return self._replay_view(ir)
+
     def _verify_replay_commitment(
         self,
         replay_view: CognitiveResultView,
-        expected_global_commitment: str | None,
+        expected_global_commitment: str,
     ) -> None:
-        if expected_global_commitment is None:
-            return
+        # Campaign 5 (D-6): the expected commitment is mandatory and
+        # must come from OUTSIDE the IR. There is no early return: a
+        # caller reaching here has asked for authentication, so a
+        # missing external anchor or a missing replay commitment is a
+        # verification failure, never a silent pass.
+        if not expected_global_commitment:
+            raise RuntimeError(
+                "Replay verification failed: no expected_global_commitment "
+                "supplied. Authentication requires an external anchor; use "
+                "replay_recomposed() to recompose without authenticating."
+            )
 
         replay_commitment = replay_view.global_commitment
 

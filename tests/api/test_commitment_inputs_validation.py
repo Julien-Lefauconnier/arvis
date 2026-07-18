@@ -119,12 +119,14 @@ def test_forged_commitment_inputs_are_rejected_in_production(forge):
     ir = run.to_ir()
     ir["commitment_inputs"] = forge(ir["commitment_inputs"])
     with pytest.raises(ArvisSecurityError):
-        os_.replay(ir)
+        os_.replay_recomposed(ir)
 
 
 def test_legitimate_replay_still_verifies_in_production():
     os_, run = _production_run()
-    replayed = os_.replay(run.to_ir(), expected_global_commitment=run.global_commitment)
+    replayed = os_.replay_verified(
+        run.to_ir(), expected_global_commitment=run.global_commitment
+    )
     assert replayed.global_commitment == run.global_commitment
 
 
@@ -133,7 +135,7 @@ def test_degraded_profile_flags_invalid_inputs_with_dedicated_reason():
     run = os_.run("u1", {"risk": 0.1})
     ir = run.to_ir()
     ir["commitment_inputs"] = {}
-    replayed = os_.replay(ir)
+    replayed = os_.replay_recomposed(ir)
     data = replayed.to_dict()
     assert replayed.global_commitment is None
     assert data["commitment_degraded"] is True

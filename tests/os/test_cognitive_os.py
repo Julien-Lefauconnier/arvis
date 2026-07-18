@@ -100,7 +100,7 @@ def test_cognitive_os_replay():
     result = os.run("user_1", {"text": "hello"})
     ir_dict = result.to_ir()
 
-    replay = os.replay(ir_dict)
+    replay = os.replay_recomposed(ir_dict)
 
     assert replay is not None
     assert replay.decision is not None

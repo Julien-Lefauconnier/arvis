@@ -100,9 +100,13 @@ class ArvisEngine:
         """Execute and export canonical IR."""
         return self._os.run_ir(*args, **kwargs)
 
-    def replay(self, *args: Any, **kwargs: Any) -> Any:
-        """Replay an IR payload."""
-        return self._os.replay(*args, **kwargs)
+    def replay_verified(self, *args: Any, **kwargs: Any) -> Any:
+        """Replay and authenticate an IR against an external commitment."""
+        return self._os.replay_verified(*args, **kwargs)
+
+    def replay_recomposed(self, *args: Any, **kwargs: Any) -> Any:
+        """Recompose an IR without authenticating it."""
+        return self._os.replay_recomposed(*args, **kwargs)
 
     # -------------------------------------------------
     # Inspection

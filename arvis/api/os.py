@@ -289,27 +289,45 @@ class CognitiveOS(CognitiveOSInternals):
     # -------------------------------------------------
     # Replay
     # -------------------------------------------------
-    def replay(
+    def replay_verified(
         self,
         ir: dict[str, Any],
         *,
-        expected_global_commitment: str | None = None,
+        expected_global_commitment: str,
     ) -> CognitiveResultView:
+        """Replay an IR and AUTHENTICATE it against an external commitment.
+
+        Campaign 5 (D-6): ``expected_global_commitment`` is MANDATORY.
+        The IR is recomposed and its global commitment is checked
+        against the value the caller supplies from a source OUTSIDE the
+        IR (a signed record, an append-only journal, a host attestation).
+        A missing or mismatched commitment raises. Replaying an IR and
+        trusting the commitment it carries about itself proves nothing;
+        authentication requires an external anchor. The host owns that
+        anchor's durability (documented host requirement).
+
+        This intentionally has no default: a caller with nothing to
+        check against wants :meth:`replay_recomposed`, which says so.
+        """
         return self._verified_replay_view(
             ir,
             expected_global_commitment=expected_global_commitment,
         )
 
-    def replay_verified(
+    def replay_recomposed(
         self,
         ir: dict[str, Any],
-        *,
-        expected_global_commitment: str | None = None,
     ) -> CognitiveResultView:
-        return self.replay(
-            ir,
-            expected_global_commitment=expected_global_commitment,
-        )
+        """Recompose an IR into a view WITHOUT authenticating it.
+
+        Campaign 5 (D-6): the recomposed view carries a freshly computed
+        commitment, but nothing here proves it matches the commitment of
+        the original run: no external anchor is checked. The name says
+        so. Use this to inspect or rebuild an IR; use
+        :meth:`replay_verified` when you have an external commitment to
+        authenticate against and want a trust decision.
+        """
+        return self._recomposed_replay_view(ir)
 
     # -------------------------------------------------
     # Inspection

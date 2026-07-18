@@ -43,7 +43,7 @@ def test_os_replay_preserves_global_commitment():
     assert ir is not None
     assert original.global_commitment is not None
 
-    replayed = os.replay(
+    replayed = os.replay_verified(
         ir,
         expected_global_commitment=original.global_commitment,
     )
@@ -62,4 +62,4 @@ def test_os_replay_detects_global_commitment_mismatch():
     bad_commitment = "0" * 64
 
     with pytest.raises(RuntimeError, match="global_commitment mismatch"):
-        os.replay(ir, expected_global_commitment=bad_commitment)
+        os.replay_verified(ir, expected_global_commitment=bad_commitment)

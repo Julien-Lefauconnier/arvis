@@ -41,7 +41,7 @@ def test_recursive_mutation_of_export_cannot_diverge_commitment():
 
     # A fresh export still replays and verifies against the original
     # commitment.
-    replayed = os.replay(
+    replayed = os.replay_verified(
         view.to_ir(),
         expected_global_commitment=view.global_commitment,
     )
@@ -79,5 +79,5 @@ def test_replay_does_not_mutate_the_input_ir():
     view = os.run(user_id="u1", cognitive_input={"text": "hello"})
     ir = view.to_ir()
     snapshot = copy.deepcopy(ir)
-    os.replay(ir, expected_global_commitment=view.global_commitment)
+    os.replay_verified(ir, expected_global_commitment=view.global_commitment)
     assert ir == snapshot

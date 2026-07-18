@@ -13,9 +13,10 @@ def test_engine_run_method_exists():
     assert callable(engine.run)
 
 
-def test_engine_replay_method_exists():
+def test_engine_replay_methods_exist():
     engine = ArvisEngine()
-    assert callable(engine.replay)
+    assert callable(engine.replay_verified)
+    assert callable(engine.replay_recomposed)
 
 
 def test_engine_ask_method_exists():

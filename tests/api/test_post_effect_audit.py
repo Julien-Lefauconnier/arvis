@@ -198,5 +198,7 @@ def test_replay_of_a_complete_run_still_verifies():
     os_ = CognitiveOS()
     os_.register_tool(_Probe())
     r1 = os_.run("u1", {"risk": 0.1})
-    r2 = os_.replay(r1.to_ir(), expected_global_commitment=r1.global_commitment)
+    r2 = os_.replay_verified(
+        r1.to_ir(), expected_global_commitment=r1.global_commitment
+    )
     assert r2.global_commitment == r1.global_commitment
