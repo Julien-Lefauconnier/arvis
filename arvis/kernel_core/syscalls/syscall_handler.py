@@ -379,9 +379,13 @@ class SyscallHandler:
             digest_args = dict(syscall.args)
             digest_args.pop("authorization", None)
             if effect_invocation is not None:
+                # Campaign 7 (Lot 1): the intent binds the canonical hash
+                # captured by the frozen invocation. It never rematerializes or
+                # rereads the caller-owned payload, so authorization, outbox and
+                # execution all refer to one immutable effect object.
                 digest_args["result"] = {
                     "tool": effect_invocation.tool_name,
-                    "tool_payload": effect_invocation.payload or {},
+                    "tool_payload_sha256": effect_invocation.payload_sha256,
                 }
             elif "result" in digest_args:
                 digest_args["result"] = effect_parameters_from_result(

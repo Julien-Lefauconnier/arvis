@@ -166,6 +166,16 @@ class AuthorizedInvocation:
     # by the executor's authority at execution.
     nonce: str = ""
 
+    @property
+    def payload_sha256(self) -> str:
+        """Canonical hash of the exact payload sealed by the invocation."""
+        return self.invocation.payload_sha256
+
+    @property
+    def canonical_payload_bytes(self) -> bytes:
+        """Canonical bytes of the exact payload sealed by the invocation."""
+        return self.invocation.canonical_payload_bytes
+
 
 class UnauthorizedExecutionError(Exception):
     """An execution was attempted without a valid, unused capability.

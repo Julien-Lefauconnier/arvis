@@ -134,13 +134,15 @@ class ToolExecutor:
             return None
 
         tool_name: str = invocation.tool_name
-        tool_payload = invocation.payload or {}
-
-        # legacy payload (kept for compatibility)
-        payload_runtime: dict[str, Any] = {
+        # Campaign 7 (Lot 1): validation receives an isolated copy of the
+        # payload frozen before authorization. A validator may retain or mutate
+        # this dictionary, but execution will rematerialize the canonical
+        # snapshot and therefore cannot observe those mutations.
+        validation_payload = invocation.materialize_payload()
+        validation_runtime: dict[str, Any] = {
             "decision": decision,
             "context": ctx,
-            "tool_payload": tool_payload,
+            "tool_payload": validation_payload,
             "invocation": invocation,
         }
 
@@ -168,7 +170,7 @@ class ToolExecutor:
         # ToolManager.authorize): a violating payload never reaches the
         # tool, and the refusal stays pre-effect.
         if spec is not None and spec.input_schema:
-            violation = _schema_violation(tool_payload, spec.input_schema)
+            violation = _schema_violation(validation_payload, spec.input_schema)
             if violation is not None:
                 ctx._tool_failure = True
                 return ToolResult(
@@ -183,7 +185,7 @@ class ToolExecutor:
                 )
 
         try:
-            tool.validate(payload_runtime)
+            tool.validate(validation_runtime)
         except Exception as e:
             # The tool's own validation refused the payload BEFORE any
             # external effect: pre-effect refusal, confirmation stays
@@ -207,6 +209,16 @@ class ToolExecutor:
 
         # --- effect phase: the boundary is crossed from here on ---
         try:
+            # Fresh execution material, independent from the schema and tool
+            # validation copies. This is the exact payload committed by the
+            # frozen invocation, never the caller-owned dictionary.
+            execution_payload = invocation.materialize_payload()
+            payload_runtime: dict[str, Any] = {
+                "decision": decision,
+                "context": ctx,
+                "tool_payload": execution_payload,
+                "invocation": invocation,
+            }
             start = time.perf_counter()
 
             if hasattr(tool, "execute_invocation"):

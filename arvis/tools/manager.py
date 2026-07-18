@@ -32,7 +32,11 @@ from typing import Any
 from arvis.adapters.tools.authorization import ToolAuthorizationDecision
 from arvis.adapters.tools.authorization_snapshot import ToolAuthorizationSnapshot
 from arvis.adapters.tools.gates import ConsentGate, EgressGate
-from arvis.adapters.tools.invocation import ToolInvocation
+from arvis.adapters.tools.invocation import (
+    FrozenEffectPayload,
+    FrozenEffectPayloadError,
+    ToolInvocation,
+)
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.errors.tool_runtime import (
     ToolAuthorizationError,
@@ -172,8 +176,26 @@ class ToolManager:
         if not isinstance(tool_name, str):
             return None
 
-        payload = getattr(decision, "tool_payload", {}) or {}
+        raw_payload = getattr(decision, "tool_payload", {})
+        if raw_payload is None:
+            raw_payload = {}
 
+        # Campaign 7 (Lot 1): capture the effect material exactly once,
+        # before any validation, confirmation or policy callback can retain
+        # or mutate the host-owned dictionary. Every later phase receives a
+        # fresh materialization of this same canonical snapshot.
+        try:
+            frozen_payload = FrozenEffectPayload(raw_payload)
+        except (FrozenEffectPayloadError, TypeError, ValueError) as exc:
+            return self._refusal_outcome(
+                ctx,
+                tool_name=tool_name,
+                reason="invalid_effect_payload",
+                error=ToolInputValidationError(
+                    "tool payload cannot be isolated as canonical effect material",
+                    details={"exception_type": type(exc).__name__},
+                ),
+            )
         # --- pre-reservation validations (constat 11) ---
         tool = self.registry.get(tool_name)
         if tool is None:
@@ -186,7 +208,10 @@ class ToolManager:
 
         spec = tool.spec
         if spec is not None and spec.input_schema:
-            violation = _schema_violation(payload, spec.input_schema)
+            violation = _schema_violation(
+                frozen_payload.materialize(),
+                spec.input_schema,
+            )
             if violation is not None:
                 return self._refusal_outcome(
                     ctx,
@@ -211,7 +236,7 @@ class ToolManager:
         confirmation = self._reserve_confirmation(
             ctx,
             tool_name=tool_name,
-            payload=payload,
+            payload=frozen_payload.materialize(),
             principal=principal_id,
             tenant=tenant_id,
         )
@@ -241,7 +266,7 @@ class ToolManager:
             {
                 "idempotency_version": 1,
                 "tool": tool_name,
-                "payload_sha256": payload_commitment(payload),
+                "payload_sha256": payload_commitment(frozen_payload.materialize()),
                 "principal": principal_id,
                 "tenant": tenant_id,
                 "process_id": resolve_process_id(ctx),
@@ -250,7 +275,7 @@ class ToolManager:
 
         invocation = ToolInvocation(
             tool_name=tool_name,
-            payload=payload,
+            payload=frozen_payload,
             process_id=resolve_process_id(ctx),
             user_id=getattr(ctx, "user_id", None),
             risk_score=_resolve_turn_risk(ctx),
