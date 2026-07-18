@@ -177,6 +177,7 @@ def test_intent_carries_structural_metadata_only(effect_probe):
         "tick",
         "process_id",
         "commitment_sha256",
+        "audit_receipt",
     }
     # P0-3-a6: the engagement digest binds the parameters by hash only.
     assert len(intent["commitment_sha256"]) == 64

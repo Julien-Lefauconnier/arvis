@@ -19,6 +19,7 @@ from arvis.adapters.tools.invocation import (
     ToolInvocation,
 )
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
+from arvis.kernel_core.syscalls.audit_sink import AuditReceipt
 from arvis.kernel_core.syscalls.engagement import stable_hash
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
@@ -78,6 +79,31 @@ def _manager(
         registry,
         ToolExecutor(registry),
         confirmation_registry=confirmation_registry,
+    )
+
+
+def _activate_outcome(
+    manager: ToolManager,
+    outcome: ToolAuthorizationOutcome,
+    *,
+    intent_sha256: str = "a" * 64,
+) -> None:
+    assert outcome.authorized is not None
+    receipt = AuditReceipt(
+        receipt_id=f"receipt:{outcome.authorized.nonce}",
+        run_id=None,
+        causal_id=f"causal:{outcome.authorized.nonce}",
+        intent_sha256=intent_sha256,
+        durable_position="1",
+        store_fingerprint="db:test",
+        committed_at="2026-07-19T00:00:00+00:00",
+    )
+    assert manager.activate_authorized(
+        outcome.authorized,
+        receipt=receipt,
+        intent_sha256=intent_sha256,
+        run_id=None,
+        causal_id=f"causal:{outcome.authorized.nonce}",
     )
 
 
@@ -180,6 +206,7 @@ def test_policy_cannot_mutate_future_effect_payload(monkeypatch: Any) -> None:
     outcome = manager.authorize(_result(payload), _ctx())
     assert isinstance(outcome, ToolAuthorizationOutcome)
     assert outcome.authorized is not None
+    _activate_outcome(manager, outcome)
     manager.execute_authorized(outcome.authorized, _result(payload), _ctx())
 
     assert tool.executed == [{"target": "A", "nested": {"value": 1}}]
@@ -283,6 +310,7 @@ def test_confirmation_callback_cannot_change_idempotency_or_effect() -> None:
         }
     )
 
+    _activate_outcome(manager, outcome)
     result = manager.execute_authorized(outcome.authorized, _result(payload), ctx)
 
     assert result is not None and result.success is True

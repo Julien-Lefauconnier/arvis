@@ -19,6 +19,7 @@ from types import SimpleNamespace
 
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.errors.codes import ErrorCode
+from arvis.tools.authorized_invocation import CapabilityActivationBinding
 from arvis.tools.base import BaseTool
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
@@ -66,7 +67,20 @@ def _run(executor: ToolExecutor, tool: str, ctx, payload: dict | None = None):
     policy.
     """
     invocation = ToolInvocation(tool_name=tool, payload=payload or {}, process_id="p")
-    authorized = _mint(executor).authorize(invocation)
+    authority = _mint(executor)
+    authorized = authority.authorize(invocation)
+    assert authority.activate(
+        authorized,
+        CapabilityActivationBinding(
+            receipt_id=f"receipt:{authorized.nonce}",
+            intent_sha256="a" * 64,
+            run_id=None,
+            causal_id=f"causal:{authorized.nonce}",
+            durable_position="test",
+            store_fingerprint="memory:test",
+            committed_at="2026-07-19T00:00:00+00:00",
+        ),
+    )
     result = _decision(tool, payload)
     return executor.execute_invocation(authorized, result, ctx)
 

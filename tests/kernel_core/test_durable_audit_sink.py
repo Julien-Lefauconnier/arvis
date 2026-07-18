@@ -116,6 +116,7 @@ def test_invalid_receipt_refuses_the_effect(monkeypatch):
             return AuditReceipt(
                 receipt_id="r1",
                 run_id=intent.get("run_id"),
+                causal_id=str(intent.get("causal_id", "")),
                 intent_sha256="not-the-engagement-digest",
                 durable_position="0",
                 store_fingerprint="memory:lying",
@@ -137,6 +138,7 @@ def test_receipt_for_a_different_run_is_refused(monkeypatch):
             return AuditReceipt(
                 receipt_id="r1",
                 run_id="another-run-entirely",
+                causal_id=str(intent.get("causal_id", "")),
                 intent_sha256=str(intent.get("commitment_sha256", "")),
                 durable_position="0",
                 store_fingerprint="memory:wrong-run",

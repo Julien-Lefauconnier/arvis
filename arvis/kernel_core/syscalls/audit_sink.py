@@ -16,6 +16,9 @@ callable: it is a component that ANSWERS, returning an
   which MUST equal the intent's journaled ``run_id`` — the receipt is
   where the run <-> commitment anchoring lives, by design outside the
   deterministic digest material;
+- ``causal_id``: the exact effect occurrence acknowledged by the store,
+  preventing one receipt from being replayed across two calls whose
+  engagement material happens to be identical;
 - ``durable_position``: the store-assigned durable position (an
   offset, a primary key, an LSN);
 - ``store_fingerprint``: the identity of the store that accepted it;
@@ -52,6 +55,7 @@ class AuditReceipt:
 
     receipt_id: str
     run_id: str | None
+    causal_id: str
     intent_sha256: str
     durable_position: str
     store_fingerprint: str
@@ -62,6 +66,7 @@ class AuditReceipt:
         return {
             "receipt_id": self.receipt_id,
             "run_id": self.run_id,
+            "causal_id": self.causal_id,
             "intent_sha256": self.intent_sha256,
             "durable_position": self.durable_position,
             "store_fingerprint": self.store_fingerprint,
@@ -93,10 +98,11 @@ def validate_receipt(receipt: Any, intent: dict[str, Any]) -> str | None:
     a receipt for a different intent, or for a different run, proves
     nothing about this effect.
     """
-    if not isinstance(receipt, AuditReceipt):
+    if type(receipt) is not AuditReceipt:
         return "receipt_wrong_type"
     for field_name in (
         "receipt_id",
+        "causal_id",
         "durable_position",
         "store_fingerprint",
         "committed_at",
@@ -108,6 +114,8 @@ def validate_receipt(receipt: Any, intent: dict[str, Any]) -> str | None:
         return "receipt_intent_mismatch"
     if receipt.run_id != intent.get("run_id"):
         return "receipt_run_mismatch"
+    if receipt.causal_id != intent.get("causal_id"):
+        return "receipt_causal_mismatch"
     return None
 
 
@@ -132,6 +140,7 @@ class InMemoryAuditSink:
         receipt = AuditReceipt(
             receipt_id=secrets.token_hex(16),
             run_id=intent.get("run_id"),
+            causal_id=str(intent.get("causal_id", "")),
             intent_sha256=str(intent.get("commitment_sha256", "")),
             durable_position=str(len(self.entries) - 1),
             store_fingerprint=self._store_fingerprint,

@@ -44,8 +44,18 @@ from arvis.errors.tool_runtime import (
     UnknownToolError,
 )
 from arvis.kernel_core.access.identity import principal_from_context
+from arvis.kernel_core.syscalls.audit_sink import (
+    AuditReceipt,
+    InMemoryAuditSink,
+    validate_receipt,
+)
 from arvis.kernel_core.syscalls.engagement import stable_hash
-from arvis.tools.authorized_invocation import AuthorizedInvocation
+from arvis.tools.authorized_invocation import (
+    AuthorizedInvocation,
+    CapabilityActivationBinding,
+    CapabilityState,
+    UnauthorizedExecutionError,
+)
 from arvis.tools.confirmation import (
     ConfirmationRegistry,
     ToolConfirmation,
@@ -408,7 +418,10 @@ class ToolManager:
             confirmed=invocation.confirmed,
             confirmation_commitment=invocation.confirmation_commitment,
         )
-        authorized = self._authority.authorize(
+        # Campaign 7 (Lot 4): authorization mints a PENDING capability.
+        # It is deliberately non-executable until SyscallHandler persists the
+        # exact intent and activates it with the validated receipt.
+        authorized = self._authority.mint(
             invocation,
             authorization_snapshot.to_material(),
         )
@@ -427,6 +440,92 @@ class ToolManager:
         if outcome.authorized is None:
             return True
         return self._authority.verifies(outcome.authorized)
+
+    def activate_authorized(
+        self,
+        authorized: Any,
+        *,
+        receipt: Any,
+        intent_sha256: str,
+        run_id: str | None,
+        causal_id: str,
+    ) -> bool:
+        """Activate one minted capability from an exact validated receipt.
+
+        Receipt validation is repeated here as defense in depth: the manager
+        will not trust a caller merely because it claims the syscall boundary
+        already checked the outbox acknowledgement. Any mismatch aborts the
+        capability and releases its reserved confirmation.
+        """
+        if type(authorized) is not AuthorizedInvocation:
+            return False
+        if not isinstance(intent_sha256, str) or not intent_sha256:
+            self.abort_authorized(authorized)
+            return False
+        if not isinstance(causal_id, str) or not causal_id:
+            self.abort_authorized(authorized)
+            return False
+        expected_intent = {
+            "commitment_sha256": intent_sha256,
+            "run_id": run_id,
+            "causal_id": causal_id,
+        }
+        if validate_receipt(receipt, expected_intent) is not None:
+            self.abort_authorized(authorized)
+            return False
+        assert isinstance(receipt, AuditReceipt)
+        try:
+            activation = CapabilityActivationBinding(
+                receipt_id=receipt.receipt_id,
+                intent_sha256=intent_sha256,
+                run_id=run_id,
+                causal_id=causal_id,
+                durable_position=receipt.durable_position,
+                store_fingerprint=receipt.store_fingerprint,
+                committed_at=receipt.committed_at,
+            )
+        except (TypeError, ValueError):
+            self.abort_authorized(authorized)
+            return False
+        if not self._authority.activate(authorized, activation):
+            self.abort_authorized(authorized)
+            return False
+        return True
+
+    def capability_state(self, authorized: Any) -> CapabilityState | None:
+        """Return the lifecycle state of an exact manager-owned capability."""
+        if type(authorized) is not AuthorizedInvocation:
+            return None
+        return self._authority.state_of(authorized)
+
+    def capability_activation(
+        self,
+        authorized: Any,
+    ) -> CapabilityActivationBinding | None:
+        """Return the immutable receipt binding of an exact capability."""
+        if type(authorized) is not AuthorizedInvocation:
+            return None
+        return self._authority.activation_of(authorized)
+
+    def abort_authorized(self, authorized: Any) -> bool:
+        """Revoke a pre-effect capability and release its confirmation.
+
+        The operation is idempotent at the capability layer. Confirmation
+        release is attempted only for a non-consumed capability; repeated
+        aborts are harmless because the registry release itself is idempotent.
+        """
+        if type(authorized) is not AuthorizedInvocation:
+            return False
+        state = self._authority.state_of(authorized)
+        if state is None or state is CapabilityState.CONSUMED:
+            return False
+        revoked = self._authority.revoke(authorized)
+        if not revoked:
+            return False
+        confirmation_id = authorized.invocation.confirmation_id
+        if isinstance(confirmation_id, str):
+            self._release_confirmation(confirmation_id)
+        return True
 
     # ------------------------------------------------------------------
     # Phase 2: sealed execution behind the syscall boundary
@@ -482,7 +581,42 @@ class ToolManager:
             return None
         if outcome.refusal is not None:
             return outcome.refusal
-        return self.execute_authorized(outcome.authorized, result, ctx)
+        assert outcome.authorized is not None
+
+        # Compatibility-only local composition. It still obeys the two-phase
+        # invariant by persisting an intent in a volatile reference outbox and
+        # activating from its exact receipt before execution. Production hosts
+        # must use SyscallHandler with their configured durable sink.
+        authorized = outcome.authorized
+        causal_id = f"tool-manager-run:{authorized.nonce}"
+        intent_sha256 = stable_hash(
+            {
+                "local_tool_run_version": 1,
+                "causal_id": causal_id,
+                "tool": authorized.invocation.tool_name,
+                "payload_sha256": authorized.payload_sha256,
+                "authorization_snapshot": dict(authorized.authorization_snapshot),
+            }
+        )
+        local_intent = {
+            "kind": "syscall_intent",
+            "syscall": "tool.execute",
+            "causal_id": causal_id,
+            "process_id": authorized.invocation.process_id or "none",
+            "commitment_sha256": intent_sha256,
+        }
+        receipt = InMemoryAuditSink().append(local_intent)
+        if not self.activate_authorized(
+            authorized,
+            receipt=receipt,
+            intent_sha256=intent_sha256,
+            run_id=None,
+            causal_id=causal_id,
+        ):
+            raise UnauthorizedExecutionError(
+                "the local compatibility outbox could not activate the capability"
+            )
+        return self.execute_authorized(authorized, result, ctx)
 
     # ------------------------------------------------------------------
     # Internals

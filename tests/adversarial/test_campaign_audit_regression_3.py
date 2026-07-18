@@ -93,6 +93,31 @@ def _rig(
     return handler, manager, executor
 
 
+def _activate_outcome(
+    manager: ToolManager,
+    outcome: ToolAuthorizationOutcome,
+    *,
+    intent_sha256: str = "a" * 64,
+) -> None:
+    assert outcome.authorized is not None
+    receipt = AuditReceipt(
+        receipt_id=f"receipt:{outcome.authorized.nonce}",
+        run_id=None,
+        causal_id=f"causal:{outcome.authorized.nonce}",
+        intent_sha256=intent_sha256,
+        durable_position="1",
+        store_fingerprint="db:test",
+        committed_at="2026-07-19T00:00:00+00:00",
+    )
+    assert manager.activate_authorized(
+        outcome.authorized,
+        receipt=receipt,
+        intent_sha256=intent_sha256,
+        run_id=None,
+        causal_id=f"causal:{outcome.authorized.nonce}",
+    )
+
+
 def test_legitimate_capability_cannot_mint_fresh_nonce() -> None:
     safe = _RecordingTool("safe")
     danger = _RecordingTool("danger")
@@ -134,6 +159,7 @@ def test_payload_mutation_after_authorization_does_not_change_effect() -> None:
 
     payload["target"] = "B"
     payload["nested"]["value"] = 2
+    _activate_outcome(manager, outcome)
     manager.execute_authorized(outcome.authorized, _result("mutate", payload), ctx)
 
     assert tool.payloads == [{"target": "A", "nested": {"value": 1}}]
@@ -190,13 +216,13 @@ def test_handler_refuses_arbitrary_authorization_wrapper(monkeypatch) -> None:
     assert captured == []
 
 
-@pytest.mark.xfail(strict=True, reason="Campaign 7 Lot 4 pending")
 def test_sink_failure_revokes_capability_and_prevents_direct_execution() -> None:
     class _InvalidSink:
         def append(self, intent: dict[str, Any]) -> AuditReceipt:
             return AuditReceipt(
                 receipt_id="r1",
                 run_id=intent.get("run_id"),
+                causal_id=str(intent.get("causal_id", "")),
                 intent_sha256="wrong-intent",
                 durable_position="1",
                 store_fingerprint="db:test",

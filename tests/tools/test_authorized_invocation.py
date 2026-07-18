@@ -22,6 +22,7 @@ from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.tools.authorized_invocation import (
     CAPABILITY_FORMAT_VERSION,
     AuthorizedInvocation,
+    CapabilityActivationBinding,
     CapabilityState,
     InvocationAuthority,
     UnauthorizedExecutionError,
@@ -65,6 +66,36 @@ def _result():
     return SimpleNamespace(action_decision=decision)
 
 
+def _activation(
+    capability: AuthorizedInvocation,
+    *,
+    suffix: str = "1",
+    intent_sha256: str = "a" * 64,
+    run_id: str | None = "run-1",
+) -> CapabilityActivationBinding:
+    return CapabilityActivationBinding(
+        receipt_id=f"receipt:{capability.nonce}:{suffix}",
+        intent_sha256=intent_sha256,
+        run_id=run_id,
+        causal_id=f"causal:{capability.nonce}:{suffix}",
+        durable_position=f"position:{suffix}",
+        store_fingerprint="db:test",
+        committed_at="2026-07-19T00:00:00+00:00",
+    )
+
+
+def _activate(
+    authority: InvocationAuthority,
+    capability: AuthorizedInvocation,
+    *,
+    suffix: str = "1",
+) -> AuthorizedInvocation:
+    assert (
+        authority.activate(capability, _activation(capability, suffix=suffix)) is True
+    )
+    return capability
+
+
 # ---------------------------------------------------------------
 # Authority mints, executor honours
 # ---------------------------------------------------------------
@@ -72,7 +103,7 @@ def _result():
 
 def test_capability_minted_by_the_claimed_authority_runs():
     executor, tool, mint = _executor()
-    authorized = mint.authorize(_invocation())
+    authorized = _activate(mint, mint.authorize(_invocation()))
     result = executor.execute_invocation(
         authorized, _result(), SimpleNamespace(extra={})
     )
@@ -205,7 +236,7 @@ def test_minting_authority_is_claimable_exactly_once():
 
 def test_authorized_invocation_is_single_use():
     executor, tool, mint = _executor()
-    authorized = mint.authorize(_invocation())
+    authorized = _activate(mint, mint.authorize(_invocation()))
     first = executor.execute_invocation(
         authorized, _result(), SimpleNamespace(extra={})
     )
@@ -218,8 +249,8 @@ def test_authorized_invocation_is_single_use():
 def test_two_capabilities_for_the_same_invocation_are_independent():
     executor, _tool, mint = _executor()
     inv = _invocation()
-    cap_a = mint.authorize(inv)
-    cap_b = mint.authorize(inv)
+    cap_a = _activate(mint, mint.authorize(inv), suffix="a")
+    cap_b = _activate(mint, mint.authorize(inv), suffix="b")
     assert cap_a.nonce != cap_b.nonce
     assert (
         executor.execute_invocation(cap_a, _result(), SimpleNamespace(extra={})).success
@@ -234,7 +265,7 @@ def test_two_capabilities_for_the_same_invocation_are_independent():
 
 def test_consume_is_single_use_at_the_authority_level():
     authority = InvocationAuthority()
-    cap = authority.authorize(_invocation())
+    cap = _activate(authority, authority.authorize(_invocation()))
     assert authority.consume(cap) is True
     assert authority.consume(cap) is False
     # Read-only verification never consumes.
@@ -269,16 +300,17 @@ def test_minted_capability_requires_activation():
     capability = authority.mint(_invocation())
     assert authority.state_of(capability) is CapabilityState.MINTED
     assert authority.consume(capability) is False
-    assert authority.activate(capability) is True
+    assert authority.activate(capability, _activation(capability)) is True
     assert authority.state_of(capability) is CapabilityState.ACTIVATED
     assert authority.consume(capability) is True
     assert authority.state_of(capability) is CapabilityState.CONSUMED
 
 
-def test_authorize_returns_an_activated_capability_for_current_compatibility():
+def test_authorize_is_now_a_non_executable_mint_alias():
     authority = InvocationAuthority()
     capability = authority.authorize(_invocation())
-    assert authority.state_of(capability) is CapabilityState.ACTIVATED
+    assert authority.state_of(capability) is CapabilityState.MINTED
+    assert authority.consume(capability) is False
 
 
 def test_capability_commitment_binds_exact_invocation():
@@ -343,7 +375,7 @@ def test_capability_commitment_binds_format_version():
 
 def test_revoked_capability_is_refused_by_executor():
     executor, tool, authority = _executor()
-    capability = authority.authorize(_invocation())
+    capability = _activate(authority, authority.authorize(_invocation()))
     assert authority.revoke(capability) is True
     assert authority.state_of(capability) is CapabilityState.REVOKED
     with pytest.raises(UnauthorizedExecutionError):
@@ -379,14 +411,14 @@ def test_revoke_is_idempotent_but_cannot_revoke_consumed_capability():
     assert authority.revoke(revoked) is True
     assert authority.revoke(revoked) is True
 
-    consumed = authority.authorize(_invocation())
+    consumed = _activate(authority, authority.authorize(_invocation()))
     assert authority.consume(consumed) is True
     assert authority.revoke(consumed) is False
 
 
 def test_concurrent_consume_has_exactly_one_winner():
     authority = InvocationAuthority()
-    capability = authority.authorize(_invocation())
+    capability = _activate(authority, authority.authorize(_invocation()))
 
     with ThreadPoolExecutor(max_workers=16) as pool:
         outcomes = list(

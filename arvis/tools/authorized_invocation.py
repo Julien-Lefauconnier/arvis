@@ -1,28 +1,23 @@
 # arvis/tools/authorized_invocation.py
-"""Opaque, registered and single-use execution capabilities for tools.
+"""Opaque, registered and receipt-activated tool capabilities.
 
-Campaign 6 made the executor's minting authority private and made each
-capability single-use, but the capability still transported the
-minting secret itself. A holder of one legitimate capability could read
-that secret, construct a new :class:`AuthorizedInvocation` with an
-attacker-selected nonce and drive a different effect.
+Campaign 7 closes two distinct capability weaknesses in layers:
 
-Campaign 7, Lot 2 replaces the transported secret with a private
-registry owned by :class:`InvocationAuthority`:
+- Lot 2 removes every transported minting secret and requires each nonce to
+  exist in the private :class:`InvocationAuthority` registry.
+- Lot 4 separates authorization from execution. A capability is minted in a
+  non-executable ``MINTED`` state and becomes executable only after a precise
+  intent-acceptance binding has been committed by the syscall outbox.
 
-- every accepted nonce must have been minted and registered here;
-- the registry retains the exact capability and invocation objects;
-- a canonical commitment binds the capability format, nonce, complete
-  invocation material, authorization snapshot, confirmation commitment
-  and idempotency key;
-- state transitions are lock-protected and monotone:
-  ``MINTED -> ACTIVATED -> CONSUMED`` or ``MINTED/ACTIVATED -> REVOKED``;
-- a manually constructed capability, a modified capability, a foreign
-  capability, a revoked capability or a replay is refused fail-closed.
+The lifecycle is monotone and lock-protected::
 
-The capability contains no authority secret. Possession of the exact
-registered object is the grant; the authority is the sole registry and
-state-transition owner.
+    MINTED -> ACTIVATED -> CONSUMED
+         \\-> REVOKED
+
+Activation binds the exact receipt identity, intent commitment, run identity,
+causal identity and durable store position. A capability without that binding,
+one activated for another intent or run, a revoked capability, a clone or a
+replay is refused fail-closed.
 """
 
 from __future__ import annotations
@@ -45,10 +40,8 @@ if TYPE_CHECKING:
     from arvis.adapters.tools.invocation import ToolInvocation
 
 CAPABILITY_FORMAT_VERSION = 1
+CAPABILITY_ACTIVATION_FORMAT_VERSION = 1
 
-# Immutable empty snapshot for capabilities minted without one (test and
-# legacy paths); production minting by the manager always provides the
-# real authorization material.
 _EMPTY_SNAPSHOT: Mapping[str, Any] = MappingProxyType({})
 
 
@@ -71,11 +64,9 @@ def _freeze_snapshot(
 class AuthorizedInvocation:
     """One exact invocation registered by an :class:`InvocationAuthority`.
 
-    The public constructor exists for transport and typing, but
-    construction alone grants no authority: execution additionally
-    requires this exact object to be present in the consuming
-    authority's private registry with a matching commitment and an
-    ``ACTIVATED`` state.
+    Construction alone grants no authority. Execution additionally requires
+    this exact bearer object to be registered, intact, receipt-activated and
+    unused in the consuming authority.
     """
 
     invocation: ToolInvocation
@@ -104,12 +95,69 @@ class CapabilityState(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class CapabilityActivationBinding:
+    """Exact outbox acceptance that activates one capability.
+
+    The binding is deliberately independent from the mutable intent envelope.
+    It commits the receipt, intent, run and causal identities that were
+    validated at the syscall boundary. Empty identifiers are refused; ``run_id``
+    may be ``None`` only for direct/non-runtime test compositions where both the
+    intent and receipt explicitly carry no run identity.
+    """
+
+    receipt_id: str
+    intent_sha256: str
+    run_id: str | None
+    causal_id: str
+    durable_position: str
+    store_fingerprint: str
+    committed_at: str
+    activation_format_version: int = CAPABILITY_ACTIVATION_FORMAT_VERSION
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "receipt_id",
+            "intent_sha256",
+            "causal_id",
+            "durable_position",
+            "store_fingerprint",
+            "committed_at",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value:
+                raise ValueError(f"{field_name} must be a non-empty string")
+        if self.run_id is not None and (
+            not isinstance(self.run_id, str) or not self.run_id
+        ):
+            raise ValueError("run_id must be None or a non-empty string")
+        if self.activation_format_version != CAPABILITY_ACTIVATION_FORMAT_VERSION:
+            raise ValueError("unsupported capability activation format version")
+
+    @property
+    def commitment_sha256(self) -> str:
+        """Canonical commitment of the complete activation evidence."""
+        return canonical_hash(
+            {
+                "activation_format_version": self.activation_format_version,
+                "receipt_id": self.receipt_id,
+                "intent_sha256": self.intent_sha256,
+                "run_id": self.run_id,
+                "causal_id": self.causal_id,
+                "durable_position": self.durable_position,
+                "store_fingerprint": self.store_fingerprint,
+                "committed_at": self.committed_at,
+            }
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class CapabilityRecord:
-    """Immutable public-shape metadata retained by the private registry."""
+    """Immutable metadata retained by the private capability registry."""
 
     nonce: str
     commitment_sha256: str
     state: CapabilityState
+    activation_commitment_sha256: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,16 +168,11 @@ class _CapabilityEntry:
     invocation: ToolInvocation
     context: Any
     record: CapabilityRecord
+    activation: CapabilityActivationBinding | None = None
 
 
 def _invocation_commitment(invocation: ToolInvocation) -> str:
-    """Commit every immutable field that can select or govern the effect.
-
-    ``context`` is not canonicalized: it is a host runtime carrier and may
-    contain services, locks or cycles. Its exact object reference is retained
-    and checked separately by the private registry entry. The effect payload
-    itself is bound by its canonical bytes and hash.
-    """
+    """Commit every immutable field that can select or govern the effect."""
     return canonical_hash(
         {
             "invocation_format_version": 1,
@@ -161,9 +204,6 @@ def _capability_commitment(capability: AuthorizedInvocation) -> str:
             "nonce": capability.nonce,
             "invocation_commitment": _invocation_commitment(invocation),
             "authorization_snapshot_commitment": snapshot_commitment,
-            # Kept explicit in addition to the invocation commitment: these
-            # are transaction-critical joins and must remain visible in the
-            # capability format when the invocation representation evolves.
             "confirmation_commitment": invocation.confirmation_commitment,
             "idempotency_key": invocation.idempotency_key,
         }
@@ -173,10 +213,14 @@ def _capability_commitment(capability: AuthorizedInvocation) -> str:
 class InvocationAuthority:
     """Private minting registry and lifecycle authority for one executor."""
 
-    __slots__ = ("_records", "_lock")
+    __slots__ = ("_records", "_receipt_bindings", "_lock")
 
     def __init__(self) -> None:
         self._records: dict[str, _CapabilityEntry] = {}
+        # One durable acknowledgement may activate exactly one capability.
+        # The binding is never released: a receipt already accepted cannot be
+        # replayed to authorize a second effect, even after revocation.
+        self._receipt_bindings: dict[str, str] = {}
         self._lock = threading.Lock()
 
     def mint(
@@ -184,11 +228,7 @@ class InvocationAuthority:
         invocation: ToolInvocation,
         authorization_snapshot: Mapping[str, Any] | None = None,
     ) -> AuthorizedInvocation:
-        """Mint and register a non-executable capability in ``MINTED`` state.
-
-        Registration and nonce allocation are atomic. The returned object
-        becomes executable only after :meth:`activate` succeeds.
-        """
+        """Mint and register a non-executable capability in ``MINTED`` state."""
         snapshot = _freeze_snapshot(authorization_snapshot)
 
         with self._lock:
@@ -220,21 +260,13 @@ class InvocationAuthority:
         invocation: ToolInvocation,
         authorization_snapshot: Mapping[str, Any] | None = None,
     ) -> AuthorizedInvocation:
-        """Compatibility composition: mint then activate one capability.
+        """Compatibility alias for :meth:`mint`.
 
-        Lot 2 introduces the lifecycle without changing the current
-        manager transaction boundary. Campaign 7 Lot 4 will call
-        :meth:`mint` before durable intent acceptance and :meth:`activate`
-        only after a valid receipt. Until then, this method preserves the
-        established manager and test surface while still enforcing the
-        private registry and commitment.
+        Before Campaign 7 Lot 4 this method also activated the capability.
+        It intentionally no longer does so: every capability now requires an
+        explicit receipt-bound :meth:`activate` transition.
         """
-        capability = self.mint(invocation, authorization_snapshot)
-        if not self.activate(capability):  # pragma: no cover - internal invariant
-            raise UnauthorizedExecutionError(
-                "a freshly minted capability could not be activated"
-            )
-        return capability
+        return self.mint(invocation, authorization_snapshot)
 
     def _matching_entry_locked(
         self,
@@ -259,56 +291,103 @@ class InvocationAuthority:
             commitment = _capability_commitment(capability)
         except (NonCanonicalizableError, TypeError, ValueError, OverflowError):
             return None
-        if not secrets.compare_digest(
-            commitment,
-            entry.record.commitment_sha256,
-        ):
+        if not secrets.compare_digest(commitment, entry.record.commitment_sha256):
             return None
+        if entry.activation is None:
+            if entry.record.activation_commitment_sha256 is not None:
+                return None
+        else:
+            try:
+                activation_commitment = entry.activation.commitment_sha256
+            except (NonCanonicalizableError, TypeError, ValueError, OverflowError):
+                return None
+            recorded = entry.record.activation_commitment_sha256
+            if recorded is None or not secrets.compare_digest(
+                activation_commitment,
+                recorded,
+            ):
+                return None
         return entry
 
     def verifies(self, capability: AuthorizedInvocation) -> bool:
-        """Whether this authority minted this exact, unmodified object.
-
-        Verification is read-only and deliberately independent from the
-        lifecycle state: a consumed or revoked capability remains
-        attributable to this authority, but cannot be consumed again.
-        """
-        if not isinstance(capability, AuthorizedInvocation):
+        """Whether this authority minted this exact, unmodified object."""
+        if type(capability) is not AuthorizedInvocation:
             return False
         with self._lock:
             return self._matching_entry_locked(capability) is not None
 
     def state_of(self, capability: AuthorizedInvocation) -> CapabilityState | None:
         """Return the lifecycle state of an exact intact capability."""
-        if not isinstance(capability, AuthorizedInvocation):
+        if type(capability) is not AuthorizedInvocation:
             return None
         with self._lock:
             entry = self._matching_entry_locked(capability)
             return entry.record.state if entry is not None else None
 
-    def activate(self, capability: AuthorizedInvocation) -> bool:
-        """Transition an intact capability from ``MINTED`` to ``ACTIVATED``.
+    def activation_of(
+        self,
+        capability: AuthorizedInvocation,
+    ) -> CapabilityActivationBinding | None:
+        """Return the immutable activation binding of an intact capability."""
+        if type(capability) is not AuthorizedInvocation:
+            return None
+        with self._lock:
+            entry = self._matching_entry_locked(capability)
+            return entry.activation if entry is not None else None
 
-        Activation is idempotent for the same already-active capability;
-        consumed, revoked, foreign, cloned or modified objects are refused.
+    def activate(
+        self,
+        capability: AuthorizedInvocation,
+        activation: CapabilityActivationBinding,
+    ) -> bool:
+        """Bind one exact outbox acceptance and activate the capability.
+
+        Repeating the transition with the same binding is idempotent. A
+        different receipt, intent, run or causal binding cannot repair or
+        re-activate an existing capability.
         """
-        if not isinstance(capability, AuthorizedInvocation):
+        if type(capability) is not AuthorizedInvocation:
             return False
+        if type(activation) is not CapabilityActivationBinding:
+            return False
+        try:
+            activation_commitment = activation.commitment_sha256
+        except (NonCanonicalizableError, TypeError, ValueError, OverflowError):
+            return False
+
         with self._lock:
             entry = self._matching_entry_locked(capability)
             if entry is None:
                 return False
             if entry.record.state is CapabilityState.ACTIVATED:
-                return True
+                recorded = entry.record.activation_commitment_sha256
+                bound_nonce = self._receipt_bindings.get(activation.receipt_id)
+                return (
+                    bound_nonce == capability.nonce
+                    and recorded is not None
+                    and secrets.compare_digest(activation_commitment, recorded)
+                )
             if entry.record.state is not CapabilityState.MINTED:
                 return False
-            updated = replace(entry.record, state=CapabilityState.ACTIVATED)
-            self._records[capability.nonce] = replace(entry, record=updated)
+            bound_nonce = self._receipt_bindings.get(activation.receipt_id)
+            if bound_nonce is not None and bound_nonce != capability.nonce:
+                return False
+            updated = replace(
+                entry.record,
+                state=CapabilityState.ACTIVATED,
+                activation_commitment_sha256=activation_commitment,
+            )
+            self._records[capability.nonce] = replace(
+                entry,
+                record=updated,
+                activation=activation,
+            )
+            self._receipt_bindings[activation.receipt_id] = capability.nonce
             return True
 
     def revoke(self, capability: AuthorizedInvocation) -> bool:
         """Revoke an unconsumed capability, idempotently and atomically."""
-        if not isinstance(capability, AuthorizedInvocation):
+        if type(capability) is not AuthorizedInvocation:
             return False
         with self._lock:
             entry = self._matching_entry_locked(capability)
@@ -323,17 +402,17 @@ class InvocationAuthority:
             return True
 
     def consume(self, capability: AuthorizedInvocation) -> bool:
-        """Atomically verify and consume one activated capability.
-
-        Returns ``True`` exactly once. A minted-but-not-activated, revoked,
-        consumed, foreign, manually constructed, cloned or modified
-        capability returns ``False`` and cannot drive the effect.
-        """
-        if not isinstance(capability, AuthorizedInvocation):
+        """Atomically verify and consume one receipt-activated capability."""
+        if type(capability) is not AuthorizedInvocation:
             return False
         with self._lock:
             entry = self._matching_entry_locked(capability)
-            if entry is None or entry.record.state is not CapabilityState.ACTIVATED:
+            if (
+                entry is None
+                or entry.record.state is not CapabilityState.ACTIVATED
+                or entry.activation is None
+                or entry.record.activation_commitment_sha256 is None
+            ):
                 return False
             updated = replace(entry.record, state=CapabilityState.CONSUMED)
             self._records[capability.nonce] = replace(entry, record=updated)
@@ -345,8 +424,10 @@ class UnauthorizedExecutionError(Exception):
 
 
 __all__ = [
+    "CAPABILITY_ACTIVATION_FORMAT_VERSION",
     "CAPABILITY_FORMAT_VERSION",
     "AuthorizedInvocation",
+    "CapabilityActivationBinding",
     "CapabilityRecord",
     "CapabilityState",
     "InvocationAuthority",

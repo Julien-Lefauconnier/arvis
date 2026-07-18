@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+from dataclasses import dataclass
 from typing import Any, Protocol
 
 from arvis.errors import ErrorOrigin
@@ -20,7 +21,11 @@ from arvis.kernel_core.access.policy import (
     OwnerScopedAuthorization,
 )
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
-from arvis.kernel_core.syscalls.audit_sink import validate_receipt
+from arvis.kernel_core.syscalls.audit_sink import (
+    AuditReceipt,
+    InMemoryAuditSink,
+    validate_receipt,
+)
 from arvis.kernel_core.syscalls.engagement import (
     effect_engagement_digest,
     effect_parameters_from_result,
@@ -44,6 +49,16 @@ class RuntimeStateLike(Protocol):
 
 class PipelineContextLike(Protocol):
     extra: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class _RecordedIntent:
+    """Exact outbox acceptance used to activate a tool capability."""
+
+    receipt: AuditReceipt
+    intent_sha256: str
+    run_id: str | None
+    causal_id: str
 
 
 def _execution_state_from_ctx(ctx: Any) -> Any | None:
@@ -85,6 +100,11 @@ class SyscallHandler:
         # outside a runtime-entered run (direct handler tests keep the
         # legacy id shape).
         self._current_run_id: str | None = None
+        # Campaign 7 (Lot 4): even development/test compositions with no
+        # host sink use a concrete volatile outbox. This preserves the
+        # universal MINTED -> receipt-bound ACTIVATED transition; Lot 6
+        # separately qualifies which sinks count as production-durable.
+        self._volatile_intent_sink = InMemoryAuditSink()
 
         # Backward-compatible convenience aliases
         self.tool_executor = self.services.tool_executor
@@ -236,8 +256,9 @@ class SyscallHandler:
         # signals a crash during the effect: the uncertainty is bounded
         # and visible, never silent.
         is_effect = descriptor is not None and descriptor.effect is SyscallEffect.EFFECT
+        recorded_intent: _RecordedIntent | None = None
         if is_effect:
-            intent_refusal = self._record_intent(
+            recorded_intent, intent_refusal = self._record_intent(
                 ctx,
                 syscall,
                 causal_id,
@@ -246,8 +267,24 @@ class SyscallHandler:
                 tool_authorization=validated_tool_authorization,
             )
             if intent_refusal is not None:
+                self._abort_tool_authorization(validated_tool_authorization)
                 self._safe_journal(ctx, syscall, intent_refusal, started_tick)
                 return intent_refusal
+
+            activation_refusal = self._activate_tool_authorization(
+                ctx,
+                syscall,
+                validated_tool_authorization,
+                recorded_intent,
+            )
+            if activation_refusal is not None:
+                # The outbox already accepted this intent. Even though the
+                # effect was refused before execution, the result must close
+                # the accepted intent with its exact commitment.
+                self._journal_effect_result(
+                    ctx, syscall, activation_refusal, started_tick
+                )
+                return activation_refusal
 
         try:
             call_args = {
@@ -260,6 +297,10 @@ class SyscallHandler:
                 call_args["authorization"] = validated_tool_authorization
             syscall_result = fn(self, **call_args)
         except Exception as exc:
+            # If the tool syscall failed before its executor consumed the
+            # capability, revoke it. If consumption already crossed the effect
+            # boundary, abort_authorized is a no-op on the CONSUMED state.
+            self._abort_tool_authorization(validated_tool_authorization)
             error_result = self._failure_from_exception(
                 ctx,
                 exc,
@@ -274,6 +315,7 @@ class SyscallHandler:
             return error_result
 
         if not isinstance(syscall_result, SyscallResult):
+            self._abort_tool_authorization(validated_tool_authorization)
             syscall_result = self._failure_from_error(
                 ctx,
                 SyscallValidationError(
@@ -378,6 +420,114 @@ class SyscallHandler:
 
         return trusted, None
 
+    def _abort_tool_authorization(
+        self,
+        outcome: ToolAuthorizationOutcome | None,
+    ) -> None:
+        """Best-effort abort of a manager-owned pre-effect capability."""
+        if outcome is None or outcome.authorized is None:
+            return
+        manager = self.services.tool_manager
+        abort = getattr(manager, "abort_authorized", None)
+        if callable(abort):
+            abort(outcome.authorized)
+
+    def _activate_tool_authorization(
+        self,
+        ctx: PipelineContextLike | None,
+        syscall: Syscall,
+        outcome: ToolAuthorizationOutcome | None,
+        recorded: _RecordedIntent | None,
+    ) -> SyscallResult | None:
+        """Activate the exact capability only after intent acceptance."""
+        if outcome is None or outcome.authorized is None:
+            return None
+        if recorded is None:
+            self._abort_tool_authorization(outcome)
+            return self._failure_from_error(
+                ctx,
+                ArvisSecurityError(
+                    "tool capability activation requires an accepted intent",
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "capability_activation_failed",
+                    },
+                ),
+            )
+
+        manager = self.services.tool_manager
+        activate = getattr(manager, "activate_authorized", None)
+        if not callable(activate):
+            self._abort_tool_authorization(outcome)
+            return self._failure_from_error(
+                ctx,
+                ArvisSecurityError(
+                    "configured tool manager cannot activate capabilities",
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "capability_activation_failed",
+                    },
+                ),
+            )
+
+        try:
+            activated = bool(
+                activate(
+                    outcome.authorized,
+                    receipt=recorded.receipt,
+                    intent_sha256=recorded.intent_sha256,
+                    run_id=recorded.run_id,
+                    causal_id=recorded.causal_id,
+                )
+            )
+        except Exception as exc:
+            self._abort_tool_authorization(outcome)
+            return self._failure_from_error(
+                ctx,
+                ArvisSecurityError(
+                    "tool capability activation failed before the effect",
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "capability_activation_failed",
+                        "exception_type": type(exc).__name__,
+                    },
+                ),
+            )
+        if activated:
+            return None
+
+        self._abort_tool_authorization(outcome)
+        return self._failure_from_error(
+            ctx,
+            ArvisSecurityError(
+                "tool capability was not activated by the accepted intent",
+                origin=ErrorOrigin(
+                    component="SyscallHandler",
+                    subsystem="kernel.syscall",
+                    syscall=syscall.name,
+                ),
+                details={
+                    "syscall": syscall.name,
+                    "reason_code": "capability_activation_failed",
+                },
+            ),
+        )
+
     def _record_intent(
         self,
         ctx: PipelineContextLike | None,
@@ -387,8 +537,8 @@ class SyscallHandler:
         *,
         authorization_reason_code: str | None = None,
         tool_authorization: ToolAuthorizationOutcome | None = None,
-    ) -> SyscallResult | None:
-        """Record a durable audit intent before an effect syscall.
+    ) -> tuple[_RecordedIntent | None, SyscallResult | None]:
+        """Record and acknowledge an intent before an effect syscall.
 
         The entry carries structural metadata only (syscall name, causal
         id, tick, process id): no payload material enters the journal
@@ -410,7 +560,7 @@ class SyscallHandler:
             # PROVES it (DurableAuditSink returning receipts); a bare
             # callable only declares. The effect is refused before
             # anything runs and before anything is recorded.
-            return self._failure_from_error(
+            return None, self._failure_from_error(
                 ctx,
                 ArvisSecurityError(
                     "effect refused: the production profile requires a "
@@ -512,8 +662,52 @@ class SyscallHandler:
                 authorization_reason_code=authorization_reason_code,
                 authorization_snapshot=authorization_snapshot,
             )
-            # Campaign 6 (Lot 2): remember this intent's exact digest so
-            # the paired result journals it (cryptographic binding).
+            # The host outbox accepts the complete engagement first. Local
+            # journals and the pending result binding are published only after
+            # a valid receipt exists, so an outbox rejection leaves no phantom
+            # accepted intent or leaked pending commitment.
+            receipt: Any
+            if sink is None:
+                receipt = self._volatile_intent_sink.append(dict(intent))
+            else:
+                append = getattr(sink, "append", None)
+                if callable(append):
+                    # The configured sink answers with the exact acceptance
+                    # that will activate the capability. Any malformed or
+                    # mismatched receipt aborts the transaction.
+                    receipt = append(dict(intent))
+                else:
+                    # Legacy callable sink: preserve its notification outside
+                    # durability-required profiles, then obtain a concrete
+                    # volatile receipt for the capability transaction.
+                    sink(dict(intent))
+                    receipt = self._volatile_intent_sink.append(dict(intent))
+
+            invalid_reason = validate_receipt(receipt, intent)
+            if invalid_reason is not None:
+                return None, self._failure_from_error(
+                    ctx,
+                    ArvisSecurityError(
+                        "effect refused: the intent sink did not return a "
+                        "valid receipt for this intent (fail-closed)",
+                        origin=ErrorOrigin(
+                            component="SyscallHandler",
+                            subsystem="kernel.syscall",
+                            syscall=syscall.name,
+                        ),
+                        details={
+                            "syscall": syscall.name,
+                            "reason_code": "invalid_audit_receipt",
+                            "receipt_reason": invalid_reason,
+                        },
+                    ),
+                )
+            assert type(receipt) is AuditReceipt
+            # Envelope material: commitment binds WHAT was accepted; receipt
+            # binds WHERE and under which run the acceptance lives.
+            intent["audit_receipt"] = receipt.to_material()
+            # Campaign 6 (Lot 2): remember this accepted intent's exact digest
+            # so the paired result journals it (cryptographic binding).
             self._pending_intent_commitments[causal_id] = intent["commitment_sha256"]
             if ctx is not None:
                 intents = ctx.extra.setdefault("syscall_intents", [])
@@ -534,48 +728,17 @@ class SyscallHandler:
                         "causal_id": causal_id,
                     },
                 )
-            if sink is not None:
-                append = getattr(sink, "append", None)
-                if callable(append):
-                    # Campaign 6 (Lot 6, closes a8 section 14): the
-                    # durable sink ANSWERS. The receipt must bind
-                    # exactly this intent (engagement digest, run
-                    # identity) and be well-formed; anything else
-                    # refuses the effect fail-closed. The host receives
-                    # a copy: mutating it never rewrites the journaled
-                    # entry.
-                    receipt = append(dict(intent))
-                    invalid_reason = validate_receipt(receipt, intent)
-                    if invalid_reason is not None:
-                        return self._failure_from_error(
-                            ctx,
-                            ArvisSecurityError(
-                                "effect refused: the durable sink did "
-                                "not return a valid receipt for this "
-                                "intent (fail-closed)",
-                                origin=ErrorOrigin(
-                                    component="SyscallHandler",
-                                    subsystem="kernel.syscall",
-                                    syscall=syscall.name,
-                                ),
-                                details={
-                                    "syscall": syscall.name,
-                                    "reason_code": "invalid_audit_receipt",
-                                    "receipt_reason": invalid_reason,
-                                },
-                            ),
-                        )
-                    # Journaled as ENVELOPE material on the intent
-                    # entry (stripped from the hashed digest, like the
-                    # run identity): the commitment binds WHAT ran, the
-                    # receipt binds WHERE the proof durably lives.
-                    intent["audit_receipt"] = receipt.to_material()
-                else:
-                    # Legacy callable sink: accepted only outside
-                    # durability-requiring profiles (checked above).
-                    sink(dict(intent))
+            return (
+                _RecordedIntent(
+                    receipt=receipt,
+                    intent_sha256=intent["commitment_sha256"],
+                    run_id=intent.get("run_id"),
+                    causal_id=causal_id,
+                ),
+                None,
+            )
         except Exception as exc:
-            return self._failure_from_error(
+            return None, self._failure_from_error(
                 ctx,
                 ArvisSecurityError(
                     "audit intent could not be recorded before the "
@@ -592,7 +755,6 @@ class SyscallHandler:
                     },
                 ),
             )
-        return None
 
     def _journal_effect_result(
         self,

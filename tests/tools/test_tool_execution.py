@@ -3,6 +3,7 @@
 import pytest
 
 from arvis.adapters.tools.invocation import ToolInvocation
+from arvis.tools.authorized_invocation import CapabilityActivationBinding
 from arvis.tools.base import BaseTool
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
@@ -13,6 +14,21 @@ class DummyTool(BaseTool):
 
     def execute(self, input_data):
         return {"ok": True, "input": input_data}
+
+
+def _activate(authority, invocation):
+    capability = authority.authorize(invocation)
+    binding = CapabilityActivationBinding(
+        receipt_id=f"receipt:{capability.nonce}",
+        intent_sha256="a" * 64,
+        run_id="run-1",
+        causal_id=f"causal:{capability.nonce}",
+        durable_position="1",
+        store_fingerprint="db:test",
+        committed_at="2026-07-19T00:00:00+00:00",
+    )
+    assert authority.activate(capability, binding) is True
+    return capability
 
 
 def test_direct_tool_execution_forbidden():
@@ -53,7 +69,8 @@ def test_tool_called_from_runtime():
     invocation = ToolInvocation(
         tool_name="dummy", payload={}, process_id="p", context=ctx
     )
-    authorized = executor.claim_minting_authority().authorize(invocation)
+    authority = executor.claim_minting_authority()
+    authorized = _activate(authority, invocation)
     executor.execute_invocation(authorized, DummyResult(), ctx)
 
     assert ctx.extra.get("called") is True
@@ -81,7 +98,8 @@ def test_tool_execution_authorized():
     invocation = ToolInvocation(
         tool_name="dummy", payload={"x": 1}, process_id="p", context=ctx
     )
-    authorized = executor.claim_minting_authority().authorize(invocation)
+    authority = executor.claim_minting_authority()
+    authorized = _activate(authority, invocation)
     result = executor.execute_invocation(authorized, DummyResult(), ctx)
 
     assert result.success is True

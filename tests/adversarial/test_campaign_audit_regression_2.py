@@ -245,8 +245,17 @@ def test_a8_authority_is_not_mintable_and_capability_is_single_use(monkeypatch):
     pipeline_result = SimpleNamespace(action_decision=decision)
     outcome = manager.authorize(pipeline_result, ctx)
     assert outcome is not None and outcome.authorized is not None
-    first = manager.execute_authorized(outcome.authorized, pipeline_result, ctx)
-    assert first is not None and first.success is True
+    first = handler.handle(
+        Syscall(
+            name="tool.execute",
+            args={
+                "result": pipeline_result,
+                "ctx": ctx,
+                "authorization": outcome,
+            },
+        )
+    )
+    assert first.success is True
     with pytest.raises(UnauthorizedExecutionError):
         manager.execute_authorized(outcome.authorized, pipeline_result, ctx)
     assert len(tool.executed) == 1
@@ -336,6 +345,7 @@ def test_a8_lying_sink_receipt_refuses_the_effect(monkeypatch):
             return AuditReceipt(
                 receipt_id="r1",
                 run_id=intent.get("run_id"),
+                causal_id=str(intent.get("causal_id", "")),
                 intent_sha256="wrong",
                 durable_position="0",
                 store_fingerprint="memory:lying",
