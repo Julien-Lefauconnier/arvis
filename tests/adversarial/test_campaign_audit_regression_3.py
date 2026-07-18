@@ -254,7 +254,6 @@ def test_sink_failure_revokes_capability_and_prevents_direct_execution() -> None
     assert tool.payloads == []
 
 
-@pytest.mark.xfail(strict=True, reason="Campaign 7 Lot 5 pending")
 def test_policy_exception_releases_reserved_confirmation(monkeypatch) -> None:
     confirmations = ConfirmationRegistry()
     tool = _RecordingTool("confirm", requires_confirmation=True)

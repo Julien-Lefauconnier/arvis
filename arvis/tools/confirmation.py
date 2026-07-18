@@ -58,12 +58,14 @@ import secrets
 import time
 import uuid
 from dataclasses import dataclass
-from typing import Any
+from types import TracebackType
+from typing import Any, Literal, Self
 
 from arvis.kernel_core.syscalls.engagement import (
     redact_for_commitment,
     stable_hash,
 )
+from arvis.tools.tool_result import ToolEffectState, effect_has_started
 
 # Confirmation record format version. Bumped whenever the binding
 # material or the payload canonicalization changes; a record of any
@@ -137,6 +139,111 @@ class ConfirmationMismatchError(Exception):
     def __init__(self, reason: str) -> None:
         self.reason = reason
         super().__init__(reason)
+
+
+class ConfirmationReservation:
+    """Exception-safe reservation transaction for one confirmation.
+
+    The registry reserves before constructing the invocation and evaluating
+    host callbacks. Unless ownership is explicitly handed off to a minted
+    capability, leaving the context releases the record automatically on
+    normal refusal and on every exception. After handoff, the manager finalizes
+    the reservation from the explicit :class:`ToolEffectState`.
+    """
+
+    __slots__ = (
+        "_registry",
+        "_confirmation",
+        "_handed_off",
+        "_closed",
+        "_effect_state",
+    )
+
+    def __init__(
+        self,
+        registry: ConfirmationRegistry,
+        confirmation: ToolConfirmation | None,
+    ) -> None:
+        self._registry = registry
+        self._confirmation = confirmation
+        self._handed_off = False
+        self._closed = False
+        self._effect_state = ToolEffectState.EFFECT_NOT_STARTED
+
+    @property
+    def confirmation(self) -> ToolConfirmation | None:
+        return self._confirmation
+
+    @property
+    def confirmation_id(self) -> str | None:
+        if self._confirmation is None:
+            return None
+        return self._confirmation.confirmation_id
+
+    @property
+    def effect_state(self) -> ToolEffectState:
+        return self._effect_state
+
+    @property
+    def handed_off(self) -> bool:
+        return self._handed_off
+
+    @property
+    def closed(self) -> bool:
+        return self._closed
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> Literal[False]:
+        del exc_type, exc, traceback
+        if not self._handed_off and not self._closed:
+            self.release_before_effect()
+        return False
+
+    def handoff(self) -> None:
+        """Transfer finalization responsibility to the minted capability."""
+        if self._closed:
+            raise RuntimeError("a closed confirmation reservation cannot be handed off")
+        self._handed_off = True
+
+    def release_before_effect(self) -> bool:
+        """Release the record and mark the transaction closed, idempotently."""
+        if self._closed:
+            return False
+        self._effect_state = ToolEffectState.EFFECT_NOT_STARTED
+        self._closed = True
+        confirmation_id = self.confirmation_id
+        if confirmation_id is None:
+            return False
+        return self._registry.release(confirmation_id=confirmation_id)
+
+    def commit_after_effect(self, state: ToolEffectState | str) -> bool:
+        """Finalize from an explicit effect state.
+
+        Proven pre-effect states release. Started, completed, failed and
+        unknown states commit conservatively because the external effect may
+        already have happened.
+        """
+        if self._closed:
+            return False
+        try:
+            normalized = ToolEffectState(state)
+        except ValueError:
+            normalized = ToolEffectState.EFFECT_STATE_UNKNOWN
+        self._effect_state = normalized
+        self._closed = True
+        confirmation_id = self.confirmation_id
+        if confirmation_id is None:
+            return False
+        if effect_has_started(normalized):
+            return self._registry.commit(confirmation_id=confirmation_id)
+        return self._registry.release(confirmation_id=confirmation_id)
 
 
 class ConfirmationRegistry:
@@ -274,6 +381,25 @@ class ConfirmationRegistry:
         stored.reserved = True
         return stored.confirmation
 
+    def reserve_transaction(
+        self,
+        *,
+        confirmation_id: str,
+        tool_name: str,
+        payload: Any,
+        principal: str | None,
+        tenant: str | None = None,
+    ) -> ConfirmationReservation:
+        """Reserve and return an exception-safe lifecycle transaction."""
+        confirmation = self.reserve(
+            confirmation_id=confirmation_id,
+            tool_name=tool_name,
+            payload=payload,
+            principal=principal,
+            tenant=tenant,
+        )
+        return ConfirmationReservation(self, confirmation)
+
     def commit(self, *, confirmation_id: str) -> bool:
         """Finalize a reserved confirmation, removing it (single use).
 
@@ -338,6 +464,7 @@ __all__ = [
     "DEFAULT_CONFIRMATION_TTL_SECONDS",
     "ConfirmationMismatchError",
     "ConfirmationRegistry",
+    "ConfirmationReservation",
     "ToolConfirmation",
     "payload_commitment",
 ]

@@ -18,6 +18,7 @@ and invalid outputs (the external effect happened).
 """
 
 import time
+from contextlib import suppress
 from typing import Any
 
 import jsonschema
@@ -40,6 +41,7 @@ from arvis.tools.registry import ToolRegistry
 from arvis.tools.tool_result import (
     EFFECT_COMPLETED,
     EFFECT_FAILED,
+    EFFECT_NOT_STARTED,
     PRE_EFFECT_REFUSAL,
     ToolResult,
 )
@@ -98,24 +100,13 @@ class ToolExecutor:
         result: Any,
         ctx: Any,
     ) -> ToolResult | None:
-        """Execute a tool from a verified authorization capability (D-7).
+        """Execute a tool from one active, registered capability.
 
-        The executor runs a tool ONLY when handed an
-        :class:`AuthorizedInvocation` this executor's authority minted.
-        A bare invocation, a forged capability or one from a different
-        authority raises :class:`UnauthorizedExecutionError` and the
-        effect never runs: there is no path to an effect that the
-        manager's policy did not authorize.
-
-        The wrapped ``ToolInvocation`` is the exact object the policy
-        evaluated, without reconstruction, so identity, tenant, real
-        risk, consent and idempotency are never lost between
-        authorization and execution.
+        Every exception after capability consumption is classified on the
+        correct side of the effect boundary. Unexpected failures while
+        preparing or validating the call are ``EFFECT_NOT_STARTED``; once the
+        tool body is entered, failures are ``EFFECT_FAILED`` conservatively.
         """
-        # Campaign 6 (Lot 3, closes a8 section 10): the capability is
-        # CONSUMED here, single use. A bare invocation, a forged or
-        # foreign capability, or a second presentation of an already
-        # executed one is refused and the effect never runs.
         if not isinstance(
             authorized, AuthorizedInvocation
         ) or not self._authority.consume(authorized):
@@ -124,73 +115,80 @@ class ToolExecutor:
                 "AuthorizedInvocation minted by the tool manager's policy"
             )
         invocation = authorized.invocation
+        tool_name = invocation.tool_name
 
-        if result is None or ctx is None:
-            return None
+        try:
+            if result is None or ctx is None:
+                return None
 
-        decision = getattr(result, "action_decision", None)
-        if decision is None:
-            return None
+            decision = getattr(result, "action_decision", None)
+            if decision is None:
+                return None
 
-        tool_name: str = invocation.tool_name
-        # Campaign 7 (Lot 1): validation receives an isolated copy of the
-        # payload frozen before authorization. A validator may retain or mutate
-        # this dictionary, but execution will rematerialize the canonical
-        # snapshot and therefore cannot observe those mutations.
-        validation_payload = invocation.materialize_payload()
-        validation_runtime: dict[str, Any] = {
-            "decision": decision,
-            "context": ctx,
-            "tool_payload": validation_payload,
-            "invocation": invocation,
-        }
+            validation_payload = invocation.materialize_payload()
+            validation_runtime: dict[str, Any] = {
+                "decision": decision,
+                "context": ctx,
+                "tool_payload": validation_payload,
+                "invocation": invocation,
+            }
 
-        # --- pre-effect phase: nothing external has happened yet ---
-        tool = self.registry.get(tool_name)
-
-        if tool is None:
-            # Defense in depth: ToolManager.authorize refuses unknown
-            # tools before minting; a capability naming one is a
-            # host-composition error, still a pre-effect refusal.
-            ctx._tool_failure = True
-            return ToolResult(
-                tool_name=tool_name,
-                success=False,
-                error=UnknownToolError(f"Unknown tool: {tool_name}"),
-                latency_ms=None,
-                effect_boundary=PRE_EFFECT_REFUSAL,
-            )
-
-        spec = tool.spec
-        if spec is not None:
-            ctx._last_tool_spec = spec
-
-        # F-020, defense in depth (authoritative check moved to
-        # ToolManager.authorize): a violating payload never reaches the
-        # tool, and the refusal stays pre-effect.
-        if spec is not None and spec.input_schema:
-            violation = _schema_violation(validation_payload, spec.input_schema)
-            if violation is not None:
+            tool = self.registry.get(tool_name)
+            if tool is None:
                 ctx._tool_failure = True
                 return ToolResult(
                     tool_name=tool_name,
                     success=False,
-                    error=ToolInputValidationError(
-                        f"tool {tool_name!r} input violates its declared input_schema",
-                        details={"schema_path": violation},
-                    ),
+                    error=UnknownToolError(f"Unknown tool: {tool_name}"),
                     latency_ms=None,
                     effect_boundary=PRE_EFFECT_REFUSAL,
                 )
 
-        try:
-            tool.validate(validation_runtime)
-        except Exception as e:
-            # The tool's own validation refused the payload BEFORE any
-            # external effect: pre-effect refusal, confirmation stays
-            # releasable.
-            ctx._tool_failure = True
-            normalized_error = normalize_error(e)
+            spec = tool.spec
+            if spec is not None:
+                ctx._last_tool_spec = spec
+
+            if spec is not None and spec.input_schema:
+                violation = _schema_violation(validation_payload, spec.input_schema)
+                if violation is not None:
+                    ctx._tool_failure = True
+                    return ToolResult(
+                        tool_name=tool_name,
+                        success=False,
+                        error=ToolInputValidationError(
+                            f"tool {tool_name!r} input violates its declared "
+                            "input_schema",
+                            details={"schema_path": violation},
+                        ),
+                        latency_ms=None,
+                        effect_boundary=PRE_EFFECT_REFUSAL,
+                    )
+
+            try:
+                tool.validate(validation_runtime)
+            except Exception as exc:
+                ctx._tool_failure = True
+                normalized_error = normalize_error(exc)
+                return ToolResult(
+                    tool_name=tool_name,
+                    success=False,
+                    error=ToolExecutionError(
+                        normalized_error.message,
+                        cause=normalized_error.cause,
+                        details={
+                            "exception_type": type(exc).__name__,
+                            "phase": "tool_validate",
+                        },
+                    ),
+                    latency_ms=None,
+                    effect_boundary=EFFECT_NOT_STARTED,
+                )
+        except Exception as exc:
+            # No tool body has been entered. Normalize the failure rather than
+            # leaking a consumed capability with a reserved confirmation.
+            with suppress(Exception):
+                ctx._tool_failure = True
+            normalized_error = normalize_error(exc)
             return ToolResult(
                 tool_name=tool_name,
                 success=False,
@@ -198,19 +196,17 @@ class ToolExecutor:
                     normalized_error.message,
                     cause=normalized_error.cause,
                     details={
-                        "exception_type": type(e).__name__,
-                        "phase": "tool_validate",
+                        "exception_type": type(exc).__name__,
+                        "phase": "pre_effect_preparation",
                     },
                 ),
                 latency_ms=None,
-                effect_boundary=PRE_EFFECT_REFUSAL,
+                effect_boundary=EFFECT_NOT_STARTED,
             )
 
-        # --- effect phase: the boundary is crossed from here on ---
+        # Crossing this line means the external tool body is about to be
+        # entered. Any exception from here is conservatively effectful.
         try:
-            # Fresh execution material, independent from the schema and tool
-            # validation copies. This is the exact payload committed by the
-            # frozen invocation, never the caller-owned dictionary.
             execution_payload = invocation.materialize_payload()
             payload_runtime: dict[str, Any] = {
                 "decision": decision,
@@ -227,12 +223,6 @@ class ToolExecutor:
 
             latency = (time.perf_counter() - start) * 1000
 
-            # F-014: deadline semantics. The tool ran to completion but
-            # past its declared budget; the late result is rejected
-            # instead of being used, and the violation is surfaced. The
-            # effect DID happen: this is a deadline on result
-            # acceptance, not an interruption (process isolation is a
-            # later chantier), so the boundary is crossed.
             if (
                 spec is not None
                 and spec.timeout_seconds is not None
@@ -253,10 +243,6 @@ class ToolExecutor:
                     effect_boundary=EFFECT_COMPLETED,
                 )
 
-            # F-020: the declared output schema is validated after the
-            # call; an invalid response gets its specific failure status
-            # instead of flowing downstream as a success. The effect
-            # happened regardless of the invalid output.
             if spec is not None and spec.output_schema:
                 violation = _schema_violation(output, spec.output_schema)
                 if violation is not None:
@@ -282,19 +268,16 @@ class ToolExecutor:
                 effect_boundary=EFFECT_COMPLETED,
             )
 
-        except Exception as e:
-            # The tool body raised: the effect may have partially
-            # happened; the boundary is crossed (conservative).
+        except Exception as exc:
             ctx._tool_failure = True
-            normalized_error = normalize_error(e)
+            normalized_error = normalize_error(exc)
             error = ToolExecutionError(
                 normalized_error.message,
                 cause=normalized_error.cause,
                 details={
-                    "exception_type": type(e).__name__,
+                    "exception_type": type(exc).__name__,
                 },
             )
-
             return ToolResult(
                 tool_name=tool_name,
                 success=False,
