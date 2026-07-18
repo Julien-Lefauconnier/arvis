@@ -40,7 +40,12 @@ from arvis.errors.tool_runtime import (
     UnknownToolError,
 )
 from arvis.kernel_core.access.identity import principal_from_context
-from arvis.tools.confirmation import ConfirmationRegistry, ToolConfirmation
+from arvis.kernel_core.syscalls.engagement import stable_hash
+from arvis.tools.confirmation import (
+    ConfirmationRegistry,
+    ToolConfirmation,
+    payload_commitment,
+)
 from arvis.tools.executor import ToolExecutor, _schema_violation
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.runtime.runtime_bindings import resolve_process_id
@@ -214,14 +219,48 @@ class ToolManager:
             confirmation.confirmation_id if confirmation is not None else None
         )
 
+        # Campaign 6 (Lot 7, closes a8 section 13 unfilled fields):
+        # consent_granted comes from the trusted composition channel
+        # (host-stamped, same doctrine as ctx.confirmation_result,
+        # never request-facing extra); the ConsentGate stays the
+        # enforcement, the invocation records what the host declared.
+        consent_channel = getattr(ctx, "consent_granted", None)
+        if isinstance(consent_channel, (list, tuple)):
+            consent_granted = tuple(
+                key for key in consent_channel if isinstance(key, str)
+            )
+        else:
+            consent_granted = ()
+
+        # Deterministic idempotency key: stable across the re-authorized
+        # retry attempts of the same logical action (same tool, same
+        # canonical payload, same identity, same process), distinct
+        # across payloads and principals, so an idempotency-aware tool
+        # or host can deduplicate replays of the same effect.
+        idempotency_key = "idem:" + stable_hash(
+            {
+                "idempotency_version": 1,
+                "tool": tool_name,
+                "payload_sha256": payload_commitment(payload),
+                "principal": principal_id,
+                "tenant": tenant_id,
+                "process_id": resolve_process_id(ctx),
+            }
+        )
+
         invocation = ToolInvocation(
             tool_name=tool_name,
             payload=payload,
             process_id=resolve_process_id(ctx),
             user_id=getattr(ctx, "user_id", None),
             risk_score=_resolve_turn_risk(ctx),
+            # Campaign 6 (Lot 7): the declarative audit flag of the
+            # spec travels on the invocation, so the executor and the
+            # snapshot see the same requirement the registry declared.
+            audit_required=spec.audit_required if spec is not None else False,
             principal=stamped.user_id if stamped is not None else None,
             tenant=stamped.organization_id if stamped is not None else None,
+            consent_granted=consent_granted,
             confirmed=confirmation is not None,
             confirmation_id=confirmation_id,
             # Campaign 6 (Lot 4, closes a8 section 12): the proof binds
@@ -231,6 +270,7 @@ class ToolManager:
             confirmation_commitment=(
                 confirmation.record_commitment if confirmation is not None else None
             ),
+            idempotency_key=idempotency_key,
             context=ctx,
         )
 

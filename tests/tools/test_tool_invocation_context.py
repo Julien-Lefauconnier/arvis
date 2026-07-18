@@ -13,9 +13,12 @@ from types import SimpleNamespace
 import pytest
 
 from arvis.adapters.tools.invocation import ToolInvocation
+from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.kernel_core.access.models import Principal
 from arvis.math.signals import RiskSignal
-from arvis.tools.manager import _resolve_turn_risk
+from arvis.tools.executor import ToolExecutor
+from arvis.tools.manager import ToolManager, _resolve_turn_risk
+from arvis.tools.registry import ToolRegistry
 
 # ---------------------------------------------------------------
 # Invocation fields
@@ -148,3 +151,115 @@ def test_manager_never_reads_identity_from_extra():
     )
     invocation = _run_manager_and_capture_invocation(ctx)
     assert invocation.principal is None
+
+
+# ---------------------------------------------------------------
+# Campaign 6, Lot 7: the invocation fields are filled (a8 section 13)
+# ---------------------------------------------------------------
+
+
+def test_audit_required_travels_from_the_spec(monkeypatch):
+    from arvis.tools.spec import ToolSpec
+
+    registry = ToolRegistry()
+
+    class _AuditedTool:
+        name = "audited"
+        spec = ToolSpec(name="audited", description="", audit_required=True)
+
+        def validate(self, payload):
+            return None
+
+        def execute(self, payload):
+            return {"ok": True}
+
+    registry.register(_AuditedTool())
+    manager = ToolManager(registry, ToolExecutor(registry))
+    captured: dict = {}
+
+    def _capture(invocation, reg, **kwargs):
+        captured["invocation"] = invocation
+        return SimpleNamespace(allowed=False, reason="captured")
+
+    monkeypatch.setattr(ToolPolicyEvaluator, "evaluate", staticmethod(_capture))
+    decision = SimpleNamespace(tool="audited", tool_payload={})
+    manager.authorize(
+        SimpleNamespace(action_decision=decision),
+        SimpleNamespace(extra={}, user_id="u1"),
+    )
+    assert captured["invocation"].audit_required is True
+
+
+def test_consent_granted_comes_from_the_trusted_channel(monkeypatch):
+    registry = ToolRegistry()
+
+    class _T:
+        name = "t"
+        spec = None
+
+        def validate(self, payload):
+            return None
+
+        def execute(self, payload):
+            return {"ok": True}
+
+    registry.register(_T())
+    manager = ToolManager(registry, ToolExecutor(registry))
+    captured: dict = {}
+
+    def _capture(invocation, reg, **kwargs):
+        captured["invocation"] = invocation
+        return SimpleNamespace(allowed=False, reason="captured")
+
+    monkeypatch.setattr(ToolPolicyEvaluator, "evaluate", staticmethod(_capture))
+    decision = SimpleNamespace(tool="t", tool_payload={})
+    ctx = SimpleNamespace(
+        extra={"consent_granted": ["spoofed_via_extra"]},
+        user_id="u1",
+        consent_granted=("mail_send", "calendar_write", 42),
+    )
+    manager.authorize(SimpleNamespace(action_decision=decision), ctx)
+    inv = captured["invocation"]
+    # Trusted composition channel only, string keys only; the
+    # request-facing extra never feeds it.
+    assert inv.consent_granted == ("mail_send", "calendar_write")
+
+
+def test_idempotency_key_is_deterministic_per_logical_action(monkeypatch):
+    registry = ToolRegistry()
+
+    class _T:
+        name = "t"
+        spec = None
+
+        def validate(self, payload):
+            return None
+
+        def execute(self, payload):
+            return {"ok": True}
+
+    registry.register(_T())
+    manager = ToolManager(registry, ToolExecutor(registry))
+    captured: list = []
+
+    def _capture(invocation, reg, **kwargs):
+        captured.append(invocation)
+        return SimpleNamespace(allowed=False, reason="captured")
+
+    monkeypatch.setattr(ToolPolicyEvaluator, "evaluate", staticmethod(_capture))
+
+    def _authorize(payload):
+        decision = SimpleNamespace(tool="t", tool_payload=payload)
+        manager.authorize(
+            SimpleNamespace(action_decision=decision),
+            SimpleNamespace(extra={}, user_id="u1"),
+        )
+
+    _authorize({"target": "A"})
+    _authorize({"target": "A"})
+    _authorize({"target": "B"})
+    keys = [inv.idempotency_key for inv in captured]
+    assert keys[0] is not None and keys[0].startswith("idem:")
+    # Same logical action (retry): same key; different payload: new key.
+    assert keys[0] == keys[1]
+    assert keys[2] != keys[0]

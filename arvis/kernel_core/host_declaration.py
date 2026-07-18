@@ -117,7 +117,12 @@ def resolve_host_context(
     # canonicalize validates every value injectively and raises on any
     # non-canonicalizable one; the result is JSON-safe and deterministic.
     resolved = canonicalize(dict(host_context))
-    assert isinstance(resolved, dict)  # a dict in yields a dict out
+    if not isinstance(resolved, dict):
+        # Structurally unreachable (a dict in yields a dict out), kept
+        # as an explicit fail-closed raise: an assert vanishes under
+        # ``python -O`` and this is a governed input boundary (Bandit
+        # B101, a8 section 20).
+        raise NonCanonicalizableError(resolved, path="host_context (canonical form)")
     return resolved
 
 
