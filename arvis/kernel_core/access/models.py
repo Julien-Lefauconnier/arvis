@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from arvis.kernel_core.syscalls.syscall_registry import SyscallEffect
+if TYPE_CHECKING:
+    from arvis.kernel_core.syscalls.syscall_registry import SyscallEffect
 
 # Reserved owner id for resources that belong to the runtime itself
 # (kernel-internal syscalls: interrupts, process lifecycle). Only calls
@@ -30,6 +32,39 @@ class Principal:
     user_id: str
     organization_id: str | None = None
     grants: frozenset[str] = frozenset()
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class AuthenticatedPrincipal(Principal):
+    """Host-attested identity accepted for production effects.
+
+    ARVIS does not authenticate credentials itself. The host authenticates the
+    subject and constructs this explicit stamp on the trusted context channel.
+    The additional fields are governance material, not secrets or credentials.
+    """
+
+    authentication_source: str
+    authentication_strength: str
+    service_id: str | None = None
+    session_id_hash: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.user_id, str) or not self.user_id:
+            raise ValueError("user_id must be a non-empty string")
+        if (
+            not isinstance(self.authentication_source, str)
+            or not self.authentication_source
+        ):
+            raise ValueError("authentication_source must be a non-empty string")
+        if (
+            not isinstance(self.authentication_strength, str)
+            or not self.authentication_strength
+        ):
+            raise ValueError("authentication_strength must be a non-empty string")
+        for field_name in ("service_id", "session_id_hash"):
+            value = getattr(self, field_name)
+            if value is not None and (not isinstance(value, str) or not value):
+                raise ValueError(f"{field_name} must be None or a non-empty string")
 
 
 # The runtime's own identity, stamped on the context by internal call

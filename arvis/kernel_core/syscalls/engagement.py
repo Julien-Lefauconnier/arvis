@@ -239,6 +239,10 @@ def effect_engagement_digest(
     turn_user_id: str | None,
     authorization_reason_code: str | None,
     authorization_snapshot: dict[str, Any] | None = None,
+    principal_authentication_source: str | None = None,
+    principal_authentication_strength: str | None = None,
+    principal_service_id: str | None = None,
+    principal_session_id_hash: str | None = None,
 ) -> str:
     """Digest engaging the exact parameters of an effect.
 
@@ -286,6 +290,13 @@ def effect_engagement_digest(
         # non-tool effects stay byte-identical.
         "authorization_snapshot": authorization_snapshot,
     }
+    if principal_authentication_source is not None:
+        material["principal_attestation"] = {
+            "source": principal_authentication_source,
+            "strength": principal_authentication_strength,
+            "service_id": principal_service_id,
+            "session_id_hash": principal_session_id_hash,
+        }
     return stable_hash(material)
 
 

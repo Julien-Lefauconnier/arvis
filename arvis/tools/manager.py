@@ -43,7 +43,10 @@ from arvis.errors.tool_runtime import (
     ToolInputValidationError,
     UnknownToolError,
 )
-from arvis.kernel_core.access.identity import principal_from_context
+from arvis.kernel_core.access.identity import (
+    authenticated_principal_from_context,
+    principal_from_context,
+)
 from arvis.kernel_core.syscalls.audit_sink import (
     AuditReceipt,
     InMemoryAuditSink,
@@ -318,6 +321,7 @@ class ToolManager:
         reservation: ConfirmationReservation | None,
     ) -> ToolAuthorizationOutcome:
         """Construct policy material and mint under reservation protection."""
+        authenticated = authenticated_principal_from_context(ctx)
         confirmation = reservation.confirmation if reservation is not None else None
         confirmation_id = (
             confirmation.confirmation_id if confirmation is not None else None
@@ -353,6 +357,20 @@ class ToolManager:
             audit_required=spec.audit_required if spec is not None else False,
             principal=stamped.user_id if stamped is not None else None,
             tenant=stamped.organization_id if stamped is not None else None,
+            authentication_source=(
+                authenticated.authentication_source
+                if authenticated is not None
+                else None
+            ),
+            authentication_strength=(
+                authenticated.authentication_strength
+                if authenticated is not None
+                else None
+            ),
+            service_id=authenticated.service_id if authenticated is not None else None,
+            session_id_hash=(
+                authenticated.session_id_hash if authenticated is not None else None
+            ),
             consent_granted=consent_granted,
             confirmed=confirmation is not None,
             confirmation_id=confirmation_id,
@@ -402,6 +420,10 @@ class ToolManager:
                 risk_score=invocation.risk_score,
                 confirmed=invocation.confirmed,
                 confirmation_commitment=invocation.confirmation_commitment,
+                authentication_source=invocation.authentication_source,
+                authentication_strength=invocation.authentication_strength,
+                service_id=invocation.service_id,
+                session_id_hash=invocation.session_id_hash,
             )
             return ToolAuthorizationOutcome(
                 refusal=ToolResult(
@@ -423,6 +445,10 @@ class ToolManager:
             risk_score=invocation.risk_score,
             confirmed=invocation.confirmed,
             confirmation_commitment=invocation.confirmation_commitment,
+            authentication_source=invocation.authentication_source,
+            authentication_strength=invocation.authentication_strength,
+            service_id=invocation.service_id,
+            session_id_hash=invocation.session_id_hash,
         )
         authorized = self._authority.mint(
             invocation,

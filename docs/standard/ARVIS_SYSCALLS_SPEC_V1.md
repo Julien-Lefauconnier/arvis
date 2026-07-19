@@ -68,6 +68,21 @@ Steps:
 4. syscall is executed safely
 5. result is recorded in journal
 
+### Production effect prerequisites
+
+Before a production EFFECT syscall may run, the boundary MUST verify both:
+
+1. a host-stamped `AuthenticatedPrincipal` is present on the trusted context
+   channel and matches the turn owner;
+2. the configured audit sink exposes an exact `AuditSinkManifest` declaring a
+   `database` or `distributed_log` durability class, with `transactional=True`
+   and `append_only=True`.
+
+The sink receipt MUST bind the exact intent, run and causal occurrence, and its
+`store_fingerprint` MUST equal the manifest fingerprint. A durable position
+already accepted by the current runtime instance MUST NOT be accepted again.
+Failure of any prerequisite is fail-closed and occurs before the effect.
+
 ---
 
 ## Syscall Model

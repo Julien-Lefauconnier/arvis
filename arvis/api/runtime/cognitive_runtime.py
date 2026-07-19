@@ -64,6 +64,7 @@ class CognitiveRuntime:
         require_gates: bool = False,
         audit_intent_sink: Any | None = None,
         require_durable_intent_sink: bool = False,
+        require_authenticated_principal: bool = False,
         confirmation_registry: Any | None = None,
         host_context: dict[str, Any] | None = None,
     ) -> None:
@@ -98,6 +99,7 @@ class CognitiveRuntime:
             llm_adapter=self.adapters.get("llm"),
             audit_intent_sink=audit_intent_sink,
             require_durable_intent_sink=require_durable_intent_sink,
+            require_authenticated_principal=require_authenticated_principal,
             # Campaign 5 (D-1): opaque host context and the instance
             # label ARVIS stamps from it, opaque otherwise.
             host_context=host_context,

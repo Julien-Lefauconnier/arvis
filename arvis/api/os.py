@@ -13,6 +13,7 @@ from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.api.runtime_mode import RuntimeMode, coerce_runtime_mode
 from arvis.api.views.cognitive_result_view import CognitiveResultView
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+from arvis.kernel_core.access.models import AuthenticatedPrincipal
 from arvis.kernel_core.syscalls.audit_sink import DurableAuditSink
 from arvis.stability.stability_snapshot import StabilitySnapshot
 from arvis.telemetry.adapters.stability import stability_event
@@ -233,6 +234,34 @@ class CognitiveOS(CognitiveOSInternals):
             extra=extra,
         )
         return result
+
+    def run_as(
+        self,
+        principal: AuthenticatedPrincipal,
+        cognitive_input: Any,
+        *,
+        conversation_context: Any = None,
+        timeline: Any = None,
+        confirmation_result: Any = None,
+        extra: dict[str, Any] | None = None,
+    ) -> CognitiveResultView | dict[str, Any]:
+        """Run with a host-authenticated identity on the trusted channel.
+
+        ARVIS validates the explicit stamp and derives the turn owner from it;
+        the host remains responsible for authenticating the session or service.
+        """
+        if type(principal) is not AuthenticatedPrincipal:
+            raise TypeError("principal must be an exact AuthenticatedPrincipal")
+        self._ensure_production_ready()
+        return self._run_single(
+            user_id=principal.user_id,
+            cognitive_input=cognitive_input,
+            conversation_context=conversation_context,
+            timeline=timeline,
+            confirmation_result=confirmation_result,
+            extra=extra,
+            principal=principal,
+        )
 
     def _emit_stability_telemetry(
         self,

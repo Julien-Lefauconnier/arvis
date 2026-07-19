@@ -54,6 +54,22 @@ A bare principal (user_id only, no organization, no grants) denotes the
 **resource owner**. This reproduces the pre-authorization behaviour, where
 access was scoped solely by user_id.
 
+For a production effect, a bare `Principal` is insufficient. The host MUST
+stamp an `AuthenticatedPrincipal`, which extends the same owner/grant model
+with non-secret governance material:
+
+    AuthenticatedPrincipal:
+        user_id: str
+        organization_id: str | None
+        grants: frozenset[str]
+        authentication_source: str
+        authentication_strength: str
+        service_id: str | None
+        session_id_hash: str | None
+
+ARVIS does not validate credentials. Construction of this object is the host's
+attestation that authentication already occurred.
+
 ### 3.2 AccessContext
 
 An `AccessContext` is the triple evaluated by a policy.
@@ -123,9 +139,11 @@ once at authentication.
 The identity carried on the context is a **trusted input**. ARVIS does not
 authenticate it and MUST NOT derive it from cognition; the authorization
 guarantee of this layer is conditional on the realization layer establishing
-that identity from an authenticated session. When no valid principal is present
-on the context, the reference resolvers fall back to a bare, user-scoped
-principal, which is behaviour-neutral.
+that identity from an authenticated session. Local, test and research postures
+may fall back to a bare user-scoped principal. In production, every EFFECT
+syscall MUST carry an `AuthenticatedPrincipal` whose `user_id` matches the turn
+owner (or the exact kernel principal for kernel-internal effects); otherwise the
+syscall is refused before intent persistence and before the effect.
 
 ---
 

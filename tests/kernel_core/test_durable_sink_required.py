@@ -10,7 +10,16 @@ never requires one (the in-memory journal stands).
 from types import SimpleNamespace
 
 from arvis import CognitiveOS, CognitiveOSConfig
-from arvis.kernel_core.access.models import AccessContext, Principal
+from arvis.kernel_core.access.models import (
+    AccessContext,
+    AuthenticatedPrincipal,
+    Principal,
+)
+from arvis.kernel_core.syscalls.audit_sink import (
+    AuditSinkDurabilityClass,
+    AuditSinkManifest,
+    InMemoryAuditSink,
+)
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
@@ -60,15 +69,41 @@ def _handler(*, require_sink: bool, sink=None):
         services=KernelServiceRegistry(
             audit_intent_sink=sink,
             require_durable_intent_sink=require_sink,
+            require_authenticated_principal=require_sink,
         ),
     )
+
+
+def _production_ctx():
+    return SimpleNamespace(
+        extra={},
+        user_id="u1",
+        principal=AuthenticatedPrincipal(
+            user_id="u1",
+            authentication_source="test",
+            authentication_strength="strong",
+        ),
+    )
+
+
+class _DatabaseSink(InMemoryAuditSink):
+    def __init__(self) -> None:
+        super().__init__()
+        self.manifest = AuditSinkManifest(
+            sink_kind="test_database",
+            durability_class=AuditSinkDurabilityClass.DATABASE,
+            transactional=True,
+            append_only=True,
+            store_fingerprint=self._store_fingerprint,
+            implementation_version="1",
+        )
 
 
 def test_effect_without_sink_is_refused_under_production_posture():
     calls: list = []
     _register_effect_probe(calls)
     try:
-        ctx = SimpleNamespace(extra={}, user_id="u1")
+        ctx = _production_ctx()
         result = _handler(require_sink=True).handle(
             Syscall(name=_PROBE, args={"ctx": ctx})
         )
@@ -87,13 +122,11 @@ def test_effect_with_durable_sink_succeeds_under_production_posture():
     # profile needs a sink that PROVES persistence (receipts), so the
     # probe uses the reference DurableAuditSink; a bare callable is
     # refused below.
-    from arvis.kernel_core.syscalls.audit_sink import InMemoryAuditSink
-
     calls: list = []
-    sink = InMemoryAuditSink()
+    sink = _DatabaseSink()
     _register_effect_probe(calls)
     try:
-        ctx = SimpleNamespace(extra={}, user_id="u1")
+        ctx = _production_ctx()
         result = _handler(require_sink=True, sink=sink).handle(
             Syscall(name=_PROBE, args={"ctx": ctx})
         )
@@ -113,7 +146,7 @@ def test_legacy_callable_sink_is_refused_under_production_posture():
     sink_entries: list = []
     _register_effect_probe(calls)
     try:
-        ctx = SimpleNamespace(extra={}, user_id="u1")
+        ctx = _production_ctx()
         result = _handler(
             require_sink=True, sink=lambda entry: sink_entries.append(entry)
         ).handle(Syscall(name=_PROBE, args={"ctx": ctx}))

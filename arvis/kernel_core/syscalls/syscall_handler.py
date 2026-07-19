@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import threading
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -14,7 +15,11 @@ from arvis.errors.messages import safe_exception_message
 from arvis.errors.normalization import normalize_error
 from arvis.errors.syscall import SyscallExecutionError, SyscallValidationError
 from arvis.errors.types import ErrorPayload
-from arvis.kernel_core.access.identity import principal_from_context
+from arvis.kernel_core.access.identity import (
+    authenticated_principal_from_context,
+    principal_from_context,
+)
+from arvis.kernel_core.access.models import KERNEL_PRINCIPAL
 from arvis.kernel_core.access.policy import (
     ACCESS_DENIED_REASON_CODE,
     AuthorizationPolicy,
@@ -23,7 +28,9 @@ from arvis.kernel_core.access.policy import (
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.audit_sink import (
     AuditReceipt,
+    AuditSinkManifest,
     InMemoryAuditSink,
+    production_sink_manifest,
     validate_receipt,
 )
 from arvis.kernel_core.syscalls.engagement import (
@@ -105,6 +112,8 @@ class SyscallHandler:
         # universal MINTED -> receipt-bound ACTIVATED transition; Lot 6
         # separately qualifies which sinks count as production-durable.
         self._volatile_intent_sink = InMemoryAuditSink()
+        self._accepted_durable_positions: set[tuple[str, str]] = set()
+        self._durable_position_lock = threading.Lock()
 
         # Backward-compatible convenience aliases
         self.tool_executor = self.services.tool_executor
@@ -243,6 +252,38 @@ class SyscallHandler:
                 )
                 return authorization_failure
 
+        is_effect = descriptor is not None and descriptor.effect is SyscallEffect.EFFECT
+        if is_effect and self.services.require_authenticated_principal:
+            principal = principal_from_context(ctx)
+            authenticated = authenticated_principal_from_context(ctx)
+            valid_kernel = principal is KERNEL_PRINCIPAL
+            turn_user_id = getattr(ctx, "user_id", None)
+            identity_valid = valid_kernel or (
+                authenticated is not None
+                and isinstance(turn_user_id, str)
+                and authenticated.user_id == turn_user_id
+            )
+            if not identity_valid:
+                self._abort_tool_authorization(validated_tool_authorization)
+                refusal = self._failure_from_error(
+                    ctx,
+                    ArvisSecurityError(
+                        "effect refused: production requires a "
+                        "host-authenticated principal",
+                        origin=ErrorOrigin(
+                            component="SyscallHandler",
+                            subsystem="kernel.syscall",
+                            syscall=syscall.name,
+                        ),
+                        details={
+                            "syscall": syscall.name,
+                            "reason_code": "authenticated_principal_required",
+                        },
+                    ),
+                )
+                self._safe_journal(ctx, syscall, refusal, started_tick)
+                return refusal
+
         causal_id = self._build_syscall_id(
             syscall,
             started_tick,
@@ -255,7 +296,6 @@ class SyscallHandler:
         # (fail-closed). An intent without a paired artifact afterwards
         # signals a crash during the effect: the uncertainty is bounded
         # and visible, never silent.
-        is_effect = descriptor is not None and descriptor.effect is SyscallEffect.EFFECT
         recorded_intent: _RecordedIntent | None = None
         if is_effect:
             recorded_intent, intent_refusal = self._record_intent(
@@ -552,30 +592,41 @@ class SyscallHandler:
         not be followed by its effect (fail-closed).
         """
         sink = self.services.audit_intent_sink
-        if self.services.require_durable_intent_sink and (
-            sink is None or not callable(getattr(sink, "append", None))
-        ):
-            # D4-e, hardened campaign 6 (Lot 6, closes a8 section 14):
-            # a profile requiring durability requires a sink that
-            # PROVES it (DurableAuditSink returning receipts); a bare
-            # callable only declares. The effect is refused before
-            # anything runs and before anything is recorded.
-            return None, self._failure_from_error(
-                ctx,
-                ArvisSecurityError(
-                    "effect refused: the production profile requires a "
-                    "durable audit intent sink and none is configured",
-                    origin=ErrorOrigin(
-                        component="SyscallHandler",
-                        subsystem="kernel.syscall",
-                        syscall=syscall.name,
+        sink_manifest: AuditSinkManifest | None = None
+        if self.services.require_durable_intent_sink:
+            manifest_reason: str | None
+            if sink is None:
+                manifest_reason = "durable_sink_required"
+            else:
+                sink_manifest, manifest_reason = production_sink_manifest(sink)
+            if manifest_reason is not None or not callable(
+                getattr(sink, "append", None)
+            ):
+                # D4-e, hardened campaign 6 (Lot 6, closes a8 section 14):
+                # a profile requiring durability requires a sink that
+                # PROVES it (DurableAuditSink returning receipts); a bare
+                # callable only declares. The effect is refused before
+                # anything runs and before anything is recorded.
+                return None, self._failure_from_error(
+                    ctx,
+                    ArvisSecurityError(
+                        "effect refused: the production profile requires a qualified "
+                        "transactional append-only audit sink",
+                        origin=ErrorOrigin(
+                            component="SyscallHandler",
+                            subsystem="kernel.syscall",
+                            syscall=syscall.name,
+                        ),
+                        details={
+                            "syscall": syscall.name,
+                            "reason_code": manifest_reason or "durable_sink_required",
+                        },
                     ),
-                    details={
-                        "syscall": syscall.name,
-                        "reason_code": "durable_sink_required",
-                    },
-                ),
-            )
+                )
+        else:
+            candidate_manifest = getattr(sink, "manifest", None)
+            if type(candidate_manifest) is AuditSinkManifest:
+                sink_manifest = candidate_manifest
 
         intent: dict[str, Any] = {
             "kind": "syscall_intent",
@@ -605,6 +656,7 @@ class SyscallHandler:
             # journal, never the parameters themselves (ZKCS).
             args_ctx = syscall.args.get("ctx")
             principal = principal_from_context(args_ctx)
+            authenticated = authenticated_principal_from_context(args_ctx)
             # Campaign 6 (Lot 1, closes a8 P0 section 8): the intent
             # binds the authorization verdict from the SEALED outcome
             # computed before this syscall was issued: the snapshot on
@@ -661,6 +713,22 @@ class SyscallHandler:
                 turn_user_id=getattr(args_ctx, "user_id", None),
                 authorization_reason_code=authorization_reason_code,
                 authorization_snapshot=authorization_snapshot,
+                principal_authentication_source=(
+                    authenticated.authentication_source
+                    if authenticated is not None
+                    else None
+                ),
+                principal_authentication_strength=(
+                    authenticated.authentication_strength
+                    if authenticated is not None
+                    else None
+                ),
+                principal_service_id=(
+                    authenticated.service_id if authenticated is not None else None
+                ),
+                principal_session_id_hash=(
+                    authenticated.session_id_hash if authenticated is not None else None
+                ),
             )
             # The host outbox accepts the complete engagement first. Local
             # journals and the pending result binding are published only after
@@ -683,7 +751,11 @@ class SyscallHandler:
                     sink(dict(intent))
                     receipt = self._volatile_intent_sink.append(dict(intent))
 
-            invalid_reason = validate_receipt(receipt, intent)
+            invalid_reason = validate_receipt(
+                receipt,
+                intent,
+                manifest=sink_manifest,
+            )
             if invalid_reason is not None:
                 return None, self._failure_from_error(
                     ctx,
@@ -702,6 +774,25 @@ class SyscallHandler:
                         },
                     ),
                 )
+            durable_position = (receipt.store_fingerprint, receipt.durable_position)
+            with self._durable_position_lock:
+                if durable_position in self._accepted_durable_positions:
+                    return None, self._failure_from_error(
+                        ctx,
+                        ArvisSecurityError(
+                            "effect refused: durable position was already acknowledged",
+                            origin=ErrorOrigin(
+                                component="SyscallHandler",
+                                subsystem="kernel.syscall",
+                                syscall=syscall.name,
+                            ),
+                            details={
+                                "syscall": syscall.name,
+                                "reason_code": "audit_receipt_position_reused",
+                            },
+                        ),
+                    )
+                self._accepted_durable_positions.add(durable_position)
             assert type(receipt) is AuditReceipt
             # Envelope material: commitment binds WHAT was accepted; receipt
             # binds WHERE and under which run the acceptance lives.

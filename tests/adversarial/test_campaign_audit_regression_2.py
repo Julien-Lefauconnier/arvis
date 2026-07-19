@@ -37,7 +37,12 @@ from arvis.kernel_core.canonicalization import (
     NonCanonicalizableError,
     canonical_hash,
 )
-from arvis.kernel_core.syscalls.audit_sink import AuditReceipt, InMemoryAuditSink
+from arvis.kernel_core.syscalls.audit_sink import (
+    AuditReceipt,
+    AuditSinkDurabilityClass,
+    AuditSinkManifest,
+    InMemoryAuditSink,
+)
 from arvis.kernel_core.syscalls.intent_result_bijection import (
     verify_intent_result_bijection,
 )
@@ -64,6 +69,19 @@ class _Tool(BaseTool):
     def execute(self, input_data):
         self.executed.append(input_data)
         return {"ok": True}
+
+
+class _DatabaseSink(InMemoryAuditSink):
+    def __init__(self) -> None:
+        super().__init__()
+        self.manifest = AuditSinkManifest(
+            sink_kind="test_database",
+            durability_class=AuditSinkDurabilityClass.DATABASE,
+            transactional=True,
+            append_only=True,
+            store_fingerprint=self._store_fingerprint,
+            implementation_version="1",
+        )
 
 
 def _rig(monkeypatch, *, sink=None, require_sink=False, verdicts=None):
@@ -381,7 +399,7 @@ def test_a8_end_to_end_honest_run_still_proves(monkeypatch):
     # The positive control: with every defense active (durable sink,
     # run identity, sealed authorization), an honest run proves cleanly
     # end to end: valid receipt, strict bijection, run-stable digest.
-    sink = InMemoryAuditSink()
+    sink = _DatabaseSink()
     handler, manager, _executor, tool = _rig(monkeypatch, sink=sink, require_sink=True)
     handler.begin_run(uuid.uuid4().hex)
     ctx = SimpleNamespace(extra={}, user_id="u1")

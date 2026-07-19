@@ -38,12 +38,15 @@ from arvis.cognition.state.cognitive_state import CognitiveState
 # Control / Stability
 # -----------------------------------------------------
 from arvis.control.control_inertia import ControlInertia
+from arvis.kernel_core.access.models import AuthenticatedPrincipal
 
 # -----------------------------------------------------
 # Durable audit sink (campaign 6, Lot 6)
 # -----------------------------------------------------
 from arvis.kernel_core.syscalls.audit_sink import (
     AuditReceipt,
+    AuditSinkDurabilityClass,
+    AuditSinkManifest,
     DurableAuditSink,
     InMemoryAuditSink,
 )
@@ -132,6 +135,9 @@ from .views.cognitive_result_view import CognitiveResultView
 __all__ = [
     # Core Runtime
     "AuditReceipt",
+    "AuditSinkDurabilityClass",
+    "AuditSinkManifest",
+    "AuthenticatedPrincipal",
     "DurableAuditSink",
     "InMemoryAuditSink",
     "CognitiveOS",

@@ -14,6 +14,7 @@ import pytest
 
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
+from arvis.kernel_core.access.models import AuthenticatedPrincipal
 from arvis.kernel_core.syscalls.audit_sink import AuditReceipt, InMemoryAuditSink
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
@@ -52,17 +53,29 @@ def _result(tool_name: str, payload: dict[str, Any]) -> Any:
     )
 
 
-def _ctx(*, user_id: str = "u1", confirmation_id: str | None = None) -> Any:
+def _ctx(
+    *,
+    user_id: str = "u1",
+    confirmation_id: str | None = None,
+    authenticated: bool = False,
+) -> Any:
     carrier = (
         SimpleNamespace(confirmation_id=confirmation_id)
         if confirmation_id is not None
         else None
     )
-    return SimpleNamespace(
+    ctx = SimpleNamespace(
         extra={},
         user_id=user_id,
         confirmation_result=carrier,
     )
+    if authenticated:
+        ctx.principal = AuthenticatedPrincipal(
+            user_id=user_id,
+            authentication_source="test",
+            authentication_strength="strong",
+        )
+    return ctx
 
 
 def _rig(
@@ -88,6 +101,7 @@ def _rig(
             tool_manager=manager,
             audit_intent_sink=sink,
             require_durable_intent_sink=require_sink,
+            require_authenticated_principal=require_sink,
         ),
     )
     return handler, manager, executor
@@ -299,7 +313,6 @@ def test_two_runs_with_same_prefix_have_distinct_causal_ids() -> None:
     assert first != second
 
 
-@pytest.mark.xfail(strict=True, reason="Campaign 7 Lot 6 pending")
 def test_production_effect_refuses_unstamped_principal() -> None:
     tool = _RecordingTool("identity")
     sink = InMemoryAuditSink()
@@ -323,12 +336,11 @@ def test_production_effect_refuses_unstamped_principal() -> None:
     assert tool.payloads == []
 
 
-@pytest.mark.xfail(strict=True, reason="Campaign 7 Lot 6 pending")
 def test_in_memory_sink_is_refused_when_durability_is_required() -> None:
     tool = _RecordingTool("memory_sink")
     sink = InMemoryAuditSink()
     handler, manager, _executor = _rig(tool, sink=sink, require_sink=True)
-    ctx = _ctx()
+    ctx = _ctx(authenticated=True)
     pipeline_result = _result("memory_sink", {"x": 1})
     outcome = manager.authorize(pipeline_result, ctx)
 

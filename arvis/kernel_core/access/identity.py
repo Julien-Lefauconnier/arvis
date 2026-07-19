@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from arvis.kernel_core.access.models import Principal
+from arvis.kernel_core.access.models import AuthenticatedPrincipal, Principal
 
 CONTEXT_PRINCIPAL_ATTR = "principal"
 
@@ -24,5 +24,15 @@ def principal_from_context(ctx: object) -> Principal | None:
     """
     principal = getattr(ctx, CONTEXT_PRINCIPAL_ATTR, None)
     if isinstance(principal, Principal):
+        return principal
+    return None
+
+
+def authenticated_principal_from_context(
+    ctx: object,
+) -> AuthenticatedPrincipal | None:
+    """Return the exact host-authenticated principal carried by ``ctx``."""
+    principal = principal_from_context(ctx)
+    if type(principal) is AuthenticatedPrincipal:
         return principal
     return None

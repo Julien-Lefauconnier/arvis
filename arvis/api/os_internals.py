@@ -23,6 +23,7 @@ from arvis.kernel.pipeline.cognitive_pipeline_context import (
 )
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.replay_engine import ReplayEngine
+from arvis.kernel_core.access.models import AuthenticatedPrincipal
 from arvis.kernel_core.host_declaration import resolve_host_context
 from arvis.kernel_core.syscalls.intent_result_bijection import (
     verify_intent_result_bijection,
@@ -51,6 +52,7 @@ class CognitiveOSInternals:
         timeline: Any = None,
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
+        principal: AuthenticatedPrincipal | None = None,
     ) -> CognitivePipelineContext:
         ctx = CognitivePipelineContext(
             user_id=user_id,
@@ -60,6 +62,8 @@ class CognitiveOSInternals:
             confirmation_result=confirmation_result,
             extra=extra if extra is not None else {},
         )
+        if principal is not None:
+            ctx.principal = principal
 
         runtime_policy = ctx.runtime_policy
 
@@ -92,6 +96,7 @@ class CognitiveOSInternals:
         timeline: Any = None,
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
+        principal: AuthenticatedPrincipal | None = None,
     ) -> tuple[CognitiveState | None, Any]:
         execution = self.runtime.execute(
             self._build_context(
@@ -101,6 +106,7 @@ class CognitiveOSInternals:
                 timeline=timeline,
                 confirmation_result=confirmation_result,
                 extra=extra,
+                principal=principal,
             )
         )
         return execution.state, execution.result
@@ -125,6 +131,9 @@ class CognitiveOSInternals:
             # refusal happens at the first effect, not at boot, so a
             # production profile without effects stays valid.
             require_durable_intent_sink=(
+                self.config.runtime_mode is RuntimeMode.PRODUCTION
+            ),
+            require_authenticated_principal=(
                 self.config.runtime_mode is RuntimeMode.PRODUCTION
             ),
             # Campaign 5 (D-1): opaque host-declared governance context,
@@ -167,6 +176,7 @@ class CognitiveOSInternals:
         timeline: Any = None,
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
+        principal: AuthenticatedPrincipal | None = None,
     ) -> CognitiveResultView | dict[str, Any]:
         state, result = self._execute(
             user_id=user_id,
@@ -175,6 +185,7 @@ class CognitiveOSInternals:
             timeline=timeline,
             confirmation_result=confirmation_result,
             extra=extra,
+            principal=principal,
         )
         return self._format_run_output(state, result)
 

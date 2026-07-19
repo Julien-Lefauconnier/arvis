@@ -227,6 +227,10 @@ class ToolInvocation:
     # stays empty until one exists.
     principal: str | None = None
     tenant: str | None = None
+    authentication_source: str | None = None
+    authentication_strength: str | None = None
+    service_id: str | None = None
+    session_id_hash: str | None = None
     consent_granted: tuple[str, ...] = ()
 
     # P1-10-a6 (decision D4-d): bound confirmation. Set by the tool
@@ -251,6 +255,10 @@ class ToolInvocation:
         audit_required: bool = False,
         principal: str | None = None,
         tenant: str | None = None,
+        authentication_source: str | None = None,
+        authentication_strength: str | None = None,
+        service_id: str | None = None,
+        session_id_hash: str | None = None,
         consent_granted: tuple[str, ...] = (),
         confirmed: bool = False,
         confirmation_id: str | None = None,
@@ -271,6 +279,10 @@ class ToolInvocation:
         object.__setattr__(self, "audit_required", audit_required)
         object.__setattr__(self, "principal", principal)
         object.__setattr__(self, "tenant", tenant)
+        object.__setattr__(self, "authentication_source", authentication_source)
+        object.__setattr__(self, "authentication_strength", authentication_strength)
+        object.__setattr__(self, "service_id", service_id)
+        object.__setattr__(self, "session_id_hash", session_id_hash)
         object.__setattr__(self, "consent_granted", consent_granted)
         object.__setattr__(self, "confirmed", confirmed)
         object.__setattr__(self, "confirmation_id", confirmation_id)

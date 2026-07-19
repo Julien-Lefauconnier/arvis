@@ -19,8 +19,11 @@ from types import SimpleNamespace
 
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.api.commitment import syscall_journal_digest
+from arvis.kernel_core.access.models import AuthenticatedPrincipal
 from arvis.kernel_core.syscalls.audit_sink import (
     AuditReceipt,
+    AuditSinkDurabilityClass,
+    AuditSinkManifest,
     DurableAuditSink,
     InMemoryAuditSink,
     validate_receipt,
@@ -47,6 +50,23 @@ class _SinkTool(BaseTool):
         return {"ok": True}
 
 
+def _database_manifest(store_fingerprint: str) -> AuditSinkManifest:
+    return AuditSinkManifest(
+        sink_kind="test_database",
+        durability_class=AuditSinkDurabilityClass.DATABASE,
+        transactional=True,
+        append_only=True,
+        store_fingerprint=store_fingerprint,
+        implementation_version="1",
+    )
+
+
+class _DatabaseSink(InMemoryAuditSink):
+    def __init__(self) -> None:
+        super().__init__()
+        self.manifest = _database_manifest(self._store_fingerprint)
+
+
 def _rig(monkeypatch, *, sink, require_sink=False):
     registry = ToolRegistry()
     tool = _SinkTool()
@@ -61,6 +81,7 @@ def _rig(monkeypatch, *, sink, require_sink=False):
             tool_manager=manager,
             audit_intent_sink=sink,
             require_durable_intent_sink=require_sink,
+            require_authenticated_principal=require_sink,
         ),
     )
     monkeypatch.setattr(
@@ -74,6 +95,11 @@ def _rig(monkeypatch, *, sink, require_sink=False):
 
 
 def _call(handler, manager, ctx):
+    ctx.principal = AuthenticatedPrincipal(
+        user_id=ctx.user_id,
+        authentication_source="test",
+        authentication_strength="strong",
+    )
     decision = SimpleNamespace(tool="sink_tool", tool_payload={"x": 1})
     pipeline_result = SimpleNamespace(action_decision=decision)
     authorization = manager.authorize(pipeline_result, ctx)
@@ -90,7 +116,7 @@ def _call(handler, manager, ctx):
 
 
 def test_durable_sink_returns_valid_receipt(monkeypatch):
-    sink = InMemoryAuditSink()
+    sink = _DatabaseSink()
     assert isinstance(sink, DurableAuditSink)
     handler, manager, tool = _rig(monkeypatch, sink=sink, require_sink=True)
     run_id = uuid.uuid4().hex
@@ -112,6 +138,8 @@ def test_durable_sink_returns_valid_receipt(monkeypatch):
 
 def test_invalid_receipt_refuses_the_effect(monkeypatch):
     class _LyingSink:
+        manifest = _database_manifest("memory:lying")
+
         def append(self, intent):
             return AuditReceipt(
                 receipt_id="r1",
@@ -134,6 +162,8 @@ def test_invalid_receipt_refuses_the_effect(monkeypatch):
 
 def test_receipt_for_a_different_run_is_refused(monkeypatch):
     class _WrongRunSink:
+        manifest = _database_manifest("memory:wrong-run")
+
         def append(self, intent):
             return AuditReceipt(
                 receipt_id="r1",
@@ -155,6 +185,8 @@ def test_receipt_for_a_different_run_is_refused(monkeypatch):
 
 def test_raising_sink_refuses_the_effect(monkeypatch):
     class _CrashingSink:
+        manifest = _database_manifest("db:crashing")
+
         def append(self, intent):
             raise RuntimeError("store unavailable")
 

@@ -54,6 +54,7 @@ from arvis.kernel.pipeline.context.tooling_context import (
 )
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.trace.decision_trace import DecisionTrace
+from arvis.kernel_core.access.models import Principal
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov import LyapunovState
 from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
@@ -73,6 +74,9 @@ class CognitivePipelineContext:
     """
 
     user_id: str
+    # Trusted ambient identity stamped by the host/runtime composition. It is
+    # never derived from request payloads or cognition.
+    principal: Principal | None = None
 
     # -------------------------
     # Inputs

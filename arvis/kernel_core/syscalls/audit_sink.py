@@ -46,7 +46,46 @@ from __future__ import annotations
 import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any, Protocol, runtime_checkable
+
+
+class AuditSinkDurabilityClass(StrEnum):
+    """Closed host-declared durability classes."""
+
+    MEMORY = "memory"
+    PROCESS = "process"
+    FILESYSTEM = "filesystem"
+    DATABASE = "database"
+    DISTRIBUTED_LOG = "distributed_log"
+
+
+@dataclass(frozen=True, slots=True)
+class AuditSinkManifest:
+    """Immutable qualification declared by one audit sink implementation."""
+
+    sink_kind: str
+    durability_class: AuditSinkDurabilityClass
+    transactional: bool
+    append_only: bool
+    store_fingerprint: str
+    implementation_version: str
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "sink_kind",
+            "store_fingerprint",
+            "implementation_version",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value:
+                raise ValueError(f"{field_name} must be a non-empty string")
+        if type(self.durability_class) is not AuditSinkDurabilityClass:
+            raise TypeError("durability_class must be AuditSinkDurabilityClass")
+        if type(self.transactional) is not bool:
+            raise TypeError("transactional must be bool")
+        if type(self.append_only) is not bool:
+            raise TypeError("append_only must be bool")
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +117,8 @@ class AuditReceipt:
 class DurableAuditSink(Protocol):
     """A sink that proves persistence instead of declaring it."""
 
+    manifest: AuditSinkManifest
+
     def append(self, intent: dict[str, Any]) -> AuditReceipt:
         """Persist one intent durably and return its receipt.
 
@@ -89,7 +130,12 @@ class DurableAuditSink(Protocol):
         ...
 
 
-def validate_receipt(receipt: Any, intent: dict[str, Any]) -> str | None:
+def validate_receipt(
+    receipt: Any,
+    intent: dict[str, Any],
+    *,
+    manifest: AuditSinkManifest | None = None,
+) -> str | None:
     """Fail-closed validation of a sink receipt against ITS intent.
 
     Returns None when the receipt is well-formed and binds exactly the
@@ -116,7 +162,31 @@ def validate_receipt(receipt: Any, intent: dict[str, Any]) -> str | None:
         return "receipt_run_mismatch"
     if receipt.causal_id != intent.get("causal_id"):
         return "receipt_causal_mismatch"
+    if manifest is not None and receipt.store_fingerprint != manifest.store_fingerprint:
+        return "receipt_store_fingerprint_mismatch"
     return None
+
+
+def production_sink_manifest(sink: Any) -> tuple[AuditSinkManifest | None, str | None]:
+    """Qualify a sink for a production effect, fail-closed.
+
+    The manifest is a host attestation, not a physical persistence proof. ARVIS
+    nevertheless enforces a closed class, transactional acceptance, append-only
+    semantics and exact receipt/store identity.
+    """
+    manifest = getattr(sink, "manifest", None)
+    if type(manifest) is not AuditSinkManifest:
+        return None, "audit_sink_manifest_required"
+    if manifest.durability_class not in {
+        AuditSinkDurabilityClass.DATABASE,
+        AuditSinkDurabilityClass.DISTRIBUTED_LOG,
+    }:
+        return None, "audit_sink_durability_class_refused"
+    if not manifest.transactional:
+        return None, "audit_sink_transaction_required"
+    if not manifest.append_only:
+        return None, "audit_sink_append_only_required"
+    return manifest, None
 
 
 class InMemoryAuditSink:
@@ -132,6 +202,14 @@ class InMemoryAuditSink:
 
     def __init__(self) -> None:
         self._store_fingerprint = f"memory:{secrets.token_hex(8)}"
+        self.manifest = AuditSinkManifest(
+            sink_kind="in_memory",
+            durability_class=AuditSinkDurabilityClass.MEMORY,
+            transactional=False,
+            append_only=True,
+            store_fingerprint=self._store_fingerprint,
+            implementation_version="1",
+        )
         self.entries: list[dict[str, Any]] = []
         self.receipts: list[AuditReceipt] = []
 
@@ -152,7 +230,10 @@ class InMemoryAuditSink:
 
 __all__ = [
     "AuditReceipt",
+    "AuditSinkDurabilityClass",
+    "AuditSinkManifest",
     "DurableAuditSink",
     "InMemoryAuditSink",
+    "production_sink_manifest",
     "validate_receipt",
 ]

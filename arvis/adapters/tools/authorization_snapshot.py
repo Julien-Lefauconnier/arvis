@@ -38,6 +38,10 @@ class ToolAuthorizationSnapshot:
     risk_score: float
     confirmed: bool
     confirmation_commitment: str | None
+    authentication_source: str | None = None
+    authentication_strength: str | None = None
+    service_id: str | None = None
+    session_id_hash: str | None = None
 
     def to_material(self) -> dict[str, Any]:
         """Deterministic, JSON-safe binding material for the commitment.
@@ -47,7 +51,7 @@ class ToolAuthorizationSnapshot:
         encoder, so two authorizations differing in any of these fields
         commit differently.
         """
-        return {
+        material = {
             "authorization_version": 1,
             "tool_name": self.tool_name,
             "allowed": self.allowed,
@@ -60,6 +64,15 @@ class ToolAuthorizationSnapshot:
             "confirmed": self.confirmed,
             "confirmation_commitment": self.confirmation_commitment,
         }
+        if self.authentication_source is not None:
+            material["authorization_version"] = 2
+            material["authentication"] = {
+                "source": self.authentication_source,
+                "strength": self.authentication_strength,
+                "service_id": self.service_id,
+                "session_id_hash": self.session_id_hash,
+            }
+        return material
 
 
 __all__ = ["ToolAuthorizationSnapshot"]
