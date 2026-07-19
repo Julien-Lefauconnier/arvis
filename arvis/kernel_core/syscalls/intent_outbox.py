@@ -204,6 +204,7 @@ class IntentOutboxService:
         principal = principal_from_context(args_ctx)
         authenticated = authenticated_principal_from_context(args_ctx)
         authorization_snapshot: dict[str, Any] | None = None
+        authorized_effect_context: dict[str, Any] | None = None
         effect_invocation = None
 
         if syscall.name == "tool.execute":
@@ -213,6 +214,13 @@ class IntentOutboxService:
                 effect_invocation = tool_authorization.authorized.invocation
                 authorization_snapshot = dict(
                     tool_authorization.authorized.authorization_snapshot
+                )
+                authorized_effect_context = (
+                    effect_invocation.effect_context.to_material()
+                )
+                intent["effect_context"] = dict(authorized_effect_context)
+                intent["effect_context_commitment"] = (
+                    effect_invocation.effect_context.commitment_sha256
                 )
             else:
                 if tool_authorization.refusal_snapshot is None:
@@ -244,6 +252,7 @@ class IntentOutboxService:
             turn_user_id=getattr(args_ctx, "user_id", None),
             authorization_reason_code=authorization_reason_code,
             authorization_snapshot=authorization_snapshot,
+            authorized_effect_context=authorized_effect_context,
             principal_authentication_source=(
                 authenticated.authentication_source
                 if authenticated is not None

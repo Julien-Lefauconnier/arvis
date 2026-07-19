@@ -253,11 +253,12 @@ def test_confirmation_and_idempotency_bind_frozen_payload() -> None:
     assert payload_commitment(frozen_material) == record.payload_sha256
     expected_idempotency = "idem:" + stable_hash(
         {
-            "idempotency_version": 1,
+            "idempotency_version": 2,
             "tool": "frozen_probe",
             "payload_sha256": payload_commitment(frozen_material),
             "principal": "u1",
             "tenant": None,
+            "service_id": None,
             "process_id": resolve_process_id(ctx),
         }
     )
@@ -302,11 +303,12 @@ def test_confirmation_callback_cannot_change_idempotency_or_effect() -> None:
     invocation = outcome.authorized.invocation
     expected_idempotency = "idem:" + stable_hash(
         {
-            "idempotency_version": 1,
+            "idempotency_version": 2,
             "tool": "frozen_probe",
             "payload_sha256": payload_commitment({"target": "A"}),
             "principal": "u1",
             "tenant": None,
+            "service_id": None,
             "process_id": resolve_process_id(ctx),
         }
     )

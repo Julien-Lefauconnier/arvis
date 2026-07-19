@@ -239,6 +239,7 @@ def effect_engagement_digest(
     turn_user_id: str | None,
     authorization_reason_code: str | None,
     authorization_snapshot: dict[str, Any] | None = None,
+    authorized_effect_context: dict[str, Any] | None = None,
     principal_authentication_source: str | None = None,
     principal_authentication_strength: str | None = None,
     principal_service_id: str | None = None,
@@ -290,6 +291,9 @@ def effect_engagement_digest(
         # non-tool effects stay byte-identical.
         "authorization_snapshot": authorization_snapshot,
     }
+    if authorized_effect_context is not None:
+        material["engagement_version"] = 3
+        material["authorized_effect_context"] = authorized_effect_context
     if principal_authentication_source is not None:
         material["principal_attestation"] = {
             "source": principal_authentication_source,

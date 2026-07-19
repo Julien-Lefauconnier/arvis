@@ -223,3 +223,24 @@ def test_engagement_snapshot_binds_risk_and_principal():
     base = _digest(authorization_snapshot=base_snap)
     assert _digest(authorization_snapshot={**base_snap, "risk_bucket": 0.9}) != base
     assert _digest(authorization_snapshot={**base_snap, "principal": "u2"}) != base
+
+
+def test_engagement_binds_the_authorized_effect_context() -> None:
+    base_context = {
+        "effect_context_format_version": 1,
+        "principal": "u1",
+        "tenant": "org-1",
+        "authentication_source": "oidc",
+        "authentication_strength": "mfa",
+        "service_id": "documents",
+        "session_id_hash": "sha256:session",
+        "process_id": "proc-1",
+        "run_id": "run-1",
+        "host_binding_commitment": None,
+    }
+
+    base = _digest(authorized_effect_context=base_context)
+    changed_run = _digest(authorized_effect_context={**base_context, "run_id": "run-2"})
+
+    assert changed_run != base
+    assert _digest() == _digest(authorized_effect_context=None)

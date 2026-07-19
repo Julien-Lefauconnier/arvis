@@ -496,11 +496,12 @@ class ToolManager:
         causal_id = f"tool-manager-test-run:{authorized.nonce}"
         intent_sha256 = stable_hash(
             {
-                "local_tool_run_version": 1,
+                "local_tool_run_version": 2,
                 "causal_id": causal_id,
                 "tool": authorized.invocation.tool_name,
                 "payload_sha256": authorized.payload_sha256,
                 "idempotency_key": authorized.invocation.idempotency_key,
+                "effect_context": (authorized.invocation.effect_context.to_material()),
                 "authorization_snapshot": dict(authorized.authorization_snapshot),
             }
         )
@@ -510,6 +511,10 @@ class ToolManager:
             "causal_id": causal_id,
             "process_id": authorized.invocation.process_id or "none",
             "idempotency_key": authorized.invocation.idempotency_key,
+            "effect_context": authorized.invocation.effect_context.to_material(),
+            "effect_context_commitment": (
+                authorized.invocation.effect_context.commitment_sha256
+            ),
             "commitment_sha256": intent_sha256,
         }
         try:

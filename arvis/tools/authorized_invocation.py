@@ -39,7 +39,8 @@ from arvis.kernel_core.canonicalization import (
 if TYPE_CHECKING:
     from arvis.adapters.tools.invocation import ToolInvocation
 
-CAPABILITY_FORMAT_VERSION = 1
+INVOCATION_FORMAT_VERSION = 2
+CAPABILITY_FORMAT_VERSION = 2
 CAPABILITY_ACTIVATION_FORMAT_VERSION = 2
 
 _EMPTY_SNAPSHOT: Mapping[str, Any] = MappingProxyType({})
@@ -180,10 +181,11 @@ def _invocation_commitment(invocation: ToolInvocation) -> str:
     """Commit every immutable field that can select or govern the effect."""
     return canonical_hash(
         {
-            "invocation_format_version": 1,
+            "invocation_format_version": INVOCATION_FORMAT_VERSION,
             "tool_name": invocation.tool_name,
             "canonical_payload_bytes": invocation.canonical_payload_bytes,
             "payload_sha256": invocation.payload_sha256,
+            "effect_context_commitment": (invocation.effect_context.commitment_sha256),
             "process_id": invocation.process_id,
             "user_id": invocation.user_id,
             "risk_score": invocation.risk_score,
@@ -212,6 +214,7 @@ def _capability_commitment(capability: AuthorizedInvocation) -> str:
             "capability_format_version": capability.capability_format_version,
             "nonce": capability.nonce,
             "invocation_commitment": _invocation_commitment(invocation),
+            "effect_context_commitment": (invocation.effect_context.commitment_sha256),
             "authorization_snapshot_commitment": snapshot_commitment,
             "confirmation_commitment": invocation.confirmation_commitment,
             "idempotency_key": invocation.idempotency_key,
@@ -434,6 +437,7 @@ class UnauthorizedExecutionError(Exception):
 __all__ = [
     "CAPABILITY_ACTIVATION_FORMAT_VERSION",
     "CAPABILITY_FORMAT_VERSION",
+    "INVOCATION_FORMAT_VERSION",
     "AuthorizedInvocation",
     "CapabilityActivationBinding",
     "CapabilityRecord",

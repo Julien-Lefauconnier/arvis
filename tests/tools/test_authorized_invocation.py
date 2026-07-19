@@ -363,6 +363,20 @@ def test_capability_commitment_detects_mutation_of_registered_invocation():
     assert authority.consume(capability) is False
 
 
+def test_capability_commitment_binds_effect_context_run_identity():
+    authority = InvocationAuthority()
+    capability = authority.authorize(_invocation())
+
+    object.__setattr__(
+        capability.invocation,
+        "effect_context",
+        build_effect_context(run_id="other-run"),
+    )
+
+    assert authority.verifies(capability) is False
+    assert authority.consume(capability) is False
+
+
 def test_capability_commitment_detects_nested_snapshot_mutation():
     authority = InvocationAuthority()
     capability = authority.authorize(

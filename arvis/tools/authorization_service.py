@@ -191,13 +191,19 @@ class ToolAuthorizationService:
         process_id = resolve_process_id(ctx)
         idempotency_key = "idem:" + stable_hash_fn(
             {
-                "idempotency_version": 1,
+                # Stable across runtime restarts by doctrine: ``run_id`` and
+                # session provenance are deliberately excluded. The host may
+                # persist and replay this key for the same logical action.
+                "idempotency_version": 2,
                 "tool": prepared.tool_name,
                 "payload_sha256": payload_commitment_fn(
                     prepared.frozen_payload.materialize()
                 ),
                 "principal": prepared.principal_id,
                 "tenant": prepared.tenant_id,
+                "service_id": (
+                    authenticated.service_id if authenticated is not None else None
+                ),
                 "process_id": process_id,
             }
         )

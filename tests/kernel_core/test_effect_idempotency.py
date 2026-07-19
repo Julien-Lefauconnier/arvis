@@ -7,6 +7,7 @@ from typing import Any
 
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
+from arvis.kernel_core.access.models import AuthenticatedPrincipal
 from arvis.kernel_core.syscalls.audit_sink import InMemoryAuditSink
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
@@ -88,8 +89,16 @@ def _authorize(
     tool_name: str,
     payload: dict[str, Any],
     user_id: str = "u1",
+    principal: AuthenticatedPrincipal | None = None,
+    process_id: str | None = None,
+    run_id: str | None = None,
 ):
-    ctx = SimpleNamespace(extra={}, user_id=user_id)
+    ctx = SimpleNamespace(
+        extra={},
+        user_id=user_id,
+        principal=principal,
+        runtime_bindings=SimpleNamespace(process_id=process_id, run_id=run_id),
+    )
     result = SimpleNamespace(
         action_decision=SimpleNamespace(tool=tool_name, tool_payload=payload)
     )
@@ -125,7 +134,14 @@ def test_idempotency_key_is_persisted_bound_and_delivered(monkeypatch) -> None:
     assert executed.success is True
     intent = ctx.extra["syscall_intents"][0]
     assert intent["idempotency_key"] == key
+    assert intent["effect_context"] == (
+        outcome.authorized.invocation.effect_context.to_material()
+    )
+    assert intent["effect_context_commitment"] == (
+        outcome.authorized.invocation.effect_context.commitment_sha256
+    )
     assert sink.entries[0]["idempotency_key"] == key
+    assert sink.entries[0]["effect_context"] == intent["effect_context"]
     assert sink.receipts[0].intent_sha256 == intent["commitment_sha256"]
     assert tool.keys == [key]
     activation = manager.capability_activation(outcome.authorized)
@@ -194,6 +210,52 @@ def test_payload_and_principal_select_distinct_keys(monkeypatch) -> None:
     base_key = base.authorized.invocation.idempotency_key
     assert other_payload.authorized.invocation.idempotency_key != base_key
     assert other_principal.authorized.invocation.idempotency_key != base_key
+
+
+def test_service_selects_the_key_but_run_identity_does_not(monkeypatch) -> None:
+    manager, _handler, _sink = _rig(monkeypatch, _StructuredProbe())
+
+    def _principal(service_id: str) -> AuthenticatedPrincipal:
+        return AuthenticatedPrincipal(
+            user_id="u1",
+            organization_id="org-1",
+            authentication_source="oidc",
+            authentication_strength="mfa",
+            service_id=service_id,
+            session_id_hash="sha256:session",
+        )
+
+    base = _authorize(
+        manager,
+        tool_name="idempotency_probe",
+        payload={"target": "A"},
+        principal=_principal("documents"),
+        process_id="proc-1",
+        run_id="run-1",
+    )[2]
+    other_run = _authorize(
+        manager,
+        tool_name="idempotency_probe",
+        payload={"target": "A"},
+        principal=_principal("documents"),
+        process_id="proc-1",
+        run_id="run-2",
+    )[2]
+    other_service = _authorize(
+        manager,
+        tool_name="idempotency_probe",
+        payload={"target": "A"},
+        principal=_principal("mail"),
+        process_id="proc-1",
+        run_id="run-1",
+    )[2]
+    assert base.authorized is not None
+    assert other_run.authorized is not None
+    assert other_service.authorized is not None
+
+    base_key = base.authorized.invocation.idempotency_key
+    assert other_run.authorized.invocation.idempotency_key == base_key
+    assert other_service.authorized.invocation.idempotency_key != base_key
 
 
 def test_idempotency_key_changes_the_intent_commitment(monkeypatch) -> None:
