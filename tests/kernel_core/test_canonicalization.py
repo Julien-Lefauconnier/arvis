@@ -167,6 +167,59 @@ def test_enum_vs_raw_value_do_not_collide():
     assert _distinct(F.X, 1)
 
 
+def test_scalar_enum_subclasses_do_not_alias_their_raw_values():
+    class Text(enum.StrEnum):
+        DELETE = "delete"
+
+    class Number(enum.IntEnum):
+        ONE = 1
+
+    class Permission(enum.IntFlag):
+        READ = 1
+        WRITE = 2
+
+    assert _distinct(Text.DELETE, "delete")
+    assert _distinct(Number.ONE, 1)
+    assert _distinct(Permission.READ | Permission.WRITE, 3)
+
+
+def test_enum_mapping_keys_do_not_alias_scalar_keys():
+    class Text(enum.StrEnum):
+        DELETE = "delete"
+
+    class Number(enum.IntEnum):
+        ONE = 1
+
+    assert _distinct({Text.DELETE: "x"}, {"delete": "x"})
+    assert _distinct({Number.ONE: "x"}, {1: "x"})
+
+
+def test_flag_composition_is_deterministic_and_membership_bound():
+    class Permission(enum.IntFlag):
+        READ = 1
+        WRITE = 2
+        EXECUTE = 4
+
+    combined = Permission.READ | Permission.WRITE
+    assert _equal(combined, Permission.WRITE | Permission.READ)
+    assert _distinct(combined, Permission.READ | Permission.EXECUTE)
+    encoded = canonicalize(combined)
+    assert isinstance(encoded, dict)
+    material = encoded["__arvis_enum__"]
+    assert isinstance(material, dict)
+    assert material["flag_members"] == [
+        {"name": "READ", "value": 1},
+        {"name": "WRITE", "value": 2},
+    ]
+
+
+def test_strenum_reserved_tag_key_is_not_treated_as_literal_string():
+    class Reserved(enum.StrEnum):
+        BYTES = "__arvis_bytes_b64__"
+
+    assert _distinct({Reserved.BYTES: "QQ=="}, {"__arvis_bytes_b64__": "QQ=="})
+
+
 def test_set_is_order_independent_but_membership_bound():
     assert _equal({1, 2, 3}, {3, 2, 1})
     assert _distinct({1, 2, 3}, {1, 2, 4})
@@ -293,7 +346,7 @@ def test_dict_key_order_does_not_affect_canonical_bytes():
 
 
 def test_version_constant_is_exposed():
-    assert isinstance(CANONICALIZATION_VERSION, int)
+    assert CANONICALIZATION_VERSION == 3
 
 
 # ---------------------------------------------------------------

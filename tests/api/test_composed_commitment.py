@@ -55,6 +55,25 @@ def test_redaction_replaces_content_fields_with_digest_markers():
     assert redacted["nested"]["tick"] == 3  # structure preserved
 
 
+def test_enum_key_named_like_content_is_not_redacted_as_a_string_key():
+    from enum import StrEnum
+
+    class Field(StrEnum):
+        PAYLOAD = "payload"
+
+    enum_keyed = redact_for_commitment({Field.PAYLOAD: "raw content"})
+    string_keyed = redact_for_commitment({"payload": "raw content"})
+
+    assert enum_keyed[Field.PAYLOAD] == "raw content"
+    assert "__redacted__" in string_keyed["payload"]
+    assert stable_hash(enum_keyed) != stable_hash(string_keyed)
+
+
+def test_effect_hash_versions_cover_canonicalization_v3():
+    assert REDACTION_POLICY_VERSION == 5
+    assert COMMITMENT_VERSION == 5
+
+
 def test_redacted_journal_carries_no_source_content():
     intents = [{"kind": "syscall_intent", "syscall": "tool.execute"}]
     results = [

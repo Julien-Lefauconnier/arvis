@@ -72,8 +72,10 @@ from arvis.tools.tool_result import ToolEffectState, effect_has_started
 # other version is refused at reservation (reason
 # confirmation_version_mismatch). Campaign 5 Lot 1 changed the payload
 # hash (v2); campaign 6 Lot 0 changed it again through
-# canonicalization v2, so this is 3: no a8 (v2) record is honoured.
-CONFIRMATION_FORMAT_VERSION = 3
+# canonicalization v2, so that format was 3. Campaign 8 canonicalization
+# v3 distinguishes enums from their scalar parents, so format 4 refuses
+# every previously issued record instead of silently reinterpreting it.
+CONFIRMATION_FORMAT_VERSION = 4
 
 # Default and mandatory expiry (campaign 6, Lot 4): a confirmation is a
 # time-bounded human decision. Hosts pass an explicit ttl_seconds for

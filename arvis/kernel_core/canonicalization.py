@@ -72,7 +72,7 @@ import math
 from dataclasses import fields, is_dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import Enum, Flag
 from pathlib import PurePath
 from typing import Any, TypeAlias
 from uuid import UUID
@@ -91,7 +91,9 @@ JSONValue: TypeAlias = (
 # own tag, paths and class identities are module-qualified, private
 # attributes are refused instead of dropped, non-finite floats are
 # refused, and the ``__arvis_canonical__`` serializer hook is honoured.
-CANONICALIZATION_VERSION = 2
+# v3 (campaign 8) dispatches enums before their scalar parents and gives
+# enum mapping keys their own typed encoding.
+CANONICALIZATION_VERSION = 3
 
 # Reserved tag keys. A single-key dict whose sole key is one of these is
 # a typed encoding, not a business dict; the encoder namespaces them so
@@ -176,7 +178,7 @@ def _type_identity(cls: type) -> str:
     return f"{cls.__module__}.{cls.__qualname__}"
 
 
-def _encode_key(key: Any, *, path: str) -> str:
+def _encode_key(key: Any, *, depth: int, path: str) -> str:
     """Encode a dict key preserving its type.
 
     ``str()``-flattening keys is exactly how ``{1: 'x'}`` and
@@ -185,6 +187,16 @@ def _encode_key(key: Any, *, path: str) -> str:
     type is encoded as a typed token so the key type is part of the
     canonical bytes and cannot alias a string key.
     """
+    if isinstance(key, Enum):
+        # StrEnum and IntEnum inherit from their scalar value types. They
+        # must be dispatched first, and their complete enum material is
+        # embedded in the token so a member cannot alias its raw value.
+        encoded = _canonicalize_enum(
+            key,
+            depth=depth + 1,
+            path=f"{path}<key>",
+        )
+        return f"__arvis_key_enum__:{_stable_dumps(encoded)}"
     if isinstance(key, str):
         # A string that could be mistaken for a typed token is escaped.
         if key.startswith("__arvis_key_"):
@@ -210,9 +222,44 @@ def _wrap(tag: str, value: JSONValue) -> dict[str, JSONValue]:
     return {tag: value}
 
 
+def _canonicalize_enum(obj: Enum, *, depth: int, path: str) -> JSONValue:
+    """Encode a member with type, name, value and flag decomposition."""
+    material: dict[str, JSONValue] = {
+        "enum": _type_identity(type(obj)),
+        "name": obj.name,
+        "value": _canonicalize(
+            obj.value,
+            depth=depth + 1,
+            path=f"{path}<value>",
+        ),
+    }
+    if isinstance(obj, Flag):
+        # Iteration yields canonical single-bit members. The exact raw value
+        # above also binds unnamed/unknown bits; this ordered decomposition
+        # makes composite Flag/IntFlag semantics explicit.
+        material["flag_members"] = [
+            {
+                "name": member.name,
+                "value": _canonicalize(
+                    member.value,
+                    depth=depth + 1,
+                    path=f"{path}<flag:{member.name}>",
+                ),
+            }
+            for member in type(obj)
+            if member.name is not None and member in obj
+        ]
+    return _wrap(_TAG_ENUM, material)
+
+
 def _canonicalize(obj: Any, *, depth: int, path: str) -> JSONValue:
     if depth > _MAX_DEPTH:
         raise NonCanonicalizableError(obj, path=f"{path} (max depth exceeded)")
+
+    # Enum must precede str/int: StrEnum, IntEnum and IntFlag inherit from
+    # those scalar parents and otherwise collapse to their raw values.
+    if isinstance(obj, Enum):
+        return _canonicalize_enum(obj, depth=depth, path=path)
 
     # --- JSON scalars pass through, with the bool/int subtlety ---
     if obj is None or isinstance(obj, str):
@@ -261,15 +308,6 @@ def _canonicalize(obj: Any, *, depth: int, path: str) -> JSONValue:
             _TAG_PATH,
             {"type": _type_identity(type(obj)), "path": str(obj)},
         )
-    if isinstance(obj, Enum):
-        # Bind the member identity (module-qualified class + name), not
-        # just the value: two enums sharing a value stay distinct, and
-        # two homonymous enums from different modules stay distinct.
-        return _wrap(
-            _TAG_ENUM,
-            {"enum": _type_identity(type(obj)), "name": obj.name},
-        )
-
     # --- containers ---
     if isinstance(obj, dict):
         return _canonicalize_dict(obj, depth=depth, path=path)
@@ -365,7 +403,7 @@ def _canonicalize_dict(
     # can never be read back as a typed encoding (tag ambiguity guard).
     if len(obj) == 1:
         (only_key,) = obj.keys()
-        if isinstance(only_key, str) and only_key in _RESERVED_TAGS:
+        if type(only_key) is str and only_key in _RESERVED_TAGS:
             inner = _canonicalize(
                 obj[only_key], depth=depth + 1, path=f"{path}.{only_key}"
             )
@@ -376,7 +414,7 @@ def _canonicalize_dict(
     # encode to the same token, refuse (should not happen with the
     # typed scheme, but never alias silently).
     for key, value in obj.items():
-        enc_key = _encode_key(key, path=path)
+        enc_key = _encode_key(key, depth=depth, path=path)
         if enc_key in out:
             raise NonCanonicalizableError(
                 obj, path=f"{path} (key token collision on {enc_key!r})"

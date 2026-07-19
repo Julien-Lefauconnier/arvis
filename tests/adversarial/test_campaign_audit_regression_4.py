@@ -325,45 +325,25 @@ def test_exact_effect_context_match_still_executes() -> None:
     assert len(ctx.extra.get("syscall_intents", [])) == 1
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="campaign 8: StrEnum is dispatched as its str parent",
-)
 def test_strenum_does_not_alias_raw_string() -> None:
     assert canonical_hash(_StringOperation.DELETE) != canonical_hash("delete")
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="campaign 8: IntEnum is dispatched as its int parent",
-)
 def test_intenum_does_not_alias_raw_integer() -> None:
     assert canonical_hash(_IntegerOperation.ONE) != canonical_hash(1)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="campaign 8: IntFlag is dispatched as its int parent",
-)
 def test_intflag_does_not_alias_raw_integer() -> None:
     combined = _Permission.READ | _Permission.WRITE
     assert canonical_hash(combined) != canonical_hash(3)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="campaign 8: enum mapping keys are encoded as scalar keys",
-)
 def test_enum_mapping_key_does_not_alias_scalar_key() -> None:
     enum_keyed = {_StringOperation.DELETE: {"target": "record-a"}}
     scalar_keyed = {"delete": {"target": "record-a"}}
     assert canonical_hash(enum_keyed) != canonical_hash(scalar_keyed)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="campaign 8: enum and scalar payloads still share confirmation material",
-)
 def test_confirmation_distinguishes_enum_payload_from_scalar_payload() -> None:
     registry = ConfirmationRegistry()
     confirmation = registry.issue(

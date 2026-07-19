@@ -42,11 +42,10 @@ from arvis.kernel_core.canonicalization import (
     canonical_hash,
 )
 
-# Redaction policy v4 (campaign 6): canonicalization v2 (module-
-# qualified identities, bytearray tag, path types, strict private
-# state) changed every digest. Widening the content set or changing
-# the digest is a version bump.
-REDACTION_POLICY_VERSION = 4
+# Redaction policy v5 (campaign 8): canonicalization v3 distinguishes
+# Enum subclasses from their scalar parents, including mapping keys.
+# Widening the content set or changing the digest is a version bump.
+REDACTION_POLICY_VERSION = 5
 
 _CONTENT_KEYS: frozenset[str] = frozenset(
     {
@@ -152,7 +151,7 @@ def redact_for_commitment(obj: Any) -> Any:
     if isinstance(obj, dict):
         redacted: dict[str, Any] = {}
         for key, value in obj.items():
-            if isinstance(key, str) and key in _CONTENT_KEYS:
+            if type(key) is str and key in _CONTENT_KEYS:
                 redacted[key] = _content_digest(value)
             else:
                 redacted[key] = redact_for_commitment(value)
@@ -180,9 +179,9 @@ def strip_envelope_volatile(entry: Any) -> Any:
         return entry
     out: dict[Any, Any] = {}
     for key, value in entry.items():
-        if isinstance(key, str) and key in _ENVELOPE_VOLATILE_KEYS:
+        if type(key) is str and key in _ENVELOPE_VOLATILE_KEYS:
             continue
-        if isinstance(key, str) and key in _ENVELOPE_CHILD_KEYS:
+        if type(key) is str and key in _ENVELOPE_CHILD_KEYS:
             # A declared sub-envelope: strip its volatile fields too,
             # but do not treat it as a business payload.
             out[key] = strip_envelope_volatile(value)

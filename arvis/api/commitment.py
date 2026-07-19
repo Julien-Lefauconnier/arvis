@@ -47,8 +47,9 @@ from arvis.kernel_core.syscalls.engagement import (
 from arvis.math.stability.hard_block_policy import HARD_BLOCK_TABLE_VERSION
 from arvis.tools.registry import MANIFEST_SCHEMA_VERSION
 
-# v4 (campaign 6): canonicalization v2 changed every hash upstream.
-COMMITMENT_VERSION = 4
+# v5 (campaign 8): canonicalization v3 distinguishes enums from their
+# scalar parents and therefore changes effect-path hashes upstream.
+COMMITMENT_VERSION = 5
 
 
 def syscall_pair_commitments(

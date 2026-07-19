@@ -38,6 +38,7 @@ def test_issued_record_carries_current_format_version():
     reg = ConfirmationRegistry()
     record = reg.issue(tool_name="t", payload={"id": "A"}, principal="u1")
     assert record.format_version == CONFIRMATION_FORMAT_VERSION
+    assert CONFIRMATION_FORMAT_VERSION == 4
 
 
 def test_reserve_refuses_a_record_of_a_foreign_version():
