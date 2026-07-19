@@ -181,6 +181,14 @@ Unsafe or invalid decisions can be blocked before execution.
 
 External tools and side-effects run behind authorization boundaries.
 
+Each authorized tool receives a canonical frozen payload and an immutable
+`AuthorizedEffectContext`; it never receives the mutable cognitive pipeline
+context. The syscall boundary compares the current trusted identity with the
+sealed principal, tenant, authentication, service, session, process and run
+bindings before committing an intent. See the normative
+[governed effect path](docs/architecture/EFFECT_PATH.md) and the
+[tool authoring guide](docs/tools/TOOL_AUTHORING_GUIDE.md).
+
 ### Explicit Uncertainty
 
 Risk, ambiguity, conflict, and instability become system signals.
@@ -332,6 +340,7 @@ experimental, and out of scope for 0.1:
 * syscall boundary for external effects, including a governed `llm.generate`
   path wired end to end
 * tool authorization boundary (per-spec risk budget)
+* sealed tool effect context and receipt-activated single-use capabilities
 * typed runtime error model
 
 **Experimental (present, not part of the stable public API):**

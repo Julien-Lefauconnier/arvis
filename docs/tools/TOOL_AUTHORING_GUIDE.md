@@ -38,14 +38,28 @@ class MyTool(BaseTool):
 
 ## Input Structure
 
+Prefer the structured invocation API:
+
+```python
+def execute_invocation(self, invocation: ToolInvocation):
+    payload = invocation.payload
+    identity = invocation.effect_context
+    idempotency_key = invocation.idempotency_key
+```
+
+The legacy `execute(input_data)` adapter is restricted to:
+
 ```python
 input_data = {
-    "decision": ActionDecision,
-    "context": CognitivePipelineContext,
     "tool_payload": dict,
-    "syscall_context": dict  # optional runtime metadata
+    "effect_context": AuthorizedEffectContext,
+    "idempotency_key": str | None,
+    "invocation": ToolInvocation,
 }
 ```
+
+There is no pipeline `context`, raw authentication object or syscall service
+container in either API.
 
 ---
 
@@ -144,7 +158,8 @@ Execution time is automatically tracked.
 
 ## Anti-patterns forbidden
 
-- modifying ctx outside context.extra
+- reading identity, tenant or target from a pipeline context
+- carrying credentials, clients or database sessions in effect context
 - hidden global state
 - non-deterministic behavior without reason
 - blocking calls without timeout
@@ -260,5 +275,50 @@ result = os.run_as(principal=principal, cognitive_input=request)
 
 `ToolManager` and `ToolExecutor` remain importable for advanced runtime
 composition and VeraMem compatibility, but their public effect methods are
-fail-closed. Private methods ending in `for_tests` exist only for ARVIS unit
-tests and are not supported integration points.
+fail-closed. Focused test composition helpers live under `tests/support`, which
+is not included in the distributed package.
+
+## VeraMem integration pattern
+
+VeraMem owns business dependencies and injects them when constructing a tool:
+
+```python
+from typing import Protocol
+
+from arvis.adapters.tools.invocation import ToolInvocation
+from arvis.tools.base import BaseTool
+
+
+class DocumentService(Protocol):
+    def delete(
+        self,
+        *,
+        document_id: str,
+        principal: str,
+        tenant: str | None,
+        idempotency_key: str | None,
+    ) -> dict: ...
+
+
+class VeraMemDocumentDeleteTool(BaseTool):
+    name = "veramem.document.delete"
+
+    def __init__(self, document_service: DocumentService) -> None:
+        self._document_service = document_service
+
+    def execute_invocation(self, invocation: ToolInvocation) -> dict:
+        return self._document_service.delete(
+            document_id=str(invocation.payload["document_id"]),
+            principal=invocation.effect_context.principal,
+            tenant=invocation.effect_context.tenant,
+            idempotency_key=invocation.idempotency_key,
+        )
+
+    def execute(self, input_data: dict) -> dict:  # compatibility contract
+        raise RuntimeError("structured invocation required")
+```
+
+The service may own a repository, transaction factory or API client. The
+invocation never carries those objects. VeraMem must also stamp a real
+`AuthenticatedPrincipal`, persist the pre-effect intent through a qualified
+database sink, and preserve confirmation/idempotency state across its workers.

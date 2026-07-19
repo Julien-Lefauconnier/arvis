@@ -93,7 +93,7 @@ Pipeline → Intent → Kernel → Syscall → Tool
 ### 2. Determinism
 
 - Pipeline must remain pure
-- All effects are externalized in `ctx.extra`
+- Effect intents and results are journaled outside cognitive decision material
 - Tool execution MUST NOT influence decision logic in the same run
 
 Tool execution MUST NOT:
@@ -188,12 +188,21 @@ syscall_handler.handle(intent, ctx)
 ### Step 3 — Tool Execution
 
 ```python
-tool.execute({
-    "decision": decision,
-    "context": ctx,
-    "tool_payload": {...}
-})
+tool.execute_invocation(invocation)
 ```
+
+The exact authorized invocation exposes only:
+
+```python
+invocation.payload
+invocation.effect_context
+invocation.idempotency_key
+```
+
+The compatibility `execute(input_data)` adapter receives `tool_payload`,
+`effect_context`, `idempotency_key` and `invocation`. It never receives the
+pipeline `context`. Tools must not derive identity, target, credentials or
+services from mutable runtime state.
 
 ---
 
@@ -314,11 +323,12 @@ neither object exposes a public route that can trigger an effect:
 
 - `ToolManager.run()` is a hard refusal;
 - `ToolManager.activate_authorized()`, `abort_authorized()` and
-  `execute_authorized()` require the private effect-boundary permit claimed by
-  exactly one `SyscallHandler`;
+  `execute_authorized()` are hard refusals;
 - `ToolExecutor.claim_minting_authority()` and
   `ToolExecutor.execute_invocation()` are hard refusals;
-- minting and capability consumption are internal composition operations.
+- minting, activation, revocation and capability consumption are private
+  composition operations owned by the effect-boundary controller claimed by
+  exactly one `SyscallHandler`.
 
 The extracted services are internal architecture boundaries, not public API.
 Their ownership and transaction are specified in
@@ -335,6 +345,21 @@ authorize
 → result journal
 ```
 
-Tests inside the ARVIS repository may use private helpers whose names explicitly
-contain `for_tests`. They are not API, are not exported, and must never be used
-by hosts such as VeraMem.
+Focused unit-test compositions live under `tests/support`, outside the
+distributed `arvis` package. Hosts such as VeraMem must use `CognitiveOS` or the
+governed syscall composition, never repository test support.
+
+## Sealed context and host services
+
+`AuthorizedEffectContext` is immutable commitment material, not a dependency
+container. It carries principal, tenant, authentication provenance,
+service/session identifiers, process/run identity and an optional host binding
+commitment. It carries no credentials, database session, HTTP request, client,
+pool, callback or logger.
+
+Production hosts inject business services at tool construction. For example,
+VeraMem owns the document repository and constructs a tool with that service;
+the tool combines the injected service with the frozen payload and sealed
+identity. ARVIS owns authorization, capability, outbox and proof mechanics but
+does not own VeraMem's authentication, PostgreSQL transactions or distributed
+worker coordination.

@@ -370,8 +370,9 @@ Tool usage can be denied even if reasoning requests it.
 
 ```text
 ToolAuthorizationService
+  → FrozenEffectPayload + AuthorizedEffectContext
   → ToolManager (confirmation + MINTED capability)
-  → SyscallHandler
+  → SyscallHandler (current/sealed context equality)
   → IntentOutboxService (receipt)
   → activation
   → EffectDispatcher
@@ -381,6 +382,16 @@ ToolAuthorizationService
 The orchestration entrypoints remain intentionally small. Security-sensitive
 state stays in private registries, and the extracted services are internal rather
 than public API. See `docs/architecture/EFFECT_PATH.md`.
+
+The tool never observes the mutable cognitive pipeline context. Its exact
+authorized invocation contains a frozen business payload, immutable identity
+and provenance material, and the durable idempotency key. Host-owned clients,
+credentials and repositories are injected into the tool at construction.
+
+For production integrations such as VeraMem, ARVIS owns the governed
+authorization/outbox/capability/proof transaction. VeraMem owns authentication,
+tenant resolution, the PostgreSQL audit sink, persistent confirmation and
+idempotency coordination, business services and distributed worker semantics.
 
 ---
 

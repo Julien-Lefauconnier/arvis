@@ -222,6 +222,14 @@ No other component may produce a terminal result.
 - Authorization MUST finish before the pre-effect intent is recorded.
 - One canonical frozen payload MUST feed confirmation, policy, commitment,
   idempotency and execution.
+- `ToolInvocation` MUST NOT retain or expose the mutable pipeline context.
+- Every tool effect MUST receive an immutable `AuthorizedEffectContext` and the
+  exact context commitment MUST enter invocation, capability and intent.
+- The current principal, tenant, authentication provenance, service, session,
+  process and run bindings MUST match the sealed effect context before intent
+  creation; divergence MUST revoke and produce no effect.
+- `KERNEL_PRINCIPAL` MUST be limited to declared kernel-internal syscalls and
+  MUST NOT authorize a user tool effect.
 - A capability MUST be registered, exact, receipt-activated and single-use.
 - A capability MUST NOT contain or expose mint authority.
 - A durable intent receipt MUST match the complete run ID, causal ID, intent
@@ -235,5 +243,13 @@ No other component may produce a terminal result.
 - The result MUST bind the exact accepted intent commitment.
 - `ToolManager` and `ToolExecutor` MUST expose no public route capable of
   minting, activating or dispatching an effect.
+- Security behavior MUST NOT depend on Python `assert`; test-only effect
+  compositions MUST remain outside the distributed `arvis` package.
+- Enum members and enum mapping keys MUST canonicalize distinctly from their
+  scalar parents.
 - The current in-process registries support atomicity within one process only;
   production MUST follow the instance-per-request doctrine.
+
+Host clients, credentials, database sessions and transaction objects MUST be
+constructor-injected into tools or adapters. They MUST NOT travel in the effect
+context or be obtained from mutable pipeline state.

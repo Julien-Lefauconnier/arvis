@@ -1,6 +1,6 @@
 # Tool lifecycle — ARVIS
 
-Status: lifecycle contract for `0.1.0a10`.
+Status: lifecycle contract for `0.1.0a11`.
 
 ## Overview
 
@@ -22,7 +22,8 @@ payload. This is a request for authorization, not an execution capability.
 1. extracts the decision;
 2. creates one canonical `FrozenEffectPayload`;
 3. validates tool existence and input schema;
-4. resolves principal, tenant, risk and authentication provenance;
+4. snapshots principal, tenant, authentication provenance and runtime bindings
+   into an immutable `AuthorizedEffectContext`;
 5. derives a deterministic idempotency key;
 6. evaluates `ToolPolicy` and configured consent/egress gates;
 7. creates an immutable authorization snapshot.
@@ -39,8 +40,10 @@ The runtime passes the exact `ToolAuthorizationOutcome` to:
 SyscallHandler.handle(Syscall(name="tool.execute", ...))
 ```
 
-The handler copies and validates the strict outcome, verifies manager ownership
-and enforces production identity requirements.
+The handler copies and validates the strict outcome, verifies manager ownership,
+enforces production identity requirements and compares the current trusted
+identity with the sealed effect context. Any mismatch revokes the capability,
+releases a reserved confirmation and stops before intent creation.
 
 ### 4. Intent outbox
 
@@ -60,8 +63,9 @@ transaction. No tool body runs.
 
 The receipt activates the exact capability. `EffectDispatcher` atomically
 consumes it and executes the frozen invocation. The adapter receives the
-idempotency key through `ToolInvocation`; legacy adapters receive it in the
-runtime payload.
+idempotency key and `AuthorizedEffectContext` through `ToolInvocation`; legacy
+adapters receive the same sealed values in their restricted payload. Neither
+path receives the pipeline context.
 
 ### 6. Effect classification
 
@@ -109,7 +113,15 @@ ToolExecutor.execute(...)
 ```
 
 Unit tests may call a tool implementation directly. End-to-end effect tests must
-use `SyscallHandler` or `CognitiveOS`.
+use `SyscallHandler` or `CognitiveOS`. Focused lifecycle compositions live only
+under `tests/support` and are excluded from the distributed package.
+
+## Context and dependency rule
+
+Tools select an effect only from `invocation.payload`,
+`invocation.effect_context` and `invocation.idempotency_key`. Credentials,
+database sessions, HTTP requests and service clients are constructor-injected
+host dependencies. They are never recovered from a mutable runtime context.
 
 ## Concurrency boundary
 
