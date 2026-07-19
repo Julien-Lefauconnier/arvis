@@ -35,7 +35,6 @@ from arvis.errors.tool_runtime import ToolAuthorizationError
 from arvis.kernel_core.access.identity import principal_from_context
 from arvis.kernel_core.syscalls.audit_sink import (
     AuditReceipt,
-    InMemoryAuditSink,
     validate_receipt,
 )
 from arvis.kernel_core.syscalls.engagement import stable_hash
@@ -127,8 +126,10 @@ class ToolAuthorizationOutcome:
         if self.authorized is not None:
             return dict(self.authorized.authorization_snapshot)
 
-        assert self.refusal_snapshot is not None
-        return self.refusal_snapshot.to_material()
+        refusal_snapshot = self.refusal_snapshot
+        if refusal_snapshot is None:
+            raise RuntimeError("refusal outcome has no authorization snapshot")
+        return refusal_snapshot.to_material()
 
 
 @dataclass(slots=True)
@@ -378,7 +379,9 @@ class ToolManager:
         if validate_receipt(receipt, expected_intent) is not None:
             self._abort_authorized(authorized)
             return False
-        assert isinstance(receipt, AuditReceipt)
+        if type(receipt) is not AuditReceipt:
+            self._abort_authorized(authorized)
+            return False
         try:
             activation = CapabilityActivationBinding(
                 receipt_id=receipt.receipt_id,
@@ -481,88 +484,6 @@ class ToolManager:
         raise UnauthorizedExecutionError(
             "ToolManager.run is not an effect route; use CognitiveOS or "
             "SyscallHandler.handle(tool.execute)"
-        )
-
-    def _run_unsafe_for_tests(self, result: Any, ctx: Any) -> ToolResult | None:
-        """Test-only compatibility composition; never used by runtime code."""
-        outcome = self.authorize(result, ctx)
-        if outcome is None:
-            return None
-        if outcome.refusal is not None:
-            return outcome.refusal
-        assert outcome.authorized is not None
-
-        authorized = outcome.authorized
-        causal_id = f"tool-manager-test-run:{authorized.nonce}"
-        intent_sha256 = stable_hash(
-            {
-                "local_tool_run_version": 2,
-                "causal_id": causal_id,
-                "tool": authorized.invocation.tool_name,
-                "payload_sha256": authorized.payload_sha256,
-                "idempotency_key": authorized.invocation.idempotency_key,
-                "effect_context": (authorized.invocation.effect_context.to_material()),
-                "authorization_snapshot": dict(authorized.authorization_snapshot),
-            }
-        )
-        local_intent = {
-            "kind": "syscall_intent",
-            "syscall": "tool.execute",
-            "causal_id": causal_id,
-            "process_id": authorized.invocation.process_id or "none",
-            "idempotency_key": authorized.invocation.idempotency_key,
-            "effect_context": authorized.invocation.effect_context.to_material(),
-            "effect_context_commitment": (
-                authorized.invocation.effect_context.commitment_sha256
-            ),
-            "commitment_sha256": intent_sha256,
-        }
-        try:
-            receipt = InMemoryAuditSink().append(local_intent)
-            if not self._activate_authorized_for_tests(
-                authorized,
-                receipt=receipt,
-                intent_sha256=intent_sha256,
-                run_id=None,
-                causal_id=causal_id,
-            ):
-                raise UnauthorizedExecutionError(
-                    "the test-only outbox could not activate the capability"
-                )
-            return self._execute_authorized_for_tests(authorized, result, ctx)
-        except Exception:
-            self._abort_authorized_for_tests(authorized)
-            raise
-
-    def _activate_authorized_for_tests(
-        self,
-        authorized: Any,
-        *,
-        receipt: Any,
-        intent_sha256: str,
-        run_id: str | None,
-        causal_id: str,
-    ) -> bool:
-        return self._activate_authorized(
-            authorized,
-            receipt=receipt,
-            intent_sha256=intent_sha256,
-            run_id=run_id,
-            causal_id=causal_id,
-        )
-
-    def _abort_authorized_for_tests(self, authorized: Any) -> bool:
-        return self._abort_authorized(
-            authorized,
-        )
-
-    def _execute_authorized_for_tests(
-        self, authorized: Any, result: Any, ctx: Any
-    ) -> ToolResult | None:
-        return self._execute_authorized(
-            authorized,
-            result,
-            ctx,
         )
 
     # ------------------------------------------------------------------

@@ -18,6 +18,7 @@ from arvis.tools.executor import ToolExecutor
 from arvis.tools.manager import ToolManager
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
+from tests.support.tool_execution import run_tool_for_tests
 
 
 class _SensitiveTool(BaseTool):
@@ -147,7 +148,7 @@ def _manager_with(registry_of_confirmations):
 def _turn(manager, ctx):
     decision = SimpleNamespace(tool="sensitive_tool", tool_payload={"cmd": "go"})
     result = SimpleNamespace(action_decision=decision)
-    return manager._run_unsafe_for_tests(result, ctx)
+    return run_tool_for_tests(manager, result, ctx)
 
 
 def test_confirmed_invocation_satisfies_the_requirement():

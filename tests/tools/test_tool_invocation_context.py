@@ -18,6 +18,7 @@ from arvis.tools.executor import ToolExecutor
 from arvis.tools.manager import ToolManager, _resolve_turn_risk
 from arvis.tools.registry import ToolRegistry
 from tests.fixtures.builders.effect_context_builder import build_effect_context
+from tests.support.tool_execution import run_tool_for_tests
 
 # ---------------------------------------------------------------
 # Invocation fields
@@ -132,7 +133,7 @@ def _run_manager_and_capture_invocation(ctx):
     try:
         decision = SimpleNamespace(tool="t", tool_payload={})
         result = SimpleNamespace(action_decision=decision)
-        manager._run_unsafe_for_tests(result, ctx)
+        run_tool_for_tests(manager, result, ctx)
     finally:
         ToolPolicyEvaluator.evaluate = original  # type: ignore[method-assign]
     return captured["invocation"]

@@ -28,6 +28,7 @@ from arvis.tools.executor import ToolExecutor
 from arvis.tools.manager import ToolManager
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
+from tests.support.tool_execution import run_tool_for_tests
 
 # ---------------------------------------------------------------
 # D-3: explicit format version
@@ -217,7 +218,7 @@ def _manager_with(reg):
 def _turn(manager, ctx, payload):
     decision = SimpleNamespace(tool="sensitive_tool", tool_payload=payload)
     result = SimpleNamespace(action_decision=decision)
-    return manager._run_unsafe_for_tests(result, ctx)
+    return run_tool_for_tests(manager, result, ctx)
 
 
 def test_policy_denial_releases_the_confirmation_not_burns_it():

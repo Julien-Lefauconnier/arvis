@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from arvis.errors import ErrorOrigin
 from arvis.errors.base import ArvisSecurityError
@@ -133,7 +133,12 @@ class SyscallHandler:
         )
         if preparation_failure is not None:
             return preparation_failure
-        assert fn is not None
+        resolution_failure = self._refuse_missing_registered_function(
+            ctx, syscall, fn, started_tick
+        )
+        if resolution_failure is not None:
+            return resolution_failure
+        fn = cast(SyscallFn, fn)
 
         descriptor = get_descriptor(syscall.name)
         authorization_reason_code, access_failure = self._authorize_registered_call(
@@ -259,6 +264,35 @@ class SyscallHandler:
             self._safe_journal(ctx, syscall, failure, started_tick)
             return ctx, fn, started_tick, failure
         return ctx, fn, started_tick, None
+
+    def _refuse_missing_registered_function(
+        self,
+        ctx: PipelineContextLike | None,
+        syscall: Syscall,
+        fn: SyscallFn | None,
+        started_tick: int,
+    ) -> SyscallResult | None:
+        """Fail closed if registry resolution breaks its preparation invariant."""
+        if fn is not None:
+            return None
+        failure = self._failure_from_error(
+            ctx,
+            SyscallValidationError(
+                "registered syscall resolution failed",
+                code=ErrorCode.UNKNOWN_SYSCALL,
+                origin=ErrorOrigin(
+                    component="SyscallHandler",
+                    subsystem="kernel.syscall",
+                    syscall=syscall.name,
+                ),
+                details={
+                    "syscall": syscall.name,
+                    "reason_code": "registered_syscall_resolution_failed",
+                },
+            ),
+        )
+        self._safe_journal(ctx, syscall, failure, started_tick)
+        return failure
 
     def _authorize_registered_call(
         self,

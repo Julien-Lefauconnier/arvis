@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 import arvis.tools.manager as manager_module
+import tests.support.tool_execution as tool_execution_support
 from arvis.adapters.tools.authorization_snapshot import ToolAuthorizationSnapshot
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.tools.authorized_invocation import InvocationAuthority
@@ -26,6 +27,11 @@ from arvis.tools.tool_result import (
     PRE_EFFECT_REFUSAL,
     ToolEffectState,
     effect_has_started,
+)
+from tests.support.tool_execution import (
+    abort_authorized_for_tests,
+    execute_authorized_for_tests,
+    run_tool_for_tests,
 )
 
 
@@ -273,7 +279,7 @@ def test_executor_validation_exception_is_effect_not_started_and_releases() -> N
     payload = {"x": 1}
     confirmation_id = _issue(confirmations, payload)
 
-    result = manager._run_unsafe_for_tests(_result(payload), _context(confirmation_id))
+    result = run_tool_for_tests(manager, _result(payload), _context(confirmation_id))
 
     assert result is not None
     assert result.success is False
@@ -293,10 +299,10 @@ def test_local_outbox_exception_revokes_and_releases(
         def append(self, intent: dict[str, Any]) -> Any:
             raise RuntimeError("outbox exploded")
 
-    monkeypatch.setattr(manager_module, "InMemoryAuditSink", _FailingSink)
+    monkeypatch.setattr(tool_execution_support, "InMemoryAuditSink", _FailingSink)
 
     with pytest.raises(RuntimeError, match="outbox exploded"):
-        manager._run_unsafe_for_tests(_result(payload), _context(confirmation_id))
+        run_tool_for_tests(manager, _result(payload), _context(confirmation_id))
 
     assert tool.executions == 0
     _assert_reservable_again(confirmations, confirmation_id, payload)
@@ -315,8 +321,8 @@ def test_forged_capability_cannot_release_another_capability_reservation() -> No
 
     forged = replace(outcome.authorized, nonce="forged-nonce")
     with pytest.raises(UnauthorizedExecutionError):
-        manager._execute_authorized_for_tests(
-            forged, _result(payload), _context(confirmation_id)
+        execute_authorized_for_tests(
+            manager, forged, _result(payload), _context(confirmation_id)
         )
 
     # The legitimate capability still owns the locked reservation.
@@ -329,7 +335,7 @@ def test_forged_capability_cannot_release_another_capability_reservation() -> No
         )
         is None
     )
-    assert manager._abort_authorized_for_tests(outcome.authorized) is True
+    assert abort_authorized_for_tests(manager, outcome.authorized) is True
     _assert_reservable_again(confirmations, confirmation_id, payload)
 
 
@@ -346,6 +352,6 @@ def test_unexpected_executor_exception_releases_and_revokes(
     monkeypatch.setattr(manager.executor, "_execute_invocation", _boom)
 
     with pytest.raises(RuntimeError, match="executor exploded before effect"):
-        manager._run_unsafe_for_tests(_result(payload), _context(confirmation_id))
+        run_tool_for_tests(manager, _result(payload), _context(confirmation_id))
 
     _assert_reservable_again(confirmations, confirmation_id, payload)

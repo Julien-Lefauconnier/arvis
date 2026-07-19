@@ -57,6 +57,7 @@ from arvis.tools.manager import ToolManager
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
 from arvis.tools.tool_result import PRE_EFFECT_REFUSAL
+from tests.support.tool_execution import execute_authorized_for_tests
 
 
 class _Tool(BaseTool):
@@ -275,7 +276,7 @@ def test_a8_authority_is_not_mintable_and_capability_is_single_use(monkeypatch):
     )
     assert first.success is True
     with pytest.raises(UnauthorizedExecutionError):
-        manager._execute_authorized_for_tests(outcome.authorized, pipeline_result, ctx)
+        execute_authorized_for_tests(manager, outcome.authorized, pipeline_result, ctx)
     assert len(tool.executed) == 1
 
 

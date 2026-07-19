@@ -25,6 +25,11 @@ from arvis.tools.executor import ToolExecutor
 from arvis.tools.manager import ToolAuthorizationOutcome, ToolManager
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
+from tests.support.tool_execution import (
+    abort_authorized_for_tests,
+    activate_authorized_for_tests,
+    execute_authorized_for_tests,
+)
 
 
 class _Tool(BaseTool):
@@ -138,7 +143,8 @@ def _activate(
         run_id=run_id,
         causal_id=causal_id,
     )
-    return manager._activate_authorized_for_tests(
+    return activate_authorized_for_tests(
+        manager,
         outcome.authorized,
         receipt=acknowledgement,
         intent_sha256=intent_sha256,
@@ -156,7 +162,7 @@ def test_capability_cannot_execute_before_receipt_activation() -> None:
     assert manager.capability_state(outcome.authorized) is CapabilityState.MINTED
 
     with pytest.raises(UnauthorizedExecutionError):
-        manager._execute_authorized_for_tests(outcome.authorized, result, ctx)
+        execute_authorized_for_tests(manager, outcome.authorized, result, ctx)
 
     assert tool.calls == []
     assert manager.capability_state(outcome.authorized) is CapabilityState.MINTED
@@ -210,7 +216,7 @@ def test_sink_exception_revokes_capability_and_prevents_effect() -> None:
     assert ctx.extra.get("syscall_intents", []) == []
     assert manager.capability_state(outcome.authorized) is CapabilityState.REVOKED
     with pytest.raises(UnauthorizedExecutionError):
-        manager._execute_authorized_for_tests(outcome.authorized, result, ctx)
+        execute_authorized_for_tests(manager, outcome.authorized, result, ctx)
 
 
 def test_receipt_replay_refusal_closes_the_accepted_intent() -> None:
@@ -309,7 +315,7 @@ def test_aborted_capability_cannot_be_activated() -> None:
     outcome = _authorize(manager, result, ctx)
     assert outcome.authorized is not None
 
-    assert manager._abort_authorized_for_tests(outcome.authorized) is True
+    assert abort_authorized_for_tests(manager, outcome.authorized) is True
     assert _activate(manager, outcome) is False
     assert manager.capability_state(outcome.authorized) is CapabilityState.REVOKED
 

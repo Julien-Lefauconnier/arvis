@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+import ast
+import inspect
+import subprocess
+import sys
+import tomllib
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -7,6 +13,8 @@ import pytest
 
 import arvis
 import arvis.api as api
+import arvis.kernel_core.syscalls.syscall_handler as syscall_handler_module
+import arvis.tools.manager as manager_module
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
@@ -157,6 +165,87 @@ def test_security_authorities_are_absent_from_public_object_graph(
 
 
 def test_api_surface_does_not_export_effect_internals() -> None:
-    forbidden = {"ToolExecutor", "ToolManager", "InvocationAuthority"}
+    forbidden = {
+        "EffectDispatcher",
+        "InvocationAuthority",
+        "ToolAuthorizationOutcome",
+        "ToolExecutor",
+        "ToolManager",
+    }
     assert forbidden.isdisjoint(set(arvis.__all__))
     assert forbidden.isdisjoint(set(api.__all__))
+
+
+def test_production_manager_exposes_no_test_effect_helper() -> None:
+    forbidden_helpers = {
+        "_abort_authorized_for_tests",
+        "_activate_authorized_for_tests",
+        "_execute_authorized_for_tests",
+        "_run_unsafe_for_tests",
+    }
+    assert all(not hasattr(ToolManager, name) for name in forbidden_helpers)
+
+
+def test_test_only_effect_support_is_excluded_from_distribution() -> None:
+    repository_root = Path(__file__).resolve().parents[2]
+    config = tomllib.loads((repository_root / "pyproject.toml").read_text())
+    package_find = config["tool"]["setuptools"]["packages"]["find"]
+
+    assert package_find["include"] == ["arvis*"]
+    assert "tests*" not in package_find["include"]
+    assert (repository_root / "tests/support/tool_execution.py").is_file()
+
+
+def test_security_boundary_modules_contain_no_runtime_assertions() -> None:
+    for module in (manager_module, syscall_handler_module):
+        tree = ast.parse(inspect.getsource(module))
+        assert not any(isinstance(node, ast.Assert) for node in ast.walk(tree))
+
+
+def test_python_optimized_mode_keeps_direct_effect_routes_closed() -> None:
+    repository_root = Path(__file__).resolve().parents[2]
+    script = """
+from types import SimpleNamespace
+
+from arvis.errors.tool_runtime import ToolAuthorizationError
+from arvis.tools.authorized_invocation import UnauthorizedExecutionError
+from arvis.tools.executor import ToolExecutor
+from arvis.tools.manager import ToolManager
+from arvis.tools.registry import ToolRegistry
+
+if __debug__:
+    raise SystemExit("python -O was not enabled")
+
+executor = ToolExecutor(ToolRegistry())
+manager = ToolManager(executor.registry, executor)
+
+try:
+    manager.run(SimpleNamespace(), SimpleNamespace(extra={}))
+except UnauthorizedExecutionError:
+    pass
+else:
+    raise SystemExit("ToolManager.run became an effect route")
+
+try:
+    manager.activate_authorized(None)
+except UnauthorizedExecutionError:
+    pass
+else:
+    raise SystemExit("public capability activation was accepted")
+
+try:
+    executor.execute("forbidden", {})
+except ToolAuthorizationError:
+    pass
+else:
+    raise SystemExit("direct executor route was accepted")
+"""
+    completed = subprocess.run(
+        [sys.executable, "-O", "-c", script],
+        cwd=repository_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr or completed.stdout

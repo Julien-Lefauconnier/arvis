@@ -30,6 +30,10 @@ from arvis.tools.manager import ToolAuthorizationOutcome, ToolManager
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
 from tests.fixtures.builders.effect_context_builder import build_effect_context
+from tests.support.tool_execution import (
+    activate_authorized_for_tests,
+    execute_authorized_for_tests,
+)
 
 
 class _RecordingTool(BaseTool):
@@ -124,7 +128,8 @@ def _activate_outcome(
         store_fingerprint="db:test",
         committed_at="2026-07-19T00:00:00+00:00",
     )
-    assert manager._activate_authorized_for_tests(
+    assert activate_authorized_for_tests(
+        manager,
         outcome.authorized,
         receipt=receipt,
         intent_sha256=intent_sha256,
@@ -157,7 +162,7 @@ def test_legitimate_capability_cannot_mint_fresh_nonce() -> None:
     )
 
     with pytest.raises(UnauthorizedExecutionError):
-        manager._execute_authorized_for_tests(forged, _result("safe", {}), ctx)
+        execute_authorized_for_tests(manager, forged, _result("safe", {}), ctx)
     assert danger.payloads == []
 
 
@@ -174,8 +179,8 @@ def test_payload_mutation_after_authorization_does_not_change_effect() -> None:
     payload["target"] = "B"
     payload["nested"]["value"] = 2
     _activate_outcome(manager, outcome)
-    manager._execute_authorized_for_tests(
-        outcome.authorized, _result("mutate", payload), ctx
+    execute_authorized_for_tests(
+        manager, outcome.authorized, _result("mutate", payload), ctx
     )
 
     assert tool.payloads == [{"target": "A", "nested": {"value": 1}}]
@@ -266,7 +271,7 @@ def test_sink_failure_revokes_capability_and_prevents_direct_execution() -> None
     assert refused.success is False
 
     with pytest.raises(UnauthorizedExecutionError):
-        manager._execute_authorized_for_tests(outcome.authorized, pipeline_result, ctx)
+        execute_authorized_for_tests(manager, outcome.authorized, pipeline_result, ctx)
     assert tool.payloads == []
 
 

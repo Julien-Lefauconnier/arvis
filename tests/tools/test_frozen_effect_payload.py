@@ -32,6 +32,11 @@ from arvis.tools.registry import ToolRegistry
 from arvis.tools.runtime.runtime_bindings import resolve_process_id
 from arvis.tools.spec import ToolSpec
 from tests.fixtures.builders.effect_context_builder import build_effect_context
+from tests.support.tool_execution import (
+    activate_authorized_for_tests,
+    execute_authorized_for_tests,
+    run_tool_for_tests,
+)
 
 
 class _Mode(Enum):
@@ -99,7 +104,8 @@ def _activate_outcome(
         store_fingerprint="db:test",
         committed_at="2026-07-19T00:00:00+00:00",
     )
-    assert manager._activate_authorized_for_tests(
+    assert activate_authorized_for_tests(
+        manager,
         outcome.authorized,
         receipt=receipt,
         intent_sha256=intent_sha256,
@@ -208,7 +214,7 @@ def test_policy_cannot_mutate_future_effect_payload(monkeypatch: Any) -> None:
     assert isinstance(outcome, ToolAuthorizationOutcome)
     assert outcome.authorized is not None
     _activate_outcome(manager, outcome)
-    manager._execute_authorized_for_tests(outcome.authorized, _result(payload), _ctx())
+    execute_authorized_for_tests(manager, outcome.authorized, _result(payload), _ctx())
 
     assert tool.executed == [{"target": "A", "nested": {"value": 1}}]
 
@@ -223,7 +229,7 @@ def test_tool_validation_cannot_mutate_execution_payload() -> None:
     manager = _manager(tool)
     payload = {"target": "A", "nested": {"value": 1}}
 
-    result = manager._run_unsafe_for_tests(_result(payload), _ctx())
+    result = run_tool_for_tests(manager, _result(payload), _ctx())
 
     assert result is not None and result.success is True
     assert tool.executed == [{"target": "A", "nested": {"value": 1}}]
@@ -314,8 +320,8 @@ def test_confirmation_callback_cannot_change_idempotency_or_effect() -> None:
     )
 
     _activate_outcome(manager, outcome)
-    result = manager._execute_authorized_for_tests(
-        outcome.authorized, _result(payload), ctx
+    result = execute_authorized_for_tests(
+        manager, outcome.authorized, _result(payload), ctx
     )
 
     assert result is not None and result.success is True

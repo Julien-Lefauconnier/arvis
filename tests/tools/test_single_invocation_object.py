@@ -18,6 +18,7 @@ from arvis.tools.executor import ToolExecutor
 from arvis.tools.manager import ToolManager
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
+from tests.support.tool_execution import run_tool_for_tests
 
 
 class _CapturingTool(BaseTool):
@@ -42,7 +43,7 @@ def _run_through_manager(ctx):
     manager = ToolManager(registry, ToolExecutor(registry))
     decision = SimpleNamespace(tool="capture_tool", tool_payload={"q": 1})
     result = SimpleNamespace(action_decision=decision)
-    outcome = manager._run_unsafe_for_tests(result, ctx)
+    outcome = run_tool_for_tests(manager, result, ctx)
     return tool, outcome
 
 
