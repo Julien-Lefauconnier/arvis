@@ -52,6 +52,95 @@ def _compute_artifact_timestamp(
     return 0.0
 
 
+def _dispatch_authorized_tool(
+    handler: SyscallHandlerLike,
+    result: Any,
+    ctx: Any,
+    authorization: ToolAuthorizationOutcome,
+) -> Any:
+    if authorization.refusal is not None:
+        return authorization.refusal
+    if authorization.authorized is not None:
+        return handler._execute_tool_authorized(
+            authorization.authorized,
+            result,
+            ctx,
+        )
+    return None
+
+
+def _normalize_tool_error(tool_error: Any, success: bool) -> ArvisError | None:
+    normalized: ArvisError | None = None
+    if tool_error is not None:
+        if isinstance(tool_error, ArvisError):
+            normalized = tool_error
+            normalized.details.setdefault("classification", "external")
+            normalized.details.setdefault("retry_class", "transient")
+        elif isinstance(tool_error, Exception):
+            normalized = ErrorManager.normalize_for_boundary(
+                tool_error,
+                boundary="external",
+                code="tool_execution_error",
+                domain=ErrorDomain.TOOL,
+                details={
+                    "classification": "external",
+                    "retry_class": "transient",
+                },
+            )
+        else:
+            normalized = ArvisRuntimeError(
+                str(tool_error),
+                code="tool_execution_error",
+                domain=ErrorDomain.TOOL,
+            )
+    if not success and normalized is None:
+        normalized = ArvisRuntimeError(
+            "Tool execution failed without explicit error",
+            code="tool_execution_unknown_failure",
+            domain=ErrorDomain.TOOL,
+            details={"retry_class": "unknown"},
+        )
+    return normalized
+
+
+def _build_tool_artifact(
+    handler: SyscallHandlerLike,
+    tool_result: Any,
+    kwargs: dict[str, Any],
+) -> ExecutionArtifact:
+    if hasattr(tool_result, "success"):
+        success = bool(tool_result.success)
+        output = getattr(tool_result, "output", None)
+        tool_error = getattr(tool_result, "error", None)
+        tool_name = getattr(tool_result, "tool_name", None)
+    else:
+        success = True
+        output = tool_result
+        tool_error = None
+        tool_name = None
+
+    normalized_error = _normalize_tool_error(tool_error, success)
+    return ExecutionArtifact(
+        artifact_type="tool_execution",
+        syscall="tool.execute",
+        status="success" if success else "error",
+        output=output,
+        error=normalized_error,
+        metadata={
+            "tool": tool_name,
+            "seq": getattr(handler, "_local_counter", 0),
+            "retry_attempt": int(kwargs.get("retry_attempt") or 0),
+            "retry_chain_id": kwargs.get("retry_chain_id"),
+            "retry_parent_syscall_id": kwargs.get("retry_parent_syscall_id"),
+        },
+        replay_policy="journal_only_replay",
+        process_id=kwargs.get("process_id"),
+        tick=kwargs.get("tick"),
+        timestamp=_compute_artifact_timestamp(handler, kwargs),
+        causal_id=kwargs.get("causal_id"),
+    )
+
+
 @register_syscall(
     "tool.execute",
     effect=SyscallEffect.EFFECT,
@@ -74,14 +163,6 @@ def tool_execute(
                 domain=ErrorDomain.TOOL,
             )
         )
-
-    # Campaign 6 (Lot 1, closes a8 P0 section 8): the syscall consumes
-    # a pre-computed authorization outcome. The full business
-    # authorization ran BEFORE this syscall was issued, so the
-    # pre-effect intent recorded by the handler bound the exact verdict
-    # from the sealed capability. A bare tool.execute without an
-    # outcome is refused (fail-closed): there is no path where the
-    # authorization happens after the intent.
     if type(authorization) is not ToolAuthorizationOutcome:
         return SyscallResult.failure(
             ArvisRuntimeError(
@@ -91,39 +172,31 @@ def tool_execute(
             )
         )
 
-    refusal = authorization.refusal
-    authorized = authorization.authorized
-
     try:
-        if refusal is not None:
-            # Pre-effect refusal decided at authorization time: no
-            # effect ran; the refusal is journaled through the same
-            # artifact path so observability keeps its intent/result
-            # pair.
-            tool_result = refusal
-        elif authorized is not None:
-            tool_result = handler._execute_tool_authorized(authorized, result, ctx)
-        else:
-            tool_result = None
-    except Exception as exc:
-        error = ErrorManager.normalize_for_boundary(
-            exc,
-            boundary="external",
-            code="tool_execution_failed",
-            domain=ErrorDomain.TOOL,
-            origin=ErrorOrigin(
-                component="tool.execute",
-                subsystem="kernel.syscall",
-                syscall="tool.execute",
-            ),
-            details={
-                "syscall": "tool.execute",
-                "retry_class": "transient",
-            },
+        tool_result = _dispatch_authorized_tool(
+            handler,
+            result,
+            ctx,
+            authorization,
         )
-
-        return SyscallResult.failure(error)
-
+    except Exception as exc:
+        return SyscallResult.failure(
+            ErrorManager.normalize_for_boundary(
+                exc,
+                boundary="external",
+                code="tool_execution_failed",
+                domain=ErrorDomain.TOOL,
+                origin=ErrorOrigin(
+                    component="tool.execute",
+                    subsystem="kernel.syscall",
+                    syscall="tool.execute",
+                ),
+                details={
+                    "syscall": "tool.execute",
+                    "retry_class": "transient",
+                },
+            )
+        )
     if tool_result is None:
         return SyscallResult.failure(
             ArvisRuntimeError(
@@ -133,79 +206,7 @@ def tool_execute(
             )
         )
 
-    if hasattr(tool_result, "success"):
-        success = bool(tool_result.success)
-        output = getattr(tool_result, "output", None)
-        tool_error: Any | None = getattr(tool_result, "error", None)
-        tool_name = getattr(tool_result, "tool_name", None)
-    else:
-        success = True
-        output = tool_result
-        tool_error = None
-        tool_name = None
-
-    normalized_error: ArvisError | None = None
-
-    if tool_error is not None:
-        if isinstance(tool_error, ArvisError):
-            normalized_error = tool_error
-
-            normalized_error.details.setdefault(
-                "classification",
-                "external",
-            )
-            normalized_error.details.setdefault(
-                "retry_class",
-                "transient",
-            )
-        elif isinstance(tool_error, Exception):
-            normalized_error = ErrorManager.normalize_for_boundary(
-                tool_error,
-                boundary="external",
-                code="tool_execution_error",
-                domain=ErrorDomain.TOOL,
-                details={
-                    "classification": "external",
-                    "retry_class": "transient",
-                },
-            )
-        else:
-            normalized_error = ArvisRuntimeError(
-                str(tool_error),
-                code="tool_execution_error",
-                domain=ErrorDomain.TOOL,
-            )
-
-    if not success and normalized_error is None:
-        normalized_error = ArvisRuntimeError(
-            "Tool execution failed without explicit error",
-            code="tool_execution_unknown_failure",
-            domain=ErrorDomain.TOOL,
-            details={
-                "retry_class": "unknown",
-            },
-        )
-
-    artifact = ExecutionArtifact(
-        artifact_type="tool_execution",
-        syscall="tool.execute",
-        status="success" if success else "error",
-        output=output,
-        error=normalized_error,
-        metadata={
-            "tool": tool_name,
-            "seq": getattr(handler, "_local_counter", 0),
-            "retry_attempt": int(kwargs.get("retry_attempt") or 0),
-            "retry_chain_id": kwargs.get("retry_chain_id"),
-            "retry_parent_syscall_id": kwargs.get("retry_parent_syscall_id"),
-        },
-        replay_policy="journal_only_replay",
-        process_id=kwargs.get("process_id"),
-        tick=kwargs.get("tick"),
-        timestamp=_compute_artifact_timestamp(handler, kwargs),
-        causal_id=kwargs.get("causal_id"),
-    )
-
+    artifact = _build_tool_artifact(handler, tool_result, kwargs)
     return SyscallResult(
         success=artifact.success,
         result=artifact,

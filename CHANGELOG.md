@@ -9,6 +9,92 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a10] - 2026-07-19
+
+Campaign 7 hardens the complete external-effect transaction. The campaign began
+with eight adversarial reproductions against `0.1.0a9`: capability mint
+forgery, payload mutation after authorization, forged authorization wrappers,
+capability reuse after outbox failure, leaked confirmation reservations, run-ID
+prefix collisions, unstamped production principals and in-memory sinks accepted
+as durable. Every reproduction is now a normal passing regression test.
+
+### Security
+
+- **Canonical frozen effect payload.** Authorization creates one deeply isolated,
+  immutable `FrozenEffectPayload`. Confirmation, schema validation, policy,
+  idempotency, intent commitment and execution all use that same canonical
+  object. Mutation of caller-owned containers after authorization cannot change
+  the dispatched effect.
+- **Registered non-forgeable capabilities.** `AuthorizedInvocation` no longer
+  transports a mint secret. Each nonce is registered against an exact commitment
+  covering invocation, authorization snapshot, confirmation and idempotency
+  material. Unknown, cloned, modified, foreign, revoked or consumed capabilities
+  are refused atomically.
+- **Strict authorization outcome.** `ToolAuthorizationOutcome` is frozen and
+  accepts exactly one typed path: a manager-owned capability or a typed refusal
+  with its own denial snapshot. Generic wrappers, repaired snapshots and duck
+  typing are rejected before intent creation.
+- **Receipt-activated transaction.** Authorization produces only a `MINTED`
+  capability. `SyscallHandler` records the exact intent, validates the sink
+  receipt and only then activates the capability. Sink failure, invalid receipt,
+  durable-position replay or activation failure revokes the capability and
+  prevents direct fallback execution.
+- **Exception-safe confirmation lifecycle.** Confirmation reservation uses an
+  explicit transaction. Every provable pre-effect refusal or exception releases
+  the reservation; started, completed, failed or uncertain effects consume it
+  conservatively. A forged capability cannot release another capability's
+  reservation.
+- **Authenticated production identity.** Production effects require a host-stamped
+  `AuthenticatedPrincipal` matching the turn owner (or the reserved kernel
+  principal). Authentication source, strength, service and session hash are
+  committed into the effect material.
+- **Qualified durable sink.** Production requires an `AuditSinkManifest` declaring
+  a database or distributed-log sink that is transactional and append-only.
+  `InMemoryAuditSink` is explicitly classified as memory and refused in that
+  posture. Receipt store identity and durable positions are checked fail-closed.
+- **Complete causal identity and effective idempotence.** Causal IDs now contain
+  the complete run ID rather than a 48-bit prefix. The deterministic
+  `idempotency_key` is committed into the intent, persisted in the outbox, bound
+  by the receipt through `intent_sha256`, exposed to structured and legacy tool
+  adapters and stable across retries.
+- **No direct production effect route.** Public manager and executor methods can
+  no longer mint, activate or dispatch a capability. One `SyscallHandler` claims
+  the private effect boundary exactly once; the supported effect path is syscall
+  mediated and outbox backed.
+
+### Architecture
+
+- Extracted `ToolAuthorizationService` for immutable request preparation and
+  policy material.
+- Extracted `IntentOutboxService` for intent construction, receipt validation,
+  durable-position replay protection and local publication.
+- Extracted `EffectDispatcher` for single-use capability consumption and explicit
+  effect-boundary classification.
+- Shared fail-closed tool schema validation lives in `arvis.tools.tool_schema`.
+- `SyscallHandler.handle`, `_record_intent`, `ToolManager.authorize`,
+  `ToolExecutor._execute_invocation` and `tool_execute` are now orchestration
+  entrypoints guarded by maintainability ratchet tests.
+- Added the normative governed-effect architecture note and updated tool
+  lifecycle, runtime concurrency doctrine and architecture invariants.
+
+### Breaking changes and host migration
+
+- Re-pin VeraMem and other hosts to `0.1.0a10`; capability, activation and intent
+  commitments changed during the campaign.
+- Do not call `ToolManager.run`, `execute_authorized`, `activate_authorized`,
+  `ToolExecutor.execute_invocation` or `ToolExecutor.execute`; use `CognitiveOS`
+  or the governed `SyscallHandler` path.
+- Production effect contexts must use `AuthenticatedPrincipal`.
+- Production sinks must expose a qualifying `AuditSinkManifest` and return an
+  `AuditReceipt` with the exact complete `run_id`, `causal_id`, intent hash and
+  matching store fingerprint.
+- Persist the complete intent, including `idempotency_key`, and forward that key
+  to the external system. Ensure causal-ID storage is not sized for the former
+  twelve-character run prefix.
+- Keep one ARVIS runtime instance per request/turn. Capability and confirmation
+  registries are thread-safe within one process but are not distributed across
+  workers.
+
 ## [0.1.0a9] - 2026-07-18
 
 Campaign 6: external-audit remediation. An external audit of 0.1.0a8

@@ -5,7 +5,7 @@
 set -u
 
 PY="${PYTHON:-python3}"
-export PYTHONPATH="${PYTHONPATH:-.}"
+export PYTHONPATH=".:${PYTHONPATH:-}"
 
 EXAMPLES=(
   examples/00_quickstart_engine.py

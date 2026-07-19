@@ -1,222 +1,119 @@
-# Tool Lifecycle — ARVIS
+# Tool lifecycle — ARVIS
+
+Status: lifecycle contract for `0.1.0a10`.
 
 ## Overview
 
-Describes the full lifecycle of a tool execution within the Kernel Core and Syscall System.
+A tool is an external capability selected by cognition and dispatched only after
+ARVIS has authorized, durably acknowledged and activated the exact invocation.
+The cognitive pipeline never executes a tool body.
 
----
+## Lifecycle
 
-## Lifecycle Steps
+### 1. Decision
 
-### 1. Decision Phase (Pipeline)
+The pipeline produces a finalized `ActionDecision` containing a tool name and
+payload. This is a request for authorization, not an execution capability.
 
-Tool is selected:
+### 2. Frozen authorization material
 
-```python
-ActionDecision(tool="my_tool")
-```
+`ToolAuthorizationService`:
 
----
+1. extracts the decision;
+2. creates one canonical `FrozenEffectPayload`;
+3. validates tool existence and input schema;
+4. resolves principal, tenant, risk and authentication provenance;
+5. derives a deterministic idempotency key;
+6. evaluates `ToolPolicy` and configured consent/egress gates;
+7. creates an immutable authorization snapshot.
 
-### 2. Kernel Detection Phase
+`ToolManager` owns the confirmation transaction and mints a registered
+single-use capability in state `MINTED`. A refusal carries a typed immutable
+denial snapshot and no executable capability.
 
-The Kernel Core detects executable intent:
+### 3. Governed syscall admission
 
-```python
-if intent.action.tool:
-
-syscall_handler.handle(...)
-```
-
-Responsibilities:
-
-- validate execution eligibility
-- trigger syscall execution
-- enforce post-decision boundary
-
----
-
-### 3. Execution Phase
-
-Tool receives:
+The runtime passes the exact `ToolAuthorizationOutcome` to:
 
 ```python
-{
-    "decision": ...,
-    "context": ...,
-    "tool_payload": ...
-    "syscall_context": {...}  # optional runtime metadata
-}
+SyscallHandler.handle(Syscall(name="tool.execute", ...))
 ```
 
-IMPORTANT:
+The handler copies and validates the strict outcome, verifies manager ownership
+and enforces production identity requirements.
 
-- Tool is executed ONLY via syscall
-- Tool is NOT aware of pipeline execution
-- Tool operates outside cognition
+### 4. Intent outbox
 
----
+Before dispatch, `IntentOutboxService` builds and commits the exact intent. A
+qualified sink returns an `AuditReceipt` binding:
 
-### 4. Result Capture
+- intent commitment;
+- complete run ID;
+- causal ID;
+- durable position;
+- store fingerprint.
 
-Success:
+An invalid receipt, sink exception or reused durable position aborts the
+transaction. No tool body runs.
 
-```python
-SyscallResult(success=True, result=...)
-```
+### 5. Activation and dispatch
 
-Failure:
+The receipt activates the exact capability. `EffectDispatcher` atomically
+consumes it and executes the frozen invocation. The adapter receives the
+idempotency key through `ToolInvocation`; legacy adapters receive it in the
+runtime payload.
 
-```python
-SyscallResult(success=False, error="...")
-```
+### 6. Effect classification
 
----
-
-### 5. Storage
-
-```python
-ctx.extra["syscall_results"]
-```
-
-This is the Syscall Journal.
-
----
-
-### 6. State Integration
-
-- CognitiveState (projection)
-- CognitiveIR.tools (runtime artifacts)
-
-IMPORTANT:
-
-- Results are observable
-- Results MUST NOT influence decision semantics of the same run
-
----
-
-### 7. Retry Phase (optional)
-
-Triggered by:
-
-```python
-ctx.extra["retry_tool"] = True
-```
-
-IMPORTANT:
-
-- Retry decision is made by the pipeline (ToolRetryStage)
-- Execution is still performed via syscall
-
----
-
-### 8. Replay
-
-- Tool NOT re-executed
-- Only results replayed
-
-Replay uses syscall journal only.
-No tool execution occurs during replay.
-
-Replay relies on:
-
-- deterministic pipeline execution
-- recorded SyscallResults
-
----
-
-## Execution Boundary
-
-Tool execution is strictly post-pipeline.
-
-The pipeline never executes tools.
-
-All tool executions occur via syscalls triggered by the Kernel Core.
-
-STRICT RULE:
-
-No tool execution is allowed outside the syscall system.
-
----
-
-## Lifecycle Diagram
+Every `ToolResult` carries one explicit boundary state:
 
 ```text
-Decision
-→ Kernel
-→ Syscall (tool.execute)
-→ Tool
-→ SyscallResult
-→ Journal
-→ Pipeline Feedback (next run)
+PRE_EFFECT_REFUSAL
+EFFECT_NOT_STARTED
+EFFECT_STARTED
+EFFECT_COMPLETED
+EFFECT_FAILED
+EFFECT_STATE_UNKNOWN
 ```
 
-Clarification:
+A confirmation is released only when ARVIS proves the effect did not start.
+Once started or uncertain, it is conservatively consumed.
 
-- "Kernel" = execution authority
-- "Syscall" = execution mechanism
-- "Tool" = external capability
+### 7. Result journal
 
----
+The syscall result is converted to an `ExecutionArtifact` and journaled against
+the exact intent using the same run ID, causal ID and intent commitment. An
+effect result that cannot be journaled marks the run audit-incomplete.
 
-## Failure Handling
+### 8. Retry
 
-Case	Behavior
-Exception	captured
-Timeout	treated as failure
-Invalid tool	rejected
+Retry remains runtime-governed. Every attempt returns through the same syscall
+path, receives a fresh authorization capability and reuses the same deterministic
+idempotency key for the same logical action.
 
-All failures are:
+### 9. Replay
 
-- captured as SyscallResult(success=False)
-- recorded in journal
-- exposed to next pipeline execution
+Replay consumes recorded artifacts. It never reactivates a capability or
+re-executes the external tool.
 
----
+## Forbidden routes
 
-## Retry Logic
+The following public calls fail closed:
 
-- bounded retries
-- payload reuse
-- safe conditions only
+```python
+ToolManager.run(...)
+ToolManager.execute_authorized(...)
+ToolManager.activate_authorized(...)
+ToolExecutor.execute_invocation(...)
+ToolExecutor.execute(...)
+```
 
-Retry is governed by:
+Unit tests may call a tool implementation directly. End-to-end effect tests must
+use `SyscallHandler` or `CognitiveOS`.
 
-- pipeline logic (ToolRetryStage)
-- NOT by syscall system
+## Concurrency boundary
 
----
-
-## Guarantees
-
-- no silent failures
-- full traceability
-- deterministic cognition
-- isolated execution
-
-Additionally:
-
-- strict separation between cognition and execution
-- replay-safe execution model
-- syscall-only side-effects
-
----
-
-## Future Extensions
-
-- async tools
-- streaming tools
-- tool chaining
-- tool planning
-
-All extensions MUST:
-
-- remain syscall-mediated
-- preserve determinism constraints
-- preserve replay compatibility
-
----
-
-## Version
-
-Lifecycle V1
+Capability transitions and confirmation reservations are atomic in one process.
+Registries are currently process-local. The supported production doctrine is one
+ARVIS instance per request/turn; shared multi-worker execution requires a future
+external transactional registry.

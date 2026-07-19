@@ -366,6 +366,22 @@ ARVIS requires explicit control over capabilities such as:
 
 Tool usage can be denied even if reasoning requests it.
 
+### Governed effect transaction
+
+```text
+ToolAuthorizationService
+  → ToolManager (confirmation + MINTED capability)
+  → SyscallHandler
+  → IntentOutboxService (receipt)
+  → activation
+  → EffectDispatcher
+  → exact result binding
+```
+
+The orchestration entrypoints remain intentionally small. Security-sensitive
+state stays in private registries, and the extracted services are internal rather
+than public API. See `docs/architecture/EFFECT_PATH.md`.
+
 ---
 
 ## Why This Is Better Than Standard AI Stacks

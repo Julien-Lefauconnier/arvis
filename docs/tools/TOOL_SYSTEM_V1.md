@@ -28,15 +28,19 @@ Pipeline (pure cognition)
 ↓
 ActionDecision (tool selected)
 ↓
-Kernel Core
+ToolAuthorizationService
+↓
+ToolManager (confirmation + MINTED capability)
 ↓
 SyscallHandler
 ↓
-ToolExecutor
+IntentOutboxService (exact receipt)
 ↓
-Tool (BaseTool)
+Capability activation
 ↓
-SyscallResult → ctx.extra
+EffectDispatcher → Tool (BaseTool)
+↓
+ExecutionArtifact / SyscallResult
 ↓
 IR / State / Replay
 ```
@@ -315,6 +319,10 @@ neither object exposes a public route that can trigger an effect:
 - `ToolExecutor.claim_minting_authority()` and
   `ToolExecutor.execute_invocation()` are hard refusals;
 - minting and capability consumption are internal composition operations.
+
+The extracted services are internal architecture boundaries, not public API.
+Their ownership and transaction are specified in
+`docs/architecture/EFFECT_PATH.md`.
 
 The production chain is therefore always:
 

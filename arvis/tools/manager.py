@@ -29,30 +29,22 @@ from dataclasses import dataclass
 from typing import Any
 from weakref import WeakKeyDictionary
 
-from arvis.adapters.tools.authorization import ToolAuthorizationDecision
 from arvis.adapters.tools.authorization_snapshot import ToolAuthorizationSnapshot
 from arvis.adapters.tools.gates import ConsentGate, EgressGate
-from arvis.adapters.tools.invocation import (
-    FrozenEffectPayload,
-    FrozenEffectPayloadError,
-    ToolInvocation,
-)
-from arvis.adapters.tools.policy import ToolPolicyEvaluator
-from arvis.errors.tool_runtime import (
-    ToolAuthorizationError,
-    ToolInputValidationError,
-    UnknownToolError,
-)
-from arvis.kernel_core.access.identity import (
-    authenticated_principal_from_context,
-    principal_from_context,
-)
+from arvis.errors.tool_runtime import ToolAuthorizationError
+from arvis.kernel_core.access.identity import principal_from_context
 from arvis.kernel_core.syscalls.audit_sink import (
     AuditReceipt,
     InMemoryAuditSink,
     validate_receipt,
 )
 from arvis.kernel_core.syscalls.engagement import stable_hash
+from arvis.tools.authorization_service import (
+    PreparedToolAuthorization,
+    ToolAuthorizationFailure,
+    ToolAuthorizationService,
+    resolve_turn_risk,
+)
 from arvis.tools.authorized_invocation import (
     AuthorizedInvocation,
     CapabilityActivationBinding,
@@ -65,9 +57,8 @@ from arvis.tools.confirmation import (
     ConfirmationReservation,
     payload_commitment,
 )
-from arvis.tools.executor import ToolExecutor, _schema_violation
+from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
-from arvis.tools.runtime.runtime_bindings import resolve_process_id
 from arvis.tools.tool_result import (
     EFFECT_NOT_STARTED,
     PRE_EFFECT_REFUSAL,
@@ -75,30 +66,8 @@ from arvis.tools.tool_result import (
     ToolResult,
 )
 
-
-def _resolve_turn_risk(ctx: Any) -> float:
-    """Real risk of the current turn, for the invocation (F-006-a5).
-
-    Hardening composition of the available signals: the declared input
-    risk (untrusted, may only make policy stricter) and the assessed
-    collapse risk. Returns 0.0 only when no signal is available, which
-    keeps the max_risk policy conservative rather than silent.
-    """
-    candidates: list[float] = []
-    extra = getattr(ctx, "extra", None)
-    if isinstance(extra, dict):
-        declared = extra.get("input_risk")
-        if isinstance(declared, (int, float)) and not isinstance(declared, bool):
-            candidates.append(float(declared))
-    assessed = getattr(ctx, "collapse_risk", None)
-    if assessed is not None:
-        try:
-            candidates.append(float(assessed))
-        except (TypeError, ValueError):
-            pass
-    if not candidates:
-        return 0.0
-    return max(0.0, min(1.0, max(candidates)))
+# Backward-compatible private alias for focused tests.
+_resolve_turn_risk = resolve_turn_risk
 
 
 @dataclass(frozen=True, slots=True)
@@ -252,6 +221,12 @@ class ToolManager:
         # is missing, instead of leaving enforcement to the host.
         self._require_gates = require_gates
         self._confirmation_registry = confirmation_registry
+        self._authorization_service = ToolAuthorizationService(
+            registry,
+            consent_gate=consent_gate,
+            egress_gate=egress_gate,
+            require_gates=require_gates,
+        )
         # Security-sensitive state is deliberately absent from the public object
         # graph. The module registry owns the mint and confirmation transactions.
         _MANAGER_SECURITY[self] = _ManagerSecurityState(
@@ -273,267 +248,83 @@ class ToolManager:
     # Phase 1: pre-syscall authorization
     # ------------------------------------------------------------------
     def authorize(self, result: Any, ctx: Any) -> ToolAuthorizationOutcome | None:
-        """Full pre-effect authorization of the decided tool invocation.
+        """Authorize one immutable invocation before the effect syscall.
 
-        Static validation happens before confirmation reservation. Every
-        operation after a successful reservation runs inside an exception-safe
-        transaction: a refusal or exception releases automatically, while only
-        a fully constructed manager-owned capability may take ownership.
+        Static preparation is delegated to :class:`ToolAuthorizationService`.
+        The manager retains only the security-sensitive responsibilities:
+        confirmation transaction ownership and capability minting.
         """
-        if result is None or ctx is None:
+        prepared = self._authorization_service.prepare(result, ctx)
+        if prepared is None:
             return None
-
-        decision = getattr(result, "action_decision", None)
-        if decision is None:
-            return None
-
-        tool_name = getattr(decision, "tool", None)
-        if not isinstance(tool_name, str):
-            return None
-
-        raw_payload = getattr(decision, "tool_payload", {})
-        if raw_payload is None:
-            raw_payload = {}
-
-        try:
-            frozen_payload = FrozenEffectPayload(raw_payload)
-        except (FrozenEffectPayloadError, TypeError, ValueError) as exc:
+        if isinstance(prepared, ToolAuthorizationFailure):
             return self._refusal_outcome(
                 ctx,
-                tool_name=tool_name,
-                reason="invalid_effect_payload",
-                error=ToolInputValidationError(
-                    "tool payload cannot be isolated as canonical effect material",
-                    details={"exception_type": type(exc).__name__},
-                ),
+                tool_name=prepared.tool_name,
+                reason=prepared.reason,
+                error=prepared.error,
             )
-
-        # Static failures precede reservation and therefore cannot lock a human
-        # confirmation.
-        tool = self.registry.get(tool_name)
-        if tool is None:
-            return self._refusal_outcome(
-                ctx,
-                tool_name=tool_name,
-                reason="unknown_tool",
-                error=UnknownToolError(f"Unknown tool: {tool_name}"),
-            )
-
-        spec = tool.spec
-        if spec is not None and spec.input_schema:
-            violation = _schema_violation(
-                frozen_payload.materialize(),
-                spec.input_schema,
-            )
-            if violation is not None:
-                return self._refusal_outcome(
-                    ctx,
-                    tool_name=tool_name,
-                    reason="input_schema_violation",
-                    error=ToolInputValidationError(
-                        f"tool {tool_name!r} input violates its declared input_schema",
-                        details={"schema_path": violation},
-                    ),
-                )
-
-        stamped = principal_from_context(ctx)
-        principal_id = (
-            stamped.user_id if stamped is not None else getattr(ctx, "user_id", None)
-        )
-        tenant_id = stamped.organization_id if stamped is not None else None
 
         reservation = self._reserve_confirmation_transaction(
             ctx,
-            tool_name=tool_name,
-            payload=frozen_payload.materialize(),
-            principal=principal_id,
-            tenant=tenant_id,
+            tool_name=prepared.tool_name,
+            payload=prepared.frozen_payload.materialize(),
+            principal=prepared.principal_id,
+            tenant=prepared.tenant_id,
         )
         if reservation is None:
-            return self._authorize_after_reservation(
-                ctx=ctx,
-                tool_name=tool_name,
-                frozen_payload=frozen_payload,
-                spec=spec,
-                stamped=stamped,
-                principal_id=principal_id,
-                tenant_id=tenant_id,
-                reservation=None,
-            )
-
+            return self._complete_authorization(prepared, ctx, None)
         with reservation:
-            return self._authorize_after_reservation(
-                ctx=ctx,
-                tool_name=tool_name,
-                frozen_payload=frozen_payload,
-                spec=spec,
-                stamped=stamped,
-                principal_id=principal_id,
-                tenant_id=tenant_id,
-                reservation=reservation,
-            )
+            return self._complete_authorization(prepared, ctx, reservation)
 
-    def _authorize_after_reservation(
+    def _complete_authorization(
         self,
-        *,
+        prepared: PreparedToolAuthorization,
         ctx: Any,
-        tool_name: str,
-        frozen_payload: FrozenEffectPayload,
-        spec: Any,
-        stamped: Any,
-        principal_id: str | None,
-        tenant_id: str | None,
         reservation: ConfirmationReservation | None,
     ) -> ToolAuthorizationOutcome:
-        """Construct policy material and mint under reservation protection."""
-        authenticated = authenticated_principal_from_context(ctx)
-        confirmation = reservation.confirmation if reservation is not None else None
-        confirmation_id = (
-            confirmation.confirmation_id if confirmation is not None else None
+        """Evaluate policy and mint while reservation rollback is active."""
+        invocation = self._authorization_service.build_invocation(
+            prepared,
+            ctx,
+            reservation,
+            payload_commitment_fn=payload_commitment,
+            stable_hash_fn=stable_hash,
         )
-
-        consent_channel = getattr(ctx, "consent_granted", None)
-        if isinstance(consent_channel, (list, tuple)):
-            consent_granted = tuple(
-                key for key in consent_channel if isinstance(key, str)
-            )
-        else:
-            consent_granted = ()
-
-        # This canonicalization deliberately remains inside the transaction: a
-        # custom canonicalizer failure after reservation must release.
-        idempotency_key = "idem:" + stable_hash(
-            {
-                "idempotency_version": 1,
-                "tool": tool_name,
-                "payload_sha256": payload_commitment(frozen_payload.materialize()),
-                "principal": principal_id,
-                "tenant": tenant_id,
-                "process_id": resolve_process_id(ctx),
-            }
-        )
-
-        invocation = ToolInvocation(
-            tool_name=tool_name,
-            payload=frozen_payload,
-            process_id=resolve_process_id(ctx),
-            user_id=getattr(ctx, "user_id", None),
-            risk_score=_resolve_turn_risk(ctx),
-            audit_required=spec.audit_required if spec is not None else False,
-            principal=stamped.user_id if stamped is not None else None,
-            tenant=stamped.organization_id if stamped is not None else None,
-            authentication_source=(
-                authenticated.authentication_source
-                if authenticated is not None
-                else None
-            ),
-            authentication_strength=(
-                authenticated.authentication_strength
-                if authenticated is not None
-                else None
-            ),
-            service_id=authenticated.service_id if authenticated is not None else None,
-            session_id_hash=(
-                authenticated.session_id_hash if authenticated is not None else None
-            ),
-            consent_granted=consent_granted,
-            confirmed=confirmation is not None,
-            confirmation_id=confirmation_id,
-            confirmation_commitment=(
-                confirmation.record_commitment if confirmation is not None else None
-            ),
-            idempotency_key=idempotency_key,
-            context=ctx,
-        )
-
-        runtime_policy = getattr(ctx, "runtime_policy", None)
-        force_tool = runtime_policy.force_tool if runtime_policy is not None else None
-        force_execution = (
-            runtime_policy.force_execution if runtime_policy is not None else False
-        )
-        bypass_policy = (
-            force_execution and force_tool is not None and tool_name == force_tool
-        )
-
-        if bypass_policy:
-            policy = ToolAuthorizationDecision(
-                allowed=True,
-                reason="forced_execution",
-            )
-        elif (
-            self._consent_gate is None
-            and self._egress_gate is None
-            and not self._require_gates
-        ):
-            policy = ToolPolicyEvaluator.evaluate(invocation, self.registry)
-        else:
-            policy = ToolPolicyEvaluator.evaluate(
-                invocation,
-                self.registry,
-                consent_gate=self._consent_gate,
-                egress_gate=self._egress_gate,
-                require_gates=self._require_gates,
-            )
+        policy = self._authorization_service.evaluate(invocation, ctx)
+        snapshot = self._authorization_service.snapshot(invocation, policy)
 
         if not policy.allowed:
-            denial = ToolAuthorizationSnapshot(
-                tool_name=tool_name,
-                allowed=False,
-                reason=policy.reason or "tool_policy_denied",
-                principal=invocation.principal,
-                tenant=invocation.tenant,
-                risk_score=invocation.risk_score,
-                confirmed=invocation.confirmed,
-                confirmation_commitment=invocation.confirmation_commitment,
-                authentication_source=invocation.authentication_source,
-                authentication_strength=invocation.authentication_strength,
-                service_id=invocation.service_id,
-                session_id_hash=invocation.session_id_hash,
-            )
             return ToolAuthorizationOutcome(
                 refusal=ToolResult(
-                    tool_name=tool_name,
+                    tool_name=prepared.tool_name,
                     success=False,
                     error=ToolAuthorizationError(policy.reason or "tool_policy_denied"),
                     latency_ms=None,
                     effect_boundary=PRE_EFFECT_REFUSAL,
                 ),
-                refusal_snapshot=denial,
+                refusal_snapshot=snapshot,
             )
 
-        authorization_snapshot = ToolAuthorizationSnapshot(
-            tool_name=tool_name,
-            allowed=True,
-            reason=policy.reason or "allowed",
-            principal=invocation.principal,
-            tenant=invocation.tenant,
-            risk_score=invocation.risk_score,
-            confirmed=invocation.confirmed,
-            confirmation_commitment=invocation.confirmation_commitment,
-            authentication_source=invocation.authentication_source,
-            authentication_strength=invocation.authentication_strength,
-            service_id=invocation.service_id,
-            session_id_hash=invocation.session_id_hash,
-        )
-        authorized = _manager_security(self).authority.mint(
+        state = _manager_security(self)
+        authorized = state.authority.mint(
             invocation,
-            authorization_snapshot.to_material(),
+            snapshot.to_material(),
         )
         try:
             outcome = ToolAuthorizationOutcome(authorized=authorized)
+            confirmation = reservation.confirmation if reservation is not None else None
             if reservation is not None and confirmation is not None:
                 reservation.handoff()
                 try:
-                    _manager_security(self).confirmation_reservations[
-                        authorized.nonce
-                    ] = reservation
+                    state.confirmation_reservations[authorized.nonce] = reservation
                 except Exception:
                     reservation.release_before_effect()
-                    _manager_security(self).authority.revoke(authorized)
+                    state.authority.revoke(authorized)
                     raise
             return outcome
         except Exception:
-            _manager_security(self).authority.revoke(authorized)
+            state.authority.revoke(authorized)
             raise
 
     def owns_outcome(self, outcome: ToolAuthorizationOutcome) -> bool:
@@ -788,7 +579,7 @@ class ToolManager:
             reason=reason,
             principal=stamped.user_id if stamped is not None else None,
             tenant=stamped.organization_id if stamped is not None else None,
-            risk_score=_resolve_turn_risk(ctx),
+            risk_score=resolve_turn_risk(ctx),
             confirmed=False,
             confirmation_commitment=None,
         )

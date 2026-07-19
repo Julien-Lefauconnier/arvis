@@ -214,3 +214,26 @@ No other component may produce a terminal result.
 - Conversation orchestration MUST remain independent from scheduler execution.
 
 **Violation of any invariant results in rejection or non-compliance.**
+
+
+## 6. Governed Effect-Path Invariants
+
+- An external effect MUST pass through a registered `EFFECT` syscall.
+- Authorization MUST finish before the pre-effect intent is recorded.
+- One canonical frozen payload MUST feed confirmation, policy, commitment,
+  idempotency and execution.
+- A capability MUST be registered, exact, receipt-activated and single-use.
+- A capability MUST NOT contain or expose mint authority.
+- A durable intent receipt MUST match the complete run ID, causal ID, intent
+  commitment and qualified store fingerprint.
+- Production effects MUST carry an `AuthenticatedPrincipal` and use a qualified
+  transactional append-only sink.
+- Every pre-effect failure MUST revoke the capability and release any reserved
+  confirmation.
+- Once the effect boundary is crossed, the confirmation MUST be conservatively
+  consumed and result journaling MUST be attempted.
+- The result MUST bind the exact accepted intent commitment.
+- `ToolManager` and `ToolExecutor` MUST expose no public route capable of
+  minting, activating or dispatching an effect.
+- The current in-process registries support atomicity within one process only;
+  production MUST follow the instance-per-request doctrine.
