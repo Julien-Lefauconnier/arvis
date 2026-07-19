@@ -54,7 +54,7 @@ def _executor():
     tool = _Tool()
     registry.register(tool)
     executor = ToolExecutor(registry)
-    return executor, tool, executor.claim_minting_authority()
+    return executor, tool, executor._claim_minting_authority()
 
 
 def _invocation():
@@ -104,7 +104,7 @@ def _activate(
 def test_capability_minted_by_the_claimed_authority_runs():
     executor, tool, mint = _executor()
     authorized = _activate(mint, mint.authorize(_invocation()))
-    result = executor.execute_invocation(
+    result = executor._execute_invocation(
         authorized, _result(), SimpleNamespace(extra={})
     )
     assert result.success is True
@@ -125,7 +125,9 @@ def test_authority_verifies_its_own_capability():
 def test_bare_invocation_is_refused():
     executor, tool, _mint = _executor()
     with pytest.raises(UnauthorizedExecutionError):
-        executor.execute_invocation(_invocation(), _result(), SimpleNamespace(extra={}))  # type: ignore[arg-type]
+        executor._execute_invocation(
+            _invocation(), _result(), SimpleNamespace(extra={})
+        )  # type: ignore[arg-type]
     assert tool.ran is False
 
 
@@ -134,7 +136,7 @@ def test_capability_from_a_different_authority_is_refused():
     foreign = InvocationAuthority()
     forged = foreign.authorize(_invocation())
     with pytest.raises(UnauthorizedExecutionError):
-        executor.execute_invocation(forged, _result(), SimpleNamespace(extra={}))
+        executor._execute_invocation(forged, _result(), SimpleNamespace(extra={}))
     assert tool.ran is False
 
 
@@ -228,22 +230,22 @@ def test_minting_authority_is_claimable_exactly_once():
     registry = ToolRegistry()
     registry.register(_Tool())
     executor = ToolExecutor(registry)
-    first = executor.claim_minting_authority()
+    first = executor._claim_minting_authority()
     assert first is not None
     with pytest.raises(UnauthorizedExecutionError):
-        executor.claim_minting_authority()
+        executor._claim_minting_authority()
 
 
 def test_authorized_invocation_is_single_use():
     executor, tool, mint = _executor()
     authorized = _activate(mint, mint.authorize(_invocation()))
-    first = executor.execute_invocation(
+    first = executor._execute_invocation(
         authorized, _result(), SimpleNamespace(extra={})
     )
     assert first is not None and first.success is True
     # Second presentation of the SAME capability: refused, no effect.
     with pytest.raises(UnauthorizedExecutionError):
-        executor.execute_invocation(authorized, _result(), SimpleNamespace(extra={}))
+        executor._execute_invocation(authorized, _result(), SimpleNamespace(extra={}))
 
 
 def test_two_capabilities_for_the_same_invocation_are_independent():
@@ -253,12 +255,16 @@ def test_two_capabilities_for_the_same_invocation_are_independent():
     cap_b = _activate(mint, mint.authorize(inv), suffix="b")
     assert cap_a.nonce != cap_b.nonce
     assert (
-        executor.execute_invocation(cap_a, _result(), SimpleNamespace(extra={})).success
+        executor._execute_invocation(
+            cap_a, _result(), SimpleNamespace(extra={})
+        ).success
         is True
     )
     # cap_b is its own single-use authorization: still valid.
     assert (
-        executor.execute_invocation(cap_b, _result(), SimpleNamespace(extra={})).success
+        executor._execute_invocation(
+            cap_b, _result(), SimpleNamespace(extra={})
+        ).success
         is True
     )
 
@@ -379,7 +385,7 @@ def test_revoked_capability_is_refused_by_executor():
     assert authority.revoke(capability) is True
     assert authority.state_of(capability) is CapabilityState.REVOKED
     with pytest.raises(UnauthorizedExecutionError):
-        executor.execute_invocation(
+        executor._execute_invocation(
             capability,
             _result(),
             SimpleNamespace(extra={}),
@@ -401,7 +407,7 @@ def test_manual_capability_clone_cannot_drive_effect():
     )
     assert authority.verifies(clone) is False
     with pytest.raises(UnauthorizedExecutionError):
-        executor.execute_invocation(clone, _result(), SimpleNamespace(extra={}))
+        executor._execute_invocation(clone, _result(), SimpleNamespace(extra={}))
     assert tool.ran is False
 
 

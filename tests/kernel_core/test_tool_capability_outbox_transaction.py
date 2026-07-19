@@ -138,7 +138,7 @@ def _activate(
         run_id=run_id,
         causal_id=causal_id,
     )
-    return manager.activate_authorized(
+    return manager._activate_authorized_for_tests(
         outcome.authorized,
         receipt=acknowledgement,
         intent_sha256=intent_sha256,
@@ -156,7 +156,7 @@ def test_capability_cannot_execute_before_receipt_activation() -> None:
     assert manager.capability_state(outcome.authorized) is CapabilityState.MINTED
 
     with pytest.raises(UnauthorizedExecutionError):
-        manager.execute_authorized(outcome.authorized, result, ctx)
+        manager._execute_authorized_for_tests(outcome.authorized, result, ctx)
 
     assert tool.calls == []
     assert manager.capability_state(outcome.authorized) is CapabilityState.MINTED
@@ -210,7 +210,7 @@ def test_sink_exception_revokes_capability_and_prevents_effect() -> None:
     assert ctx.extra.get("syscall_intents", []) == []
     assert manager.capability_state(outcome.authorized) is CapabilityState.REVOKED
     with pytest.raises(UnauthorizedExecutionError):
-        manager.execute_authorized(outcome.authorized, result, ctx)
+        manager._execute_authorized_for_tests(outcome.authorized, result, ctx)
 
 
 def test_receipt_replay_refusal_closes_the_accepted_intent() -> None:
@@ -309,7 +309,7 @@ def test_aborted_capability_cannot_be_activated() -> None:
     outcome = _authorize(manager, result, ctx)
     assert outcome.authorized is not None
 
-    assert manager.abort_authorized(outcome.authorized) is True
+    assert manager._abort_authorized_for_tests(outcome.authorized) is True
     assert _activate(manager, outcome) is False
     assert manager.capability_state(outcome.authorized) is CapabilityState.REVOKED
 

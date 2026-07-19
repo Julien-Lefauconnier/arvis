@@ -19,7 +19,9 @@ and invalid outputs (the external effect happened).
 
 import time
 from contextlib import suppress
+from dataclasses import dataclass
 from typing import Any
+from weakref import WeakKeyDictionary
 
 import jsonschema
 
@@ -65,6 +67,24 @@ def _schema_violation(instance: Any, schema: dict[str, Any]) -> str | None:
     return None
 
 
+@dataclass(slots=True)
+class _ExecutorSecurityState:
+    authority: InvocationAuthority
+    minting_claimed: bool = False
+
+
+_EXECUTOR_SECURITY: WeakKeyDictionary[object, _ExecutorSecurityState] = (
+    WeakKeyDictionary()
+)
+
+
+def _executor_security(executor: object) -> _ExecutorSecurityState:
+    state = _EXECUTOR_SECURITY.get(executor)
+    if state is None:
+        raise UnauthorizedExecutionError("executor security state is unavailable")
+    return state
+
+
 class ToolExecutor:
     def __init__(self, registry: ToolRegistry) -> None:
         self.registry = registry
@@ -73,28 +93,37 @@ class ToolExecutor:
         # audit proved a public `authority` let any holder of the
         # executor mint its own capability, bypassing confirmation,
         # policy, manager, syscall and audit. The only handle is
-        # claim_minting_authority(), claimable exactly once (the
-        # manager claims it at construction).
-        self._authority = InvocationAuthority()
-        self._minting_claimed = False
+        # _claim_minting_authority(), claimable exactly once by the
+        # manager during internal composition.
+        _EXECUTOR_SECURITY[self] = _ExecutorSecurityState(
+            authority=InvocationAuthority()
+        )
 
-    def claim_minting_authority(self) -> InvocationAuthority:
+    def _claim_minting_authority(self) -> InvocationAuthority:
         """Hand over the minting authority, EXACTLY ONCE (Lot 3).
 
-        The ToolManager calls this at construction; once the system is
+        Internal composition only. ToolManager calls this at construction;
+        once the system is
         composed there is no reachable mint on the public object graph.
         A second claim raises: two components cannot both hold the
         mint, and a later caller cannot obtain it.
         """
-        if self._minting_claimed:
+        state = _executor_security(self)
+        if state.minting_claimed:
             raise UnauthorizedExecutionError(
                 "the minting authority of this executor was already "
                 "claimed; there is exactly one minter per executor"
             )
-        self._minting_claimed = True
-        return self._authority
+        state.minting_claimed = True
+        return state.authority
 
-    def execute_invocation(
+    def claim_minting_authority(self) -> InvocationAuthority:
+        """Public mint claims are forbidden; composition owns the authority."""
+        raise UnauthorizedExecutionError(
+            "minting authority is internal to ToolManager composition"
+        )
+
+    def _execute_invocation(
         self,
         authorized: AuthorizedInvocation,
         result: Any,
@@ -107,9 +136,10 @@ class ToolExecutor:
         preparing or validating the call are ``EFFECT_NOT_STARTED``; once the
         tool body is entered, failures are ``EFFECT_FAILED`` conservatively.
         """
-        if not isinstance(
-            authorized, AuthorizedInvocation
-        ) or not self._authority.consume(authorized):
+        authority = _executor_security(self).authority
+        if not isinstance(authorized, AuthorizedInvocation) or not authority.consume(
+            authorized
+        ):
             raise UnauthorizedExecutionError(
                 "tool execution requires an active, registered, intact and unused "
                 "AuthorizedInvocation minted by the tool manager's policy"
@@ -287,6 +317,17 @@ class ToolExecutor:
                 latency_ms=None,
                 effect_boundary=EFFECT_FAILED,
             )
+
+    def execute_invocation(
+        self,
+        authorized: AuthorizedInvocation,
+        result: Any,
+        ctx: Any,
+    ) -> ToolResult | None:
+        """Public capability execution is forbidden outside SyscallHandler."""
+        raise UnauthorizedExecutionError(
+            "authorized tool execution is internal to the syscall boundary"
+        )
 
     def execute(self, arg1: Any, arg2: Any | None = None) -> ToolResult | None:
         """Direct execution is forbidden (D-7).

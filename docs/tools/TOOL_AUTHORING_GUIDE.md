@@ -243,3 +243,22 @@ A good tool is:
 - observable
 - bounded
 - safe
+
+---
+
+## Calling tools from a host
+
+A host must never call a tool body, `ToolManager.run()`, or executor capability
+methods to perform a business effect. Register the tool, then let `CognitiveOS`
+and its `tool.execute` syscall perform authorization, outbox persistence,
+capability activation, execution, and journaling.
+
+```python
+os.register_tool(MyTool())
+result = os.run_as(principal=principal, cognitive_input=request)
+```
+
+`ToolManager` and `ToolExecutor` remain importable for advanced runtime
+composition and VeraMem compatibility, but their public effect methods are
+fail-closed. Private methods ending in `for_tests` exist only for ARVIS unit
+tests and are not supported integration points.

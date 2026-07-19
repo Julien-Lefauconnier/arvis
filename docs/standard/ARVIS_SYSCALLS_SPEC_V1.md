@@ -592,3 +592,28 @@ The ARVIS syscall system is:
     ensuring all side-effects are controlled, traceable, and replay-safe
 
 It is the foundation that allows ARVIS to safely interact with the external world while preserving cognitive integrity.
+
+---
+
+## Public effect-route invariant
+
+An external effect MUST be dispatched only while handling a registered EFFECT
+syscall. Possession of a `ToolManager`, `ToolExecutor`, authorization outcome,
+or minted capability is insufficient.
+
+For `tool.execute`:
+
+1. `ToolManager.authorize()` may only produce a non-executable MINTED
+   capability or a refusal.
+2. `SyscallHandler` is the unique owner of the private effect-boundary permit.
+3. The handler records and validates the intent receipt before activation.
+4. Only the handler may request activation, revocation, or execution through
+   that permit.
+5. Public manager/executor methods MUST fail closed when called without the
+   private permit.
+6. No unsafe executor or minting authority is exported from `arvis` or
+   `arvis.api`.
+
+A host test that needs to exercise a tool in isolation SHOULD call the tool
+implementation directly as a unit test. End-to-end effect-path tests MUST use
+`SyscallHandler.handle(Syscall(name="tool.execute", ...))` or `CognitiveOS`.

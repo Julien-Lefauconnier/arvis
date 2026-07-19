@@ -123,7 +123,7 @@ def _activate_outcome(
         store_fingerprint="db:test",
         committed_at="2026-07-19T00:00:00+00:00",
     )
-    assert manager.activate_authorized(
+    assert manager._activate_authorized_for_tests(
         outcome.authorized,
         receipt=receipt,
         intent_sha256=intent_sha256,
@@ -157,7 +157,7 @@ def test_legitimate_capability_cannot_mint_fresh_nonce() -> None:
     )
 
     with pytest.raises(UnauthorizedExecutionError):
-        manager.execute_authorized(forged, _result("safe", {}), ctx)
+        manager._execute_authorized_for_tests(forged, _result("safe", {}), ctx)
     assert danger.payloads == []
 
 
@@ -174,7 +174,9 @@ def test_payload_mutation_after_authorization_does_not_change_effect() -> None:
     payload["target"] = "B"
     payload["nested"]["value"] = 2
     _activate_outcome(manager, outcome)
-    manager.execute_authorized(outcome.authorized, _result("mutate", payload), ctx)
+    manager._execute_authorized_for_tests(
+        outcome.authorized, _result("mutate", payload), ctx
+    )
 
     assert tool.payloads == [{"target": "A", "nested": {"value": 1}}]
 
@@ -264,7 +266,7 @@ def test_sink_failure_revokes_capability_and_prevents_direct_execution() -> None
     assert refused.success is False
 
     with pytest.raises(UnauthorizedExecutionError):
-        manager.execute_authorized(outcome.authorized, pipeline_result, ctx)
+        manager._execute_authorized_for_tests(outcome.authorized, pipeline_result, ctx)
     assert tool.payloads == []
 
 

@@ -20,14 +20,14 @@ and returns a frozen :class:`ToolAuthorizationOutcome` (a sealed
 capability, or a pre-effect refusal with its own denial snapshot). The
 runtime threads the outcome into the ``tool.execute`` syscall args; the
 handler binds the intent from the sealed capability, never from a
-mutable channel; the syscall body then calls
-:meth:`execute_authorized`, which runs the executor and finalizes the
-confirmation on the effect boundary: committed only if the boundary was
-crossed, released on any pre-effect refusal (closes constat 11).
+mutable channel. Campaign 7 Lot 8 confines activation and execution to
+the private effect-boundary permit claimed by one SyscallHandler; public
+manager methods cannot drive an effect.
 """
 
 from dataclasses import dataclass
 from typing import Any
+from weakref import WeakKeyDictionary
 
 from arvis.adapters.tools.authorization import ToolAuthorizationDecision
 from arvis.adapters.tools.authorization_snapshot import ToolAuthorizationSnapshot
@@ -57,6 +57,7 @@ from arvis.tools.authorized_invocation import (
     AuthorizedInvocation,
     CapabilityActivationBinding,
     CapabilityState,
+    InvocationAuthority,
     UnauthorizedExecutionError,
 )
 from arvis.tools.confirmation import (
@@ -161,6 +162,62 @@ class ToolAuthorizationOutcome:
         return self.refusal_snapshot.to_material()
 
 
+@dataclass(slots=True)
+class _ManagerSecurityState:
+    authority: InvocationAuthority
+    confirmation_reservations: dict[str, ConfirmationReservation]
+    effect_boundary_claimed: bool = False
+
+
+_MANAGER_SECURITY: WeakKeyDictionary[object, _ManagerSecurityState] = (
+    WeakKeyDictionary()
+)
+
+
+def _manager_security(manager: object) -> _ManagerSecurityState:
+    state = _MANAGER_SECURITY.get(manager)
+    if state is None:
+        raise UnauthorizedExecutionError("tool manager security state is unavailable")
+    return state
+
+
+class _ToolEffectBoundary:
+    """Private controller held only by one SyscallHandler."""
+
+    __slots__ = ("_manager",)
+
+    def __init__(self, manager: "ToolManager") -> None:
+        self._manager = manager
+
+    def owns_outcome(self, outcome: ToolAuthorizationOutcome) -> bool:
+        return self._manager.owns_outcome(outcome)
+
+    def activate_authorized(
+        self,
+        authorized: Any,
+        *,
+        receipt: Any,
+        intent_sha256: str,
+        run_id: str | None,
+        causal_id: str,
+    ) -> bool:
+        return self._manager._activate_authorized(
+            authorized,
+            receipt=receipt,
+            intent_sha256=intent_sha256,
+            run_id=run_id,
+            causal_id=causal_id,
+        )
+
+    def abort_authorized(self, authorized: Any) -> bool:
+        return self._manager._abort_authorized(authorized)
+
+    def execute_authorized(
+        self, authorized: Any, result: Any, ctx: Any
+    ) -> ToolResult | None:
+        return self._manager._execute_authorized(authorized, result, ctx)
+
+
 class ToolManager:
     """
     Unified tool lifecycle orchestrator.
@@ -168,8 +225,8 @@ class ToolManager:
     Responsibilities:
     - authorize an invocation fully BEFORE the effect syscall
       (:meth:`authorize`)
-    - execute a sealed, authorized invocation and finalize its
-      confirmation on the effect boundary (:meth:`execute_authorized`)
+    - provide private activation/execution operations only to the single
+      SyscallHandler that claims the effect boundary
 
     Retry orchestration is owned by CognitiveRuntime and must pass
     through SyscallHandler for audit/replay consistency; every attempt
@@ -195,14 +252,22 @@ class ToolManager:
         # is missing, instead of leaving enforcement to the host.
         self._require_gates = require_gates
         self._confirmation_registry = confirmation_registry
-        # Campaign 7 Lot 5: once authorization succeeds, ownership of an
-        # exception-safe reservation transaction is transferred to the exact
-        # minted capability and finalized from its explicit effect state.
-        self._confirmation_reservations: dict[str, ConfirmationReservation] = {}
-        # Campaign 6 (Lot 3, closes a8 section 10): the manager is the
-        # single minter. The claim is exactly-once per executor, so no
-        # later caller can obtain the mint from the public graph.
-        self._authority = executor.claim_minting_authority()
+        # Security-sensitive state is deliberately absent from the public object
+        # graph. The module registry owns the mint and confirmation transactions.
+        _MANAGER_SECURITY[self] = _ManagerSecurityState(
+            authority=executor._claim_minting_authority(),
+            confirmation_reservations={},
+        )
+
+    def _claim_effect_boundary(self) -> _ToolEffectBoundary:
+        """Hand one private controller to exactly one SyscallHandler."""
+        state = _manager_security(self)
+        if state.effect_boundary_claimed:
+            raise UnauthorizedExecutionError(
+                "the tool effect boundary was already claimed by a syscall handler"
+            )
+        state.effect_boundary_claimed = True
+        return _ToolEffectBoundary(self)
 
     # ------------------------------------------------------------------
     # Phase 1: pre-syscall authorization
@@ -450,7 +515,7 @@ class ToolManager:
             service_id=invocation.service_id,
             session_id_hash=invocation.session_id_hash,
         )
-        authorized = self._authority.mint(
+        authorized = _manager_security(self).authority.mint(
             invocation,
             authorization_snapshot.to_material(),
         )
@@ -459,14 +524,16 @@ class ToolManager:
             if reservation is not None and confirmation is not None:
                 reservation.handoff()
                 try:
-                    self._confirmation_reservations[authorized.nonce] = reservation
+                    _manager_security(self).confirmation_reservations[
+                        authorized.nonce
+                    ] = reservation
                 except Exception:
                     reservation.release_before_effect()
-                    self._authority.revoke(authorized)
+                    _manager_security(self).authority.revoke(authorized)
                     raise
             return outcome
         except Exception:
-            self._authority.revoke(authorized)
+            _manager_security(self).authority.revoke(authorized)
             raise
 
     def owns_outcome(self, outcome: ToolAuthorizationOutcome) -> bool:
@@ -481,9 +548,9 @@ class ToolManager:
             return False
         if outcome.authorized is None:
             return True
-        return self._authority.verifies(outcome.authorized)
+        return _manager_security(self).authority.verifies(outcome.authorized)
 
-    def activate_authorized(
+    def _activate_authorized(
         self,
         authorized: Any,
         *,
@@ -502,14 +569,14 @@ class ToolManager:
         if type(authorized) is not AuthorizedInvocation:
             return False
         if not isinstance(intent_sha256, str) or not intent_sha256:
-            self.abort_authorized(authorized)
+            self._abort_authorized(authorized)
             return False
         if not isinstance(causal_id, str) or not causal_id:
-            self.abort_authorized(authorized)
+            self._abort_authorized(authorized)
             return False
         idempotency_key = authorized.invocation.idempotency_key
         if not isinstance(idempotency_key, str) or not idempotency_key:
-            self.abort_authorized(authorized)
+            self._abort_authorized(authorized)
             return False
         expected_intent = {
             "commitment_sha256": intent_sha256,
@@ -518,7 +585,7 @@ class ToolManager:
             "idempotency_key": idempotency_key,
         }
         if validate_receipt(receipt, expected_intent) is not None:
-            self.abort_authorized(authorized)
+            self._abort_authorized(authorized)
             return False
         assert isinstance(receipt, AuditReceipt)
         try:
@@ -533,18 +600,39 @@ class ToolManager:
                 committed_at=receipt.committed_at,
             )
         except (TypeError, ValueError):
-            self.abort_authorized(authorized)
+            self._abort_authorized(authorized)
             return False
-        if not self._authority.activate(authorized, activation):
-            self.abort_authorized(authorized)
+        if not _manager_security(self).authority.activate(authorized, activation):
+            self._abort_authorized(authorized)
             return False
         return True
+
+    def activate_authorized(self, *args: Any, **kwargs: Any) -> bool:
+        """Public activation is forbidden; SyscallHandler owns this transition."""
+        del args, kwargs
+        raise UnauthorizedExecutionError(
+            "direct tool effects are forbidden; use SyscallHandler.handle(tool.execute)"
+        )
+
+    def abort_authorized(self, *args: Any, **kwargs: Any) -> bool:
+        """Public revocation is forbidden outside the syscall transaction."""
+        del args, kwargs
+        raise UnauthorizedExecutionError(
+            "direct tool effects are forbidden; use SyscallHandler.handle(tool.execute)"
+        )
+
+    def execute_authorized(self, *args: Any, **kwargs: Any) -> ToolResult | None:
+        """Public capability execution is forbidden outside SyscallHandler."""
+        del args, kwargs
+        raise UnauthorizedExecutionError(
+            "direct tool effects are forbidden; use SyscallHandler.handle(tool.execute)"
+        )
 
     def capability_state(self, authorized: Any) -> CapabilityState | None:
         """Return the lifecycle state of an exact manager-owned capability."""
         if type(authorized) is not AuthorizedInvocation:
             return None
-        return self._authority.state_of(authorized)
+        return _manager_security(self).authority.state_of(authorized)
 
     def capability_activation(
         self,
@@ -553,16 +641,16 @@ class ToolManager:
         """Return the immutable receipt binding of an exact capability."""
         if type(authorized) is not AuthorizedInvocation:
             return None
-        return self._authority.activation_of(authorized)
+        return _manager_security(self).authority.activation_of(authorized)
 
-    def abort_authorized(self, authorized: Any) -> bool:
-        """Revoke a pre-effect capability and release its reservation."""
+    def _abort_authorized(self, authorized: Any) -> bool:
+        """Revoke from the private effect controller."""
         if type(authorized) is not AuthorizedInvocation:
             return False
-        state = self._authority.state_of(authorized)
+        state = _manager_security(self).authority.state_of(authorized)
         if state is None or state is CapabilityState.CONSUMED:
             return False
-        revoked = self._authority.revoke(authorized)
+        revoked = _manager_security(self).authority.revoke(authorized)
         if not revoked:
             return False
         self._finalize_authorized_confirmation(authorized, EFFECT_NOT_STARTED)
@@ -571,15 +659,12 @@ class ToolManager:
     # ------------------------------------------------------------------
     # Phase 2: sealed execution behind the syscall boundary
     # ------------------------------------------------------------------
-    def execute_authorized(
-        self,
-        authorized: Any,
-        result: Any,
-        ctx: Any,
+    def _execute_authorized(
+        self, authorized: Any, result: Any, ctx: Any
     ) -> ToolResult | None:
-        """Execute a sealed invocation and finalize from its effect state."""
+        """Execute from the private effect controller."""
         try:
-            result_exec = self.executor.execute_invocation(authorized, result, ctx)
+            result_exec = self.executor._execute_invocation(authorized, result, ctx)
         except Exception:
             # Executor exceptions that escape its own phase classification are
             # necessarily before a proven effect boundary. Release and preserve
@@ -600,15 +685,15 @@ class ToolManager:
     # Composition (unit-test and host convenience)
     # ------------------------------------------------------------------
     def run(self, result: Any, ctx: Any) -> ToolResult | None:
-        """Authorize then execute, as one call.
+        """Direct effect composition is not part of the public runtime surface."""
+        del result, ctx
+        raise UnauthorizedExecutionError(
+            "ToolManager.run is not an effect route; use CognitiveOS or "
+            "SyscallHandler.handle(tool.execute)"
+        )
 
-        Convenience composition for direct callers (unit tests, simple
-        hosts). The governed runtime path does NOT use it: the runtime
-        authorizes first, threads the frozen outcome through the
-        syscall, and the syscall body executes the sealed capability,
-        so the intent always precedes the effect and follows the
-        authorization.
-        """
+    def _run_unsafe_for_tests(self, result: Any, ctx: Any) -> ToolResult | None:
+        """Test-only compatibility composition; never used by runtime code."""
         outcome = self.authorize(result, ctx)
         if outcome is None:
             return None
@@ -616,12 +701,8 @@ class ToolManager:
             return outcome.refusal
         assert outcome.authorized is not None
 
-        # Compatibility-only local composition. It still obeys the two-phase
-        # invariant by persisting an intent in a volatile reference outbox and
-        # activating from its exact receipt before execution. Production hosts
-        # must use SyscallHandler with their configured durable sink.
         authorized = outcome.authorized
-        causal_id = f"tool-manager-run:{authorized.nonce}"
+        causal_id = f"tool-manager-test-run:{authorized.nonce}"
         intent_sha256 = stable_hash(
             {
                 "local_tool_run_version": 1,
@@ -642,7 +723,7 @@ class ToolManager:
         }
         try:
             receipt = InMemoryAuditSink().append(local_intent)
-            if not self.activate_authorized(
+            if not self._activate_authorized_for_tests(
                 authorized,
                 receipt=receipt,
                 intent_sha256=intent_sha256,
@@ -650,14 +731,43 @@ class ToolManager:
                 causal_id=causal_id,
             ):
                 raise UnauthorizedExecutionError(
-                    "the local compatibility outbox could not activate the capability"
+                    "the test-only outbox could not activate the capability"
                 )
-            return self.execute_authorized(authorized, result, ctx)
+            return self._execute_authorized_for_tests(authorized, result, ctx)
         except Exception:
-            # Idempotent: activation failures already abort; sink failures have
-            # not yet done so. Either way no pre-effect reservation may leak.
-            self.abort_authorized(authorized)
+            self._abort_authorized_for_tests(authorized)
             raise
+
+    def _activate_authorized_for_tests(
+        self,
+        authorized: Any,
+        *,
+        receipt: Any,
+        intent_sha256: str,
+        run_id: str | None,
+        causal_id: str,
+    ) -> bool:
+        return self._activate_authorized(
+            authorized,
+            receipt=receipt,
+            intent_sha256=intent_sha256,
+            run_id=run_id,
+            causal_id=causal_id,
+        )
+
+    def _abort_authorized_for_tests(self, authorized: Any) -> bool:
+        return self._abort_authorized(
+            authorized,
+        )
+
+    def _execute_authorized_for_tests(
+        self, authorized: Any, result: Any, ctx: Any
+    ) -> ToolResult | None:
+        return self._execute_authorized(
+            authorized,
+            result,
+            ctx,
+        )
 
     # ------------------------------------------------------------------
     # Internals
@@ -725,7 +835,9 @@ class ToolManager:
         """Finalize the exact reservation handed to one capability."""
         if type(authorized) is not AuthorizedInvocation:
             return
-        reservation = self._confirmation_reservations.pop(authorized.nonce, None)
+        reservation = _manager_security(self).confirmation_reservations.pop(
+            authorized.nonce, None
+        )
         if reservation is not None:
             reservation.commit_after_effect(state)
             return

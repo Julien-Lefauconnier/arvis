@@ -144,7 +144,7 @@ def test_attack_executor_cannot_be_driven_without_a_capability():
     bare = ToolInvocation(tool_name="t", payload={}, process_id="p")
     result = SimpleNamespace(action_decision=SimpleNamespace(tool="t", tool_payload={}))
     with pytest.raises(UnauthorizedExecutionError):
-        executor.execute_invocation(bare, result, SimpleNamespace(extra={}))  # type: ignore[arg-type]
+        executor._execute_invocation(bare, result, SimpleNamespace(extra={}))  # type: ignore[arg-type]
 
 
 def test_attack_forged_capability_is_refused():
@@ -155,7 +155,7 @@ def test_attack_forged_capability_is_refused():
     )
     result = SimpleNamespace(action_decision=SimpleNamespace(tool="t", tool_payload={}))
     with pytest.raises(UnauthorizedExecutionError):
-        executor.execute_invocation(forged, result, SimpleNamespace(extra={}))
+        executor._execute_invocation(forged, result, SimpleNamespace(extra={}))
 
 
 def test_attack_no_public_executor_and_no_bypass():

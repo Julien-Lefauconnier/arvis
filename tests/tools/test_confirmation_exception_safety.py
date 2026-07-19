@@ -273,7 +273,7 @@ def test_executor_validation_exception_is_effect_not_started_and_releases() -> N
     payload = {"x": 1}
     confirmation_id = _issue(confirmations, payload)
 
-    result = manager.run(_result(payload), _context(confirmation_id))
+    result = manager._run_unsafe_for_tests(_result(payload), _context(confirmation_id))
 
     assert result is not None
     assert result.success is False
@@ -296,7 +296,7 @@ def test_local_outbox_exception_revokes_and_releases(
     monkeypatch.setattr(manager_module, "InMemoryAuditSink", _FailingSink)
 
     with pytest.raises(RuntimeError, match="outbox exploded"):
-        manager.run(_result(payload), _context(confirmation_id))
+        manager._run_unsafe_for_tests(_result(payload), _context(confirmation_id))
 
     assert tool.executions == 0
     _assert_reservable_again(confirmations, confirmation_id, payload)
@@ -315,7 +315,9 @@ def test_forged_capability_cannot_release_another_capability_reservation() -> No
 
     forged = replace(outcome.authorized, nonce="forged-nonce")
     with pytest.raises(UnauthorizedExecutionError):
-        manager.execute_authorized(forged, _result(payload), _context(confirmation_id))
+        manager._execute_authorized_for_tests(
+            forged, _result(payload), _context(confirmation_id)
+        )
 
     # The legitimate capability still owns the locked reservation.
     assert (
@@ -327,7 +329,7 @@ def test_forged_capability_cannot_release_another_capability_reservation() -> No
         )
         is None
     )
-    assert manager.abort_authorized(outcome.authorized) is True
+    assert manager._abort_authorized_for_tests(outcome.authorized) is True
     _assert_reservable_again(confirmations, confirmation_id, payload)
 
 
@@ -341,9 +343,9 @@ def test_unexpected_executor_exception_releases_and_revokes(
     def _boom(*args: Any, **kwargs: Any) -> Any:
         raise RuntimeError("executor exploded before effect")
 
-    monkeypatch.setattr(manager.executor, "execute_invocation", _boom)
+    monkeypatch.setattr(manager.executor, "_execute_invocation", _boom)
 
     with pytest.raises(RuntimeError, match="executor exploded before effect"):
-        manager.run(_result(payload), _context(confirmation_id))
+        manager._run_unsafe_for_tests(_result(payload), _context(confirmation_id))
 
     _assert_reservable_again(confirmations, confirmation_id, payload)

@@ -147,7 +147,7 @@ def _manager_with(registry_of_confirmations):
 def _turn(manager, ctx):
     decision = SimpleNamespace(tool="sensitive_tool", tool_payload={"cmd": "go"})
     result = SimpleNamespace(action_decision=decision)
-    return manager.run(result, ctx)
+    return manager._run_unsafe_for_tests(result, ctx)
 
 
 def test_confirmed_invocation_satisfies_the_requirement():

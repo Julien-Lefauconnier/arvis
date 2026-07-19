@@ -98,7 +98,7 @@ def _activate_outcome(
         store_fingerprint="db:test",
         committed_at="2026-07-19T00:00:00+00:00",
     )
-    assert manager.activate_authorized(
+    assert manager._activate_authorized_for_tests(
         outcome.authorized,
         receipt=receipt,
         intent_sha256=intent_sha256,
@@ -207,7 +207,7 @@ def test_policy_cannot_mutate_future_effect_payload(monkeypatch: Any) -> None:
     assert isinstance(outcome, ToolAuthorizationOutcome)
     assert outcome.authorized is not None
     _activate_outcome(manager, outcome)
-    manager.execute_authorized(outcome.authorized, _result(payload), _ctx())
+    manager._execute_authorized_for_tests(outcome.authorized, _result(payload), _ctx())
 
     assert tool.executed == [{"target": "A", "nested": {"value": 1}}]
 
@@ -222,7 +222,7 @@ def test_tool_validation_cannot_mutate_execution_payload() -> None:
     manager = _manager(tool)
     payload = {"target": "A", "nested": {"value": 1}}
 
-    result = manager.run(_result(payload), _ctx())
+    result = manager._run_unsafe_for_tests(_result(payload), _ctx())
 
     assert result is not None and result.success is True
     assert tool.executed == [{"target": "A", "nested": {"value": 1}}]
@@ -311,7 +311,9 @@ def test_confirmation_callback_cannot_change_idempotency_or_effect() -> None:
     )
 
     _activate_outcome(manager, outcome)
-    result = manager.execute_authorized(outcome.authorized, _result(payload), ctx)
+    result = manager._execute_authorized_for_tests(
+        outcome.authorized, _result(payload), ctx
+    )
 
     assert result is not None and result.success is True
     assert invocation.idempotency_key == expected_idempotency

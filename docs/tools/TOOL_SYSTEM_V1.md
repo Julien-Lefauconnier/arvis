@@ -299,3 +299,34 @@ Stable baseline for:
 - deterministic replay
 - observable cognition
 - kernel-mediated execution
+
+---
+
+## Effect execution boundary
+
+Tool registration and tool execution are deliberately separate surfaces.
+`ToolManager` and `ToolExecutor` may be imported by a host for composition, but
+neither object exposes a public route that can trigger an effect:
+
+- `ToolManager.run()` is a hard refusal;
+- `ToolManager.activate_authorized()`, `abort_authorized()` and
+  `execute_authorized()` require the private effect-boundary permit claimed by
+  exactly one `SyscallHandler`;
+- `ToolExecutor.claim_minting_authority()` and
+  `ToolExecutor.execute_invocation()` are hard refusals;
+- minting and capability consumption are internal composition operations.
+
+The production chain is therefore always:
+
+```text
+authorize
+→ tool.execute syscall
+→ intent outbox receipt
+→ capability activation
+→ effect execution
+→ result journal
+```
+
+Tests inside the ARVIS repository may use private helpers whose names explicitly
+contain `for_tests`. They are not API, are not exported, and must never be used
+by hosts such as VeraMem.

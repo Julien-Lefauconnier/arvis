@@ -112,7 +112,7 @@ def _run_manager_and_capture_invocation(ctx):
     try:
         decision = SimpleNamespace(tool="t", tool_payload={})
         result = SimpleNamespace(action_decision=decision)
-        manager.run(result, ctx)
+        manager._run_unsafe_for_tests(result, ctx)
     finally:
         ToolPolicyEvaluator.evaluate = original  # type: ignore[method-assign]
     return captured["invocation"]

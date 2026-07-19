@@ -69,9 +69,9 @@ def test_tool_called_from_runtime():
     invocation = ToolInvocation(
         tool_name="dummy", payload={}, process_id="p", context=ctx
     )
-    authority = executor.claim_minting_authority()
+    authority = executor._claim_minting_authority()
     authorized = _activate(authority, invocation)
-    executor.execute_invocation(authorized, DummyResult(), ctx)
+    executor._execute_invocation(authorized, DummyResult(), ctx)
 
     assert ctx.extra.get("called") is True
 
@@ -98,9 +98,9 @@ def test_tool_execution_authorized():
     invocation = ToolInvocation(
         tool_name="dummy", payload={"x": 1}, process_id="p", context=ctx
     )
-    authority = executor.claim_minting_authority()
+    authority = executor._claim_minting_authority()
     authorized = _activate(authority, invocation)
-    result = executor.execute_invocation(authorized, DummyResult(), ctx)
+    result = executor._execute_invocation(authorized, DummyResult(), ctx)
 
     assert result.success is True
     assert result.output["ok"] is True

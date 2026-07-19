@@ -254,7 +254,7 @@ def test_a8_authority_is_not_mintable_and_capability_is_single_use(monkeypatch):
     assert not hasattr(executor, "authority")
     # The single claim is already held by the manager.
     with pytest.raises(UnauthorizedExecutionError):
-        executor.claim_minting_authority()
+        executor._claim_minting_authority()
 
     # Replay of a legitimately minted capability: first presentation
     # runs, the second is refused.
@@ -275,7 +275,7 @@ def test_a8_authority_is_not_mintable_and_capability_is_single_use(monkeypatch):
     )
     assert first.success is True
     with pytest.raises(UnauthorizedExecutionError):
-        manager.execute_authorized(outcome.authorized, pipeline_result, ctx)
+        manager._execute_authorized_for_tests(outcome.authorized, pipeline_result, ctx)
     assert len(tool.executed) == 1
 
 

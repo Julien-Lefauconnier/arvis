@@ -442,6 +442,5 @@ __all__ = [
     "CapabilityActivationBinding",
     "CapabilityRecord",
     "CapabilityState",
-    "InvocationAuthority",
     "UnauthorizedExecutionError",
 ]

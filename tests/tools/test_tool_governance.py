@@ -54,7 +54,7 @@ _CLAIMED_MINTS: dict[ToolExecutor, object] = {}
 
 def _mint(executor: ToolExecutor):
     if executor not in _CLAIMED_MINTS:
-        _CLAIMED_MINTS[executor] = executor.claim_minting_authority()
+        _CLAIMED_MINTS[executor] = executor._claim_minting_authority()
     return _CLAIMED_MINTS[executor]
 
 
@@ -82,7 +82,7 @@ def _run(executor: ToolExecutor, tool: str, ctx, payload: dict | None = None):
         ),
     )
     result = _decision(tool, payload)
-    return executor.execute_invocation(authorized, result, ctx)
+    return executor._execute_invocation(authorized, result, ctx)
 
 
 # ---------------------------------------------------------------

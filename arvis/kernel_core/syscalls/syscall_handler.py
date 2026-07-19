@@ -45,7 +45,12 @@ from arvis.kernel_core.syscalls.syscall_registry import (
     get_descriptor,
     get_syscall,
 )
-from arvis.tools.manager import ToolAuthorizationOutcome
+from arvis.tools.authorized_invocation import UnauthorizedExecutionError
+from arvis.tools.manager import (
+    ToolAuthorizationOutcome,
+    ToolManager,
+    _ToolEffectBoundary,
+)
 
 
 class RuntimeStateLike(Protocol):
@@ -87,6 +92,10 @@ class SyscallHandler:
         self.runtime_state = runtime_state
         self.scheduler = scheduler
         self.services = services or KernelServiceRegistry()
+        self._tool_effect_boundary: _ToolEffectBoundary | None = None
+        configured_manager = self.services.tool_manager
+        if isinstance(configured_manager, ToolManager):
+            self._tool_effect_boundary = configured_manager._claim_effect_boundary()
         self._local_counter: int = 0
         self._last_tick: int = -1
         # Campaign 6 (Lot 2, closes a8 section 9): the engagement digest
@@ -439,9 +448,8 @@ class SyscallHandler:
                 ),
             )
 
-        tool_manager = self.services.tool_manager
-        owns_outcome = getattr(tool_manager, "owns_outcome", None)
-        if not callable(owns_outcome) or not owns_outcome(trusted):
+        effect_boundary = self._tool_effect_boundary
+        if effect_boundary is None or not effect_boundary.owns_outcome(trusted):
             return None, self._failure_from_error(
                 ctx,
                 ArvisSecurityError(
@@ -467,10 +475,21 @@ class SyscallHandler:
         """Best-effort abort of a manager-owned pre-effect capability."""
         if outcome is None or outcome.authorized is None:
             return
-        manager = self.services.tool_manager
-        abort = getattr(manager, "abort_authorized", None)
-        if callable(abort):
-            abort(outcome.authorized)
+        effect_boundary = self._tool_effect_boundary
+        if effect_boundary is not None:
+            effect_boundary.abort_authorized(outcome.authorized)
+
+    def _execute_tool_authorized(
+        self,
+        authorized: Any,
+        result: Any,
+        ctx: Any,
+    ) -> Any:
+        """Execute through the private boundary permit claimed at composition."""
+        effect_boundary = self._tool_effect_boundary
+        if effect_boundary is None:
+            raise UnauthorizedExecutionError("tool manager not configured")
+        return effect_boundary.execute_authorized(authorized, result, ctx)
 
     def _activate_tool_authorization(
         self,
@@ -500,9 +519,8 @@ class SyscallHandler:
                 ),
             )
 
-        manager = self.services.tool_manager
-        activate = getattr(manager, "activate_authorized", None)
-        if not callable(activate):
+        effect_boundary = self._tool_effect_boundary
+        if effect_boundary is None:
             self._abort_tool_authorization(outcome)
             return self._failure_from_error(
                 ctx,
@@ -522,7 +540,7 @@ class SyscallHandler:
 
         try:
             activated = bool(
-                activate(
+                effect_boundary.activate_authorized(
                     outcome.authorized,
                     receipt=recorded.receipt,
                     intent_sha256=recorded.intent_sha256,

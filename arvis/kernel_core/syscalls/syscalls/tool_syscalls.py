@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol
 
 from arvis.errors.base import (
     ArvisError,
@@ -21,18 +21,12 @@ from arvis.kernel_core.syscalls.syscall_registry import (
 from arvis.tools.manager import ToolAuthorizationOutcome
 
 
-@runtime_checkable
-class ToolManagerLike(Protocol):
-    def execute_authorized(self, authorized: Any, result: Any, ctx: Any) -> Any: ...
-
-
-class ServiceRegistryLike(Protocol):
-    tool_manager: ToolManagerLike | None
-
-
 class SyscallHandlerLike(Protocol):
-    services: ServiceRegistryLike
     runtime_state: Any | None
+
+    def _execute_tool_authorized(
+        self, authorized: Any, result: Any, ctx: Any
+    ) -> Any: ...
 
 
 def _compute_artifact_timestamp(
@@ -72,9 +66,7 @@ def tool_execute(
     authorization: Any | None = None,
     **kwargs: Any,
 ) -> SyscallResult:
-    tool_manager = handler.services.tool_manager
-
-    if tool_manager is None:
+    if not callable(getattr(handler, "_execute_tool_authorized", None)):
         return SyscallResult.failure(
             ArvisRuntimeError(
                 "Tool manager not configured",
@@ -110,7 +102,7 @@ def tool_execute(
             # pair.
             tool_result = refusal
         elif authorized is not None:
-            tool_result = tool_manager.execute_authorized(authorized, result, ctx)
+            tool_result = handler._execute_tool_authorized(authorized, result, ctx)
         else:
             tool_result = None
     except Exception as exc:

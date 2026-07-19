@@ -42,7 +42,7 @@ def _run_through_manager(ctx):
     manager = ToolManager(registry, ToolExecutor(registry))
     decision = SimpleNamespace(tool="capture_tool", tool_payload={"q": 1})
     result = SimpleNamespace(action_decision=decision)
-    outcome = manager.run(result, ctx)
+    outcome = manager._run_unsafe_for_tests(result, ctx)
     return tool, outcome
 
 

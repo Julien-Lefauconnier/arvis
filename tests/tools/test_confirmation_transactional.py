@@ -206,13 +206,17 @@ def _manager_with(reg):
     tools = ToolRegistry()
     tool = _SensitiveTool()
     tools.register(tool)
-    return ToolManager(tools, ToolExecutor(tools), confirmation_registry=reg), tool
+    return ToolManager(
+        tools,
+        ToolExecutor(tools),
+        confirmation_registry=reg,
+    ), tool
 
 
 def _turn(manager, ctx, payload):
     decision = SimpleNamespace(tool="sensitive_tool", tool_payload=payload)
     result = SimpleNamespace(action_decision=decision)
-    return manager.run(result, ctx)
+    return manager._run_unsafe_for_tests(result, ctx)
 
 
 def test_policy_denial_releases_the_confirmation_not_burns_it():
