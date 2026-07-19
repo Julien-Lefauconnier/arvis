@@ -25,6 +25,7 @@ from arvis.errors.base import ArvisSecurityError
 from arvis.tools.base import BaseTool
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
+from tests.fixtures.builders.effect_context_builder import build_effect_context
 
 # ---------------------------------------------------------------
 # Profile factory
@@ -191,7 +192,11 @@ def _registry_with(spec: ToolSpec) -> ToolRegistry:
 
 
 def _invocation(name: str) -> ToolInvocation:
-    return ToolInvocation(tool_name=name, payload={}, process_id="p1")
+    return ToolInvocation(
+        tool_name=name,
+        payload={},
+        effect_context=build_effect_context(process_id="p1"),
+    )
 
 
 def test_declared_consent_without_gate_is_denied_when_gates_required():

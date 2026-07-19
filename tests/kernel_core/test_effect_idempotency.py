@@ -238,10 +238,8 @@ def test_persisted_key_can_be_restored_after_a_crash(monkeypatch) -> None:
     recovered = ToolInvocation(
         tool_name=original.tool_name,
         payload=payload,
-        process_id=original.process_id,
+        effect_context=original.effect_context,
         user_id=original.user_id,
-        principal=original.principal,
-        tenant=original.tenant,
         idempotency_key=str(persisted["idempotency_key"]),
     )
     assert recovered.idempotency_key == original.idempotency_key

@@ -29,6 +29,7 @@ from arvis.tools.executor import ToolExecutor
 from arvis.tools.manager import ToolAuthorizationOutcome, ToolManager
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
+from tests.fixtures.builders.effect_context_builder import build_effect_context
 
 
 class _RecordingTool(BaseTool):
@@ -148,9 +149,8 @@ def test_legitimate_capability_cannot_mint_fresh_nonce() -> None:
         invocation=ToolInvocation(
             tool_name="danger",
             payload={"target": "B"},
-            process_id="p1",
+            effect_context=build_effect_context(process_id="p1"),
             user_id="u1",
-            context=ctx,
         ),
         authorization_snapshot=legitimate.authorization_snapshot,
         nonce="attacker-selected-fresh-nonce",

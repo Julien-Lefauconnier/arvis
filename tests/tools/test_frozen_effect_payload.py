@@ -31,6 +31,7 @@ from arvis.tools.manager import ToolAuthorizationOutcome, ToolManager
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.runtime.runtime_bindings import resolve_process_id
 from arvis.tools.spec import ToolSpec
+from tests.fixtures.builders.effect_context_builder import build_effect_context
 
 
 class _Mode(Enum):
@@ -172,7 +173,7 @@ def test_tool_invocation_payload_property_returns_fresh_copies() -> None:
     invocation = ToolInvocation(
         tool_name="frozen_probe",
         payload={"nested": {"value": 1}},
-        process_id="p1",
+        effect_context=build_effect_context(process_id="p1"),
     )
 
     first = invocation.payload

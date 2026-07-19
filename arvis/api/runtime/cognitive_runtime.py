@@ -125,6 +125,7 @@ class CognitiveRuntime:
         # anchoring belongs to the durable sink (receipt, Lot 6).
         run_id = uuid.uuid4().hex
         self.syscall_handler.begin_run(run_id)
+        ctx.runtime_bindings.run_id = run_id
 
         if self.adapters:
             ctx.runtime_bindings.adapters = self.adapters
@@ -151,6 +152,7 @@ class CognitiveRuntime:
         runtime_bindings = PipelineRuntimeBindings(
             syscall_handler=self.syscall_handler,
             process_id=process.process_id.value,
+            run_id=run_id,
         )
 
         ctx.runtime_bindings.runtime = runtime_bindings

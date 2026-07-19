@@ -31,6 +31,7 @@ from arvis.tools.base import BaseTool
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
+from tests.fixtures.builders.effect_context_builder import build_effect_context
 
 
 class _Tool(BaseTool):
@@ -58,7 +59,11 @@ def _executor():
 
 
 def _invocation():
-    return ToolInvocation(tool_name="probe_tool", payload={}, process_id="p")
+    return ToolInvocation(
+        tool_name="probe_tool",
+        payload={},
+        effect_context=build_effect_context(),
+    )
 
 
 def _result():
@@ -325,7 +330,11 @@ def test_capability_commitment_binds_exact_invocation():
     object.__setattr__(
         capability,
         "invocation",
-        ToolInvocation(tool_name="other", payload={}, process_id="p"),
+        ToolInvocation(
+            tool_name="other",
+            payload={},
+            effect_context=build_effect_context(),
+        ),
     )
     assert authority.verifies(capability) is False
     assert authority.consume(capability) is False

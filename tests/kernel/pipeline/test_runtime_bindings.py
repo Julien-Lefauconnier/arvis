@@ -15,6 +15,8 @@ def test_pipeline_runtime_bindings_are_immutable() -> None:
     bindings = PipelineRuntimeBindings(
         syscall_handler=DummyHandler(),
         process_id="proc-1",
+        run_id="run-1",
     )
 
     assert bindings.process_id == "proc-1"
+    assert bindings.run_id == "run-1"

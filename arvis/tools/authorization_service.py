@@ -26,10 +26,14 @@ from arvis.kernel_core.access.identity import (
     authenticated_principal_from_context,
     principal_from_context,
 )
-from arvis.kernel_core.access.models import Principal
+from arvis.kernel_core.access.models import (
+    UNAUTHENTICATED_PRINCIPAL_ID,
+    Principal,
+)
 from arvis.tools.confirmation import ConfirmationReservation
+from arvis.tools.effect_context import AuthorizedEffectContext
 from arvis.tools.registry import ToolRegistry
-from arvis.tools.runtime.runtime_bindings import resolve_process_id
+from arvis.tools.runtime.runtime_bindings import resolve_process_id, resolve_run_id
 from arvis.tools.spec import ToolSpec
 from arvis.tools.tool_schema import schema_violation
 
@@ -198,31 +202,37 @@ class ToolAuthorizationService:
             }
         )
 
-        principal = prepared.principal
         spec = prepared.spec
-        return ToolInvocation(
-            tool_name=prepared.tool_name,
-            payload=prepared.frozen_payload,
-            process_id=process_id,
-            user_id=getattr(ctx, "user_id", None),
-            risk_score=resolve_turn_risk(ctx),
-            audit_required=spec.audit_required if spec is not None else False,
-            principal=principal.user_id if principal is not None else None,
-            tenant=principal.organization_id if principal is not None else None,
+        principal_id = prepared.principal_id
+        if not isinstance(principal_id, str) or not principal_id:
+            principal_id = UNAUTHENTICATED_PRINCIPAL_ID
+        effect_context = AuthorizedEffectContext(
+            principal=principal_id,
+            tenant=prepared.tenant_id,
             authentication_source=(
                 authenticated.authentication_source
                 if authenticated is not None
-                else None
+                else "unattested"
             ),
             authentication_strength=(
                 authenticated.authentication_strength
                 if authenticated is not None
-                else None
+                else "none"
             ),
             service_id=authenticated.service_id if authenticated is not None else None,
             session_id_hash=(
                 authenticated.session_id_hash if authenticated is not None else None
             ),
+            process_id=process_id,
+            run_id=resolve_run_id(ctx),
+        )
+        return ToolInvocation(
+            tool_name=prepared.tool_name,
+            payload=prepared.frozen_payload,
+            effect_context=effect_context,
+            user_id=getattr(ctx, "user_id", None),
+            risk_score=resolve_turn_risk(ctx),
+            audit_required=spec.audit_required if spec is not None else False,
             consent_granted=consent_granted,
             confirmed=confirmation is not None,
             confirmation_id=confirmation_id,
@@ -230,7 +240,6 @@ class ToolAuthorizationService:
                 confirmation.record_commitment if confirmation is not None else None
             ),
             idempotency_key=idempotency_key,
-            context=ctx,
         )
 
     def evaluate(

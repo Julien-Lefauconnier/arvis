@@ -24,6 +24,7 @@ from arvis.tools.manager import ToolAuthorizationOutcome, ToolManager
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
 from arvis.tools.tool_result import PRE_EFFECT_REFUSAL, ToolResult
+from tests.fixtures.builders.effect_context_builder import build_effect_context
 
 
 class _ProbeTool(BaseTool):
@@ -97,7 +98,7 @@ def test_outcome_requires_exactly_one_authorization_path() -> None:
     invocation = ToolInvocation(
         tool_name="outcome_probe",
         payload={"x": 1},
-        process_id="p1",
+        effect_context=build_effect_context(process_id="p1"),
     )
     capability = AuthorizedInvocation(invocation=invocation, nonce="manual")
 

@@ -172,7 +172,6 @@ class _CapabilityEntry:
 
     capability: AuthorizedInvocation
     invocation: ToolInvocation
-    context: Any
     record: CapabilityRecord
     activation: CapabilityActivationBinding | None = None
 
@@ -260,7 +259,6 @@ class InvocationAuthority:
             self._records[nonce] = _CapabilityEntry(
                 capability=capability,
                 invocation=invocation,
-                context=invocation.context,
                 record=record,
             )
             return capability
@@ -292,8 +290,6 @@ class InvocationAuthority:
         if entry.capability is not capability:
             return None
         if entry.invocation is not capability.invocation:
-            return None
-        if entry.context is not capability.invocation.context:
             return None
         if capability.capability_format_version != CAPABILITY_FORMAT_VERSION:
             return None

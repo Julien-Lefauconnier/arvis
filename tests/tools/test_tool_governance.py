@@ -25,6 +25,7 @@ from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.retry_policy import ToolRetryPolicy
 from arvis.tools.spec import ToolSpec
+from tests.fixtures.builders.effect_context_builder import build_effect_context
 
 
 def _ctx() -> SimpleNamespace:
@@ -66,7 +67,11 @@ def _run(executor: ToolExecutor, tool: str, ctx, payload: dict | None = None):
     executor's claimed authority, exactly as the manager does after
     policy.
     """
-    invocation = ToolInvocation(tool_name=tool, payload=payload or {}, process_id="p")
+    invocation = ToolInvocation(
+        tool_name=tool,
+        payload=payload or {},
+        effect_context=build_effect_context(),
+    )
     authority = _mint(executor)
     authorized = authority.authorize(invocation)
     assert authority.activate(

@@ -1,13 +1,11 @@
 # tests/tools/test_tool_invocation_context.py
-"""Complete invocation context (F-006-a5, skeleton).
+"""Sealed invocation effect context (campaign 8).
 
-The invocation carries the real turn context: identity threaded from
-the trusted context channel only (a stamped Principal, never
-request-facing extra), the real turn risk as a hardening composition of
-the available signals, and opaque principal/tenant/consent fields whose
-meaning belongs to the host.
+The invocation carries only immutable effect identity derived from the trusted
+context channel, never the mutable pipeline context or request-facing extra.
 """
 
+from dataclasses import FrozenInstanceError
 from types import SimpleNamespace
 
 import pytest
@@ -19,6 +17,7 @@ from arvis.math.signals import RiskSignal
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.manager import ToolManager, _resolve_turn_risk
 from arvis.tools.registry import ToolRegistry
+from tests.fixtures.builders.effect_context_builder import build_effect_context
 
 # ---------------------------------------------------------------
 # Invocation fields
@@ -26,17 +25,38 @@ from arvis.tools.registry import ToolRegistry
 
 
 def test_invocation_defaults_are_safe():
-    invocation = ToolInvocation(tool_name="t", payload={}, process_id="p1")
-    assert invocation.principal is None
+    invocation = ToolInvocation(
+        tool_name="t",
+        payload={},
+        effect_context=build_effect_context(process_id="p1"),
+    )
+    assert invocation.principal == "u1"
     assert invocation.tenant is None
+    assert invocation.process_id == "p1"
     assert invocation.consent_granted == ()
     assert invocation.risk_score == 0.0
+    assert not hasattr(invocation, "context")
 
 
 def test_invocation_is_immutable():
-    invocation = ToolInvocation(tool_name="t", payload={}, process_id="p1")
-    with pytest.raises(AttributeError):
-        invocation.principal = "spoof"  # type: ignore[misc]
+    invocation = ToolInvocation(
+        tool_name="t",
+        payload={},
+        effect_context=build_effect_context(process_id="p1"),
+    )
+    with pytest.raises(FrozenInstanceError):
+        invocation.effect_context = build_effect_context(  # type: ignore[misc]
+            principal="spoof"
+        )
+
+
+def test_invocation_refuses_an_untyped_effect_context() -> None:
+    with pytest.raises(TypeError, match="exact AuthorizedEffectContext"):
+        ToolInvocation(
+            tool_name="t",
+            payload={},
+            effect_context=SimpleNamespace(principal="u1"),  # type: ignore[arg-type]
+        )
 
 
 # ---------------------------------------------------------------
@@ -131,14 +151,35 @@ def test_manager_threads_stamped_principal_and_tenant():
     assert invocation.risk_score == 0.5
 
 
-def test_manager_leaves_identity_empty_without_stamp():
-    # No stamped Principal: opaque identity fields stay None; the bare
-    # user_id still travels for owner scoping.
+def test_manager_snapshots_process_and_run_without_retaining_runtime_context():
+    bindings = SimpleNamespace(process_id="proc-7", run_id="run-7")
+    ctx = SimpleNamespace(
+        extra={},
+        user_id="u1",
+        runtime_bindings=bindings,
+    )
+
+    invocation = _run_manager_and_capture_invocation(ctx)
+    bindings.process_id = "proc-mutated"
+    bindings.run_id = "run-mutated"
+
+    assert invocation.effect_context.process_id == "proc-7"
+    assert invocation.effect_context.run_id == "run-7"
+    assert not hasattr(invocation, "context")
+    assert invocation.effect_context is not ctx
+    assert invocation.effect_context is not bindings
+
+
+def test_manager_marks_unstamped_local_identity_as_unattested():
+    # Local mode still seals its turn owner, but never presents it as a
+    # host-authenticated identity.
     ctx = SimpleNamespace(extra={}, user_id="u1")
     invocation = _run_manager_and_capture_invocation(ctx)
     assert invocation.user_id == "u1"
-    assert invocation.principal is None
+    assert invocation.principal == "u1"
     assert invocation.tenant is None
+    assert invocation.authentication_source == "unattested"
+    assert invocation.authentication_strength == "none"
     assert invocation.consent_granted == ()
 
 
@@ -150,7 +191,8 @@ def test_manager_never_reads_identity_from_extra():
         user_id="u1",
     )
     invocation = _run_manager_and_capture_invocation(ctx)
-    assert invocation.principal is None
+    assert invocation.principal == "u1"
+    assert invocation.principal != "attacker"
 
 
 # ---------------------------------------------------------------

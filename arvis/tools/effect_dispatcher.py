@@ -77,7 +77,7 @@ class EffectDispatcher:
             execution_payload = invocation.materialize_payload()
             payload_runtime: dict[str, Any] = {
                 "decision": decision,
-                "context": ctx,
+                "effect_context": invocation.effect_context,
                 "tool_payload": execution_payload,
                 "idempotency_key": invocation.idempotency_key,
                 "invocation": invocation,
@@ -126,7 +126,7 @@ class EffectDispatcher:
         validation_payload = invocation.materialize_payload()
         validation_runtime: dict[str, Any] = {
             "decision": decision,
-            "context": ctx,
+            "effect_context": invocation.effect_context,
             "tool_payload": validation_payload,
             "idempotency_key": invocation.idempotency_key,
             "invocation": invocation,

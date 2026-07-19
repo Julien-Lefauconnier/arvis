@@ -16,3 +16,4 @@ class SyscallHandlerLike(Protocol):
 class PipelineRuntimeBindings:
     syscall_handler: SyscallHandlerLike
     process_id: str
+    run_id: str | None = None

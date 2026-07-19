@@ -21,6 +21,7 @@ from typing import Any
 from uuid import UUID
 
 from arvis.kernel_core.canonicalization import canonical_bytes as encode_canonical_bytes
+from arvis.tools.effect_context import AuthorizedEffectContext
 
 
 class FrozenEffectPayloadError(TypeError):
@@ -203,13 +204,11 @@ class FrozenEffectPayload:
 
 @dataclass(frozen=True, slots=True, init=False)
 class ToolInvocation:
-    """One fully contextualized tool invocation with frozen effect material."""
+    """One tool invocation with frozen payload and sealed effect context."""
 
     tool_name: str
     _effect_payload: FrozenEffectPayload = field(repr=False)
-
-    # runtime context (minimal & controlled)
-    process_id: str
+    effect_context: AuthorizedEffectContext
     user_id: str | None = None
 
     # governance
@@ -219,18 +218,8 @@ class ToolInvocation:
     risk_score: float = 0.0
     audit_required: bool = False
 
-    # F-006-a5: complete invocation context (skeleton). Opaque to
-    # arvis; the host assigns meaning (same doctrine as capability
-    # grants). principal and tenant are threaded from the trusted
-    # context identity channel when a Principal is stamped;
-    # consent_granted is reserved for a host composition channel and
-    # stays empty until one exists.
-    principal: str | None = None
-    tenant: str | None = None
-    authentication_source: str | None = None
-    authentication_strength: str | None = None
-    service_id: str | None = None
-    session_id_hash: str | None = None
+    # Purpose-scoped grants remain invocation governance material. Identity,
+    # tenant and runtime bindings live exclusively in ``effect_context``.
     consent_granted: tuple[str, ...] = ()
 
     # P1-10-a6 (decision D4-d): bound confirmation. Set by the tool
@@ -243,29 +232,23 @@ class ToolInvocation:
 
     # execution semantics
     idempotency_key: str | None = None
-    context: Any | None = None
 
     def __init__(
         self,
         tool_name: str,
         payload: dict[str, Any] | FrozenEffectPayload,
-        process_id: str,
+        effect_context: AuthorizedEffectContext,
         user_id: str | None = None,
         risk_score: float = 0.0,
         audit_required: bool = False,
-        principal: str | None = None,
-        tenant: str | None = None,
-        authentication_source: str | None = None,
-        authentication_strength: str | None = None,
-        service_id: str | None = None,
-        session_id_hash: str | None = None,
         consent_granted: tuple[str, ...] = (),
         confirmed: bool = False,
         confirmation_id: str | None = None,
         confirmation_commitment: str | None = None,
         idempotency_key: str | None = None,
-        context: Any | None = None,
     ) -> None:
+        if type(effect_context) is not AuthorizedEffectContext:
+            raise TypeError("effect_context must be an exact AuthorizedEffectContext")
         frozen_payload = (
             payload
             if isinstance(payload, FrozenEffectPayload)
@@ -273,22 +256,43 @@ class ToolInvocation:
         )
         object.__setattr__(self, "tool_name", tool_name)
         object.__setattr__(self, "_effect_payload", frozen_payload)
-        object.__setattr__(self, "process_id", process_id)
+        object.__setattr__(self, "effect_context", effect_context)
         object.__setattr__(self, "user_id", user_id)
         object.__setattr__(self, "risk_score", risk_score)
         object.__setattr__(self, "audit_required", audit_required)
-        object.__setattr__(self, "principal", principal)
-        object.__setattr__(self, "tenant", tenant)
-        object.__setattr__(self, "authentication_source", authentication_source)
-        object.__setattr__(self, "authentication_strength", authentication_strength)
-        object.__setattr__(self, "service_id", service_id)
-        object.__setattr__(self, "session_id_hash", session_id_hash)
         object.__setattr__(self, "consent_granted", consent_granted)
         object.__setattr__(self, "confirmed", confirmed)
         object.__setattr__(self, "confirmation_id", confirmation_id)
         object.__setattr__(self, "confirmation_commitment", confirmation_commitment)
         object.__setattr__(self, "idempotency_key", idempotency_key)
-        object.__setattr__(self, "context", context)
+
+    @property
+    def process_id(self) -> str:
+        return self.effect_context.process_id
+
+    @property
+    def principal(self) -> str:
+        return self.effect_context.principal
+
+    @property
+    def tenant(self) -> str | None:
+        return self.effect_context.tenant
+
+    @property
+    def authentication_source(self) -> str:
+        return self.effect_context.authentication_source
+
+    @property
+    def authentication_strength(self) -> str:
+        return self.effect_context.authentication_strength
+
+    @property
+    def service_id(self) -> str | None:
+        return self.effect_context.service_id
+
+    @property
+    def session_id_hash(self) -> str | None:
+        return self.effect_context.session_id_hash
 
     @property
     def payload(self) -> dict[str, Any]:

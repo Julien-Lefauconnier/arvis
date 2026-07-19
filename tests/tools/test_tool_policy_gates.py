@@ -5,6 +5,7 @@ from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.tools.base import BaseTool
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.spec import ToolSpec
+from tests.fixtures.builders.effect_context_builder import build_effect_context
 
 
 class _GatedTool(BaseTool):
@@ -24,7 +25,11 @@ def _registry(spec: ToolSpec) -> ToolRegistry:
 
 
 def _invocation() -> ToolInvocation:
-    return ToolInvocation(tool_name="gated", payload={}, process_id="p")
+    return ToolInvocation(
+        tool_name="gated",
+        payload={},
+        effect_context=build_effect_context(),
+    )
 
 
 class _DenyConsent:

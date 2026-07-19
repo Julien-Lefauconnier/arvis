@@ -13,5 +13,6 @@ class PipelineRuntimeBindingsContext:
     runtime: Any | None = None
     syscall_handler: Any | None = None
     process_id: str | None = None
+    run_id: str | None = None
     adapters: dict[str, Any] | None = None
     control_runtime: CognitiveControlRuntime | None = None

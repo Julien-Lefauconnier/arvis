@@ -4,6 +4,7 @@ from arvis import CognitiveOS
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.tools.base import BaseTool
+from arvis.tools.effect_context import AuthorizedEffectContext
 from arvis.tools.spec import ToolSpec
 
 
@@ -62,7 +63,16 @@ def authorize(tool_name: str, risk: float):
     invocation = ToolInvocation(
         tool_name=tool_name,
         payload={},
-        process_id="demo",
+        effect_context=AuthorizedEffectContext(
+            principal="example-user",
+            tenant=None,
+            authentication_source="example",
+            authentication_strength="unattested",
+            service_id=None,
+            session_id_hash=None,
+            process_id="demo",
+            run_id=None,
+        ),
         risk_score=risk,
     )
     return ToolPolicyEvaluator.evaluate(invocation, registry)

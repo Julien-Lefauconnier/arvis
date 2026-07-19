@@ -28,6 +28,7 @@ from arvis.tools.authorized_invocation import (
 from arvis.tools.confirmation import ConfirmationRegistry, payload_commitment
 from arvis.tools.executor import ToolExecutor
 from arvis.tools.registry import ToolRegistry
+from tests.fixtures.builders.effect_context_builder import build_effect_context
 
 # ---------------------------------------------------------------
 # P0: payload collision -> confirmation transfer
@@ -141,7 +142,11 @@ def test_attack_replay_cannot_authenticate_without_an_anchor():
 
 def test_attack_executor_cannot_be_driven_without_a_capability():
     executor = ToolExecutor(ToolRegistry())
-    bare = ToolInvocation(tool_name="t", payload={}, process_id="p")
+    bare = ToolInvocation(
+        tool_name="t",
+        payload={},
+        effect_context=build_effect_context(),
+    )
     result = SimpleNamespace(action_decision=SimpleNamespace(tool="t", tool_payload={}))
     with pytest.raises(UnauthorizedExecutionError):
         executor._execute_invocation(bare, result, SimpleNamespace(extra={}))  # type: ignore[arg-type]
@@ -151,7 +156,11 @@ def test_attack_forged_capability_is_refused():
     executor = ToolExecutor(ToolRegistry())
     foreign = InvocationAuthority()
     forged = foreign.authorize(
-        ToolInvocation(tool_name="t", payload={}, process_id="p")
+        ToolInvocation(
+            tool_name="t",
+            payload={},
+            effect_context=build_effect_context(),
+        )
     )
     result = SimpleNamespace(action_decision=SimpleNamespace(tool="t", tool_payload={}))
     with pytest.raises(UnauthorizedExecutionError):

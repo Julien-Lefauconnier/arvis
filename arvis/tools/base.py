@@ -10,8 +10,10 @@ from arvis.tools.spec import ToolSpec
 class BaseTool(ABC):
     """
     input_data contains:
-    - decision
-    - context
+    - tool_payload
+    - idempotency_key
+    - invocation
+    - effect_context
     """
 
     # legacy support (optional)
@@ -52,6 +54,6 @@ class BaseTool(ABC):
                 "tool_payload": invocation.payload,
                 "idempotency_key": invocation.idempotency_key,
                 "invocation": invocation,
-                "context": getattr(invocation, "context", None),  # 👈 FIX
+                "effect_context": invocation.effect_context,
             }
         )

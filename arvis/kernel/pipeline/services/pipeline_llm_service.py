@@ -390,6 +390,8 @@ class PipelineLLMService:
 
         handler_obj = bindings.syscall_handler
         process_id_obj = bindings.process_id
+        run_id_obj = bindings.run_id
+        run_id = run_id_obj if isinstance(run_id_obj, str) and run_id_obj else None
 
         if handler_obj is None or not hasattr(handler_obj, "handle"):
             # allow mocked syscall path (tests / injection)
@@ -399,6 +401,7 @@ class PipelineLLMService:
                 return PipelineRuntimeBindings(
                     syscall_handler=cast(SyscallHandlerLike, handler_obj),
                     process_id=process_id_obj,
+                    run_id=run_id,
                 )
             return None
 
@@ -408,6 +411,7 @@ class PipelineLLMService:
         return PipelineRuntimeBindings(
             syscall_handler=cast(SyscallHandlerLike, handler_obj),
             process_id=process_id_obj,
+            run_id=run_id,
         )
 
     @staticmethod
