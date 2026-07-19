@@ -1,6 +1,6 @@
 # Runtime lifecycle, state and concurrency
 
-Status: contract documentation updated for `0.1.0a10`. Shared-runtime
+Status: contract documentation updated for `0.1.0a11`. Shared-runtime
 enforcement remains backlog (P2). This document closes the documentation side of audit
 findings F-022 (unbounded runtime state) and F-023 (implicit concurrency
 model) by making the supported usage pattern explicit.
@@ -46,4 +46,4 @@ share one effectful ARVIS instance across workers or processes. The production
 doctrine remains one instance per request/turn, with durable intents and
 idempotency records persisted by the host. Multi-worker capability consumption
 requires a future external transactional registry and is not claimed by
-`0.1.0a10`.
+`0.1.0a11`.

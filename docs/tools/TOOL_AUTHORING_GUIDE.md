@@ -274,13 +274,13 @@ result = os.run_as(principal=principal, cognitive_input=request)
 ```
 
 `ToolManager` and `ToolExecutor` remain importable for advanced runtime
-composition and VeraMem compatibility, but their public effect methods are
+composition and Veramem compatibility, but their public effect methods are
 fail-closed. Focused test composition helpers live under `tests/support`, which
 is not included in the distributed package.
 
-## VeraMem integration pattern
+## Veramem integration pattern
 
-VeraMem owns business dependencies and injects them when constructing a tool:
+Veramem owns business dependencies and injects them when constructing a tool:
 
 ```python
 from typing import Protocol
@@ -300,7 +300,7 @@ class DocumentService(Protocol):
     ) -> dict: ...
 
 
-class VeraMemDocumentDeleteTool(BaseTool):
+class VeramemDocumentDeleteTool(BaseTool):
     name = "veramem.document.delete"
 
     def __init__(self, document_service: DocumentService) -> None:
@@ -319,6 +319,6 @@ class VeraMemDocumentDeleteTool(BaseTool):
 ```
 
 The service may own a repository, transaction factory or API client. The
-invocation never carries those objects. VeraMem must also stamp a real
+invocation never carries those objects. Veramem must also stamp a real
 `AuthenticatedPrincipal`, persist the pre-effect intent through a qualified
 database sink, and preserve confirmation/idempotency state across its workers.

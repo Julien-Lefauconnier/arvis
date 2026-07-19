@@ -388,8 +388,8 @@ authorized invocation contains a frozen business payload, immutable identity
 and provenance material, and the durable idempotency key. Host-owned clients,
 credentials and repositories are injected into the tool at construction.
 
-For production integrations such as VeraMem, ARVIS owns the governed
-authorization/outbox/capability/proof transaction. VeraMem owns authentication,
+For production integrations such as Veramem, ARVIS owns the governed
+authorization/outbox/capability/proof transaction. Veramem owns authentication,
 tenant resolution, the PostgreSQL audit sink, persistent confirmation and
 idempotency coordination, business services and distributed worker semantics.
 

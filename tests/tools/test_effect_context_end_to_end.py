@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import gc
 import weakref
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
+import arvis.kernel_core.syscalls.syscall_handler as syscall_handler_module
 from arvis.api.commitment import syscall_pair_commitments
 from arvis.kernel_core.access.models import AuthenticatedPrincipal
 from arvis.kernel_core.canonicalization import canonical_hash
@@ -208,6 +209,48 @@ def test_equivalent_but_distinct_effect_context_is_bound_by_value() -> None:
     assert len(tool.observed) == 1
     assert authorization_ctx.extra.get("syscall_intents", []) == []
     assert len(presentation_ctx.extra["syscall_intents"]) == 1
+
+
+def test_host_binding_mismatch_stops_before_intent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tool, manager, handler, sink = _rig()
+    ctx = _RuntimeContext(_principal())
+    handler.begin_run("run-a")
+    request = _request()
+    outcome = _authorize(manager, request, ctx)
+    original_builder = syscall_handler_module.build_authorized_effect_context
+
+    def _current_effect_context(
+        current_ctx: Any,
+        *,
+        process_id: str,
+        run_id: str | None,
+        host_binding_commitment: str | None = None,
+    ) -> AuthorizedEffectContext:
+        current = original_builder(
+            current_ctx,
+            process_id=process_id,
+            run_id=run_id,
+            host_binding_commitment=host_binding_commitment,
+        )
+        return replace(current, host_binding_commitment="sha256:host-b")
+
+    monkeypatch.setattr(
+        syscall_handler_module,
+        "build_authorized_effect_context",
+        _current_effect_context,
+    )
+
+    refused = _execute(handler, request, ctx, outcome)
+
+    assert refused.success is False
+    assert refused.error is not None
+    assert refused.error.details["reason_code"] == "effect_context_mismatch"
+    assert refused.error.details["mismatch_fields"] == "host_binding_commitment"
+    assert tool.observed == []
+    assert sink.entries == []
+    assert ctx.extra.get("syscall_intents", []) == []
 
 
 def test_intent_commits_authorized_effect_context() -> None:

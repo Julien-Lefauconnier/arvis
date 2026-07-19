@@ -41,6 +41,9 @@ jobs:
       - name: Mypy
         run: mypy arvis --strict
 
+      - name: Bandit (medium/high)
+        run: bash scripts/run_quality_gate.sh security
+
   test:
     runs-on: ubuntu-latest
 
@@ -121,6 +124,9 @@ jobs:
 
       - name: Verify ir_schema.json ships in the wheel
         run: python -c "import glob, zipfile; w = glob.glob('dist/*.whl')[0]; assert 'arvis/api/schema/ir_schema.json' in zipfile.ZipFile(w).namelist(), 'ir_schema.json missing from wheel'; print('ir_schema.json present in', w)"
+
+      - name: Reject forbidden wheel entries
+        run: python scripts/check_wheel_contents.py dist/*.whl
 
       - name: Install built wheel in a clean env and smoke-import
         run: |

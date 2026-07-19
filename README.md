@@ -67,6 +67,17 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
+Run the canonical local quality gate with the same pinned tools and security
+threshold used by CI:
+
+```bash
+bash scripts/run_quality_gate.sh
+```
+
+The security-only slice is available as
+`bash scripts/run_quality_gate.sh security`; Bandit fails on medium- or
+high-severity findings.
+
 PyPI (`pip install arvis`) is planned once the alpha stabilizes.
 
 ```python
@@ -373,7 +384,7 @@ ARVIS tracks three distinct version axes, each honestly labeled:
 
 | Axis | Value | Meaning |
 |------|-------|---------|
-| Package version | `0.1.0a10` | the distributed artifact (PEP 440) |
+| Package version | `0.1.0a11` | the distributed artifact (PEP 440) |
 | API version | `0.1` | the public Python API contract (not yet stable) |
 | Standard version | `draft-v1` | the ARVIS decision / IR specification |
 

@@ -126,7 +126,7 @@ After the effect boundary is crossed:
 - a journaling failure marks the run audit-incomplete rather than pretending the
   effect did not happen.
 
-## ARVIS / VeraMem boundary
+## ARVIS / Veramem boundary
 
 ARVIS provides and enforces:
 
@@ -135,7 +135,7 @@ ARVIS provides and enforces:
 - intent construction, receipt validation and result-to-intent binding;
 - canonicalization, confirmation binding and composed commitments.
 
-VeraMem, as production host, must provide:
+Veramem, as production host, must provide:
 
 - a real `AuthenticatedPrincipal` and tenant binding from its authentication
   layer;
@@ -147,7 +147,7 @@ VeraMem, as production host, must provide:
 - distributed locking, queues, retries and crash recovery when several workers
   share effects.
 
-At minimum, VeraMem's durable schema must prevent duplicate receipt IDs,
+At minimum, Veramem's durable schema must prevent duplicate receipt IDs,
 duplicate `(store_fingerprint, durable_position)` pairs and duplicate
 `(run_id, causal_id)` pairs. It should index `intent_sha256`, persist the
 idempotency key, and model confirmation as an atomic lifecycle such as
@@ -171,6 +171,6 @@ A production host must provide:
 - one runtime instance per request/turn unless the host serializes access.
 
 An ARVIS tool must never use mutable runtime context to select its target,
-identity, tenant, credentials or services. VeraMem injects those services into
+identity, tenant, credentials or services. Veramem injects those services into
 the tool or adapter constructor; the effect body uses only the frozen payload,
 sealed effect context and persisted idempotency key.

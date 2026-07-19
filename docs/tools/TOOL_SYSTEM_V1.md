@@ -346,7 +346,7 @@ authorize
 ```
 
 Focused unit-test compositions live under `tests/support`, outside the
-distributed `arvis` package. Hosts such as VeraMem must use `CognitiveOS` or the
+distributed `arvis` package. Hosts such as Veramem must use `CognitiveOS` or the
 governed syscall composition, never repository test support.
 
 ## Sealed context and host services
@@ -358,8 +358,8 @@ commitment. It carries no credentials, database session, HTTP request, client,
 pool, callback or logger.
 
 Production hosts inject business services at tool construction. For example,
-VeraMem owns the document repository and constructs a tool with that service;
+Veramem owns the document repository and constructs a tool with that service;
 the tool combines the injected service with the frozen payload and sealed
 identity. ARVIS owns authorization, capability, outbox and proof mechanics but
-does not own VeraMem's authentication, PostgreSQL transactions or distributed
+does not own Veramem's authentication, PostgreSQL transactions or distributed
 worker coordination.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arvis"
-version = "0.1.0a10"
+version = "0.1.0a11"
 description = "Cognitive Operating System kernel for trustworthy AI systems"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -48,13 +48,15 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  # Gate tools are pinned exactly: the repository's canonical formatting is
-  # defined by this ruff version, and mypy/pytest results must be reproducible
-  # between local gates and CI (audit 0.1.0a4, tooling reproducibility).
+  # Gate tools are pinned exactly: the repository's canonical formatting and
+  # security thresholds are defined by these versions, and results must be
+  # reproducible between local gates and CI (audit 0.1.0a4, tooling
+  # reproducibility).
   # Bumping any pin is a deliberate, dedicated commit (re-format if ruff).
   "mypy==1.19.1",
   "ruff==0.14.3",
   "pytest==8.4.2",
+  "bandit==1.9.4",
   # Plugins stay unpinned until the dev lockfile lands (backlog P2).
   # Stubs for the runtime jsonschema dependency (tool schema validation).
   "types-jsonschema",

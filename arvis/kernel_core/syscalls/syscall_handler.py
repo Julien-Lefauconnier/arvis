@@ -414,6 +414,7 @@ class SyscallHandler:
             "session_id_hash",
             "process_id",
             "run_id",
+            "host_binding_commitment",
         )
         mismatches = {
             field_name

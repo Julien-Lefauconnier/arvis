@@ -9,6 +9,14 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a11] - 2026-07-19
+
+Campaign 8 seals the complete effect-selection context. A capability is now
+bound not only to its frozen payload and authorization, but also to the exact
+principal, tenant, authentication provenance, service/session and runtime
+identity under which it was minted. The campaign also closes enum/scalar
+canonical collisions and removes residual test-only production surfaces.
+
 ### Security
 
 - Introduced immutable `AuthorizedEffectContext` material and removed the raw
@@ -18,7 +26,8 @@ versioning during the alpha.
 - `SyscallHandler` compares the current trusted identity with the sealed effect
   context before intent creation. Divergence revokes the capability, releases
   confirmation and produces no receipt or effect; `KERNEL_PRINCIPAL` is
-  excluded from user tool effects.
+  excluded from user tool effects. The final audit also pins the optional host
+  binding commitment in this equality check.
 - Canonicalization v3 dispatches `Enum`, `StrEnum`, `IntEnum`, `Flag` and
   `IntFlag` before scalar parents and preserves enum mapping-key identity.
   Redaction policy v5, commitment v5 and confirmation format v4 invalidate old
@@ -26,12 +35,15 @@ versioning during the alpha.
 - Removed production-packaged test effect routes and replaced security-sensitive
   runtime assertions with explicit fail-closed checks, including under
   optimized Python.
+- Pinned Bandit in the development gate, wired the same security command into
+  CI, and added a wheel-content check that rejects OS metadata, bytecode,
+  caches and packaged test helpers.
 
 ### Host integration
 
-- Defined the ARVIS/VeraMem boundary: ARVIS owns frozen effect material,
+- Defined the ARVIS/Veramem boundary: ARVIS owns frozen effect material,
   authorization capabilities, intent/receipt validation, result binding and
-  commitments. VeraMem owns real authentication and tenant resolution,
+  commitments. Veramem owns real authentication and tenant resolution,
   PostgreSQL persistence, persistent confirmation/idempotency coordination,
   business service injection and distributed workers.
 - Tool dependencies must be constructor-injected. Mutable runtime context,
@@ -108,7 +120,7 @@ as durable. Every reproduction is now a normal passing regression test.
 
 ### Breaking changes and host migration
 
-- Re-pin VeraMem and other hosts to `0.1.0a10`; capability, activation and intent
+- Re-pin Veramem and other hosts to `0.1.0a10`; capability, activation and intent
   commitments changed during the campaign.
 - Do not call `ToolManager.run`, `execute_authorized`, `activate_authorized`,
   `ToolExecutor.execute_invocation` or `ToolExecutor.execute`; use `CognitiveOS`
