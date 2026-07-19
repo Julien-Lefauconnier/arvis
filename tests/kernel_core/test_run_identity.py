@@ -9,7 +9,8 @@ aggregation).
 
 Campaign 6: a fresh unguessable ``run_id`` is generated at run entry
 (``SyscallHandler.begin_run``, called by the runtime), prefixes every
-causal id and is journaled on every intent and result. It is ENVELOPE
+causal id and is journaled on every intent and result. Campaign 7 Lot 7
+binds the COMPLETE run id rather than a 48-bit prefix. It is ENVELOPE
 identity: like the causal ids it prefixes, it is stripped from the
 hashed material, so the deterministic-commitment contract of the
 kernel ("what the run did", not "which run did it") is preserved; the
@@ -108,6 +109,23 @@ def test_causal_ids_are_unique_between_runs(monkeypatch):
     assert ids[0] != ids[1]
 
 
+def test_same_prefix_runs_use_the_complete_identity(monkeypatch):
+    run_ids = (
+        "0123456789abAAAAAAAAAAAAAAAAAAAA",
+        "0123456789abBBBBBBBBBBBBBBBBBBBB",
+    )
+    ids = []
+    for run_id in run_ids:
+        handler, manager = _rig(monkeypatch)
+        handler.begin_run(run_id)
+        ctx = SimpleNamespace(extra={}, user_id="u1")
+        assert _call(handler, manager, ctx).success is True
+        ids.append(ctx.extra["syscall_intents"][0]["causal_id"])
+    assert ids[0] != ids[1]
+    assert ids[0].startswith(f"syscall:{run_ids[0]}:")
+    assert ids[1].startswith(f"syscall:{run_ids[1]}:")
+
+
 def test_intent_and_result_carry_the_run_id(monkeypatch):
     handler, manager = _rig(monkeypatch)
     run_id = uuid.uuid4().hex
@@ -119,7 +137,7 @@ def test_intent_and_result_carry_the_run_id(monkeypatch):
     journaled = ctx.extra["syscall_results"][0]
     assert intent["run_id"] == run_id
     assert journaled["run_id"] == run_id
-    assert intent["causal_id"].startswith(f"syscall:{run_id[:12]}:")
+    assert intent["causal_id"].startswith(f"syscall:{run_id}:")
     assert journaled["syscall_id"] == intent["causal_id"]
 
 

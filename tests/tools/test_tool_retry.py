@@ -20,6 +20,7 @@ def test_tool_retry_flow(monkeypatch):
     )
 
     calls = {"count": 0}
+    idempotency_keys: list[str | None] = []
 
     class FailingThenSuccessTool(BaseTool):
         name = "retry_tool"
@@ -28,6 +29,7 @@ def test_tool_retry_flow(monkeypatch):
 
         def execute(self, input_data):
             calls["count"] += 1
+            idempotency_keys.append(input_data.get("idempotency_key"))
             if calls["count"] == 1:
                 raise Exception("fail")
             return {"ok": True}
@@ -67,6 +69,9 @@ def test_tool_retry_flow(monkeypatch):
 
     # retry path executed
     assert calls["count"] == 2
+    assert len(idempotency_keys) == 2
+    assert idempotency_keys[0] is not None
+    assert idempotency_keys[0] == idempotency_keys[1]
 
     # execution finalized correctly
     assert execution_view.execution_status is not None

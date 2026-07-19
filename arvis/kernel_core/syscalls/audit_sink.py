@@ -25,6 +25,10 @@ callable: it is a component that ANSWERS, returning an
 - ``receipt_id`` and ``committed_at``: the identity and time of the
   acknowledgement.
 
+For tool effects, ``intent_sha256`` also commits the persisted
+``idempotency_key``. The receipt therefore binds that recovery key without
+copying it into a second independently mutable receipt field.
+
 The syscall boundary validates every receipt fail-closed: a sink that
 returns a malformed receipt, or a receipt binding a DIFFERENT intent,
 refuses the effect before it runs. In profiles requiring durability, a

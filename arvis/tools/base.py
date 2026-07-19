@@ -50,6 +50,7 @@ class BaseTool(ABC):
         return self.execute(
             {
                 "tool_payload": invocation.payload,
+                "idempotency_key": invocation.idempotency_key,
                 "invocation": invocation,
                 "context": getattr(invocation, "context", None),  # 👈 FIX
             }

@@ -300,7 +300,6 @@ def test_policy_exception_releases_reserved_confirmation(monkeypatch) -> None:
     assert reserved_again is not None
 
 
-@pytest.mark.xfail(strict=True, reason="Campaign 7 Lot 7 pending")
 def test_two_runs_with_same_prefix_have_distinct_causal_ids() -> None:
     handler = SyscallHandler(runtime_state=None, scheduler=None)
     syscall = Syscall(name="tool.execute", args={"process_id": "p1"})

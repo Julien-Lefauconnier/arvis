@@ -94,11 +94,33 @@ Side-effect	API call, DB write
 
 ### 2. Idempotency
 
-Prefer:
+Declaring an operation idempotent is only the first step:
 
 ```python
-idempotent = True
+ToolSpec(
+    name="payments.capture",
+    description="Capture one payment",
+    idempotent=True,
+)
 ```
+
+Every effectful adapter MUST forward the exact key provided by ARVIS rather
+than generating a new one:
+
+```python
+def execute_invocation(self, invocation: ToolInvocation):
+    return provider.capture(
+        payload=invocation.payload,
+        idempotency_key=invocation.idempotency_key,
+    )
+```
+
+Legacy adapters receive the same value under
+`input_data["idempotency_key"]`. The key is stable for one logical action,
+persisted in the pre-effect outbox and bound by the audit receipt through the
+intent commitment. A retry or crash-recovery worker MUST reuse the persisted
+key exactly. `idempotent=True` without forwarding the key is only a declaration
+and does not make an external effect safely replayable.
 
 ---
 

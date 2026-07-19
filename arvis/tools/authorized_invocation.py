@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from arvis.adapters.tools.invocation import ToolInvocation
 
 CAPABILITY_FORMAT_VERSION = 1
-CAPABILITY_ACTIVATION_FORMAT_VERSION = 1
+CAPABILITY_ACTIVATION_FORMAT_VERSION = 2
 
 _EMPTY_SNAPSHOT: Mapping[str, Any] = MappingProxyType({})
 
@@ -112,6 +112,7 @@ class CapabilityActivationBinding:
     durable_position: str
     store_fingerprint: str
     committed_at: str
+    idempotency_key: str | None = None
     activation_format_version: int = CAPABILITY_ACTIVATION_FORMAT_VERSION
 
     def __post_init__(self) -> None:
@@ -130,6 +131,10 @@ class CapabilityActivationBinding:
             not isinstance(self.run_id, str) or not self.run_id
         ):
             raise ValueError("run_id must be None or a non-empty string")
+        if self.idempotency_key is not None and (
+            not isinstance(self.idempotency_key, str) or not self.idempotency_key
+        ):
+            raise ValueError("idempotency_key must be None or a non-empty string")
         if self.activation_format_version != CAPABILITY_ACTIVATION_FORMAT_VERSION:
             raise ValueError("unsupported capability activation format version")
 
@@ -143,6 +148,7 @@ class CapabilityActivationBinding:
                 "intent_sha256": self.intent_sha256,
                 "run_id": self.run_id,
                 "causal_id": self.causal_id,
+                "idempotency_key": self.idempotency_key,
                 "durable_position": self.durable_position,
                 "store_fingerprint": self.store_fingerprint,
                 "committed_at": self.committed_at,
@@ -357,6 +363,8 @@ class InvocationAuthority:
         try:
             activation_commitment = activation.commitment_sha256
         except (NonCanonicalizableError, TypeError, ValueError, OverflowError):
+            return False
+        if activation.idempotency_key != capability.invocation.idempotency_key:
             return False
 
         with self._lock:

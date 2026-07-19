@@ -96,10 +96,10 @@ class SyscallHandler:
         # by the intents of the current run; runtime lifecycle bounding
         # is a tracked later chantier (a8 section 22).
         self._pending_intent_commitments: dict[str, str] = {}
-        # Campaign 6 (Lot 5, closes a8 section 17): identity of the
-        # current run, set by the runtime at run entry. When set, it
-        # prefixes every causal id (global uniqueness across runs in a
-        # shared sink) and is journaled on every intent and result for
+        # Campaign 6 (Lot 5), hardened by campaign 7 (Lot 7): identity
+        # of the current run, set by the runtime at run entry. When set,
+        # the COMPLETE run id prefixes every causal id (global uniqueness
+        # across runs in a shared sink) and is journaled on every intent and
         # host-side reconciliation. It is ENVELOPE identity: stripped
         # from the hashed material like the causal ids it prefixes, so
         # the commitment stays deterministic; the run <-> commitment
@@ -696,7 +696,14 @@ class SyscallHandler:
                 digest_args["result"] = {
                     "tool": effect_invocation.tool_name,
                     "tool_payload_sha256": effect_invocation.payload_sha256,
+                    # Campaign 7 (Lot 7): the externally reusable operation
+                    # identity is part of WHAT was durably accepted. The key
+                    # is deterministic for one logical action and therefore
+                    # remains stable across retries and crash recovery.
+                    "idempotency_key": effect_invocation.idempotency_key,
                 }
+                if effect_invocation.idempotency_key is not None:
+                    intent["idempotency_key"] = effect_invocation.idempotency_key
             elif "result" in digest_args:
                 digest_args["result"] = effect_parameters_from_result(
                     digest_args["result"]
@@ -1079,18 +1086,19 @@ class SyscallHandler:
         tick: int,
         seq: int,
     ) -> str:
-        """Causal id of a syscall, globally unique across runs (Lot 5).
+        """Causal id of a syscall, globally unique across runs.
 
-        The a8 audit (section 17) proved ids built from local elements
-        (syscall, process, tick, counter) repeat between runs, so a
-        shared sink could not reconcile them. When a run identity is
-        set, its prefix makes the id globally unique; outside a
-        runtime-entered run the legacy shape is kept.
+        Campaign 7 (Lot 7) binds the complete run identity. The previous
+        twelve-hex-character prefix exposed only 48 bits and let two distinct
+        runs sharing that prefix produce the same local causal ids. Outside a
+        runtime-entered run the legacy shape is kept for direct compositions.
         """
         process_id = syscall.args.get("process_id", "none")
         if self._current_run_id is not None:
-            run_segment = self._current_run_id[:12]
-            return f"syscall:{run_segment}:{syscall.name}:{process_id}:{tick}:{seq}"
+            return (
+                f"syscall:{self._current_run_id}:"
+                f"{syscall.name}:{process_id}:{tick}:{seq}"
+            )
         return f"syscall:{syscall.name}:{process_id}:{tick}:{seq}"
 
     def _append_syscall_runtime_event(self, entry: dict[str, Any]) -> None:

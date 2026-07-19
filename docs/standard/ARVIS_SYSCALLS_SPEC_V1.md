@@ -83,6 +83,18 @@ The sink receipt MUST bind the exact intent, run and causal occurrence, and its
 already accepted by the current runtime instance MUST NOT be accepted again.
 Failure of any prerequisite is fail-closed and occurs before the effect.
 
+A runtime causal identity MUST contain the complete run identity; truncating a
+run id is forbidden. The current form is:
+
+```text
+syscall:{full_run_id}:{syscall}:{process_id}:{tick}:{sequence}
+```
+
+For a tool effect, the pre-effect intent MUST also persist the exact
+`idempotency_key` carried by the sealed `ToolInvocation`. That key is part of
+the intent commitment, so the receipt binds it through `intent_sha256`. The
+capability activation commitment MUST bind the same key before execution.
+
 ---
 
 ## Syscall Model

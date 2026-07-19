@@ -130,6 +130,7 @@ class ToolExecutor:
                 "decision": decision,
                 "context": ctx,
                 "tool_payload": validation_payload,
+                "idempotency_key": invocation.idempotency_key,
                 "invocation": invocation,
             }
 
@@ -212,6 +213,7 @@ class ToolExecutor:
                 "decision": decision,
                 "context": ctx,
                 "tool_payload": execution_payload,
+                "idempotency_key": invocation.idempotency_key,
                 "invocation": invocation,
             }
             start = time.perf_counter()

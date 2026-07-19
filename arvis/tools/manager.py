@@ -507,10 +507,15 @@ class ToolManager:
         if not isinstance(causal_id, str) or not causal_id:
             self.abort_authorized(authorized)
             return False
+        idempotency_key = authorized.invocation.idempotency_key
+        if not isinstance(idempotency_key, str) or not idempotency_key:
+            self.abort_authorized(authorized)
+            return False
         expected_intent = {
             "commitment_sha256": intent_sha256,
             "run_id": run_id,
             "causal_id": causal_id,
+            "idempotency_key": idempotency_key,
         }
         if validate_receipt(receipt, expected_intent) is not None:
             self.abort_authorized(authorized)
@@ -522,6 +527,7 @@ class ToolManager:
                 intent_sha256=intent_sha256,
                 run_id=run_id,
                 causal_id=causal_id,
+                idempotency_key=idempotency_key,
                 durable_position=receipt.durable_position,
                 store_fingerprint=receipt.store_fingerprint,
                 committed_at=receipt.committed_at,
@@ -622,6 +628,7 @@ class ToolManager:
                 "causal_id": causal_id,
                 "tool": authorized.invocation.tool_name,
                 "payload_sha256": authorized.payload_sha256,
+                "idempotency_key": authorized.invocation.idempotency_key,
                 "authorization_snapshot": dict(authorized.authorization_snapshot),
             }
         )
@@ -630,6 +637,7 @@ class ToolManager:
             "syscall": "tool.execute",
             "causal_id": causal_id,
             "process_id": authorized.invocation.process_id or "none",
+            "idempotency_key": authorized.invocation.idempotency_key,
             "commitment_sha256": intent_sha256,
         }
         try:

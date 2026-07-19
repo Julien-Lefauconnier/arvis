@@ -368,6 +368,7 @@ def test_intent_and_execution_use_the_same_frozen_payload(monkeypatch: Any) -> N
         {
             "tool": "frozen_probe",
             "tool_payload_sha256": outcome.authorized.payload_sha256,
+            "idempotency_key": outcome.authorized.invocation.idempotency_key,
         }
     ]
     assert tool.executed == [{"target": "A", "nested": {"value": 1}}]
