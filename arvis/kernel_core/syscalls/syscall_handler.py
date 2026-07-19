@@ -17,7 +17,7 @@ from arvis.kernel_core.access.identity import (
     authenticated_principal_from_context,
     principal_from_context,
 )
-from arvis.kernel_core.access.models import KERNEL_PRINCIPAL
+from arvis.kernel_core.access.models import KERNEL_OWNER_ID, KERNEL_PRINCIPAL
 from arvis.kernel_core.access.policy import (
     ACCESS_DENIED_REASON_CODE,
     AuthorizationPolicy,
@@ -39,11 +39,13 @@ from arvis.kernel_core.syscalls.syscall_registry import (
     get_syscall,
 )
 from arvis.tools.authorized_invocation import UnauthorizedExecutionError
+from arvis.tools.effect_context import build_authorized_effect_context
 from arvis.tools.manager import (
     ToolAuthorizationOutcome,
     ToolManager,
     _ToolEffectBoundary,
 )
+from arvis.tools.runtime.runtime_bindings import resolve_process_id, resolve_run_id
 
 
 class RuntimeStateLike(Protocol):
@@ -141,6 +143,7 @@ class SyscallHandler:
             started_tick,
         )
         if access_failure is not None:
+            self._abort_presented_tool_authorization(syscall)
             return access_failure
 
         tool_authorization: ToolAuthorizationOutcome | None = None
@@ -162,6 +165,15 @@ class SyscallHandler:
         )
         if identity_failure is not None:
             return identity_failure
+
+        effect_context_failure = self._validate_tool_effect_context(
+            ctx,
+            syscall,
+            started_tick,
+            tool_authorization,
+        )
+        if effect_context_failure is not None:
+            return effect_context_failure
 
         causal_id = self._build_syscall_id(
             syscall,
@@ -341,6 +353,94 @@ class SyscallHandler:
         )
         self._safe_journal(ctx, syscall, failure, started_tick)
         return failure
+
+    def _validate_tool_effect_context(
+        self,
+        ctx: PipelineContextLike | None,
+        syscall: Syscall,
+        started_tick: int,
+        outcome: ToolAuthorizationOutcome | None,
+    ) -> SyscallResult | None:
+        """Refuse a capability presented outside its sealed identity context."""
+        if outcome is None or outcome.authorized is None:
+            return None
+
+        sealed = outcome.authorized.invocation.effect_context
+        current = build_authorized_effect_context(
+            ctx,
+            process_id=resolve_process_id(ctx),
+            run_id=resolve_run_id(ctx),
+        )
+        compared_fields = (
+            "principal",
+            "tenant",
+            "authentication_source",
+            "authentication_strength",
+            "service_id",
+            "session_id_hash",
+            "process_id",
+            "run_id",
+        )
+        mismatches = {
+            field_name
+            for field_name in compared_fields
+            if getattr(current, field_name) != getattr(sealed, field_name)
+        }
+
+        # ``begin_run`` is kernel-owned envelope state. Direct local handler
+        # compositions historically omit a runtime run binding, but whenever
+        # authorization did seal one it must also equal the handler's run.
+        if (
+            sealed.run_id is not None
+            and self._current_run_id is not None
+            and sealed.run_id != self._current_run_id
+        ):
+            mismatches.add("run_id")
+
+        # The reserved kernel identity may own internal syscalls only. It is
+        # never a valid identity for a user-facing tool effect.
+        if sealed.principal == KERNEL_OWNER_ID or current.principal == KERNEL_OWNER_ID:
+            mismatches.add("kernel_principal")
+
+        if not mismatches:
+            return None
+
+        self._abort_tool_authorization(outcome)
+        failure = self._failure_from_error(
+            ctx,
+            ArvisSecurityError(
+                "tool effect refused: current identity does not match the "
+                "authorized effect context",
+                origin=ErrorOrigin(
+                    component="SyscallHandler",
+                    subsystem="kernel.syscall",
+                    syscall=syscall.name,
+                ),
+                details={
+                    "syscall": syscall.name,
+                    "reason_code": "effect_context_mismatch",
+                    # Field names support diagnosis without leaking identity
+                    # values, tenant names or session commitments.
+                    "mismatch_fields": ",".join(sorted(mismatches)),
+                },
+            ),
+        )
+        self._safe_journal(ctx, syscall, failure, started_tick)
+        return failure
+
+    def _abort_presented_tool_authorization(self, syscall: Syscall) -> None:
+        """Revoke an owned capability even when access admission fails first."""
+        if syscall.name != "tool.execute":
+            return
+        candidate = syscall.args.get("authorization")
+        effect_boundary = self._tool_effect_boundary
+        if (
+            type(candidate) is ToolAuthorizationOutcome
+            and candidate.authorized is not None
+            and effect_boundary is not None
+            and effect_boundary.owns_outcome(candidate)
+        ):
+            effect_boundary.abort_authorized(candidate.authorized)
 
     def _open_effect_transaction(
         self,

@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from arvis.kernel_core.access.models import AuthenticatedPrincipal
+from arvis.kernel_core.access.models import KERNEL_PRINCIPAL, AuthenticatedPrincipal
 from arvis.kernel_core.canonicalization import canonical_hash
 from arvis.kernel_core.syscalls.audit_sink import InMemoryAuditSink
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
@@ -154,12 +154,6 @@ def _handle(
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "campaign 8: a mutable authorization context still crosses the effect boundary"
-    ),
-)
 def test_context_identity_mutation_after_authorization_is_refused() -> None:
     confirmations = ConfirmationRegistry()
     tool, manager, handler = _rig(
@@ -185,16 +179,15 @@ def test_context_identity_mutation_after_authorization_is_refused() -> None:
     refused = _handle(handler, result, ctx, outcome)
 
     assert refused.success is False
+    assert refused.error is not None
+    assert refused.error.details["reason_code"] == "effect_context_mismatch"
+    assert refused.error.details["mismatch_fields"] == "principal"
     assert tool.calls == []
     assert manager.capability_state(outcome.authorized) is CapabilityState.REVOKED
     assert confirmations.pending_count() == 1
     assert ctx.extra.get("syscall_intents", []) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="campaign 8: a capability can still be presented from a distinct context",
-)
 def test_alice_capability_cannot_be_presented_in_bob_context() -> None:
     tool, manager, handler = _rig()
     alice_ctx = _ctx(_principal("alice"))
@@ -210,10 +203,6 @@ def test_alice_capability_cannot_be_presented_in_bob_context() -> None:
     assert bob_ctx.extra.get("syscall_intents", []) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="campaign 8: tenant binding is not compared with the sealed authorization",
-)
 def test_tenant_mutation_after_authorization_is_refused() -> None:
     tool, manager, handler = _rig()
     ctx = _ctx(_principal("alice", tenant="tenant-a"))
@@ -228,10 +217,6 @@ def test_tenant_mutation_after_authorization_is_refused() -> None:
     assert ctx.extra.get("syscall_intents", []) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="campaign 8: session binding is not compared with the sealed authorization",
-)
 def test_session_binding_mutation_after_authorization_is_refused() -> None:
     tool, manager, handler = _rig()
     ctx = _ctx(_principal("alice", session_id_hash="sha256:session-a"))
@@ -246,10 +231,6 @@ def test_session_binding_mutation_after_authorization_is_refused() -> None:
     assert ctx.extra.get("syscall_intents", []) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="campaign 8: service binding is not compared with the sealed authorization",
-)
 def test_service_identity_mutation_after_authorization_is_refused() -> None:
     tool, manager, handler = _rig()
     ctx = _ctx(_principal("alice", service_id="service-a"))
@@ -262,6 +243,86 @@ def test_service_identity_mutation_after_authorization_is_refused() -> None:
     assert refused.success is False
     assert tool.calls == []
     assert ctx.extra.get("syscall_intents", []) == []
+
+
+@pytest.mark.parametrize(
+    ("changed_principal", "expected_field"),
+    [
+        (_principal("alice", source="saml"), "authentication_source"),
+        (_principal("alice", strength="password"), "authentication_strength"),
+    ],
+)
+def test_authentication_provenance_mutation_is_refused(
+    changed_principal: AuthenticatedPrincipal,
+    expected_field: str,
+) -> None:
+    tool, manager, handler = _rig()
+    ctx = _ctx(_principal("alice"))
+    result = _result()
+    outcome = _authorize(manager, result, ctx)
+
+    ctx.principal = changed_principal
+    refused = _handle(handler, result, ctx, outcome)
+
+    assert refused.success is False
+    assert refused.error is not None
+    assert refused.error.details["mismatch_fields"] == expected_field
+    assert tool.calls == []
+    assert ctx.extra.get("syscall_intents", []) == []
+
+
+def test_runtime_binding_mutation_after_authorization_is_refused() -> None:
+    tool, manager, handler = _rig()
+    ctx = _ctx(_principal("alice"))
+    ctx.runtime_bindings = SimpleNamespace(process_id="process-a", run_id="run-a")
+    handler.begin_run("run-a")
+    result = _result()
+    outcome = _authorize(manager, result, ctx)
+
+    ctx.runtime_bindings = SimpleNamespace(process_id="process-b", run_id="run-b")
+    refused = _handle(handler, result, ctx, outcome)
+
+    assert refused.success is False
+    assert refused.error is not None
+    assert refused.error.details["mismatch_fields"] == "process_id,run_id"
+    assert tool.calls == []
+    assert ctx.extra.get("syscall_intents", []) == []
+
+
+def test_kernel_principal_is_excluded_from_user_tool_effects() -> None:
+    tool, manager, handler = _rig()
+    ctx = SimpleNamespace(
+        extra={},
+        user_id=KERNEL_PRINCIPAL.user_id,
+        principal=KERNEL_PRINCIPAL,
+        confirmation_result=None,
+    )
+    result = _result()
+    outcome = _authorize(manager, result, ctx)
+
+    refused = _handle(handler, result, ctx, outcome)
+
+    assert refused.success is False
+    assert refused.error is not None
+    assert refused.error.details["reason_code"] == "effect_context_mismatch"
+    assert refused.error.details["mismatch_fields"] == "kernel_principal"
+    assert tool.calls == []
+    assert ctx.extra.get("syscall_intents", []) == []
+
+
+def test_exact_effect_context_match_still_executes() -> None:
+    tool, manager, handler = _rig()
+    ctx = _ctx(_principal("alice"))
+    ctx.runtime_bindings = SimpleNamespace(process_id="process-a", run_id="run-a")
+    handler.begin_run("run-a")
+    result = _result()
+    outcome = _authorize(manager, result, ctx)
+
+    executed = _handle(handler, result, ctx, outcome)
+
+    assert executed.success is True
+    assert tool.calls == [{"target": "record-a"}]
+    assert len(ctx.extra.get("syscall_intents", [])) == 1
 
 
 @pytest.mark.xfail(

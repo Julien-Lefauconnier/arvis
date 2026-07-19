@@ -26,12 +26,9 @@ from arvis.kernel_core.access.identity import (
     authenticated_principal_from_context,
     principal_from_context,
 )
-from arvis.kernel_core.access.models import (
-    UNAUTHENTICATED_PRINCIPAL_ID,
-    Principal,
-)
+from arvis.kernel_core.access.models import Principal
 from arvis.tools.confirmation import ConfirmationReservation
-from arvis.tools.effect_context import AuthorizedEffectContext
+from arvis.tools.effect_context import build_authorized_effect_context
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.runtime.runtime_bindings import resolve_process_id, resolve_run_id
 from arvis.tools.spec import ToolSpec
@@ -209,26 +206,8 @@ class ToolAuthorizationService:
         )
 
         spec = prepared.spec
-        principal_id = prepared.principal_id
-        if not isinstance(principal_id, str) or not principal_id:
-            principal_id = UNAUTHENTICATED_PRINCIPAL_ID
-        effect_context = AuthorizedEffectContext(
-            principal=principal_id,
-            tenant=prepared.tenant_id,
-            authentication_source=(
-                authenticated.authentication_source
-                if authenticated is not None
-                else "unattested"
-            ),
-            authentication_strength=(
-                authenticated.authentication_strength
-                if authenticated is not None
-                else "none"
-            ),
-            service_id=authenticated.service_id if authenticated is not None else None,
-            session_id_hash=(
-                authenticated.session_id_hash if authenticated is not None else None
-            ),
+        effect_context = build_authorized_effect_context(
+            ctx,
             process_id=process_id,
             run_id=resolve_run_id(ctx),
         )

@@ -16,6 +16,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from arvis.kernel_core.access.identity import (
+    authenticated_principal_from_context,
+    principal_from_context,
+)
+from arvis.kernel_core.access.models import UNAUTHENTICATED_PRINCIPAL_ID
 from arvis.kernel_core.canonicalization import canonical_hash
 
 EFFECT_CONTEXT_FORMAT_VERSION = 1
@@ -97,4 +102,53 @@ class AuthorizedEffectContext:
         return canonical_hash(self.to_material())
 
 
-__all__ = ["EFFECT_CONTEXT_FORMAT_VERSION", "AuthorizedEffectContext"]
+def build_authorized_effect_context(
+    ctx: Any,
+    *,
+    process_id: str,
+    run_id: str | None,
+    host_binding_commitment: str | None = None,
+) -> AuthorizedEffectContext:
+    """Snapshot the trusted identity channel into effect-only material.
+
+    Authorization and the syscall boundary deliberately share this builder so
+    that they cannot silently drift in how a current principal is projected.
+    Runtime identifiers remain explicit inputs: they are resolved by the
+    boundary that owns them, never inferred from cognition-controlled data.
+    """
+    principal = principal_from_context(ctx)
+    authenticated = authenticated_principal_from_context(ctx)
+    principal_id = (
+        principal.user_id if principal is not None else getattr(ctx, "user_id", None)
+    )
+    if not isinstance(principal_id, str) or not principal_id:
+        principal_id = UNAUTHENTICATED_PRINCIPAL_ID
+
+    return AuthorizedEffectContext(
+        principal=principal_id,
+        tenant=principal.organization_id if principal is not None else None,
+        authentication_source=(
+            authenticated.authentication_source
+            if authenticated is not None
+            else "unattested"
+        ),
+        authentication_strength=(
+            authenticated.authentication_strength
+            if authenticated is not None
+            else "none"
+        ),
+        service_id=authenticated.service_id if authenticated is not None else None,
+        session_id_hash=(
+            authenticated.session_id_hash if authenticated is not None else None
+        ),
+        process_id=process_id,
+        run_id=run_id,
+        host_binding_commitment=host_binding_commitment,
+    )
+
+
+__all__ = [
+    "EFFECT_CONTEXT_FORMAT_VERSION",
+    "AuthorizedEffectContext",
+    "build_authorized_effect_context",
+]
