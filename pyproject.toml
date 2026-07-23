@@ -54,7 +54,7 @@ dev = [
   # reproducible between local gates and CI (audit 0.1.0a4, tooling
   # reproducibility).
   # Bumping any pin is a deliberate, dedicated commit (re-format if ruff).
-  "mypy==1.19.1",
+  "mypy==2.3.0",
   "ruff==0.14.3",
   "pytest==8.4.2",
   "bandit==1.9.4",
