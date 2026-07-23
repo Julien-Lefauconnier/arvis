@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from typing import Any, cast
+
 from arvis.adapters.ir.adaptive_adapter import AdaptiveIRAdapter
 from arvis.adapters.ir.cognitive_ir_builder import CognitiveIRBuilder
 from arvis.adapters.ir.projection_adapter import ProjectionIRAdapter
@@ -133,12 +136,18 @@ class PipelineIRService:
         # -----------------------------------------
         # Serialize / hash / envelope
         # -----------------------------------------
+        # P1-04 (audit a13): one canonical serialization. The witness
+        # dict, the hash and the envelope all derive from the same
+        # canonical text, so a mutation of the live IR between steps can
+        # no longer desynchronize the exported witness from its hash.
         try:
-            ctx.ir_serialized = CognitiveIRSerializer.to_canonical_dict(
-                ctx.cognitive_ir
-            )
+            canonical_text = CognitiveIRSerializer.serialize(ctx.cognitive_ir)
+            loaded = json.loads(canonical_text)
+            if not isinstance(loaded, dict):
+                raise TypeError("Canonical IR must be a dict")
+            ctx.ir_serialized = cast(dict[str, Any], loaded)
 
-            ctx.ir_hash = CognitiveIRHasher.hash(ctx.cognitive_ir)
+            ctx.ir_hash = CognitiveIRHasher.hash_canonical_text(canonical_text)
 
             ctx.ir_envelope = CognitiveIREnvelope.build(
                 ir=ctx.cognitive_ir,

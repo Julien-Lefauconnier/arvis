@@ -44,6 +44,13 @@ class ProjectionCertificate:
     # debug / trace
     checks_detail: dict[str, bool]
 
+    def __post_init__(self) -> None:
+        # P1-04 (audit a13): the certificate is an attestation. It
+        # snapshots its detail map at construction, so the producing
+        # validator's working dict can no longer mutate what an already
+        # emitted certificate reports.
+        object.__setattr__(self, "checks_detail", dict(self.checks_detail))
+
     @property
     def is_projection_safe(self) -> bool:
         return (
