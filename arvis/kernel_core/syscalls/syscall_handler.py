@@ -422,15 +422,21 @@ class SyscallHandler:
             if getattr(current, field_name) != getattr(sealed, field_name)
         }
 
-        # ``begin_run`` is kernel-owned envelope state. Direct local handler
-        # compositions historically omit a runtime run binding, but whenever
-        # authorization did seal one it must also equal the handler's run.
-        if (
-            sealed.run_id is not None
-            and self._current_run_id is not None
-            and sealed.run_id != self._current_run_id
-        ):
-            mismatches.add("run_id")
+        # ``begin_run`` is kernel-owned envelope state. Whenever authorization
+        # sealed a run, it must equal the handler's run.
+        #
+        # A sealed context carrying NO run is tolerated outside production:
+        # a direct local composition may legitimately omit the binding. Under
+        # production posture it is refused, because the effect would otherwise
+        # execute under a run its own sealed context does not name, leaving
+        # the intent's run and the effect's run with nothing tying them
+        # together in the audit trail.
+        if self._current_run_id is not None and sealed.run_id != self._current_run_id:
+            if (
+                sealed.run_id is not None
+                or self.services.require_authenticated_principal
+            ):
+                mismatches.add("run_id")
 
         # The reserved kernel identity may own internal syscalls only. It is
         # never a valid identity for a user-facing tool effect.

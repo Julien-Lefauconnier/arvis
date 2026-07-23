@@ -94,6 +94,20 @@ def _rig(monkeypatch, *, sink, require_sink=False):
     return handler, manager, tool
 
 
+def _ctx(run_id, *, user_id="u1"):
+    """A context bound to the handler's run, as production requires.
+
+    Without runtime bindings the sealed effect context carries no run while
+    the intent carries the handler's envelope, and a production effect is
+    refused: the two runs would have nothing tying them together.
+    """
+    return SimpleNamespace(
+        extra={},
+        user_id=user_id,
+        runtime_bindings=SimpleNamespace(process_id="test-process", run_id=run_id),
+    )
+
+
 def _call(handler, manager, ctx):
     ctx.principal = AuthenticatedPrincipal(
         user_id=ctx.user_id,
@@ -121,7 +135,7 @@ def test_durable_sink_returns_valid_receipt(monkeypatch):
     handler, manager, tool = _rig(monkeypatch, sink=sink, require_sink=True)
     run_id = uuid.uuid4().hex
     handler.begin_run(run_id)
-    ctx = SimpleNamespace(extra={}, user_id="u1")
+    ctx = _ctx(run_id)
     result = _call(handler, manager, ctx)
     assert result.success is True
     assert tool.executed
@@ -152,8 +166,9 @@ def test_invalid_receipt_refuses_the_effect(monkeypatch):
             )
 
     handler, manager, tool = _rig(monkeypatch, sink=_LyingSink(), require_sink=True)
-    handler.begin_run(uuid.uuid4().hex)
-    ctx = SimpleNamespace(extra={}, user_id="u1")
+    run_id = uuid.uuid4().hex
+    handler.begin_run(run_id)
+    ctx = _ctx(run_id)
     result = _call(handler, manager, ctx)
     assert result.success is False
     assert result.error is not None
@@ -176,8 +191,9 @@ def test_receipt_for_a_different_run_is_refused(monkeypatch):
             )
 
     handler, manager, tool = _rig(monkeypatch, sink=_WrongRunSink(), require_sink=True)
-    handler.begin_run(uuid.uuid4().hex)
-    ctx = SimpleNamespace(extra={}, user_id="u1")
+    run_id = uuid.uuid4().hex
+    handler.begin_run(run_id)
+    ctx = _ctx(run_id)
     result = _call(handler, manager, ctx)
     assert result.success is False
     assert tool.executed == []
@@ -191,23 +207,30 @@ def test_raising_sink_refuses_the_effect(monkeypatch):
             raise RuntimeError("store unavailable")
 
     handler, manager, tool = _rig(monkeypatch, sink=_CrashingSink(), require_sink=True)
-    handler.begin_run(uuid.uuid4().hex)
-    ctx = SimpleNamespace(extra={}, user_id="u1")
+    run_id = uuid.uuid4().hex
+    handler.begin_run(run_id)
+    ctx = _ctx(run_id)
     result = _call(handler, manager, ctx)
     assert result.success is False
     assert tool.executed == []
 
 
 def test_receipt_is_envelope_material(monkeypatch):
-    # Deterministic-commitment contract: the same call with and without
-    # a durable sink, and across two runs with distinct receipts,
-    # yields the SAME journal digest. The receipt anchors, the digest
-    # binds; they never mix.
+    # Deterministic-commitment contract: the same call with and without a
+    # durable sink, producing distinct receipts, yields the SAME journal
+    # digest. The receipt anchors, the digest binds; they never mix.
+    #
+    # The run is deliberately held constant across the three calls. It is
+    # sealed into the effect context and therefore into the commitment, so
+    # varying it would vary the digest for a reason that has nothing to do
+    # with the sink this test isolates. Distinct sink instances already give
+    # the distinct receipts the contract is about.
     digests = []
+    run_id = uuid.uuid4().hex
     for sink in (None, InMemoryAuditSink(), InMemoryAuditSink()):
         handler, manager, _tool = _rig(monkeypatch, sink=sink)
-        handler.begin_run(uuid.uuid4().hex)
-        ctx = SimpleNamespace(extra={}, user_id="u1")
+        handler.begin_run(run_id)
+        ctx = _ctx(run_id)
         assert _call(handler, manager, ctx).success is True
         digests.append(
             syscall_journal_digest(
