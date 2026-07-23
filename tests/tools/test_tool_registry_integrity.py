@@ -182,8 +182,10 @@ def test_fingerprint_with_specs_stays_order_independent():
 
 
 def test_non_canonicalizable_schema_refuses_pinning():
+    # Deep freeze (audit a13, BETA-01): the unpinnable surface is refused
+    # at registration, before it can exist, and registration is atomic.
     bad = _spec(input_schema={"type": object})  # a class is not JSON
     reg = ToolRegistry()
-    reg.register(_SpecTool(bad))
     with pytest.raises(ArvisSecurityError, match="cannot be pinned"):
-        reg.fingerprint()
+        reg.register(_SpecTool(bad))
+    assert reg.get("spec_tool") is None

@@ -20,7 +20,7 @@ from arvis.adapters.tools.invocation import (
     ToolInvocation,
 )
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
-from arvis.errors.base import ArvisError
+from arvis.errors.base import ArvisError, ArvisSecurityError
 from arvis.errors.tool_runtime import ToolInputValidationError, UnknownToolError
 from arvis.kernel_core.access.identity import (
     authenticated_principal_from_context,
@@ -131,7 +131,14 @@ class ToolAuthorizationService:
                 error=UnknownToolError(f"Unknown tool: {tool_name}"),
             )
 
-        spec = tool.spec
+        try:
+            spec = self._registry.verified_spec(tool_name)
+        except ArvisSecurityError as exc:
+            return ToolAuthorizationFailure(
+                tool_name=tool_name,
+                reason="frozen_surface_diverged",
+                error=exc,
+            )
         if spec is not None and spec.input_schema:
             violation = schema_violation(
                 frozen_payload.materialize(),

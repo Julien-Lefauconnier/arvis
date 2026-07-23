@@ -12,6 +12,7 @@ from contextlib import suppress
 from typing import Any
 
 from arvis.errors import normalize_error
+from arvis.errors.base import ArvisSecurityError
 from arvis.errors.tool_runtime import (
     ToolExecutionError,
     ToolInputValidationError,
@@ -142,7 +143,17 @@ class EffectDispatcher:
                 effect_boundary=PRE_EFFECT_REFUSAL,
             )
 
-        spec = tool.spec
+        try:
+            spec = self._registry.verified_spec(tool_name)
+        except ArvisSecurityError as exc:
+            ctx._tool_failure = True
+            return ToolResult(
+                tool_name=tool_name,
+                success=False,
+                error=exc,
+                latency_ms=None,
+                effect_boundary=PRE_EFFECT_REFUSAL,
+            )
         if spec is not None:
             ctx._last_tool_spec = spec
         if spec is not None and spec.input_schema:

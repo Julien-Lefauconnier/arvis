@@ -3,6 +3,7 @@
 from arvis.adapters.tools.authorization import ToolAuthorizationDecision
 from arvis.adapters.tools.gates import ConsentGate, EgressGate
 from arvis.adapters.tools.invocation import ToolInvocation
+from arvis.errors.base import ArvisSecurityError
 from arvis.tools.registry import ToolRegistry
 
 
@@ -24,7 +25,13 @@ class ToolPolicyEvaluator:
                 reason="unknown_tool",
             )
 
-        spec = tool.spec
+        try:
+            spec = registry.verified_spec(invocation.tool_name)
+        except ArvisSecurityError:
+            return ToolAuthorizationDecision(
+                allowed=False,
+                reason="frozen_surface_diverged",
+            )
 
         if spec is None:
             return ToolAuthorizationDecision(
