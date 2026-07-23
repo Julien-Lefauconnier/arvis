@@ -9,6 +9,73 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+The beta readiness campaign. No kernel behaviour changes; what changes is what
+the package ships, what it claims, and how it is published.
+
+### Removed
+
+- Removed 52 unreachable modules, about 1600 lines that travelled in the wheel
+  while nothing imported them. Twelve were the orphans reported by the a11
+  audit; the rest surfaced from a reachability fixed point, and included three
+  subsystems that had never been wired: the lexicon registry with its finance,
+  legal and security vocabularies, the realization service and its templates,
+  and the reflexive timeline insight and rendering layers. Those three sat on
+  the wrong side of the open-core boundary: naming what a formal notice is, or
+  rendering a timeline for a human, is realization, not kernel. The kernel keeps
+  the contracts (lexicon entries and snapshots) and everything that constrains
+  or introspects. Deletion history is in git if a design is ever revived.
+- Removed the empty packages left behind, and the modules that died in cascade
+  behind the ones removed.
+
+### Added
+
+- `tests/contracts/test_module_reachability_ratchet.py`: a module that nothing
+  imports now fails the suite when it is introduced, rather than at the next
+  audit. It resolves absolute, relative and dynamic imports, and treats a module
+  reached only by its tests as alive.
+- `tests/kernel/projection/test_unassessed_projection_axes.py`: pins that the
+  projection certificate never attests an axis it did not measure.
+
+### Changed
+
+- `ProjectionValidator` no longer certifies unassessed axes. Noise robustness
+  had no estimator and reused domain validity as a proxy; mode stability was a
+  bare `True`. Both fed the certification level, so a LOCAL certificate attested
+  six properties of which two were never evaluated. They are now recorded as
+  unassessed in `checks_detail` and excluded from the level. Behaviour is
+  unchanged: both hold whenever the domain does, which is the only branch that
+  reaches the level computation. Implementing a real noise estimator remains
+  open; what changed is the claim, not the estimator.
+- `ProjectionCertificate` states its contract: a flag reports what the producing
+  validator concluded, qualified by the `<axis>_assessed` markers.
+- `ARVIS_LINGUISTIC_SPEC_V1.md` describes what the kernel actually ships. It
+  named removed modules as architecture components, so the public specification
+  described code that did not exist.
+- Translated the remaining French comments and docstrings: the repository rule
+  is English throughout, and sixteen files were breaking it.
+
+### Security
+
+- Hardened the release workflow. It now runs under `contents: read`, grants
+  `id-token: write` to the publish job alone, accepts version tags only, and
+  refuses to publish unless the tag names the packaged version and the changelog
+  documents it. The full quality gate, the packaging checks and a clean-env
+  install run before publication, and the published artifact is the one that was
+  verified, passed between jobs rather than rebuilt.
+
+## [0.1.0a12] - 2026-07-22
+
+Version bump and the first publication path. No kernel logic changes.
+
+### Added
+
+- OIDC Trusted Publishing workflow for PyPI releases
+  (`.github/workflows/release.yml`).
+
+### Changed
+
+- Bumped the package version from `0.1.0a11` to `0.1.0a12`.
+
 ## [0.1.0a11] - 2026-07-19
 
 Campaign 8 seals the complete effect-selection context. A capability is now
