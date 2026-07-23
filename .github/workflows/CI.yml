@@ -77,7 +77,7 @@ jobs:
           pip install -e .[dev] --prefer-binary
 
       - name: Run tests
-        run: pytest --cov=arvis --cov-report=xml --cov-fail-under=85 --maxfail=1 --disable-warnings -q
+        run: pytest --cov=arvis --cov-report=xml --cov-fail-under=90 --maxfail=1 --disable-warnings -q
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'

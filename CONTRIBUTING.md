@@ -84,9 +84,15 @@ old hashes explicitly. See [VERSIONING.md](VERSIONING.md).
 
 ## Ratchets
 
-Several tests exist to stop drift rather than to check behaviour: the module
-reachability ratchet, the context facade ratchet, the broad-except guard, and
-the public API surface check. They fail when a change makes the codebase looser.
+Several checks exist to stop drift rather than to verify behaviour: the module
+reachability ratchet, the context facade ratchet, the broad-except guard, the
+public API surface check, and the coverage floor. They fail when a change makes
+the codebase looser.
+
+The coverage floor only ever moves up. It sits just under the measured figure,
+so a change that adds untested code is caught by the lot that adds it rather
+than by an audit months later. Raising it belongs to the change that earned the
+margin.
 
 Do not update the frozen list to make one pass. Either the change belongs
 outside the ratchet, or relaxing it is the deliberate point of the pull request

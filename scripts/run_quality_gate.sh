@@ -26,7 +26,7 @@ run_full_gate() {
   "$PY" -m pytest \
     --cov=arvis \
     --cov-report=term-missing \
-    --cov-fail-under=85 \
+    --cov-fail-under=90 \
     -q
 
   echo "==> Examples smoke"
