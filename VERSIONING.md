@@ -45,6 +45,11 @@ format version changes, old hashes and confirmations are explicitly
 invalidated, and the change is called out in the changelog. A stored
 confirmation from an older format is never silently accepted.
 
+Which constant governs which artifact, and what breaks when each one moves, is
+mapped in [docs/VERSIONS.md](docs/VERSIONS.md). Two of them are both called
+`IR_VERSION` and are not the same thing, which is worth knowing before reading
+a mismatch as a defect.
+
 ## Guarantee scope
 
 The formal results in `docs/math/` (M1 to M15) hold **on the documented
