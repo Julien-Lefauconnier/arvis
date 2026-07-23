@@ -24,7 +24,7 @@ class NumericBounds:
 @dataclass(frozen=True)
 class ProjectionDomain:
     """
-    Exécutable: définit le domaine admissible de la projection Pi.
+    Executable: defines the admissible domain of the Pi projection.
 
     Ce n'est PAS un concept abstrait:
     → c'est un validateur runtime.
@@ -39,14 +39,14 @@ class ProjectionDomain:
     # --- custom validator ---
     custom_validator: Callable[[dict[str, Any]], bool] | None = None
 
-    # tolérance globale (bruit, etc.)
+    # global tolerance (noise and the like)
     epsilon: float = 1e-6
 
     def validate(self, projected: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
         """
         Retourne:
-        - validité globale
-        - détails par contrainte
+        - overall validity
+        - per-constraint detail
         """
         checks: dict[str, bool] = {}
 
@@ -80,7 +80,7 @@ class ProjectionDomain:
 
     def margin_to_boundary(self, projected: dict[str, Any]) -> float:
         """
-        Approximation conservative de la distance à la frontière du domaine.
+        Conservative approximation of the distance to the domain boundary.
         """
         margins = []
 

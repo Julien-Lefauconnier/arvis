@@ -145,7 +145,7 @@ class HybridRiskObserver:
         w_composite = None
         delta_w = None
 
-        # Calcul composite Lyapunov seulement si toutes les infos sont présentes
+        # Composite Lyapunov computation only when every input is present
         if (
             current_fast is not None
             and current_slow is not None

@@ -23,7 +23,7 @@ from arvis.kernel_core.process.types import (
 @dataclass(init=False)
 class CognitiveProcess:
     """
-    V2 façade (backward compatible).
+    V2 facade (backward compatible).
 
     Internally split into:
     - descriptor (immutable-ish identity)

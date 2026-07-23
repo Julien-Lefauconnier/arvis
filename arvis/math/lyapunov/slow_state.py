@@ -12,8 +12,8 @@ from arvis.reflexive.core.irg_latent_state import IRGLatentState
 @dataclass(frozen=True)
 class SlowState:
     """
-    État lent z : IRG latent geometry (stability memory, structural risk, etc.).
-    Immutable, numeric only, aligné sur IRGLatentState.
+    Slow state z: IRG latent geometry (stability memory, structural risk, ...).
+    Immutable, numeric only, aligned on IRGLatentState.
     """
 
     stability_memory: float = 0.0

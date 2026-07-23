@@ -60,7 +60,7 @@ class CanonicalSignalRegistry:
 def register_all_canonical_signals() -> None:
     """
     Bootstrap complet du registry canonique.
-    Appelée automatiquement au premier import du module canonical.
+    Called automatically on the first import of the canonical module.
     """
     from .specs.decision import register_decision_signals
     from .specs.memory_long import register_memory_long_signals

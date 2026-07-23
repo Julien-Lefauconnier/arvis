@@ -37,7 +37,7 @@ class LLMRequest(BaseModel):
 
     @model_validator(mode="after")
     def normalize_messages(self) -> "LLMRequest":
-        # cas 1: messages déjà fournis
+        # case 1: messages already supplied
         if self.messages:
             if len(self.messages) == 0:
                 raise ValueError("messages cannot be empty")

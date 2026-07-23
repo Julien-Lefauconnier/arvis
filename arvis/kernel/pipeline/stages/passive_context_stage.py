@@ -32,13 +32,13 @@ class PassiveContextStage:
         # MEMORY INJECTION (PASSIVE, KERNEL-COMPAT)
         # -----------------------------------------------------
         try:
-            # Case 1 — snapshot déjà injecté (preferred path)
+            # Case 1: snapshot already injected (preferred path)
             snapshot = getattr(ctx, "memory_snapshot", None)
 
-            # Case 2 — projection déjà fournie (external injection)
+            # Case 2: projection already supplied (external injection)
             projection = getattr(ctx, "memory_projection", None)
 
-            # Case 3 — fallback legacy (long_memory)
+            # Case 3: legacy fallback (long_memory)
             if snapshot is None and projection is None:
                 legacy = getattr(ctx, "long_memory", None)
                 if isinstance(legacy, dict) and legacy:

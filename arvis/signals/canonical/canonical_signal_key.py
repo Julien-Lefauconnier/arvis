@@ -8,7 +8,7 @@ from .canonical_signal_category import CanonicalSignalCategory
 @dataclass(frozen=True)
 class CanonicalSignalKey:
     category: CanonicalSignalCategory
-    code: str  # snake_case, stable, non-métier
+    code: str  # snake_case, stable, domain-agnostic
 
     def __post_init__(self) -> None:
         if not self.code or not self.code.isidentifier():

@@ -63,12 +63,12 @@ class MultiHorizonPredictiveObserver:
     """
     Multi-horizon predictive observer (passive, no gating).
 
-    Estime une pente sur V à partir des N derniers états,
-    puis prédit V à plusieurs horizons (court / moyen / long).
+    Estimates a slope on V from the last N states,
+    then predicts V at several horizons (short, medium, long).
 
     Objectifs:
-    - mieux détecter drift lent (long horizon)
-    - mieux détecter shocks (short horizon)
+    - detect slow drift better (long horizon)
+    - detect shocks better (short horizon)
     - garder compat avec PredictiveSnapshot (predicted_v/horizon/window_size)
     """
 

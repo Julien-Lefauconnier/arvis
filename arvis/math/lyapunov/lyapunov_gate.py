@@ -30,7 +30,7 @@ class LyapunovGateParams:
     mode: CognitiveMode = CognitiveMode.NORMAL
     eps_override: float | None = None
 
-    # ---- Stabilisation intégrale (Phase 1)
+    # ---- Integral stabilization (Phase 1)
     # Damping: plus V est haut, plus on devient strict sur ΔV
     damping_gamma: float = 0.5  # 0 => off, >0 => stricter when V high
 

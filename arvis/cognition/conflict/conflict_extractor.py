@@ -13,7 +13,7 @@ def extract_conflicts_from_bundle(bundle: Any) -> list[ConflictSignal]:
 
     conflicts: list[ConflictSignal] = []
 
-    # Exemple simple : incohérence décision / explication
+    # Simple example: decision and explanation disagree
     decision_reason = getattr(bundle, "decision_reason", None)
     explanation = getattr(bundle, "explanation", None)
 

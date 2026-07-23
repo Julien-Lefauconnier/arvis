@@ -11,7 +11,7 @@ def get_reflexive_snapshot(
     context: dict[str, Any] | None = None,
 ) -> ReflexiveSnapshot:
     """
-    Point d’entrée officiel de la réflexivité ARVIS.
+    The official entry point to ARVIS reflexivity.
     """
 
     service = ReflexiveSnapshotService()

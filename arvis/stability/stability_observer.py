@@ -8,7 +8,7 @@ from arvis.cognition.bundle.cognitive_bundle_snapshot import CognitiveBundleSnap
 @runtime_checkable
 class StabilitySnapshot(Protocol):
     """
-    Snapshot générique pour tous les observers de stabilité.
+    Generic snapshot shared by every stability observer.
     Permet fusion multi-horizon et audit scientifique.
     """
 
@@ -18,10 +18,10 @@ class StabilitySnapshot(Protocol):
 @runtime_checkable
 class StabilityObserver(Protocol):
     """
-    Contrat mathématique ARVIS.
+    ARVIS mathematical contract.
 
     Tous les observers doivent :
-    - être déterministes
+    - be deterministic
     - auditables
     - compatibles ZKCS
     """
