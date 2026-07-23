@@ -1,0 +1,24 @@
+version: 2
+
+updates:
+  # GitHub Actions are pinned by SHA, so an update here is how a pin moves at
+  # all: without it, pinning would quietly freeze the release chain on old,
+  # eventually vulnerable actions.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(ci)"
+
+  # Gate tooling is pinned exactly in pyproject.toml. Bumping a pin is a
+  # deliberate act (a ruff bump means re-formatting), so these arrive one per
+  # pull request and are reviewed like any other change.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"

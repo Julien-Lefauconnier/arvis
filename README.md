@@ -270,7 +270,7 @@ ARVIS is validated like infrastructure.
 
 Current suite includes:
 
-* 1700+ passing tests
+* 2700+ passing tests
 * unit tests
 * integration tests
 * deterministic replay verification

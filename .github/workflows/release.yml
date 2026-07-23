@@ -16,6 +16,12 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Provenance attestation is signed here, where the artifacts are built
+      # and verified, not in the publish job which only forwards them.
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout
@@ -60,7 +66,9 @@ jobs:
         run: bash scripts/run_quality_gate.sh all
 
       - name: Install build tooling
-        run: pip install build twine
+        # Pinned: the artifact that reaches PyPI must not depend on whichever
+        # builder happened to be current that day.
+        run: pip install build==1.5.0 twine==6.2.0 cyclonedx-bom==7.3.1
 
       - name: Build sdist and wheel
         run: python -m build
@@ -78,6 +86,32 @@ jobs:
           /tmp/wheelenv/bin/pip install "$(ls dist/*.whl)"
           cd /tmp
           /tmp/wheelenv/bin/python -c "import arvis; print('arvis', arvis.__version__); from arvis import ArvisEngine, CognitiveOS, CognitiveOSConfig; print('public API import OK')"
+
+      - name: Generate the SBOM
+        # Describes what the built environment actually contains, so a consumer
+        # can answer "is this release affected by X" without guessing.
+        #
+        # Written OUTSIDE dist/: the publish job forwards that directory to
+        # PyPI wholesale, and an SBOM is not a distribution file.
+        run: |
+          mkdir -p sbom
+          cyclonedx-py environment \
+            --output-format json \
+            --outfile sbom/arvis-sbom.json
+
+      - name: Upload the SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom/
+          if-no-files-found: error
+
+      - name: Attest the build provenance
+        # Signs a statement tying these exact artifacts to this workflow run,
+        # verifiable with: gh attestation verify <file> --repo <owner>/<repo>
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/*.whl,dist/*.tar.gz"
 
       - name: Upload the verified artifacts
         # What gets published is what was verified here, byte for byte. A

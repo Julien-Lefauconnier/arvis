@@ -41,6 +41,15 @@ jobs:
       - name: Mypy
         run: mypy arvis --strict
 
+      - name: Dependency audit
+        # Known vulnerabilities in the resolved dependency set. Advisory-only
+        # for now: it reports without failing the job, so a fresh advisory on a
+        # transitive dependency does not block unrelated work. Tighten to a
+        # hard failure once the dev lockfile lands.
+        run: |
+          pip install pip-audit==2.10.1
+          pip-audit --strict || echo "pip-audit reported findings (advisory)"
+
       - name: Bandit (medium/high)
         run: bash scripts/run_quality_gate.sh security
 
