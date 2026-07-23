@@ -16,6 +16,15 @@ class ProjectionCertificationLevel(StrEnum):
 
 @dataclass(frozen=True)
 class ProjectionCertificate:
+    """The runtime outcome of validating one projection.
+
+    Each boolean below reports what the producing validator concluded on that
+    axis. A validator is not required to assess every axis: when it does not,
+    it reports a conservative value and records the fact in ``checks_detail``
+    under ``<axis>_assessed``. Read the two together before treating any of
+    these flags as a guarantee.
+    """
+
     domain_valid: bool
 
     # main checks (M3)

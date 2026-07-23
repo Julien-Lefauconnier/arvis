@@ -15,8 +15,16 @@ from .domain import ProjectionDomain
 
 
 class ProjectionValidator:
-    """
-    Transforme une projection brute en certificat runtime.
+    """Turn a raw projection into a runtime certificate.
+
+    Two of the six certificate axes are NOT assessed here. Noise robustness has
+    no estimator and reuses domain validity as a conservative monotonic proxy;
+    mode stability examines nothing at all. Both are recorded as unassessed in
+    ``checks_detail`` and are excluded from the certification level, so a LOCAL
+    certificate only ever attests axes that were actually measured.
+
+    This is a bounded, declared limitation, not a hidden one: see the guarantee
+    scope published with the release.
     """
 
     def __init__(
@@ -72,23 +80,19 @@ class ProjectionValidator:
             except (AttributeError, TypeError, ValueError, OverflowError):
                 lipschitz_ok = False
 
-        # --- noise robustness (placeholder simple) ---
+        # --- noise robustness: NOT ASSESSED ---
+        # Nothing here estimates a noise gain. Domain validity is reused as a
+        # conservative monotonic proxy, which is why noise_gain_estimate stays
+        # None: there is no measurement behind this value and it must not be
+        # read as a bound. The axis is flagged unassessed below.
         noise_gain = None
-        noise_robustness_ok = True
-
-        # TODO: brancher sur un vrai estimateur plus tard
-        """
-        Deterministic conservative baseline.
-
-        Noise robustness currently reuses domain validity
-        as a monotonic proxy until a dedicated estimator
-        is introduced.
-        """
-        # pour l'instant on assume OK si domain OK
         noise_robustness_ok = domain_valid
+        checks_detail["noise_robustness_assessed"] = False
 
-        # --- mode stability ---
-        mode_stability_ok = True  # placeholder
+        # --- mode stability: NOT ASSESSED ---
+        # No mode transition is examined at this point.
+        mode_stability_ok = True
+        checks_detail["mode_stability_assessed"] = False
 
         # --- lyapunov compatibility ---
         lyapunov_ok = True
@@ -111,17 +115,14 @@ class ProjectionValidator:
                 checks_detail["lyapunov_check_error"] = False
 
         # --- certification level ---
+        # Computed over the axes this validator actually measures. The two
+        # unassessed axes are deliberately excluded: certifying on an axis that
+        # was never evaluated would overstate what the certificate attests.
+        # Behaviour is unchanged today, since both hold whenever domain_valid
+        # does, and domain_valid is the only branch that reaches here.
         if not domain_valid:
             level = ProjectionCertificationLevel.NONE
-        elif all(
-            [
-                boundedness_ok,
-                lipschitz_ok,
-                noise_robustness_ok,
-                mode_stability_ok,
-                lyapunov_ok,
-            ]
-        ):
+        elif all([boundedness_ok, lipschitz_ok, lyapunov_ok]):
             level = ProjectionCertificationLevel.LOCAL
         else:
             level = ProjectionCertificationLevel.BASIC
