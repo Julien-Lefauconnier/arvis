@@ -50,7 +50,12 @@ effect path. Its contract:
   ``Decimal``, ``UUID``, path types, ``Enum`` members, ``list``,
   ``tuple``, ``set``/``frozenset``, ``dict`` with scalar keys,
   dataclasses, plain objects with public-only state, and objects
-  providing ``__arvis_canonical__``.
+  providing ``__arvis_canonical__``. Those native types are matched by
+  EXACT type: a subclass (``class UserId(str)``, a ``NamedTuple``, a
+  ``defaultdict``) is not its parent and is refused unless it declares
+  ``__arvis_canonical__``, since encoding it as the parent would let a
+  commitment made for one be redeemed with the other. ``Enum`` members
+  are the deliberate exception, carrying their own tagged form.
 - **Deterministic across instances.** No ``repr`` of instances, no
   memory address, no wall-clock: the same logical object yields the
   same bytes in any process.
@@ -142,6 +147,53 @@ _RESERVED_TAGS: frozenset[str] = frozenset(
 # would be refused by the private-state guard).
 _SERIALIZER_HOOK = "__arvis_canonical__"
 
+# Native types canonicalized by exact identity. A subclass of one of these is
+# NOT its parent: UserId("alice") and "alice" would otherwise share canonical
+# bytes, so a confirmation minted for one could be redeemed with the other.
+#
+# Falling through to the attribute encoding below is not an answer either: a
+# plain str or int subclass has an empty __dict__, so UserId("alice") and
+# UserId("bob") would collide with EACH OTHER, which is worse. A subclass
+# therefore either declares __arvis_canonical__, or is refused.
+#
+# Enum is deliberately absent: StrEnum, IntEnum and IntFlag are legitimate
+# scalar subclasses, dispatched before this check with their own tagged form.
+_EXACT_NATIVE_TYPES: tuple[type, ...] = (
+    str,
+    bool,
+    int,
+    float,
+    bytes,
+    bytearray,
+    dict,
+    tuple,
+    set,
+    frozenset,
+    list,
+)
+
+
+def _is_native_subclass(obj: Any) -> bool:
+    return type(obj) not in _EXACT_NATIVE_TYPES and isinstance(obj, _EXACT_NATIVE_TYPES)
+
+
+def _canonicalize_via_serializer(
+    obj: Any, hook: Any, *, depth: int, path: str
+) -> JSONValue:
+    """Encode through the class-declared serializer, bound to its type."""
+    return _wrap(
+        _TAG_OBJECT,
+        {
+            "type": _type_identity(type(obj)),
+            # Distinct key from "fields": a serializer output can
+            # never alias an attribute encoding of the same class.
+            "serialized": _canonicalize(
+                hook(obj), depth=depth + 1, path=f"{path}<serialized>"
+            ),
+        },
+    )
+
+
 # Depth cap: a guard against pathological nesting, not a lossy fallback.
 # Reaching it raises rather than collapsing to type identity, so two
 # deep-but-distinct objects never coincide silently.
@@ -197,6 +249,13 @@ def _encode_key(key: Any, *, depth: int, path: str) -> str:
             path=f"{path}<key>",
         )
         return f"__arvis_key_enum__:{_stable_dumps(encoded)}"
+    if _is_native_subclass(key):
+        # Same reasoning as for values: a subclass key is not its parent, and
+        # the token space below only distinguishes native types.
+        raise NonCanonicalizableError(
+            key,
+            path=f"{path}<key> (subclass of a native type; use the exact type)",
+        )
     if isinstance(key, str):
         # A string that could be mistaken for a typed token is escaped.
         if key.startswith("__arvis_key_"):
@@ -260,6 +319,20 @@ def _canonicalize(obj: Any, *, depth: int, path: str) -> JSONValue:
     # those scalar parents and otherwise collapse to their raw values.
     if isinstance(obj, Enum):
         return _canonicalize_enum(obj, depth=depth, path=path)
+
+    # A subclass of a native type is dispatched here, before the scalar and
+    # container branches would silently encode it as its parent.
+    if _is_native_subclass(obj):
+        hook = getattr(type(obj), _SERIALIZER_HOOK, None)
+        if not callable(hook):
+            raise NonCanonicalizableError(
+                obj,
+                path=(
+                    f"{path} (subclass of a native type; declare "
+                    f"{_SERIALIZER_HOOK} or use the exact type)"
+                ),
+            )
+        return _canonicalize_via_serializer(obj, hook, depth=depth, path=path)
 
     # --- JSON scalars pass through, with the bool/int subtlety ---
     if obj is None or isinstance(obj, str):
@@ -335,18 +408,7 @@ def _canonicalize(obj: Any, *, depth: int, path: str) -> JSONValue:
     # --- host serializer hook: explicit contract for private state ---
     hook = getattr(type(obj), _SERIALIZER_HOOK, None)
     if callable(hook):
-        serialized = hook(obj)
-        return _wrap(
-            _TAG_OBJECT,
-            {
-                "type": _type_identity(type(obj)),
-                # Distinct key from "fields": a serializer output can
-                # never alias an attribute encoding of the same class.
-                "serialized": _canonicalize(
-                    serialized, depth=depth + 1, path=f"{path}<serialized>"
-                ),
-            },
-        )
+        return _canonicalize_via_serializer(obj, hook, depth=depth, path=path)
 
     # --- dataclasses and plain objects: attributes, injectively ---
     if is_dataclass(obj) and not isinstance(obj, type):
