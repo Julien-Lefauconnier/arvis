@@ -75,11 +75,22 @@ KERNEL_PRINCIPAL = Principal(user_id=KERNEL_OWNER_ID)
 
 @dataclass(slots=True, frozen=True)
 class AccessContext:
-    """The (principal, effect, resource) triple evaluated by a policy."""
+    """The (principal, effect, resource) triple evaluated by a policy.
+
+    ``resource_scope`` names a narrower area than the whole organization: a
+    matter, a project, a folder, whatever the layer above calls it. The token
+    is OPAQUE to ARVIS, which never parses it, never derives a hierarchy from
+    it, and never treats one scope as containing another. It only hands it to
+    the scope rule the policy was given.
+
+    Leaving it None means the resource is not sub-scoped, which is how every
+    resource behaved before scoped grants existed.
+    """
 
     principal: Principal
     effect: SyscallEffect
     resource_owner_id: str
     resource_organization_id: str | None = None
     resource_id: str | None = None
+    resource_scope: str | None = None
     syscall_name: str | None = None
