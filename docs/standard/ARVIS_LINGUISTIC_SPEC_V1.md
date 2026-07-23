@@ -101,7 +101,6 @@ Defined in:
 ```text
 gate_mapping.py
 act_types.py
-mode_act_policy.py
 ```
 
 Maps:
@@ -203,17 +202,23 @@ arvis/linguistic/lexicon/
 
 ### Components
 
-- lexicon_registry.py
-- lexicon_resolver.py
-- domain lexicons (finance, legal, security, etc.)
+- lexicon_entry.py
+- lexicon_snapshot.py
+
+The kernel defines the lexicon CONTRACT: what an entry is, and what a snapshot
+of the active lexicon looks like. It deliberately ships no domain lexicon.
+
+Domain vocabularies (finance, legal, security, ...) are realization: naming what
+a formal notice or a financial exposure is belongs to the layer that knows the
+business, not to a domain-agnostic kernel. A realization layer supplies them
+against this contract.
 
 ---
 
 ### Role
 
-- normalize terminology
-- enforce domain constraints
-- ensure semantic consistency
+- define the terminology contract a realization layer populates
+- carry a versioned snapshot of the active lexicon
 
 Constraints:
 
@@ -246,10 +251,12 @@ arvis/linguistic/realization/
 
 ### Components
 
-- realization_service.py
-- default_templates.py
 - prompt_builder.py
 - llm_executor.py
+
+The kernel builds the prompt and drives the executor. Turning a structured
+representation into finished wording, with its templates, is realization and
+lives in the layer built on top of ARVIS.
 
 ---
 
