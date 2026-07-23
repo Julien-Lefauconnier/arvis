@@ -9,8 +9,17 @@ versioning during the alpha.
 
 ## [Unreleased]
 
-The beta readiness campaign. No kernel behaviour changes; what changes is what
-the package ships, what it claims, and how it is published.
+## [0.1.0a13] - 2026-07-23
+
+The beta readiness campaign, closing an internal audit and an external one. It
+changes what the package ships, what it claims, how it is published, and, in
+three bounded places, what the kernel accepts. Those three are called out under
+Security and Changed: each closes a gap where the runtime was more permissive
+than it stated.
+
+Upgrading from 0.1.0a12: no public API is removed. Two effect-path behaviours
+become stricter and may surface an integration that was relying on the looser
+one, which is the point of the change rather than a side effect.
 
 ### Removed
 

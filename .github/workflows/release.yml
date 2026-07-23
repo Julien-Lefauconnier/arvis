@@ -50,9 +50,19 @@ jobs:
 
       - name: Verify the changelog documents this version
         # A release nobody can read the history of is not a release.
+        #
+        # On failure this says WHAT is missing and lists the sections it did
+        # find. A check that fails without naming the cause costs a round trip
+        # every time it fires.
         run: |
           package_version="${GITHUB_REF_NAME#v}"
-          grep -q "^## \[${package_version}\]" CHANGELOG.md
+          if ! grep -q "^## \[${package_version}\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [${package_version}]' entry"
+            echo "Sections present in CHANGELOG.md:"
+            grep -n '^## ' CHANGELOG.md | head -10
+            exit 1
+          fi
+          echo "changelog documents ${package_version}"
 
       - name: Install the package and its development tooling
         run: |
