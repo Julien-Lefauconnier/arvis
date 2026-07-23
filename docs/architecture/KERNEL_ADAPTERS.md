@@ -224,8 +224,6 @@ See:
 arvis/adapters/kernel/
 │
 ├── kernel_adapter.py          # orchestration entrypoint
-├── canonical_to_event.py      # canonical → event mapping
-├── event_to_signal.py         # event → signal mapping
 │
 ├── mappers/
 │   └── ir_to_canonical.py     # IR → canonical signals
