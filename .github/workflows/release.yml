@@ -106,8 +106,13 @@ jobs:
         run: |
           mkdir -p sbom
           cyclonedx-py environment \
-            --output-format json \
-            --outfile sbom/arvis-sbom.json
+            --output-format JSON \
+            --output-file sbom/arvis-sbom.json \
+            --pyproject pyproject.toml
+          python -c "import json,sys; d=json.load(open('sbom/arvis-sbom.json')); \
+            print('SBOM', d['bomFormat'], d['specVersion'], \
+            'root=' + (d.get('metadata',{}).get('component',{}).get('name') or '?'), \
+            len(d.get('components', [])), 'components')"
 
       - name: Upload the SBOM
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
