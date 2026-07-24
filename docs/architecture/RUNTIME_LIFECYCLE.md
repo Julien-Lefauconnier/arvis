@@ -28,6 +28,14 @@ life of the instance. There is no TTL, eviction, archival or size limit
 mechanism yet. This is compatible with, and is the reason for, the
 instance-per-request pattern above.
 
+Sequential reuse of one instance on a single thread is functionally
+supported and deliberately exercised by the isolation tests
+(`tests/api/test_multi_instance_isolation.py`), which prove that
+instances do not leak into each other; that is a proof of isolation,
+not a usage recommendation. The recommended pattern remains one
+instance per governed turn, and every shipped example follows it,
+enforced by `tests/contracts/test_examples_lifecycle.py`.
+
 ## Planned hardening (backlog P2)
 
 - Eviction of finished processes.

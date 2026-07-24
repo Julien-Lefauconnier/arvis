@@ -1,15 +1,18 @@
 # examples/09_multi_engine_hosting.py
 
-"""Host-side parallelism: one engine per unit of work.
+"""Host-side parallelism: one engine per governed turn.
 
 An ARVIS engine executes one governed run at a time and is not
-thread-safe. Parallelism belongs to the host: create one engine per
-unit of work (a request, a workload, a tenant). Engines living in the
-same process are isolated by construction, so concurrent workers never
-share cognitive state, tool surfaces or commitments.
+thread-safe. The documented lifecycle (docs/architecture/
+RUNTIME_LIFECYCLE.md) is one instance per governed turn, discarded
+afterwards: a reused instance accumulates state without bound.
+Parallelism belongs to the host, by instantiation: engines living in
+the same process are isolated by construction, so concurrent workers
+never share cognitive state, tool surfaces or commitments.
 
-This example screens three independent workstreams concurrently, each
-worker creating its own engine, under the same three-band declared-risk
+This example screens three independent workstreams concurrently. Each
+worker builds a fresh engine for every decision (the recommended
+host-side factory pattern), under the same three-band declared-risk
 policy (low -> APPROVED, medium -> REVIEW, high -> BLOCKED).
 """
 
@@ -24,12 +27,18 @@ WORKSTREAMS: dict[str, list[float]] = {
 }
 
 
+def build_engine() -> CognitiveOS:
+    """Host-side factory: one place to configure, one instance per turn."""
+    return CognitiveOS()
+
+
 def screen_workstream(stream: str, risks: list[float]) -> list[tuple]:
-    # One engine per unit of work, created inside the worker: the host
-    # parallelizes by instantiation, never by sharing an engine.
-    engine = CognitiveOS()
     rows = []
     for risk in risks:
+        # One engine per governed turn, built fresh inside the loop:
+        # no state carries over between decisions, and nothing
+        # accumulates (RUNTIME_LIFECYCLE doctrine).
+        engine = build_engine()
         result = engine.run(f"host_{stream}", {"risk": risk})
         decision = result.to_dict()["decision"]  # structured block (a15)
 
@@ -62,13 +71,13 @@ def main() -> None:
         print(f"{stream:<11} Risk={risk:<4} {status:<9} {commitment}")
 
     print()
-    print("Engines      :", len(WORKSTREAMS), "(one per workstream)")
+    print("Engines      :", len(rows), "(one per decision)")
     print("Decisions    :", len(rows))
     print("Traceability : PER ITEM")
     print()
     print("Takeaway     : Parallelism belongs to the host. One engine per")
-    print("               unit of work; engines in one process are isolated")
-    print("               by construction.")
+    print("               governed turn, built by a host factory; engines in")
+    print("               one process are isolated by construction.")
 
 
 if __name__ == "__main__":

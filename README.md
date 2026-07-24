@@ -129,11 +129,17 @@ Commitment    : 8642d95cfdb73c16...
 ### Engine lifecycle
 
 One engine executes one governed run at a time; an engine instance is not
-thread-safe. Parallelism belongs to the host: create one engine per unit of
-work (a request, a workload, a tenant). Engines in the same process are
-isolated by construction; the guarantee is tested in
-`tests/api/test_multi_instance_isolation.py` and the hosting pattern is shown
-in `examples/09_multi_engine_hosting.py`.
+thread-safe. The documented lifecycle is one instance per governed turn,
+discarded afterwards (`docs/architecture/RUNTIME_LIFECYCLE.md`). Sequential
+reuse of one instance on a single thread works and is exercised by the
+isolation tests, but it accumulates state without bound (no TTL, no
+eviction) and is not the recommended pattern; concurrent reuse is forbidden.
+Parallelism belongs to the host, by instantiation: engines in the same
+process are isolated by construction. The guarantee is tested in
+`tests/api/test_multi_instance_isolation.py`, the one-instance-per-turn
+factory pattern is shown in `examples/09_multi_engine_hosting.py`, and a
+contract test keeps every example on that pattern
+(`tests/contracts/test_examples_lifecycle.py`).
 
 ---
 

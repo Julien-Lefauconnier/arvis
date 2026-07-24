@@ -46,6 +46,15 @@ def test_tool_surfaces_are_per_instance():
 
 
 def test_interleaved_runs_do_not_move_decisions_or_pinned_surfaces():
+    """Isolation proof, not a usage recommendation.
+
+    Sequential reuse here is deliberate: it demonstrates that instances
+    never leak into each other even across interleaved runs. The
+    documented lifecycle stays one instance per governed turn
+    (docs/architecture/RUNTIME_LIFECYCLE.md); the shipped examples
+    follow it and tests/contracts/test_examples_lifecycle.py keeps
+    them on it.
+    """
     engines = [CognitiveOS() for _ in range(3)]
     for index, engine in enumerate(engines):
         engine.register_tool(_NamedTool(f"tool_{index}"))
