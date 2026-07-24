@@ -403,7 +403,7 @@ ARVIS tracks three distinct version axes, each honestly labeled:
 
 | Axis | Value | Meaning |
 |------|-------|---------|
-| Package version | `0.1.0a16` | the distributed artifact (PEP 440) |
+| Package version | `0.1.0a17` | the distributed artifact (PEP 440) |
 | API version | `0.1` | the public Python API contract (not yet stable) |
 | Standard version | `draft-v1` | the ARVIS decision / IR specification |
 

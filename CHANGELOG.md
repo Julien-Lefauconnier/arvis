@@ -9,6 +9,49 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a17] - 2026-07-24
+
+The final contractual closure before beta, fixing the two defects
+reproduced by the independent a16 audit. No new subsystem.
+
+### Fixed
+
+- Total public result conformance (a16 blocker 1): the public no-trace
+  path (`CognitiveOSConfig(enable_trace=False)`) emitted
+  `commitment_policy=None`, rejected by the shipped schema. The minimal
+  view now carries the actually configured audit policy, an explicit
+  `trace_disabled` reason and the exact F-015 degradation semantics.
+  Contract invariants move into the constructor (`commitment_policy`
+  typed `str`, enum-aligned default, `__post_init__` validation): an
+  out-of-contract `CognitiveResultView` cannot exist. The synthetic
+  contract test is replaced by real end-to-end no-trace runs under both
+  policies, plus the property that every result produced by `run`,
+  `run_as`, `ask`, `replay_recomposed` and `replay_verified` validates
+  the shipped schema; the wheel black-box suite gains the no-trace
+  scenario.
+- Complete attestation verification (a16 blocker 2): `verify` rebuilds
+  the full attestation and compares the entire embedded block to its
+  recomputed form (exact key set, exact metadata values, constant-time
+  fingerprint comparison). The audit's eight forgery probes, all of
+  which previously verified True, now all fail and are pinned as
+  parametrized tests. Fail-closed is real: every malformed input shape
+  returns False instead of raising.
+
+### Changed
+
+- Attestation canonicalization 2.0: `mode` and `canon_version` become
+  attested members of the canonical source, so neither can be
+  rewritten, even consistently across the payload and the block,
+  without changing the fingerprint; unknown canonicalization versions
+  are refused before any computation.
+- Contract surface: `load_result_schema` and `RESULT_SCHEMA_VERSION`
+  are exported at the root (11 symbols); the beta manifest gains a
+  constant branch freezing the exact promised version values.
+- `docs/VERSIONS.md` moves to nineteen constants with the consumer and
+  reflexive contract table; `docs/REFLEXIVE.md` documents
+  canonicalization 2.0 and the explicit "structural integrity, not
+  authenticity" boundary.
+
 ## [0.1.0a16] - 2026-07-24
 
 The final release candidate before beta, closing the two contractual gaps
