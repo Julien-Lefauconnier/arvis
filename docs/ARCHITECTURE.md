@@ -482,4 +482,4 @@ Just as operating systems brought order to hardware chaos, ARVIS aims to bring o
 
 ## In One Sentence
 
-    ARVIS is the architecture layer that separates reasoning, decision, and execution—then governs all three.
+    ARVIS is the architecture layer that separates reasoning, decision, and execution, then governs all three.

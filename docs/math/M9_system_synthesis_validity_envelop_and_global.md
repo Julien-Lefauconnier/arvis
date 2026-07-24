@@ -1,4 +1,4 @@
-# ARVIS — M9: System Synthesis, Validity Envelope & Global Guarantee (Implementation-Aligned)
+# ARVIS: M9: System Synthesis, Validity Envelope & Global Guarantee (Implementation-Aligned)
 
 ## 1. Objective
 
@@ -109,7 +109,7 @@ Outside $\mathcal{O}_{\text{valid}}$ or if any assumption is violated: **no stab
 
 ## 5. Global Stability Result (Reference to M8)
 
-The culminating result of the ARVIS stack is **Result T8** (M8 — Robust Practical Stability and ISS Interpretation):
+The culminating result of the ARVIS stack is **Result T8** (M8: Robust Practical Stability and ISS Interpretation):
 
 Under the combined conditions of
 - M3 (projection validity on $\mathcal{O}_{\text{valid}}$),
@@ -145,15 +145,15 @@ It is a practical stability guarantee built on the local proof skeleton of M2.
 
 The runtime layers (M5–M8) actively enforce the following **operational invariants** (these are enforced behaviors, not formal proofs):
 
-- **I1** — Bounded energy on valid trajectories  
-- **I2** — Negative feedback: $W_t \uparrow \implies u_t \downarrow$  
-- **I3** — Gate monotonicity (ABSTAIN ≻ REQUIRE_CONFIRMATION ≻ ALLOW)  
-- **I4** — No instability amplification  
-- **I5** — Persistent drift detection via history ($H_t$)  
-- **I6** — Conservative response when $\mathcal{V}_t.\text{valid} = \text{False}$
-- **I7 — Projection monotonicity (Π_ctrl)**  
+- **I1**: Bounded energy on valid trajectories  
+- **I2**: Negative feedback: $W_t \uparrow \implies u_t \downarrow$  
+- **I3**: Gate monotonicity (ABSTAIN ≻ REQUIRE_CONFIRMATION ≻ ALLOW)  
+- **I4**: No instability amplification  
+- **I5**: Persistent drift detection via history ($H_t$)  
+- **I6**: Conservative response when $\mathcal{V}_t.\text{valid} = \text{False}$
+- **I7: Projection monotonicity (Π_ctrl)**  
    $\Pi_{\text{ctrl}}$ cannot relax a restrictive decision
-- **I8 — Abstention irreversibility**  
+- **I8: Abstention irreversibility**  
    $v_t^{\text{gate}} = \text{ABSTAIN} \Rightarrow v_t = \text{ABSTAIN}$
    where $\text{ABSTAIN}$ is an absorbing element of $(\mathcal{V}, \succ)$
 

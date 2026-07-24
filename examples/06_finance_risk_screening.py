@@ -30,7 +30,7 @@ elif needs_confirm:
 else:
     status = "BLOCKED"
 
-print("\nARVIS Example 06 — Finance Risk Screening")
+print("\nARVIS Example 06: Finance Risk Screening")
 print("-" * 46)
 print("Desk          : FX_SPOT")
 print("Instrument    : EURUSD")

@@ -1,4 +1,4 @@
-# ARVIS — M1: Result Inventory
+# ARVIS: M1: Result Inventory
 
 ## Objective
 
@@ -42,7 +42,7 @@ where:
 
 ## 3. Results Definitions
 
-### T1 — Fast Subsystem Stability
+### T1: Fast Subsystem Stability
 
 **Statement**  
 Under assumptions A1–A6, for each mode $`q`$:
@@ -55,7 +55,7 @@ $$
 - Fast dynamics are **dissipative**
 - Stability holds in absence of large disturbances
 
-### T2 — Slow Tracking Bound
+### T2: Slow Tracking Bound
 
 **Statement**  
 Under A7–A9:
@@ -70,7 +70,7 @@ for some constant $`C > 0`$
 - Slow state tracks the target manifold
 - Error is proportional to the time-scale parameter $`\eta`$
 
-### T3 — Composite Lyapunov Decrease
+### T3: Composite Lyapunov Decrease
 
 **Statement**  
 Under A1–A9:
@@ -85,7 +85,7 @@ $$
 \kappa_{\mathrm{eff}} = \alpha - \gamma_z \eta L_T
 $$
 
-### T4 — Stability Under Switching
+### T4: Stability Under Switching
 
 **Statement**  
 Under A10–A11:
@@ -96,7 +96,7 @@ $$
 
 and switching frequency bounded by the dwell-time constraint.
 
-### T5 — Global Exponential Stability
+### T5: Global Exponential Stability
 
 **Statement**  
 Under all assumptions A1–A12, if:
@@ -113,7 +113,7 @@ $$
 
 for some $`C > 0`$, $`\beta > 0`$.
 
-### T6 — Input-to-State Stability (ISS)
+### T6: Input-to-State Stability (ISS)
 
 **Statement**  
 Under A1–A13:
@@ -122,7 +122,7 @@ $$
 W(t) \leq C e^{-\beta t} W(0) + \gamma \sup_{k \leq t} \|w_k\|^2
 $$
 
-### T7 — Observed Stability Consistency
+### T7: Observed Stability Consistency
 
 **Statement**  
 Under A14:
@@ -131,7 +131,7 @@ $$
 |\hat{W}(t) - W(t)| \leq \epsilon
 $$
 
-### T8 — Projection Consistency (CRITICAL)
+### T8: Projection Consistency (CRITICAL)
 
 **Statement**  
 Under A15:

@@ -146,7 +146,7 @@ def test_adaptive_fallback_regimes():
 
     result = obs.update(ctx)
 
-    # pas de _prev_W exploitable pour la partie adaptive => fallback
+    # no usable _prev_W for the adaptive part => fallback
     assert result.adaptive_kappa_eff is not None
     assert result.adaptive_margin is not None
     assert result.adaptive_regime in {"stable", "critical", "unstable"}

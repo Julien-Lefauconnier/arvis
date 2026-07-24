@@ -1,4 +1,4 @@
-# ARVIS — M3.3: Runtime Projection Certificate & Validated Domain
+# ARVIS: M3.3: Runtime Projection Certificate & Validated Domain
 
 ## Objective
 

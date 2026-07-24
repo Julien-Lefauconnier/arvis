@@ -1,5 +1,5 @@
 # ARVIS MEMORY SPECIFICATION V1
-## Kernel Memory Subsystem — ARVIS-MEM-01
+## Kernel Memory Subsystem: ARVIS-MEM-01
 
 **Version:** 1.0  
 **Status:** Stable (implementation-aligned)  

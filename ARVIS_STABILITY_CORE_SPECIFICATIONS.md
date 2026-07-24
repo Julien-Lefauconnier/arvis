@@ -239,13 +239,13 @@ for some $\kappa > 0$.
 
 ### Regularity
 
-**R1 — Local Lipschitz continuity.**  
+**R1: Local Lipschitz continuity.**  
 For each regime $q \in Q$, the map $f_q(x,z,w)$ is locally Lipschitz in $(x,z)$ uniformly in $w$.
 
-**R2 — Bounded slow map.**  
+**R2: Bounded slow map.**  
 The map $T(x)$ is globally Lipschitz on $X$ with constant $L_T$ and bounded on $X$.
 
-**R3 — One-step increment bounds.**  
+**R3: One-step increment bounds.**  
 There exist constants $L_x, L_z, L_w \ge 0$ such that for all admissible $(x,z,w)$ and regimes $q$,
 
 $$
@@ -258,7 +258,7 @@ $$
 
 These conditions ensure well-posedness and bounded sensitivity to perturbations.
 
-**R4 — Lyapunov projection sufficiency.**  
+**R4: Lyapunov projection sufficiency.**  
 We assume that the system state is observable through a reduced Lyapunov representation. In practice, stability-relevant properties of $(x_t, z_t)$ are captured by $W_q(x_t,z_t)$.
 
 This assumption reflects implementations operating in a compressed state space.
@@ -307,7 +307,7 @@ This Lyapunov function penalizes both cognitive instability (fast layer) and str
 
 ### Switching Constraint and Comparability
 
-**A1 — Fast-layer ISS (practical).**  
+**A1: Fast-layer ISS (practical).**  
 There exist $\alpha \in (0,1)$, $c \ge 0$ and $\gamma_z,\gamma_w \ge 0$ such that for all regimes $q$
 
 $$
@@ -328,14 +328,14 @@ $$
 
 Hence the $\gamma_z$ term is controlled directly by the slow mismatch.
 
-**A2 — Average dwell-time.**  
+**A2: Average dwell-time.**  
 The number of switches $N(t_0,t)$ satisfies
 
 $$
 N(t_0,t) \le N_0 + \frac{t-t_0}{\tau_d}
 $$
 
-**A3 — Lyapunov comparability.**  
+**A3: Lyapunov comparability.**  
 There exist $m,M>0$ such that
 
 $$
@@ -823,7 +823,7 @@ $$
 
 Figure 1 visualizes the resulting stability region in the $(\eta,\tau_d)$ parameter plane. Below the curve $\tau_d^*(\eta)$ the system becomes unstable, while above the curve contraction dominates switching.
 
-![Stability region in the (η,τ_d) plane predicted by Theorem 2](figures/stability_region.png)
+*(Figure not included in this repository: stability region in the (η,τ_d) plane predicted by Theorem 2.)*
 
 ### Lyapunov Energy Evolution
 
@@ -835,7 +835,7 @@ To illustrate the exponential decay predicted by Theorem 1, Figure 2 shows the e
 
 The logarithmic scale reveals exponential decay of the Lyapunov energy in the stable regime.
 
-![Evolution of the composite Lyapunov energy under different parameter regimes](figures/fig2_lyapunov_decay.png)
+*(Figure not included in this repository: evolution of the composite Lyapunov energy under different parameter regimes.)*
 
 ### Sensitivity to Metric Mismatch
 
@@ -847,15 +847,18 @@ $$
 
 which measures the mismatch between Lyapunov metrics across regimes. Figure 3 illustrates how increasing $J$ shrinks the stability region. Larger metric mismatch therefore requires larger dwell time to guarantee stability.
 
-![Effect of Lyapunov metric mismatch on the stability region](figures/fig3_stability_vs_J.png)
+*(Figure not included in this repository: effect of Lyapunov metric mismatch on the stability region.)*
 
 ### Empirical Validation of the Stability Frontier
 
-To further validate the theoretical tradeoff, we performed a grid exploration of the parameter plane $(\eta,\tau_d)$. For each parameter pair the hybrid system was simulated and the convergence of the composite Lyapunov energy was evaluated. Figure 4 compares the empirical stability classification with the theoretical stability boundary predicted by Theorem 2.
-
-The results confirm that the theoretical boundary accurately predicts the transition between stable and unstable regimes. Points above the boundary are consistently stable, while instability predominantly appears below the curve, consistent with the fact that the theoretical condition is sufficient but not necessary.
-
-![Empirical validation of the stability frontier](figures/fig4_empirical_phase_diagram.png)
+A grid exploration of the parameter plane $(\eta,\tau_d)$ is a planned
+validation (same discipline as the M10 protocol): for each parameter pair the
+hybrid system would be simulated and the convergence of the composite Lyapunov
+energy evaluated, comparing the empirical stability classification with the
+theoretical boundary of Theorem 2. Such a sweep would have to show points above
+the boundary consistently stable, with instability predominantly below the
+curve, consistent with the condition being sufficient but not necessary. It has
+not been executed; no figure or dataset exists yet.
 
 ### Example System
 
@@ -889,7 +892,10 @@ $$
 z_{t+1} = (1-\eta)z_t + \eta K x_t.
 $$
 
-With $\eta = 0.05$ and bounded noise $\|w_t\| \le 0.05$, simulations show decay of the composite energy and bounded trajectories under switching, consistent with condition (T1).
+With $\eta = 0.05$ and bounded noise $\|w_t\| \le 0.05$, the simulation
+shows decay of the composite energy and bounded trajectories under switching,
+consistent with condition (T1). This exact system is executed, with a fixed
+seed, by `tests/math/test_linear_two_regime_example.py`.
 
 ## Limitations
 

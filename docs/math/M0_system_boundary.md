@@ -1,4 +1,4 @@
-# ARVIS — M0: System Boundary & Mathematical Scope Definition
+# ARVIS: M0: System Boundary & Mathematical Scope Definition
 
 ## Objective
 
@@ -252,4 +252,4 @@ It does **NOT** yet provide:
 
 ## 10. Guiding Rule
 
-> Expand the mathematical domain until it matches the real system — not the opposite.
+> Expand the mathematical domain until it matches the real system: not the opposite.

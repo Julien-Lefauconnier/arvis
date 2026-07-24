@@ -1,4 +1,4 @@
-# ARVIS — M5: Adaptive Stability Integration
+# ARVIS: M5: Adaptive Stability Integration
 
 ## Objective
 
@@ -70,7 +70,7 @@ Used for:
 - runtime control modulation,
 - gate-level self-protection.
 
-The adaptive layer **does not replace** the static layer — it **extends** it operationally.
+The adaptive layer **does not replace** the static layer: it **extends** it operationally.
 
 ---
 
@@ -158,7 +158,7 @@ Adaptive stability participates in gate-level decision shaping:
 - A locally unstable adaptive margin may trigger an abstention-style veto,
 - A marginal adaptive margin may escalate a permissive decision toward confirmation.
 
-The gate is no longer driven solely by static or fast-state criteria — it now reacts to **observed trajectory-level instability**.  
+The gate is no longer driven solely by static or fast-state criteria: it now reacts to **observed trajectory-level instability**.  
 This is the first level of **adaptive self-protection**.
 
 ### 5.3 Control Level
@@ -227,10 +227,10 @@ The adaptive layer is currently justified as **implementation-aligned**, **empir
 
 The adaptive layer is designed to preserve the following invariants:
 
-**I1 — No adaptive crash**  
+**I1: No adaptive crash**  
 Adaptive estimation must fail-soft and never break the pipeline.
 
-**I2 — Bounded adaptive estimate**
+**I2: Bounded adaptive estimate**
 
 $$
 0 \leq \widehat{\kappa}_{\mathrm{eff}}(t) \leq \kappa_{\max}
@@ -238,13 +238,13 @@ $$
 
 (whenever available)
 
-**I3 — Conservative instability response**  
+**I3: Conservative instability response**  
 If the adaptive regime is unstable, the system must become more conservative, never less.
 
-**I4 — Margin-aware gate behavior**  
+**I4: Margin-aware gate behavior**  
 Positive adaptive margin must not silently bypass restrictive gating.
 
-**I5 — Observability consistency**  
+**I5: Observability consistency**  
 When available, adaptive values must be externally inspectable.
 
 ---

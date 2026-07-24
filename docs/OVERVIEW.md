@@ -215,7 +215,7 @@ delete_customer_account
 
 Instead of auto-executing, ARVIS can require approval.
 
-This makes human oversight a system primitive—not an afterthought.
+This makes human oversight a system primitive, not an afterthought.
 
 ---
 
@@ -255,7 +255,7 @@ Examples:
 - account state
 - historical preferences
 
-Memory remains governed input—not magical implicit behavior.
+Memory remains governed input, not magical implicit behavior.
 
 ---
 

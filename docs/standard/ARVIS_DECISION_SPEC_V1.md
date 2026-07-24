@@ -174,7 +174,7 @@ This indicates:
 
 ### 6.2 Recovery Rules
 
-#### Case 1 — Valid Recovery
+#### Case 1: Valid Recovery
 
 If:
 
@@ -188,7 +188,7 @@ Then:
 final verdict MAY be promoted to ALLOW
 ```
 
-#### Case 2 — Uncertain Recovery
+#### Case 2: Uncertain Recovery
 
 If:
 
@@ -201,7 +201,7 @@ Then:
 final verdict MUST be REQUIRE_CONFIRMATION
 ```
 
-### Case 3 — Invalid Recovery
+### Case 3: Invalid Recovery
 
 If:
 

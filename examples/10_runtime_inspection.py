@@ -30,7 +30,7 @@ else:
     risk = "LOW"
     regime = "BOOTSTRAP"
 
-print("\nARVIS Example 10 — Runtime Inspection")
+print("\nARVIS Example 10: Runtime Inspection")
 print("-" * 44)
 print("Operation     : launch process")
 print("Risk Score    : 0.28")

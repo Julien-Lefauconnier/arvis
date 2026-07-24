@@ -14,7 +14,7 @@ ir = os.run_ir(
 
 keys = list(ir.keys())
 
-print("\nARVIS Example 03 — Portable Decision Record")
+print("\nARVIS Example 03: Portable Decision Record")
 print("-" * 42)
 print("Format        : Structured JSON")
 print("Top Keys      :", ", ".join(keys[:5]))

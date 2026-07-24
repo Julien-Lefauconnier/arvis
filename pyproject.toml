@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arvis"
-version = "0.1.0a14"
+version = "0.1.0a15"
 description = "Cognitive Operating System kernel for trustworthy AI systems"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -41,10 +41,16 @@ classifiers = [
 ]
 
 dependencies = [
-  "jsonschema>=4.0",
-  "pyyaml>=6.0",
-  "pydantic>=2,<3",
-  "numpy>=1.24",
+  # Minimum bounds are the versions actually proven by the gate
+  # (audit a14, A14-P1-07): the locked environment for jsonschema,
+  # pyyaml and numpy, and pydantic 2.8 which the beta-manifest
+  # determinism proof exercises explicitly alongside the locked 2.13.
+  # Widening a bound is deliberate and requires proving the older
+  # version in the gate first.
+  "jsonschema>=4.26",
+  "pyyaml>=6.0.3",
+  "pydantic>=2.8,<3",
+  "numpy>=2.4",
 ]
 
 [project.optional-dependencies]

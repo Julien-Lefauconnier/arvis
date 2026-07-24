@@ -30,7 +30,7 @@ def perturb_observation(obs: Observation, epsilon: float) -> Observation:
 
 
 def make_alert_interior_case() -> Observation:
-    # Moyenne = 0.5, loin des seuils 0.3 et 0.7
+    # Mean = 0.5, far from the 0.3 and 0.7 thresholds
     return Observation(
         numeric_signals={
             "risk": 0.5,
@@ -72,7 +72,7 @@ def test_interior_mode_is_stable_under_small_perturbations():
 
     flip_rate = mode_flips / trials
 
-    # En région intérieure, on veut une vraie stabilité
+    # In the interior region we want genuine stability
     assert flip_rate == 0.0
 
 
@@ -122,14 +122,14 @@ def test_boundary_cases_measure_mode_instability_without_failing(case_fn):
 
     flip_rate = mode_flips / trials
 
-    # En frontière, les flips sont admissibles, mais doivent rester bornés.
+    # At the boundary, flips are admissible but must stay bounded.
     assert 0.0 <= flip_rate <= 1.0
 
 
 def test_no_chattering_on_small_deterministic_trajectory():
     base = make_alert_interior_case()
 
-    # Micro-trajectoire déterministe oscillant faiblement autour d'une zone intérieure
+    # Deterministic micro-trajectory oscillating weakly inside an interior zone
     offsets = [0.0, 0.01, -0.01, 0.015, -0.015, 0.005, -0.005, 0.0]
 
     modes = []
@@ -146,5 +146,5 @@ def test_no_chattering_on_small_deterministic_trajectory():
         proj = project_observation(obs)
         modes.append(proj.q)
 
-    # En zone intérieure, on ne veut qu'un seul mode sur toute la micro-trajectoire
+    # In the interior zone we expect a single mode across the whole micro-trajectory
     assert set(modes) == {"alert"}

@@ -26,7 +26,7 @@ This file is the **entry point for understanding ARVIS as a standard system**.
 
 The ARVIS specification is organized into the following priority levels:
 
-### Level 1 — System Invariants (ABSOLUTE AUTHORITY)
+### Level 1: System Invariants (ABSOLUTE AUTHORITY)
 
 * `ARCHITECTURE_INVARIANTS.md`
 
@@ -40,7 +40,7 @@ Rules:
 
 ---
 
-### Level 2 — Core Decision Authority
+### Level 2: Core Decision Authority
 
 * `ARVIS_GATE_SPEC_V1.md`
 
@@ -57,7 +57,7 @@ Rules:
 
 ---
 
-### Level 3 — External Contract (IR Layer)
+### Level 3: External Contract (IR Layer)
 
 * `ARVIS_IR_SPEC_V1.md`
 * `ARVIS_PUBLIC_OBJECT.md`
@@ -79,7 +79,7 @@ Rules:
 
 ---
 
-### Level 4 — Response Construction Layer
+### Level 4: Response Construction Layer
 
 * `CONVERSATION_SPEC_V1.md`
 * `LINGUISTIC_SPEC_V1.md`
@@ -96,7 +96,7 @@ Rules:
 
 ---
 
-### Level 5 — Execution Model
+### Level 5: Execution Model
 
 * `PIPELINE.md`
 * `KERNEL_CORE.md`
@@ -140,7 +140,7 @@ This ensures:
 
 ---
 
-### Level 6 — Constraint Input Layer
+### Level 6: Constraint Input Layer
 
 * `ARVIS_PROJECTION_SPEC_V1.md`
 * `ARVIS_VALIDITY_ENVELOPE_SPEC_V1.md`
@@ -164,7 +164,7 @@ They MUST NOT depend on runtime execution or syscalls.
 
 ---
 
-### Level 7 — Interoperability / Canonical Projection Layer
+### Level 7: Interoperability / Canonical Projection Layer
 
 * `KERNEL_ADAPTER.md`
 
@@ -240,7 +240,7 @@ Tool execution is:
 
 ---
 
-### Level 8 — Compliance & Verification
+### Level 8: Compliance & Verification
 
 * `ARVIS_COMPLIANCE_SUITE_V1.md`
 
@@ -257,7 +257,7 @@ Rules:
 
 ---
 
-### Level 9 — Architecture & Informative Documents
+### Level 9: Architecture & Informative Documents
 
 * `ARCHITECTURE.md`
 * `OVERVIEW.md`

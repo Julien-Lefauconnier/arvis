@@ -6,7 +6,7 @@ from arvis.api.ir import build_ir_view
 def test_ir_golden_snapshot(dummy_pipeline_result):
     ir = build_ir_view(dummy_pipeline_result)
 
-    # on enlève le hash pour comparaison stable
+    # strip the hash for a stable comparison
     ir_without_hash = dict(ir)
     ir_without_hash["meta"] = {}
 

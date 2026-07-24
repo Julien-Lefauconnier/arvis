@@ -1,4 +1,4 @@
-# ARVIS — M1: Formal System Definition
+# ARVIS: M1: Formal System Definition
 
 ## Objective
 

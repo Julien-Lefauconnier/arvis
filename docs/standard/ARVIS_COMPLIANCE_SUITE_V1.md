@@ -202,7 +202,7 @@ The system MUST pass:
 
 ## 12. Compliance Levels
 
-### Level 1 — Core Compliance
+### Level 1: Core Compliance
 
 Requires:
 
@@ -210,14 +210,14 @@ Requires:
 - Reason registry compliance
 - IR structure compliance
 
-### Level 2 — Projection Compliance
+### Level 2: Projection Compliance
 
 Adds:
 
 - projection validation
 - projection certificate correctness
 
-### Level 3 — Full Cognitive Compliance
+### Level 3: Full Cognitive Compliance
 
 Adds:
 
@@ -225,7 +225,7 @@ Adds:
 - replay determinism
 - adaptive behavior consistency
 
-### Level 4 — Audit-Grade Compliance
+### Level 4: Audit-Grade Compliance
 
 Adds:
 

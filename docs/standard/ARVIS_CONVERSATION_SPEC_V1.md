@@ -178,7 +178,7 @@ Constraints:
 
 ## 5. Processing Flow
 
-### Step 1 — Strategy Selection
+### Step 1: Strategy Selection
 
 ```text
 Decision → ResponseStrategyDecision
@@ -197,7 +197,7 @@ Inputs:
 
 ---
 
-### Step 2 — Context Integration
+### Step 2: Context Integration
 
 ```text
 ConversationContext + Memory → enriched context
@@ -216,7 +216,7 @@ Includes:
 
 ---
 
-### Step 3 — Plan Construction
+### Step 3: Plan Construction
 
 ```text
 ResponseStrategy → ResponsePlan
@@ -230,7 +230,7 @@ Plan defines:
 
 ---
 
-### Step 4 — Stability Adaptation
+### Step 4: Stability Adaptation
 
 Conversation may be adapted based on:
 

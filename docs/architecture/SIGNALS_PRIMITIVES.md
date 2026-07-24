@@ -1,4 +1,4 @@
-# Signals — Cognitive Kernel Abstraction
+# Signals: Cognitive Kernel Abstraction
 
 ## Overview
 

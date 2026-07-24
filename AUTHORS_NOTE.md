@@ -22,8 +22,8 @@ ARVIS also serves another purpose: it is a foundation layer for future systems s
 
 The project remains ambitious, unfinished, and evolving. That is intentional. ARVIS is not presented as a final answer, but as a serious alternative direction.
 
-If this work resonates with researchers, engineers, safety practitioners, or builders who believe AI needs deeper architecture—not only larger models—then it has already fulfilled part of its purpose.
+If this work resonates with researchers, engineers, safety practitioners, or builders who believe AI needs deeper architecture, not only larger models, then it has already fulfilled part of its purpose.
 
 Thank you for reading, testing, criticizing, and improving it.
 
-— J
+- J

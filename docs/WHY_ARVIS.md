@@ -176,7 +176,7 @@ Examples:
 - privileged system action
 - customer-impacting changes
 
-Human escalation becomes architecture—not policy theater.
+Human escalation becomes architecture, not policy theater.
 
 ---
 
@@ -220,7 +220,7 @@ ARVIS governs the system around them.
 
 Agents increase autonomy.
 
-That is useful—but autonomy without control scales risk.
+That is useful, but autonomy without control scales risk.
 
 Many agent stacks still rely on:
 

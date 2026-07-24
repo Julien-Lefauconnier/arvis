@@ -18,7 +18,7 @@ entries = timeline.get("total_entries", 0)
 
 state = "ACTIVE" if data["has_timeline"] else "OFF"
 
-print("\nARVIS Example 08 — Timeline Audit Trail")
+print("\nARVIS Example 08: Timeline Audit Trail")
 print("-" * 44)
 print("Action        : approve_document")
 print("Risk Score    : 0.18")

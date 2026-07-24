@@ -1,5 +1,4 @@
-
-# ARVIS — Tool System V1 (Syscall-Aligned)
+# ARVIS: Tool System V1 (Syscall-Aligned)
 
 ## Overview
 
@@ -161,7 +160,7 @@ Replay MUST rely exclusively on:
 
 ## Execution Flow
 
-### Step 1 — Decision
+### Step 1: Decision
 
 Pipeline selects tool:
 
@@ -171,7 +170,7 @@ ActionDecision(tool="my_tool", allowed=True)
 
 ---
 
-### Step 2 — Kernel Execution
+### Step 2: Kernel Execution
 
 ```python
 kernel.execute(ctx)
@@ -185,7 +184,7 @@ syscall_handler.handle(intent, ctx)
 
 ---
 
-### Step 3 — Tool Execution
+### Step 3: Tool Execution
 
 ```python
 tool.execute_invocation(invocation)
@@ -206,7 +205,7 @@ services from mutable runtime state.
 
 ---
 
-### Step 4 — Result Storage
+### Step 4: Result Storage
 
 ```python
 ctx.extra["syscall_results"].append(SyscallResult(...))
@@ -214,7 +213,7 @@ ctx.extra["syscall_results"].append(SyscallResult(...))
 
 ---
 
-### Step 5 — State + IR propagation
+### Step 5: State + IR propagation
 
 - CognitiveState
 - CognitiveIR

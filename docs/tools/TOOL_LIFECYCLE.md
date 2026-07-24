@@ -1,4 +1,4 @@
-# Tool lifecycle — ARVIS
+# Tool lifecycle: ARVIS
 
 Status: lifecycle contract for `0.1.0a11`.
 

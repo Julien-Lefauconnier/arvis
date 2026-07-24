@@ -1,4 +1,4 @@
-# ARVIS — M4: Adaptive Effective Stability Estimation
+# ARVIS: M4: Adaptive Effective Stability Estimation
 
 ## Objective
 
@@ -142,7 +142,7 @@ then the adaptive version of the ARVIS small-gain condition implies **practical 
 
 Tu peux copier-coller cette version directement. Elle est plus fluide, les formules s’affichent correctement, et le ton reste rigoureux tout en étant clair.
 
-Prêt pour le document suivant ? Envoie-le-moi !# ARVIS — M4: Adaptive Effective Stability Estimation
+Prêt pour le document suivant ? Envoie-le-moi !# ARVIS: M4: Adaptive Effective Stability Estimation
 
 ## Objective
 
@@ -281,4 +281,3 @@ The next theorem-level goal is to prove that if:
 3. perturbations remain bounded,
 
 then the adaptive version of the ARVIS small-gain condition implies **practical exponential stability** on the validated domain.
-

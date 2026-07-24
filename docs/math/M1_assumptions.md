@@ -1,4 +1,4 @@
-# ARVIS — M1: Assumptions
+# ARVIS: M1: Assumptions
 
 ## Objective
 
@@ -19,7 +19,7 @@ All guarantees in ARVIS are **conditional**:
 
 ## 2. Structural Assumptions
 
-### A1 — Measurability
+### A1: Measurability
 
 For all modes $`q \in \mathcal{Q}`$:
 
@@ -28,7 +28,7 @@ For all modes $`q \in \mathcal{Q}`$:
 
 ---
 
-### A2 — Local Regularity
+### A2: Local Regularity
 
 Functions $`f_q`$, $`g_q`$ are locally Lipschitz:
 
@@ -41,13 +41,13 @@ $$
 
 ## 3. Boundedness Assumptions
 
-### A3 — Bounded Disturbances
+### A3: Bounded Disturbances
 
 $$
 \|w_t\| \leq W_{\max}
 $$
 
-### A4 — Bounded Initial Conditions
+### A4: Bounded Initial Conditions
 
 $$
 \|x_0\| \leq X_{\max}, \quad \|z_0\| \leq Z_{\max}
@@ -57,13 +57,13 @@ $$
 
 ## 4. Lyapunov Assumptions
 
-### A5 — Positive Definiteness
+### A5: Positive Definiteness
 
 $$
 c_1 \|x\|^2 \leq V_q(x) \leq c_2 \|x\|^2
 $$
 
-### A6 — Decrease Condition
+### A6: Decrease Condition
 
 There exist \( \alpha > 0 \), \( \gamma_w > 0 \) such that:
 
@@ -71,13 +71,13 @@ $$
 V_q(x_{t+1}) - V_q(x_t) \leq -\alpha \|x_t\|^2 + \gamma_w \|w_t\|^2
 $$
 
-### A7 — Target Map Regularity
+### A7: Target Map Regularity
 
 $$
 \|T_q(x_1) - T_q(x_2)\| \leq L_T \|x_1 - x_2\|
 $$
 
-### A8 — Slow-Fast Coupling
+### A8: Slow-Fast Coupling
 
 $$
 \|g_q(x, z, w)\| \leq \gamma_z \big( \|x\| + \|z\| + \|w\| \big)
@@ -87,7 +87,7 @@ $$
 
 ## 5. Time-Scale Separation
 
-### A9 — Small Adaptation Rate
+### A9: Small Adaptation Rate
 
 $$
 0 < \eta \leq \eta_{\max}
@@ -99,13 +99,13 @@ with \( \eta_{\max} \) sufficiently small for stability analysis.
 
 ## 6. Switching Assumptions
 
-### A10 — Average Dwell-Time
+### A10: Average Dwell-Time
 
 $$
 N_\sigma(t_0, t) \leq N_0 + \frac{t - t_0}{\tau_d}
 $$
 
-### A11 — Mode Compatibility
+### A11: Mode Compatibility
 
 $$
 W_{q'}(x, z) \leq J \cdot W_q(x, z)
@@ -115,7 +115,7 @@ $$
 
 ## 7. Effective Contraction Condition
 
-### A12 — Contraction Condition
+### A12: Contraction Condition
 
 $$
 \kappa_{\mathrm{eff}} = \alpha - \gamma_z \eta L_T
@@ -133,7 +133,7 @@ This condition is **not guaranteed a priori** and must be estimated or enforced.
 
 ## 8. Disturbance Compatibility
 
-### A13 — Bounded Influence
+### A13: Bounded Influence
 
 $$
 \|f_q(x, z, w) - f_q(x, z, 0)\| \leq \gamma \|w\|
@@ -143,7 +143,7 @@ $$
 
 ## 9. Interface Assumptions (Critical)
 
-### A14 — State Observability (Approximate)
+### A14: State Observability (Approximate)
 
 The system produces observable quantities \( \hat{x}_t \) such that:
 
@@ -153,7 +153,7 @@ $$
 
 This is an **approximation**, not a guaranteed observer.
 
-### A15 — Projection Assumption (Weak Form)
+### A15: Projection Assumption (Weak Form)
 
 There exists a projection:
 

@@ -11,9 +11,16 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
-echo "==> building the wheel"
-python -m pip wheel --no-deps -w "$WORKDIR/dist" "$ROOT" > /dev/null
-WHEEL="$(ls "$WORKDIR"/dist/arvis-*.whl)"
+if [ "$#" -ge 1 ]; then
+  # Release mode: prove the EXACT artifact that will be published,
+  # never a rebuild (audit a14, A14-P1-02/03).
+  WHEEL="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+  echo "==> using the provided wheel: $WHEEL"
+else
+  echo "==> building the wheel"
+  python -m pip wheel --no-deps -w "$WORKDIR/dist" "$ROOT" > /dev/null
+  WHEEL="$(ls "$WORKDIR"/dist/arvis-*.whl)"
+fi
 
 echo "==> pristine environment"
 python -m venv "$WORKDIR/venv"

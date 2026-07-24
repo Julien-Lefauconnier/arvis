@@ -1,4 +1,4 @@
-# ARVIS — M3: Appendix Projection Validation
+# ARVIS: M3: Appendix Projection Validation
 
 ## Objective
 
@@ -186,7 +186,7 @@ $$
 \|\Pi_{\text{impl}}(o + \delta o) - \Pi_{\text{impl}}(o)\| \leq \gamma_\Pi \|\delta o\|
 $$
 
-**Important limitation:** Current noise model is mainly numeric — semantic / structured corruption is not yet fully validated.
+**Important limitation:** Current noise model is mainly numeric: semantic / structured corruption is not yet fully validated.
 
 ### 4.5 Switching Stability
 
@@ -201,7 +201,7 @@ $$
 The implemented switching projection component behaves consistently with the expected distinction between stable interior regions and sensitive boundary regions.  
 This is a strong empirical precursor for later connection with average dwell-time reasoning.
 
-**Important limitation:** Current switching law is still simple and hand-defined — no result-level dwell-time certificate yet attached.
+**Important limitation:** Current switching law is still simple and hand-defined: no result-level dwell-time certificate yet attached.
 
 ### 4.6 Lyapunov Compatibility
 
@@ -217,7 +217,7 @@ This is a strong empirical precursor for later connection with average dwell-tim
 The implemented projection layer produces states that remain compatible with a surrogate quadratic Lyapunov computation on the tested fixture set.  
 This is sufficient to justify that the current projection does not immediately violate the structural requirements of the stability core on the validated test domain.
 
-**Important limitation:** The current compatibility test uses a simplified proxy energy — full compatibility with the mode-dependent composite Lyapunov $W_q(x,z)$ still needs tighter connection to the production mathematical core.
+**Important limitation:** The current compatibility test uses a simplified proxy energy: full compatibility with the mode-dependent composite Lyapunov $W_q(x,z)$ still needs tighter connection to the production mathematical core.
 
 ## 5. Current Validated Fixture Families
 

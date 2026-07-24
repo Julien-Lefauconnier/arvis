@@ -64,10 +64,22 @@ jobs:
           fi
           echo "changelog documents ${package_version}"
 
-      - name: Install the package and its development tooling
+      - name: Install the locked gate environment
+        # The release gate runs in the SAME frozen environment as CI
+        # (audit a14, A14-P1-03): the tag commit is validated with the
+        # exact transitives the branch gate validated, never a fresh
+        # resolution.
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -r requirements/gate.lock --prefer-binary
+          pip install -e . --no-deps
+
+      - name: Dependency audit (blocking)
+        run: |
+          pip install pip-audit==2.10.1
+          # Same policy and same documented exception as CI.yml
+          # (SECURITY.md, dependency audit policy).
+          pip-audit --strict -r requirements/gate.lock --ignore-vuln PYSEC-2026-1845
 
       - name: Quality gate
         # The same gate contributors run: format, lint, mypy strict, bandit,
@@ -96,6 +108,12 @@ jobs:
           /tmp/wheelenv/bin/pip install "$(ls dist/*.whl)"
           cd /tmp
           /tmp/wheelenv/bin/python -c "import arvis; print('arvis', arvis.__version__); from arvis import ArvisEngine, CognitiveOS, CognitiveOSConfig; print('public API import OK')"
+
+      - name: Black-box compliance against the exact artifact
+        # The published wheel is the proven wheel: the normative suite
+        # runs against the file that goes to PyPI, in a pristine venv
+        # with the repository not importable (audit a14, A14-P1-02).
+        run: bash scripts/run_blackbox_against_wheel.sh "$(ls dist/*.whl)"
 
       - name: Generate the SBOM
         # Describes what the built environment actually contains, so a consumer

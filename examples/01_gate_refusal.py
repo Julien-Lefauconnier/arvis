@@ -18,7 +18,7 @@ decision = data["decision"]  # structured public block (a15): status + flags
 blocked = decision["status"] == "BLOCKED"
 needs_confirm = bool(decision["requires_user_validation"])
 
-print("\nARVIS Example 01 — Safe Runtime Gate")
+print("\nARVIS Example 01: Safe Runtime Gate")
 print("-" * 42)
 print("Action        : wire_transfer")
 print("Risk Score    : 0.98")

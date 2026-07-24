@@ -134,17 +134,17 @@ i.e., the Gate does not classify it as unstable.
 
 ## 6. ARVIS Three-Layer Safety Stack
 
-**Layer 1** — Lyapunov constraint  
+**Layer 1**: Lyapunov constraint  
 ```math
 \Delta W_t \leq 0 \quad \text{(nominal contraction)}
 ```
 
-**Layer 2** — Adaptive kappa constraint  
+**Layer 2**: Adaptive kappa constraint  
 ```math
 \kappa_{\text{eff}}^t \leq 1 \quad \text{(contraction not critically lost)}
 ```
 
-**Layer 3** — Validity envelope  
+**Layer 3**: Validity envelope  
 ```math
 o_t \in \mathcal{O}_{\text{valid}} \quad \text{and} \quad V_t = \text{valid}
 ```
@@ -187,7 +187,7 @@ Safety ⇔ $V(x) \to 0$ or bounded.
 No equivalent energy-like function today.
 
 **ARVIS contribution**:
-Defines $W(o_t)$ — a **Lyapunov-like cognitive energy** — that quantifies instability in language-based reasoning.
+Defines $W(o_t)$: a **Lyapunov-like cognitive energy**: that quantifies instability in language-based reasoning.
 
 ## 9. Stability Under Language-specific Dynamics
 
@@ -287,4 +287,4 @@ ARVIS bridges **control theory** and **LLM-based cognitive systems** by introduc
 - formal decision gating,
 - bounded perturbation modeling.
 
-This constitutes a principled path toward **measurable, enforceable practical stability** in language-based AI systems — a foundational layer that can complement (but does not replace) alignment and optimization efforts.
+This constitutes a principled path toward **measurable, enforceable practical stability** in language-based AI systems: a foundational layer that can complement (but does not replace) alignment and optimization efforts.

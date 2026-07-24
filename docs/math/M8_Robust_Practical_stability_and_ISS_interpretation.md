@@ -1,4 +1,4 @@
-# M8 — Robust Practical Stability and ISS Interpretation 
+# M8: Robust Practical Stability and ISS Interpretation 
 
 ## 1. Objective
 
@@ -168,9 +168,9 @@ when the system operates in uncertain regions.
 
 ---
 
-## 6. Main Result — Robust Practical Stability on the Validated Domain
+## 6. Main Result: Robust Practical Stability on the Validated Domain
 
-**Result T8 — Implementation-Aligned Robust Practical Stability**
+**Result T8: Implementation-Aligned Robust Practical Stability**
 
 **Under assumptions:**
 
@@ -270,22 +270,22 @@ Bounded adversarial perturbations are therefore treated as robustness inputs, **
 
 The current implementation enforces the following runtime invariants:
 
-- **I1** — Bounded response under bounded perturbation  
+- **I1**: Bounded response under bounded perturbation  
   If $\|w_t\| \leq \bar{w}$, the theoretical trace remains bounded.
 
-- **I2** — No instability amplification through control  
+- **I2**: No instability amplification through control  
   Control never increases aggressiveness when instability grows.
 
-- **I3** — Gate monotonicity  
+- **I3**: Gate monotonicity  
   Instability cannot directly increase permissiveness.
 
-- **I4** — Persistent drift detection  
+- **I4**: Persistent drift detection  
   Repeated positive drift cannot remain invisible indefinitely.
 
-- **I5** — Fail-soft observability  
+- **I5**: Fail-soft observability  
   If one robustness observer fails, the system falls back conservatively.
 
-- **I6 — Margin-aware robustness**
+- **I6: Margin-aware robustness**
    System reacts continuously to contraction degradation,
    not only binary violations.
 
@@ -340,4 +340,4 @@ This means:
 - the system is confined to a practical stability tube  
   rather than entering uncontrolled divergence.
 
-This constitutes a **defensible and scoped robustness level** for the current ARVIS implementation — a meaningful and defensible final stability milestone.
+This constitutes a **defensible and scoped robustness level** for the current ARVIS implementation: a meaningful and defensible final stability milestone.

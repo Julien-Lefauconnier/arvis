@@ -16,7 +16,7 @@ ARVIS is no longer presented only as a stability framework, but as a **foundatio
 
 ---
 
-## 2. Definition — Cognitive Operating System
+## 2. Definition: Cognitive Operating System
 
 ### 2.1 Formal Definition
 
@@ -46,7 +46,7 @@ where:
 
 ---
 
-## 3. Conceptual Shift — Traditional OS vs ARVIS COS
+## 3. Conceptual Shift: Traditional OS vs ARVIS COS
 
 | Aspect                     | Traditional OS                  | ARVIS COS                              |
 |----------------------------|---------------------------------|----------------------------------------|
@@ -57,7 +57,7 @@ where:
 | Core objective             | Execute instructions reliably   | Regulate decisions under uncertainty   |
 
 **Key Insight**  
-ARVIS does **not** manage compute resources —  
+ARVIS does **not** manage compute resources:  
 it manages **decision integrity under uncertainty**.
 
 ---
@@ -192,7 +192,7 @@ ARVIS becomes:
 
 ### 7.3 Key Property
 
-ARVIS does **not** replace intelligence —  
+ARVIS does **not** replace intelligence:  
 it **constrains intelligence into stability**.
 
 ---
@@ -247,11 +247,11 @@ Ensures:
 
 ARVIS as COS enforces the following system-wide invariants:
 
-- **S1** — Stability-aware execution  
-- **S2** — Non-amplification of instability  
-- **S3** — Explicit uncertainty representation  
-- **S4** — Full decision traceability  
-- **S5** — Closed-loop regulation of behavior  
+- **S1**: Stability-aware execution  
+- **S2**: Non-amplification of instability  
+- **S3**: Explicit uncertainty representation  
+- **S4**: Full decision traceability  
+- **S5**: Closed-loop regulation of behavior  
 
 ---
 

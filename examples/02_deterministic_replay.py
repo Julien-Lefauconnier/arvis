@@ -28,7 +28,7 @@ r2 = os.replay_verified(r1.to_ir(), expected_global_commitment=external_anchor)
 
 same = r1.global_commitment == r2.global_commitment
 
-print("\nARVIS Example 02 — Authenticated Deterministic Replay")
+print("\nARVIS Example 02: Authenticated Deterministic Replay")
 print("-" * 52)
 print("Input Risk    : 0.10")
 print("Original Run  :", r1.global_commitment[:16] + "...")

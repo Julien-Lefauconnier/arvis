@@ -1,4 +1,4 @@
-# LINGUISTIC LAYER SPEC (v1 — Normative)
+# LINGUISTIC LAYER SPEC (v1: Normative)
 
 ## 1. Purpose
 

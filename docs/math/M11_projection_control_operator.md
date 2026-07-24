@@ -1,4 +1,4 @@
-# M11 — Projection-Control Operator (Π_ctrl) and Decision-Theoretic Structure
+# M11: Projection-Control Operator (Π_ctrl) and Decision-Theoretic Structure
 
 ## 1. Objective
 
@@ -157,8 +157,8 @@ Thus, $(V, \min_{\succ})$ forms a **commutative idempotent semigroup**.
 
 ARVIS stability is decomposed into two independent layers:
 
-- **Energy stability** (Lyapunov-based) — controlled by $W_t$, $\Delta W_t$, $\widehat{\kappa}_t$
-- **Structural stability** (projection-based) — enforced by $\Pi_{\text{ctrl}}$
+- **Energy stability** (Lyapunov-based): controlled by $W_t$, $\Delta W_t$, $\widehat{\kappa}_t$
+- **Structural stability** (projection-based): enforced by $\Pi_{\text{ctrl}}$
 
 ### 6.2 Independence
 

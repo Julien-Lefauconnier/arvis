@@ -1,4 +1,4 @@
-# ARVIS OS — Cognitive Operating System Standard v1.0
+# ARVIS OS: Cognitive Operating System Standard v1.0
 
 ## 1. Introduction
 

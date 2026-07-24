@@ -1,4 +1,4 @@
-# ARVIS — M2: Stability Proof Skeleton (Implementation-Aligned)
+# ARVIS: M2: Stability Proof Skeleton (Implementation-Aligned)
 
 ## Objective
 
@@ -191,4 +191,4 @@ before being considered in the logical time evolution used in this proof.
 
 ARVIS admits a **locally valid exponential stability skeleton** on the empirically validated projection domain $\mathcal{O}_{\text{valid}}$, under average dwell-time and effective contraction conditions.  
 
-This outline is **implementation-aligned**, **mathematically structured**, and **explicitly conditional** — providing a credible bridge between hybrid systems theory and the ARVIS cognitive runtime.
+This outline is **implementation-aligned**, **mathematically structured**, and **explicitly conditional**: providing a credible bridge between hybrid systems theory and the ARVIS cognitive runtime.

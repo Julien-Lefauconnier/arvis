@@ -1,6 +1,6 @@
-# ARVIS — Formal Theory ↔ System Correspondence 
+# ARVIS: Formal Theory ↔ System Correspondence 
 
-**Research-grade Mapping Document — Implementation-Aligned (M0–M12)**
+**Research-grade Mapping Document: Implementation-Aligned (M0–M12)**
 
 ## 0. Purpose
 
@@ -11,9 +11,9 @@ This document establishes a formal correspondence between:
 
 It serves three critical roles:
 
-- **Traceability** — mapping each mathematical construct to runtime artifacts
-- **Auditability** — clarifying which theoretical assumptions are enforced, approximated, or unverified
-- **Structural clarity** — separating the proven theoretical core, the implementation-aligned extensions, and the decision-theoretic algebra layer
+- **Traceability**: mapping each mathematical construct to runtime artifacts
+- **Auditability**: clarifying which theoretical assumptions are enforced, approximated, or unverified
+- **Structural clarity**: separating the proven theoretical core, the implementation-aligned extensions, and the decision-theoretic algebra layer
 
 ## 1. Formal Model vs Runtime Representation
 
@@ -125,7 +125,7 @@ $$
 The system performs **online verification** of the theoretical inequality.  
 Unlike the pure theoretical model, this condition is not only observed but actively **enforced** via decision filtering (Gate operator).
 
-## 4. Projection Layer (Runtime Certification — M3.3)
+## 4. Projection Layer (Runtime Certification: M3.3)
 
 ### 4.1 Theoretical Projection
 
@@ -140,7 +140,7 @@ with $P_t = (\text{domain_valid}, m_t, \text{is_projection_safe}, \text{level})$
 
 The projection layer currently acts as a **runtime certification operator**, not a full mathematical projection. It ensures bounded domain, deterministic validation, and compatibility with Gate enforcement.
 
-## 5. Decision System (Algebraic Layer — M11–M12)
+## 5. Decision System (Algebraic Layer: M11–M12)
 
 ### 5.1 Decision Space
 
@@ -193,7 +193,7 @@ $$
 
 ensures that no structural violation can be bypassed by energy signals.
 
-## 7. Control Layer (Closed-Loop — M7)
+## 7. Control Layer (Closed-Loop: M7)
 
 **Implementation**  
 - adaptive epsilon  

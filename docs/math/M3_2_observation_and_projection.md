@@ -1,4 +1,4 @@
-# ARVIS — M3.2: Observation, Validation & Certification Protocol
+# ARVIS: M3.2: Observation, Validation & Certification Protocol
 
 ## Objective
 

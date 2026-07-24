@@ -1,4 +1,4 @@
-# ARVIS — M3.1: Cognitive State Model & Target Projection
+# ARVIS: M3.1: Cognitive State Model & Target Projection
 
 ## Objective
 

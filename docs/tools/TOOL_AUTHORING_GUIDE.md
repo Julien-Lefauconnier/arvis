@@ -1,5 +1,4 @@
-
-# Tool Authoring Guide — ARVIS
+# Tool Authoring Guide: ARVIS
 
 ## Position in ARVIS Architecture
 

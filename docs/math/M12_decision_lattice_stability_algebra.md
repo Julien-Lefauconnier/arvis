@@ -1,4 +1,4 @@
-# M12 — Decision Lattice & Stability Algebra
+# M12: Decision Lattice & Stability Algebra
 
 ## 1. Objective
 

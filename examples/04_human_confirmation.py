@@ -19,7 +19,7 @@ decision = data["decision"]  # structured public block (a15): status + flags
 needs_confirm = bool(decision["requires_user_validation"])
 allowed = decision["status"] == "ALLOWED"
 
-print("\nARVIS Example 04 — Human Approval Gate")
+print("\nARVIS Example 04: Human Approval Gate")
 print("-" * 44)
 print("Declared Risk : 0.55")
 print("Auto Execute  :", "YES" if allowed else "NO")

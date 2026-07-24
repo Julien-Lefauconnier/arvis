@@ -1,4 +1,4 @@
-# M7 — Closed-Loop Adaptive Stability Result
+# M7: Closed-Loop Adaptive Stability Result
 
 ## 1. Objective
 
@@ -101,33 +101,33 @@ soft_decrease   → epsilon *= 0.9
 
 The system implements three nested stability feedback loops:
 
-1. **Loop 1 — Stability feedback**  
+1. **Loop 1: Stability feedback**  
    $W_t \to \Delta W_t \to v_t$  
    (Gate reacts to instantaneous energy variation)
 
-2. **Loop 2 — Adaptive estimation feedback**  
+2. **Loop 2: Adaptive estimation feedback**  
    $W_t \to \kappa^t \to v_t$  
    (Gate reacts to long-term contraction/adaptation estimate)
 
-3. **Loop 3 — Control modulation feedback**  
+3. **Loop 3: Control modulation feedback**  
    $v_t^{\text{final}}, W_t \to u_t \to f_{q_t}(\cdot)$
    (Control reduces aggressiveness when Gate signals caution or when energy increases)
 
-4. **Loop 4 — Projection-control feedback (NEW)**  
+4. **Loop 4: Projection-control feedback (NEW)**  
    $(x_t, z_t) \to v_t^{\pi} \to v_t^{\text{final}}$  
    (structured projection constrains final decision independently of Lyapunov signals)
 
 ---
 
-## 5. Main Result — Closed-Loop Practical Stability
+## 5. Main Result: Closed-Loop Practical Stability
 
-**Result T7 — Closed-Loop Practical Stability**
+**Result T7: Closed-Loop Practical Stability**
 
 **Under assumptions:**
 
 - A1–A15 (M1)
 - projection validity on $\mathcal{O}_{\text{valid}}$ (M3)
-- Gate stability preservation (M6 — T6, including Π_ctrl constraints)
+- Gate stability preservation (M6: T6, including Π_ctrl constraints)
 - bounded control modulation ($\epsilon_t, \text{exploration}_t$ remain bounded)
 
 **then:**
@@ -205,7 +205,7 @@ $$
 
 ---
 
-## 7. Critical Property — Self-Stabilization
+## 7. Critical Property: Self-Stabilization
 
 The system satisfies the **negative feedback invariant**:
 
@@ -241,34 +241,34 @@ The system is not only energy-stabilized, but also **structure-stabilized** via 
 
 The current implementation enforces the following invariants:
 
-- **I1 — Bounded control**  
+- **I1: Bounded control**  
   $0 < \epsilon_t \leq \epsilon_{\max}$
 
-- **I2 — Conservative reaction**  
+- **I2: Conservative reaction**  
   If unstable → $u_t$ becomes more conservative
 
-- **I3 — No positive feedback loop**  
+- **I3: No positive feedback loop**  
   There is **no** mechanism such that $W_t \uparrow \Rightarrow u_t \uparrow$  
   → **This is critical** for stability
 
-- **I4 — Gate dominance**  
+- **I4: Gate dominance**  
   If $v_t^{\text{final}} = \text{ABSTAIN}$ → no risky evolution is allowed
 
-- **I5 — Kappa Dominance (Hard Constraint)**  
+- **I5: Kappa Dominance (Hard Constraint)**  
   If contraction fails → system cannot proceed  
   (enforced after fusion)
 
-- **I6 — Projection monotonicity (Π_ctrl)**  
+- **I6: Projection monotonicity (Π_ctrl)**  
    Π_ctrl cannot relax a restrictive decision
 
-- **I7 — Abstention irreversibility**  
+- **I7: Abstention irreversibility**  
    $v_t^{\text{gate}} = \text{ABSTAIN} \Rightarrow v_t^{\text{final}} = \text{ABSTAIN}$
 
 ---
 
 ## 9. Final Statement
 
-The ARVIS closed-loop system — Projection → Dynamics → Gate → Control → Dynamics — is **practically stable** under the validated assumptions and implementation constraints.
+The ARVIS closed-loop system: Projection → Dynamics → Gate → Control → Dynamics: is **practically stable** under the validated assumptions and implementation constraints.
 
 The combination of Lyapunov-based Gate decisions, projection-control constraints (Π_ctrl), and adaptive control modulation creates a **multi-layer self-stabilizing feedback architecture** that:
 

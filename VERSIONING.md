@@ -9,11 +9,11 @@ disagrees with a blog post, a slide or a docstring, this document wins.
 ARVIS follows [PEP 440](https://peps.python.org/pep-0440/). During the `0.x`
 series the version carries three claims and no more:
 
-- `0.1.0aN` (alpha) — the public surface may change without a deprecation
+- `0.1.0aN` (alpha): the public surface may change without a deprecation
   window. Pin an exact version.
-- `0.1.0bN` (beta) — the public surface is stable within the series. A removal
+- `0.1.0bN` (beta): the public surface is stable within the series. A removal
   from the public API goes through the deprecation window below.
-- `0.1.0` and later `0.x` — stable within the minor version. Breaking changes
+- `0.1.0` and later `0.x`: stable within the minor version. Breaking changes
   raise the minor number, since `0.x` has no major-version budget.
 
 A patch release never changes the public API, never changes canonical bytes,

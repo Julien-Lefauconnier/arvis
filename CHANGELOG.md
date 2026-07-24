@@ -9,6 +9,83 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a15] - 2026-07-24
+
+The final contract campaign before beta, closing the four blockers and the
+retained P1 findings of the independent a14 audit. This release makes the
+frozen surface real: no reference obtained from the registry can move the
+validated surface, the central result type is itself part of the contract, the
+lifecycle doctrine is univocal and mechanically enforced, the science corpus
+claims nothing it has not executed, and the published artifact is the proven
+artifact.
+
+### Security
+
+- The tool registry TOCTOU window is closed (A14-BETA-01): verified_spec()
+  never hands out the private capture; every governed read returns a fresh
+  ToolSpec rebuilt from the pinned canonical bytes, caller-owned and atomic
+  with respect to concurrent schema mutation. The audit's concurrent probe is
+  replayed as a deterministic barrier-based test and now reports
+  prepare_accepted_diverged_surface=False.
+- The release gate runs in the same locked environment as CI (A14-P1-03):
+  release.yml installs requirements/gate.lock with the package on top in
+  --no-deps, replays the blocking dependency audit with the same documented
+  exception, and runs the normative black-box suite against the exact wheel
+  that will be published (A14-P1-02), in a pristine venv where the repository
+  is not importable.
+
+### Changed
+
+- CognitiveResultView and the new typed DecisionStatus are exported from
+  arvis and host_api.engine (A14-BETA-02); the view gains a typed .status
+  property (ALLOWED / REQUIRES_CONFIRMATION / BLOCKED / NONE, the product's
+  established vocabulary), to_dict()["decision"] becomes a structured block
+  (status, flags, denied_reason) and is never a repr, and the decision field
+  is typed ActionDecision | None. Repr parsing is purged from the whole
+  repository: examples, doctrine tests and the black-box suite read
+  result.status.
+- The beta contract manifest pins default values canonically and the
+  qualified identity of default_factory functions, for dataclasses and
+  pydantic models, and gains a root_api section freezing every arvis.__all__
+  symbol, CognitiveOS included; proven deterministic across Python 3.11/3.12
+  and pydantic 2.8/2.13.
+- The lifecycle doctrine is univocal (A14-BETA-03): one instance per governed
+  turn, discarded; sequential reuse works, is exercised by the isolation
+  tests as an isolation proof, accumulates unbounded state and is not
+  recommended; concurrent reuse is forbidden. Example 09 builds a fresh
+  engine per decision through a host factory, and an AST contract test keeps
+  every example on the pattern.
+- Runtime dependency minimum bounds are tightened to the versions actually
+  proven by the gate (A14-P1-07): jsonschema>=4.26, pyyaml>=6.0.3,
+  numpy>=2.4, pydantic>=2.8.
+
+### Fixed
+
+- The reflexive layer works on the real CognitiveState (A14-P1-01):
+  _safe_serialize learns dataclasses, enums, tuples and datetimes, with a
+  deterministic opaque marker for live objects (the in-state SignalJournal
+  broke the attestation's deepcopy before json.dumps ever ran). The nominal
+  path now produces the reflexive payload and its attestation; the three
+  skipped integration tests are hard-asserting passing tests, a unit test
+  replays the audit probe, and REFLEXIVE.md documents the serialization
+  contract.
+- The mathematical corpus numbering is coherent (A14-BETA-04): M13, M14 and
+  M15 carried titles shifted by two; all are renumbered without renaming
+  files. M13 classifies M10 as a planned protocol everywhere, states precise
+  conditionality (T6-T9 proven, offline Phase A, T10 hypothesis) and carries
+  an honest final statement; M15's comparative table says planned for M10;
+  M5 no longer claims a nonexistent runtime validation stack. A whole-corpus
+  sweep, root files included, reclassified the stability-frontier grid
+  exploration of ARVIS_STABILITY_CORE_SPECIFICATIONS as planned, replaced
+  the four missing figure embeds with explicit notes, and turned the linear
+  two-regime example claim into an executed, seeded test
+  (tests/math/test_linear_two_regime_example.py).
+- CONTRIBUTING.md is true as written (A14-P2-02): the documentation corpus
+  is purged of its 176 em-dashes, the remaining French comments in tests are
+  translated, and a repository-wide ratchet
+  (tests/contracts/test_no_em_dashes.py) keeps em-dashes out for good.
+
+
 ## [0.1.0a14] - 2026-07-24
 
 The beta contract campaign, closing the four blockers of the external a13

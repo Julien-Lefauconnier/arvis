@@ -36,7 +36,7 @@ def test_fusion_reason_consistency(pipeline, ctx):
     #
     # Ce qui doit rester cohérent :
     # - fusion_reasons reste structurée
-    # - le verdict final est unique
+    # - the final verdict is unique
     # - fusion_trace reflète le verdict réel
 
     assert isinstance(reasons, list)

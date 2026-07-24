@@ -1,4 +1,4 @@
-# ARVIS — M6: Gate Stability Filtering & Decision Consistency (v2 — Implementation-Aligned)
+# ARVIS: M6: Gate Stability Filtering & Decision Consistency (v2: Implementation-Aligned)
 
 ## Objective
 This document defines the role of the **Gate operator** in ARVIS.
@@ -103,9 +103,9 @@ This ordering is strictly enforced across all core Gate layers and in the final 
 
 ---
 
-## 4. Main Result — Extended Conditional Filtering Property
+## 4. Main Result: Extended Conditional Filtering Property
 
-**Result T6 — Gate Stability Filtering (Extended)**
+**Result T6: Gate Stability Filtering (Extended)**
 
 Under assumptions A1–A15 (M1), and assuming:
 - the underlying system satisfies T1 (stability condition)
@@ -171,7 +171,7 @@ This layer enforces:
   $\neg P_t.\text{is\_projection\_safe} \land (\Delta W_t > 0 \lor \text{global unsafe} \lor \text{switching unsafe}) \quad \Rightarrow \quad v_t^{\text{gate}} \neq \text{ALLOW}$
 
 **Interpretation**:  
-The Gate is not only stability-aware — it is also **projection-aware**.
+The Gate is not only stability-aware: it is also **projection-aware**.
 
 ---
 

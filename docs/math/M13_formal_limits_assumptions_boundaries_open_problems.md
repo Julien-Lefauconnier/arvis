@@ -11,7 +11,7 @@ This document explicitly characterizes:
 
 M13 completes the ARVIS mathematical stack (M0-M12) by clearly stating:
 
-> what ARVIS does **NOT** guarantee — and why
+> what ARVIS does **NOT** guarantee: and why
 
 It enforces scientific honesty by defining the **non-claims** as rigorously as the claims themselves.
 
@@ -233,15 +233,15 @@ $$
 
 ## 13. Open Theoretical Problems
 
-1. **Adaptive stability tracking** — Prove that $\kappa^t$ consistently tracks true contraction under general perturbations.
-2. **Hybrid ISS theory** — Establish a full hybrid ISS result for switching systems with adaptive control.
-3. **Optimal coupling** — Characterize optimal $(G, C)$ under stability constraints.
-4. **Domain expansion** — Provide a rigorous description of the expansion:
+1. **Adaptive stability tracking**: Prove that $\kappa^t$ consistently tracks true contraction under general perturbations.
+2. **Hybrid ISS theory**: Establish a full hybrid ISS result for switching systems with adaptive control.
+3. **Optimal coupling**: Characterize optimal $(G, C)$ under stability constraints.
+4. **Domain expansion**: Provide a rigorous description of the expansion:
 ```math
 $\mathcal{O}_{\mathrm{valid}} \to \mathcal{O}_{\mathrm{max}}$.
 ```
-5. **Adversarial robustness** — Formalize bounded-adversarial resilience in a minimax framework.
-6. **Invariant certification** — Convert $V_t$ into a formally verifiable invariant set.
+5. **Adversarial robustness**: Formalize bounded-adversarial resilience in a minimax framework.
+6. **Invariant certification**: Convert $V_t$ into a formally verifiable invariant set.
 
 ## 14. Open Engineering Problems
 
