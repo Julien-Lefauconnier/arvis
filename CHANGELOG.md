@@ -9,6 +9,38 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0b1] - 2026-07-24
+
+ARVIS enters beta: the beta contract, as closed by the a15, a16 and a17
+campaigns and confirmed by four independent audits. No functional
+rupture from a17; the surface freeze becomes policy.
+
+### Changed
+
+- Development status moves to Beta (PyPI classifier, README). The
+  public surface (`arvis.__all__`, the stable `host_api` modules, the
+  shipped serialization contract and the attestation canonicalization)
+  is stabilized and covered by the deprecation policy documented in
+  `VERSIONING.md` (new "Beta series" section).
+- Migration from a17: none required. Consumers pinning `0.1.0a17` can
+  move to `0.1.0b1` unchanged.
+
+### Fixed (hardenings from the a17 audit, 16.3)
+
+- `to_json()` is strict JSON (`allow_nan=False`): a non-finite float
+  fails loudly instead of emitting invalid `NaN`/`Infinity` tokens,
+  with a negative proof.
+- The attestation verifier absorbs exceptions from hostile container
+  subclasses (boundary fail-closed), its docstring states the expected
+  ordinary-JSON input, and the residual "canonicalization 1.0" line is
+  corrected to 2.0.
+- The black-box wheel suite imports the contract loader from the
+  official root surface and gains two attestation scenarios: a valid
+  payload verifies from the wheel and a forged field fails; an unknown
+  canonicalization version is refused (13 tests).
+- The constructor-invariant comment states its exact scope (unknown
+  commitment policy).
+
 ## [0.1.0a17] - 2026-07-24
 
 The final contractual closure before beta, fixing the two defects

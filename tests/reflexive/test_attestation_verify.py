@@ -162,3 +162,14 @@ def test_unknown_canon_version_is_refused_before_any_computation() -> None:
     payload = _payload()
     payload["attestation"]["canon_version"] = "1.0"
     assert verify_reflexive_attestation(payload) is False
+
+
+def test_hostile_container_subclass_fails_closed() -> None:
+    """b1 (audit a17, 13.3): a dict subclass raising from get() is
+    absorbed by the boundary verifier, never propagated."""
+
+    class _EvilDict(dict):
+        def get(self, *args, **kwargs):
+            raise RuntimeError("boom")
+
+    assert verify_reflexive_attestation(_EvilDict()) is False

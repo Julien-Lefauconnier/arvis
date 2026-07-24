@@ -22,7 +22,7 @@ ATTESTATION_CANON_VERSION = "2.0"
 
 @dataclass(frozen=True)
 class ReflexiveAttestation:
-    """Reflexive surface attestation (canonicalization 1.0).
+    """Reflexive surface attestation (canonicalization 2.0).
 
     The fingerprint is computed from the rendered payload after a
     documented, versioned canonicalization:
@@ -140,9 +140,12 @@ class ReflexiveAttestation:
         values for every metadata field (type, scope, authority,
         flags, mode, exposed_views, canon_version), and constant-time
         comparison for the fingerprint. An unknown canon_version is
-        refused before any algorithm is applied. Fail-closed: any
-        malformed input of any type returns False (audit a16,
-        blocker 2 and 7.4).
+        refused before any algorithm is applied. Fail-closed for any
+        malformed ORDINARY JSON tree (the expected input, as produced
+        by json.loads or result.reflexive): every such invalid shape
+        returns False. This is a boundary verifier, so unexpected
+        exceptions from hostile container subclasses are also absorbed
+        (audit a16 blocker 2 and 7.4; audit a17, 13.3).
         """
         try:
             if not isinstance(rendered_payload, dict):
@@ -165,7 +168,7 @@ class ReflexiveAttestation:
             if not isinstance(published, str):
                 return False
             return hmac.compare_digest(expected["fingerprint"], published)
-        except (TypeError, ValueError, KeyError, AttributeError):
+        except Exception:  # arvis-broad: boundary verifier, fail-closed
             return False
 
     @staticmethod

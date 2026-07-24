@@ -161,3 +161,24 @@ def test_every_public_result_path_conforms() -> None:
 
     for payload in payloads:
         _VALIDATOR.validate(payload)
+
+
+def test_to_json_refuses_non_finite_floats() -> None:
+    """b1 (audit a17, 13.1): NaN/Infinity are not valid JSON numbers;
+    to_json must fail loudly rather than emit an out-of-contract
+    document."""
+    import dataclasses
+    import math
+
+    from arvis import ArvisEngine
+
+    view = ArvisEngine().run("contract", {"risk": 0.10})
+    assert view.stability_view is not None
+    bad = dataclasses.replace(
+        view,
+        stability_view=dataclasses.replace(
+            view.stability_view, stability_score=math.nan
+        ),
+    )
+    with pytest.raises(ValueError):
+        bad.to_json()

@@ -62,8 +62,9 @@ class CognitiveResultView:
     # never silent: applied policy, reason code when missing, and an
     # explicit degradation flag under the DEGRADED policy.
     # a17 (audit a16, blocker 1): the applied policy is part of the
-    # serialized contract; a view carrying anything but a valid policy
-    # value cannot exist (see __post_init__).
+    # serialized contract; a view carrying an unknown commitment policy
+    # cannot exist (see __post_init__). Other fields rely on their type
+    # annotations; the full schema is enforced by the contract tests.
     commitment_policy: str = AuditCommitmentPolicy.DEGRADED.value
     commitment_reason: str | None = None
     commitment_degraded: bool = False
@@ -344,14 +345,19 @@ class CognitiveResultView:
         }
 
     def to_json(self, *, indent: int = 2) -> str:
-        """
-        Stable JSON serialization of public structured output.
+        """Stable JSON serialization of public structured output.
+
+        Strict JSON (b1, audit a17, 13.1): a non-finite float would
+        serialize as NaN/Infinity, which are not valid JSON numbers;
+        this fails loudly instead of emitting an out-of-contract
+        document.
         """
         return json.dumps(
             self.to_dict(),
             indent=indent,
             sort_keys=True,
             ensure_ascii=False,
+            allow_nan=False,
         )
 
     def quickstart_json(self, *, indent: int = 2) -> str:

@@ -160,3 +160,14 @@ optional keys is allowed within a version. Blocks marked experimental
 in the schema (the `trace` inner structure, timeline entry items) are
 not part of the stable contract and may change without a bump;
 consumers must not parse them.
+
+## Beta series (0.1.0bN)
+
+The beta series stabilizes `arvis.__all__` (11 symbols) and the stable
+`host_api` modules (53 symbols), both frozen by the beta contract
+manifest, plus the shipped serialization contract and the reflexive
+attestation canonicalization. Within the series, removals, renames or
+type changes on this surface require a deprecation cycle: a changelog
+entry, a version bump of the affected contract constant, and one beta
+release of overlap where both forms work. Additive, backward-compatible
+changes remain free.

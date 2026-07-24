@@ -66,14 +66,42 @@ def test_runs_against_an_installed_distribution_when_required() -> None:
     )
 
 
+def test_reflexive_attestation_verifies_from_the_wheel() -> None:
+    """b1 (audit a17, 13.4): the exact artifact carries the corrected
+    verification: the final payload verifies through the root API, and
+    a forged attestation field fails."""
+    import copy
+
+    from arvis import CognitiveOS, verify_reflexive_attestation
+
+    payload = CognitiveOS().run(user_id="blackbox", cognitive_input="test").reflexive
+    assert payload is not None
+    assert verify_reflexive_attestation(payload) is True
+
+    forged = copy.deepcopy(payload)
+    forged["attestation"]["authority"] = "user"
+    assert verify_reflexive_attestation(forged) is False
+
+
+def test_unknown_canonicalization_version_is_refused_from_the_wheel() -> None:
+    import copy
+
+    from arvis import CognitiveOS, verify_reflexive_attestation
+
+    payload = CognitiveOS().run(user_id="blackbox", cognitive_input="test").reflexive
+    assert payload is not None
+    stale = copy.deepcopy(payload)
+    stale["attestation"]["canon_version"] = "1.0"
+    assert verify_reflexive_attestation(stale) is False
+
+
 def test_no_trace_result_conforms_to_the_shipped_schema() -> None:
     """a17 (audit a16, blocker 1): the public no-trace path used to
     emit a payload the shipped schema rejected; the wheel must prove
     every public result path conforms, this one included."""
     import jsonschema
 
-    from arvis import CognitiveOS, CognitiveOSConfig
-    from arvis.api.contracts.result_schema import load_result_schema
+    from arvis import CognitiveOS, CognitiveOSConfig, load_result_schema
 
     payload = (
         CognitiveOS(CognitiveOSConfig(enable_trace=False))
@@ -90,10 +118,7 @@ def test_serialized_result_conforms_to_the_shipped_schema() -> None:
     accepts the payload the same wheel produces."""
     import jsonschema
 
-    from arvis.api.contracts.result_schema import (
-        RESULT_SCHEMA_VERSION,
-        load_result_schema,
-    )
+    from arvis import RESULT_SCHEMA_VERSION, load_result_schema
 
     schema = load_result_schema()
     payload = ArvisEngine().run("blackbox", {"risk": 0.10}).to_dict()
