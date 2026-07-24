@@ -146,3 +146,17 @@ adversarial suite rather than argued:
 
 If the runtime claims more than this document allows, that is a defect worth
 reporting, and a security-adjacent one. See [SECURITY.md](SECURITY.md).
+
+## Result serialization contract
+
+`CognitiveResultView.to_dict()` follows a versioned consumer contract:
+the JSON Schema `arvis/api/contracts/cognitive_result_v1.schema.json`
+ships inside the package and its fingerprint is frozen in the beta
+contract manifest. The payload carries `schema_version`.
+
+Deprecation rule: removing a stable key, renaming it or changing its
+type requires a `schema_version` bump and a changelog entry. Adding
+optional keys is allowed within a version. Blocks marked experimental
+in the schema (the `trace` inner structure, timeline entry items) are
+not part of the stable contract and may change without a bump;
+consumers must not parse them.

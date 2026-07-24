@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-import importlib
 import inspect
 from typing import Any
 
@@ -204,9 +203,19 @@ def _describe(symbol_name: str, obj: Any) -> dict[str, Any]:
 
 
 def generate_manifest() -> dict[str, Any]:
+    import hashlib
+    import importlib.resources
+
     import arvis
     from arvis import host_api
+    from arvis.api.contracts.result_schema import RESULT_SCHEMA_VERSION
     from arvis.api.engine import ArvisEngine
+
+    schema_bytes = (
+        importlib.resources.files("arvis.api.contracts")
+        .joinpath("cognitive_result_v1.schema.json")
+        .read_bytes()
+    )
 
     manifest: dict[str, Any] = {
         "manifest_version": MANIFEST_VERSION,
@@ -214,6 +223,13 @@ def generate_manifest() -> dict[str, Any]:
         "provisional_modules": sorted(host_api.PROVISIONAL_MODULES),
         # a15 (A14-BETA-02): every symbol promised by arvis.__all__ is
         # part of the frozen contract, CognitiveOS included.
+        # a16 (A15-BETA-01): the serialized consumer contract is frozen
+        # by fingerprint; editing the schema breaks the golden and
+        # forces explicit versioning.
+        "result_serialization": {
+            "schema_version": RESULT_SCHEMA_VERSION,
+            "schema_sha256": hashlib.sha256(schema_bytes).hexdigest(),
+        },
         "root_api": {
             symbol: _describe(symbol, getattr(arvis, symbol))
             for symbol in sorted(arvis.__all__)

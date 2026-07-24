@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arvis.dev/contracts/cognitive_result_v1.schema.json",
+  "title": "ARVIS CognitiveResultView.to_dict() contract",
+  "description": "Versioned serialization contract of the public result (beta, a16). Stable keys are frozen: removing a key, renaming it or changing its type requires a schema_version bump and a changelog entry (see VERSIONING.md). Adding optional keys is allowed within a version. Blocks marked experimental expose an open structure that is NOT part of the stable contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "version",
+    "fingerprint",
+    "decision",
+    "stability",
+    "has_trace",
+    "has_timeline",
+    "timeline_commitment",
+    "global_commitment",
+    "commitment_policy",
+    "commitment_reason",
+    "commitment_degraded",
+    "audit_incomplete",
+    "trace",
+    "timeline",
+    "execution"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "description": "Version of this serialization contract."
+    },
+    "version": {
+      "type": "string",
+      "description": "Structural API version of the view."
+    },
+    "fingerprint": {
+      "type": "string",
+      "description": "Fingerprint of the public root API surface."
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "allowed", "requires_user_validation", "denied_reason"],
+      "properties": {
+        "status": {
+          "enum": ["ALLOWED", "REQUIRES_CONFIRMATION", "BLOCKED", "NONE"],
+          "description": "Public typed verdict; mirrors arvis.DecisionStatus."
+        },
+        "allowed": { "type": ["boolean", "null"] },
+        "requires_user_validation": { "type": ["boolean", "null"] },
+        "denied_reason": { "type": ["string", "null"] }
+      }
+    },
+    "stability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "risk", "regime"],
+      "properties": {
+        "score": { "type": ["number", "null"] },
+        "risk": { "type": ["number", "null"] },
+        "regime": { "type": ["string", "null"] }
+      }
+    },
+    "has_trace": { "type": "boolean" },
+    "has_timeline": { "type": "boolean" },
+    "timeline_commitment": { "type": ["string", "null"] },
+    "global_commitment": { "type": ["string", "null"] },
+    "commitment_policy": {
+      "enum": ["required", "degraded", "optional"],
+      "description": "Mirrors arvis.AuditCommitmentPolicy values."
+    },
+    "commitment_reason": { "type": ["string", "null"] },
+    "commitment_degraded": { "type": "boolean" },
+    "audit_incomplete": { "type": "boolean" },
+    "trace": {
+      "type": ["object", "null"],
+      "description": "EXPERIMENTAL: open structure, not part of the stable contract. Present when the run carries a decision trace; inner fields (including repr-shaped decision and intent strings) may change without a schema_version bump. Consumers must not parse them."
+    },
+    "timeline": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["entries", "head", "total_entries"],
+      "properties": {
+        "entries": { "type": "array" },
+        "head": { "type": ["string", "null"] },
+        "total_entries": { "type": "integer" }
+      },
+      "description": "Timeline summary; entry items are experimental."
+    },
+    "execution": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": [
+        "can_execute",
+        "degraded",
+        "error_count",
+        "execution_status",
+        "needs_confirmation",
+        "process_id",
+        "requires_confirmation",
+        "syscall_count"
+      ],
+      "properties": {
+        "can_execute": { "type": "boolean" },
+        "degraded": { "type": "boolean" },
+        "error_count": { "type": "integer" },
+        "execution_status": { "type": "string" },
+        "needs_confirmation": { "type": "boolean" },
+        "process_id": { "type": ["string", "null"] },
+        "requires_confirmation": { "type": "boolean" },
+        "syscall_count": { "type": "integer" }
+      }
+    }
+  }
+}

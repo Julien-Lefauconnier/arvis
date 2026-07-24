@@ -94,6 +94,8 @@ include = ["arvis*"]
 
 [tool.setuptools.package-data]
 arvis = ["py.typed"]
+# The versioned consumer contract ships with the package (a16).
+"arvis.api.contracts" = ["*.schema.json"]
 "arvis.api" = ["schema/*.json"]
 
 [tool.mypy]

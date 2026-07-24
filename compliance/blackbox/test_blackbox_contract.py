@@ -66,6 +66,23 @@ def test_runs_against_an_installed_distribution_when_required() -> None:
     )
 
 
+def test_serialized_result_conforms_to_the_shipped_schema() -> None:
+    """A15-BETA-01: the consumer contract is validated from the
+    installed package: the schema a consumer loads from the wheel
+    accepts the payload the same wheel produces."""
+    import jsonschema
+
+    from arvis.api.contracts.result_schema import (
+        RESULT_SCHEMA_VERSION,
+        load_result_schema,
+    )
+
+    schema = load_result_schema()
+    payload = ArvisEngine().run("blackbox", {"risk": 0.10}).to_dict()
+    jsonschema.Draft202012Validator(schema).validate(payload)
+    assert payload["schema_version"] == RESULT_SCHEMA_VERSION
+
+
 @pytest.mark.parametrize(("risk", "expected"), RISK_SCENARIOS)
 def test_declared_risk_gradation(risk: float, expected: DecisionStatus) -> None:
     """The public verdict is result.status, typed: no consumer, and no

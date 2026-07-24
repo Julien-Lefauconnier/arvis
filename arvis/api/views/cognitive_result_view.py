@@ -21,6 +21,7 @@ from arvis.api.commitment import (
     compose_global_commitment,
     validate_commitment_inputs,
 )
+from arvis.api.contracts.result_schema import RESULT_SCHEMA_VERSION
 from arvis.api.execution import ExecutionTraceView
 from arvis.api.ir import build_ir_view
 from arvis.api.stability import StabilityView
@@ -247,6 +248,7 @@ class CognitiveResultView:
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "schema_version": RESULT_SCHEMA_VERSION,
             "version": API_VERSION,
             "fingerprint": API_FINGERPRINT,
             "decision": self._decision_block(),

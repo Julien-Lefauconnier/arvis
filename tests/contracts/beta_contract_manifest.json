@@ -1161,6 +1161,10 @@
   "provisional_modules": [
     "control"
   ],
+  "result_serialization": {
+    "schema_sha256": "0fad4c96106da176e0d5cdc80706f552e29e8ce84fc7599343298f5684d7eda1",
+    "schema_version": "1.0"
+  },
   "root_api": {
     "ArvisEngine": {
       "kind": "class",
