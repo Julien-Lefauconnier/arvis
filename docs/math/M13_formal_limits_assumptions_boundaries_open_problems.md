@@ -1,4 +1,4 @@
-# M11 — Formal Limits, Assumption Boundaries & Open Problems
+# M13: Formal Limits, Assumption Boundaries & Open Problems
 
 ## 1. Objective
 
@@ -9,7 +9,7 @@ This document explicitly characterizes:
 - the critical assumptions on which all stability results depend,
 - the major open theoretical, empirical and engineering problems.
 
-M12 completes the ARVIS mathematical stack (M0–M11) by clearly stating:
+M13 completes the ARVIS mathematical stack (M0-M12) by clearly stating:
 
 > what ARVIS does **NOT** guarantee — and why
 
@@ -19,16 +19,16 @@ It enforces scientific honesty by defining the **non-claims** as rigorously as t
 
 | Layer     | Role                                      | Nature                     |
 |-----------|-------------------------------------------|----------------------------|
-| M0–M9     | Formal system definition + core results  | Theoretical / proven       |
-| M10       | Empirical validation & runtime statistics | Empirical / observed       |
-| M11       | Full system architecture & integration    | Architectural / operational|
-| M12       | Limits, non-claims & open problems        | Critical boundary analysis |
+| M0-M9     | Formal system definition + core results  | Theoretical / proven       |
+| M10       | Empirical validation protocol             | Protocol, planned (not yet executed) |
+| M11-M12   | Projection-control operator, decision lattice | Theoretical / proven   |
+| M13       | Limits, non-claims & open problems        | Critical boundary analysis (this document) |
 
 ## 3. Fundamental Limitation Principle
 
 **ARVIS is a bounded-domain stability system.**
 
-All theoretical guarantees (T6–T10), empirical validations, and runtime certifications are **conditional** on the following invariant holding for every trajectory:
+All theoretical guarantees (T6-T9), the offline Phase A evidence, and any future M10 runtime validation (T10, hypothesis) are **conditional** on the following invariant holding for every trajectory:
 
 $$
 \forall t, \quad o_t \in \mathcal{O}_{\text{valid}}
@@ -205,7 +205,10 @@ V_t = \mathrm{valid} \quad \not\Rightarrow \quad \mathrm{absolute\ safety}
 
 ### 11.1 Dataset Dependence
 
-All results in M10 depend on the finite corpus $\mathcal{D}$.
+The M10 campaign has not been executed: it is a pre-registered
+protocol. Every metric it will collect depends on the finite corpus
+$\mathcal{D}$ that the protocol requires to be constructed, versioned
+and published.
 
 **Limitation**  
 - incomplete coverage possible,
@@ -253,12 +256,13 @@ ARVIS is:
 
 > a **bounded-domain**, **Lyapunov-grounded**, **adaptive** cognitive operating system  
 > with **provable practical stability** (conditional),  
-> **empirical runtime validation**,  
+> a **pre-registered empirical runtime validation protocol** (M10, planned;
+> the projection layer carries offline Phase A evidence per the M3 appendix),  
 > and **explicitly characterized limits and failure modes**.
 
 ## 16. Scientific Positioning
 
-With M12, ARVIS positions itself as:
+With M13, ARVIS positions itself as:
 
 ✗ **Not**  
 - a heuristic agent  

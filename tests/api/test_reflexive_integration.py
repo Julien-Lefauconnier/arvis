@@ -1,6 +1,5 @@
 # tests/api/test_reflexive_integration.py
 
-import pytest
 
 from arvis.api.os import CognitiveOS
 
@@ -32,8 +31,9 @@ def test_reflexive_payload_structure_if_present():
     result = os.run(user_id="u1", cognitive_input="test")
     r = result.reflexive
 
-    if r is None:
-        pytest.skip("Reflexive not available (no cognitive_state)")
+    # A14-P1-01: the nominal path must produce the payload; a silent
+    # None here was the audited defect.
+    assert r is not None
 
     assert "mode" in r
     assert "capabilities" in r
@@ -51,8 +51,7 @@ def test_reflexive_attestation_if_present():
     result = os.run(user_id="u1", cognitive_input="test")
     r = result.reflexive
 
-    if r is None:
-        pytest.skip("Reflexive not available")
+    assert r is not None  # A14-P1-01: nominal path produces the payload
 
     assert "attestation" in r
     assert r["attestation"] is not None
@@ -83,7 +82,6 @@ def test_reflexive_mode_stable():
     r1 = os.run("u1", "same input").reflexive
     r2 = os.run("u1", "same input").reflexive
 
-    if r1 is None or r2 is None:
-        pytest.skip("Reflexive not available")
+    assert r1 is not None and r2 is not None  # A14-P1-01
 
     assert r1["mode"] == r2["mode"]

@@ -1,4 +1,4 @@
-# M13 — Comparative Framework & Safety Guarantees for LLM-based Systems
+# M15: Comparative Framework & Safety Guarantees for LLM-based Systems
 
 ## 1. Objective
 
@@ -80,7 +80,7 @@ o_t \xrightarrow{\Pi} (x_t, z_t, q_t, w_t) \to W_t \to \kappa^t \to G \to C \to 
 | Explicit decision filtering  | ✖                 | ✖               | ✖ (heuristic)   | ✔ (Gate G)             |
 | Bounded perturbation model   | ✔                 | ✖               | ✖               | ✔ (w_t decomposition)  |
 | Bounded practical behavior   | ✔                 | ✖               | ✖               | ✔ (practical tube)     |
-| Empirical runtime validation | optional          | ✔               | ✔               | ✔ (M10)                |
+| Empirical runtime validation | optional          | ✔               | ✔               | planned (M10 protocol)  |
 
 ## 4. Core Paradigm Difference: Stability vs Optimization
 
@@ -231,7 +231,7 @@ ARVIS provides **stability guarantees** even if alignment fails.
 |--------|-----------------------------------------------|----------------------------------------------|
 | RL     | Reward hacking, divergence, instability       | Not applicable (ARVIS is not reward-driven)  |
 | LLM    | Hallucination, unsafe output, incoherence     | Gate blocks + W(t) bounds                    |
-| ARVIS  | Domain violation, perturbation overflow, estimator error | Explicitly characterized (M12)               |
+| ARVIS  | Domain violation, perturbation overflow, estimator error | Explicitly characterized (M13)               |
 
 ## 12. Theoretical Guarantee Summary (ARVIS on LLM Systems)
 

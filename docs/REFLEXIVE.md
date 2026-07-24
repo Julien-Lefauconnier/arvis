@@ -89,6 +89,17 @@ reflexive/snapshot/
 
 ---
 
+#### Serialization contract (a15)
+
+The snapshot serializes the cognitive state structurally: dataclass
+trees, enums, tuples and datetimes render canonically. A live object
+with no serialization contract (the in-state signal journal, an
+observer) surfaces as a deterministic opaque marker
+(`<unserialized:TypeName>`), never as an exception: the nominal run
+path always produces the reflexive payload and its attestation
+(audit a14, A14-P1-01). The curated timeline exposure goes through the
+role-filtered `timeline_views` channel, never through the raw state.
+
 ### 2. Introspection Services
 
 Structured introspection of specific domains.

@@ -88,7 +88,9 @@ where:
 3. $W_t$ is the composite Lyapunov energy,
 4. $\widehat{\kappa}_{\mathrm{eff}}(t)$ is the smoothed adaptive contraction estimate.
 
-This pipeline is now implemented and empirically exercised in the runtime validation stack.
+This pipeline is implemented. The projection layer it feeds carries
+offline Phase A evidence (M3 appendix, `tests/math/`); its runtime
+empirical validation is the planned M10 protocol, not yet executed.
 
 ---
 

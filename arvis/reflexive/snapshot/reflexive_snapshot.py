@@ -1,7 +1,9 @@
 # arvis/reflexive/snapshot/reflexive_snapshot.py
 
+import dataclasses
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from typing import Any
 
 from arvis.reflexive.core.reflexive_mode_registry import (
@@ -56,13 +58,39 @@ class ReflexiveSnapshot:
         if hasattr(value, "to_dict"):
             return value.to_dict()
 
+        # A14-P1-01: the real CognitiveState is a tree of plain
+        # dataclasses; serialize field by field through this same
+        # method so nested specials stay covered. Before this branch,
+        # the state travelled as a live object and the attestation's
+        # json.dumps raised, silently degrading reflexive to None.
+        if dataclasses.is_dataclass(value) and not isinstance(value, type):
+            return {
+                field.name: self._safe_serialize(getattr(value, field.name))
+                for field in dataclasses.fields(value)
+            }
+
+        if isinstance(value, Enum):
+            return self._safe_serialize(value.value)
+
+        if isinstance(value, datetime):
+            return value.isoformat()
+
         if isinstance(value, dict):
             return {k: self._safe_serialize(v) for k, v in value.items()}
 
-        if isinstance(value, list):
+        if isinstance(value, (list, tuple)):
             return [self._safe_serialize(v) for v in value]
 
-        return value
+        if isinstance(value, (str, int, float, bool)):
+            return value
+
+        # Final net: a live object with no serialization contract (the
+        # in-state SignalJournal, an observer, a lock holder) surfaces
+        # as a deterministic opaque marker. The reflexive payload states
+        # the structure without exposing live internals; the curated
+        # timeline exposure goes through the role-filtered
+        # timeline_views channel, never through the raw state.
+        return f"<unserialized:{type(value).__qualname__}>"
 
     def _build_explanation(self) -> dict[str, Any]:
         # Deprecated: explanation now built upstream in builder
