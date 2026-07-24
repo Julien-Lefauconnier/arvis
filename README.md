@@ -319,7 +319,7 @@ Included examples:
 5. Tool governance
 6. Finance risk screening
 8. Timeline audit trail
-9. Batch decision engine
+9. Multi-engine hosting (one engine per governed turn)
 10. Runtime inspection
 
 See: `examples/README.md`

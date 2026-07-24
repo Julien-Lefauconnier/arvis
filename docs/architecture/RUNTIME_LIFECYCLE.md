@@ -1,6 +1,6 @@
 # Runtime lifecycle, state and concurrency
 
-Status: contract documentation updated for `0.1.0a11`. Shared-runtime
+Status: contract documentation, current as of `0.1.0a16`. Shared-runtime
 enforcement remains backlog (P2). This document closes the documentation side of audit
 findings F-022 (unbounded runtime state) and F-023 (implicit concurrency
 model) by making the supported usage pattern explicit.

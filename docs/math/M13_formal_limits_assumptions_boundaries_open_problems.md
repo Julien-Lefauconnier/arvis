@@ -19,9 +19,9 @@ It enforces scientific honesty by defining the **non-claims** as rigorously as t
 
 | Layer     | Role                                      | Nature                     |
 |-----------|-------------------------------------------|----------------------------|
-| M0-M9     | Formal system definition + core results  | Theoretical / proven       |
+| M0-M9     | Formal system definition + core results  | Conditional results and proof skeletons |
 | M10       | Empirical validation protocol             | Protocol, planned (not yet executed) |
-| M11-M12   | Projection-control operator, decision lattice | Theoretical / proven   |
+| M11-M12   | Projection-control operator, decision lattice | Conditional results and proof skeletons |
 | M13       | Limits, non-claims & open problems        | Critical boundary analysis (this document) |
 
 ## 3. Fundamental Limitation Principle

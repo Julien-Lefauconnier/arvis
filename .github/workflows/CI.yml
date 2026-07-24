@@ -46,10 +46,9 @@ jobs:
         run: mypy arvis --strict
 
       - name: Dependency audit
-        # Known vulnerabilities in the resolved dependency set. Advisory-only
-        # for now: it reports without failing the job, so a fresh advisory on a
-        # transitive dependency does not block unrelated work. Tighten to a
-        # hard failure once the dev lockfile lands.
+        # Known vulnerabilities in the resolved dependency set. Blocking
+        # since a14 (audit a13, P1-03): the environment is locked, so a
+        # failure here is actionable, never noise from unrelated work.
         run: |
           pip install pip-audit==2.10.1
           # Blocking (audit a13, P1-03). Exceptions, if ever needed, are

@@ -806,7 +806,7 @@ This provides a direct design rule: faster switching reduces the admissible adap
 
 ## Numerical Illustration
 
-We illustrate the theoretical results through numerical experiments. Four complementary figures are provided:
+The theoretical results are to be illustrated through numerical experiments. Four complementary figures are planned (not yet produced or versioned in this repository):
 
 1. Stability region in the parameter plane $(\eta,\tau_d)$
 2. Evolution of the composite Lyapunov energy
