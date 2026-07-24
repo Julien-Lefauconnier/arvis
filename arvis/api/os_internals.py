@@ -152,22 +152,38 @@ class CognitiveOSInternals:
         commitment can exist, and the view says so by construction.
         """
         if not self.config.enable_trace:
-            return self._minimal_result_view(result)
+            return self._minimal_result_view(
+                result, self.config.audit_commitment_policy
+            )
 
         # trace mode normal
         if state is not None:
             return self._build_trace_result(state, result)
 
         # fallback fake executors/tests
-        return self._minimal_result_view(result)
+        return self._minimal_result_view(result, self.config.audit_commitment_policy)
 
     @staticmethod
-    def _minimal_result_view(result: Any) -> CognitiveResultView:
+    def _minimal_result_view(
+        result: Any, policy: AuditCommitmentPolicy
+    ) -> CognitiveResultView:
+        """Minimal no-trace view, in contract (audit a16, blocker 1).
+
+        With enable_trace=False no commitment can exist; the view says
+        so explicitly instead of falling back to out-of-contract
+        defaults: it carries the policy actually configured, the reason
+        trace_disabled, and the F-015 degradation semantics (REQUIRED
+        is already rejected at config construction; DEGRADED marks the
+        absence, OPTIONAL tolerates it).
+        """
         return CognitiveResultView(
             decision=getattr(result, "action_decision", None),
             stability=None,
             stability_view=None,
             trace=None,
+            commitment_policy=policy.value,
+            commitment_reason="trace_disabled",
+            commitment_degraded=policy is AuditCommitmentPolicy.DEGRADED,
         )
 
     def _run_single(

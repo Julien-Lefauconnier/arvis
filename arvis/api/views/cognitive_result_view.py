@@ -61,9 +61,23 @@ class CognitiveResultView:
     # F-015: audit commitment accounting. Absence of a commitment is
     # never silent: applied policy, reason code when missing, and an
     # explicit degradation flag under the DEGRADED policy.
-    commitment_policy: str | None = None
+    # a17 (audit a16, blocker 1): the applied policy is part of the
+    # serialized contract; a view carrying anything but a valid policy
+    # value cannot exist (see __post_init__).
+    commitment_policy: str = AuditCommitmentPolicy.DEGRADED.value
     commitment_reason: str | None = None
     commitment_degraded: bool = False
+
+    def __post_init__(self) -> None:
+        """Contract invariants at construction (a17): the serialized
+        schema is closed over commitment_policy, so an out-of-contract
+        view must be impossible to build, not merely untested."""
+        valid = {policy.value for policy in AuditCommitmentPolicy}
+        if self.commitment_policy not in valid:
+            raise ValueError(
+                "commitment_policy must be one of "
+                f"{sorted(valid)}, got {self.commitment_policy!r}"
+            )
 
     @staticmethod
     def from_state(

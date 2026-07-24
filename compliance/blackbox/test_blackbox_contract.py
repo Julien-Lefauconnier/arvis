@@ -66,6 +66,24 @@ def test_runs_against_an_installed_distribution_when_required() -> None:
     )
 
 
+def test_no_trace_result_conforms_to_the_shipped_schema() -> None:
+    """a17 (audit a16, blocker 1): the public no-trace path used to
+    emit a payload the shipped schema rejected; the wheel must prove
+    every public result path conforms, this one included."""
+    import jsonschema
+
+    from arvis import CognitiveOS, CognitiveOSConfig
+    from arvis.api.contracts.result_schema import load_result_schema
+
+    payload = (
+        CognitiveOS(CognitiveOSConfig(enable_trace=False))
+        .run("blackbox", "hello")
+        .to_dict()
+    )
+    jsonschema.Draft202012Validator(load_result_schema()).validate(payload)
+    assert payload["commitment_reason"] == "trace_disabled"
+
+
 def test_serialized_result_conforms_to_the_shipped_schema() -> None:
     """A15-BETA-01: the consumer contract is validated from the
     installed package: the schema a consumer loads from the wheel

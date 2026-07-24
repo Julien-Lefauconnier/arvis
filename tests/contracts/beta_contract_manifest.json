@@ -325,8 +325,8 @@
             "type": "bool"
           },
           "commitment_policy": {
-            "default": "None",
-            "type": "str | None"
+            "default": "'degraded'",
+            "type": "str"
           },
           "commitment_reason": {
             "default": "None",
@@ -375,7 +375,7 @@
         },
         "kind": "dataclass",
         "methods": {
-          "__init__": "(self, decision: ActionDecision | None, stability: Any, stability_view: StabilityView | None, trace: Any, trace_view: DecisionTraceView | None = None, timeline: Any | None = None, timeline_view: TimelineView | None = None, timeline_commitment: str | None = None, global_commitment: str | None = None, _ir: dict[str, Any] | None = None, reflexive: dict[str, Any] | None = None, execution_view: ExecutionTraceView | None = None, commitment_policy: str | None = None, commitment_reason: str | None = None, commitment_degraded: bool = False) -> None",
+          "__init__": "(self, decision: ActionDecision | None, stability: Any, stability_view: StabilityView | None, trace: Any, trace_view: DecisionTraceView | None = None, timeline: Any | None = None, timeline_view: TimelineView | None = None, timeline_commitment: str | None = None, global_commitment: str | None = None, _ir: dict[str, Any] | None = None, reflexive: dict[str, Any] | None = None, execution_view: ExecutionTraceView | None = None, commitment_policy: str = 'degraded', commitment_reason: str | None = None, commitment_degraded: bool = False) -> None",
           "explain": "(self) -> str",
           "from_state": "(state: CognitiveState, result: Any, *, commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, commitment_inputs: dict[str, Any] | None = None, commitment_inputs_reason: str | None = None) -> CognitiveResultView",
           "pretty": "(self) -> str",
@@ -1290,8 +1290,8 @@
           "type": "bool"
         },
         "commitment_policy": {
-          "default": "None",
-          "type": "str | None"
+          "default": "'degraded'",
+          "type": "str"
         },
         "commitment_reason": {
           "default": "None",
@@ -1340,7 +1340,7 @@
       },
       "kind": "dataclass",
       "methods": {
-        "__init__": "(self, decision: ActionDecision | None, stability: Any, stability_view: StabilityView | None, trace: Any, trace_view: DecisionTraceView | None = None, timeline: Any | None = None, timeline_view: TimelineView | None = None, timeline_commitment: str | None = None, global_commitment: str | None = None, _ir: dict[str, Any] | None = None, reflexive: dict[str, Any] | None = None, execution_view: ExecutionTraceView | None = None, commitment_policy: str | None = None, commitment_reason: str | None = None, commitment_degraded: bool = False) -> None",
+        "__init__": "(self, decision: ActionDecision | None, stability: Any, stability_view: StabilityView | None, trace: Any, trace_view: DecisionTraceView | None = None, timeline: Any | None = None, timeline_view: TimelineView | None = None, timeline_commitment: str | None = None, global_commitment: str | None = None, _ir: dict[str, Any] | None = None, reflexive: dict[str, Any] | None = None, execution_view: ExecutionTraceView | None = None, commitment_policy: str = 'degraded', commitment_reason: str | None = None, commitment_degraded: bool = False) -> None",
         "explain": "(self) -> str",
         "from_state": "(state: CognitiveState, result: Any, *, commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, commitment_inputs: dict[str, Any] | None = None, commitment_inputs_reason: str | None = None) -> CognitiveResultView",
         "pretty": "(self) -> str",
