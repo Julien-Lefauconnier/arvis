@@ -19,7 +19,7 @@ input:
     lyapunov_compatibility_ok: true
     margin_to_boundary: 1.5
     local_lipschitz_estimate: 0.8
-    noise_gain_estimate: 0.0
+    noise_gain_estimate: null
     certification_level: NONE
     checks_detail: {}
 

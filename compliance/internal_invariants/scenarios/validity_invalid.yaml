@@ -1,4 +1,4 @@
-id: projection_invalid
+id: validity_invalid
 
 input:
   numeric_signals:
@@ -8,5 +8,5 @@ expected:
   gate:
     verdict: ABSTAIN
 
-  projection:
-    available: false
+  validity:
+    valid: false

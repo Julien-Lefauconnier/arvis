@@ -7,6 +7,10 @@ import pytest
 from arvis.cognition.projection.projection_api import Observation, project_observation
 from tests.fixtures.projection_cases import boundary_case, nominal_case
 
+# Deterministic perturbations (audit a13, BETA-04): the corpus these
+# tests validate must be reproducible bit-for-bit across runs.
+_RNG = random.Random(20260724)
+
 
 def perturb_observation(obs: Observation, epsilon: float) -> Observation:
     perturbed = {}
@@ -16,7 +20,7 @@ def perturb_observation(obs: Observation, epsilon: float) -> Observation:
             base = float(v)
         except Exception:
             base = 0.0
-        perturbed[k] = base + random.uniform(-epsilon, epsilon)
+        perturbed[k] = base + _RNG.uniform(-epsilon, epsilon)
 
     return Observation(
         numeric_signals=perturbed,

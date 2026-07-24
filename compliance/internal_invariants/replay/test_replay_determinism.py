@@ -1,7 +1,7 @@
 # compliance/replay/test_replay_determinism.py
 
-from compliance.helpers import replay_from_ir, run_ctx
-from compliance.scenarios.builders import build_nominal_context
+from compliance.internal_invariants.helpers import replay_from_ir, run_ctx
+from compliance.internal_invariants.scenarios.builders import build_nominal_context
 
 
 def test_replay_is_deterministic():

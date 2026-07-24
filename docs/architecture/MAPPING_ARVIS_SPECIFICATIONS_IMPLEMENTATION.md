@@ -105,7 +105,7 @@ Computed under partial observability and fallback-compatible. Introduces robust 
 
 `ctx.delta_w_history`  
 Used for:
-- empirical stability monitoring (M10)
+- empirical stability monitoring (M10 protocol, planned; not yet executed)
 - global stability guards
 
 ## 3. Switching Stability (Result ↔ Runtime)
@@ -262,7 +262,7 @@ The ARVIS implementation:
 -  preserves the theoretical stability core
 - ✔ introduces a decision lattice enforcing safety constraints
 - ✔ integrates energy and structural stability
-- ✔ provides empirically validated behavior (M10)
+- prepares runtime empirical validation (M10 protocol, planned; the projection layer itself is validated offline per the M3 appendix)
 
 **Final Insight**
 

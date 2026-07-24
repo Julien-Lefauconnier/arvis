@@ -3,9 +3,9 @@
 import pytest
 
 from arvis.ir.gate import CognitiveGateVerdictIR
-from compliance.helpers import run_ctx
-from compliance.scenarios.builders import build_context_from_yaml
-from compliance.scenarios.loader import load_scenario
+from compliance.internal_invariants.helpers import run_ctx
+from compliance.internal_invariants.scenarios.builders import build_context_from_yaml
+from compliance.internal_invariants.scenarios.loader import load_scenario
 
 SCENARIOS = [
     "validity_invalid",

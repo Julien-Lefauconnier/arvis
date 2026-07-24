@@ -99,7 +99,7 @@ $$
 $$
 
 (Phase A, documented in M3), where:
-- the projection $\Pi$ is empirically bounded, locally Lipschitz, noise-robust, switching-stable away from boundaries, and Lyapunov-compatible,
+- the projection $\Pi$ is empirically bounded, locally Lipschitz, noise-robust, switching-stable away from boundaries, and Lyapunov-compatible, as validated offline on the deterministic fixture corpus of Phase A (`M3_appendix_projection_validation.md`, suite under `tests/math/`); at runtime, the noise robustness and mode stability axes are not assessed (see `VERSIONING.md`, guarantee scope),
 - perturbations are bounded ($\lVert w_t \rVert \leq \bar{w}$),
 - assumptions A1–A15 (M1) are taken as granted on this domain (they are not all monitored at runtime).
 

@@ -116,7 +116,14 @@ def build_context_from_yaml(data):
             lyapunov_compatibility_ok=bool(proj.get("lyapunov_compatibility_ok", True)),
             margin_to_boundary=float(proj.get("margin_to_boundary", 1.0)),
             local_lipschitz_estimate=float(proj.get("local_lipschitz_estimate", 1.0)),
-            noise_gain_estimate=float(proj.get("noise_gain_estimate", 0.0)),
+            # Faithful to the a13+ runtime: no noise estimator exists, so
+            # the validator always emits None here; a synthetic scenario
+            # must not fabricate a value the runtime never produces.
+            noise_gain_estimate=(
+                float(proj["noise_gain_estimate"])
+                if proj.get("noise_gain_estimate") is not None
+                else None
+            ),
             certification_level=level,
             checks_detail=proj.get("checks_detail", {}),
         )

@@ -56,7 +56,7 @@ There exists a non-empty subset $\mathcal{O}_{\text{valid}} \subset \mathcal{O}$
 4. Switching signal $q_t = \Pi_q(o_t)$ is stable away from mode boundaries
 5. The composite Lyapunov candidate $W(x,z)$ is well-defined and positive definite on the image of $\Pi$
 
-These properties are **empirically validated** on a deterministic fixture corpus (see M3_projection_validated_domain.md).  
+These properties are **empirically validated offline** on a deterministic fixture corpus (Phase A, see `M3_appendix_projection_validation.md`; deterministic suite under `tests/math/`). At runtime, noise robustness and mode stability are not assessed (see `VERSIONING.md`, guarantee scope).  
 **No global properties** (global Lipschitz, injectivity, full domain coverage) are claimed.
 
 ---

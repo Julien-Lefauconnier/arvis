@@ -8,9 +8,13 @@ import pytest
 from arvis.cognition.projection.projection_api import project_observation
 from tests.fixtures.projection_cases import nominal_case
 
+# Deterministic perturbations (audit a13, BETA-04): the corpus these
+# tests validate must be reproducible bit-for-bit across runs.
+_RNG = random.Random(20260724)
+
 
 def add_noise(value: float, scale: float) -> float:
-    return value + random.uniform(-scale, scale)
+    return value + _RNG.uniform(-scale, scale)
 
 
 def noisy_observation(obs, noise_scale):

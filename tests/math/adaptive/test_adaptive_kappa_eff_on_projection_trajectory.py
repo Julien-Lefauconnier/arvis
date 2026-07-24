@@ -13,6 +13,10 @@ from tests.math.test_projection_real_lyapunov_compatibility import (
     _symbolic_state_from_mode,
 )
 
+# Deterministic perturbations (audit a13, BETA-04): the corpus these
+# tests validate must be reproducible bit-for-bit across runs.
+_RNG = random.Random(20260724)
+
 
 def _generate_projection_trajectory(
     base_obs: Observation, steps: int = 80, noise: float = 0.015
@@ -23,7 +27,7 @@ def _generate_projection_trajectory(
         prev = trajectory[-1]
         nxt = Observation(
             numeric_signals={
-                k: float(v) + random.uniform(-noise, noise)
+                k: float(v) + _RNG.uniform(-noise, noise)
                 for k, v in prev.numeric_signals.items()
             },
             structured_signals=prev.structured_signals,
