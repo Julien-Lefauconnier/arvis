@@ -18,4 +18,7 @@ def test_root_api_is_minimal():
         # the configuration-building family like AuditCommitmentPolicy.
         "RuntimeMode",
         "TrustedRuntimeControls",
+        # a16 lot 2 (A15-BETA-02): the consumer-facing verification of
+        # the reflexive attestation is part of the promised surface.
+        "verify_reflexive_attestation",
     }

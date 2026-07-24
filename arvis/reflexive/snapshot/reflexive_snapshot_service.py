@@ -55,7 +55,6 @@ class ReflexiveSnapshotService:
         )
 
         rendered: dict[str, Any] = snapshot.to_dict()
-        rendered["exposed_views"] = list(rendered.get("timeline_views", {}).keys())
 
         attestation = ReflexiveAttestation.from_rendered_payload(rendered)
 

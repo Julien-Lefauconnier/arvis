@@ -8,6 +8,7 @@ Only stable high-level entrypoints are exposed here.
 from .api.audit import AuditCommitmentPolicy
 from .api.engine import ArvisEngine
 from .api.os import CognitiveOS, CognitiveOSConfig
+from .api.reflexive import verify_reflexive_attestation
 from .api.runtime_controls import TrustedRuntimeControls
 from .api.runtime_mode import RuntimeMode
 from .api.version import PACKAGE_VERSION
@@ -25,4 +26,5 @@ __all__ = [
     "DecisionStatus",
     "RuntimeMode",
     "TrustedRuntimeControls",
+    "verify_reflexive_attestation",
 ]

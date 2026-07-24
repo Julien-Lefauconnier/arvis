@@ -89,6 +89,22 @@ reflexive/snapshot/
 
 ---
 
+#### Attestation contract (a16)
+
+The final public payload verifies its own attestation directly:
+`arvis.verify_reflexive_attestation(result.reflexive)` recomputes the
+fingerprint from the payload exactly as exposed and compares it to the
+published one. The canonicalization is versioned (`canon_version` in
+the attestation): the `attestation` key is excluded from its own
+fingerprint, `generated_at`, `mode`, `exposed_views` and
+`timeline_views` are removed from the body, timeline views are
+re-attested filtered to the exposed set, `exposed_views` is attested
+sorted, and the source is hashed as compact sorted-keys JSON with
+SHA-256. `deterministic` means the fingerprint is a pure function of
+that canonical source; identity across separate runs is not claimed,
+because the attested state legitimately carries decision timestamps
+(`generated_at` is the only top-level volatile field and is excluded).
+
 #### Serialization contract (a15)
 
 The snapshot serializes the cognitive state structurally: dataclass

@@ -2,8 +2,21 @@
 
 from typing import Any
 
+from arvis.reflexive.attestation.reflexive_attestation import ReflexiveAttestation
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
 from arvis.reflexive.snapshot.reflexive_snapshot_service import ReflexiveSnapshotService
+
+
+def verify_reflexive_attestation(payload: dict[str, Any]) -> bool:
+    """Verify a reflexive payload against its embedded attestation.
+
+    The consumer-facing entry point (beta contract, a16): takes the
+    ``result.reflexive`` dict exactly as exposed and returns True only
+    if the recomputed fingerprint matches the published one under the
+    documented canonicalization (see ReflexiveAttestation). Fail-closed
+    on any malformed or altered payload.
+    """
+    return ReflexiveAttestation.verify(payload)
 
 
 def get_reflexive_snapshot(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 from copy import deepcopy
 from dataclasses import dataclass
@@ -10,11 +11,35 @@ from typing import Any
 
 from arvis.reflexive.core.reflexive_mode import ReflexiveMode
 
+# Version of the canonicalization rule below. A consumer reading
+# canon_version from an attestation knows exactly which transformation
+# reproduces the fingerprint (audit a15, A15-BETA-02).
+ATTESTATION_CANON_VERSION = "1.0"
+
 
 @dataclass(frozen=True)
 class ReflexiveAttestation:
-    """
-    Reflexive surface attestation.
+    """Reflexive surface attestation (canonicalization 1.0).
+
+    The fingerprint is computed from the rendered payload after a
+    documented, versioned canonicalization:
+
+    - the ``attestation`` key is removed: the attestation is excluded
+      from its own fingerprint, so the final public payload verifies
+      directly (A15-BETA-02);
+    - the volatile ``generated_at`` and the derived ``mode``,
+      ``exposed_views`` and ``timeline_views`` keys are removed from
+      the payload body;
+    - ``timeline_views`` is re-attested filtered to ``exposed_views``
+      only, and ``exposed_views`` is attested sorted;
+    - the source is JSON-serialized with sorted keys and compact
+      separators, then hashed with SHA-256.
+
+    ``deterministic`` means the fingerprint is a pure function of that
+    canonical source: no salt, no randomness. Identity across separate
+    runs is NOT claimed: the attested state legitimately carries
+    decision timestamps. ``immutability`` is true of this object: every
+    field is immutable (the view names are a tuple).
     """
 
     type: str
@@ -23,8 +48,9 @@ class ReflexiveAttestation:
     immutability: bool
     deterministic: bool
     mode: ReflexiveMode
-    exposed_views: list[str]
+    exposed_views: tuple[str, ...]
     fingerprint: str
+    canon_version: str = ATTESTATION_CANON_VERSION
 
     @classmethod
     def from_rendered_payload(
@@ -58,6 +84,10 @@ class ReflexiveAttestation:
             k: v for k, v in timeline_views_all.items() if k in exposed_views
         }
 
+        # The attestation is excluded from its own fingerprint: the
+        # canonical source of a final payload and of the pre-attestation
+        # rendering are identical (A15-BETA-02).
+        payload.pop("attestation", None)
         payload.pop("generated_at", None)
         payload.pop("mode", None)
         payload.pop("exposed_views", None)
@@ -78,9 +108,29 @@ class ReflexiveAttestation:
             immutability=True,
             deterministic=True,
             mode=mode,
-            exposed_views=exposed_views,
+            exposed_views=tuple(exposed_views),
             fingerprint=fingerprint,
         )
+
+    @classmethod
+    def verify(cls, rendered_payload: dict[str, Any]) -> bool:
+        """Verify a final public payload against its embedded attestation.
+
+        Recomputes the fingerprint from the payload as exposed, with no
+        implicit transformation, and compares it to the embedded one.
+        Fail-closed: any malformed or altered payload returns False.
+        """
+        try:
+            embedded = rendered_payload.get("attestation")
+            if not isinstance(embedded, dict):
+                return False
+            published = embedded.get("fingerprint")
+            if not isinstance(published, str):
+                return False
+            recomputed = cls.from_rendered_payload(rendered_payload)
+            return hmac.compare_digest(recomputed.fingerprint, published)
+        except (TypeError, ValueError, KeyError):
+            return False
 
     @staticmethod
     def _compute_fingerprint(source: dict[str, Any]) -> str:
@@ -100,6 +150,7 @@ class ReflexiveAttestation:
             "immutability": self.immutability,
             "deterministic": self.deterministic,
             "mode": self.mode.value,
-            "exposed_views": self.exposed_views,
+            "exposed_views": list(self.exposed_views),
             "fingerprint": self.fingerprint,
+            "canon_version": self.canon_version,
         }

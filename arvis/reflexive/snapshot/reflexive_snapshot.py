@@ -32,15 +32,20 @@ class ReflexiveSnapshot:
         mode = ReflexiveModeRegistry.resolve(
             snapshot=self,
         )
+        public_views = {
+            key: self._safe_serialize(view)
+            for key, view in self.timeline_views.items()
+            if hasattr(view, "role") and self._is_public_role(view.role)
+        }
         return {
             "mode": mode.value,
             "capabilities": self._safe_serialize(self.capabilities),
             "cognitive_state": self._safe_serialize(self.cognitive_state),
-            "timeline_views": {
-                key: self._safe_serialize(view)
-                for key, view in self.timeline_views.items()
-                if hasattr(view, "role") and self._is_public_role(view.role)
-            },
+            "timeline_views": public_views,
+            # a16 (A15-BETA-02): the final public payload natively
+            # carries every parameter its attestation needs; a consumer
+            # never reconstructs inputs from the attestation itself.
+            "exposed_views": sorted(public_views),
             "introspection": self._safe_serialize(self.introspection),
             # ----------------------------------------
             # Use canonical pre-built explanations

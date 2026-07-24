@@ -1397,6 +1397,10 @@
         "__init__": "(self, force_tool: str | None = None, force_execution: bool = False, force_safe_projection: bool = False, force_safe_switching: bool = False) -> None"
       },
       "properties": {}
+    },
+    "verify_reflexive_attestation": {
+      "kind": "function",
+      "signature": "(payload: dict[str, typing.Any]) -> builtins.bool"
     }
   }
 }
