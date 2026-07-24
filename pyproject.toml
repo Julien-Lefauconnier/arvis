@@ -50,7 +50,9 @@ dependencies = [
   "jsonschema>=4.26",
   "pyyaml>=6.0.3",
   "pydantic>=2.8,<3",
-  "numpy>=2.4",
+  # numpy 2.4.0 was yanked from the index; 2.4.1 is the lowest
+  # installable revision of the proven series (audit a15, 7.4).
+  "numpy>=2.4.1",
 ]
 
 [project.optional-dependencies]
