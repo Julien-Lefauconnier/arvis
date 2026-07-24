@@ -56,7 +56,7 @@ dev = [
   # Bumping any pin is a deliberate, dedicated commit (re-format if ruff).
   "mypy==1.19.1",
   "ruff==0.14.3",
-  "pytest==8.4.2",
+  "pytest==9.1.1",
   "bandit==1.9.4",
   # Plugins pinned with the gate lockfile (audit a13, P1-03): the full
   # transitive environment is frozen in requirements/gate.lock, and CI
