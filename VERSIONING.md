@@ -31,6 +31,30 @@ path's internal services are deliberately absent from it.
 
 Importing an internal module is allowed. Depending on its stability is not.
 
+## The host integration surface is `arvis.host_api`
+
+A host (the application embedding arvis) integrates the kernel through
+`arvis.host_api`: twelve capability modules (engine, access, services, vfs,
+tools, memory, knowledge, conversation, cognition, control, llm, telemetry)
+that re-export the symbols a host legitimately consumes. Symbols stay defined
+where they live; `host_api` pins the import paths and carries the
+compatibility promise, versioned by `HOST_API_VERSION` independently of the
+package version.
+
+Two stability levels, per module:
+
+- **stable** (every module not listed in `PROVISIONAL_MODULES`): covered by
+  the beta compatibility promise and the deprecation window below; the
+  surface is frozen both ways by `tests/contracts/test_host_api_surface.py`
+  (a removal and a silent addition both fail CI);
+- **provisional** (currently `control` only): tracks the most active research
+  area of the kernel; its surface may change in a minor release with a
+  changelog entry and no deprecation window.
+
+Deep imports of internal modules remain possible and remain internal: a host
+that bypasses `host_api` is depending on surfaces that may change in any
+release.
+
 ## Deprecation window
 
 From beta onwards, a name in the public API is removed in two steps:
