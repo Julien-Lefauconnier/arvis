@@ -189,20 +189,6 @@ class CognitiveOSInternals:
         )
         return self._format_run_output(state, result)
 
-    def _run_batch(
-        self,
-        inputs: list[Any],
-        *,
-        user_id: str,
-    ) -> list[CognitiveResultView | dict[str, Any]]:
-        return [
-            self._run_single(
-                user_id=user_id,
-                cognitive_input=cognitive_input,
-            )
-            for cognitive_input in inputs
-        ]
-
     def _export_ir(
         self,
         state: CognitiveState,

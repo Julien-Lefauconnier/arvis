@@ -292,7 +292,6 @@ run(...)
 run_ir(...)
 replay(...)
 inspect(...)
-run_multi(...)
 register_tool(...)
 ```
 

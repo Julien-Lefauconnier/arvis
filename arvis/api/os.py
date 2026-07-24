@@ -380,21 +380,6 @@ class CognitiveOS(CognitiveOSInternals):
         }
 
     # -------------------------------------------------
-    # Multi-run
-    # -------------------------------------------------
-    def run_multi(
-        self,
-        inputs: list[Any],
-        *,
-        user_id: str = "multi",
-    ) -> list[CognitiveResultView | dict[str, Any]]:
-        self._ensure_production_ready()
-        return self._run_batch(
-            inputs=inputs,
-            user_id=user_id,
-        )
-
-    # -------------------------------------------------
     # Properties
     # -------------------------------------------------
     @property

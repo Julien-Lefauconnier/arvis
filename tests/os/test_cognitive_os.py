@@ -125,26 +125,6 @@ def test_runtime_adapter_injection():
 
 
 # =====================================================
-# MULTI AGENT
-# =====================================================
-
-
-def test_multi_agent_run():
-    os = CognitiveOS()
-
-    inputs = [
-        {"text": "hello"},
-        {"text": "world"},
-    ]
-
-    results = os.run_multi(inputs)
-
-    assert len(results) == 2
-    for r in results:
-        assert r.decision is not None
-
-
-# =====================================================
 # INSPECT API
 # =====================================================
 

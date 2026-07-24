@@ -1,7 +1,7 @@
 
 # ARVIS Examples
 
-Production-ready examples showing how ARVIS governs decisions, tools, memory, replayability, runtime controls, and auditability.
+Runnable examples showing how ARVIS governs decisions, tools, memory, replayability, runtime controls, and auditability.
 
 Run any example:
 
@@ -57,7 +57,7 @@ Default quickstart output:
 ```text
 === ARVIS Quickstart ===
 
-Status         : BLOCKED
+Status         : REQUIRES_CONFIRMATION
 Approval Need  : YES
 Reason         : execution_blocked
 Commitment     : 4ee297032d4aa02b...
@@ -66,6 +66,10 @@ Trace          : Available
 Structured Output:
 { compact machine-readable payload }
 ```
+
+A bare text prompt is governed with a minimal projection and lands in
+REQUIRES_CONFIRMATION; an explicit high `risk` payload (see the advanced
+runtime API above) is BLOCKED before execution.
 
 ---
 
@@ -81,7 +85,7 @@ Structured Output:
 | `05_tool_authorization.py`      | Tool authorization + capability manifest (sovereignty/egress/consent) |
 | `06_finance_risk_screening.py`  | Trade / risk pre-execution controls          |
 | `08_timeline_audit.py`          | Hash-linked timeline commitments             |
-| `09_multi_run_batch.py`         | Batch decision processing at scale           |
+| `09_multi_engine_hosting.py`    | One engine per unit of work (host-side parallelism) |
 | `10_runtime_inspection.py`      | Production observability & inspection        |
 
 ---
@@ -116,7 +120,7 @@ If you're new to ARVIS:
 Examples are intentionally concise and executive-readable:
 
 ```text
-Status         : BLOCKED
+Status         : REQUIRES_CONFIRMATION
 Approval Need  : YES
 Reason         : execution_blocked
 Commitment     : 8642d95cfdb73c16...

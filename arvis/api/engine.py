@@ -89,10 +89,6 @@ class ArvisEngine:
             **kwargs,
         )
 
-    def run_multi(self, *args: Any, **kwargs: Any) -> Any:
-        """Execute multiple requests."""
-        return self._os.run_multi(*args, **kwargs)
-
     # -------------------------------------------------
     # IR / Replay
     # -------------------------------------------------

@@ -78,7 +78,11 @@ The security-only slice is available as
 `bash scripts/run_quality_gate.sh security`; Bandit fails on medium- or
 high-severity findings.
 
-PyPI (`pip install arvis`) is planned once the alpha stabilizes.
+Alpha releases are published on PyPI:
+
+```bash
+pip install arvis
+```
 
 ```python
 from arvis import ArvisEngine
@@ -118,9 +122,18 @@ Commitment    : 8642d95cfdb73c16...
 
 > Note (0.1.0-alpha): the gate grades an explicit top-level `risk` scalar —
 > low → ALLOWED, medium → REQUIRES_CONFIRMATION, high → BLOCKED (see
-> `examples/09_multi_run_batch.py`). This risk policy applies only to an
+> `examples/09_multi_engine_hosting.py`). This risk policy applies only to an
 > explicit `risk` field; a bare text prompt is governed with a minimal
 > projection (REQUIRES_CONFIRMATION), not a full natural-language projection.
+
+### Engine lifecycle
+
+One engine executes one governed run at a time; an engine instance is not
+thread-safe. Parallelism belongs to the host: create one engine per unit of
+work (a request, a workload, a tenant). Engines in the same process are
+isolated by construction; the guarantee is tested in
+`tests/api/test_multi_instance_isolation.py` and the hosting pattern is shown
+in `examples/09_multi_engine_hosting.py`.
 
 ---
 
