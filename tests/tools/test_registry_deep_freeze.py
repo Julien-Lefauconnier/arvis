@@ -170,9 +170,10 @@ def test_internal_mutation_of_the_capture_refuses_the_governed_read():
     reg, _spec = _registered(_schema(required=["x"]))
     reg.freeze()
 
-    governed = reg.verified_spec("spec_tool")
-    assert governed is not None
-    governed.input_schema["required"] = ["y"]
+    # Simulate an INTERNAL bug mutating the private capture: since the
+    # a15 fix, no reference handed out by the registry can reach it, so
+    # the only remaining vector is the private attribute itself.
+    reg._captured["spec_tool"].spec.input_schema["required"] = ["y"]
 
     with pytest.raises(ArvisSecurityError, match="diverged from the frozen"):
         reg.verified_spec("spec_tool")
@@ -181,9 +182,10 @@ def test_internal_mutation_of_the_capture_refuses_the_governed_read():
 def test_policy_evaluator_refuses_a_diverged_surface():
     reg, _spec = _registered(_schema(required=["x"]))
     reg.freeze()
-    governed = reg.verified_spec("spec_tool")
-    assert governed is not None
-    governed.output_schema["injected"] = True
+    # Simulate an INTERNAL bug mutating the private capture: since the
+    # a15 fix, no reference handed out by the registry can reach it, so
+    # the only remaining vector is the private attribute itself.
+    reg._captured["spec_tool"].spec.output_schema["injected"] = True
 
     decision = ToolPolicyEvaluator.evaluate(
         ToolInvocation(
@@ -207,9 +209,10 @@ def test_authorization_service_refuses_a_diverged_surface():
 
     reg, _spec = _registered(_schema(required=["x"]))
     reg.freeze()
-    governed = reg.verified_spec("spec_tool")
-    assert governed is not None
-    governed.input_schema["required"] = ["y"]
+    # Simulate an INTERNAL bug mutating the private capture: since the
+    # a15 fix, no reference handed out by the registry can reach it, so
+    # the only remaining vector is the private attribute itself.
+    reg._captured["spec_tool"].spec.input_schema["required"] = ["y"]
 
     service = ToolAuthorizationService(
         reg, consent_gate=None, egress_gate=None, require_gates=False
@@ -233,9 +236,10 @@ def test_effect_dispatcher_refuses_a_diverged_surface_pre_effect():
 
     reg, _spec = _registered(_schema(required=["x"]))
     reg.freeze()
-    governed = reg.verified_spec("spec_tool")
-    assert governed is not None
-    governed.input_schema["required"] = ["y"]
+    # Simulate an INTERNAL bug mutating the private capture: since the
+    # a15 fix, no reference handed out by the registry can reach it, so
+    # the only remaining vector is the private attribute itself.
+    reg._captured["spec_tool"].spec.input_schema["required"] = ["y"]
 
     dispatcher = EffectDispatcher(reg, SimpleNamespace())
     ctx = SimpleNamespace()
@@ -255,7 +259,7 @@ def test_effect_dispatcher_refuses_a_diverged_surface_pre_effect():
     assert ctx._tool_failure is True
 
 
-def test_verified_spec_before_freeze_reads_the_capture():
+def test_verified_spec_before_freeze_reads_the_captured_surface():
     reg, _spec = _registered(_schema(required=["x"]))
     governed = reg.verified_spec("spec_tool")
     assert governed is not None
@@ -376,3 +380,106 @@ def test_tool_without_spec_stays_supported():
     entry = next(t for t in reg.manifest()["tools"] if t["name"] == "bare_tool")
     assert entry["spec"] is None
     assert reg.fingerprint() == pinned
+
+
+# ---------------------------------------------------------------------
+# A15 lot 1: the governed read hands out caller-owned copies
+# (audit a14, A14-BETA-01: no TOCTOU window between check and use)
+# ---------------------------------------------------------------------
+
+
+def test_mutating_the_governed_read_is_inert():
+    """The a14 audit probe, inverted: mutating what verified_spec hands
+    out must not move the registry, later reads, or what dispatch
+    validates against."""
+    reg, _spec = _registered(_schema(required=["x"]))
+    pinned = reg.freeze()
+
+    governed = reg.verified_spec("spec_tool")
+    assert governed is not None
+    governed.input_schema["properties"]["x"]["type"] = "string"
+    governed.input_schema["required"] = ["y"]
+
+    # The registry surface is untouched: no divergence, same pin.
+    again = reg.verified_spec("spec_tool")
+    assert again is not None
+    assert again.input_schema["properties"]["x"]["type"] == "integer"
+    assert again.input_schema["required"] == ["x"]
+    assert reg.fingerprint() == pinned
+
+
+def test_governed_reads_are_independent_objects():
+    reg, _spec = _registered(_schema(required=["x"]))
+    reg.freeze()
+
+    first = reg.verified_spec("spec_tool")
+    second = reg.verified_spec("spec_tool")
+    assert first is not None and second is not None
+    assert first is not second
+    assert first.input_schema is not second.input_schema
+    first.input_schema["properties"]["x"]["type"] = "string"
+    assert second.input_schema["properties"]["x"]["type"] == "integer"
+
+
+def test_governed_read_before_freeze_is_also_a_copy():
+    reg, _spec = _registered(_schema(required=["x"]))
+
+    governed = reg.verified_spec("spec_tool")
+    assert governed is not None
+    governed.input_schema["required"] = ["y"]
+
+    fresh = reg.verified_spec("spec_tool")
+    assert fresh is not None
+    assert fresh.input_schema["required"] == ["x"]
+
+
+def test_concurrent_attacker_cannot_move_the_validated_surface():
+    """Faithful replay of the a14 audit TOCTOU probe, post-fix.
+
+    An attacker thread holds a reference obtained from verified_spec
+    and mutates it exactly between the reader's integrity check and the
+    reader's validation. Before the fix, the preparation accepted the
+    diverged schema (prepare_accepted_diverged_surface = True). After
+    the fix, every read is caller-owned: the reader validates against
+    the pinned surface, deterministic thanks to barriers.
+    """
+    import threading
+
+    import jsonschema
+
+    reg, _spec = _registered(_schema(required=["x"]))
+    reg.freeze()
+
+    checked = threading.Barrier(2)
+    mutated = threading.Barrier(2)
+    outcome: dict[str, bool] = {}
+
+    def reader() -> None:
+        governed = reg.verified_spec("spec_tool")  # integrity check + copy
+        assert governed is not None
+        checked.wait()  # attacker mutates now
+        mutated.wait()  # mutation done; validate "between check and use"
+        try:
+            jsonschema.validate({"x": "attacker-string"}, governed.input_schema)
+            outcome["prepare_accepted_diverged_surface"] = True
+        except jsonschema.ValidationError:
+            outcome["prepare_accepted_diverged_surface"] = False
+
+    def attacker() -> None:
+        held = reg.verified_spec("spec_tool")
+        assert held is not None
+        checked.wait()
+        held.input_schema["properties"]["x"]["type"] = "string"
+        mutated.wait()
+
+    threads = [threading.Thread(target=reader), threading.Thread(target=attacker)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert outcome["prepare_accepted_diverged_surface"] is False
+    # And the next governed read still sees the pinned surface.
+    after = reg.verified_spec("spec_tool")
+    assert after is not None
+    assert after.input_schema["properties"]["x"]["type"] == "integer"

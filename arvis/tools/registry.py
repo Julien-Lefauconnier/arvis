@@ -61,9 +61,10 @@ class _CapturedSpec:
     the canonical bytes below, so the captured surface shares no
     reference with the caller's objects and later mutation of those
     objects cannot reach the registry. The private copy is never handed
-    out: public readers receive defensive copies (:meth:`ToolRegistry.get_spec`,
-    :meth:`ToolRegistry.list_specs`), the governed effect path goes
-    through :meth:`ToolRegistry.verified_spec`.
+    out, without exception: every reader, including the governed
+    :meth:`ToolRegistry.verified_spec`, receives a fresh defensive copy
+    rebuilt from the canonical bytes (:meth:`ToolRegistry.get_spec`,
+    :meth:`ToolRegistry.list_specs`, :meth:`ToolRegistry.verified_spec`).
     """
 
     spec: ToolSpec | None
@@ -276,13 +277,21 @@ class ToolRegistry:
         the bytes pinned at registration; any divergence (an internal
         mutation of the captured surface) refuses the read fail-closed
         instead of validating against a surface the host never pinned.
+
+        Every call returns a fresh ToolSpec rebuilt from the pinned
+        canonical bytes, never the private capture itself (audit a14,
+        A14-BETA-01): the returned object is caller-owned, so no
+        reference obtained here can modify the surface a later
+        authorization or dispatch validates against, even between check
+        and use. The bytes are immutable, so the copy is atomic with
+        respect to any concurrent mutation of schema dictionaries.
         """
         captured = self._captured.get(name)
         if captured is None or captured.spec is None:
             return None
         if self._frozen:
             self._verify_captured_integrity(name, captured)
-        return captured.spec
+        return _defensive_spec_copy(captured)
 
     def _verify_captured_integrity(self, name: str, captured: _CapturedSpec) -> None:
         spec = captured.spec
