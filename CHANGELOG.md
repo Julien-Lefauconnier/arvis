@@ -9,6 +9,56 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a16] - 2026-07-24
+
+The final release candidate before beta, closing the two contractual gaps
+and the retained findings of the independent a15 audit. No new subsystem.
+
+### Added
+
+- Versioned serialized result contract (A15-BETA-01): a JSON Schema
+  (draft 2020-12, `schema_version` 1.0) ships inside the package at
+  `arvis/api/contracts/cognitive_result_v1.schema.json`; its SHA-256 is
+  frozen in the beta contract manifest, `to_dict()` carries
+  `schema_version`, eight contract tests validate the three risk bands
+  plus the no-decision view with negative proofs (removed key, renamed
+  key, changed type), and the black-box suite validates the schema
+  loaded from the installed wheel. `VERSIONING.md` documents the
+  deprecation rule; open-structure blocks are explicitly experimental.
+- Verifiable reflexive attestation (A15-BETA-02): the attestation is
+  excluded from its own fingerprint and `exposed_views` is carried
+  natively by the payload, so the final public payload verifies
+  directly. The canonicalization is documented and versioned
+  (`canon_version` 1.0). New public API
+  `arvis.verify_reflexive_attestation(payload)` (root surface
+  deliberately extended to 9 symbols), fail-closed, with eleven tests
+  covering tamper detection on every attested surface.
+- Editorial hygiene ratchet (`tests/contracts/test_docs_hygiene.py`):
+  exactly one H1 per mathematical document with mid-line duplicate
+  title detection, and zero conversational session residue in `docs/`.
+- CI `min-deps` job: the published lower bounds installed exactly, full
+  suite on 3.11. CI `wheel-compliance` job: black-box compliance
+  against a freshly built wheel on every push and pull request.
+
+### Changed
+
+- `ReflexiveAttestation.exposed_views` becomes a tuple: the frozen
+  dataclass is genuinely immutable and `immutability` is now accurate;
+  `deterministic` is documented as purity over the canonical source,
+  with no cross-run identity claim.
+- `docs/math/M4` deduplicated (283 to 139 lines): the two pasted
+  versions were proven strictly identical; the French LLM-session
+  dialogue is purged.
+- Scientific wording aligned: the stability specification announces its
+  four figures as planned, M11 moves the empirical characterization of
+  Pi_ctrl to prospective wording, M13 replaces "Theoretical / proven"
+  with "Conditional results and proof skeletons".
+- README example 09 renamed "Multi-engine hosting"; three
+  documentation statuses updated from a11 to a16; the CI dependency
+  audit comment now matches its blocking command.
+- numpy lower bound raised to >=2.4.1 (2.4.0 was yanked from the
+  index).
+
 ## [0.1.0a15] - 2026-07-24
 
 The final contract campaign before beta, closing the four blockers and the
