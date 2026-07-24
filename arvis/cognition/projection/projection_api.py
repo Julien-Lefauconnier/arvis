@@ -19,7 +19,7 @@ class Observation:
 
 
 # -----------------------------
-# Constants (TEMP — will evolve)
+# Constants (TEMP: will evolve)
 # -----------------------------
 
 ALLOWED_MODES = ("nominal", "alert", "critical")
@@ -52,7 +52,7 @@ def project_observation(observation: Observation) -> ProjectionResult:
     is_admissible = len(violations_initial) == 0
 
     # ---- Simple deterministic projection ----
-    # (placeholder logic — will be replaced later)
+    # (placeholder logic: will be replaced later)
 
     x_values = []
     violations: list[str] = []

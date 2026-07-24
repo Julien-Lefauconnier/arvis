@@ -38,12 +38,12 @@ def core_stability_event(
 ) -> TelemetryEvent:
     """Build a STABILITY telemetry event from the cognitive core output.
 
-    ``CognitiveCoreResult`` is the deterministic stability mathematics the
-    core produces on every run (collapse risk, total drift, Lyapunov
-    projections, regime). Unlike the richer observability ``StabilitySnapshot``
-    — only built when observability is attached — this result is always
-    present at the OS boundary, so it is the reliable telemetry source. The
-    attributes are deterministic and carry no chain-of-thought (ZKCS-safe).
+     ``CognitiveCoreResult`` is the deterministic stability mathematics the
+     core produces on every run (collapse risk, total drift, Lyapunov
+     projections, regime). Unlike the richer observability ``StabilitySnapshot``
+    : only built when observability is attached: this result is always
+     present at the OS boundary, so it is the reliable telemetry source. The
+     attributes are deterministic and carry no chain-of-thought (ZKCS-safe).
     """
     attributes: TelemetryAttributes = {
         "collapse_risk": _coerce_float(core.collapse_risk),

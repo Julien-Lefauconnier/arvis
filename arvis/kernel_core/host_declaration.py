@@ -99,7 +99,7 @@ def resolve_host_context(
     injectively: keys must be strings (a host context is a declarative
     namespace, not arbitrary keyed data), values may be any
     canonicalizable JSON value. A non-string key or a non-canonicalizable
-    value raises :class:`NonCanonicalizableError` — the host context is
+    value raises :class:`NonCanonicalizableError`: the host context is
     a governed input, so it fails closed rather than aliasing.
 
     ARVIS reads only :data:`INSTANCE_LABEL_KEY` from the result (to

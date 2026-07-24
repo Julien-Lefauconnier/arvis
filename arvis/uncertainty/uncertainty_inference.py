@@ -7,7 +7,7 @@ intent, and emits declarative :class:`ReasoningGap` / :class:`UncertaintyFrame`
 backend coupling. Increment 1 covers referential under-determination; increment
 2 adds contextual under-determination (a context-dependent query the kernel has
 no memory to resolve); increment 3 adds internal conflict (an action request
-whose target is under-determined) — kernel-computed, orthogonal to grounding.
+whose target is under-determined): kernel-computed, orthogonal to grounding.
 """
 
 from __future__ import annotations
@@ -105,7 +105,7 @@ class UncertaintyInference:
             )
             frames.append(_CONTEXTUAL_FRAME)
         # Internal conflict: an action request on an under-determined target.
-        # Orthogonal to grounding — fires even when retrieval is strong.
+        # Orthogonal to grounding: fires even when retrieval is strong.
         if reason == "action_request" and (referential_under or context_under):
             conflicts.append(
                 ConflictSignal(type=REASON_MISMATCH, payload={"reason": reason})

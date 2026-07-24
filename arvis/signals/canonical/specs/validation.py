@@ -1,7 +1,7 @@
 # arvis/signals/canonical/specs/validation.py
 
 """
-Canonical Signal Specifications — Validation Domain
+Canonical Signal Specifications: Validation Domain
 Universal validation / gate vocabulary for cognitive systems.
 """
 

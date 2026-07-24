@@ -13,7 +13,7 @@ callable: it is a component that ANSWERS, returning an
 - ``intent_sha256``: the engagement digest of the persisted intent,
   which MUST equal the intent's own ``commitment_sha256``;
 - ``run_id``: the run identity of the intent (campaign 6, Lot 5),
-  which MUST equal the intent's journaled ``run_id`` — the receipt is
+  which MUST equal the intent's journaled ``run_id``: the receipt is
   where the run <-> commitment anchoring lives, by design outside the
   deterministic digest material;
 - ``causal_id``: the exact effect occurrence acknowledged by the store,

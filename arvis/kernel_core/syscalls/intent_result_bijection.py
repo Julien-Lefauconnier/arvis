@@ -10,13 +10,13 @@ causal id, no duplicates, no orphans.
 The a7 check (audit P1-6) verified only that each intent's causal id
 appeared somewhere in the set of journaled result ids. It missed:
 
-- **duplicate intents** — two intents at one causal id (one effect, two
+- **duplicate intents**: two intents at one causal id (one effect, two
   engagements): the set membership check passed.
-- **orphan results** — a journaled result with no matching intent (an
+- **orphan results**: a journaled result with no matching intent (an
   effect that ran with no pre-effect engagement): never inspected.
-- **syscall mismatch** — an intent and a result at the same causal id
+- **syscall mismatch**: an intent and a result at the same causal id
   but for different syscalls: the names were never compared.
-- **cardinality** — more than one result per causal id.
+- **cardinality**: more than one result per causal id.
 
 The a8 audit (section 9) then proved the correspondence was still
 metadata-only: two same-syscall results could be permuted together with

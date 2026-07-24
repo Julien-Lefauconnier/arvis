@@ -1,6 +1,6 @@
 # tests/math/core/test_monitor_action_escalation.py
 """Same ambiguity, grounded turn: a question stays in caution (1 axis, no
-violation) while an action escalates to abstention (2 axes -> violation) — the
+violation) while an action escalates to abstention (2 axes -> violation): the
 violation is driven by uncertainty alone, with risk low."""
 
 from __future__ import annotations

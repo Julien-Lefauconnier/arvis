@@ -1,7 +1,7 @@
 # arvis/signals/canonical/specs/risk.py
 
 """
-Canonical Signal Specifications — Risk Domain
+Canonical Signal Specifications: Risk Domain
 Universal risk-state vocabulary for cognitive systems.
 """
 

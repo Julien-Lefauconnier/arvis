@@ -23,6 +23,16 @@ This project focuses on:
 
 Security issues related to these areas are treated with high priority.
 
+## Dependency audit policy
+
+The gate environment is frozen in `requirements/gate.lock` and audited by
+`pip-audit --strict` in CI, as a blocking step. When a finding has no
+released fix and blocks the gate, the exception is an explicit
+`--ignore-vuln <ID>` flag in the CI workflow, added in a dedicated commit
+with a dated justification in the commit message and removed as soon as a
+fixed release exists. There is no standing exception file: every exception
+is visible where it acts and carries its own history.
+
 ## Effect-boundary assumptions
 
 ARVIS authenticates no credentials itself. A production host must stamp a real

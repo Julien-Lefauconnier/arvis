@@ -27,7 +27,11 @@ jobs:
       - name: Install deps
         run: |
           pip install --upgrade pip
-          pip install -e .[dev] --prefer-binary
+          # Locked gate environment (audit a13, P1-03): the full
+          # transitive set is frozen; the package itself installs on top
+          # without resolving anything.
+          pip install -r requirements/gate.lock --prefer-binary
+          pip install -e . --no-deps
 
       - name: Fail on missing __all__
         run: python -c "import arvis; assert hasattr(arvis, '__all__') and arvis.__all__"
@@ -48,7 +52,19 @@ jobs:
         # hard failure once the dev lockfile lands.
         run: |
           pip install pip-audit==2.10.1
-          pip-audit --strict || echo "pip-audit reported findings (advisory)"
+          # Blocking (audit a13, P1-03). Exceptions, if ever needed, are
+          # explicit --ignore-vuln flags added here with a dated
+          # justification, per the policy in SECURITY.md.
+          #
+          # PYSEC-2026-1845 (pytest 8.4.2, fixed in 9.0.3), ignored
+          # 2026-07-24: pytest is gate tooling only, absent from the
+          # shipped wheel and from the runtime dependencies. The fix is
+          # the pytest 9 toolchain bump already opened by Dependabot,
+          # scheduled as a dedicated commit right after 0.1.0b1 (bumping
+          # the whole gate toolchain mid-release-campaign would reformat
+          # and reshuffle the very diffs under review). Remove this flag
+          # with that bump.
+          pip-audit --strict -r requirements/gate.lock --ignore-vuln PYSEC-2026-1845
 
       - name: Bandit (medium/high)
         run: bash scripts/run_quality_gate.sh security
@@ -74,7 +90,11 @@ jobs:
       - name: Install deps
         run: |
           pip install --upgrade pip
-          pip install -e .[dev] --prefer-binary
+          # Locked gate environment (audit a13, P1-03): the full
+          # transitive set is frozen; the package itself installs on top
+          # without resolving anything.
+          pip install -r requirements/gate.lock --prefer-binary
+          pip install -e . --no-deps
 
       - name: Run tests
         run: pytest --cov=arvis --cov-report=xml --cov-fail-under=90 --maxfail=1 --disable-warnings -q
@@ -99,7 +119,11 @@ jobs:
       - name: Install deps
         run: |
           pip install --upgrade pip
-          pip install -e .[dev] --prefer-binary
+          # Locked gate environment (audit a13, P1-03): the full
+          # transitive set is frozen; the package itself installs on top
+          # without resolving anything.
+          pip install -r requirements/gate.lock --prefer-binary
+          pip install -e . --no-deps
 
       - name: Run examples smoke (stable examples)
         run: bash scripts/run_examples_smoke.sh

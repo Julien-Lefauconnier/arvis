@@ -8,9 +8,13 @@ That is the kind of drift this test exists to stop: adding a module without
 wiring it now fails here, at the moment it is introduced rather than at the next
 audit.
 
-Reachable means: imported by any module in the package, by any test, or by an
-example. A module exercised only by its tests counts as reachable, since a
-component may legitimately be tested before it is wired into a path.
+Reachable means REFERENCED: imported by any module in the package, by any
+test, or by an example. This is deliberately a floor, not a claim of runtime
+integration: a module exercised only by its tests counts as reachable, since
+a component may legitimately be tested before it is wired into a path.
+Whether a referenced module actually sits on a runtime path is a separate,
+stronger property that this ratchet does not measure and does not assert
+(audit a13, P2-04).
 
 Import forms handled:
 

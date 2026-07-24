@@ -214,4 +214,4 @@ The main limitation is:
 
 ## 14. Next Step
 
-→ [M1_result_inventory.md](M1_result_inventory.md)
+→ [M1c_result_inventory.md](M1c_result_inventory.md)

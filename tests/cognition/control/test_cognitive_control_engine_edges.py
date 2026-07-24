@@ -39,7 +39,7 @@ class BudgetBroken:
 
 
 # --------------------------------------------------
-# Test 1 — prev_lyap path + CRITICAL mode
+# Test 1: prev_lyap path + CRITICAL mode
 # --------------------------------------------------
 
 
@@ -70,7 +70,7 @@ def test_prev_lyap_and_critical_mode():
 
 
 # --------------------------------------------------
-# Test 2 — exception safety everywhere
+# Test 2: exception safety everywhere
 # --------------------------------------------------
 
 
@@ -126,7 +126,7 @@ def test_all_exceptions_are_safe():
 
 
 # --------------------------------------------------
-# Test 3 — bandit confirm path + epsilon modulation fallback
+# Test 3: bandit confirm path + epsilon modulation fallback
 # --------------------------------------------------
 
 

@@ -3,7 +3,7 @@
 
 Encodes the research-box finding (the default operating point does NOT separate
 grounded from weak grounding) and guards that the sweep can FIND an operating
-point that does — i.e. that the certified risk is calibratable into a real
+point that does: i.e. that the certified risk is calibratable into a real
 "the decision is assured" signal.
 """
 

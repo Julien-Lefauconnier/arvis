@@ -68,4 +68,5 @@ Thumbs.db
 *.tmp
 *.bak
 *.swp
-.ipynb_checkpoints/examples/video_script_DRAFT.md
+.ipynb_checkpoints/
+examples/video_script_DRAFT.md

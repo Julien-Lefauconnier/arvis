@@ -175,7 +175,10 @@ Example:
 
 ```python
 r1 = os.run("u1", payload)
-r2 = os.replay(r1.to_ir())
+r2 = os.replay_verified(
+    r1.to_ir(),
+    expected_global_commitment=r1.global_commitment,
+)
 ```
 
 ---

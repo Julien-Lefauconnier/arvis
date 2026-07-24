@@ -1,8 +1,8 @@
 # arvis/signals/canonical/canonical_signal_spec.py
 
 """
-Canonical Signal Specification — Core Definition
-Part of ARVIS Kernel — Closed Canonical World
+Canonical Signal Specification: Core Definition
+Part of ARVIS Kernel: Closed Canonical World
 Extended with explicit allowed_states and subject_kinds validation
 """
 
@@ -26,7 +26,7 @@ class CanonicalSignalSpec:
 
     key: CanonicalSignalKey
 
-    # Explicit finite sets — extracted from private stack
+    # Explicit finite sets: extracted from private stack
     states_allowed: frozenset[str] = field(default_factory=frozenset)
     subject_kinds: frozenset[str] = field(default_factory=frozenset)
 

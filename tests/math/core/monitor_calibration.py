@@ -4,7 +4,7 @@
 Replays labelled scenarios through the REAL monitor under a grid of two knob
 families and reports which operating point makes the certified risk
 (``collapse_risk`` / ``risk_verdict``) DISCRIMINATE well-grounded turns from
-weakly-grounded ones — on evidence, not by eye.
+weakly-grounded ones: on evidence, not by eye.
 
 Two knob families, because the pipeline splits the work:
   * the *confidence transform* (raw retrieval scores -> a single confidence) is
@@ -243,7 +243,7 @@ def recommend(
     Among combos that strictly separate and stay under the false-alarm cap,
     pick widest separation first (BAD clearly flagged), then largest grounded
     headroom (most robust tau). This is the same order as the printed table, so
-    the recommendation is just its top eligible row — never the brittle combo
+    the recommendation is just its top eligible row: never the brittle combo
     that only happens to separate this scenario set with razor-thin headroom.
     """
     eligible = [

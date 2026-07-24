@@ -121,7 +121,7 @@ class ConversationOrchestrator:
             context.state.user_profile = context.user_profile
 
         # --------------------------------------------
-        # STEP 1 — Derive linguistic act from cognition
+        # STEP 1: Derive linguistic act from cognition
         # --------------------------------------------
         act = context.act or map_gate_verdict_to_act(
             verdict=gate_verdict,
@@ -131,12 +131,12 @@ class ConversationOrchestrator:
         context.act = act
 
         # --------------------------------------------
-        # STEP 2 — Base strategy from act
+        # STEP 2: Base strategy from act
         # --------------------------------------------
         base_strategy = map_act_to_strategy(act.act_type)
 
         # --------------------------------------------
-        # STEP 3 — Strategy refinement via resolver
+        # STEP 3: Strategy refinement via resolver
         # --------------------------------------------
         decision = ResponseStrategyResolver.resolve(
             gate_verdict=gate_verdict,
@@ -156,7 +156,7 @@ class ConversationOrchestrator:
         )
 
         # --------------------------------------------
-        # STEP FINAL — Memory write hook (safe minimal)
+        # STEP FINAL: Memory write hook (safe minimal)
         # --------------------------------------------
         hook = context.memory_write_hook
         if hook is not None:

@@ -95,7 +95,7 @@ def test_memory_bridge_propagates_to_kernel():
     assert context.long_memory["constraints"] == ["no_marketing_emails"]
 
 
-# ✅ NEW — adaptive loop integration
+# ✅ NEW: adaptive loop integration
 def test_adaptive_feedback_loop_integration():
     context = build_context(CognitiveGateVerdict.ALLOW)
 

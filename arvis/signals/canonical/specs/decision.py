@@ -1,7 +1,7 @@
 # arvis/signals/canonical/specs/decision.py
 
 """
-Canonical Signal Specifications — Decision Domain
+Canonical Signal Specifications: Decision Domain
 Universal decision-state vocabulary for cognitive systems.
 """
 

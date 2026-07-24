@@ -18,8 +18,8 @@ def system_tension_event(
 ) -> TelemetryEvent:
     """Build a telemetry event from the unified system-tension signal.
 
-    ``SystemTensionSignal`` fuses the three instability axes — collapse
-    (physical), drift (dynamic) and conflict (cognitive) — into one signal.
+    ``SystemTensionSignal`` fuses the three instability axes: collapse
+    (physical), drift (dynamic) and conflict (cognitive): into one signal.
     The attributes carry the raw axes plus the derived level, dominant axis
     and high-tension flag, all deterministic and ZKCS-safe.
     """

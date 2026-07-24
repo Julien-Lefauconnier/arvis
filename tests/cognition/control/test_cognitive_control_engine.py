@@ -23,7 +23,7 @@ class DummyIRG:
 
 
 # ---------------------------------------------------------------------
-# TEST 1 — MINIMAL RUN
+# TEST 1: MINIMAL RUN
 # ---------------------------------------------------------------------
 
 
@@ -61,7 +61,7 @@ def test_control_engine_minimal_run():
 
 
 # ---------------------------------------------------------------------
-# TEST 2 — TEMPORAL + HYSTERESIS
+# TEST 2: TEMPORAL + HYSTERESIS
 # ---------------------------------------------------------------------
 
 
@@ -133,7 +133,7 @@ def test_control_engine_with_temporal_and_hysteresis():
 
 
 # ---------------------------------------------------------------------
-# TEST 3 — INERTIA + COUNTERFACTUAL + BANDIT
+# TEST 3: INERTIA + COUNTERFACTUAL + BANDIT
 # ---------------------------------------------------------------------
 
 

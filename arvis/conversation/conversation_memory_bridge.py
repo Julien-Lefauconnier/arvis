@@ -20,7 +20,7 @@ class ConversationMemoryBridge:
         snapshot = None
 
         # --------------------------------------------
-        # MODE 1 — Service-based (preferred, scalable)
+        # MODE 1: Service-based (preferred, scalable)
         # --------------------------------------------
         service: MemoryLongService | None = getattr(context, "memory_service", None)
 
@@ -34,7 +34,7 @@ class ConversationMemoryBridge:
                 snapshot = None
 
         # --------------------------------------------
-        # MODE 2 — Direct snapshot (legacy/tests)
+        # MODE 2: Direct snapshot (legacy/tests)
         # --------------------------------------------
         if snapshot is None:
             snapshot = getattr(context, "memory_snapshot", None)

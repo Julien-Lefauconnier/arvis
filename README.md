@@ -120,7 +120,7 @@ Approval Need : YES
 Commitment    : 8642d95cfdb73c16...
 ```
 
-> Note (0.1.0-alpha): the gate grades an explicit top-level `risk` scalar —
+> Note (0.1.0-alpha): the gate grades an explicit top-level `risk` scalar:
 > low → ALLOWED, medium → REQUIRES_CONFIRMATION, high → BLOCKED (see
 > `examples/09_multi_engine_hosting.py`). This risk policy applies only to an
 > explicit `risk` field; a bare text prompt is governed with a minimal
@@ -371,9 +371,9 @@ experimental, and out of scope for 0.1:
 
 * long-term memory
 * conversation orchestration
-* natural-language input surface — a bare text prompt is governed with a
+* natural-language input surface: a bare text prompt is governed with a
   *minimal* projection (REQUIRES_CONFIRMATION), not a full cognitive projection
-* real LLM providers — the governed adapter path is wired end to end, but the
+* real LLM providers: the governed adapter path is wired end to end, but the
   bundled provider is a deterministic stub; production providers must be
   configured via the adapter registry
 
@@ -397,7 +397,7 @@ ARVIS tracks three distinct version axes, each honestly labeled:
 
 | Axis | Value | Meaning |
 |------|-------|---------|
-| Package version | `0.1.0a13` | the distributed artifact (PEP 440) |
+| Package version | `0.1.0a14` | the distributed artifact (PEP 440) |
 | API version | `0.1` | the public Python API contract (not yet stable) |
 | Standard version | `draft-v1` | the ARVIS decision / IR specification |
 
@@ -405,7 +405,7 @@ ARVIS tracks three distinct version axes, each honestly labeled:
 
 ## Project Status
 
-**`0.1.0-alpha` (preview)** — actively developed with a validation-first
+**`0.1.0-alpha` (preview)**: actively developed with a validation-first
 engineering approach. The public API is not yet stable.
 
 ---

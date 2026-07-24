@@ -182,7 +182,7 @@ Next additions:
 
 ## 8. Next Step
 
-→ [`M3_cognitive_state_model.md`](M3_cognitive_state_model.md)
+→ [`M3_1_cognitive_state_model.md`](M3_1_cognitive_state_model.md)
 
 Where we formalize:
 - cognitive variables

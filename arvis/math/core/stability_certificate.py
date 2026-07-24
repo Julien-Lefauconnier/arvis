@@ -1,7 +1,7 @@
 # arvis/math/core/stability_certificate.py
 """Stability certificate for the v0 contraction monitor's fast loop.
 
-Proven, sequence-agnostic guarantees — they hold for ANY input sequence,
+Proven, sequence-agnostic guarantees: they hold for ANY input sequence,
 adversarial or not, because they follow from the construction of the energy,
 not from observed samples:
 
@@ -17,7 +17,7 @@ not from observed samples:
           |V(x) - V(x')| <= sum_i w_i * |x_i - x'_i| <= ||x - x'||_inf .
       An adversary moving signal i by eps shifts V by at most ``w_i * eps``;
       moving every signal by eps shifts V by at most eps. The energy cannot be
-      amplified — a per-turn jump in V is bounded by the per-turn input move.
+      amplified: a per-turn jump in V is bounded by the per-turn input move.
 
 These are derived from the weights (see :func:`certify`) and machine-checked by
 ``tests/math/core/test_contraction_stability.py``, which SEARCHES adversarially
@@ -54,7 +54,7 @@ class StabilityCertificate:
         Lipschitz constant of V in the sup norm (the sum of the weights = 1 for
         convex weights): moving every axis by ``eps`` moves V by at most this.
     state_lower / state_upper:
-        The compact invariant box each axis — and hence V and the drift —
+        The compact invariant box each axis: and hence V and the drift:
         provably stays inside.
     """
 

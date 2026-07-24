@@ -277,7 +277,10 @@ example :
 
 ```python
 r1 = os.run("u1", payload)
-r2 = os.replay(r1.to_ir())
+r2 = os.replay_verified(
+    r1.to_ir(),
+    expected_global_commitment=r1.global_commitment,
+)
 ```
 
 ---
@@ -295,7 +298,11 @@ Use cases:
 - simulation
 
 ```python
-result = os.replay(ir)
+# Authenticate against a commitment stored OUTSIDE the IR:
+result = os.replay_verified(ir, expected_global_commitment=stored_commitment)
+
+# Or recompose without authenticating (inspection only; the name says so):
+view = os.replay_recomposed(ir)
 ```
 
 ---

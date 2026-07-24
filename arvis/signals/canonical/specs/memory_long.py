@@ -1,7 +1,7 @@
 # arvis/signals/canonical/specs/memory_long.py
 
 """
-Canonical Signal Specifications — Memory Long Domain
+Canonical Signal Specifications: Memory Long Domain
 """
 
 

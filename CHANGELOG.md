@@ -9,6 +9,96 @@ versioning during the alpha.
 
 ## [Unreleased]
 
+## [0.1.0a14] - 2026-07-24
+
+The beta contract campaign, closing the four blockers of the external a13
+audit (BETA-01 to BETA-04) and its P1 findings. This release freezes what a
+host can rely on: the tool surface is deeply frozen, the engine lifecycle is
+the documented one, the public contract is pinned by a manifest, the science
+documents say exactly what is measured, and the compliance suite proves the
+installed wheel.
+
+### Security
+
+- Deep freeze of the tool registry (BETA-01): tool specs are captured and
+  sanitized at registration (canonical bytes, private rebuilt copies), the
+  manifest is snapshotted at freeze() and the fingerprint is never recomputed
+  from live objects. Authorization, dispatch and policy evaluation read the
+  surface through an integrity-checked path and refuse fail-closed on any
+  divergence (frozen_surface_diverged). Non-canonicalizable schemas,
+  non-ToolSpec specs and non-finite values are refused at registration,
+  atomically.
+- Proof structures are deep-frozen on the commitment paths (P1-04, targeted):
+  the IR witness, its hash and its envelope derive from a single canonical
+  serialization (hash byte-identical, replay preserved), and the projection
+  certificate snapshots its detail map at construction.
+- The dependency gate is locked and audited (P1-03): requirements/gate.lock
+  freezes the full transitive environment, CI installs from the lock, test
+  plugins are pinned, and pip-audit is a blocking CI step with an explicit
+  exception policy in SECURITY.md.
+
+### Changed
+
+- run(), run_as() and ask() return a single public type,
+  CognitiveResultView (BETA-02); the legacy no-trace mode returns a minimal
+  view carrying the decision only, since no trace or commitment can exist
+  there. ArvisEngine carries explicit signatures with real types; passing
+  both an explicit config and keyword arguments now raises TypeError.
+- TimelineView.entries is a tuple.
+- The compliance tree is split (P1-01): the former suite becomes
+  compliance/internal_invariants (white-box, documented as such) and the new
+  normative compliance/blackbox suite exercises only the public surface, with
+  versioned scenarios, wheel provenance enforcement and an authenticated
+  replay round-trip; scripts/run_blackbox_against_wheel.sh proves it against
+  the built wheel in a pristine environment.
+- The five projection test files use a module-level seeded RNG: the Phase A
+  corpus is reproducible bit-for-bit (BETA-04).
+- Synthetic compliance certificates are faithful to the runtime:
+  noise_gain_estimate is null, never a fabricated 0.0.
+
+### Added
+
+- arvis.host_api (P1-02): the versioned host integration surface, twelve
+  capability modules re-exporting the 51 symbols a host legitimately
+  consumes, HOST_API_VERSION 1.0, two stability levels (every module stable
+  except control, provisional), frozen both ways by a 65-test contract file
+  and documented in VERSIONING.md.
+- The beta contract manifest (BETA-02): a deterministic golden covering full
+  signatures, dataclass fields, canonical defaults and enum members for the
+  facade and all host_api symbols, environment-independent (proven identical
+  across Python 3.11/3.12 and pydantic 2.8/2.13), with a CI test failing on
+  any modification and a deliberate regeneration script.
+- A multi-instance isolation guarantee (BETA-03): engines in one process are
+  isolated by construction, tested (per-instance tool surfaces, interleaved
+  runs, threaded one-engine-per-worker hosting), with the lifecycle doctrine
+  in the README quick start and a new hosting example
+  (09_multi_engine_hosting.py).
+
+### Removed
+
+- run_multi (BETA-03): the facade, runtime, internals, its test, the batch
+  example and its documentation mentions. The documented lifecycle is one
+  engine, one governed run at a time; parallelism belongs to the host.
+- CERTIFIED_RUNTIME (BETA-02): removed from the certification enum; it had
+  never been produced by any code path, and a contract must not carry an
+  unattainable level. VERSIONING.md records the removal.
+
+### Fixed
+
+- M10 is rewritten as the planned empirical validation protocol it actually
+  is (BETA-04): metrics and pass criteria preserved, every unbacked observed
+  result removed, corrupted fragments repaired, execution and publication
+  requirements stated. M9, M2 and the architecture mapping now source the
+  projection properties to the offline Phase A fixture corpus and state that
+  runtime does not assess noise or mode stability; the stale M2 link and the
+  two broken M1 links are fixed (P2-01), replay documentation uses the real
+  replay_verified/replay_recomposed API (DOC-02), the reachability ratchet
+  documents that it measures reference, not runtime integration (P2-04), the
+  concatenated .gitignore line is split (P2-02), the stale PyPI-is-planned
+  README line is corrected, the examples README shows the real quickstart
+  output, and the em-dashes are purged from the package, tests and README.
+
+
 ## [0.1.0a13] - 2026-07-23
 
 The beta readiness campaign, closing an internal audit and an external one. It

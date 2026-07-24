@@ -1,6 +1,6 @@
 # arvis/signals/canonical/specs/timeline.py
 """
-Canonical Signal Specifications — Timeline Domain — Closed Canonical World
+Canonical Signal Specifications: Timeline Domain: Closed Canonical World
 """
 
 from arvis.signals.canonical.canonical_signal_category import CanonicalSignalCategory

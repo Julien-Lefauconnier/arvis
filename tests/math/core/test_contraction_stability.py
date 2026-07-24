@@ -2,8 +2,8 @@
 """Adversarial validation of the fast-loop stability certificate.
 
 These tests do not assert on a curated happy path: they SEARCH for an input
-sequence that breaks a proven guarantee — random sequences over many seeds plus
-hand-built worst cases (out-of-range, non-finite, alternating extremes) — and
+sequence that breaks a proven guarantee: random sequences over many seeds plus
+hand-built worst cases (out-of-range, non-finite, alternating extremes): and
 confirm the real :class:`ContractionMonitorCore` never violates the compact
 invariant (I) or the Lipschitz energy bound (II).
 """
