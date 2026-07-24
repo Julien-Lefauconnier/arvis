@@ -89,21 +89,38 @@ reflexive/snapshot/
 
 ---
 
-#### Attestation contract (a16)
+#### Attestation contract (a17, canonicalization 2.0)
 
 The final public payload verifies its own attestation directly:
 `arvis.verify_reflexive_attestation(result.reflexive)` recomputes the
-fingerprint from the payload exactly as exposed and compares it to the
-published one. The canonicalization is versioned (`canon_version` in
-the attestation): the `attestation` key is excluded from its own
-fingerprint, `generated_at`, `mode`, `exposed_views` and
-`timeline_views` are removed from the body, timeline views are
-re-attested filtered to the exposed set, `exposed_views` is attested
-sorted, and the source is hashed as compact sorted-keys JSON with
-SHA-256. `deterministic` means the fingerprint is a pure function of
-that canonical source; identity across separate runs is not claimed,
-because the attested state legitimately carries decision timestamps
-(`generated_at` is the only top-level volatile field and is excluded).
+FULL attestation from the payload exactly as exposed and compares the
+entire embedded block to the recomputed one: exact key set, exact
+values for every metadata field (type, scope, authority, flags, mode,
+exposed_views, canon_version), and a constant-time comparison for the
+fingerprint. An unknown `canon_version` is refused before any
+algorithm is applied, and any malformed input of any type returns
+False.
+
+Canonicalization 2.0: the `attestation` key is excluded from its own
+fingerprint; `generated_at`, `mode`, `exposed_views` and
+`timeline_views` are removed from the payload body; timeline views are
+re-attested filtered to the exposed set; `exposed_views` is attested
+sorted; `mode` and `canon_version` are attested members of the
+canonical source, so neither can be rewritten, even consistently
+across the payload and the block, without changing the fingerprint;
+the source is hashed as compact sorted-keys JSON with SHA-256.
+`generated_at` is the only top-level volatile field and is excluded:
+`deterministic` means the fingerprint is a pure function of the
+canonical source; identity across separate runs is not claimed.
+
+**Structural integrity, not authenticity.** The fingerprint is an
+unsigned SHA-256 with no secret: it proves a payload matches its
+embedded attestation, provided that attestation is already trusted. It
+does not authenticate the emitter, does not prove ARVIS origin, and
+does not resist an actor able to rewrite the whole document, checksum
+included. Proving authenticity requires an external anchor held by the
+host: a signature, an HMAC, a commitment stored in a durable journal,
+or a fingerprint obtained through an independent channel.
 
 #### Serialization contract (a15)
 

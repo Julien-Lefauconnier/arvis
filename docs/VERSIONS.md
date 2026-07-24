@@ -1,6 +1,6 @@
 # Format versions
 
-ARVIS carries seventeen version constants. They are not variants of one number:
+ARVIS carries nineteen version constants. They are not variants of one number:
 each governs a different artifact, changes for a different reason, and breaks a
 different thing when it moves. This page is the map.
 
@@ -71,3 +71,10 @@ If two artifacts disagree on a version, the question is which of these moved.
 A commitment that no longer verifies after an upgrade is expected behaviour if
 `CANONICALIZATION_VERSION` or `COMMITMENT_VERSION` changed, and a defect
 otherwise.
+
+## Consumer and reflexive contracts (a16, a17)
+
+| Constant | Value | Scope | Rupture rule |
+|---|---|---|---|
+| `RESULT_SCHEMA_VERSION` | 1.0 | JSON Schema of `CognitiveResultView.to_dict()`, shipped in the package and exported at the root | Removing or retyping a stable key requires a bump and a changelog entry (see VERSIONING.md) |
+| `ATTESTATION_CANON_VERSION` | 2.0 | Canonicalization of the reflexive attestation fingerprint | Any change to the canonical source or hashing rule requires a bump; `verify` refuses unknown versions |

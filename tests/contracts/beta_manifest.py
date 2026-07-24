@@ -197,6 +197,10 @@ def _describe(symbol_name: str, obj: Any) -> dict[str, Any]:
             "kind": "function",
             "signature": _signature_of(obj),
         }
+    if isinstance(obj, str):
+        # a17: version constants promised at the root (for example
+        # RESULT_SCHEMA_VERSION) freeze their exact value.
+        return {"kind": "constant", "type": "str", "value": obj}
     raise TypeError(  # pragma: no cover - the surface holds none today
         f"unsupported contract symbol kind for {symbol_name}: {type(obj)!r}"
     )

@@ -1364,6 +1364,11 @@
         "REQUIRES_CONFIRMATION": "REQUIRES_CONFIRMATION"
       }
     },
+    "RESULT_SCHEMA_VERSION": {
+      "kind": "constant",
+      "type": "str",
+      "value": "1.0"
+    },
     "RuntimeMode": {
       "kind": "enum",
       "members": {
@@ -1397,6 +1402,10 @@
         "__init__": "(self, force_tool: str | None = None, force_execution: bool = False, force_safe_projection: bool = False, force_safe_switching: bool = False) -> None"
       },
       "properties": {}
+    },
+    "load_result_schema": {
+      "kind": "function",
+      "signature": "() -> dict[str, Any]"
     },
     "verify_reflexive_attestation": {
       "kind": "function",

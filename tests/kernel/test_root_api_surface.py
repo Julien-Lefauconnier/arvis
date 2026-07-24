@@ -21,4 +21,9 @@ def test_root_api_is_minimal():
         # a16 lot 2 (A15-BETA-02): the consumer-facing verification of
         # the reflexive attestation is part of the promised surface.
         "verify_reflexive_attestation",
+        # a17 lot 2 (audit a16, 8): the serialized-contract loader and
+        # its version are officially stable; a consumer no longer
+        # imports an internal submodule to read the shipped schema.
+        "RESULT_SCHEMA_VERSION",
+        "load_result_schema",
     }

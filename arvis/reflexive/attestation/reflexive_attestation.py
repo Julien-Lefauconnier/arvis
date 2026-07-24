@@ -13,8 +13,11 @@ from arvis.reflexive.core.reflexive_mode import ReflexiveMode
 
 # Version of the canonicalization rule below. A consumer reading
 # canon_version from an attestation knows exactly which transformation
-# reproduces the fingerprint (audit a15, A15-BETA-02).
-ATTESTATION_CANON_VERSION = "1.0"
+# reproduces the fingerprint (audit a15, A15-BETA-02). Version 2.0
+# (audit a16, blocker 2): mode and canon_version enter the canonical
+# source, so neither can be rewritten, even consistently across the
+# payload and the attestation block, without changing the fingerprint.
+ATTESTATION_CANON_VERSION = "2.0"
 
 
 @dataclass(frozen=True)
@@ -32,8 +35,20 @@ class ReflexiveAttestation:
       the payload body;
     - ``timeline_views`` is re-attested filtered to ``exposed_views``
       only, and ``exposed_views`` is attested sorted;
+    - ``mode`` and ``canon_version`` are attested members of the
+      canonical source (canonicalization 2.0): they cannot be
+      rewritten without changing the fingerprint;
     - the source is JSON-serialized with sorted keys and compact
       separators, then hashed with SHA-256.
+
+    :meth:`verify` compares the ENTIRE embedded attestation block to
+    its recomputed form (exact keys, exact values, constant-time
+    fingerprint comparison): no field of the block, constants and
+    flags included, can be modified without failing verification.
+    The fingerprint proves structural integrity only, never
+    authenticity: it is an unsigned SHA-256, so an actor able to
+    rewrite the whole payload can also rewrite its checksum; proving
+    origin requires an external anchor held by the host.
 
     ``deterministic`` means the fingerprint is a pure function of that
     canonical source: no salt, no randomness. Identity across separate
@@ -97,6 +112,9 @@ class ReflexiveAttestation:
             "timeline_views": timeline_views,
             "payload": payload,
             "exposed_views": exposed_views,
+            # Canonicalization 2.0: attested members.
+            "mode": mode.value,
+            "canon_version": ATTESTATION_CANON_VERSION,
         }
 
         fingerprint = cls._compute_fingerprint(fingerprint_source)
@@ -113,23 +131,41 @@ class ReflexiveAttestation:
         )
 
     @classmethod
-    def verify(cls, rendered_payload: dict[str, Any]) -> bool:
+    def verify(cls, rendered_payload: object) -> bool:
         """Verify a final public payload against its embedded attestation.
 
-        Recomputes the fingerprint from the payload as exposed, with no
-        implicit transformation, and compares it to the embedded one.
-        Fail-closed: any malformed or altered payload returns False.
+        Recomputes the full attestation from the payload as exposed,
+        with no implicit transformation, and compares the ENTIRE
+        embedded block to the recomputed one: exact key set, exact
+        values for every metadata field (type, scope, authority,
+        flags, mode, exposed_views, canon_version), and constant-time
+        comparison for the fingerprint. An unknown canon_version is
+        refused before any algorithm is applied. Fail-closed: any
+        malformed input of any type returns False (audit a16,
+        blocker 2 and 7.4).
         """
         try:
+            if not isinstance(rendered_payload, dict):
+                return False
             embedded = rendered_payload.get("attestation")
             if not isinstance(embedded, dict):
                 return False
-            published = embedded.get("fingerprint")
-            if not isinstance(published, str):
+            if embedded.get("canon_version") != ATTESTATION_CANON_VERSION:
                 return False
             recomputed = cls.from_rendered_payload(rendered_payload)
-            return hmac.compare_digest(recomputed.fingerprint, published)
-        except (TypeError, ValueError, KeyError):
+            expected = recomputed.to_dict()
+            if set(embedded.keys()) != set(expected.keys()):
+                return False
+            for key, value in expected.items():
+                if key == "fingerprint":
+                    continue
+                if embedded[key] != value:
+                    return False
+            published = embedded["fingerprint"]
+            if not isinstance(published, str):
+                return False
+            return hmac.compare_digest(expected["fingerprint"], published)
+        except (TypeError, ValueError, KeyError, AttributeError):
             return False
 
     @staticmethod

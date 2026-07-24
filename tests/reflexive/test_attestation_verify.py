@@ -13,6 +13,8 @@ attested surface is detected fail-closed.
 
 import copy
 
+import pytest
+
 from arvis import CognitiveOS, verify_reflexive_attestation
 from arvis.reflexive.attestation.reflexive_attestation import (
     ATTESTATION_CANON_VERSION,
@@ -102,3 +104,61 @@ def test_fingerprint_is_a_pure_function_of_the_canonical_source() -> None:
     first = ReflexiveAttestation.from_rendered_payload(payload).fingerprint
     second = ReflexiveAttestation.from_rendered_payload(payload).fingerprint
     assert first == second
+
+
+# ---------------------------------------------------------------------
+# A17 lot 2: the ENTIRE attestation block is verified (audit a16,
+# blocker 2): every metadata field, the audit's eight probes replayed.
+# ---------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("field", "forged"),
+    [
+        ("type", "forged_type"),
+        ("scope", "forged_scope"),
+        ("authority", "user"),
+        ("immutability", False),
+        ("deterministic", False),
+        ("mode", "forged_mode"),
+        ("exposed_views", ["forged_view"]),
+        ("canon_version", "999.0"),
+    ],
+)
+def test_forging_any_attestation_field_fails(field: str, forged) -> None:
+    """The a16 audit probes, replayed: each one used to verify True."""
+    payload = _payload()
+    payload["attestation"][field] = forged
+    assert verify_reflexive_attestation(payload) is False
+
+
+def test_consistent_mode_rewrite_fails() -> None:
+    """Canonicalization 2.0: mode is an attested member of the source,
+    so rewriting it consistently in BOTH the payload root and the
+    attestation block still changes the fingerprint and fails."""
+    payload = _payload()
+    payload["mode"] = "observation_only"
+    payload["attestation"]["mode"] = "observation_only"
+    assert verify_reflexive_attestation(payload) is False
+
+
+def test_extra_or_missing_attestation_key_fails() -> None:
+    payload = _payload()
+    payload["attestation"]["injected"] = True
+    assert verify_reflexive_attestation(payload) is False
+    payload = _payload()
+    del payload["attestation"]["authority"]
+    assert verify_reflexive_attestation(payload) is False
+
+
+@pytest.mark.parametrize("malformed", [None, [], "x", 42, 3.14, {"a": 1}])
+def test_malformed_input_fails_closed(malformed) -> None:
+    """7.4: the boundary verifier returns False for every invalid
+    shape; it never raises (AttributeError included)."""
+    assert verify_reflexive_attestation(malformed) is False
+
+
+def test_unknown_canon_version_is_refused_before_any_computation() -> None:
+    payload = _payload()
+    payload["attestation"]["canon_version"] = "1.0"
+    assert verify_reflexive_attestation(payload) is False
