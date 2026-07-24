@@ -36,7 +36,9 @@ HOST_API_SURFACE: dict[str, list[str]] = {
     "engine": [
         "ArvisEngine",
         "CognitiveOSConfig",
+        "CognitiveResultView",
         "ContractionMonitorCore",
+        "DecisionStatus",
         "MonitorConfig",
     ],
     "access": [
@@ -135,7 +137,7 @@ _PAIRS: list[tuple[str, str]] = [
 def test_surface_size_is_pinned() -> None:
     assert len(HOST_API_SURFACE) == 12
     assert sorted(HOST_API_SURFACE) == sorted(_MODULES)
-    assert len(_PAIRS) == 51
+    assert len(_PAIRS) == 53
 
 
 @pytest.mark.parametrize(

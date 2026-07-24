@@ -13,10 +13,10 @@ result = os.run(
 )
 
 data = result.to_dict()
-decision = data["decision"]
+decision = data["decision"]  # structured public block (a15): status + flags
 
-blocked = "allowed=False" in decision
-needs_confirm = "requires_user_validation=True" in decision
+blocked = decision["status"] == "BLOCKED"
+needs_confirm = bool(decision["requires_user_validation"])
 
 print("\nARVIS Example 01 — Safe Runtime Gate")
 print("-" * 42)

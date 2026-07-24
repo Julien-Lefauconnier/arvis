@@ -19,12 +19,11 @@ trade = {
 result = os.run("desk_a", trade)
 
 data = result.to_dict()
-decision = data["decision"]
+decision = data["decision"]  # structured public block (a15): status + flags
 
-allowed = "allowed=True" in decision
-needs_confirm = "requires_user_validation=True" in decision
+needs_confirm = bool(decision["requires_user_validation"])
 
-if allowed and not needs_confirm:
+if decision["status"] == "ALLOWED":
     status = "APPROVED"
 elif needs_confirm:
     status = "REVIEW"

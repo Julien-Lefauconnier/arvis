@@ -10,16 +10,16 @@ all, pure payload included.
 from arvis import CognitiveOS, CognitiveOSConfig
 
 
-def _decision(os_: CognitiveOS, payload: dict) -> str:
-    return str(os_.run("acceptance", payload).to_dict()["decision"])
+def _decision(os_: CognitiveOS, payload: dict) -> dict:
+    return os_.run("acceptance", payload).to_dict()["decision"]
 
 
-def _is_allowed(decision: str) -> bool:
-    return "allowed=True" in decision
+def _is_allowed(decision: dict) -> bool:
+    return decision["status"] == "ALLOWED"
 
 
 def _needs_confirmation(decision: str) -> bool:
-    return "requires_user_validation=True" in decision
+    return bool(decision["requires_user_validation"])
 
 
 def test_mixed_payload_low_risk_is_never_allowed():

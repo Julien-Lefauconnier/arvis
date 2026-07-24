@@ -34,6 +34,12 @@ from tests.contracts.test_host_api_surface import HOST_API_SURFACE
 MANIFEST_VERSION = 1
 
 
+def _qualified_name(obj: Any) -> str:
+    module = getattr(obj, "__module__", "")
+    qualname = getattr(obj, "__qualname__", getattr(obj, "__name__", repr(obj)))
+    return f"{module}.{qualname}" if module else str(qualname)
+
+
 def _canonical_default(value: Any) -> str:
     """Deterministic rendering of a parameter default.
 
@@ -142,10 +148,15 @@ def _describe(symbol_name: str, obj: Any) -> dict[str, Any]:
     if inspect.isclass(obj) and issubclass(obj, pydantic.BaseModel):
         # The contract of a pydantic model is its declared fields (our
         # code), never the surface inherited from pydantic itself.
-        fields = {
-            name: _render_annotation(info.annotation)
-            for name, info in obj.model_fields.items()
-        }
+        fields = {}
+        for name, info in obj.model_fields.items():
+            entry: dict[str, Any] = {"type": _render_annotation(info.annotation)}
+            if not info.is_required():
+                if info.default_factory is not None:
+                    entry["default_factory"] = _qualified_name(info.default_factory)
+                else:
+                    entry["default"] = _canonical_default(info.default)
+            fields[name] = entry
         return {
             "kind": "pydantic_model",
             "fields": fields,
@@ -160,13 +171,16 @@ def _describe(symbol_name: str, obj: Any) -> dict[str, Any]:
     if inspect.isclass(obj) and dataclasses.is_dataclass(obj):
         fields: dict[str, Any] = {}
         for field in dataclasses.fields(obj):
-            fields[field.name] = {
-                "type": _render_annotation(field.type),
-                "has_default": (
-                    field.default is not dataclasses.MISSING
-                    or field.default_factory is not dataclasses.MISSING
-                ),
-            }
+            entry: dict[str, Any] = {"type": _render_annotation(field.type)}
+            # a15 (A14-BETA-02): the manifest pins the default VALUES,
+            # canonically, and the qualified identity of factories: a
+            # default flipped from True to False, or a factory moved
+            # from list to dict, must break the golden.
+            if field.default is not dataclasses.MISSING:
+                entry["default"] = _canonical_default(field.default)
+            if field.default_factory is not dataclasses.MISSING:
+                entry["default_factory"] = _qualified_name(field.default_factory)
+            fields[field.name] = entry
         return {
             "kind": "dataclass",
             "fields": fields,
@@ -190,6 +204,7 @@ def _describe(symbol_name: str, obj: Any) -> dict[str, Any]:
 
 
 def generate_manifest() -> dict[str, Any]:
+    import arvis
     from arvis import host_api
     from arvis.api.engine import ArvisEngine
 
@@ -197,6 +212,12 @@ def generate_manifest() -> dict[str, Any]:
         "manifest_version": MANIFEST_VERSION,
         "host_api_version": host_api.HOST_API_VERSION,
         "provisional_modules": sorted(host_api.PROVISIONAL_MODULES),
+        # a15 (A14-BETA-02): every symbol promised by arvis.__all__ is
+        # part of the frozen contract, CognitiveOS included.
+        "root_api": {
+            symbol: _describe(symbol, getattr(arvis, symbol))
+            for symbol in sorted(arvis.__all__)
+        },
         "facade": {
             "ArvisEngine": {
                 "kind": "class",

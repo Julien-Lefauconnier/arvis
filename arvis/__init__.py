@@ -11,6 +11,8 @@ from .api.os import CognitiveOS, CognitiveOSConfig
 from .api.runtime_controls import TrustedRuntimeControls
 from .api.runtime_mode import RuntimeMode
 from .api.version import PACKAGE_VERSION
+from .api.views.cognitive_result_view import CognitiveResultView
+from .api.views.decision_status import DecisionStatus
 
 __version__ = PACKAGE_VERSION
 
@@ -19,6 +21,8 @@ __all__ = [
     "AuditCommitmentPolicy",
     "CognitiveOS",
     "CognitiveOSConfig",
+    "CognitiveResultView",
+    "DecisionStatus",
     "RuntimeMode",
     "TrustedRuntimeControls",
 ]

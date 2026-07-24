@@ -14,10 +14,10 @@ result = os.run(
 )
 
 data = result.to_dict()
-decision = data["decision"]
+decision = data["decision"]  # structured public block (a15): status + flags
 
-needs_confirm = "requires_user_validation=True" in decision
-allowed = "allowed=True" in decision
+needs_confirm = bool(decision["requires_user_validation"])
+allowed = decision["status"] == "ALLOWED"
 
 print("\nARVIS Example 04 — Human Approval Gate")
 print("-" * 44)

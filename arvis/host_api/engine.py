@@ -12,6 +12,8 @@ surface).
 
 from arvis.api.engine import ArvisEngine
 from arvis.api.os import CognitiveOSConfig
+from arvis.api.views.cognitive_result_view import CognitiveResultView
+from arvis.api.views.decision_status import DecisionStatus
 from arvis.math.core.contraction_monitor_core import (
     ContractionMonitorCore,
     MonitorConfig,
@@ -20,6 +22,8 @@ from arvis.math.core.contraction_monitor_core import (
 __all__ = [
     "ArvisEngine",
     "CognitiveOSConfig",
+    "CognitiveResultView",
     "ContractionMonitorCore",
+    "DecisionStatus",
     "MonitorConfig",
 ]

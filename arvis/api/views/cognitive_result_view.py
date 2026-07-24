@@ -10,6 +10,7 @@ from hashlib import sha256
 from pprint import pformat
 from typing import Any, cast
 
+from arvis.action.action_decision import ActionDecision
 from arvis.adapters.kernel.timeline_from_signals import (
     signal_journal_to_timeline_snapshot,
 )
@@ -26,6 +27,7 @@ from arvis.api.stability import StabilityView
 from arvis.api.timeline import TimelineView
 from arvis.api.trace import DecisionTraceView
 from arvis.api.version import API_FINGERPRINT, API_VERSION
+from arvis.api.views.decision_status import DecisionStatus
 from arvis.cognition.state.cognitive_state import CognitiveState
 from arvis.errors.base import ArvisSecurityError
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
@@ -34,7 +36,16 @@ from arvis.signals.signal_journal import SignalJournal
 
 @dataclass(frozen=True)
 class CognitiveResultView:
-    decision: Any
+    """Public result of a governed run (beta contract).
+
+    The public decision contract is :attr:`status` (typed) and the
+    structured ``decision`` block of :meth:`to_dict`; ``decision``
+    itself carries the rich kernel object. ``stability`` and ``trace``
+    are deliberately ``Any``: heterogeneous internal enrichment
+    channels, surfaced through their typed ``*_view`` companions.
+    """
+
+    decision: ActionDecision | None
     stability: Any
     stability_view: StabilityView | None
     trace: Any
@@ -238,7 +249,7 @@ class CognitiveResultView:
         return {
             "version": API_VERSION,
             "fingerprint": API_FINGERPRINT,
-            "decision": str(self.decision),
+            "decision": self._decision_block(),
             "stability": {
                 "score": (
                     self.stability_view.stability_score if self.stability_view else None
@@ -272,19 +283,29 @@ class CognitiveResultView:
             return None
         return copy.deepcopy(self._ir)
 
-    @staticmethod
-    def _public_status(*, allowed: bool, requires_validation: bool) -> str:
-        """Tri-state public status.
+    @property
+    def status(self) -> DecisionStatus:
+        """Typed public verdict of the run (beta contract, a15)."""
+        return DecisionStatus.from_decision(self.decision)
 
-        A confirmation-required decision is neither a clean pass nor a hard
-        block: it is surfaced as REQUIRES_CONFIRMATION so the medium-risk band
-        is visibly distinct from an outright ABSTAIN/BLOCK.
-        """
-        if allowed:
-            return "ALLOWED"
-        if requires_validation:
-            return "REQUIRES_CONFIRMATION"
-        return "BLOCKED"
+    def _decision_block(self) -> dict[str, Any]:
+        """Structured public decision, never a repr (A14-BETA-02)."""
+        decision = self.decision
+        if decision is None:
+            return {
+                "status": DecisionStatus.NONE.value,
+                "allowed": None,
+                "requires_user_validation": None,
+                "denied_reason": None,
+            }
+        return {
+            "status": self.status.value,
+            "allowed": bool(getattr(decision, "allowed", False)),
+            "requires_user_validation": bool(
+                getattr(decision, "requires_user_validation", False)
+            ),
+            "denied_reason": getattr(decision, "denied_reason", None),
+        }
 
     def quickstart_payload(self) -> dict[str, Any]:
         """
@@ -293,15 +314,12 @@ class CognitiveResultView:
         """
         decision = self.decision
 
-        allowed = bool(getattr(decision, "allowed", False))
         requires_validation = bool(getattr(decision, "requires_user_validation", False))
         denied_reason = getattr(decision, "denied_reason", None)
 
         return {
             "version": API_VERSION,
-            "status": self._public_status(
-                allowed=allowed, requires_validation=requires_validation
-            ),
+            "status": self.status.value,
             "approval_required": requires_validation,
             "reason": denied_reason,
             "has_trace": self.trace_view is not None,
@@ -338,13 +356,10 @@ class CognitiveResultView:
         """
         decision = self.decision
 
-        allowed = bool(getattr(decision, "allowed", False))
         requires_validation = bool(getattr(decision, "requires_user_validation", False))
         denied_reason = getattr(decision, "denied_reason", None) or "-"
 
-        status = self._public_status(
-            allowed=allowed, requires_validation=requires_validation
-        )
+        status = self.status.value
         approval = "YES" if requires_validation else "NO"
         commitment = (
             f"{self.global_commitment[:16]}..." if self.global_commitment else "-"

@@ -29,14 +29,7 @@ class _NamedTool(BaseTool):
 
 
 def _status(result) -> str:
-    decision = result.to_dict()["decision"]
-    allowed = "allowed=True" in decision
-    needs_confirm = "requires_user_validation=True" in decision
-    if allowed and not needs_confirm:
-        return "APPROVED"
-    if needs_confirm:
-        return "REVIEW"
-    return "BLOCKED"
+    return result.status.value
 
 
 def test_tool_surfaces_are_per_instance():
@@ -63,7 +56,7 @@ def test_interleaved_runs_do_not_move_decisions_or_pinned_surfaces():
         _status(engine.run(f"user_{index}", payloads[index]))
         for index, engine in enumerate(engines)
     ]
-    assert first_pass == ["APPROVED", "REVIEW", "BLOCKED"]
+    assert first_pass == ["ALLOWED", "REQUIRES_CONFIRMATION", "BLOCKED"]
 
     # Interleave the same work in a different order across the same
     # engines: per-engine decisions and pinned surfaces must not move.
@@ -84,4 +77,4 @@ def test_threaded_hosting_one_engine_per_worker():
     with ThreadPoolExecutor(max_workers=4) as pool:
         outcomes = list(pool.map(worker, range(8)))
 
-    assert outcomes == ["APPROVED"] * 8
+    assert outcomes == ["ALLOWED"] * 8

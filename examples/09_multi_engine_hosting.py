@@ -31,12 +31,11 @@ def screen_workstream(stream: str, risks: list[float]) -> list[tuple]:
     rows = []
     for risk in risks:
         result = engine.run(f"host_{stream}", {"risk": risk})
-        decision = result.to_dict()["decision"]
+        decision = result.to_dict()["decision"]  # structured block (a15)
 
-        allowed = "allowed=True" in decision
-        needs_confirm = "requires_user_validation=True" in decision
+        needs_confirm = bool(decision["requires_user_validation"])
 
-        if allowed and not needs_confirm:
+        if decision["status"] == "ALLOWED":
             status = "APPROVED"
         elif needs_confirm:
             status = "REVIEW"

@@ -36,15 +36,14 @@
       "Principal": {
         "fields": {
           "grants": {
-            "has_default": true,
+            "default": "<frozenset>",
             "type": "frozenset[str]"
           },
           "organization_id": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           },
           "user_id": {
-            "has_default": false,
             "type": "str"
           }
         },
@@ -59,23 +58,22 @@
       "CognitiveRetrievalSnapshot": {
         "fields": {
           "confidence": {
-            "has_default": true,
+            "default": "0.0",
             "type": "builtins.float"
           },
           "item_ids": {
-            "has_default": true,
+            "default_factory": "builtins.list",
             "type": "list[str]"
           },
           "scores": {
-            "has_default": true,
+            "default_factory": "builtins.list",
             "type": "list[float]"
           },
           "semantic_roles": {
-            "has_default": true,
+            "default_factory": "builtins.list",
             "type": "list[str]"
           },
           "source": {
-            "has_default": false,
             "type": "builtins.str"
           }
         },
@@ -90,63 +88,63 @@
       "CognitiveControlDeps": {
         "fields": {
           "adaptive_controller_factory": {
-            "has_default": true,
+            "default": "None",
             "type": "Callable[..., Any] | None"
           },
           "calibration_engine": {
-            "has_default": true,
+            "default": "None",
             "type": "HasEvaluate | None"
           },
           "counterfactual_bandit_factory": {
-            "has_default": true,
+            "default": "None",
             "type": "Callable[..., Any] | None"
           },
           "counterfactual_factory": {
-            "has_default": true,
+            "default": "None",
             "type": "Callable[..., Any] | None"
           },
           "drift_detector_factory": {
-            "has_default": true,
+            "default": "None",
             "type": "Callable[..., Any] | None"
           },
           "epsilon_monitor_factory": {
-            "has_default": true,
+            "default": "None",
             "type": "Callable[..., Any] | None"
           },
           "exploration_controller": {
-            "has_default": true,
+            "default": "None",
             "type": "HasCompute | None"
           },
           "inertia_controller": {
-            "has_default": true,
+            "default": "None",
             "type": "HasUpdate | None"
           },
           "local_dynamics_factory": {
-            "has_default": true,
+            "default": "None",
             "type": "Callable[..., Any] | None"
           },
           "mode_hysteresis": {
-            "has_default": true,
+            "default": "None",
             "type": "HasUpdate | None"
           },
           "regime_estimator_factory": {
-            "has_default": true,
+            "default": "None",
             "type": "Callable[..., Any] | None"
           },
           "regime_policy": {
-            "has_default": true,
+            "default": "None",
             "type": "HasCompute | None"
           },
           "stability_stats": {
-            "has_default": true,
+            "default": "None",
             "type": "HasPushSnapshot | None"
           },
           "temporal_pressure": {
-            "has_default": true,
+            "default": "None",
             "type": "HasCompute | None"
           },
           "temporal_regulation": {
-            "has_default": true,
+            "default": "None",
             "type": "HasCompute | None"
           }
         },
@@ -191,31 +189,24 @@
       "PendingTurn": {
         "fields": {
           "conversation_id": {
-            "has_default": false,
             "type": "str"
           },
           "created_at": {
-            "has_default": false,
             "type": "datetime"
           },
           "kind": {
-            "has_default": false,
             "type": "str"
           },
           "payload": {
-            "has_default": false,
             "type": "Mapping[str, object]"
           },
           "status": {
-            "has_default": false,
             "type": "PendingTurnStatus"
           },
           "turn_id": {
-            "has_default": false,
             "type": "str"
           },
           "user_id": {
-            "has_default": false,
             "type": "str"
           }
         },
@@ -264,55 +255,55 @@
       "CognitiveOSConfig": {
         "fields": {
           "adapter_registry": {
-            "has_default": true,
+            "default": "None",
             "type": "dict[str, Any] | None"
           },
           "audit_commitment_policy": {
-            "has_default": true,
+            "default": "<AuditCommitmentPolicy.DEGRADED: 'degraded'>",
             "type": "AuditCommitmentPolicy"
           },
           "audit_intent_sink": {
-            "has_default": true,
+            "default": "None",
             "type": "DurableAuditSink | Callable[[dict[str, Any]], None] | None"
           },
           "confirmation_registry": {
-            "has_default": true,
+            "default": "None",
             "type": "Any | None"
           },
           "consent_gate": {
-            "has_default": true,
+            "default": "None",
             "type": "ConsentGate | None"
           },
           "core_model": {
-            "has_default": true,
+            "default": "None",
             "type": "Any | None"
           },
           "egress_gate": {
-            "has_default": true,
+            "default": "None",
             "type": "EgressGate | None"
           },
           "enable_trace": {
-            "has_default": true,
+            "default": "True",
             "type": "bool"
           },
           "host_context": {
-            "has_default": true,
+            "default": "None",
             "type": "dict[str, Any] | None"
           },
           "runtime_controls": {
-            "has_default": true,
+            "default": "None",
             "type": "TrustedRuntimeControls | None"
           },
           "runtime_mode": {
-            "has_default": true,
+            "default": "<RuntimeMode.LOCAL: 'local'>",
             "type": "RuntimeMode | str"
           },
           "strict_mode": {
-            "has_default": true,
+            "default": "False",
             "type": "bool"
           },
           "telemetry_sink": {
-            "has_default": true,
+            "default": "None",
             "type": "TelemetrySink | None"
           }
         },
@@ -323,6 +314,82 @@
         },
         "properties": {}
       },
+      "CognitiveResultView": {
+        "fields": {
+          "_ir": {
+            "default": "None",
+            "type": "dict[str, Any] | None"
+          },
+          "commitment_degraded": {
+            "default": "False",
+            "type": "bool"
+          },
+          "commitment_policy": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "commitment_reason": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "decision": {
+            "type": "ActionDecision | None"
+          },
+          "execution_view": {
+            "default": "None",
+            "type": "ExecutionTraceView | None"
+          },
+          "global_commitment": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "reflexive": {
+            "default": "None",
+            "type": "dict[str, Any] | None"
+          },
+          "stability": {
+            "type": "Any"
+          },
+          "stability_view": {
+            "type": "StabilityView | None"
+          },
+          "timeline": {
+            "default": "None",
+            "type": "Any | None"
+          },
+          "timeline_commitment": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "timeline_view": {
+            "default": "None",
+            "type": "TimelineView | None"
+          },
+          "trace": {
+            "type": "Any"
+          },
+          "trace_view": {
+            "default": "None",
+            "type": "DecisionTraceView | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, decision: ActionDecision | None, stability: Any, stability_view: StabilityView | None, trace: Any, trace_view: DecisionTraceView | None = None, timeline: Any | None = None, timeline_view: TimelineView | None = None, timeline_commitment: str | None = None, global_commitment: str | None = None, _ir: dict[str, Any] | None = None, reflexive: dict[str, Any] | None = None, execution_view: ExecutionTraceView | None = None, commitment_policy: str | None = None, commitment_reason: str | None = None, commitment_degraded: bool = False) -> None",
+          "explain": "(self) -> str",
+          "from_state": "(state: CognitiveState, result: Any, *, commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, commitment_inputs: dict[str, Any] | None = None, commitment_inputs_reason: str | None = None) -> CognitiveResultView",
+          "pretty": "(self) -> str",
+          "quickstart_json": "(self, *, indent: int = 2) -> str",
+          "quickstart_payload": "(self) -> dict[str, Any]",
+          "summary": "(self) -> str",
+          "to_dict": "(self) -> dict[str, Any]",
+          "to_ir": "(self) -> dict[str, Any] | None",
+          "to_json": "(self, *, indent: int = 2) -> str"
+        },
+        "properties": {
+          "status": "DecisionStatus"
+        }
+      },
       "ContractionMonitorCore": {
         "kind": "class",
         "methods": {
@@ -331,66 +398,75 @@
         },
         "properties": {}
       },
+      "DecisionStatus": {
+        "kind": "enum",
+        "members": {
+          "ALLOWED": "ALLOWED",
+          "BLOCKED": "BLOCKED",
+          "NONE": "NONE",
+          "REQUIRES_CONFIRMATION": "REQUIRES_CONFIRMATION"
+        }
+      },
       "MonitorConfig": {
         "fields": {
           "cs_boundary": {
-            "has_default": true,
+            "default": "'fixed_lambda'",
             "type": "str"
           },
           "drift_alpha": {
-            "has_default": true,
+            "default": "0.5",
             "type": "float"
           },
           "governance_default": {
-            "has_default": true,
+            "default": "0.6",
             "type": "float"
           },
           "intent_governance": {
-            "has_default": true,
+            "default_factory": "arvis.math.core.contraction_monitor_core._default_intent_governance",
             "type": "Mapping[str, float]"
           },
           "regime_min_samples": {
-            "has_default": true,
+            "default": "10",
             "type": "int"
           },
           "regime_window": {
-            "has_default": true,
+            "default": "40",
             "type": "int"
           },
           "risk_bound": {
-            "has_default": true,
+            "default": "'hoeffding'",
             "type": "str"
           },
           "risk_delta": {
-            "has_default": true,
+            "default": "0.01",
             "type": "float"
           },
           "risk_horizon": {
-            "has_default": true,
+            "default": "200",
             "type": "int"
           },
           "risk_window": {
-            "has_default": true,
+            "default": "200",
             "type": "int"
           },
           "tau_risk": {
-            "has_default": true,
+            "default": "0.5",
             "type": "float"
           },
           "tau_uncertainty": {
-            "has_default": true,
+            "default": "0.5",
             "type": "float"
           },
           "uncertainty_saturation": {
-            "has_default": true,
+            "default": "4",
             "type": "int"
           },
           "verdict_critical_ceiling": {
-            "has_default": true,
+            "default": "0.4",
             "type": "float"
           },
           "verdict_ok_ceiling": {
-            "has_default": true,
+            "default": "0.15",
             "type": "float"
           }
         },
@@ -405,23 +481,18 @@
       "KnowledgeEvent": {
         "fields": {
           "created_at": {
-            "has_default": false,
             "type": "datetime.datetime"
           },
           "event_id": {
-            "has_default": false,
             "type": "builtins.str"
           },
           "place_id": {
-            "has_default": false,
             "type": "str | None"
           },
           "snapshot": {
-            "has_default": false,
             "type": "arvis.knowledge.knowledge_snapshot.KnowledgeSnapshot"
           },
           "user_id": {
-            "has_default": false,
             "type": "str | None"
           }
         },
@@ -447,19 +518,17 @@
       "KnowledgeSnapshot": {
         "fields": {
           "created_at": {
-            "has_default": true,
+            "default_factory": "arvis.types.timestamps.utcnow",
             "type": "datetime.datetime"
           },
           "scope": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           },
           "signals": {
-            "has_default": false,
             "type": "list[arvis.knowledge.knowledge_signal.KnowledgeSignal]"
           },
           "state": {
-            "has_default": false,
             "type": "arvis.knowledge.knowledge_state.KnowledgeState"
           }
         },
@@ -483,14 +552,37 @@
     "llm": {
       "LLMResponse": {
         "fields": {
-          "content": "builtins.str",
-          "finish_reason": "str | None",
-          "metadata": "dict[str, typing.Any]",
-          "model": "builtins.str",
-          "provider": "builtins.str",
-          "response_id": "str | None",
-          "trace_id": "str | None",
-          "usage": "arvis.adapters.llm.contracts.usage.LLMUsage"
+          "content": {
+            "type": "builtins.str"
+          },
+          "finish_reason": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "metadata": {
+            "default_factory": "builtins.dict",
+            "type": "dict[str, typing.Any]"
+          },
+          "model": {
+            "default": "'unknown'",
+            "type": "builtins.str"
+          },
+          "provider": {
+            "default": "'unknown'",
+            "type": "builtins.str"
+          },
+          "response_id": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "trace_id": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "usage": {
+            "default": "<LLMUsage>",
+            "type": "arvis.adapters.llm.contracts.usage.LLMUsage"
+          }
         },
         "kind": "pydantic_model",
         "methods": {
@@ -503,23 +595,23 @@
       "Governance": {
         "fields": {
           "encryption": {
-            "has_default": true,
+            "default": "<GovernanceEncryption.AT_REST: 'at_rest'>",
             "type": "arvis.memory.governance.GovernanceEncryption"
           },
           "principal": {
-            "has_default": true,
+            "default": "<GovernancePrincipal.USER: 'user'>",
             "type": "arvis.memory.governance.GovernancePrincipal"
           },
           "retention": {
-            "has_default": true,
+            "default": "<GovernanceRetention.PERSISTENT: 'persistent'>",
             "type": "arvis.memory.governance.GovernanceRetention"
           },
           "sharing": {
-            "has_default": true,
+            "default": "<GovernanceSharing.PERSONAL: 'personal'>",
             "type": "arvis.memory.governance.GovernanceSharing"
           },
           "visibility": {
-            "has_default": true,
+            "default": "<GovernanceVisibility.USABLE: 'usable'>",
             "type": "arvis.memory.governance.GovernanceVisibility"
           }
         },
@@ -571,39 +663,35 @@
       "MemoryLongEntry": {
         "fields": {
           "created_at": {
-            "has_default": false,
             "type": "datetime.datetime"
           },
           "expires_at": {
-            "has_default": true,
+            "default": "None",
             "type": "datetime.datetime | None"
           },
           "governance": {
-            "has_default": true,
+            "default_factory": "arvis.memory.governance.Governance",
             "type": "arvis.memory.governance.Governance"
           },
           "key": {
-            "has_default": false,
             "type": "builtins.str"
           },
           "memory_type": {
-            "has_default": false,
             "type": "arvis.memory.memory_long_entry.MemoryLongType"
           },
           "notes": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           },
           "revoked_at": {
-            "has_default": true,
+            "default": "None",
             "type": "datetime.datetime | None"
           },
           "source": {
-            "has_default": false,
             "type": "builtins.str"
           },
           "value_ref": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           }
         },
@@ -625,15 +713,12 @@
       "MemoryLongRecord": {
         "fields": {
           "entry": {
-            "has_default": false,
             "type": "arvis.memory.memory_long_entry.MemoryLongEntry"
           },
           "nonce": {
-            "has_default": false,
             "type": "builtins.bytes"
           },
           "payload_ciphertext": {
-            "has_default": false,
             "type": "builtins.bytes"
           }
         },
@@ -656,27 +741,27 @@
       "MemoryLongSnapshot": {
         "fields": {
           "active_entries": {
-            "has_default": true,
+            "default_factory": "builtins.list",
             "type": "list[arvis.memory.memory_long_entry.MemoryLongEntry]"
           },
           "created_at": {
-            "has_default": true,
+            "default_factory": "arvis.types.timestamps.utcnow",
             "type": "datetime.datetime"
           },
           "last_updated_at": {
-            "has_default": true,
+            "default": "None",
             "type": "datetime.datetime | None"
           },
           "notes": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           },
           "revoked_entries": {
-            "has_default": true,
+            "default": "0",
             "type": "builtins.int"
           },
           "total_entries": {
-            "has_default": true,
+            "default": "0",
             "type": "builtins.int"
           }
         },
@@ -703,47 +788,47 @@
       "KernelServiceRegistry": {
         "fields": {
           "audit_intent_sink": {
-            "has_default": true,
+            "default": "None",
             "type": "Any | None"
           },
           "authorization_service": {
-            "has_default": true,
+            "default": "None",
             "type": "Any | None"
           },
           "host_context": {
-            "has_default": true,
+            "default": "None",
             "type": "dict[str, Any] | None"
           },
           "instance_label": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           },
           "llm_adapter": {
-            "has_default": true,
+            "default": "None",
             "type": "Any | None"
           },
           "require_authenticated_principal": {
-            "has_default": true,
+            "default": "False",
             "type": "bool"
           },
           "require_durable_intent_sink": {
-            "has_default": true,
+            "default": "False",
             "type": "bool"
           },
           "tool_executor": {
-            "has_default": true,
+            "default": "None",
             "type": "Any | None"
           },
           "tool_manager": {
-            "has_default": true,
+            "default": "None",
             "type": "Any | None"
           },
           "vfs_service": {
-            "has_default": true,
+            "default": "None",
             "type": "Any | None"
           },
           "zip_ingest_service": {
-            "has_default": true,
+            "default": "None",
             "type": "Any | None"
           }
         },
@@ -756,11 +841,9 @@
       "Syscall": {
         "fields": {
           "args": {
-            "has_default": false,
             "type": "Mapping[str, Any]"
           },
           "name": {
-            "has_default": false,
             "type": "str"
           }
         },
@@ -861,67 +944,65 @@
       "ToolSpec": {
         "fields": {
           "audit_required": {
-            "has_default": true,
+            "default": "False",
             "type": "builtins.bool"
           },
           "data_class": {
-            "has_default": true,
+            "default": "'unspecified'",
             "type": "builtins.str"
           },
           "data_egress": {
-            "has_default": true,
+            "default": "False",
             "type": "builtins.bool"
           },
           "description": {
-            "has_default": false,
             "type": "builtins.str"
           },
           "idempotent": {
-            "has_default": true,
+            "default": "False",
             "type": "builtins.bool"
           },
           "input_schema": {
-            "has_default": true,
+            "default_factory": "builtins.dict",
             "type": "dict[str, typing.Any]"
           },
           "max_risk": {
-            "has_default": true,
+            "default": "1.0",
             "type": "builtins.float"
           },
           "name": {
-            "has_default": false,
             "type": "builtins.str"
           },
           "output_schema": {
-            "has_default": true,
+            "default_factory": "builtins.dict",
             "type": "dict[str, typing.Any]"
           },
           "provider": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           },
           "required_consent": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           },
           "requires_confirmation": {
-            "has_default": true,
+            "default": "False",
             "type": "builtins.bool"
           },
           "retryable": {
-            "has_default": true,
+            "default": "True",
             "type": "builtins.bool"
           },
           "reversible": {
-            "has_default": true,
+            "default": "True",
             "type": "builtins.bool"
           },
           "side_effectful": {
-            "has_default": true,
+            "default": "True",
             "type": "builtins.bool"
           },
           "timeout_seconds": {
-            "has_default": true,
+            "default": "None",
             "type": "float | None"
           }
         },
@@ -986,39 +1067,34 @@
       "VFSItem": {
         "fields": {
           "created_at": {
-            "has_default": true,
+            "default": "None",
             "type": "int | None"
           },
           "display_name": {
-            "has_default": false,
             "type": "str"
           },
           "file_size": {
-            "has_default": true,
+            "default": "None",
             "type": "int | None"
           },
           "item_id": {
-            "has_default": false,
             "type": "str"
           },
           "item_type": {
-            "has_default": false,
             "type": "VFSItemType"
           },
           "mime": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           },
           "organization_id": {
-            "has_default": true,
+            "default": "None",
             "type": "str | None"
           },
           "owner_id": {
-            "has_default": false,
             "type": "str"
           },
           "parent_id": {
-            "has_default": false,
             "type": "str | None"
           }
         },
@@ -1084,5 +1160,239 @@
   "manifest_version": 1,
   "provisional_modules": [
     "control"
-  ]
+  ],
+  "root_api": {
+    "ArvisEngine": {
+      "kind": "class",
+      "methods": {
+        "__init__": "(self, config: CognitiveOSConfig | None = None, *, pipeline: CognitivePipeline | None = None, **kwargs: Any) -> None",
+        "ask": "(self, prompt: str, *, user_id: str = 'default', conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "freeze_tools": "(self) -> str",
+        "get_tool_spec": "(self, name: str) -> ToolSpec | None",
+        "inspect": "(self, result: CognitiveResultView) -> dict[str, Any]",
+        "list_tool_specs": "(self) -> dict[str, ToolSpec]",
+        "list_tools": "(self) -> list[str]",
+        "register_tool": "(self, tool: BaseTool) -> None",
+        "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
+        "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
+        "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+      },
+      "properties": {
+        "config": "CognitiveOSConfig",
+        "os": "CognitiveOS",
+        "version": "str"
+      }
+    },
+    "AuditCommitmentPolicy": {
+      "kind": "enum",
+      "members": {
+        "DEGRADED": "degraded",
+        "OPTIONAL": "optional",
+        "REQUIRED": "required"
+      }
+    },
+    "CognitiveOS": {
+      "kind": "class",
+      "methods": {
+        "__init__": "(self, config: CognitiveOSConfig | None = None, *, pipeline: CognitivePipeline | None = None)",
+        "freeze_tools": "(self) -> str",
+        "get_tool_spec": "(self, name: str) -> ToolSpec | None",
+        "inspect": "(self, result: CognitiveResultView) -> dict[str, Any]",
+        "list_tool_specs": "(self) -> dict[str, ToolSpec]",
+        "list_tools": "(self) -> list[str]",
+        "register_tool": "(self, tool: Any) -> None",
+        "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
+        "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
+        "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+      },
+      "properties": {
+        "config": "CognitiveOSConfig",
+        "version": "str"
+      }
+    },
+    "CognitiveOSConfig": {
+      "fields": {
+        "adapter_registry": {
+          "default": "None",
+          "type": "dict[str, Any] | None"
+        },
+        "audit_commitment_policy": {
+          "default": "<AuditCommitmentPolicy.DEGRADED: 'degraded'>",
+          "type": "AuditCommitmentPolicy"
+        },
+        "audit_intent_sink": {
+          "default": "None",
+          "type": "DurableAuditSink | Callable[[dict[str, Any]], None] | None"
+        },
+        "confirmation_registry": {
+          "default": "None",
+          "type": "Any | None"
+        },
+        "consent_gate": {
+          "default": "None",
+          "type": "ConsentGate | None"
+        },
+        "core_model": {
+          "default": "None",
+          "type": "Any | None"
+        },
+        "egress_gate": {
+          "default": "None",
+          "type": "EgressGate | None"
+        },
+        "enable_trace": {
+          "default": "True",
+          "type": "bool"
+        },
+        "host_context": {
+          "default": "None",
+          "type": "dict[str, Any] | None"
+        },
+        "runtime_controls": {
+          "default": "None",
+          "type": "TrustedRuntimeControls | None"
+        },
+        "runtime_mode": {
+          "default": "<RuntimeMode.LOCAL: 'local'>",
+          "type": "RuntimeMode | str"
+        },
+        "strict_mode": {
+          "default": "False",
+          "type": "bool"
+        },
+        "telemetry_sink": {
+          "default": "None",
+          "type": "TelemetrySink | None"
+        }
+      },
+      "kind": "dataclass",
+      "methods": {
+        "__init__": "(self, enable_trace: bool = True, strict_mode: bool = False, adapter_registry: dict[str, Any] | None = None, runtime_mode: RuntimeMode | str = <RuntimeMode.LOCAL: 'local'>, telemetry_sink: TelemetrySink | None = None, core_model: Any | None = None, runtime_controls: TrustedRuntimeControls | None = None, consent_gate: ConsentGate | None = None, egress_gate: EgressGate | None = None, audit_commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, confirmation_registry: Any | None = None, audit_intent_sink: DurableAuditSink | Callable[[dict[str, Any]], None] | None = None, host_context: dict[str, Any] | None = None) -> None",
+        "production": "(**overrides: Any) -> CognitiveOSConfig"
+      },
+      "properties": {}
+    },
+    "CognitiveResultView": {
+      "fields": {
+        "_ir": {
+          "default": "None",
+          "type": "dict[str, Any] | None"
+        },
+        "commitment_degraded": {
+          "default": "False",
+          "type": "bool"
+        },
+        "commitment_policy": {
+          "default": "None",
+          "type": "str | None"
+        },
+        "commitment_reason": {
+          "default": "None",
+          "type": "str | None"
+        },
+        "decision": {
+          "type": "ActionDecision | None"
+        },
+        "execution_view": {
+          "default": "None",
+          "type": "ExecutionTraceView | None"
+        },
+        "global_commitment": {
+          "default": "None",
+          "type": "str | None"
+        },
+        "reflexive": {
+          "default": "None",
+          "type": "dict[str, Any] | None"
+        },
+        "stability": {
+          "type": "Any"
+        },
+        "stability_view": {
+          "type": "StabilityView | None"
+        },
+        "timeline": {
+          "default": "None",
+          "type": "Any | None"
+        },
+        "timeline_commitment": {
+          "default": "None",
+          "type": "str | None"
+        },
+        "timeline_view": {
+          "default": "None",
+          "type": "TimelineView | None"
+        },
+        "trace": {
+          "type": "Any"
+        },
+        "trace_view": {
+          "default": "None",
+          "type": "DecisionTraceView | None"
+        }
+      },
+      "kind": "dataclass",
+      "methods": {
+        "__init__": "(self, decision: ActionDecision | None, stability: Any, stability_view: StabilityView | None, trace: Any, trace_view: DecisionTraceView | None = None, timeline: Any | None = None, timeline_view: TimelineView | None = None, timeline_commitment: str | None = None, global_commitment: str | None = None, _ir: dict[str, Any] | None = None, reflexive: dict[str, Any] | None = None, execution_view: ExecutionTraceView | None = None, commitment_policy: str | None = None, commitment_reason: str | None = None, commitment_degraded: bool = False) -> None",
+        "explain": "(self) -> str",
+        "from_state": "(state: CognitiveState, result: Any, *, commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, commitment_inputs: dict[str, Any] | None = None, commitment_inputs_reason: str | None = None) -> CognitiveResultView",
+        "pretty": "(self) -> str",
+        "quickstart_json": "(self, *, indent: int = 2) -> str",
+        "quickstart_payload": "(self) -> dict[str, Any]",
+        "summary": "(self) -> str",
+        "to_dict": "(self) -> dict[str, Any]",
+        "to_ir": "(self) -> dict[str, Any] | None",
+        "to_json": "(self, *, indent: int = 2) -> str"
+      },
+      "properties": {
+        "status": "DecisionStatus"
+      }
+    },
+    "DecisionStatus": {
+      "kind": "enum",
+      "members": {
+        "ALLOWED": "ALLOWED",
+        "BLOCKED": "BLOCKED",
+        "NONE": "NONE",
+        "REQUIRES_CONFIRMATION": "REQUIRES_CONFIRMATION"
+      }
+    },
+    "RuntimeMode": {
+      "kind": "enum",
+      "members": {
+        "LOCAL": "local",
+        "PRODUCTION": "production",
+        "RESEARCH": "research",
+        "TEST": "test"
+      }
+    },
+    "TrustedRuntimeControls": {
+      "fields": {
+        "force_execution": {
+          "default": "False",
+          "type": "bool"
+        },
+        "force_safe_projection": {
+          "default": "False",
+          "type": "bool"
+        },
+        "force_safe_switching": {
+          "default": "False",
+          "type": "bool"
+        },
+        "force_tool": {
+          "default": "None",
+          "type": "str | None"
+        }
+      },
+      "kind": "dataclass",
+      "methods": {
+        "__init__": "(self, force_tool: str | None = None, force_execution: bool = False, force_safe_projection: bool = False, force_safe_switching: bool = False) -> None"
+      },
+      "properties": {}
+    }
+  }
 }

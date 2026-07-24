@@ -25,16 +25,16 @@ import pytest
 
 import arvis
 import arvis.host_api
-from arvis import ArvisEngine
+from arvis import ArvisEngine, DecisionStatus
 
 BLACKBOX_SCENARIOS_VERSION = 1
 
 # Declared-risk gradation: the documented three-band policy of the
 # 0.1.0-alpha gate (README quick start, examples 01/06/09).
-RISK_SCENARIOS: tuple[tuple[float, str], ...] = (
-    (0.10, "APPROVED"),
-    (0.50, "REVIEW"),
-    (0.90, "BLOCKED"),
+RISK_SCENARIOS: tuple[tuple[float, DecisionStatus], ...] = (
+    (0.10, DecisionStatus.ALLOWED),
+    (0.50, DecisionStatus.REQUIRES_CONFIRMATION),
+    (0.90, DecisionStatus.BLOCKED),
 )
 
 # The host integration surface, as promised (NOTE_DECISION 2026-07-24).
@@ -42,7 +42,7 @@ RISK_SCENARIOS: tuple[tuple[float, str], ...] = (
 # must stay self-contained, since the repository is absent when running
 # against the wheel.
 HOST_API_MODULES: dict[str, int] = {
-    "engine": 4,
+    "engine": 6,
     "access": 2,
     "services": 3,
     "vfs": 9,
@@ -66,22 +66,15 @@ def test_runs_against_an_installed_distribution_when_required() -> None:
     )
 
 
-def _status(result) -> str:
-    decision = result.to_dict()["decision"]
-    allowed = "allowed=True" in decision
-    needs_confirm = "requires_user_validation=True" in decision
-    if allowed and not needs_confirm:
-        return "APPROVED"
-    if needs_confirm:
-        return "REVIEW"
-    return "BLOCKED"
-
-
 @pytest.mark.parametrize(("risk", "expected"), RISK_SCENARIOS)
-def test_declared_risk_gradation(risk: float, expected: str) -> None:
+def test_declared_risk_gradation(risk: float, expected: DecisionStatus) -> None:
+    """The public verdict is result.status, typed: no consumer, and no
+    compliance scenario, derives it from the repr of an internal object
+    anymore (audit a14, A14-BETA-02)."""
     engine = ArvisEngine()
     result = engine.run("blackbox", {"risk": risk})
-    assert _status(result) == expected
+    assert result.status is expected
+    assert result.to_dict()["decision"]["status"] == expected.value
 
 
 def test_run_view_carries_a_commitment_and_an_ir() -> None:
@@ -138,4 +131,4 @@ def test_host_api_surface_resolves_as_promised() -> None:
         for symbol in exported:
             assert hasattr(module, symbol)
         total += len(exported)
-    assert total == 51
+    assert total == 53
