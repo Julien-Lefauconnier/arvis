@@ -11,7 +11,6 @@ class ProjectionCertificationLevel(StrEnum):
     MINIMAL = "MINIMAL"
     BASIC = "BASIC"
     LOCAL = "LOCAL"
-    CERTIFIED_RUNTIME = "CERTIFIED_RUNTIME"
 
 
 @dataclass(frozen=True)

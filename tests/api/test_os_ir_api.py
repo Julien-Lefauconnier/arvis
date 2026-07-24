@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from arvis.api import CognitiveOS, CognitiveOSConfig
+from arvis.api.views.cognitive_result_view import CognitiveResultView
 
 
 def test_run_returns_result_view_with_ir_access() -> None:
@@ -69,8 +70,10 @@ def test_to_dict_does_not_expose_internal_ir_field() -> None:
     assert "_ir" not in data
 
 
-def test_run_without_trace_keeps_backward_compatible_output() -> None:
+def test_run_without_trace_returns_a_minimal_view() -> None:
     # F-007: the config is frozen; no-trace mode is set at construction.
+    # Beta contract (BETA-02): run() has a single public return type; the
+    # no-trace mode returns a minimal view carrying the decision only.
     os = CognitiveOS(CognitiveOSConfig(enable_trace=False))
 
     result = os.run(
@@ -78,6 +81,6 @@ def test_run_without_trace_keeps_backward_compatible_output() -> None:
         cognitive_input={},
     )
 
-    assert isinstance(result, dict)
-    assert "action" in result
-    assert "can_execute" in result
+    assert isinstance(result, CognitiveResultView)
+    assert result.trace is None
+    assert result.global_commitment is None

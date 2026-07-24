@@ -49,13 +49,13 @@ class TimelineView:
     Public projection of a TimelineSnapshot.
     """
 
-    entries: list[TimelineEntryView]
+    entries: tuple[TimelineEntryView, ...]
     head: str | None
     total_entries: int
 
     @staticmethod
     def from_snapshot(snapshot: TimelineSnapshot) -> TimelineView:
-        entries = [TimelineEntryView.from_entry(e) for e in snapshot.entries]
+        entries = tuple(TimelineEntryView.from_entry(e) for e in snapshot.entries)
 
         return TimelineView(
             entries=entries,

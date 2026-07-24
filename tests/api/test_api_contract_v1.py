@@ -78,9 +78,9 @@ def test_disable_trace_mode():
 
     result = os.run(user_id="u1", cognitive_input="test")
 
-    assert isinstance(result, dict)
-    assert "action" in result
-    assert "can_execute" in result
+    # Beta contract (BETA-02): single public return type, minimal view.
+    assert result.trace is None
+    assert result.global_commitment is None
 
 
 def test_fingerprint_matches_contract():

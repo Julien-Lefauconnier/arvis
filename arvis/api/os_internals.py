@@ -39,10 +39,6 @@ class CognitiveOSInternals:
     _tool_executor: ToolExecutor
     tool_registry: ToolRegistry
 
-    @staticmethod
-    def _result_execution(result: Any) -> Any:
-        return getattr(result, "execution", result)
-
     def _build_context(
         self,
         user_id: str,
@@ -147,25 +143,32 @@ class CognitiveOSInternals:
         self,
         state: CognitiveState | None,
         result: Any,
-    ) -> CognitiveResultView | dict[str, Any]:
-        # legacy mode explicite
+    ) -> CognitiveResultView:
+        """Single public return type (beta contract, BETA-02).
+
+        Trace mode builds the full view. The legacy no-trace mode and
+        the fake-executor fallback return a minimal view carrying the
+        decision only: with enable_trace=False no trace and no
+        commitment can exist, and the view says so by construction.
+        """
         if not self.config.enable_trace:
-            execution = self._result_execution(result)
-            return {
-                "action": getattr(result, "action_decision", None),
-                "can_execute": getattr(execution, "can_execute", None),
-            }
+            return self._minimal_result_view(result)
 
         # trace mode normal
         if state is not None:
             return self._build_trace_result(state, result)
 
         # fallback fake executors/tests
-        execution = self._result_execution(result)
-        return {
-            "action": getattr(result, "action_decision", None),
-            "can_execute": getattr(execution, "can_execute", None),
-        }
+        return self._minimal_result_view(result)
+
+    @staticmethod
+    def _minimal_result_view(result: Any) -> CognitiveResultView:
+        return CognitiveResultView(
+            decision=getattr(result, "action_decision", None),
+            stability=None,
+            stability_view=None,
+            trace=None,
+        )
 
     def _run_single(
         self,
@@ -177,7 +180,7 @@ class CognitiveOSInternals:
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
         principal: AuthenticatedPrincipal | None = None,
-    ) -> CognitiveResultView | dict[str, Any]:
+    ) -> CognitiveResultView:
         state, result = self._execute(
             user_id=user_id,
             cognitive_input=cognitive_input,

@@ -1,0 +1,1088 @@
+{
+  "facade": {
+    "ArvisEngine": {
+      "kind": "class",
+      "methods": {
+        "__init__": "(self, config: CognitiveOSConfig | None = None, *, pipeline: CognitivePipeline | None = None, **kwargs: Any) -> None",
+        "ask": "(self, prompt: str, *, user_id: str = 'default', conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "freeze_tools": "(self) -> str",
+        "get_tool_spec": "(self, name: str) -> ToolSpec | None",
+        "inspect": "(self, result: CognitiveResultView) -> dict[str, Any]",
+        "list_tool_specs": "(self) -> dict[str, ToolSpec]",
+        "list_tools": "(self) -> list[str]",
+        "register_tool": "(self, tool: BaseTool) -> None",
+        "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
+        "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
+        "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+      },
+      "properties": {
+        "config": "CognitiveOSConfig",
+        "os": "CognitiveOS",
+        "version": "str"
+      }
+    }
+  },
+  "host_api": {
+    "access": {
+      "OrganizationScopedAuthorization": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, capability_for: Callable[[AccessContext], str] | None = None, scope_covers: ScopeCoverage | None = None) -> None",
+          "decide": "(self, context: AccessContext) -> AccessVerdict"
+        },
+        "properties": {}
+      },
+      "Principal": {
+        "fields": {
+          "grants": {
+            "has_default": true,
+            "type": "frozenset[str]"
+          },
+          "organization_id": {
+            "has_default": true,
+            "type": "str | None"
+          },
+          "user_id": {
+            "has_default": false,
+            "type": "str"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, user_id: str, organization_id: str | None = None, grants: frozenset[str] = <frozenset>) -> None"
+        },
+        "properties": {}
+      }
+    },
+    "cognition": {
+      "CognitiveRetrievalSnapshot": {
+        "fields": {
+          "confidence": {
+            "has_default": true,
+            "type": "builtins.float"
+          },
+          "item_ids": {
+            "has_default": true,
+            "type": "list[str]"
+          },
+          "scores": {
+            "has_default": true,
+            "type": "list[float]"
+          },
+          "semantic_roles": {
+            "has_default": true,
+            "type": "list[str]"
+          },
+          "source": {
+            "has_default": false,
+            "type": "builtins.str"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, source: builtins.str, item_ids: list[str] = <_HAS_DEFAULT_FACTORY_CLASS>, scores: list[float] = <_HAS_DEFAULT_FACTORY_CLASS>, semantic_roles: list[str] = <_HAS_DEFAULT_FACTORY_CLASS>, confidence: builtins.float = 0.0) -> None"
+        },
+        "properties": {}
+      }
+    },
+    "control": {
+      "CognitiveControlDeps": {
+        "fields": {
+          "adaptive_controller_factory": {
+            "has_default": true,
+            "type": "Callable[..., Any] | None"
+          },
+          "calibration_engine": {
+            "has_default": true,
+            "type": "HasEvaluate | None"
+          },
+          "counterfactual_bandit_factory": {
+            "has_default": true,
+            "type": "Callable[..., Any] | None"
+          },
+          "counterfactual_factory": {
+            "has_default": true,
+            "type": "Callable[..., Any] | None"
+          },
+          "drift_detector_factory": {
+            "has_default": true,
+            "type": "Callable[..., Any] | None"
+          },
+          "epsilon_monitor_factory": {
+            "has_default": true,
+            "type": "Callable[..., Any] | None"
+          },
+          "exploration_controller": {
+            "has_default": true,
+            "type": "HasCompute | None"
+          },
+          "inertia_controller": {
+            "has_default": true,
+            "type": "HasUpdate | None"
+          },
+          "local_dynamics_factory": {
+            "has_default": true,
+            "type": "Callable[..., Any] | None"
+          },
+          "mode_hysteresis": {
+            "has_default": true,
+            "type": "HasUpdate | None"
+          },
+          "regime_estimator_factory": {
+            "has_default": true,
+            "type": "Callable[..., Any] | None"
+          },
+          "regime_policy": {
+            "has_default": true,
+            "type": "HasCompute | None"
+          },
+          "stability_stats": {
+            "has_default": true,
+            "type": "HasPushSnapshot | None"
+          },
+          "temporal_pressure": {
+            "has_default": true,
+            "type": "HasCompute | None"
+          },
+          "temporal_regulation": {
+            "has_default": true,
+            "type": "HasCompute | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, epsilon_monitor_factory: Callable[..., Any] | None = None, stability_stats: HasPushSnapshot | None = None, adaptive_controller_factory: Callable[..., Any] | None = None, calibration_engine: HasEvaluate | None = None, local_dynamics_factory: Callable[..., Any] | None = None, regime_estimator_factory: Callable[..., Any] | None = None, drift_detector_factory: Callable[..., Any] | None = None, regime_policy: HasCompute | None = None, temporal_regulation: HasCompute | None = None, temporal_pressure: HasCompute | None = None, exploration_controller: HasCompute | None = None, mode_hysteresis: HasUpdate | None = None, inertia_controller: HasUpdate | None = None, counterfactual_factory: Callable[..., Any] | None = None, counterfactual_bandit_factory: Callable[..., Any] | None = None) -> None"
+        },
+        "properties": {}
+      },
+      "CognitiveControlEngine": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, deps: CognitiveControlDeps)",
+          "compute": "(self, *, runtime: CognitiveControlRuntime, user_id: str, bundle: Any, budget: Any, core: Any, prev_lyap: Any, cur_lyap: Any, irg: Any, explanation: Any | None = None) -> CognitiveControlSnapshot"
+        },
+        "properties": {}
+      },
+      "CognitiveRegimePolicy": {
+        "kind": "class",
+        "methods": {
+          "compute": "(self, regime: str | None) -> RegimeControlSnapshot"
+        },
+        "properties": {}
+      },
+      "ExplorationController": {
+        "kind": "class",
+        "methods": {
+          "compute": "(self, *, regime: str | None, collapse_risk: float | RiskSignal | None, drift_score: float | DriftSignal | None, stable: bool | None) -> ExplorationSnapshot"
+        },
+        "properties": {}
+      },
+      "ModeHysteresis": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, params: ModeHysteresisParams | None = None) -> None",
+          "update": "(self, user_id: str, risk: float | RiskSignal | None) -> CognitiveMode"
+        },
+        "properties": {}
+      }
+    },
+    "conversation": {
+      "PendingTurn": {
+        "fields": {
+          "conversation_id": {
+            "has_default": false,
+            "type": "str"
+          },
+          "created_at": {
+            "has_default": false,
+            "type": "datetime"
+          },
+          "kind": {
+            "has_default": false,
+            "type": "str"
+          },
+          "payload": {
+            "has_default": false,
+            "type": "Mapping[str, object]"
+          },
+          "status": {
+            "has_default": false,
+            "type": "PendingTurnStatus"
+          },
+          "turn_id": {
+            "has_default": false,
+            "type": "str"
+          },
+          "user_id": {
+            "has_default": false,
+            "type": "str"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, turn_id: str, conversation_id: str, user_id: str, kind: str, payload: Mapping[str, object], created_at: datetime, status: PendingTurnStatus) -> None"
+        },
+        "properties": {}
+      },
+      "PendingTurnStatus": {
+        "kind": "enum",
+        "members": {
+          "ABANDONED": "abandoned",
+          "CONSUMED": "consumed",
+          "PENDING": "pending"
+        }
+      },
+      "resolve_continuation": {
+        "kind": "function",
+        "signature": "(pending: PendingTurn, turn_text: str, resolvers: Sequence[ContinuationResolver]) -> str | None"
+      }
+    },
+    "engine": {
+      "ArvisEngine": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, config: CognitiveOSConfig | None = None, *, pipeline: CognitivePipeline | None = None, **kwargs: Any) -> None",
+          "ask": "(self, prompt: str, *, user_id: str = 'default', conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "freeze_tools": "(self) -> str",
+          "get_tool_spec": "(self, name: str) -> ToolSpec | None",
+          "inspect": "(self, result: CognitiveResultView) -> dict[str, Any]",
+          "list_tool_specs": "(self) -> dict[str, ToolSpec]",
+          "list_tools": "(self) -> list[str]",
+          "register_tool": "(self, tool: BaseTool) -> None",
+          "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
+          "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
+          "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        "properties": {
+          "config": "CognitiveOSConfig",
+          "os": "CognitiveOS",
+          "version": "str"
+        }
+      },
+      "CognitiveOSConfig": {
+        "fields": {
+          "adapter_registry": {
+            "has_default": true,
+            "type": "dict[str, Any] | None"
+          },
+          "audit_commitment_policy": {
+            "has_default": true,
+            "type": "AuditCommitmentPolicy"
+          },
+          "audit_intent_sink": {
+            "has_default": true,
+            "type": "DurableAuditSink | Callable[[dict[str, Any]], None] | None"
+          },
+          "confirmation_registry": {
+            "has_default": true,
+            "type": "Any | None"
+          },
+          "consent_gate": {
+            "has_default": true,
+            "type": "ConsentGate | None"
+          },
+          "core_model": {
+            "has_default": true,
+            "type": "Any | None"
+          },
+          "egress_gate": {
+            "has_default": true,
+            "type": "EgressGate | None"
+          },
+          "enable_trace": {
+            "has_default": true,
+            "type": "bool"
+          },
+          "host_context": {
+            "has_default": true,
+            "type": "dict[str, Any] | None"
+          },
+          "runtime_controls": {
+            "has_default": true,
+            "type": "TrustedRuntimeControls | None"
+          },
+          "runtime_mode": {
+            "has_default": true,
+            "type": "RuntimeMode | str"
+          },
+          "strict_mode": {
+            "has_default": true,
+            "type": "bool"
+          },
+          "telemetry_sink": {
+            "has_default": true,
+            "type": "TelemetrySink | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, enable_trace: bool = True, strict_mode: bool = False, adapter_registry: dict[str, Any] | None = None, runtime_mode: RuntimeMode | str = <RuntimeMode.LOCAL: 'local'>, telemetry_sink: TelemetrySink | None = None, core_model: Any | None = None, runtime_controls: TrustedRuntimeControls | None = None, consent_gate: ConsentGate | None = None, egress_gate: EgressGate | None = None, audit_commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, confirmation_registry: Any | None = None, audit_intent_sink: DurableAuditSink | Callable[[dict[str, Any]], None] | None = None, host_context: dict[str, Any] | None = None) -> None",
+          "production": "(**overrides: Any) -> CognitiveOSConfig"
+        },
+        "properties": {}
+      },
+      "ContractionMonitorCore": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, config: MonitorConfig | None = None) -> None",
+          "compute": "(self, bundle: Any, prior_in: Mapping[str, Any] | None) -> tuple[MonitorSnapshot, dict[str, Any]]"
+        },
+        "properties": {}
+      },
+      "MonitorConfig": {
+        "fields": {
+          "cs_boundary": {
+            "has_default": true,
+            "type": "str"
+          },
+          "drift_alpha": {
+            "has_default": true,
+            "type": "float"
+          },
+          "governance_default": {
+            "has_default": true,
+            "type": "float"
+          },
+          "intent_governance": {
+            "has_default": true,
+            "type": "Mapping[str, float]"
+          },
+          "regime_min_samples": {
+            "has_default": true,
+            "type": "int"
+          },
+          "regime_window": {
+            "has_default": true,
+            "type": "int"
+          },
+          "risk_bound": {
+            "has_default": true,
+            "type": "str"
+          },
+          "risk_delta": {
+            "has_default": true,
+            "type": "float"
+          },
+          "risk_horizon": {
+            "has_default": true,
+            "type": "int"
+          },
+          "risk_window": {
+            "has_default": true,
+            "type": "int"
+          },
+          "tau_risk": {
+            "has_default": true,
+            "type": "float"
+          },
+          "tau_uncertainty": {
+            "has_default": true,
+            "type": "float"
+          },
+          "uncertainty_saturation": {
+            "has_default": true,
+            "type": "int"
+          },
+          "verdict_critical_ceiling": {
+            "has_default": true,
+            "type": "float"
+          },
+          "verdict_ok_ceiling": {
+            "has_default": true,
+            "type": "float"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, tau_risk: float = 0.5, tau_uncertainty: float = 0.5, uncertainty_saturation: int = 4, drift_alpha: float = 0.5, governance_default: float = 0.6, risk_window: int = 200, risk_delta: float = 0.01, risk_bound: str = 'hoeffding', risk_horizon: int = 200, cs_boundary: str = 'fixed_lambda', verdict_ok_ceiling: float = 0.15, verdict_critical_ceiling: float = 0.4, regime_window: int = 40, regime_min_samples: int = 10, intent_governance: Mapping[str, float] = <_HAS_DEFAULT_FACTORY_CLASS>) -> None"
+        },
+        "properties": {}
+      }
+    },
+    "knowledge": {
+      "KnowledgeEvent": {
+        "fields": {
+          "created_at": {
+            "has_default": false,
+            "type": "datetime.datetime"
+          },
+          "event_id": {
+            "has_default": false,
+            "type": "builtins.str"
+          },
+          "place_id": {
+            "has_default": false,
+            "type": "str | None"
+          },
+          "snapshot": {
+            "has_default": false,
+            "type": "arvis.knowledge.knowledge_snapshot.KnowledgeSnapshot"
+          },
+          "user_id": {
+            "has_default": false,
+            "type": "str | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, event_id: builtins.str, snapshot: arvis.knowledge.knowledge_snapshot.KnowledgeSnapshot, user_id: str | None, place_id: str | None, created_at: datetime.datetime) -> None"
+        },
+        "properties": {}
+      },
+      "KnowledgeSignal": {
+        "kind": "enum",
+        "members": {
+          "CONFLICTING_SIGNALS": "conflicting_signals",
+          "CONTEXT_DEPENDENT": "context_dependent",
+          "HIGH_VARIANCE": "high_variance",
+          "INDIRECT_KNOWLEDGE": "indirect_knowledge",
+          "INSUFFICIENT_INFORMATION": "insufficient_information",
+          "OUT_OF_SCOPE": "out_of_scope",
+          "SYSTEM_LIMITATION": "system_limitation",
+          "UNSTABLE_KNOWLEDGE": "unstable_knowledge"
+        }
+      },
+      "KnowledgeSnapshot": {
+        "fields": {
+          "created_at": {
+            "has_default": true,
+            "type": "datetime.datetime"
+          },
+          "scope": {
+            "has_default": true,
+            "type": "str | None"
+          },
+          "signals": {
+            "has_default": false,
+            "type": "list[arvis.knowledge.knowledge_signal.KnowledgeSignal]"
+          },
+          "state": {
+            "has_default": false,
+            "type": "arvis.knowledge.knowledge_state.KnowledgeState"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, state: arvis.knowledge.knowledge_state.KnowledgeState, signals: list[arvis.knowledge.knowledge_signal.KnowledgeSignal], scope: str | None = None, created_at: datetime.datetime = <_HAS_DEFAULT_FACTORY_CLASS>) -> None"
+        },
+        "properties": {}
+      },
+      "KnowledgeState": {
+        "kind": "enum",
+        "members": {
+          "KNOWN": "known",
+          "NOT_APPLICABLE": "not_applicable",
+          "PARTIAL": "partial",
+          "UNCERTAIN": "uncertain",
+          "UNKNOWN": "unknown"
+        }
+      }
+    },
+    "llm": {
+      "LLMResponse": {
+        "fields": {
+          "content": "builtins.str",
+          "finish_reason": "str | None",
+          "metadata": "dict[str, typing.Any]",
+          "model": "builtins.str",
+          "provider": "builtins.str",
+          "response_id": "str | None",
+          "trace_id": "str | None",
+          "usage": "arvis.adapters.llm.contracts.usage.LLMUsage"
+        },
+        "kind": "pydantic_model",
+        "methods": {
+          "is_empty": "(self) -> builtins.bool"
+        },
+        "properties": {}
+      }
+    },
+    "memory": {
+      "Governance": {
+        "fields": {
+          "encryption": {
+            "has_default": true,
+            "type": "arvis.memory.governance.GovernanceEncryption"
+          },
+          "principal": {
+            "has_default": true,
+            "type": "arvis.memory.governance.GovernancePrincipal"
+          },
+          "retention": {
+            "has_default": true,
+            "type": "arvis.memory.governance.GovernanceRetention"
+          },
+          "sharing": {
+            "has_default": true,
+            "type": "arvis.memory.governance.GovernanceSharing"
+          },
+          "visibility": {
+            "has_default": true,
+            "type": "arvis.memory.governance.GovernanceVisibility"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, visibility: arvis.memory.governance.GovernanceVisibility = <GovernanceVisibility.USABLE: 'usable'>, sharing: arvis.memory.governance.GovernanceSharing = <GovernanceSharing.PERSONAL: 'personal'>, retention: arvis.memory.governance.GovernanceRetention = <GovernanceRetention.PERSISTENT: 'persistent'>, encryption: arvis.memory.governance.GovernanceEncryption = <GovernanceEncryption.AT_REST: 'at_rest'>, principal: arvis.memory.governance.GovernancePrincipal = <GovernancePrincipal.USER: 'user'>) -> None"
+        },
+        "properties": {}
+      },
+      "GovernanceEncryption": {
+        "kind": "enum",
+        "members": {
+          "AT_REST": "at_rest",
+          "ZERO_KNOWLEDGE": "zero_knowledge"
+        }
+      },
+      "GovernancePrincipal": {
+        "kind": "enum",
+        "members": {
+          "GOVERNANCE": "governance",
+          "ORGANIZATION": "organization",
+          "USER": "user"
+        }
+      },
+      "GovernanceRetention": {
+        "kind": "enum",
+        "members": {
+          "BOUNDED": "bounded",
+          "EPHEMERAL": "ephemeral",
+          "PERSISTENT": "persistent"
+        }
+      },
+      "GovernanceSharing": {
+        "kind": "enum",
+        "members": {
+          "NEVER_SHARE": "never_share",
+          "PERSONAL": "personal",
+          "SHAREABLE": "shareable"
+        }
+      },
+      "GovernanceVisibility": {
+        "kind": "enum",
+        "members": {
+          "DISPLAYABLE": "displayable",
+          "SEALED": "sealed",
+          "USABLE": "usable"
+        }
+      },
+      "MemoryLongEntry": {
+        "fields": {
+          "created_at": {
+            "has_default": false,
+            "type": "datetime.datetime"
+          },
+          "expires_at": {
+            "has_default": true,
+            "type": "datetime.datetime | None"
+          },
+          "governance": {
+            "has_default": true,
+            "type": "arvis.memory.governance.Governance"
+          },
+          "key": {
+            "has_default": false,
+            "type": "builtins.str"
+          },
+          "memory_type": {
+            "has_default": false,
+            "type": "arvis.memory.memory_long_entry.MemoryLongType"
+          },
+          "notes": {
+            "has_default": true,
+            "type": "str | None"
+          },
+          "revoked_at": {
+            "has_default": true,
+            "type": "datetime.datetime | None"
+          },
+          "source": {
+            "has_default": false,
+            "type": "builtins.str"
+          },
+          "value_ref": {
+            "has_default": true,
+            "type": "str | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, memory_type: arvis.memory.memory_long_entry.MemoryLongType, key: builtins.str, created_at: datetime.datetime, source: builtins.str, notes: str | None = None, value_ref: str | None = None, expires_at: datetime.datetime | None = None, revoked_at: datetime.datetime | None = None, governance: arvis.memory.governance.Governance = <_HAS_DEFAULT_FACTORY_CLASS>) -> None"
+        },
+        "properties": {}
+      },
+      "MemoryLongPolicyGate": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, registry: arvis.memory.memory_long_registry.MemoryLongRegistry = <MemoryLongRegistry>)",
+          "compose": "(self, *, personal: arvis.memory.governance.Governance, organization: arvis.memory.governance.Governance) -> arvis.memory.governance.Governance",
+          "validate_append": "(self, entry: arvis.memory.memory_long_entry.MemoryLongEntry) -> None"
+        },
+        "properties": {}
+      },
+      "MemoryLongRecord": {
+        "fields": {
+          "entry": {
+            "has_default": false,
+            "type": "arvis.memory.memory_long_entry.MemoryLongEntry"
+          },
+          "nonce": {
+            "has_default": false,
+            "type": "builtins.bytes"
+          },
+          "payload_ciphertext": {
+            "has_default": false,
+            "type": "builtins.bytes"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, entry: arvis.memory.memory_long_entry.MemoryLongEntry, payload_ciphertext: builtins.bytes, nonce: builtins.bytes) -> None"
+        },
+        "properties": {}
+      },
+      "MemoryLongRepository": {
+        "kind": "class",
+        "methods": {
+          "list_active_entries": "(self, *, user_id: builtins.str) -> list[arvis.memory.memory_long_entry.MemoryLongEntry]",
+          "list_active_entries_batch": "(self, *, user_ids: collections.abc.Iterable[str]) -> dict[str, list[arvis.memory.memory_long_entry.MemoryLongEntry]]",
+          "list_entries": "(self, *, user_id: builtins.str) -> list[arvis.memory.memory_long_record.MemoryLongRecord]",
+          "revoke": "(self, *, user_id: builtins.str, key: builtins.str, revoked_at: datetime.datetime) -> None"
+        },
+        "properties": {}
+      },
+      "MemoryLongSnapshot": {
+        "fields": {
+          "active_entries": {
+            "has_default": true,
+            "type": "list[arvis.memory.memory_long_entry.MemoryLongEntry]"
+          },
+          "created_at": {
+            "has_default": true,
+            "type": "datetime.datetime"
+          },
+          "last_updated_at": {
+            "has_default": true,
+            "type": "datetime.datetime | None"
+          },
+          "notes": {
+            "has_default": true,
+            "type": "str | None"
+          },
+          "revoked_entries": {
+            "has_default": true,
+            "type": "builtins.int"
+          },
+          "total_entries": {
+            "has_default": true,
+            "type": "builtins.int"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, active_entries: list[arvis.memory.memory_long_entry.MemoryLongEntry] = <_HAS_DEFAULT_FACTORY_CLASS>, total_entries: builtins.int = 0, revoked_entries: builtins.int = 0, last_updated_at: datetime.datetime | None = None, notes: str | None = None, created_at: datetime.datetime = <_HAS_DEFAULT_FACTORY_CLASS>) -> None"
+        },
+        "properties": {
+          "entries": "list[arvis.memory.memory_long_entry.MemoryLongEntry]"
+        }
+      },
+      "MemoryLongType": {
+        "kind": "enum",
+        "members": {
+          "CONSTRAINT": "constraint",
+          "CONTEXT": "context",
+          "PREFERENCE": "preference",
+          "RULE": "rule",
+          "STYLE": "style"
+        }
+      }
+    },
+    "services": {
+      "KernelServiceRegistry": {
+        "fields": {
+          "audit_intent_sink": {
+            "has_default": true,
+            "type": "Any | None"
+          },
+          "authorization_service": {
+            "has_default": true,
+            "type": "Any | None"
+          },
+          "host_context": {
+            "has_default": true,
+            "type": "dict[str, Any] | None"
+          },
+          "instance_label": {
+            "has_default": true,
+            "type": "str | None"
+          },
+          "llm_adapter": {
+            "has_default": true,
+            "type": "Any | None"
+          },
+          "require_authenticated_principal": {
+            "has_default": true,
+            "type": "bool"
+          },
+          "require_durable_intent_sink": {
+            "has_default": true,
+            "type": "bool"
+          },
+          "tool_executor": {
+            "has_default": true,
+            "type": "Any | None"
+          },
+          "tool_manager": {
+            "has_default": true,
+            "type": "Any | None"
+          },
+          "vfs_service": {
+            "has_default": true,
+            "type": "Any | None"
+          },
+          "zip_ingest_service": {
+            "has_default": true,
+            "type": "Any | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, tool_executor: Any | None = None, tool_manager: Any | None = None, vfs_service: Any | None = None, zip_ingest_service: Any | None = None, llm_adapter: Any | None = None, authorization_service: Any | None = None, audit_intent_sink: Any | None = None, require_durable_intent_sink: bool = False, require_authenticated_principal: bool = False, host_context: dict[str, Any] | None = None, instance_label: str | None = None) -> None"
+        },
+        "properties": {}
+      },
+      "Syscall": {
+        "fields": {
+          "args": {
+            "has_default": false,
+            "type": "Mapping[str, Any]"
+          },
+          "name": {
+            "has_default": false,
+            "type": "str"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, name: str, args: Mapping[str, Any]) -> None"
+        },
+        "properties": {}
+      },
+      "SyscallHandler": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, runtime_state: RuntimeStateLike | None, scheduler: Any, services: KernelServiceRegistry | None = None) -> None",
+          "begin_run": "(self, run_id: str) -> None",
+          "handle": "(self, syscall: Syscall) -> SyscallResult"
+        },
+        "properties": {}
+      }
+    },
+    "telemetry": {
+      "InMemoryTelemetrySink": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self) -> None",
+          "clear": "(self) -> None",
+          "emit": "(self, event: TelemetryEvent) -> None",
+          "events": "(self) -> list[TelemetryEvent]"
+        },
+        "properties": {}
+      },
+      "TelemetryKind": {
+        "kind": "enum",
+        "members": {
+          "DECISION": "decision",
+          "DEGRADATION": "degradation",
+          "ERROR": "error",
+          "ESCALATION": "escalation",
+          "LIFECYCLE": "lifecycle",
+          "STABILITY": "stability"
+        }
+      }
+    },
+    "tools": {
+      "BaseTool": {
+        "kind": "class",
+        "methods": {
+          "execute": "(self, input_data: dict[str, typing.Any]) -> typing.Any",
+          "execute_invocation": "(self, invocation: arvis.adapters.tools.invocation.ToolInvocation) -> typing.Any",
+          "validate": "(self, input_data: dict[str, typing.Any]) -> None"
+        },
+        "properties": {
+          "tool_name": "builtins.str"
+        }
+      },
+      "ToolExecutor": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, registry: arvis.tools.registry.ToolRegistry) -> None",
+          "claim_minting_authority": "(self) -> arvis.tools.authorized_invocation.InvocationAuthority",
+          "execute": "(self, arg1: typing.Any, arg2: typing.Any | None = None) -> arvis.tools.tool_result.ToolResult | None",
+          "execute_invocation": "(self, authorized: arvis.tools.authorized_invocation.AuthorizedInvocation, result: typing.Any, ctx: typing.Any) -> arvis.tools.tool_result.ToolResult | None"
+        },
+        "properties": {}
+      },
+      "ToolManager": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, registry: arvis.tools.registry.ToolRegistry, executor: arvis.tools.executor.ToolExecutor, *, consent_gate: arvis.adapters.tools.gates.ConsentGate | None = None, egress_gate: arvis.adapters.tools.gates.EgressGate | None = None, require_gates: builtins.bool = False, confirmation_registry: arvis.tools.confirmation.ConfirmationRegistry | None = None) -> None",
+          "abort_authorized": "(self, *args: typing.Any, **kwargs: typing.Any) -> builtins.bool",
+          "activate_authorized": "(self, *args: typing.Any, **kwargs: typing.Any) -> builtins.bool",
+          "authorize": "(self, result: typing.Any, ctx: typing.Any) -> arvis.tools.manager.ToolAuthorizationOutcome | None",
+          "capability_activation": "(self, authorized: typing.Any) -> arvis.tools.authorized_invocation.CapabilityActivationBinding | None",
+          "capability_state": "(self, authorized: typing.Any) -> arvis.tools.authorized_invocation.CapabilityState | None",
+          "execute_authorized": "(self, *args: typing.Any, **kwargs: typing.Any) -> arvis.tools.tool_result.ToolResult | None",
+          "owns_outcome": "(self, outcome: arvis.tools.manager.ToolAuthorizationOutcome) -> builtins.bool",
+          "run": "(self, result: typing.Any, ctx: typing.Any) -> arvis.tools.tool_result.ToolResult | None"
+        },
+        "properties": {}
+      },
+      "ToolRegistry": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self) -> None",
+          "fingerprint": "(self) -> builtins.str",
+          "freeze": "(self) -> builtins.str",
+          "get": "(self, name: builtins.str) -> arvis.tools.base.BaseTool | None",
+          "get_spec": "(self, name: builtins.str) -> arvis.tools.spec.ToolSpec | None",
+          "list": "(self) -> list[str]",
+          "list_specs": "(self) -> dict[str, arvis.tools.spec.ToolSpec]",
+          "manifest": "(self) -> dict[str, typing.Any]",
+          "register": "(self, tool: arvis.tools.base.BaseTool, *, replace: builtins.bool = False) -> None",
+          "verified_spec": "(self, name: builtins.str) -> arvis.tools.spec.ToolSpec | None"
+        },
+        "properties": {
+          "frozen": "builtins.bool"
+        }
+      },
+      "ToolSpec": {
+        "fields": {
+          "audit_required": {
+            "has_default": true,
+            "type": "builtins.bool"
+          },
+          "data_class": {
+            "has_default": true,
+            "type": "builtins.str"
+          },
+          "data_egress": {
+            "has_default": true,
+            "type": "builtins.bool"
+          },
+          "description": {
+            "has_default": false,
+            "type": "builtins.str"
+          },
+          "idempotent": {
+            "has_default": true,
+            "type": "builtins.bool"
+          },
+          "input_schema": {
+            "has_default": true,
+            "type": "dict[str, typing.Any]"
+          },
+          "max_risk": {
+            "has_default": true,
+            "type": "builtins.float"
+          },
+          "name": {
+            "has_default": false,
+            "type": "builtins.str"
+          },
+          "output_schema": {
+            "has_default": true,
+            "type": "dict[str, typing.Any]"
+          },
+          "provider": {
+            "has_default": true,
+            "type": "str | None"
+          },
+          "required_consent": {
+            "has_default": true,
+            "type": "str | None"
+          },
+          "requires_confirmation": {
+            "has_default": true,
+            "type": "builtins.bool"
+          },
+          "retryable": {
+            "has_default": true,
+            "type": "builtins.bool"
+          },
+          "reversible": {
+            "has_default": true,
+            "type": "builtins.bool"
+          },
+          "side_effectful": {
+            "has_default": true,
+            "type": "builtins.bool"
+          },
+          "timeout_seconds": {
+            "has_default": true,
+            "type": "float | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, name: builtins.str, description: builtins.str, input_schema: dict[str, typing.Any] = <_HAS_DEFAULT_FACTORY_CLASS>, output_schema: dict[str, typing.Any] = <_HAS_DEFAULT_FACTORY_CLASS>, idempotent: builtins.bool = False, retryable: builtins.bool = True, side_effectful: builtins.bool = True, timeout_seconds: float | None = None, max_risk: builtins.float = 1.0, requires_confirmation: builtins.bool = False, audit_required: builtins.bool = False, reversible: builtins.bool = True, provider: str | None = None, data_egress: builtins.bool = False, data_class: builtins.str = 'unspecified', required_consent: str | None = None) -> None"
+        },
+        "properties": {
+          "crosses_trust_boundary": "builtins.bool"
+        }
+      }
+    },
+    "vfs": {
+      "VFSCycleError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      },
+      "VFSError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      },
+      "VFSFolderNotEmptyError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      },
+      "VFSInvalidNameError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      },
+      "VFSItem": {
+        "fields": {
+          "created_at": {
+            "has_default": true,
+            "type": "int | None"
+          },
+          "display_name": {
+            "has_default": false,
+            "type": "str"
+          },
+          "file_size": {
+            "has_default": true,
+            "type": "int | None"
+          },
+          "item_id": {
+            "has_default": false,
+            "type": "str"
+          },
+          "item_type": {
+            "has_default": false,
+            "type": "VFSItemType"
+          },
+          "mime": {
+            "has_default": true,
+            "type": "str | None"
+          },
+          "organization_id": {
+            "has_default": true,
+            "type": "str | None"
+          },
+          "owner_id": {
+            "has_default": false,
+            "type": "str"
+          },
+          "parent_id": {
+            "has_default": false,
+            "type": "str | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, item_id: str, display_name: str, item_type: VFSItemType, parent_id: str | None, owner_id: str, organization_id: str | None = None, mime: str | None = None, file_size: int | None = None, created_at: int | None = None) -> None",
+          "is_file": "(self) -> bool",
+          "is_folder": "(self) -> bool"
+        },
+        "properties": {}
+      },
+      "VFSItemNotFoundError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      },
+      "VFSNameConflictError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      },
+      "VFSParentNotFolderError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      },
+      "VFSParentNotFoundError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      }
+    }
+  },
+  "host_api_version": "1.0",
+  "manifest_version": 1,
+  "provisional_modules": [
+    "control"
+  ]
+}

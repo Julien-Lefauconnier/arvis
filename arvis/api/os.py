@@ -223,7 +223,7 @@ class CognitiveOS(CognitiveOSInternals):
         timeline: Any = None,
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
-    ) -> CognitiveResultView | dict[str, Any]:
+    ) -> CognitiveResultView:
         self._ensure_production_ready()
         result = self._run_single(
             user_id=user_id,
@@ -244,7 +244,7 @@ class CognitiveOS(CognitiveOSInternals):
         timeline: Any = None,
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
-    ) -> CognitiveResultView | dict[str, Any]:
+    ) -> CognitiveResultView:
         """Run with a host-authenticated identity on the trusted channel.
 
         ARVIS validates the explicit stamp and derives the turn owner from it;

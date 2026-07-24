@@ -196,5 +196,5 @@ def test_run_as_stamps_the_exact_authenticated_principal() -> None:
 
     os_.runtime = _Runtime()
     result = os_.run_as(principal, "hello")
-    assert isinstance(result, dict)
+    assert result.decision is None  # minimal view from the fake runtime
     assert captured["ctx"].principal is principal

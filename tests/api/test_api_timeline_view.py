@@ -49,7 +49,7 @@ def test_timeline_view_empty():
 
     assert view.total_entries == 0
     assert view.head is None
-    assert view.entries == []
+    assert view.entries == ()
 
 
 def test_os_returns_timeline_view():

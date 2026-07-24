@@ -145,11 +145,13 @@ def test_no_trace_mode_no_commitment():
     from arvis.api import CognitiveOS, CognitiveOSConfig
 
     # F-007: the config is frozen; no-trace mode is set at construction.
+    # Beta contract (BETA-02): single return type; no trace, no commitment.
     os = CognitiveOS(CognitiveOSConfig(enable_trace=False))
 
     result = os.run(user_id="u1", cognitive_input={})
 
-    assert isinstance(result, dict)
+    assert result.trace is None
+    assert result.global_commitment is None
 
 
 def test_global_commitment_present():

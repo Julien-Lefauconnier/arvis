@@ -110,9 +110,10 @@ The runtime produces exactly three: `NONE`, `BASIC` and `LOCAL`, plus `MINIMAL`
 for a bare informational input, attached so the turn is still governed rather
 than rejected. `MINIMAL` is explicitly not a full cognitive projection.
 
-`CERTIFIED_RUNTIME` exists in the enum and **is never produced**. No code path
-awards it, so no artifact carries it. It is reserved, not attainable, and must
-not be read as a level ARVIS can currently reach.
+`CERTIFIED_RUNTIME` was removed from the enum in 0.1.0a14: it had never been
+produced by any code path, and a contract must not carry an unattainable
+level. It will return, as a deliberate contract change, when the noise
+robustness estimator exists and a code path can actually award it.
 
 ### What is out of scope entirely
 
