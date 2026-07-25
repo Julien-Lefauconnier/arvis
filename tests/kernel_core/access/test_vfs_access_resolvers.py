@@ -171,6 +171,55 @@ def test_item_resolver_scope_none_when_item_carries_no_scope():
 
 
 # ---------------------------------------------------------------------------
+# A-01 (campaign 0.1.0b3): VFSItem positional backward compatibility
+# ---------------------------------------------------------------------------
+
+
+def test_vfsitem_positional_call_matches_0_1_0b2_object():
+    """The 0.1.0b2 positional constructor (no resource_scope) must build the
+    exact same object: the trailing metadata land in their own fields and
+    resource_scope defaults to None. resource_scope is appended LAST so this
+    holds (audit A-01)."""
+    item = VFSItem(
+        "id-1",
+        "probe.txt",
+        "file",
+        None,
+        "alice",
+        "acme",
+        "text/plain",
+        123,
+        456,
+    )
+    assert item.item_id == "id-1"
+    assert item.owner_id == "alice"
+    assert item.organization_id == "acme"
+    assert item.mime == "text/plain"
+    assert item.file_size == 123
+    assert item.created_at == 456
+    assert item.resource_scope is None
+
+
+def test_vfsitem_scope_passes_by_keyword():
+    item = VFSItem(
+        item_id="id-1",
+        display_name="probe.txt",
+        item_type="file",
+        parent_id=None,
+        owner_id="alice",
+        resource_scope="scope:A",
+    )
+    assert item.resource_scope == "scope:A"
+
+
+def test_vfsitem_is_importable_from_host_api():
+    """VFSItem is part of the host integration surface."""
+    from arvis.host_api.vfs import VFSItem as HostVFSItem
+
+    assert HostVFSItem is VFSItem
+
+
+# ---------------------------------------------------------------------------
 # Identity on the execution context (org-4)
 # ---------------------------------------------------------------------------
 
