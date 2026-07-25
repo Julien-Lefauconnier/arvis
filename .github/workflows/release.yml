@@ -197,6 +197,7 @@ jobs:
       - name: Create or refresh the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           assets=(release-assets/dist/* release-assets/sbom/*)
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
