@@ -35,19 +35,31 @@ public methods.
   both the reference repository and the service fallbacks, use it, so they can
   no longer drop `owner_id`, `organization_id` or `resource_scope`. An unknown
   field name raises rather than building a divergent object.
-- Resolver fail-open closed (A-03): on a metadata lookup failure the item
-  resolver no longer fabricates a resolved, caller-owned, unscoped resource
-  (which the policy would grant). It leaves the context unresolved and does not
-  raise; the syscall body, calling the same lookup, fails on the same condition
-  and returns a failure, never the resource. An indeterminate lookup is
-  fail-closed by construction. Expected VFS conditions (item or parent not
-  found) still flow to their proper error codes.
+- Both-sided move governance (A-05): `vfs.move_item` reads the source and the
+  destination parent before any mutation and refuses, with no partial mutation,
+  a move into a parent the caller may not write, a move that crosses
+  organization or scope (opaque equality), a move of a scoped item to the
+  unscoped root, or a move with an indeterminate source or destination. A
+  cross-scope transfer is not an ordinary move.
+  - Resolver fail-open closed (A-03): on an UNEXPECTED metadata lookup failure the
+  item resolver no longer fabricates a resolved, caller-owned, unscoped resource
+  (which the policy would grant). It lets the exception PROPAGATE, and the
+  handler turns any exception raised during authorization into a fail-closed
+  `authorization_failure` refusal, so the syscall body never runs. This closes
+  the time-of-check/time-of-use gap where a transient first failure, once
+  swallowed, let the body read a second time and return a foreign resource on
+  fabricated metadata. Expected VFS conditions (item or parent not found) stay
+  neutral and still flow to their proper error codes; only an unresolvable
+  lookup denies.
 - Governed collections (A-04): `vfs.list` and `vfs.tree` evaluate every returned
   item against the full policy, not just the caller's own scope at the syscall
   boundary. Only accessible items survive; an item whose evaluation errors is
   excluded, never included by default, and the result is never widened. For
   `vfs.tree` the flat list is filtered before the tree is built, so no forbidden
-  node is ever materialized.
+  node is ever materialized. Each item is judged under the REAL calling syscall
+  (`vfs.list` or `vfs.tree`), so a host policy that governs the two operations
+  with distinct capabilities is applied correctly and neither borrows the
+  other's grant.
 - Both-sided move governance (A-05): `vfs.move_item` reads the source and the
   destination parent before any mutation and refuses, with no partial mutation,
   a move into a parent the caller may not write, a move that crosses
@@ -55,11 +67,16 @@ public methods.
   unscoped root, or a move with an indeterminate source or destination. A
   cross-scope transfer is not an ordinary move.
 - Impose-and-verify creation inheritance (A-06): a child inherits its parent's
-  organization and scope as a governed invariant. The kernel resolves the
-  parent, imposes its context as a constraint passed to the service, then
-  verifies the created item carries it; a non-conforming item is rolled back and
-  the creation refused. Security does not depend on the service honouring the
-  constraint. Root creation inherits nothing and stays unscoped.
+  organization and scope as a governed invariant CENTRALIZED in `VFSService`,
+  the common boundary of every creation path. The service derives the parent's
+  context, imposes it on the repository call, then verifies the created item
+  carries it; a non-conforming item is rolled back and the creation refused.
+  Security does not depend on the repository honouring the constraint. Because
+  the invariant lives in the service, the ZIP import path (which reaches the
+  service directly, without a creation syscall) inherits the parent's
+  organization and scope on every descendant. Root creation inherits nothing and
+  stays unscoped.
+
 
 ### Added
 
@@ -91,6 +108,14 @@ public methods.
   the resolution-failure-is-not-an-unscoped-resource rule, per-item collection
   filtering, both-sided move governance, impose-and-verify creation inheritance,
   and the obligations a host-supplied VFS service must uphold.
+- Following an independent counter-audit of the b3 candidate, three isolation
+  defects were closed before release: the resolver now denies on an
+  indeterminate lookup instead of trusting the body to fail (A-03,
+  time-of-check/time-of-use), creation inheritance was centralized in
+  `VFSService` so the ZIP import path can no longer drop scope (A-06), and the
+  per-item collection filter now judges each item under the real syscall name so
+  `vfs.tree` cannot borrow the `vfs.list` capability (A-04). The candidate was
+  neither tagged nor published before these closures.
 
 ## [0.1.0b2] - 2026-07-25
 

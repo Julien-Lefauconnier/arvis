@@ -200,11 +200,20 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           assets=(release-assets/dist/* release-assets/sbom/*)
+          # Mark any PEP 440 pre-release tag (alpha, beta, rc) as a GitHub
+          # prerelease, so a beta artifact is never presented as stable
+          # (counter-audit B3-REL-01). A final tag (no a/b/rc suffix) omits
+          # the flag and publishes as a normal release.
+          prerelease_flag=()
+          if printf '%s' "${GITHUB_REF_NAME}" | grep -Eiq '([0-9])(a|b|rc)[0-9]+$'; then
+            prerelease_flag=(--prerelease)
+          fi
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
             gh release upload "${GITHUB_REF_NAME}" "${assets[@]}" --clobber
           else
             gh release create "${GITHUB_REF_NAME}" "${assets[@]}" \
               --verify-tag \
               --title "ARVIS ${GITHUB_REF_NAME}" \
-              --generate-notes
+              --generate-notes \
+              "${prerelease_flag[@]}"
           fi

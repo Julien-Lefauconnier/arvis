@@ -266,11 +266,20 @@ A VFS repository must provide:
 
 - `list_items(user_id: str) -> list[VFSItem]`
 - `get_item(user_id: str, item_id: str) -> Optional[VFSItem]`
-- `create_folder(user_id: str, name: str, parent_id: Optional[str]) -> str`
-- `create_file_item(user_id: str, name: str, parent_id: Optional[str], size: Optional[int], mime: Optional[str]) -> str`
+- `create_folder(user_id: str, name: str, parent_id: Optional[str], organization_id: Optional[str] = None, resource_scope: Optional[str] = None) -> str`
+- `create_file_item(user_id: str, name: str, parent_id: Optional[str], size: Optional[int], mime: Optional[str], organization_id: Optional[str] = None, resource_scope: Optional[str] = None) -> str`
 - `delete_item(user_id: str, item_id: str) -> None`
 - `rename_item(user_id: str, item_id: str, new_name: str) -> None`
 - `move_item(user_id: str, item_id: str, parent_id: Optional[str]) -> None`
+
+The two creation methods carry the inherited security context
+(`organization_id`, `resource_scope`) that the service derives from the parent
+and passes down (Section 10.9). Both parameters are optional and default to
+`None`, which is behaviour-neutral for an unscoped, personal creation. A
+repository written for `0.1.0b2` must be migrated to the new signature; the
+migration strategy is stated in Section 8.4. `VFSRepository` is not exported by
+`arvis.host_api`, so this evolution does not by itself change
+`HOST_API_VERSION`.
 
 ### 8.3 Current implementation
 
@@ -279,6 +288,20 @@ V1 ships with:
 - `InMemoryVFSRepository`
 
 This is the baseline driver used for deterministic tests and kernel validation.
+
+### 8.4 Repository migration (0.1.0b2 to 0.1.0b3)
+
+The creation methods gained two optional parameters (`organization_id`,
+`resource_scope`). The service always passes them, so a repository written for
+the `0.1.0b2` signature raises `TypeError` even when both values are `None`.
+
+The retained strategy is explicit migration (no compatibility shim): a custom
+repository MUST adopt the new signature. The reference in-memory repository and
+any host repository (for example a VeraMem adapter) are updated to accept and
+stamp the two parameters. A contract test asserts the repository honours the
+inherited context, so a future divergence is caught rather than silently
+dropping scope. This keeps a single creation contract across all paths at the
+cost of a one-time migration for host-provided repositories.
 
 ---
 
@@ -332,6 +355,13 @@ Current service surface:
 - `delete_item(user_id, item_id)`
 - `rename_item(user_id, item_id, new_name)`
 - `move_item(user_id, item_id, parent_id)`
+
+The service creation methods deliberately do NOT accept an explicit
+`organization_id` or `resource_scope`: the parent is authoritative, and the
+service derives the inherited context from it, imposes it on the repository call
+and verifies the created item carries it (Section 10.9). This makes creation
+inheritance a single, centralized invariant that every creation path, including
+ZIP import, obtains without passing anything.
 
 ### 10.3 Name normalization
 
@@ -413,21 +443,23 @@ mutation. See `vfs.move_item`.
 
 ### 10.9 Creation inheritance invariant
 
-A newly created item inherits its parent's security context (audit A-06):
+A newly created item inherits its parent's security context:
 
 - creating under a parent, the new item MUST carry the parent's
   `organization_id` and `resource_scope`;
 - creating at the root (no parent) inherits nothing: the item is unscoped, the
   historical behaviour.
 
-This inheritance is a **governed invariant**, not a convention trusted to the
-service. The kernel (Section 23.2) imposes the parent's context as a constraint
-passed to the service AND verifies that the created item carries it; a
-non-conforming item is rolled back and the creation refused. Security therefore
-does not depend on any service honouring the constraint. The reference service
-and repository accept the inherited `organization_id` and `resource_scope` as
-optional creation parameters (default `None`, behaviour-neutral) and stamp them
-on the created item.
+This inheritance is a **governed invariant centralized in `VFSService`**, the
+common boundary of every creation path (unit creation and ZIP import alike). The
+service derives the parent's context, imposes it on the repository call, and
+then VERIFIES the created item carries it; a non-conforming item is rolled back
+and `VFSInheritanceViolationError` is raised, which the syscall body maps to a
+fail-closed security refusal. Security therefore does not depend on the
+repository honouring the constraint: the service imposes AND verifies. Placing
+the invariant in the service (rather than in each syscall body) is what closes
+the ZIP path, which reaches the service directly without going through a
+creation syscall.
 
 ---
 
