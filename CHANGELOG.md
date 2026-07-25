@@ -9,6 +9,89 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+## [0.1.0b3] - 2026-07-25
+
+Corrective beta release closing the six findings of the independent audit of
+the VFS resource-scope feature. It makes narrower-than-organization scopes a
+governed isolation boundary in the kernel, with the security property enforced
+and verified rather than assumed. The public surface is unchanged:
+`HOST_API_VERSION` stays `1.0`, no `host_api` module moved, and the beta
+contract manifest changes only to record `VFSItem`'s field order and unchanged
+public methods.
+
+### Security
+
+- `VFSItem.resource_scope` is now honoured as an isolation boundary across the
+  whole VFS surface, not merely carried. A resource that carries a scope is
+  reachable only when the principal's grants cover that scope (opaque, never
+  parsed), cumulatively with organization membership and the required
+  capability.
+- Backward-compatible constructor (A-01): `resource_scope` is the LAST field of
+  `VFSItem`, so every positional constructor call written before scoped grants
+  existed builds the exact same object. New callers pass the scope by keyword.
+- Metadata preservation on reconstruction (A-02): a private
+  `VFSItem._with_changes(**changes)` primitive returns a copy with only the
+  named fields changed and every other field preserved. `rename` and `move`, in
+  both the reference repository and the service fallbacks, use it, so they can
+  no longer drop `owner_id`, `organization_id` or `resource_scope`. An unknown
+  field name raises rather than building a divergent object.
+- Resolver fail-open closed (A-03): on a metadata lookup failure the item
+  resolver no longer fabricates a resolved, caller-owned, unscoped resource
+  (which the policy would grant). It leaves the context unresolved and does not
+  raise; the syscall body, calling the same lookup, fails on the same condition
+  and returns a failure, never the resource. An indeterminate lookup is
+  fail-closed by construction. Expected VFS conditions (item or parent not
+  found) still flow to their proper error codes.
+- Governed collections (A-04): `vfs.list` and `vfs.tree` evaluate every returned
+  item against the full policy, not just the caller's own scope at the syscall
+  boundary. Only accessible items survive; an item whose evaluation errors is
+  excluded, never included by default, and the result is never widened. For
+  `vfs.tree` the flat list is filtered before the tree is built, so no forbidden
+  node is ever materialized.
+- Both-sided move governance (A-05): `vfs.move_item` reads the source and the
+  destination parent before any mutation and refuses, with no partial mutation,
+  a move into a parent the caller may not write, a move that crosses
+  organization or scope (opaque equality), a move of a scoped item to the
+  unscoped root, or a move with an indeterminate source or destination. A
+  cross-scope transfer is not an ordinary move.
+- Impose-and-verify creation inheritance (A-06): a child inherits its parent's
+  organization and scope as a governed invariant. The kernel resolves the
+  parent, imposes its context as a constraint passed to the service, then
+  verifies the created item carries it; a non-conforming item is rolled back and
+  the creation refused. Security does not depend on the service honouring the
+  constraint. Root creation inherits nothing and stays unscoped.
+
+### Added
+
+- `VFSItem` gains an optional `resource_scope: str | None = None` field, the
+  item's opaque narrower-than-organization scope. The item access resolver
+  copies it verbatim into the `AccessContext`, where the injected scope rule
+  decides coverage; ARVIS never parses it. Additive and backward-compatible:
+  the field defaults to `None` (a scopeless item, the pre-scoped behaviour), so
+  a host adapter that does not set it is unchanged. `HOST_API_VERSION` stays
+  `1.0` per the additive-changes-remain-free rule (VERSIONING.md); the beta
+  contract manifest is regenerated to record the new field.
+- The reference `VFSService` and in-memory repository creation methods accept
+  optional inherited `organization_id` and `resource_scope` (default `None`,
+  behaviour-neutral), which the kernel uses to impose creation inheritance.
+  Neither contract is part of `host_api`.
+- An adversarial isolation suite (`tests/kernel_core/access/`) locking each
+  finding: positional compatibility, reconstruction preservation, end-to-end
+  denial on indeterminate lookup over every item-referencing syscall, no
+  collection leak, cross-scope move refusal, and creation-inheritance
+  verification including a disobedient-service rollback.
+
+### Changed
+
+- Package version moves to `0.1.0b3`; README, source fallback and public status
+  are coherent with the beta.
+- `ARVIS_ACCESS_SPEC_V1` and `ARVIS_VFS_SPEC_V1` document the resource-scope
+  invariants: opacity and the injectable coverage rule, the cumulative
+  organization + capability + scope condition, the None-is-covered semantics,
+  the resolution-failure-is-not-an-unscoped-resource rule, per-item collection
+  filtering, both-sided move governance, impose-and-verify creation inheritance,
+  and the obligations a host-supplied VFS service must uphold.
+
 ## [0.1.0b2] - 2026-07-25
 
 Corrective beta release. It closes the non-finite input-risk defect found by
@@ -33,14 +116,6 @@ integration path for developers adopting ARVIS.
 
 ### Added
 
-- `VFSItem` gains an optional `resource_scope: str | None = None` field, the
-  item's opaque narrower-than-organization scope. The item access resolver
-  copies it verbatim into the `AccessContext`, where the injected scope rule
-  decides coverage; ARVIS never parses it. Additive and backward-compatible:
-  the field defaults to `None` (a scopeless item, the pre-scoped behaviour),
-  so a host adapter that does not set it is unchanged. `HOST_API_VERSION`
-  stays `1.0` per the additive-changes-remain-free rule (VERSIONING.md); the
-  beta contract manifest is regenerated to record the new field.
 - A stack-neutral
   `docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md` explaining ARVIS as
   the governance boundary inside a complete sovereign assistant.
