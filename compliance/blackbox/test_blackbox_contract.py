@@ -322,8 +322,21 @@ class _BlackboxExpectedFailureThenForeignVFS:
         )
 
 
-def test_vfs_expected_lookup_failure_fails_closed_from_the_wheel() -> None:
-    """b3/A-03: expected lookup errors cannot authorize a second read."""
+def test_vfs_expected_lookup_failure_never_reaches_a_second_lookup_from_the_wheel() -> (
+    None
+):
+    """b4 single-read: an expected first failure (not-found) must never reach a
+    second body lookup that a live store could answer with a FOREIGN resource.
+
+    Under single-read the resolver captures the expected exception and the body
+    maps it WITHOUT re-reading, so the second (foreign) read never happens:
+    ``calls == 1`` and no resource is returned. The precise code is
+    vfs_item_not_found (finesse restored: fail-closed is not fail-opaque), not
+    an opaque authorization_failure. The security property is the absence of a
+    second lookup and of any returned resource, exactly what closes the TOCTOU
+    an absorbed expected failure would otherwise reopen (counter-audit
+    B3-VFS-01). Anti-enumeration is preserved by the denied case, not by erasing
+    not-found."""
     from arvis.host_api.access import OrganizationScopedAuthorization, Principal
     from arvis.host_api.services import KernelServiceRegistry, Syscall, SyscallHandler
 
@@ -339,7 +352,8 @@ def test_vfs_expected_lookup_failure_fails_closed_from_the_wheel() -> None:
         Syscall(name="vfs.get", args={"ctx": ctx, "user_id": "bob", "item_id": "i1"})
     )
 
-    assert result.success is False
-    assert vfs.calls == 1
+    assert result.success is False, "a resource was returned after a not-found"
+    assert vfs.calls == 1, "the body performed a second lookup, reopening the TOCTOU"
+    assert result.result is None, "a foreign resource leaked through the retry"
     assert result.error is not None
-    assert result.error.details.get("reason_code") == "authorization_failure"
+    assert result.error.code == "vfs_item_not_found"

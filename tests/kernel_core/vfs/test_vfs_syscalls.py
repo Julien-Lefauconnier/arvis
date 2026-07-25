@@ -164,7 +164,12 @@ def test_vfs_get_syscall_returns_serialized_item() -> None:
     assert result.result["item_type"] == "folder"
 
 
-def test_vfs_get_missing_reference_fails_during_authorization() -> None:
+def test_vfs_get_missing_item_maps_to_not_found() -> None:
+    """vfs.get on an absent item resolves to the precise vfs_item_not_found
+    code, not an opaque authorization_failure. The resolver stays neutral on an
+    EXPECTED VFS condition and the body maps it (b4 finesse); fail-closed does
+    not mean fail-opaque. Anti-enumeration is preserved by the denied case, not
+    by erasing not-found (see the adversarial finesse suite)."""
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
 
@@ -180,7 +185,9 @@ def test_vfs_get_missing_reference_fails_during_authorization() -> None:
         )
     )
 
-    _assert_authorization_failure(result)
+    assert result.success is False
+    assert result.error is not None
+    assert result.error.code == "vfs_item_not_found"
 
 
 def test_vfs_tree_syscall_returns_serialized_tree() -> None:
@@ -301,7 +308,10 @@ def test_vfs_create_folder_syscall_maps_invalid_name() -> None:
     )
 
 
-def test_vfs_create_folder_missing_parent_fails_during_authorization() -> None:
+def test_vfs_create_folder_missing_parent_maps_to_parent_not_found() -> None:
+    """vfs.create_folder under an absent parent resolves to the precise
+    vfs_parent_not_found code (b4 finesse): an absent parent is an expected VFS
+    condition, not indeterminate authorization."""
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
 
@@ -318,7 +328,9 @@ def test_vfs_create_folder_missing_parent_fails_during_authorization() -> None:
         )
     )
 
-    _assert_authorization_failure(result)
+    assert result.success is False
+    assert result.error is not None
+    assert result.error.code == "vfs_parent_not_found"
 
 
 def test_vfs_create_file_syscall_creates_file() -> None:

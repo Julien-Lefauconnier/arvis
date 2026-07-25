@@ -111,7 +111,7 @@ def test_item_resolver_populates_resource_organization_id():
         vfs_service=_FakeVFS(owner_id="alice", organization_id="acme"),
     )
 
-    context = resolver({"user_id": "bob", "item_id": "i1"}, services)
+    context = resolver({"user_id": "bob", "item_id": "i1"}, services).context
 
     assert context.resource_owner_id == "alice"
     assert context.resource_organization_id == "acme"
@@ -121,7 +121,7 @@ def test_item_resolver_defaults_organization_to_none_when_unreadable():
     resolver = _item_owner_resolver(SyscallEffect.READ, "vfs.get", id_arg="item_id")
     services = KernelServiceRegistry(vfs_service=None)
 
-    context = resolver({"user_id": "bob", "item_id": "i1"}, services)
+    context = resolver({"user_id": "bob", "item_id": "i1"}, services).context
 
     assert context.resource_owner_id == "bob"
     assert context.resource_organization_id is None
@@ -141,7 +141,7 @@ def test_item_resolver_populates_resource_scope():
         ),
     )
 
-    context = resolver({"user_id": "bob", "item_id": "i1"}, services)
+    context = resolver({"user_id": "bob", "item_id": "i1"}, services).context
 
     assert context.resource_scope == "rsc:client:3/matter:7|financier"
 
@@ -152,7 +152,7 @@ def test_item_resolver_defaults_resource_scope_to_none_when_unreadable():
     resolver = _item_owner_resolver(SyscallEffect.READ, "vfs.get", id_arg="item_id")
     services = KernelServiceRegistry(vfs_service=None)
 
-    context = resolver({"user_id": "bob", "item_id": "i1"}, services)
+    context = resolver({"user_id": "bob", "item_id": "i1"}, services).context
 
     assert context.resource_scope is None
 
@@ -165,7 +165,7 @@ def test_item_resolver_scope_none_when_item_carries_no_scope():
         vfs_service=_FakeVFS(owner_id="alice", organization_id="acme"),
     )
 
-    context = resolver({"user_id": "bob", "item_id": "i1"}, services)
+    context = resolver({"user_id": "bob", "item_id": "i1"}, services).context
 
     assert context.resource_scope is None
 

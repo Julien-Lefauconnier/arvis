@@ -17,10 +17,18 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from typing import Any
 
-    from arvis.kernel_core.access.models import AccessContext
+    from arvis.kernel_core.access.models import AccessContext, ResolvedAccess
     from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 
-    AccessResolver = Callable[[Mapping[str, Any], KernelServiceRegistry], AccessContext]
+    # A resolver returns either a bare AccessContext (it read nothing to
+    # authorize) or a ResolvedAccess carrying the resource it already read, so a
+    # pure-READ body can reuse it instead of a second lookup (b4 single-read).
+    # The handler accepts both; ResolvedAccess is additive and backward
+    # compatible.
+    AccessResolver = Callable[
+        [Mapping[str, Any], KernelServiceRegistry],
+        "AccessContext | ResolvedAccess",
+    ]
 
 SyscallFn = Callable[..., SyscallResult]
 

@@ -15,7 +15,7 @@ from arvis.errors.provenance import ErrorOrigin, cause_from_exception
 from arvis.errors.syscall import SyscallBoundaryViolationError
 from arvis.kernel_core.access.decision import AccessDecision
 from arvis.kernel_core.access.identity import principal_from_context
-from arvis.kernel_core.access.models import AccessContext, Principal
+from arvis.kernel_core.access.models import AccessContext, Principal, ResolvedAccess
 from arvis.kernel_core.access.policy import (
     ACCESS_DENIED_REASON_CODE,
     AuthorizationPolicy,
@@ -77,6 +77,9 @@ def _get_zip(handler: SyscallHandlerLike) -> ZipIngestService | None:
 # =====================================================
 
 _AccessResolver = Callable[[Mapping[str, Any], KernelServiceRegistry], AccessContext]
+_ItemAccessResolver = Callable[
+    [Mapping[str, Any], KernelServiceRegistry], ResolvedAccess
+]
 
 
 def _scope_owner_resolver(effect: SyscallEffect, syscall_name: str) -> _AccessResolver:
@@ -106,7 +109,7 @@ def _scope_owner_resolver(effect: SyscallEffect, syscall_name: str) -> _AccessRe
 
 def _item_owner_resolver(
     effect: SyscallEffect, syscall_name: str, *, id_arg: str
-) -> _AccessResolver:
+) -> _ItemAccessResolver:
     """Resolve the resource owner as the owner of a referenced VFS item.
 
     ``id_arg`` names the syscall argument holding the target item or parent
@@ -114,23 +117,33 @@ def _item_owner_resolver(
     read from the item through the VFS service, so a principal acting on a
     resource it does not own is denied by the owner-scoped policy.
 
-    Two cases are carefully distinguished (audit A-03, fail-closed doctrine):
+    Three cases are carefully distinguished (audit A-03, counter-audit
+    B3-VFS-01, b4 finesse; fail-closed does not mean fail-opaque):
 
     - the reference is ABSENT (creation at the root): not an error, the
       caller acts on its own scope, ownership is the caller and the resource
       is genuinely unscoped (resource_scope None, the historical behaviour);
-    - the lookup FAILS for any reason: the metadata is INDETERMINATE. The
-      exception propagates to ``SyscallHandler``, which emits an
-      ``authorization_failure`` refusal and never dispatches the syscall body.
-      This includes expected domain errors such as ``VFSItemNotFoundError``:
-      absorbing one would allow a second, time-of-check/time-of-use lookup to
-      return a different resource after authorization was granted on fabricated
-      caller-owned metadata.
+    - the lookup raises an EXPECTED VFS condition (item or parent not found,
+      ...): this is a fact about the resource, not indeterminate authorization.
+      The resolver stays NEUTRAL (caller-owned, unscoped) and lets the syscall
+      body map the same condition to its precise error code, exactly as it does
+      when no scope is involved. Anti-enumeration is not weakened: an existing
+      but forbidden item is caught by the owner/organization/scope policy and
+      denied (access_denied), indistinguishable from any other denial; the
+      precise not-found code only ever reaches a caller whose authorization
+      would have succeeded had the item existed, for whom the item's absence is
+      not a secret;
+    - the lookup raises an UNEXPECTED failure (transient outage, proxy, cache,
+      inconsistency): the metadata is INDETERMINATE. The exception PROPAGATES
+      to ``SyscallHandler``, which emits an ``authorization_failure`` refusal
+      and never dispatches the body. This is the time-of-check/time-of-use
+      guard: a transient first failure, if absorbed, could let a second read
+      return a different resource after authorization on fabricated metadata.
     """
 
     def _resolve(
         args: Mapping[str, Any], services: KernelServiceRegistry
-    ) -> AccessContext:
+    ) -> ResolvedAccess:
         user_id: str = args["user_id"]
         principal = principal_from_context(args.get("ctx"))
         if principal is None:
@@ -141,20 +154,35 @@ def _item_owner_resolver(
         organization_id: str | None = None
         resource_scope: str | None = None
 
+        resolved_item: VFSItem | None = None
+        lookup_error: Exception | None = None
         vfs: VFSService | None = services.vfs_service
         if vfs is not None and isinstance(reference, str):
-            # Read the resource to authorize against its real owner,
-            # organization and scope. NO lookup exception is absorbed here:
-            # expected and unexpected failures both mean the authorization
-            # metadata could not be resolved for this operation. The handler
-            # converts the propagated exception into a fail-closed
-            # authorization_failure, before the body can perform another read.
-            item = vfs.get_item(user_id=user_id, item_id=reference)
-            owner_id = item.owner_id
-            organization_id = item.organization_id
-            resource_scope = item.resource_scope
+            try:
+                item = vfs.get_item(user_id=user_id, item_id=reference)
+            except VFS_EXPECTED_ERRORS as exc:
+                # Expected VFS condition (not-found, ...): stay NEUTRAL for the
+                # authorization decision, and CAPTURE the exception so a
+                # pure-READ body maps it to its precise code without a second
+                # lookup (b4 finesse). Not re-reading is what keeps it safe: a
+                # live store cannot answer a retry with a foreign resource (the
+                # TOCTOU an absorbed expected failure would reopen). Only an
+                # UNEXPECTED failure, left to propagate below, denies fail-closed.
+                owner_id = user_id
+                organization_id = None
+                resource_scope = None
+                lookup_error = exc
+            else:
+                owner_id = item.owner_id
+                organization_id = item.organization_id
+                resource_scope = item.resource_scope
+                # Carry the item just read, so a pure-READ body reuses it
+                # instead of a SECOND lookup that a live store could answer with
+                # a different resource (b4 single-read closes B3-VFS-01 at its
+                # root for reads). Effect bodies ignore it and mutate by id.
+                resolved_item = item
 
-        return AccessContext(
+        context = AccessContext(
             principal=principal,
             effect=effect,
             resource_owner_id=owner_id,
@@ -162,6 +190,9 @@ def _item_owner_resolver(
             resource_id=reference if isinstance(reference, str) else None,
             resource_scope=resource_scope,
             syscall_name=syscall_name,
+        )
+        return ResolvedAccess(
+            context=context, resource=resolved_item, lookup_error=lookup_error
         )
 
     return _resolve
@@ -484,12 +515,34 @@ def vfs_list(handler: SyscallHandlerLike, user_id: str, **kwargs: Any) -> Syscal
     access=_item_owner_resolver(SyscallEffect.READ, "vfs.get", id_arg="item_id"),
 )
 def vfs_get(
-    handler: SyscallHandlerLike, user_id: str, item_id: str, **_: Any
+    handler: SyscallHandlerLike,
+    user_id: str,
+    item_id: str,
+    _resolved_resource: object | None = None,
+    _resolved_lookup_error: Exception | None = None,
+    **_: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
 
+    # Single-read (b4): the access resolver already read this item to authorize
+    # it, and handed over the OUTCOME of that read. The body never performs a
+    # second lookup a live store could answer with a different resource, so what
+    # was authorized is exactly what is returned, closing the
+    # time-of-check/time-of-use gap at its root (counter-audit B3-VFS-01):
+    #   - the item was read: return it directly;
+    #   - the read raised an expected condition (not-found, ...): map that exact
+    #     exception to its precise code, WITHOUT re-reading.
+    if isinstance(_resolved_resource, VFSItem):
+        return SyscallResult(
+            success=True, result=_serialize_vfs_item(_resolved_resource)
+        )
+    if isinstance(_resolved_lookup_error, VFS_EXPECTED_ERRORS):
+        return SyscallResult.failure(_map_vfs_error(_resolved_lookup_error))
+
+    # Fallback for a direct call without the handler (no resolver ran): read and
+    # map expected VFS conditions to their precise error codes.
     try:
         item = vfs.get_item(user_id=user_id, item_id=item_id)
     except VFS_EXPECTED_ERRORS as exc:

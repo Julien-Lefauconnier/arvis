@@ -94,3 +94,38 @@ class AccessContext:
     resource_id: str | None = None
     resource_scope: str | None = None
     syscall_name: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedAccess:
+    """An access decision context plus the resource the resolver already read.
+
+    A resolver that must READ a resource to authorize (owner, organization and
+    scope live on the resource) can return this instead of a bare
+    ``AccessContext``, carrying the resource it read so the syscall body reuses
+    it INSTEAD OF reading a second time. For a pure-READ syscall this collapses
+    the two lookups into one and closes the time-of-check/time-of-use gap at its
+    root: what was authorized is exactly what is returned, with no live store
+    between the two (counter-audit B3-VFS-01, b4).
+
+    ``resource`` is opaque to the kernel authorization path, which only reads
+    ``context``; it is handed to the body verbatim. Resolvers that do not read a
+    resource keep returning a bare ``AccessContext``; the handler treats that as
+    ``resource=None``, so this is additive and backward-compatible.
+
+    The three lookup outcomes a reading resolver can report:
+
+    - it READ the resource: ``resource`` holds it, ``lookup_error`` is None. A
+      pure-READ body returns it directly (single-read).
+    - the lookup raised an EXPECTED condition (not-found, ...): ``resource`` is
+      None and ``lookup_error`` holds that exception. A pure-READ body re-raises
+      or maps it to its precise code WITHOUT a second lookup, so a live store
+      cannot answer the retry with a different resource (the TOCTOU that an
+      absorbed expected failure would reopen). This gives finesse AND safety at
+      once.
+    - it read NOTHING (absent reference, root creation): both are None and the
+      body proceeds as before."""
+
+    context: AccessContext
+    resource: object | None = None
+    lookup_error: Exception | None = None

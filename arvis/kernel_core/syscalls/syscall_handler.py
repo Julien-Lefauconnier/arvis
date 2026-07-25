@@ -17,7 +17,12 @@ from arvis.kernel_core.access.identity import (
     authenticated_principal_from_context,
     principal_from_context,
 )
-from arvis.kernel_core.access.models import KERNEL_OWNER_ID, KERNEL_PRINCIPAL
+from arvis.kernel_core.access.models import (
+    KERNEL_OWNER_ID,
+    KERNEL_PRINCIPAL,
+    AccessContext,
+    ResolvedAccess,
+)
 from arvis.kernel_core.access.policy import (
     ACCESS_DENIED_REASON_CODE,
     AuthorizationPolicy,
@@ -141,7 +146,12 @@ class SyscallHandler:
         fn = cast(SyscallFn, fn)
 
         descriptor = get_descriptor(syscall.name)
-        authorization_reason_code, access_failure = self._authorize_registered_call(
+        (
+            authorization_reason_code,
+            access_failure,
+            resolved_resource,
+            resolved_lookup_error,
+        ) = self._authorize_registered_call(
             ctx,
             syscall,
             descriptor,
@@ -203,6 +213,8 @@ class SyscallHandler:
             fn=fn,
             causal_id=causal_id,
             started_tick=started_tick,
+            resolved_resource=resolved_resource,
+            resolved_lookup_error=resolved_lookup_error,
             is_effect=is_effect,
             tool_authorization=tool_authorization,
         )
@@ -300,11 +312,24 @@ class SyscallHandler:
         syscall: Syscall,
         descriptor: Any,
         started_tick: int,
-    ) -> tuple[str | None, SyscallResult | None]:
+    ) -> tuple[str | None, SyscallResult | None, object | None, Exception | None]:
         if descriptor is None or descriptor.access is None:
-            return None, None
+            return None, None, None, None
         try:
-            access_ctx = descriptor.access(syscall.args, self.services)
+            resolved = descriptor.access(syscall.args, self.services)
+            # A resolver may return a bare AccessContext (it read nothing to
+            # authorize) or a ResolvedAccess carrying the resource it already
+            # read, so a pure-READ body reuses it instead of a second lookup
+            # (b4, single-read). Both are supported: the bare form is
+            # resource=None.
+            if isinstance(resolved, ResolvedAccess):
+                access_ctx: AccessContext = resolved.context
+                resolved_resource: object | None = resolved.resource
+                resolved_lookup_error: Exception | None = resolved.lookup_error
+            else:
+                access_ctx = resolved
+                resolved_resource = None
+                resolved_lookup_error = None
             verdict = self.authorization_service.decide(access_ctx)
         except Exception as exc:
             failure = self._failure_from_error(
@@ -325,9 +350,14 @@ class SyscallHandler:
                 ),
             )
             self._safe_journal(ctx, syscall, failure, started_tick)
-            return None, failure
+            return None, failure, None, None
         if verdict.allowed:
-            return verdict.reason_code, None
+            return (
+                verdict.reason_code,
+                None,
+                resolved_resource,
+                resolved_lookup_error,
+            )
 
         failure = self._failure_from_error(
             ctx,
@@ -345,7 +375,7 @@ class SyscallHandler:
             ),
         )
         self._safe_journal(ctx, syscall, failure, started_tick)
-        return verdict.reason_code, failure
+        return verdict.reason_code, failure, None, None
 
     def _validate_effect_identity(
         self,
@@ -531,11 +561,25 @@ class SyscallHandler:
         started_tick: int,
         is_effect: bool,
         tool_authorization: ToolAuthorizationOutcome | None,
+        resolved_resource: object | None = None,
+        resolved_lookup_error: Exception | None = None,
     ) -> SyscallResult:
         try:
             call_args = {**syscall.args, "causal_id": causal_id}
             if tool_authorization is not None:
                 call_args["authorization"] = tool_authorization
+            if resolved_resource is not None:
+                # The access resolver already read the target resource to
+                # authorize; hand it to the body so a pure-READ syscall reuses
+                # it instead of a second lookup (b4, single-read: what was
+                # authorized is exactly what is returned).
+                call_args["_resolved_resource"] = resolved_resource
+            if resolved_lookup_error is not None:
+                # The resolver's read raised an expected condition (not-found,
+                # ...). Hand the exception to the body so it maps the precise
+                # code WITHOUT a second lookup a live store could answer with a
+                # foreign resource (b4 finesse without reopening the TOCTOU).
+                call_args["_resolved_lookup_error"] = resolved_lookup_error
             result = fn(self, **call_args)
         except Exception as exc:
             self._abort_tool_authorization(tool_authorization)

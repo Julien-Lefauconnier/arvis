@@ -116,11 +116,18 @@ class _ExpectedFailureThenForeignVFS:
         )
 
 
-def test_b3_vfs_01_expected_resolver_failure_also_denies_before_execution():
-    """An expected first failure must not reach a second body lookup.
+def test_b3_vfs_01_expected_resolver_failure_never_reaches_a_second_lookup():
+    """An expected first failure (not-found) must not reach a second body
+    lookup that a live store could answer with a FOREIGN resource.
 
-    This is the precise regression missed by the initial B3-VFS-01 test, which
-    covered only ``RuntimeError``.
+    Under b4 single-read the resolver captures the expected exception and the
+    body maps it WITHOUT re-reading, so the second (foreign) read never happens:
+    ``calls == 1`` and no resource is returned. The precise code is
+    vfs_item_not_found (finesse), not an opaque authorization_failure; the
+    security property is the absence of a second lookup and of any returned
+    resource, which is exactly what closes the TOCTOU an absorbed expected
+    failure would otherwise reopen. This is the regression the initial
+    B3-VFS-01 test, covering only ``RuntimeError``, missed.
     """
     vfs = _ExpectedFailureThenForeignVFS()
     services = KernelServiceRegistry(
@@ -134,10 +141,11 @@ def test_b3_vfs_01_expected_resolver_failure_also_denies_before_execution():
         Syscall(name="vfs.get", args={"ctx": ctx, "user_id": "bob", "item_id": "i1"})
     )
 
-    assert result.success is False, "access granted after an expected lookup failure"
-    assert vfs.calls == 1, "the body performed a second lookup after auth failure"
+    assert result.success is False, "a resource was returned after a not-found"
+    assert vfs.calls == 1, "the body performed a second lookup, reopening the TOCTOU"
+    assert result.result is None, "a foreign resource leaked through the retry"
     assert result.error is not None
-    assert result.error.details.get("reason_code") == "authorization_failure"
+    assert result.error.code == "vfs_item_not_found"
 
 
 class _AlwaysFlakyVFS:
