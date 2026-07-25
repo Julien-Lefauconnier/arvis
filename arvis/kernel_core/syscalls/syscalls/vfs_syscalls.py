@@ -105,12 +105,21 @@ def _item_owner_resolver(
     read from the item through the VFS service, so a principal acting on a
     resource it does not own is denied by the owner-scoped policy.
 
-    Owner resolution is best-effort. When the reference is absent (creation at
-    the root) or the item cannot be read for any reason, ownership falls back
-    to the caller and dispatch proceeds. The syscall body stays the single
-    authority for executing the operation and mapping its errors: an
-    unexpected VFS failure must surface as a boundary violation raised by the
-    body, never be pre-empted or recast as an authorization denial here.
+    Two cases are carefully distinguished (audit A-03, fail-closed doctrine):
+
+    - the reference is ABSENT (creation at the root): not an error, the
+      caller acts on its own scope, ownership is the caller and the resource
+      is genuinely unscoped (resource_scope None, the historical behaviour);
+    - the lookup FAILS (exception): the metadata is INDETERMINATE. The
+      resolver must never fabricate RESOLVED metadata from an error, which is
+      exactly what the previous code did (it copied the caller as owner and
+      None as scope, both looking like a resolved, grantable resource). It
+      leaves organization and scope unresolved and does not raise: the
+      syscall body is the single authority to execute and map errors, and it
+      calls the same lookup, so it fails on the same condition and returns a
+      failure (an expected VFS error code, or a boundary violation), never
+      the resource. The operation therefore cannot succeed on an
+      indeterminate lookup, which is fail-closed by construction.
     """
 
     def _resolve(
@@ -121,6 +130,7 @@ def _item_owner_resolver(
         if principal is None:
             principal = Principal(user_id=user_id)
         reference = args.get(id_arg)
+        # Absent reference: the caller acts on its own scope (root creation).
         owner_id = user_id
         organization_id: str | None = None
         resource_scope: str | None = None
@@ -129,13 +139,26 @@ def _item_owner_resolver(
         if vfs is not None and isinstance(reference, str):
             try:
                 item = vfs.get_item(user_id=user_id, item_id=reference)
+            except Exception:  # arvis-broad: any lookup failure is indeterminate
+                # The lookup failed, so the authorization metadata is
+                # INDETERMINATE. The resolver must never read this as an
+                # unscoped, caller-owned resource that the policy would grant
+                # (audit A-03). It also must not raise: the syscall body is
+                # the single authority to execute and map errors, and it
+                # calls the SAME lookup, so it will fail on the same
+                # condition and return a failure (an expected VFS error code,
+                # or a boundary violation), never the resource. Leaving the
+                # access context UNRESOLVED (no organization, no scope, and
+                # crucially no successful item read) is therefore fail-closed
+                # by construction: the operation cannot succeed. What the
+                # resolver must not do is fabricate resolved metadata from an
+                # error, which is exactly the bug this closes.
+                organization_id = None
+                resource_scope = None
+            else:
                 owner_id = item.owner_id
                 organization_id = item.organization_id
                 resource_scope = item.resource_scope
-            except Exception:  # arvis-broad: best-effort owner resolution
-                owner_id = user_id
-                organization_id = None
-                resource_scope = None
 
         return AccessContext(
             principal=principal,

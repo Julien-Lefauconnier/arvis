@@ -19,6 +19,8 @@ Test IDs map to audit findings:
 
 from types import SimpleNamespace
 
+import pytest
+
 from arvis.kernel_core.access.models import Principal
 from arvis.kernel_core.access.policy import (
     CAPABILITY_READ,
@@ -27,8 +29,6 @@ from arvis.kernel_core.access.policy import (
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
-from arvis.kernel_core.syscalls.syscall_registry import SyscallEffect
-from arvis.kernel_core.syscalls.syscalls.vfs_syscalls import _item_owner_resolver
 from arvis.kernel_core.vfs.models import VFSItem
 from arvis.kernel_core.vfs.repositories.in_memory import InMemoryVFSRepository
 from arvis.kernel_core.vfs.service import VFSService
@@ -115,29 +115,99 @@ def test_a02_move_preserves_resource_scope():
 class _FailingLookupVFS:
     """A VFS whose get_item raises: an unavailable or inconsistent store.
 
-    The resolver must treat an unresolvable scope as a denial, never as a
-    scopeless (covered) resource."""
+    The resolver must treat unresolvable metadata as a denial, never as a
+    scopeless, caller-owned (covered) resource."""
 
     def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
         raise RuntimeError("transient store failure")
 
 
-def test_a03_resolver_lookup_error_does_not_yield_covered_scope():
-    """On lookup failure the resolver must NOT report resource_scope=None as
-    if the resource were explicitly unscoped. An error is indeterminate, and
-    indeterminate must not become 'no restriction'. The context must carry
-    the failure so the policy can deny (here: it must not silently be None)."""
-    resolver = _item_owner_resolver(SyscallEffect.READ, "vfs.get", id_arg="item_id")
-    services = KernelServiceRegistry(vfs_service=_FailingLookupVFS())
-
-    context = resolver({"user_id": "bob", "item_id": "i1"}, services)
-
-    # Post-fix: a lookup failure must be distinguishable from a genuine
-    # scopeless resource. Today the resolver swallows the error and sets
-    # resource_scope=None, which this asserts against.
-    assert context.resource_scope is not None, (
-        "lookup failure was silently turned into an unscoped (covered) resource"
+def test_a03_resolver_lookup_error_denies_end_to_end():
+    """A lookup failure must NOT authorize. The end-to-end invariant (audit
+    A-03: verify the final syscall result, not the resolver in isolation):
+    when the metadata cannot be resolved, vfs.get must deny, never return the
+    resource as if it were caller-owned and unscoped. Today the resolver
+    swallows the error, pins ownership to the caller and the scope to None,
+    which grants; this asserts the denial."""
+    services = KernelServiceRegistry(
+        vfs_service=_FailingLookupVFS(),
+        authorization_service=OrganizationScopedAuthorization(),
     )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    # A principal that is NOT the resource owner under any correct resolution.
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="bob"))
+
+    result = handler.handle(
+        Syscall(name="vfs.get", args={"ctx": ctx, "user_id": "bob", "item_id": "i1"})
+    )
+
+    assert result.success is False, (
+        "a lookup failure was turned into a granted, unrestricted access"
+    )
+
+
+class _ExplodingVFS:
+    """Every VFS access raises an UNEXPECTED error (store unavailable).
+
+    Used to lock the doctrine-A invariant: the resolver stays neutral on an
+    indeterminate lookup and the syscall BODY, calling the same failing VFS,
+    returns a failure. No item-referencing syscall may report success."""
+
+    def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
+        raise RuntimeError("store unavailable")
+
+    def list_items(self, user_id: str) -> list[VFSItem]:
+        raise RuntimeError("store unavailable")
+
+    def create_folder(self, *, user_id, name, parent_id):
+        raise RuntimeError("store unavailable")
+
+    def create_file_item(self, *, user_id, name, parent_id, size, mime=None):
+        raise RuntimeError("store unavailable")
+
+    def rename_item(self, *, user_id, item_id, new_name):
+        raise RuntimeError("store unavailable")
+
+    def move_item(self, *, user_id, item_id, parent_id):
+        raise RuntimeError("store unavailable")
+
+    def delete_item(self, *, user_id, item_id):
+        raise RuntimeError("store unavailable")
+
+
+@pytest.mark.parametrize(
+    ("syscall_name", "extra_args"),
+    [
+        ("vfs.get", {"item_id": "i1"}),
+        ("vfs.create_folder", {"name": "f", "parent_id": "p1"}),
+        ("vfs.create_file", {"name": "f.txt", "parent_id": "p1", "size": 1}),
+        ("vfs.rename_item", {"item_id": "i1", "new_name": "x"}),
+        ("vfs.move_item", {"item_id": "i1", "parent_id": "p1"}),
+        ("vfs.delete_item", {"item_id": "i1"}),
+    ],
+)
+def test_a03_no_vfs_syscall_grants_on_indeterminate_lookup(syscall_name, extra_args):
+    """Doctrine-A lock (audit A-03): when the resolver's metadata lookup is
+    indeterminate, NO item-referencing VFS syscall may return success. The
+    resolver never fabricates a grantable resolution from an error, and the
+    body fails on the same unavailable store. A future syscall that authorized
+    without re-reading, and so could succeed here, would break this and be
+    caught."""
+    services = KernelServiceRegistry(
+        vfs_service=_ExplodingVFS(),
+        authorization_service=OrganizationScopedAuthorization(),
+    )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="bob"))
+
+    result = handler.handle(
+        Syscall(
+            name=syscall_name,
+            args={"ctx": ctx, "user_id": "bob", **extra_args},
+        )
+    )
+
+    assert result.success is False, f"{syscall_name} granted on an indeterminate lookup"
 
 
 # ---------------------------------------------------------------------------
