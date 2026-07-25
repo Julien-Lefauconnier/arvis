@@ -273,3 +273,75 @@ def test_b3_vfs_03_tree_is_judged_under_its_own_syscall_name():
     assert result.success is True
     flat = str(result.result)
     assert "t1" in flat, "tree was judged under the wrong syscall_name and hid the item"
+
+
+# ---------------------------------------------------------------------------
+# B3-VFS-02 acceptance: real ZIP import inherits scope on every descendant
+# ---------------------------------------------------------------------------
+
+
+def test_b3_vfs_02_zip_import_descendants_inherit_scope(tmp_path, monkeypatch):
+    """A real ZIP imported under a scoped parent stamps the parent's
+    organization and scope on EVERY descendant, nested folders and files
+    alike. The ZipExecutor calls VFSService, which centralizes inheritance, so
+    the fix needs no ZIP-specific code (counter-audit B3-VFS-02)."""
+    import zipfile
+
+    from arvis.kernel_core.vfs.zip.analyzer import ZipAnalyzer
+    from arvis.kernel_core.vfs.zip.collision import ZipCollisionService
+    from arvis.kernel_core.vfs.zip.executor import ZipExecutor
+    from arvis.kernel_core.vfs.zip.plan import ZipImportPlanService
+    from arvis.kernel_core.vfs.zip.service import ZipIngestService
+
+    monkeypatch.setenv("ENV", "test")
+
+    repo = InMemoryVFSRepository()
+    vfs = VFSService(repo)
+    parent = repo.create_folder(user_id="u1", name="matter", parent_id=None)
+    b = repo._user_bucket("u1")
+    b[parent] = VFSItem(
+        item_id=parent,
+        display_name="matter",
+        item_type="folder",
+        parent_id=None,
+        owner_id="u1",
+        organization_id="acme",
+        resource_scope="scope:A",
+    )
+
+    service = ZipIngestService(
+        analyzer=ZipAnalyzer(),
+        collision_service=ZipCollisionService(vfs),
+        executor=ZipExecutor(vfs_service=vfs),
+        planner=ZipImportPlanService(),
+        vfs_service=vfs,
+    )
+    zip_path = tmp_path / "test.zip"
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        zf.writestr("docs/sub/deep.txt", b"deep")
+
+    decision = service.analyze_and_validate(
+        zip_path=str(zip_path), user_id="u1", target_parent_id=parent
+    )
+    assert decision.status == "ready"
+    assert decision.zip_root is not None
+
+    service.execute_import(
+        zip_root=decision.zip_root,
+        zip_path=str(zip_path),
+        user_id="u1",
+        target_parent_id=parent,
+        keep_zip=True,
+    )
+
+    # Every item created under the scoped parent (docs, sub, deep.txt) must
+    # carry the parent's organization and scope; none may sit unscoped.
+    created = [i for i in vfs.list_items("u1") if i.item_id != parent]
+    assert created, "the ZIP import created nothing"
+    for item in created:
+        assert item.organization_id == "acme", (
+            f"{item.display_name} did not inherit the organization"
+        )
+        assert item.resource_scope == "scope:A", (
+            f"{item.display_name} did not inherit the scope"
+        )

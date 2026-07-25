@@ -5,6 +5,7 @@ from __future__ import annotations
 from arvis.kernel_core.vfs.exceptions import (
     VFSCycleError,
     VFSFolderNotEmptyError,
+    VFSInheritanceViolationError,
     VFSInvalidNameError,
     VFSItemNotFoundError,
     VFSNameConflictError,
@@ -34,8 +35,6 @@ class VFSService:
         user_id: str,
         name: str,
         parent_id: str | None,
-        organization_id: str | None = None,
-        resource_scope: str | None = None,
     ) -> VFSItem:
         normalized_name = self._normalize_name(name)
         items = self.repo.list_items(user_id)
@@ -46,6 +45,11 @@ class VFSService:
             parent_id=parent_id,
             display_name=normalized_name,
         )
+
+        # Inheritance is derived, imposed and verified HERE, the common
+        # boundary of every creation path including ZIP import (audit A-06,
+        # counter-audit B3-VFS-02).
+        organization_id, resource_scope = self._parent_context(items, parent_id)
 
         folder_id = self.repo.create_folder(
             user_id=user_id,
@@ -56,21 +60,21 @@ class VFSService:
         )
 
         created = self.repo.get_item(user_id, folder_id)
-        if created is not None:
-            return created
-
-        return VFSItem(
-            item_id=folder_id,
-            display_name=normalized_name,
-            item_type="folder",
-            parent_id=parent_id,
-            owner_id=user_id,
-            organization_id=organization_id,
-            mime=None,
-            file_size=0,
-            created_at=None,
-            resource_scope=resource_scope,
-        )
+        if created is None:
+            created = VFSItem(
+                item_id=folder_id,
+                display_name=normalized_name,
+                item_type="folder",
+                parent_id=parent_id,
+                owner_id=user_id,
+                organization_id=organization_id,
+                mime=None,
+                file_size=0,
+                created_at=None,
+                resource_scope=resource_scope,
+            )
+        self._verify_inheritance(user_id, created, organization_id, resource_scope)
+        return created
 
     def create_file_item(
         self,
@@ -80,8 +84,6 @@ class VFSService:
         parent_id: str | None,
         size: int | None,
         mime: str | None = None,
-        organization_id: str | None = None,
-        resource_scope: str | None = None,
     ) -> VFSItem:
         normalized_name = self._normalize_name(name)
         items = self.repo.list_items(user_id)
@@ -92,6 +94,10 @@ class VFSService:
             parent_id=parent_id,
             display_name=normalized_name,
         )
+
+        # Inheritance derived, imposed and verified HERE (audit A-06,
+        # counter-audit B3-VFS-02).
+        organization_id, resource_scope = self._parent_context(items, parent_id)
 
         file_id = self.repo.create_file_item(
             user_id=user_id,
@@ -104,21 +110,21 @@ class VFSService:
         )
 
         created = self.repo.get_item(user_id, file_id)
-        if created is not None:
-            return created
-
-        return VFSItem(
-            item_id=file_id,
-            display_name=normalized_name,
-            item_type="file",
-            parent_id=parent_id,
-            owner_id=user_id,
-            organization_id=organization_id,
-            mime=mime,
-            file_size=size,
-            created_at=None,
-            resource_scope=resource_scope,
-        )
+        if created is None:
+            created = VFSItem(
+                item_id=file_id,
+                display_name=normalized_name,
+                item_type="file",
+                parent_id=parent_id,
+                owner_id=user_id,
+                organization_id=organization_id,
+                mime=mime,
+                file_size=size,
+                created_at=None,
+                resource_scope=resource_scope,
+            )
+        self._verify_inheritance(user_id, created, organization_id, resource_scope)
+        return created
 
     def delete_item(
         self,
@@ -218,6 +224,47 @@ class VFSService:
         if not normalized:
             raise VFSInvalidNameError("name cannot be empty")
         return normalized
+
+    def _parent_context(
+        self,
+        items: list[VFSItem],
+        parent_id: str | None,
+    ) -> tuple[str | None, str | None]:
+        """The (organization_id, resource_scope) a child inherits from its
+        parent. Root creation (no parent) inherits nothing: the item is
+        unscoped, the historical behaviour. The parent is already validated to
+        exist and be a folder by _validate_parent."""
+        if parent_id is None:
+            return (None, None)
+        parent = self._find_item(items, parent_id, parent=True)
+        return (parent.organization_id, parent.resource_scope)
+
+    def _verify_inheritance(
+        self,
+        user_id: str,
+        created: VFSItem,
+        organization_id: str | None,
+        resource_scope: str | None,
+    ) -> None:
+        """Verify the repository honoured the inheritance constraint; roll the
+        item back and raise if it did not. The service does not trust the
+        repository to stamp the inherited context: it imposes the constraint
+        AND checks the result, so a non-conforming repository fails closed
+        rather than leaking a mis-scoped item (audit A-06, counter-audit
+        B3-VFS-02). Comparison is by opaque equality; the scope is never
+        parsed."""
+        if (
+            created.organization_id == organization_id
+            and created.resource_scope == resource_scope
+        ):
+            return
+        try:
+            self.repo.delete_item(user_id=user_id, item_id=created.item_id)
+        except Exception:  # arvis-broad: rollback is best-effort, refusal stands
+            pass
+        raise VFSInheritanceViolationError(
+            "created item does not carry the parent's organization and scope"
+        )
 
     def _validate_parent(
         self,

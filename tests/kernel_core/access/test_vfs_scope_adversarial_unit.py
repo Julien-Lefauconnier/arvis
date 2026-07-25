@@ -29,7 +29,6 @@ from arvis.kernel_core.access.policy import (
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
-from arvis.kernel_core.vfs.exceptions import VFSItemNotFoundError
 from arvis.kernel_core.vfs.models import VFSItem
 from arvis.kernel_core.vfs.repositories.in_memory import InMemoryVFSRepository
 from arvis.kernel_core.vfs.service import VFSService
@@ -500,13 +499,15 @@ def test_a06_root_creation_stays_unscoped():
     assert child.organization_id is None
 
 
-class _DisobedientVFS:
-    """A service that IGNORES the inheritance constraint: it stamps neither
-    the organization nor the scope on the created item, whatever it is told.
+class _DisobedientRepo:
+    """A repository that IGNORES the inherited context: it stamps neither the
+    organization nor the scope on the created item, whatever it is told.
 
-    This is the whole point of verify-not-trust (audit A-06): security must
-    not depend on the service honouring the constraint. The kernel must catch
-    the violation and roll the item back."""
+    The verify-not-trust property now lives in VFSService (counter-audit
+    B3-VFS-02): the service imposes the constraint AND verifies the repository
+    honoured it. A disobedient repository behind a real service must therefore
+    be caught, the item rolled back, and the creation refused. Security does
+    not depend on the repository cooperating."""
 
     def __init__(self) -> None:
         self._store: dict[str, VFSItem] = {}
@@ -521,10 +522,11 @@ class _DisobedientVFS:
         )
         self._store[parent.item_id] = parent
 
-    def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
-        if item_id not in self._store:
-            raise VFSItemNotFoundError(f"item not found: {item_id}")
-        return self._store[item_id]
+    def list_items(self, user_id: str) -> list[VFSItem]:
+        return list(self._store.values())
+
+    def get_item(self, user_id: str, item_id: str) -> VFSItem | None:
+        return self._store.get(item_id)
 
     def create_file_item(
         self,
@@ -536,7 +538,7 @@ class _DisobedientVFS:
         mime=None,
         organization_id=None,
         resource_scope=None,
-    ) -> VFSItem:
+    ) -> str:
         # Deliberately drop the inherited context.
         item = VFSItem(
             item_id="child_bad",
@@ -546,18 +548,36 @@ class _DisobedientVFS:
             owner_id=user_id,
         )
         self._store[item.item_id] = item
-        return item
+        return item.item_id
+
+    def create_folder(
+        self,
+        *,
+        user_id,
+        name,
+        parent_id,
+        organization_id=None,
+        resource_scope=None,
+    ) -> str:
+        raise AssertionError("not exercised in this test")
 
     def delete_item(self, *, user_id, item_id) -> None:
         self._store.pop(item_id, None)
 
+    def rename_item(self, *, user_id, item_id, new_name) -> None:
+        raise AssertionError("not exercised in this test")
 
-def test_a06_disobedient_service_triggers_rollback_and_denial():
-    """When the service does not stamp the inherited context, the kernel
-    verifies the result, refuses, and rolls the mis-scoped item back so it
-    does not persist."""
-    vfs = _DisobedientVFS()
-    services = KernelServiceRegistry(vfs_service=vfs)
+    def move_item(self, *, user_id, item_id, parent_id) -> None:
+        raise AssertionError("not exercised in this test")
+
+
+def test_a06_disobedient_repository_triggers_rollback_and_denial():
+    """When the repository does not stamp the inherited context, the service
+    verifies the result, rolls the mis-scoped item back and raises, so the
+    syscall refuses and no residual item remains (counter-audit B3-VFS-02:
+    verification lives in the service, the common creation boundary)."""
+    repo = _DisobedientRepo()
+    services = KernelServiceRegistry(vfs_service=VFSService(repo))
     handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
     ctx = SimpleNamespace(extra={}, principal=Principal(user_id="alice"))
 
@@ -574,4 +594,4 @@ def test_a06_disobedient_service_triggers_rollback_and_denial():
         )
     )
     assert result.success is False, "a mis-scoped child was accepted"
-    assert "child_bad" not in vfs._store, "the mis-scoped child was not rolled back"
+    assert "child_bad" not in repo._store, "the mis-scoped child was not rolled back"

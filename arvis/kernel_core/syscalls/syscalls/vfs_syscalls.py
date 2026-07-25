@@ -29,6 +29,7 @@ from arvis.kernel_core.syscalls.syscall_registry import (
 from arvis.kernel_core.vfs.exceptions import (
     VFSCycleError,
     VFSFolderNotEmptyError,
+    VFSInheritanceViolationError,
     VFSInvalidNameError,
     VFSItemNotFoundError,
     VFSNameConflictError,
@@ -449,55 +450,6 @@ def _may_write_to(
     return verdict.decision is AccessDecision.ALLOW
 
 
-def _inherited_context(
-    vfs: VFSService, user_id: str, parent_id: str | None
-) -> tuple[str | None, str | None]:
-    """The (organization_id, resource_scope) a child MUST inherit from its
-    parent (audit A-06). A root creation (no parent) inherits nothing, which
-    is the historical unscoped case. A missing parent raises
-    VFSParentNotFoundError (in this context the looked-up item IS a parent),
-    so the caller maps it to the proper error code, exactly as parent
-    validation did before; any other lookup failure propagates."""
-    if parent_id is None:
-        return (None, None)
-    try:
-        parent = vfs.get_item(user_id=user_id, item_id=parent_id)
-    except VFSItemNotFoundError as exc:
-        raise VFSParentNotFoundError(f"parent folder not found: {parent_id}") from exc
-    return (parent.organization_id, parent.resource_scope)
-
-
-def _rollback_created(vfs: VFSService, user_id: str, item_id: str) -> None:
-    """Best-effort deletion of an item the kernel refuses after creation.
-
-    When the service creates a child that violates the inheritance
-    constraint, the kernel rolls it back so the mis-scoped item does not
-    persist. A failure to delete is swallowed: the operation already returns
-    a denial, and surfacing a secondary error would obscure the primary
-    refusal. This closes the create-then-verify window as tightly as a
-    delegated-persistence design allows (audit A-06)."""
-    try:
-        vfs.delete_item(user_id=user_id, item_id=item_id)
-    except Exception:  # arvis-broad: rollback is best-effort, refusal stands
-        pass
-
-
-def _created_matches_inheritance(
-    item: VFSItem,
-    organization_id: str | None,
-    resource_scope: str | None,
-) -> bool:
-    """Whether the service honoured the inheritance CONSTRAINT (audit A-06).
-
-    The kernel does not trust the service to stamp the inherited context: it
-    passes the constraint AND verifies the result. Comparison is by opaque
-    equality; arvis never parses the scope."""
-    return (
-        item.organization_id == organization_id
-        and item.resource_scope == resource_scope
-    )
-
-
 def _same_governed_area(source: VFSItem, parent: VFSItem) -> bool:
     """Whether source and destination parent share organization AND scope.
 
@@ -609,27 +561,18 @@ def vfs_create_folder(
     if vfs is None:
         return _missing_service_error("no_vfs_service")
 
-    # The parent defines the child's security context (audit A-06). Resolve
-    # it first (the resolver already governed write access to it), and impose
-    # its organization and scope as an inheritance CONSTRAINT.
+    # Creation inheritance (the child carries the parent's organization and
+    # scope) is derived, imposed and verified inside VFSService, the common
+    # boundary of every creation path (audit A-06, counter-audit B3-VFS-02).
+    # An inheritance violation surfaces as a fail-closed security refusal.
     try:
-        organization_id, resource_scope = _inherited_context(vfs, user_id, parent_id)
-    except VFS_EXPECTED_ERRORS as exc:
-        return SyscallResult.failure(_map_vfs_error(exc))
-    except Exception:  # arvis-broad: unreadable parent, do not create
+        item = vfs.create_folder(user_id=user_id, name=name, parent_id=parent_id)
+    except VFSInheritanceViolationError:
         return _deny(
             "vfs.create_folder",
-            "create_parent_unresolved",
-            "create refused: the parent could not be resolved",
-        )
-
-    try:
-        item = vfs.create_folder(
-            user_id=user_id,
-            name=name,
-            parent_id=parent_id,
-            organization_id=organization_id,
-            resource_scope=resource_scope,
+            "inheritance_violation",
+            "create refused: the created item does not carry the parent's "
+            "organization and scope",
         )
     except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
@@ -645,17 +588,6 @@ def vfs_create_folder(
                 },
                 cause=cause_from_exception(exc),
             )
-        )
-
-    # Do not trust the service to have honoured the constraint: verify, and
-    # roll back a non-conforming item so a mis-scoped child never persists.
-    if not _created_matches_inheritance(item, organization_id, resource_scope):
-        _rollback_created(vfs, user_id, item.item_id)
-        return _deny(
-            "vfs.create_folder",
-            "inheritance_violation",
-            "create refused: the created item does not carry the parent's "
-            "organization and scope",
         )
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
@@ -682,19 +614,9 @@ def vfs_create_file(
     if vfs is None:
         return _missing_service_error("no_vfs_service")
 
-    # The parent defines the child's security context (audit A-06). Resolve
-    # it, impose its organization and scope as an inheritance constraint.
-    try:
-        organization_id, resource_scope = _inherited_context(vfs, user_id, parent_id)
-    except VFS_EXPECTED_ERRORS as exc:
-        return SyscallResult.failure(_map_vfs_error(exc))
-    except Exception:  # arvis-broad: unreadable parent, do not create
-        return _deny(
-            "vfs.create_file",
-            "create_parent_unresolved",
-            "create refused: the parent could not be resolved",
-        )
-
+    # Creation inheritance is derived, imposed and verified inside VFSService
+    # (audit A-06, counter-audit B3-VFS-02). An inheritance violation surfaces
+    # as a fail-closed security refusal.
     try:
         item = vfs.create_file_item(
             user_id=user_id,
@@ -702,8 +624,13 @@ def vfs_create_file(
             parent_id=parent_id,
             size=size,
             mime=mime,
-            organization_id=organization_id,
-            resource_scope=resource_scope,
+        )
+    except VFSInheritanceViolationError:
+        return _deny(
+            "vfs.create_file",
+            "inheritance_violation",
+            "create refused: the created item does not carry the parent's "
+            "organization and scope",
         )
     except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
@@ -719,15 +646,6 @@ def vfs_create_file(
                 },
                 cause=cause_from_exception(exc),
             )
-        )
-
-    if not _created_matches_inheritance(item, organization_id, resource_scope):
-        _rollback_created(vfs, user_id, item.item_id)
-        return _deny(
-            "vfs.create_file",
-            "inheritance_violation",
-            "create refused: the created item does not carry the parent's "
-            "organization and scope",
         )
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
