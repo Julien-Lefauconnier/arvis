@@ -34,6 +34,8 @@ class VFSService:
         user_id: str,
         name: str,
         parent_id: str | None,
+        organization_id: str | None = None,
+        resource_scope: str | None = None,
     ) -> VFSItem:
         normalized_name = self._normalize_name(name)
         items = self.repo.list_items(user_id)
@@ -49,6 +51,8 @@ class VFSService:
             user_id=user_id,
             name=normalized_name,
             parent_id=parent_id,
+            organization_id=organization_id,
+            resource_scope=resource_scope,
         )
 
         created = self.repo.get_item(user_id, folder_id)
@@ -61,9 +65,11 @@ class VFSService:
             item_type="folder",
             parent_id=parent_id,
             owner_id=user_id,
+            organization_id=organization_id,
             mime=None,
             file_size=0,
             created_at=None,
+            resource_scope=resource_scope,
         )
 
     def create_file_item(
@@ -74,6 +80,8 @@ class VFSService:
         parent_id: str | None,
         size: int | None,
         mime: str | None = None,
+        organization_id: str | None = None,
+        resource_scope: str | None = None,
     ) -> VFSItem:
         normalized_name = self._normalize_name(name)
         items = self.repo.list_items(user_id)
@@ -91,6 +99,8 @@ class VFSService:
             parent_id=parent_id,
             size=size,
             mime=mime,
+            organization_id=organization_id,
+            resource_scope=resource_scope,
         )
 
         created = self.repo.get_item(user_id, file_id)
@@ -103,9 +113,11 @@ class VFSService:
             item_type="file",
             parent_id=parent_id,
             owner_id=user_id,
+            organization_id=organization_id,
             mime=mime,
             file_size=size,
             created_at=None,
+            resource_scope=resource_scope,
         )
 
     def delete_item(

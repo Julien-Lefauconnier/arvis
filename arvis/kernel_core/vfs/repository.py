@@ -18,6 +18,8 @@ class VFSRepository(Protocol):
         user_id: str,
         name: str,
         parent_id: str | None,
+        organization_id: str | None = None,
+        resource_scope: str | None = None,
     ) -> str: ...
 
     def create_file_item(
@@ -28,6 +30,8 @@ class VFSRepository(Protocol):
         parent_id: str | None,
         size: int | None,
         mime: str | None,
+        organization_id: str | None = None,
+        resource_scope: str | None = None,
     ) -> str: ...
 
     def delete_item(

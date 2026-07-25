@@ -29,6 +29,7 @@ from arvis.kernel_core.access.policy import (
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+from arvis.kernel_core.vfs.exceptions import VFSItemNotFoundError
 from arvis.kernel_core.vfs.models import VFSItem
 from arvis.kernel_core.vfs.repositories.in_memory import InMemoryVFSRepository
 from arvis.kernel_core.vfs.service import VFSService
@@ -477,3 +478,100 @@ def test_a06_child_inherits_parent_scope():
     child = repo._user_bucket("alice")[child_id]
     assert child.resource_scope == "scope:A", "child did not inherit parent scope"
     assert child.organization_id == "acme"
+
+
+def test_a06_root_creation_stays_unscoped():
+    """Creation at the root has no parent to inherit from, so it stays
+    unscoped: the historical behaviour is preserved."""
+    repo = InMemoryVFSRepository()
+    services = KernelServiceRegistry(vfs_service=VFSService(repo))
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="alice"))
+
+    result = handler.handle(
+        Syscall(
+            name="vfs.create_folder",
+            args={"ctx": ctx, "user_id": "alice", "name": "top", "parent_id": None},
+        )
+    )
+    assert result.success is True
+    child = repo._user_bucket("alice")[result.result["item_id"]]
+    assert child.resource_scope is None
+    assert child.organization_id is None
+
+
+class _DisobedientVFS:
+    """A service that IGNORES the inheritance constraint: it stamps neither
+    the organization nor the scope on the created item, whatever it is told.
+
+    This is the whole point of verify-not-trust (audit A-06): security must
+    not depend on the service honouring the constraint. The kernel must catch
+    the violation and roll the item back."""
+
+    def __init__(self) -> None:
+        self._store: dict[str, VFSItem] = {}
+        parent = VFSItem(
+            item_id="p_scoped",
+            display_name="matter",
+            item_type="folder",
+            parent_id=None,
+            owner_id="alice",
+            organization_id="acme",
+            resource_scope="scope:A",
+        )
+        self._store[parent.item_id] = parent
+
+    def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
+        if item_id not in self._store:
+            raise VFSItemNotFoundError(f"item not found: {item_id}")
+        return self._store[item_id]
+
+    def create_file_item(
+        self,
+        *,
+        user_id,
+        name,
+        parent_id,
+        size,
+        mime=None,
+        organization_id=None,
+        resource_scope=None,
+    ) -> VFSItem:
+        # Deliberately drop the inherited context.
+        item = VFSItem(
+            item_id="child_bad",
+            display_name=name,
+            item_type="file",
+            parent_id=parent_id,
+            owner_id=user_id,
+        )
+        self._store[item.item_id] = item
+        return item
+
+    def delete_item(self, *, user_id, item_id) -> None:
+        self._store.pop(item_id, None)
+
+
+def test_a06_disobedient_service_triggers_rollback_and_denial():
+    """When the service does not stamp the inherited context, the kernel
+    verifies the result, refuses, and rolls the mis-scoped item back so it
+    does not persist."""
+    vfs = _DisobedientVFS()
+    services = KernelServiceRegistry(vfs_service=vfs)
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="alice"))
+
+    result = handler.handle(
+        Syscall(
+            name="vfs.create_file",
+            args={
+                "ctx": ctx,
+                "user_id": "alice",
+                "name": "leak.pdf",
+                "parent_id": "p_scoped",
+                "size": 1,
+            },
+        )
+    )
+    assert result.success is False, "a mis-scoped child was accepted"
+    assert "child_bad" not in vfs._store, "the mis-scoped child was not rolled back"

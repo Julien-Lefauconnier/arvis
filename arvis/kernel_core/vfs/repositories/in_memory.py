@@ -28,6 +28,8 @@ class InMemoryVFSRepository:
         user_id: str,
         name: str,
         parent_id: str | None,
+        organization_id: str | None = None,
+        resource_scope: str | None = None,
     ) -> str:
         bucket = self._user_bucket(user_id)
         created_at = int(utcnow().timestamp())
@@ -46,9 +48,11 @@ class InMemoryVFSRepository:
             item_type="folder",
             parent_id=parent_id,
             owner_id=user_id,
+            organization_id=organization_id,
             mime=None,
             file_size=0,
             created_at=created_at,
+            resource_scope=resource_scope,
         )
         return item_id
 
@@ -60,6 +64,8 @@ class InMemoryVFSRepository:
         parent_id: str | None,
         size: int | None,
         mime: str | None,
+        organization_id: str | None = None,
+        resource_scope: str | None = None,
     ) -> str:
         bucket = self._user_bucket(user_id)
         created_at = int(utcnow().timestamp())
@@ -77,9 +83,11 @@ class InMemoryVFSRepository:
             item_type="file",
             parent_id=parent_id,
             owner_id=user_id,
+            organization_id=organization_id,
             mime=mime,
             file_size=size,
             created_at=created_at,
+            resource_scope=resource_scope,
         )
         return item_id
 

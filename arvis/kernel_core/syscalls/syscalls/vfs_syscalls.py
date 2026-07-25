@@ -7,15 +7,19 @@ from typing import Any, Protocol
 
 from arvis.errors.base import (
     ArvisRuntimeError,
+    ArvisSecurityError,
     ErrorDomain,
 )
 from arvis.errors.normalization import normalize_error
-from arvis.errors.provenance import cause_from_exception
+from arvis.errors.provenance import ErrorOrigin, cause_from_exception
 from arvis.errors.syscall import SyscallBoundaryViolationError
 from arvis.kernel_core.access.decision import AccessDecision
 from arvis.kernel_core.access.identity import principal_from_context
 from arvis.kernel_core.access.models import AccessContext, Principal
-from arvis.kernel_core.access.policy import AuthorizationPolicy
+from arvis.kernel_core.access.policy import (
+    ACCESS_DENIED_REASON_CODE,
+    AuthorizationPolicy,
+)
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
@@ -388,6 +392,118 @@ def _visible_items(
     return visible
 
 
+def _deny(syscall_name: str, reason_code: str, message: str) -> SyscallResult:
+    """Build a governed access denial from a syscall body (audit A-05/A-06).
+
+    Mirrors the handler's own access-denied failure so a refusal raised
+    inside a body (a destination check, a parent mismatch) is reported like
+    any authorization denial, with no partial mutation having occurred."""
+    return SyscallResult.failure(
+        ArvisSecurityError(
+            message,
+            origin=ErrorOrigin(
+                component="vfs_syscall",
+                subsystem="kernel.syscall.vfs",
+                syscall=syscall_name,
+            ),
+            details={"syscall": syscall_name, "reason_code": reason_code},
+        )
+    )
+
+
+def _may_write_to(
+    handler: SyscallHandlerLike,
+    args: Mapping[str, Any],
+    parent: VFSItem,
+) -> bool:
+    """Whether the caller may WRITE into this parent, under the full policy.
+
+    The move source is governed by the resolver (id_arg=item_id); the
+    DESTINATION parent must be governed too (audit A-05). This asks the same
+    policy the same question it answers for the source, for a write effect."""
+    policy = handler.authorization_service
+    principal = principal_from_context(args.get("ctx"))
+    if principal is None:
+        principal = Principal(user_id=args["user_id"])
+    context = AccessContext(
+        principal=principal,
+        effect=SyscallEffect.EFFECT,
+        resource_owner_id=parent.owner_id,
+        resource_organization_id=parent.organization_id,
+        resource_id=parent.item_id,
+        resource_scope=parent.resource_scope,
+        syscall_name="vfs.move_item",
+    )
+    try:
+        verdict = policy.decide(context)
+    except Exception:  # arvis-broad: an unjudgeable destination is refused
+        return False
+    return verdict.decision is AccessDecision.ALLOW
+
+
+def _inherited_context(
+    vfs: VFSService, user_id: str, parent_id: str | None
+) -> tuple[str | None, str | None]:
+    """The (organization_id, resource_scope) a child MUST inherit from its
+    parent (audit A-06). A root creation (no parent) inherits nothing, which
+    is the historical unscoped case. A missing parent raises
+    VFSParentNotFoundError (in this context the looked-up item IS a parent),
+    so the caller maps it to the proper error code, exactly as parent
+    validation did before; any other lookup failure propagates."""
+    if parent_id is None:
+        return (None, None)
+    try:
+        parent = vfs.get_item(user_id=user_id, item_id=parent_id)
+    except VFSItemNotFoundError as exc:
+        raise VFSParentNotFoundError(f"parent folder not found: {parent_id}") from exc
+    return (parent.organization_id, parent.resource_scope)
+
+
+def _rollback_created(vfs: VFSService, user_id: str, item_id: str) -> None:
+    """Best-effort deletion of an item the kernel refuses after creation.
+
+    When the service creates a child that violates the inheritance
+    constraint, the kernel rolls it back so the mis-scoped item does not
+    persist. A failure to delete is swallowed: the operation already returns
+    a denial, and surfacing a secondary error would obscure the primary
+    refusal. This closes the create-then-verify window as tightly as a
+    delegated-persistence design allows (audit A-06)."""
+    try:
+        vfs.delete_item(user_id=user_id, item_id=item_id)
+    except Exception:  # arvis-broad: rollback is best-effort, refusal stands
+        pass
+
+
+def _created_matches_inheritance(
+    item: VFSItem,
+    organization_id: str | None,
+    resource_scope: str | None,
+) -> bool:
+    """Whether the service honoured the inheritance CONSTRAINT (audit A-06).
+
+    The kernel does not trust the service to stamp the inherited context: it
+    passes the constraint AND verifies the result. Comparison is by opaque
+    equality; arvis never parses the scope."""
+    return (
+        item.organization_id == organization_id
+        and item.resource_scope == resource_scope
+    )
+
+
+def _same_governed_area(source: VFSItem, parent: VFSItem) -> bool:
+    """Whether source and destination parent share organization AND scope.
+
+    Comparison is by OPAQUE EQUALITY of the tokens; arvis never parses a
+    scope. A plain move stays inside one governed area (audit A-05): a
+    cross-scope or cross-organization move is not an ordinary move and is
+    refused here (a dedicated, explicitly governed transfer would be a
+    separate future capability)."""
+    return (
+        source.organization_id == parent.organization_id
+        and source.resource_scope == parent.resource_scope
+    )
+
+
 # =====================================================
 # VFS SYSCALLS
 # =====================================================
@@ -485,8 +601,28 @@ def vfs_create_folder(
     if vfs is None:
         return _missing_service_error("no_vfs_service")
 
+    # The parent defines the child's security context (audit A-06). Resolve
+    # it first (the resolver already governed write access to it), and impose
+    # its organization and scope as an inheritance CONSTRAINT.
     try:
-        item = vfs.create_folder(user_id=user_id, name=name, parent_id=parent_id)
+        organization_id, resource_scope = _inherited_context(vfs, user_id, parent_id)
+    except VFS_EXPECTED_ERRORS as exc:
+        return SyscallResult.failure(_map_vfs_error(exc))
+    except Exception:  # arvis-broad: unreadable parent, do not create
+        return _deny(
+            "vfs.create_folder",
+            "create_parent_unresolved",
+            "create refused: the parent could not be resolved",
+        )
+
+    try:
+        item = vfs.create_folder(
+            user_id=user_id,
+            name=name,
+            parent_id=parent_id,
+            organization_id=organization_id,
+            resource_scope=resource_scope,
+        )
     except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
     except Exception as exc:
@@ -501,6 +637,17 @@ def vfs_create_folder(
                 },
                 cause=cause_from_exception(exc),
             )
+        )
+
+    # Do not trust the service to have honoured the constraint: verify, and
+    # roll back a non-conforming item so a mis-scoped child never persists.
+    if not _created_matches_inheritance(item, organization_id, resource_scope):
+        _rollback_created(vfs, user_id, item.item_id)
+        return _deny(
+            "vfs.create_folder",
+            "inheritance_violation",
+            "create refused: the created item does not carry the parent's "
+            "organization and scope",
         )
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
@@ -527,6 +674,19 @@ def vfs_create_file(
     if vfs is None:
         return _missing_service_error("no_vfs_service")
 
+    # The parent defines the child's security context (audit A-06). Resolve
+    # it, impose its organization and scope as an inheritance constraint.
+    try:
+        organization_id, resource_scope = _inherited_context(vfs, user_id, parent_id)
+    except VFS_EXPECTED_ERRORS as exc:
+        return SyscallResult.failure(_map_vfs_error(exc))
+    except Exception:  # arvis-broad: unreadable parent, do not create
+        return _deny(
+            "vfs.create_file",
+            "create_parent_unresolved",
+            "create refused: the parent could not be resolved",
+        )
+
     try:
         item = vfs.create_file_item(
             user_id=user_id,
@@ -534,6 +694,8 @@ def vfs_create_file(
             parent_id=parent_id,
             size=size,
             mime=mime,
+            organization_id=organization_id,
+            resource_scope=resource_scope,
         )
     except VFS_EXPECTED_ERRORS as exc:
         return SyscallResult.failure(_map_vfs_error(exc))
@@ -549,6 +711,15 @@ def vfs_create_file(
                 },
                 cause=cause_from_exception(exc),
             )
+        )
+
+    if not _created_matches_inheritance(item, organization_id, resource_scope):
+        _rollback_created(vfs, user_id, item.item_id)
+        return _deny(
+            "vfs.create_file",
+            "inheritance_violation",
+            "create refused: the created item does not carry the parent's "
+            "organization and scope",
         )
 
     return SyscallResult(success=True, result=_serialize_vfs_item(item))
@@ -646,11 +817,64 @@ def vfs_move_item(
     user_id: str,
     item_id: str,
     parent_id: str | None = None,
-    **_: Any,
+    **kwargs: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
+
+    # Govern BOTH sides of the move (audit A-05). The resolver already
+    # governed the source (id_arg=item_id). Here, before any mutation, read
+    # the source and the destination parent and refuse a move that leaves the
+    # source's governed area or writes into a parent the caller may not write.
+    # All refusals happen BEFORE vfs.move_item, so no partial mutation occurs.
+    args = {"user_id": user_id, "ctx": kwargs.get("ctx")}
+    try:
+        source = vfs.get_item(user_id=user_id, item_id=item_id)
+    except VFS_EXPECTED_ERRORS as exc:
+        return SyscallResult.failure(_map_vfs_error(exc))
+    except Exception:  # arvis-broad: source indeterminate, refuse the move
+        return _deny(
+            "vfs.move_item",
+            "move_source_unresolved",
+            "move refused: the source item could not be resolved",
+        )
+
+    if parent_id is not None:
+        try:
+            parent = vfs.get_item(user_id=user_id, item_id=parent_id)
+        except VFS_EXPECTED_ERRORS as exc:
+            return SyscallResult.failure(_map_vfs_error(exc))
+        except Exception:  # arvis-broad: destination indeterminate, refuse
+            return _deny(
+                "vfs.move_item",
+                "move_destination_unresolved",
+                "move refused: the destination parent could not be resolved",
+            )
+        if not _may_write_to(handler, args, parent):
+            return _deny(
+                "vfs.move_item",
+                ACCESS_DENIED_REASON_CODE,
+                "move refused: no write access to the destination parent",
+            )
+        if not _same_governed_area(source, parent):
+            return _deny(
+                "vfs.move_item",
+                "cross_scope_move_refused",
+                "move refused: source and destination differ in organization "
+                "or scope; a cross-scope move is not an ordinary move",
+            )
+    else:
+        # Move to the root: there is no parent to inherit from, so a SCOPED
+        # source would silently lose its restriction at the root. Refuse it;
+        # only an unscoped source may sit at the root (audit A-05, A-02).
+        if source.resource_scope is not None or source.organization_id is not None:
+            return _deny(
+                "vfs.move_item",
+                "cross_scope_move_refused",
+                "move refused: a scoped item cannot be moved to the "
+                "unscoped root by an ordinary move",
+            )
 
     try:
         item = vfs.move_item(user_id=user_id, item_id=item_id, parent_id=parent_id)
