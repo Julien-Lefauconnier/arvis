@@ -1,6 +1,6 @@
 # Governed effect path
 
-Status: normative architecture note, current as of `0.1.0a16`.
+Status: normative architecture note, current as of `0.1.0b2`.
 
 ## Scope
 

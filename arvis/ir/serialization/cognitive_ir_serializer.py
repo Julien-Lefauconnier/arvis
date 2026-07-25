@@ -82,6 +82,7 @@ class CognitiveIRSerializer:
             canonical,
             separators=(",", ":"),
             ensure_ascii=False,
+            allow_nan=False,
         )
 
     @classmethod

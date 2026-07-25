@@ -4,13 +4,13 @@
 
 > Python 3.11+ • Deterministic • Replayable • Governed • Auditable
 
-> **Status: `0.1.0-beta`.** The public surface (`arvis.__all__` and the
+> **Status: `0.1.0b2` (beta).** The public surface (`arvis.__all__` and the
 > stable `host_api` modules) is stabilized, versioned, and covered by the
 > deprecation policy in `VERSIONING.md`: removals or type changes require a
 > version bump and a changelog entry.
 > The projection layer is partial, LLM governance is mock-first, and formal
 > guarantees apply only to the documented projected domains. See
-> [Known Limitations](#known-limitations-010-alpha).
+> [Known Limitations](#known-limitations-010-beta).
 
 ARVIS is a deterministic runtime layer that treats reasoning as **critical infrastructure**.
 
@@ -60,7 +60,13 @@ Outputs are not assumed valid.
 
 ## Quick Start
 
-Install from source (works today):
+Install the beta from PyPI:
+
+```bash
+pip install arvis
+```
+
+Or install from source for development:
 
 ```bash
 git clone https://github.com/Julien-Lefauconnier/arvis
@@ -80,12 +86,6 @@ bash scripts/run_quality_gate.sh
 The security-only slice is available as
 `bash scripts/run_quality_gate.sh security`; Bandit fails on medium- or
 high-severity findings.
-
-Alpha releases are published on PyPI:
-
-```bash
-pip install arvis
-```
 
 ```python
 from arvis import ArvisEngine
@@ -123,11 +123,12 @@ Approval Need : YES
 Commitment    : 8642d95cfdb73c16...
 ```
 
-> Note (0.1.0-alpha): the gate grades an explicit top-level `risk` scalar:
+> Note (0.1.0-beta): the gate grades an explicit finite top-level `risk` scalar:
 > low → ALLOWED, medium → REQUIRES_CONFIRMATION, high → BLOCKED (see
 > `examples/09_multi_engine_hosting.py`). This risk policy applies only to an
-> explicit `risk` field; a bare text prompt is governed with a minimal
-> projection (REQUIRES_CONFIRMATION), not a full natural-language projection.
+> explicit `risk` field; `NaN` and infinities fail closed to BLOCKED. A bare
+> text prompt is governed with a minimal projection (REQUIRES_CONFIRMATION),
+> not a full natural-language projection.
 
 ### Engine lifecycle
 
@@ -240,6 +241,23 @@ Internal cognition remains inspectable in production.
 
 ---
 
+## Where ARVIS Fits
+
+ARVIS sits between an application's AI-generated proposals and its governed
+tools. The host still owns identity, business rules, memory, models, storage,
+queues and external providers.
+
+Start with:
+
+* [Reference architecture: sovereign, governed AI assistant](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md)
+* [Runnable governed-assistant example](https://github.com/Julien-Lefauconnier/arvis/blob/main/examples/11_governed_assistant.py)
+* [VeraMem integration case study](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/integration/VERAMEM_CASE_STUDY.md)
+
+The architecture is implementation-neutral. VeraMem is a real application of
+the pattern, not a dependency or required deployment stack.
+
+---
+
 ## Architecture Snapshot
 
 ```text
@@ -292,7 +310,7 @@ ARVIS is validated like infrastructure.
 
 Current suite includes:
 
-* 2600+ passing tests
+* 2900+ passing tests
 * unit tests
 * integration tests
 * deterministic replay verification
@@ -324,6 +342,7 @@ Included examples:
 8. Timeline audit trail
 9. Multi-engine hosting (one engine per governed turn)
 10. Runtime inspection
+11. Governed-assistant reference integration
 
 See: `examples/README.md`
 
@@ -336,6 +355,8 @@ Start here:
 * `docs/OVERVIEW.md`
 * `docs/WHY_ARVIS.md`
 * `docs/ARCHITECTURE.md`
+* `docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md`
+* `docs/integration/VERAMEM_CASE_STUDY.md`
 * `docs/PIPELINE.md`
 * `docs/IR.md`
 * `docs/REFLEXIVE.md`
@@ -358,10 +379,10 @@ ARVIS is about **trustworthy operation under constraints**.
 
 ---
 
-## Known Limitations (0.1.0-alpha)
+## Known Limitations (0.1.0-beta)
 
-This is an early alpha of a deterministic cognitive kernel. What is stable,
-experimental, and out of scope for 0.1:
+This is a beta of a deterministic cognitive kernel. What is stable,
+experimental, and out of scope for the 0.1 series:
 
 **Stable (documented, tested):**
 
@@ -393,7 +414,7 @@ experimental, and out of scope for 0.1:
 * risk gating beyond an explicit top-level `risk` scalar (nested signals,
   structured tool requests, and free text do not yet drive a full projection)
 * general formal guarantees over arbitrary LLM behavior
-* a frozen public API surface
+* distributed registry, confirmation and idempotency coordination
 
 Formal guarantees apply only to the documented projected domains and their
 assumptions.
@@ -406,16 +427,17 @@ ARVIS tracks three distinct version axes, each honestly labeled:
 
 | Axis | Value | Meaning |
 |------|-------|---------|
-| Package version | `0.1.0b1` | the distributed artifact (PEP 440) |
-| API version | `0.1` | the public Python API contract (not yet stable) |
+| Package version | `0.1.0b2` | the distributed artifact (PEP 440) |
+| API version | `0.1` | stable within the beta series under `VERSIONING.md` |
 | Standard version | `draft-v1` | the ARVIS decision / IR specification |
 
 ---
 
 ## Project Status
 
-**`0.1.0-alpha` (preview)**: actively developed with a validation-first
-engineering approach. The public API is not yet stable.
+**`0.1.0b2` (beta)**: actively developed with a validation-first engineering
+approach. The documented public and host surfaces are stable within the beta
+series; experimental internals and the draft standard may still evolve.
 
 ---
 

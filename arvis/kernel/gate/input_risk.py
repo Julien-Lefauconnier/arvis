@@ -22,6 +22,7 @@ on that content is real, and a declared risk may only harden it.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from arvis.math.core.normalization import clamp01
@@ -39,6 +40,10 @@ def read_input_risk(cognitive_input: Any) -> float | None:
 
     Accepts only a numeric top-level ``risk`` key. Booleans are rejected
     (``bool`` is an ``int`` subclass). Nested signals are not consulted.
+
+    A numeric value that is not finite is invalid rather than clamped:
+    mapping NaN or an infinity to a boundary would turn malformed,
+    caller-controlled data into a meaningful safety assertion.
     """
     if not isinstance(cognitive_input, dict):
         return None
@@ -48,7 +53,10 @@ def read_input_risk(cognitive_input: Any) -> float | None:
     if isinstance(value, bool):
         return None
     if isinstance(value, (int, float)):
-        return clamp01(float(value))
+        risk = float(value)
+        if not math.isfinite(risk):
+            raise ValueError("input risk must be finite")
+        return clamp01(risk)
 
     return None
 
@@ -74,6 +82,8 @@ def resolve_input_risk_verdict(risk: float) -> str:
 
     Returns one of: ``"allow"``, ``"require_confirmation"``, ``"abstain"``.
     """
+    if not math.isfinite(risk):
+        raise ValueError("input risk must be finite")
     if risk >= INPUT_RISK_ABSTAIN_THRESHOLD:
         return "abstain"
     if risk >= INPUT_RISK_CONFIRM_THRESHOLD:

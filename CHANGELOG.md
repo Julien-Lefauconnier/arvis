@@ -5,9 +5,55 @@ All notable changes to ARVIS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [PEP 440](https://peps.python.org/pep-0440/)
-versioning during the alpha.
+versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
+
+## [0.1.0b2] - 2026-07-25
+
+Corrective beta release. It closes the non-finite input-risk defect found by
+the independent audit of the published `0.1.0b1` artifact and adds a reference
+integration path for developers adopting ARVIS.
+
+### Security
+
+- Explicit numeric risk now accepts finite values only. `NaN`, positive
+  infinity and negative infinity raise at the risk boundary and force
+  `ABSTAIN/BLOCKED` in local, research, test and production postures instead of
+  being clamped to `0.0` and allowed.
+- The fail-closed path detaches the caller's mapping, replaces only the invalid
+  internal risk scalar with JSON `null`, and refreshes the frozen input IR.
+  The caller's object is never mutated; exported IR, composed commitments and
+  reflexive output remain strict-JSON serializable.
+- Reflexive fingerprinting, cognitive IR serialization and result-view IR
+  hashing now use `allow_nan=False`; a non-finite value cannot enter canonical
+  material as a non-standard JSON token.
+- The installed-wheel black-box suite pins all three non-finite cases:
+  `BLOCKED`, sanitized IR, strict result JSON and a valid reflexive attestation.
+
+### Added
+
+- A stack-neutral
+  `docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md` explaining ARVIS as
+  the governance boundary inside a complete sovereign assistant.
+- A concise `docs/integration/VERAMEM_CASE_STUDY.md` mapping a real host
+  application onto that architecture without turning VeraMem infrastructure
+  into an ARVIS dependency.
+- `examples/11_governed_assistant.py`: registration, registry freeze, an
+  allowed read and an external send awaiting confirmation. The example
+  deliberately performs no direct tool effect and points to the governed
+  syscall path.
+- The release workflow creates an idempotent GitHub Release after PyPI
+  publication and attaches the exact wheel, sdist and CycloneDX SBOM.
+
+### Changed
+
+- Package version moves to `0.1.0b2`; README, source fallback and public status
+  are coherent with the beta.
+- PyPI's Changelog project URL now targets the versioned `CHANGELOG.md`.
+- The deprecation policy now states one unambiguous rule: one published beta
+  of overlap during beta, at least one minor release after stable `0.x`.
+- The examples smoke gate now runs eleven examples.
 
 ## [0.1.0b1] - 2026-07-24
 

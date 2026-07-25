@@ -8,6 +8,8 @@ These pin the three-band mapping and the gate helper behaviour deterministically
 
 from types import SimpleNamespace
 
+import pytest
+
 from arvis.kernel.gate.input_risk import (
     is_pure_risk_payload,
     read_input_risk,
@@ -16,6 +18,12 @@ from arvis.kernel.gate.input_risk import (
 from arvis.kernel.pipeline.stages.gate.input_risk_gate import apply_input_risk_gate
 from arvis.kernel.pipeline.stages.gate.trace_helpers import VERDICT_PROVENANCE_KEY
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+
+NON_FINITE_RISKS = (
+    pytest.param(float("nan"), id="nan"),
+    pytest.param(float("inf"), id="positive-infinity"),
+    pytest.param(float("-inf"), id="negative-infinity"),
+)
 
 # --- read_input_risk: only a numeric top-level "risk" qualifies ---
 
@@ -33,6 +41,14 @@ def test_read_ignores_nested_and_non_numeric():
     assert read_input_risk({"risk": True}) is None  # bool excluded
     assert read_input_risk({}) is None
     assert read_input_risk(None) is None
+
+
+@pytest.mark.parametrize("risk", NON_FINITE_RISKS)
+def test_read_rejects_non_finite_numeric_risk(risk: float):
+    with pytest.raises(ValueError, match="finite"):
+        read_input_risk({"risk": risk})
+    with pytest.raises(ValueError, match="finite"):
+        resolve_input_risk_verdict(risk)
 
 
 # --- resolve_input_risk_verdict: three bands ---
@@ -149,6 +165,40 @@ def test_gate_exception_forces_abstain():
     trace = ctx.extra["verdict_transition_trace"]
     assert trace[-1]["stage"] == "input_risk_fail_closed"
     assert trace[-1]["reason"] == "gate_exception"
+
+
+@pytest.mark.parametrize("risk", NON_FINITE_RISKS)
+def test_gate_non_finite_pure_risk_fails_closed(risk: float):
+    ctx = _ctx({"risk": risk})
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ALLOW)
+
+    assert out is LyapunovVerdict.ABSTAIN
+    assert ctx.cognitive_input["risk"] is None
+    assert ctx.extra["input_risk"] is None
+    assert ctx.extra["verdict_transition_trace"][-1]["stage"] == (
+        "input_risk_fail_closed"
+    )
+
+
+@pytest.mark.parametrize("risk", NON_FINITE_RISKS)
+def test_gate_non_finite_mixed_payload_fails_closed(risk: float):
+    ctx = _ctx({"action": "publish", "risk": risk})
+    out = apply_input_risk_gate(ctx, LyapunovVerdict.ALLOW)
+
+    assert out is LyapunovVerdict.ABSTAIN
+    assert ctx.cognitive_input == {"action": "publish", "risk": None}
+
+
+@pytest.mark.parametrize("risk", NON_FINITE_RISKS)
+def test_gate_sanitizes_a_copy_without_mutating_caller(risk: float):
+    caller_input = {"risk": risk}
+    ctx = _ctx(caller_input)
+
+    apply_input_risk_gate(ctx, LyapunovVerdict.ALLOW)
+
+    assert ctx.cognitive_input is not caller_input
+    assert ctx.cognitive_input["risk"] is None
+    assert caller_input["risk"] is risk
 
 
 def test_gate_records_input_risk_in_extra():

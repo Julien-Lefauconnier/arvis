@@ -87,6 +87,7 @@ runtime API above) is BLOCKED before execution.
 | `08_timeline_audit.py`          | Hash-linked timeline commitments             |
 | `09_multi_engine_hosting.py`    | One engine per unit of work (host-side parallelism) |
 | `10_runtime_inspection.py`      | Production observability & inspection        |
+| `11_governed_assistant.py`      | Reference assistant: read vs confirmed external effect |
 
 ---
 
@@ -111,7 +112,8 @@ If you're new to ARVIS:
 2. `01_gate_refusal.py`
 3. `02_deterministic_replay.py`
 4. `04_human_confirmation.py`
-5. `10_runtime_inspection.py`
+5. `11_governed_assistant.py`
+6. `10_runtime_inspection.py`
 
 ---
 
@@ -131,4 +133,7 @@ Trace          : Available
 
 ## Next Step
 
-Read the main documentation to integrate ARVIS into your own AI systems, copilots, or governed autonomous workflows.
+Read the
+[governed-assistant reference architecture](../docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md)
+to integrate ARVIS into your own AI system, copilot or governed autonomous
+workflow.

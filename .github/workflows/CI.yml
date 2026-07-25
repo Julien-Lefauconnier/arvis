@@ -58,11 +58,10 @@ jobs:
           # PYSEC-2026-1845 (pytest 8.4.2, fixed in 9.0.3), ignored
           # 2026-07-24: pytest is gate tooling only, absent from the
           # shipped wheel and from the runtime dependencies. The fix is
-          # the pytest 9 toolchain bump already opened by Dependabot,
-          # scheduled as a dedicated commit right after 0.1.0b1 (bumping
-          # the whole gate toolchain mid-release-campaign would reformat
-          # and reshuffle the very diffs under review). Remove this flag
-          # with that bump.
+          # the pytest 9 toolchain bump already opened by Dependabot.
+          # Keep it as a dedicated tooling change rather than mixing a
+          # formatter/test-runner transition into a corrective release.
+          # Remove this flag with that bump.
           pip-audit --strict -r requirements/gate.lock --ignore-vuln PYSEC-2026-1845
 
       - name: Bandit (medium/high)

@@ -8,8 +8,9 @@ on:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+*"
 
-# Least privilege by default: no job may write to the repository. The publish
-# job alone raises id-token, and only because OIDC Trusted Publishing needs it.
+# Least privilege by default. Verification raises only provenance permissions,
+# publishing raises only PyPI OIDC, and the final release job alone may write a
+# GitHub Release.
 permissions:
   contents: read
 
@@ -173,3 +174,36 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # release/v1
+
+  github-release:
+    needs: [verify, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download the verified distributions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dist
+          path: release-assets/dist/
+
+      - name: Download the verified SBOM
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: sbom
+          path: release-assets/sbom/
+
+      - name: Create or refresh the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          assets=(release-assets/dist/* release-assets/sbom/*)
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" "${assets[@]}" --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" "${assets[@]}" \
+              --verify-tag \
+              --title "ARVIS ${GITHUB_REF_NAME}" \
+              --generate-notes
+          fi

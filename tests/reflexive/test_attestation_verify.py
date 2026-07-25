@@ -164,6 +164,15 @@ def test_unknown_canon_version_is_refused_before_any_computation() -> None:
     assert verify_reflexive_attestation(payload) is False
 
 
+def test_non_finite_attested_value_is_refused_as_non_json() -> None:
+    payload = _payload()
+    payload["capabilities"]["non_finite"] = float("nan")
+
+    with pytest.raises(ValueError, match="JSON compliant"):
+        ReflexiveAttestation.from_rendered_payload(payload)
+    assert verify_reflexive_attestation(payload) is False
+
+
 def test_hostile_container_subclass_fails_closed() -> None:
     """b1 (audit a17, 13.3): a dict subclass raising from get() is
     absorbed by the boundary verifier, never propagated."""

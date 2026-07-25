@@ -7,7 +7,7 @@ from importlib.metadata import PackageNotFoundError, version
 from typing import Final
 
 # -----------------------------------------------------
-# Versioning axes (0.1.0-alpha)
+# Versioning axes (0.1.0-beta)
 # -----------------------------------------------------
 # Three distinct axes are tracked, each honestly labeled and mutually
 # consistent. They are NOT the same string on purpose:
@@ -26,14 +26,15 @@ from typing import Final
 try:
     PACKAGE_VERSION = version("arvis")
 except PackageNotFoundError:
-    PACKAGE_VERSION = "0.1.0b1"
+    PACKAGE_VERSION = "0.1.0b2"
 
 
 # -----------------------------------------------------
 # Public API contract version
 # -----------------------------------------------------
-# Alpha: the public API is not yet stable. This intentionally reads "0.1"
-# (not "1.0.0") so the emitted contract does not over-promise stability.
+# The 0.1 public API is stable within the beta series under VERSIONING.md.
+# This intentionally reads "0.1" (not "1.0.0") so the emitted contract
+# does not over-promise cross-minor or 1.0 stability.
 API_VERSION: Final[str] = "0.1"
 
 

@@ -30,11 +30,17 @@ from arvis import ArvisEngine, DecisionStatus
 BLACKBOX_SCENARIOS_VERSION = 1
 
 # Declared-risk gradation: the documented three-band policy of the
-# 0.1.0-alpha gate (README quick start, examples 01/06/09).
+# 0.1.0-beta gate (README quick start, examples 01/06/09).
 RISK_SCENARIOS: tuple[tuple[float, DecisionStatus], ...] = (
     (0.10, DecisionStatus.ALLOWED),
     (0.50, DecisionStatus.REQUIRES_CONFIRMATION),
     (0.90, DecisionStatus.BLOCKED),
+)
+
+NON_FINITE_RISKS = (
+    pytest.param(float("nan"), id="nan"),
+    pytest.param(float("inf"), id="positive-infinity"),
+    pytest.param(float("-inf"), id="negative-infinity"),
 )
 
 # The host integration surface, as promised (NOTE_DECISION 2026-07-24).
@@ -135,6 +141,25 @@ def test_declared_risk_gradation(risk: float, expected: DecisionStatus) -> None:
     result = engine.run("blackbox", {"risk": risk})
     assert result.status is expected
     assert result.to_dict()["decision"]["status"] == expected.value
+
+
+@pytest.mark.parametrize("risk", NON_FINITE_RISKS)
+def test_non_finite_declared_risk_fails_closed_from_the_wheel(
+    risk: float,
+) -> None:
+    """b2: malformed public risk values never become an ALLOWED decision,
+    and the installed artifact still emits strict JSON and a verifiable
+    reflexive payload."""
+    import json
+
+    from arvis import verify_reflexive_attestation
+
+    result = ArvisEngine().run("blackbox", {"risk": risk})
+    assert result.status is DecisionStatus.BLOCKED
+    assert result.to_ir()["input"]["metadata"]["risk"] is None
+    json.loads(result.to_json())
+    assert result.reflexive is not None
+    assert verify_reflexive_attestation(result.reflexive) is True
 
 
 def test_run_view_carries_a_commitment_and_an_ir() -> None:

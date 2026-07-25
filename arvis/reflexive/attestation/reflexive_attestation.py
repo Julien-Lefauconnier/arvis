@@ -178,6 +178,7 @@ class ReflexiveAttestation:
             sort_keys=True,
             separators=(",", ":"),
             ensure_ascii=False,
+            allow_nan=False,
         )
         return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 

@@ -1,7 +1,7 @@
 # ARVIS documentation
 
-Fifty-six documents, four kinds. This page says which kind answers which
-question, so you land in the right one rather than reading three.
+The documentation is organized into four kinds. This page says which kind
+answers which question, so you land in the right one rather than reading three.
 
 - **Standard** (`standard/`) states what a conforming implementation MUST do.
   Normative.
@@ -43,10 +43,14 @@ compliance suite.
 | [architecture/RUNTIME_LIFECYCLE.md](architecture/RUNTIME_LIFECYCLE.md) | what the runtime does over time |
 | [architecture/KERNEL_ADAPTERS.md](architecture/KERNEL_ADAPTERS.md) | how signals reach the kernel |
 | [architecture/SIGNALS_PRIMITIVES.md](architecture/SIGNALS_PRIMITIVES.md) | the signal vocabulary |
+| [architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md](architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md) | where ARVIS fits in a complete governed assistant |
 | [COGNITIVE_STATE.md](COGNITIVE_STATE.md) | what the runtime holds between turns |
 | [IR.md](IR.md) | what the intermediate representation carries |
 | [REFLEXIVE.md](REFLEXIVE.md) | how the runtime describes itself |
 | [VERSIONS.md](VERSIONS.md) | which version constant governs what |
+
+For a concrete but non-normative application mapping, see the
+[VeraMem integration case study](integration/VERAMEM_CASE_STUDY.md).
 
 Read `EFFECT_PATH.md` before changing anything under `kernel_core/syscalls/` or
 `tools/`. Its invariants are pinned by `tests/adversarial/`, and a change that

@@ -120,6 +120,7 @@ class CognitiveResultView:
                 sort_keys=True,
                 separators=(",", ":"),
                 ensure_ascii=True,
+                allow_nan=False,
             ).encode("utf-8")
             ir_hash = sha256(ir_bytes).hexdigest()
         except (TypeError, ValueError):

@@ -18,6 +18,7 @@ EXAMPLES=(
   examples/08_timeline_audit.py
   examples/09_multi_engine_hosting.py
   examples/10_runtime_inspection.py
+  examples/11_governed_assistant.py
 )
 
 failures=()

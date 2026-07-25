@@ -36,9 +36,13 @@ emitted IR stays consistent with the verdict.
 
 from __future__ import annotations
 
+import math
+from collections.abc import Mapping
+from dataclasses import replace
 from typing import Any
 
 from arvis.errors.manager import ErrorManager
+from arvis.ir.input import CognitiveInputIR
 from arvis.kernel.gate.input_risk import (
     is_pure_risk_payload,
     read_input_risk,
@@ -98,7 +102,53 @@ _HARDEN_STAGE = "input_risk_harden"
 _GRADED_MODE = "graded"
 
 
+def _null_invalid_risk_in_context(ctx: Any, cognitive_input: Any) -> None:
+    """Detach a rejected numeric risk from every exported context view.
+
+    The caller's mapping is never mutated. The pipeline receives a shallow
+    copy in which the invalid scalar is represented as JSON ``null``; the
+    already-bootstrapped frozen input IR is replaced with the same detached
+    metadata. This keeps the fail-closed decision, IR, commitments and
+    reflexive output serializable as strict JSON.
+
+    The function is deliberately best-effort because it runs while handling
+    an earlier boundary failure. Any hostile object behaviour must not escape
+    the gate's fail-closed path.
+    """
+    try:
+        if not isinstance(cognitive_input, dict):
+            return
+
+        value = cognitive_input.get("risk")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return
+        try:
+            invalid = not math.isfinite(float(value))
+        except (OverflowError, ValueError):
+            invalid = True
+        if not invalid:
+            return
+
+        sanitized_input = dict(cognitive_input)
+        sanitized_input["risk"] = None
+        ctx.cognitive_input = sanitized_input
+
+        extra = getattr(ctx, "extra", None)
+        if isinstance(extra, dict):
+            extra["input_risk"] = None
+
+        ir_input = getattr(ctx, "ir_input", None)
+        metadata = getattr(ir_input, "metadata", None)
+        if isinstance(ir_input, CognitiveInputIR) and isinstance(metadata, Mapping):
+            sanitized_metadata = dict(metadata)
+            sanitized_metadata["risk"] = None
+            ctx.ir_input = replace(ir_input, metadata=sanitized_metadata)
+    except Exception:  # arvis-broad: best-effort fail-closed artifact sanitization
+        return
+
+
 def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict:
+    cognitive_input: Any = None
     try:
         cognitive_input = getattr(ctx, "cognitive_input", None)
         risk = read_input_risk(cognitive_input)
@@ -181,6 +231,7 @@ def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict
         return risk_verdict
 
     except Exception as exc:
+        _null_invalid_risk_in_context(ctx, cognitive_input)
         ErrorManager.capture_exception(
             ctx,
             exc,

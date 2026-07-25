@@ -59,9 +59,14 @@ release.
 
 From beta onwards, a name in the public API is removed in two steps:
 
-1. it emits `DeprecationWarning` for at least one minor release, with the
-   replacement named in the message;
-2. it is removed in the following minor release.
+1. it emits `DeprecationWarning`, with the replacement named in the message;
+2. it is removed only after at least one published compatibility release has
+   carried that warning.
+
+During `0.1.0bN`, one prior beta release is the minimum overlap. After a stable
+`0.x.0` release, the warning remains for at least one minor release and removal
+can occur only in the following minor series. This is one policy with
+stage-appropriate windows, not competing beta and minor-release rules.
 
 Anything that changes canonical bytes (canonicalization, redaction policy,
 commitment or confirmation formats) is not deprecated: it is versioned. The
@@ -168,6 +173,7 @@ The beta series stabilizes `arvis.__all__` (11 symbols) and the stable
 manifest, plus the shipped serialization contract and the reflexive
 attestation canonicalization. Within the series, removals, renames or
 type changes on this surface require a deprecation cycle: a changelog
-entry, a version bump of the affected contract constant, and one beta
-release of overlap where both forms work. Additive, backward-compatible
+entry, a version bump of the affected contract constant, and the overlap
+required by the policy above. During beta, at least one published beta must
+carry both the old and replacement forms. Additive, backward-compatible
 changes remain free.
