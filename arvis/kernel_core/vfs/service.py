@@ -155,17 +155,10 @@ class VFSService:
         if updated is not None:
             return updated
 
-        return VFSItem(
-            item_id=item.item_id,
-            display_name=normalized_name,
-            item_type=item.item_type,
-            parent_id=item.parent_id,
-            owner_id=item.owner_id,
-            organization_id=item.organization_id,
-            mime=item.mime,
-            file_size=item.file_size,
-            created_at=item.created_at,
-        )
+        # Fallback reconstruction: preserve every security-bearing field
+        # (owner, organization, resource_scope), change only the name
+        # (audit A-02).
+        return item._with_changes(display_name=normalized_name)
 
     def move_item(
         self,
@@ -204,17 +197,9 @@ class VFSService:
         if updated is not None:
             return updated
 
-        return VFSItem(
-            item_id=item.item_id,
-            display_name=item.display_name,
-            item_type=item.item_type,
-            parent_id=parent_id,
-            owner_id=item.owner_id,
-            organization_id=item.organization_id,
-            mime=item.mime,
-            file_size=item.file_size,
-            created_at=item.created_at,
-        )
+        # Fallback reconstruction: a plain move changes only the parent and
+        # preserves organization and resource_scope (audit A-02).
+        return item._with_changes(parent_id=parent_id)
 
     def _normalize_name(self, name: str) -> str:
         normalized = name.strip()

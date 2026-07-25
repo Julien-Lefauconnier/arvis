@@ -101,17 +101,9 @@ class InMemoryVFSRepository:
     ) -> None:
         bucket = self._user_bucket(user_id)
         item = bucket[item_id]
-        bucket[item_id] = VFSItem(
-            item_id=item.item_id,
-            display_name=new_name,
-            item_type=item.item_type,
-            parent_id=item.parent_id,
-            owner_id=item.owner_id,
-            organization_id=item.organization_id,
-            mime=item.mime,
-            file_size=item.file_size,
-            created_at=item.created_at,
-        )
+        # Only the name changes; owner, organization and resource_scope are
+        # preserved (audit A-02).
+        bucket[item_id] = item._with_changes(display_name=new_name)
 
     def move_item(
         self,
@@ -122,14 +114,6 @@ class InMemoryVFSRepository:
     ) -> None:
         bucket = self._user_bucket(user_id)
         item = bucket[item_id]
-        bucket[item_id] = VFSItem(
-            item_id=item.item_id,
-            display_name=item.display_name,
-            item_type=item.item_type,
-            parent_id=parent_id,
-            owner_id=item.owner_id,
-            organization_id=item.organization_id,
-            mime=item.mime,
-            file_size=item.file_size,
-            created_at=item.created_at,
-        )
+        # Only the parent changes; a plain move preserves organization and
+        # resource_scope (audit A-02, A-05).
+        bucket[item_id] = item._with_changes(parent_id=parent_id)
