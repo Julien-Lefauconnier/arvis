@@ -72,7 +72,7 @@ attestation that authentication already occurred.
 
 ### 3.2 AccessContext
 
-An `AccessContext` is the triple evaluated by a policy.
+An `AccessContext` is the tuple evaluated by a policy.
 
     AccessContext:
         principal: Principal
@@ -80,7 +80,15 @@ An `AccessContext` is the triple evaluated by a policy.
         resource_owner_id: str
         resource_organization_id: str | None   # owning organization, None when personal
         resource_id: str | None
+        resource_scope: str | None     # opaque narrower-than-organization scope, None when unscoped
         syscall_name: str | None
+
+`resource_scope` is an **opaque** token naming an area narrower than the
+organization (a matter, a project, whatever the realization layer names it).
+This layer never parses it. `None` means the resource is not sub-scoped, the
+behaviour every resource had before scoped grants existed. A resource resolver
+copies the value verbatim from the resource into the context; the coverage rule
+(Section 4) decides whether the principal's grants reach that scope.
 
 ### 3.3 AccessDecision and AccessVerdict
 
@@ -104,6 +112,42 @@ Requirements (normative):
 * **Side-effect free**: `decide` MUST NOT perform I/O or mutate state.
 * **Fail-closed**: when the answer is uncertain, the policy MUST return DENY.
 * On DENY, the verdict MUST carry a canonical access-layer reason code.
+
+### 4.1 Scope coverage
+
+When a policy honours `resource_scope`, coverage is decided by an **injectable**
+rule of the shape:
+
+    scope_covers(principal: Principal, resource_scope: str | None) -> bool
+
+Normative properties of this rule:
+
+* it operates on **opaque** tokens; this layer never parses a scope;
+* `resource_scope is None` MUST be covered (an unscoped resource keeps its
+  pre-scope behaviour), so injecting a rule is behaviour-neutral for resources
+  that carry no scope;
+* the default rule is verbatim membership: the scope token must be present in
+  `principal.grants`.
+
+A resource that belongs to an organization AND carries a scope is ALLOW only if
+the principal belongs to the organization, holds the required capability, AND
+the scope is covered. The three conditions are cumulative.
+
+### 4.2 Resolution failure is not an unscoped resource
+
+A policy decides on **resolved** metadata. The resource resolver that populates
+`resource_owner_id`, `resource_organization_id` and `resource_scope` MUST
+distinguish two cases:
+
+* the resource reference is **absent** (for example creation at the root): not
+  an error, the resource is genuinely unscoped, `resource_scope` is `None`;
+* the resource lookup **fails** (store unavailable, inconsistency): the metadata
+  is **indeterminate** and MUST NOT be presented as a resolved, unscoped,
+  caller-owned resource. The resolver MUST NOT fabricate metadata from an error.
+  It leaves the context unresolved and does not raise; the syscall body, which
+  performs the same lookup, fails on the same condition and returns a failure,
+  never the resource. An indeterminate lookup is therefore fail-closed by
+  construction: it can never yield ALLOW.
 
 ---
 
@@ -195,16 +239,18 @@ to a write capability). This derivation is **injectable**: a realization layer
 MAY supply its own mapping from effect or syscall to a domain-specific
 capability without modifying this layer.
 
-### 7.3 Grants are opaque
+### 7.3 Grants and scopes are opaque
 
 `grants` are **opaque tokens** to this layer. ARVIS only tests membership of a
-required capability in `principal.grants`. Assigning meaning to those tokens,
-constructing the `Principal` (its organization and grants) from an identity
-system, labelling resources with their owner and organization, and authoring
-any governance beyond these reference mechanisms are responsibilities of the
-realization layer. This boundary keeps the standard generic and auditable
-while organization-specific governance remains private to the realization
-layer.
+required capability, and of a resource scope, in `principal.grants`. It never
+parses a grant or a scope. Assigning meaning to those tokens, constructing the
+`Principal` (its organization and grants) from an identity system, labelling
+resources with their owner, organization and scope, deciding which capability a
+given access requires, and authoring the coverage rule and any governance beyond
+these reference mechanisms are responsibilities of the realization layer. This
+boundary keeps the standard generic and auditable while organization-specific
+governance, including how a scope is named and which grants cover it, remains
+private to the realization layer.
 
 ---
 
@@ -217,7 +263,13 @@ An implementation conforms to this specification if and only if:
 * the `access_denied` reason code is emitted on denial and is consistent with
   the Gate verdict;
 * policy evaluation is deterministic and replay-safe;
-* the absence of a configured policy defaults to owner-scoped authorization.
+* the absence of a configured policy defaults to owner-scoped authorization;
+* `resource_scope` is treated as opaque and is never parsed by this layer;
+* a `None` scope is covered, and belonging to an organization with the required
+  capability does not by itself grant access to a scoped resource whose scope
+  the principal's grants do not cover;
+* a resource-resolution failure never yields ALLOW: an indeterminate lookup is
+  not presented as an unscoped, caller-owned resource.
 
 ---
 

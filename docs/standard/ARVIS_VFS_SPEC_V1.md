@@ -180,20 +180,41 @@ Defined values:
 
 `VFSItem` is the canonical logical item representation.
 
-Fields:
+Fields (in declaration order):
 
 - `item_id: str`
 - `display_name: str`
 - `item_type: VFSItemType`
 - `parent_id: Optional[str]`
+- `owner_id: str`
+- `organization_id: Optional[str] = None`
 - `mime: Optional[str] = None`
 - `file_size: Optional[int] = None`
 - `created_at: Optional[int] = None`
+- `resource_scope: Optional[str] = None`
+
+`owner_id`, `organization_id` and `resource_scope` are the security-bearing
+fields consumed by the access layer (see ARVIS_ACCESS_SPEC_V1). `resource_scope`
+is an **opaque** token naming an area narrower than the organization; the kernel
+never parses it. It is declared **last** so that every positional constructor
+call written before scoped grants existed keeps producing the exact same object,
+while new callers pass the scope by keyword (audit A-01).
 
 Behavior helpers:
 
 - `is_file() -> bool`
 - `is_folder() -> bool`
+
+Reconstruction primitive:
+
+- `_with_changes(**changes) -> VFSItem` returns a copy with only the named fields
+  changed, every other field **preserved**. A mutation states what it changes;
+  every security-bearing field it does not name is carried over unchanged. This
+  makes it structurally impossible to drop `owner_id`, `organization_id` or
+  `resource_scope` when reconstructing an item after a rename or a move (audit
+  A-02). It is private (leading underscore): an internal reconstruction
+  primitive, not part of the host integration surface. An unknown field name
+  raises rather than building a divergent object.
 
 ### 6.3 Semantics
 
@@ -362,9 +383,12 @@ Renaming an item preserves:
 - its identity,
 - its type,
 - its parent,
+- its owner, organization and resource scope,
 - its metadata except display name.
 
-A rename must not create a same-parent conflict.
+A rename must not create a same-parent conflict. Preservation of the
+security-bearing fields is guaranteed by reconstructing through
+`_with_changes(display_name=...)`, which changes only the name (audit A-02).
 
 ### 10.8 Move invariant
 
@@ -372,13 +396,38 @@ Moving an item requires:
 
 - target parent exists if provided,
 - target parent is a folder,
-- no name conflict in the target parent.
+- no name conflict in the target parent,
+- the item's owner, organization and resource scope are preserved (a plain move
+  changes only the parent).
 
 For folders, moving into self or a descendant is forbidden.
 
 Such invalid moves raise:
 
 - `VFSCycleError`
+
+Governance of a move is defined at the syscall surface (Section 23.2): a plain
+move stays inside a single governed area. A move that would cross organization
+or scope, or write into a parent the caller may not write, is refused before any
+mutation. See `vfs.move_item`.
+
+### 10.9 Creation inheritance invariant
+
+A newly created item inherits its parent's security context (audit A-06):
+
+- creating under a parent, the new item MUST carry the parent's
+  `organization_id` and `resource_scope`;
+- creating at the root (no parent) inherits nothing: the item is unscoped, the
+  historical behaviour.
+
+This inheritance is a **governed invariant**, not a convention trusted to the
+service. The kernel (Section 23.2) imposes the parent's context as a constraint
+passed to the service AND verifies that the created item carries it; a
+non-conforming item is rolled back and the creation refused. Security therefore
+does not depend on any service honouring the constraint. The reference service
+and repository accept the inherited `organization_id` and `resource_scope` as
+optional creation parameters (default `None`, behaviour-neutral) and stamp them
+on the created item.
 
 ---
 
@@ -858,6 +907,12 @@ Returns:
 
 - serialized list of VFS items
 
+> Governance: the caller's own scope is authorized at the syscall boundary, then
+> **every** returned item is evaluated against the full policy (owner,
+> organization, resource scope). Only items the caller may access survive; an
+> item whose evaluation errors is excluded, never included by default, and the
+> result is never widened.
+
 #### `vfs.get`
 
 Arguments:
@@ -879,6 +934,11 @@ Returns:
 
 - serialized deterministic VFS tree
 
+> Governance: the flat item list is filtered through the full policy BEFORE the
+> tree is built, so no forbidden node is ever materialized. A covered item whose
+> parent is filtered out surfaces as a root (its own coverage stands); the
+> forbidden parent is never revealed.
+
 ### 23.2 Write syscalls
 
 #### `vfs.create_folder`
@@ -892,6 +952,13 @@ Arguments:
 Returns:
 
 - serialized created VFS item
+
+> Governance (inheritance): the parent defines the child's security context. The
+> parent is resolved (the caller's write access to it is already governed), its
+> organization and scope are imposed as a constraint passed to the service, and
+> the created item is then verified to carry them; a non-conforming item is
+> rolled back and the creation refused. Creation at the root inherits nothing and
+> stays unscoped.
 
 #### `vfs.create_file`
 
@@ -941,6 +1008,14 @@ Arguments:
 Returns:
 
 - serialized updated VFS item
+
+> Governance (both sides): before any mutation, the source and the destination
+> parent are read. The move is refused, with no partial mutation, if the caller
+> may not write into the destination parent, if source and destination differ in
+> organization or scope (compared by opaque equality; the kernel never parses a
+> scope), if a scoped item would be moved to the unscoped root, or if the source
+> or destination is indeterminate. A cross-scope transfer is not an ordinary
+> move; it would be a separate, explicitly governed capability.
 
 ### 23.3 ZIP syscalls
 
@@ -1140,7 +1215,18 @@ Future versions should formalize ZIP security configuration in a dedicated ARVIS
 
 ### 28.3 Permissions
 
-No permissions model exists in V1.
+No general permissions model exists in V1; access is governed by owner, organization and scope isolation (see above and ARVIS_ACCESS_SPEC_V1)
+
+> **Host service obligations.** The reference `VFSService` and in-memory
+> repository implement the scope-isolation invariants (metadata preservation on
+> rename and move, both-sided move governance, impose-and-verify creation
+> inheritance). A host that supplies its own VFS service (arvis types it
+> structurally, it is not part of `host_api`) MUST honour the same invariants:
+> preserve the security-bearing fields on reconstruction, and stamp the inherited
+> organization and scope on creation. The kernel verifies creation inheritance
+> and rolls back a violation, so a non-conforming host service fails closed
+> rather than leaking, but rename and move preservation remain the host service's
+> responsibility to uphold.
 
 ### 28.4 Content import abstraction
 
