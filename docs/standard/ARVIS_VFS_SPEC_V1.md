@@ -126,6 +126,13 @@ This especially applies to:
 
 Domain errors are surfaced through explicit VFS and ZIP exception classes and mapped into syscall error codes.
 
+Fail-closed does not mean fail-opaque: refusing on the indeterminate case (an
+unexpected authorization failure denies) does not require erasing the nature of
+an EXPECTED condition for a legitimately entitled caller. An item that does not
+exist is a normal fact of the world, not an authorization failure, and is
+surfaced as its precise not-found code, not as an opaque refusal. Anti-enumeration
+is carried by the denied case, the only case where it applies (see 25.1).
+
 ---
 
 ## 5. Module layout
@@ -982,6 +989,15 @@ Returns:
 
 - serialized VFS item
 
+> Governance (single-read): the access resolver reads the item once, to
+> authorize against its real owner, organization and scope, and hands that same
+> item to the body, which returns it WITHOUT a second read. What is authorized
+> is exactly what is returned. This closes a read time-of-check/time-of-use gap
+> at its root: a body that re-read could receive, from a live store, a different
+> resource than the one authorized. If the resolver's read raised an expected
+> not-found, the body maps the precise code without re-reading, so a retry can
+> never surface a foreign resource.
+
 #### `vfs.tree`
 
 Arguments:
@@ -998,6 +1014,21 @@ Returns:
 > forbidden parent is never revealed.
 
 ### 23.2 Write syscalls
+
+> Governance (mutation atomicity is the store's responsibility): a write syscall
+> authorizes against the target's current labels (owner, organization, scope),
+> then asks the service to mutate BY ID. ARVIS is a governance kernel, not a
+> transactional engine: it does not, and cannot, make the store-level mutation
+> atomic with the authorization read, because the store stays live between the
+> two and ARVIS does not own it. A host that requires strict serializability
+> (the target's labels cannot change between authorization and mutation) MUST
+> provide it in its repository, through a compare-and-swap on the labels or an
+> equivalent transaction. This is deliberately NOT faked at the kernel level:
+> passing a pre-read in-memory snapshot to the mutation would only displace the
+> window while creating a false assurance of atomicity. Single-read (23.1)
+> therefore applies to the pure-READ `vfs.get`, where it genuinely closes the
+> gap; write syscalls get the same expected/unexpected finesse but carry no such
+> guarantee about store-level atomicity.
 
 #### `vfs.create_folder`
 
@@ -1182,10 +1213,29 @@ layer maps VFS exceptions to stable string codes:
 - `VFSCycleError` → `vfs_cycle_error`
 - `VFSInvalidNameError` → `vfs_invalid_name`
 
-An exception raised while resolving an item or parent for authorization is not
-body-level error mapping: it becomes `security_error` with
-`reason_code=authorization_failure`, and the body is not dispatched. Creation
-inheritance violations are security refusals with
+Resolving an item or parent for authorization can itself fail, and the two kinds
+of failure are distinguished (fail-closed does not mean fail-opaque):
+
+- an EXPECTED VFS condition (the item or parent does not exist, and the other
+  conditions above) is a fact about the resource, not indeterminate
+  authorization. The resolver stays neutral for the decision and the body maps
+  the SAME condition to its precise code (`vfs_item_not_found`, ...), exactly as
+  it does when no scope is involved. For a pure-READ syscall the resolver
+  additionally captures the exception and the body maps it WITHOUT a second
+  lookup (single-read, see 23.1);
+- an UNEXPECTED failure (a transient outage, proxy, cache, inconsistency) leaves
+  the authorization metadata indeterminate: it becomes `security_error` with
+  `reason_code=authorization_failure`, and the body is not dispatched.
+
+This preserves anti-enumeration WITHOUT erasing not-found: a principal without
+access to an EXISTING item is denied by the owner, organization and scope policy
+(`reason_code=access_denied`), indistinguishable from any other denial, so it
+can never tell "exists but forbidden" from "does not exist". The precise
+not-found code is only ever returned to a caller whose authorization would have
+succeeded had the item existed, i.e. one entitled to that scope, for whom the
+item's absence is not a secret.
+
+Creation inheritance violations are security refusals with
 `reason_code=inheritance_violation`; an unproved compensating rollback uses
 `reason_code=inheritance_rollback_failed`.
 

@@ -9,6 +9,64 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+## [0.1.0b4] - 2026-07-26
+
+Corrective beta release restoring the not-found / denied distinction that the
+0.1.0b3 strict resolver doctrine erased, and closing the read
+time-of-check/time-of-use gap at its ROOT for `vfs.get` through a single read.
+The guiding principle is that fail-closed does not mean fail-opaque. The public
+surface is unchanged: `HOST_API_VERSION` stays `1.0`, no `host_api` module
+moved, and the beta contract manifest is unchanged (the new `ResolvedAccess`
+type is internal to the kernel, not exported).
+
+### Security
+
+- Read single-read (`vfs.get`): the access resolver reads the target item once,
+  to authorize against its real owner, organization and scope, and hands that
+  same item to the syscall body, which returns it WITHOUT a second read. What is
+  authorized is exactly what is returned. This closes the reproduced read
+  time-of-check/time-of-use path (B3-VFS-01) at its root rather than by refusing:
+  a body that re-read could receive a different resource from a live store than
+  the one authorized. The generic mechanism is a new internal
+  `ResolvedAccess(context, resource, lookup_error)` a resolver may return in
+  place of a bare `AccessContext`; it is additive and backward compatible
+  (resolvers that read nothing keep returning `AccessContext`, treated as no
+  carried resource), so non-VFS resolvers are unchanged.
+- Anti-enumeration preserved by the denied case, not by erasing not-found: a
+  principal without access to an EXISTING item is denied by the owner,
+  organization and scope policy (`access_denied`), indistinguishable from any
+  other denial, so it cannot tell "exists but forbidden" from "does not exist".
+
+### Changed
+
+- Resolver finesse restored (revises b3 A-03): the item resolver now
+  distinguishes an EXPECTED VFS condition (item or parent not found, ...) from an
+  UNEXPECTED failure. An expected condition no longer becomes an opaque
+  `authorization_failure`; the resolver stays neutral for the decision and the
+  syscall body maps the SAME condition to its precise code (`vfs_item_not_found`,
+  `vfs_parent_not_found`, ...), exactly as when no scope is involved. For
+  `vfs.get` the resolver captures the expected exception so the body maps it
+  WITHOUT a second lookup, giving finesse and closing the TOCTOU at once. An
+  UNEXPECTED failure still denies fail-closed with `authorization_failure`, so
+  the indeterminate case that b3 A-03 targeted stays closed. This corrects the
+  b3 doctrine, which propagated EVERY lookup failure (expected included) and so
+  erased the legitimate not-found / denied distinction.
+- Mutation atomicity is documented as the store's responsibility, not the
+  kernel's (VFS spec 23.2). A write syscall authorizes against the target's
+  current labels and mutates by id; ARVIS is a governance kernel, not a
+  transactional engine, and does not fake store-level atomicity by passing a
+  pre-read snapshot to the mutation (which would only displace the window while
+  creating a false assurance). A host requiring strict serializability provides
+  it in its repository (compare-and-swap or transaction). Write syscalls get the
+  same expected/unexpected finesse but carry no store-atomicity guarantee.
+
+### Notes
+
+- A host on 0.1.0b3 that translated a missing item as an authorization failure
+  will now receive the precise `vfs_item_not_found` (and the sibling parent and
+  name codes) again, as it did before 0.1.0b3. A host that had adapted to the b3
+  behaviour should expect the not-found codes to return.
+
 ## [0.1.0b3] - 2026-07-25
 
 Corrective beta release closing the six findings of the independent audit of
