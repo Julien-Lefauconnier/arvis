@@ -126,9 +126,9 @@ def test_a03_resolver_lookup_error_denies_end_to_end():
     """A lookup failure must NOT authorize. The end-to-end invariant (audit
     A-03: verify the final syscall result, not the resolver in isolation):
     when the metadata cannot be resolved, vfs.get must deny, never return the
-    resource as if it were caller-owned and unscoped. Today the resolver
-    swallows the error, pins ownership to the caller and the scope to None,
-    which grants; this asserts the denial."""
+    resource as if it were caller-owned and unscoped. The resolver propagates
+    the error and the handler refuses before dispatch; this asserts the final
+    denial."""
     services = KernelServiceRegistry(
         vfs_service=_FailingLookupVFS(),
         authorization_service=OrganizationScopedAuthorization(),
@@ -149,9 +149,9 @@ def test_a03_resolver_lookup_error_denies_end_to_end():
 class _ExplodingVFS:
     """Every VFS access raises an UNEXPECTED error (store unavailable).
 
-    Used to lock the doctrine-A invariant: the resolver stays neutral on an
-    indeterminate lookup and the syscall BODY, calling the same failing VFS,
-    returns a failure. No item-referencing syscall may report success."""
+    Used to lock the fail-closed invariant: the resolver propagates an
+    indeterminate lookup and the syscall body is never dispatched. No
+    item-referencing syscall may report success."""
 
     def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
         raise RuntimeError("store unavailable")
@@ -187,12 +187,10 @@ class _ExplodingVFS:
     ],
 )
 def test_a03_no_vfs_syscall_grants_on_indeterminate_lookup(syscall_name, extra_args):
-    """Doctrine-A lock (audit A-03): when the resolver's metadata lookup is
+    """Fail-closed lock (audit A-03): when the resolver's metadata lookup is
     indeterminate, NO item-referencing VFS syscall may return success. The
-    resolver never fabricates a grantable resolution from an error, and the
-    body fails on the same unavailable store. A future syscall that authorized
-    without re-reading, and so could succeed here, would break this and be
-    caught."""
+    resolver propagates the error and the handler refuses before dispatching
+    the body."""
     services = KernelServiceRegistry(
         vfs_service=_ExplodingVFS(),
         authorization_service=OrganizationScopedAuthorization(),
@@ -506,8 +504,8 @@ class _DisobedientRepo:
     The verify-not-trust property now lives in VFSService (counter-audit
     B3-VFS-02): the service imposes the constraint AND verifies the repository
     honoured it. A disobedient repository behind a real service must therefore
-    be caught, the item rolled back, and the creation refused. Security does
-    not depend on the repository cooperating."""
+    be caught, the item rolled back, and the creation refused. Reliable
+    persistence rollback remains an explicit host-repository obligation."""
 
     def __init__(self) -> None:
         self._store: dict[str, VFSItem] = {}
@@ -571,6 +569,23 @@ class _DisobedientRepo:
         raise AssertionError("not exercised in this test")
 
 
+class _RollbackRaisesRepo(_DisobedientRepo):
+    def delete_item(self, *, user_id, item_id) -> None:
+        raise RuntimeError("persistent store refused rollback")
+
+
+class _RollbackNoOpRepo(_DisobedientRepo):
+    def delete_item(self, *, user_id, item_id) -> None:
+        return None
+
+
+class _UnreadableCreatedRepo(_DisobedientRepo):
+    def get_item(self, user_id: str, item_id: str) -> VFSItem | None:
+        if item_id == "child_bad":
+            return None
+        return super().get_item(user_id, item_id)
+
+
 def test_a06_disobedient_repository_triggers_rollback_and_denial():
     """When the repository does not stamp the inherited context, the service
     verifies the result, rolls the mis-scoped item back and raises, so the
@@ -595,3 +610,64 @@ def test_a06_disobedient_repository_triggers_rollback_and_denial():
     )
     assert result.success is False, "a mis-scoped child was accepted"
     assert "child_bad" not in repo._store, "the mis-scoped child was not rolled back"
+
+
+def test_a06_unreadable_creation_is_not_reconstructed_as_verified():
+    """A missing read-after-create result cannot be replaced by a synthetic
+    scoped item: the actual persisted metadata is unknown and must be rolled
+    back before the operation is refused.
+    """
+    repo = _UnreadableCreatedRepo()
+    services = KernelServiceRegistry(vfs_service=VFSService(repo))
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="alice"))
+
+    result = handler.handle(
+        Syscall(
+            name="vfs.create_file",
+            args={
+                "ctx": ctx,
+                "user_id": "alice",
+                "name": "unreadable.pdf",
+                "parent_id": "p_scoped",
+                "size": 1,
+            },
+        )
+    )
+
+    assert result.success is False
+    assert result.error is not None
+    assert result.error.details.get("reason_code") == "inheritance_violation"
+    assert "child_bad" not in repo._store
+
+
+@pytest.mark.parametrize("repo_type", [_RollbackRaisesRepo, _RollbackNoOpRepo])
+def test_a06_unproved_rollback_is_reported_as_critical(repo_type):
+    """A failed or ineffective compensating delete is never swallowed.
+
+    The caller remains denied and receives a distinct reason code, while the
+    residual item demonstrates why the host repository belongs to the
+    persistence trust boundary.
+    """
+    repo = repo_type()
+    services = KernelServiceRegistry(vfs_service=VFSService(repo))
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="alice"))
+
+    result = handler.handle(
+        Syscall(
+            name="vfs.create_file",
+            args={
+                "ctx": ctx,
+                "user_id": "alice",
+                "name": "leak.pdf",
+                "parent_id": "p_scoped",
+                "size": 1,
+            },
+        )
+    )
+
+    assert result.success is False
+    assert result.error is not None
+    assert result.error.details.get("reason_code") == "inheritance_rollback_failed"
+    assert "child_bad" in repo._store

@@ -164,7 +164,7 @@ def test_vfs_get_syscall_returns_serialized_item() -> None:
     assert result.result["item_type"] == "folder"
 
 
-def test_vfs_get_syscall_maps_not_found_error() -> None:
+def test_vfs_get_missing_reference_fails_during_authorization() -> None:
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
 
@@ -180,11 +180,7 @@ def test_vfs_get_syscall_maps_not_found_error() -> None:
         )
     )
 
-    assert result.success is False
-    _assert_error_code(
-        result,
-        "vfs_item_not_found",
-    )
+    _assert_authorization_failure(result)
 
 
 def test_vfs_tree_syscall_returns_serialized_tree() -> None:
@@ -248,6 +244,13 @@ def _assert_error_code(
     assert result.error.code == expected_code
 
 
+def _assert_authorization_failure(result) -> None:
+    assert result.success is False
+    assert result.error is not None
+    assert result.error.code == "security_error"
+    assert result.error.details.get("reason_code") == "authorization_failure"
+
+
 # ============================================================
 # VFS write syscalls
 # ============================================================
@@ -298,7 +301,7 @@ def test_vfs_create_folder_syscall_maps_invalid_name() -> None:
     )
 
 
-def test_vfs_create_folder_syscall_maps_parent_not_found() -> None:
+def test_vfs_create_folder_missing_parent_fails_during_authorization() -> None:
     repo = InMemoryVFSRepository()
     service = VFSService(repo)
 
@@ -315,10 +318,7 @@ def test_vfs_create_folder_syscall_maps_parent_not_found() -> None:
         )
     )
 
-    _assert_error_code(
-        result,
-        "vfs_parent_not_found",
-    )
+    _assert_authorization_failure(result)
 
 
 def test_vfs_create_file_syscall_creates_file() -> None:

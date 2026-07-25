@@ -34,6 +34,7 @@ from arvis.kernel_core.access.policy import (
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+from arvis.kernel_core.vfs.exceptions import VFSItemNotFoundError
 from arvis.kernel_core.vfs.models import VFSItem
 from arvis.kernel_core.vfs.repositories.in_memory import InMemoryVFSRepository
 from arvis.kernel_core.vfs.service import VFSService
@@ -84,6 +85,56 @@ def test_b3_vfs_01_transient_resolver_failure_denies_before_execution():
     )
 
     assert result.success is False, "access granted after an indeterminate lookup"
+    assert vfs.calls == 1, "the body performed a second lookup after auth failure"
+    assert result.error is not None
+    assert result.error.details.get("reason_code") == "authorization_failure"
+
+
+class _ExpectedFailureThenForeignVFS:
+    """First lookup reports an expected domain error, second lookup would
+    return a foreign scoped resource.
+
+    Expected and unexpected exceptions are equally indeterminate at the
+    authorization boundary; neither may be converted into grantable metadata.
+    """
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
+        self.calls += 1
+        if self.calls == 1:
+            raise VFSItemNotFoundError(f"item not found: {item_id}")
+        return VFSItem(
+            item_id=item_id,
+            display_name="secret.txt",
+            item_type="file",
+            parent_id=None,
+            owner_id="someone_else",
+            organization_id="acme",
+            resource_scope="scope:A",
+        )
+
+
+def test_b3_vfs_01_expected_resolver_failure_also_denies_before_execution():
+    """An expected first failure must not reach a second body lookup.
+
+    This is the precise regression missed by the initial B3-VFS-01 test, which
+    covered only ``RuntimeError``.
+    """
+    vfs = _ExpectedFailureThenForeignVFS()
+    services = KernelServiceRegistry(
+        vfs_service=vfs,
+        authorization_service=OrganizationScopedAuthorization(),
+    )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="bob"))
+
+    result = handler.handle(
+        Syscall(name="vfs.get", args={"ctx": ctx, "user_id": "bob", "item_id": "i1"})
+    )
+
+    assert result.success is False, "access granted after an expected lookup failure"
     assert vfs.calls == 1, "the body performed a second lookup after auth failure"
     assert result.error is not None
     assert result.error.details.get("reason_code") == "authorization_failure"

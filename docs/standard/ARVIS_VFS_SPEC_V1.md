@@ -243,12 +243,15 @@ The VFS domain uses explicit exception types.
 - `VFSFolderNotEmptyError`
 - `VFSCycleError`
 - `VFSInvalidNameError`
+- `VFSInheritanceViolationError`
+- `VFSInheritanceRollbackError`
 
 ### 7.3 Semantics
 
-These exceptions are domain-level failures and are used by the VFS service to signal invariant violations.
-
-They are later mapped to stable syscall error codes.
+These exceptions are domain-level failures used by the VFS service to signal
+invariant violations. Routine failures are mapped to stable VFS syscall error
+codes; inheritance failures are mapped to stable security-refusal reason codes
+(Section 25.1).
 
 ---
 
@@ -280,6 +283,20 @@ repository written for `0.1.0b2` must be migrated to the new signature; the
 migration strategy is stated in Section 8.4. `VFSRepository` is not exported by
 `arvis.host_api`, so this evolution does not by itself change
 `HOST_API_VERSION`.
+
+The persistence adapter is part of the VFS trust boundary. For creation it
+MUST:
+
+- persist the supplied `organization_id` and `resource_scope` atomically with
+  the new item;
+- make the created item immediately readable through `get_item`;
+- provide reliable `delete_item` and read-after-delete semantics for the
+  compensating rollback path.
+
+`VFSService` verifies inheritance and refuses a mismatched result, but it cannot
+make an arbitrary external store transactional. A host repository that violates
+these obligations can retain a mis-scoped item even though the syscall caller is
+denied.
 
 ### 8.3 Current implementation
 
@@ -357,9 +374,9 @@ Current service surface:
 - `move_item(user_id, item_id, parent_id)`
 
 The service creation methods deliberately do NOT accept an explicit
-`organization_id` or `resource_scope`: the parent is authoritative, and the
-service derives the inherited context from it, imposes it on the repository call
-and verifies the created item carries it (Section 10.9). This makes creation
+`organization_id` or `resource_scope`: the parent is authoritative. The service
+derives the inherited context from it, imposes it on the repository call and
+verifies the created item carries it (Section 10.9). This makes creation
 inheritance a single, centralized invariant that every creation path, including
 ZIP import, obtains without passing anything.
 
@@ -453,13 +470,22 @@ A newly created item inherits its parent's security context:
 This inheritance is a **governed invariant centralized in `VFSService`**, the
 common boundary of every creation path (unit creation and ZIP import alike). The
 service derives the parent's context, imposes it on the repository call, and
-then VERIFIES the created item carries it; a non-conforming item is rolled back
-and `VFSInheritanceViolationError` is raised, which the syscall body maps to a
-fail-closed security refusal. Security therefore does not depend on the
-repository honouring the constraint: the service imposes AND verifies. Placing
-the invariant in the service (rather than in each syscall body) is what closes
-the ZIP path, which reaches the service directly without going through a
-creation syscall.
+then reads the actual persisted item back and VERIFIES it carries the inherited
+context. A missing read-after-create result is indeterminate and MUST NOT be
+replaced by a synthetic item. An unreadable or non-conforming item is deleted,
+the deletion is verified by read-after-delete, and
+`VFSInheritanceViolationError` is raised; the syscall body maps it to a
+fail-closed security refusal.
+
+If deletion fails or the item remains readable,
+`VFSInheritanceRollbackError` is raised and the syscall returns the distinct
+`inheritance_rollback_failed` refusal. This path is observable rather than
+silently swallowed, but it cannot erase data from a non-conforming external
+store by force. The host repository therefore remains part of the persistence
+trust boundary and MUST provide the atomicity and rollback semantics in Section
+8.2. Placing the invariant in the service (rather than in each syscall body) is
+what closes the ZIP path, which reaches the service directly without going
+through a creation syscall.
 
 ---
 
@@ -1145,7 +1171,8 @@ A ZIP decision is serialized with:
 
 ### 25.1 VFS syscall error codes
 
-The syscall layer maps VFS exceptions to stable string codes:
+After authorization has succeeded and a syscall body is dispatched, the syscall
+layer maps VFS exceptions to stable string codes:
 
 - `VFSItemNotFoundError` → `vfs_item_not_found`
 - `VFSParentNotFoundError` → `vfs_parent_not_found`
@@ -1154,6 +1181,13 @@ The syscall layer maps VFS exceptions to stable string codes:
 - `VFSFolderNotEmptyError` → `vfs_folder_not_empty`
 - `VFSCycleError` → `vfs_cycle_error`
 - `VFSInvalidNameError` → `vfs_invalid_name`
+
+An exception raised while resolving an item or parent for authorization is not
+body-level error mapping: it becomes `security_error` with
+`reason_code=authorization_failure`, and the body is not dispatched. Creation
+inheritance violations are security refusals with
+`reason_code=inheritance_violation`; an unproved compensating rollback uses
+`reason_code=inheritance_rollback_failed`.
 
 Missing VFS service resolves to:
 
@@ -1254,11 +1288,15 @@ No general permissions model exists in V1; access is governed by owner, organiza
 > rename and move, both-sided move governance, impose-and-verify creation
 > inheritance). A host that supplies its own VFS service (arvis types it
 > structurally, it is not part of `host_api`) MUST honour the same invariants:
-> preserve the security-bearing fields on reconstruction, and stamp the inherited
-> organization and scope on creation. The kernel verifies creation inheritance
-> and rolls back a violation, so a non-conforming host service fails closed
-> rather than leaking, but rename and move preservation remain the host service's
-> responsibility to uphold.
+> preserve the security-bearing fields on reconstruction, stamp the inherited
+> organization and scope atomically on creation, and provide reliable
+> delete/read-after-delete semantics. The kernel verifies creation inheritance,
+> attempts and verifies rollback, and refuses the caller on every violation. A
+> rollback it cannot prove is surfaced as `inheritance_rollback_failed`; the
+> host must then quarantine or abort the affected persistence workflow because
+> ARVIS cannot guarantee deletion from an arbitrary non-conforming store.
+> Rename and move preservation likewise remain the host service's
+> responsibility.
 
 ### 28.4 Content import abstraction
 

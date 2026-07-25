@@ -8,6 +8,14 @@ from arvis.kernel_core.vfs.models import VFSItem
 
 
 class VFSRepository(Protocol):
+    """Persistence contract used by :class:`VFSService`.
+
+    Host implementations are part of the VFS trust boundary. Creation must
+    persist the supplied organization and resource scope atomically with the
+    item, and delete/get must provide reliable read-after-delete semantics for
+    compensating rollback verification.
+    """
+
     def list_items(self, user_id: str) -> list[VFSItem]: ...
 
     def get_item(self, user_id: str, item_id: str) -> VFSItem | None: ...

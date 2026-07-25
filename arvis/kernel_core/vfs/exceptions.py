@@ -46,7 +46,17 @@ class VFSInheritanceViolationError(VFSError):
     Creation inheritance (organization and scope) is imposed AND verified by
     the service, the common boundary of every creation path (audit A-06,
     counter-audit B3-VFS-02). If the repository returns an item that does not
-    carry the parent's organization and scope, the service rolls the item back
-    and raises this. It is a security defect, not an ordinary VFS condition,
-    and the syscall body maps it to a fail-closed security refusal, never to a
+    carry the parent's organization and scope, the service proves rollback and
+    raises this. It is a security defect, not an ordinary VFS condition, and
+    the syscall body maps it to a fail-closed security refusal, never to a
     routine VFS error code."""
+
+
+class VFSInheritanceRollbackError(VFSInheritanceViolationError):
+    """Raised when rollback of a mis-scoped creation cannot be proved.
+
+    The caller is still refused, but the persistence adapter may retain the
+    invalid item. Host repositories are part of the persistence trust boundary
+    and must provide reliable delete/read-after-delete semantics for this
+    compensating rollback path.
+    """

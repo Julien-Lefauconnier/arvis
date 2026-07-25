@@ -5,6 +5,7 @@ from __future__ import annotations
 from arvis.kernel_core.vfs.exceptions import (
     VFSCycleError,
     VFSFolderNotEmptyError,
+    VFSInheritanceRollbackError,
     VFSInheritanceViolationError,
     VFSInvalidNameError,
     VFSItemNotFoundError,
@@ -61,17 +62,9 @@ class VFSService:
 
         created = self.repo.get_item(user_id, folder_id)
         if created is None:
-            created = VFSItem(
-                item_id=folder_id,
-                display_name=normalized_name,
-                item_type="folder",
-                parent_id=parent_id,
-                owner_id=user_id,
-                organization_id=organization_id,
-                mime=None,
-                file_size=0,
-                created_at=None,
-                resource_scope=resource_scope,
+            self._rollback_created_item(user_id, folder_id)
+            raise VFSInheritanceViolationError(
+                "created folder could not be read back for inheritance verification"
             )
         self._verify_inheritance(user_id, created, organization_id, resource_scope)
         return created
@@ -111,17 +104,9 @@ class VFSService:
 
         created = self.repo.get_item(user_id, file_id)
         if created is None:
-            created = VFSItem(
-                item_id=file_id,
-                display_name=normalized_name,
-                item_type="file",
-                parent_id=parent_id,
-                owner_id=user_id,
-                organization_id=organization_id,
-                mime=mime,
-                file_size=size,
-                created_at=None,
-                resource_scope=resource_scope,
+            self._rollback_created_item(user_id, file_id)
+            raise VFSInheritanceViolationError(
+                "created file could not be read back for inheritance verification"
             )
         self._verify_inheritance(user_id, created, organization_id, resource_scope)
         return created
@@ -246,25 +231,37 @@ class VFSService:
         organization_id: str | None,
         resource_scope: str | None,
     ) -> None:
-        """Verify the repository honoured the inheritance constraint; roll the
-        item back and raise if it did not. The service does not trust the
-        repository to stamp the inherited context: it imposes the constraint
-        AND checks the result, so a non-conforming repository fails closed
-        rather than leaking a mis-scoped item (audit A-06, counter-audit
-        B3-VFS-02). Comparison is by opaque equality; the scope is never
-        parsed."""
+        """Verify the repository honoured the inheritance constraint.
+
+        A mismatched item is deleted and the deletion is verified before the
+        ordinary inheritance violation is raised. If either deletion or its
+        read-after-delete verification fails, raise a distinct rollback error:
+        the operation remains refused, but the host must treat its persistence
+        adapter as compromised because an invalid item may remain.
+        """
         if (
             created.organization_id == organization_id
             and created.resource_scope == resource_scope
         ):
             return
-        try:
-            self.repo.delete_item(user_id=user_id, item_id=created.item_id)
-        except Exception:  # arvis-broad: rollback is best-effort, refusal stands
-            pass
+        self._rollback_created_item(user_id, created.item_id)
         raise VFSInheritanceViolationError(
             "created item does not carry the parent's organization and scope"
         )
+
+    def _rollback_created_item(self, user_id: str, item_id: str) -> None:
+        """Delete a refused creation and prove it is no longer readable."""
+        try:
+            self.repo.delete_item(user_id=user_id, item_id=item_id)
+            residual = self.repo.get_item(user_id, item_id)
+        except Exception as exc:
+            raise VFSInheritanceRollbackError(
+                "created item violates inheritance and rollback failed"
+            ) from exc
+        if residual is not None:
+            raise VFSInheritanceRollbackError(
+                "created item violates inheritance and remains after rollback"
+            )
 
     def _validate_parent(
         self,

@@ -141,13 +141,15 @@ distinguish two cases:
 
 * the resource reference is **absent** (for example creation at the root): not
   an error, the resource is genuinely unscoped, `resource_scope` is `None`;
-* the resource lookup **fails** (store unavailable, inconsistency): the metadata
-  is **indeterminate** and MUST NOT be presented as a resolved, unscoped,
-  caller-owned resource. The resolver MUST NOT fabricate metadata from an error.
-  It leaves the context unresolved and does not raise; the syscall body, which
-  performs the same lookup, fails on the same condition and returns a failure,
-  never the resource. An indeterminate lookup is therefore fail-closed by
-  construction: it can never yield ALLOW.
+* the resource lookup **fails**, whether with an expected domain error such as
+  `VFSItemNotFoundError` or an unexpected infrastructure error: the metadata is
+  **indeterminate** and MUST NOT be presented as a resolved, unscoped,
+  caller-owned resource. The resolver MUST propagate the failure. The
+  `SyscallHandler` converts every authorization-machinery exception into an
+  `authorization_failure` refusal and MUST NOT dispatch the syscall body. This
+  single-attempt rule prevents a second time-of-check/time-of-use lookup from
+  returning a resource after authorization was evaluated on fabricated
+  metadata.
 
 ---
 

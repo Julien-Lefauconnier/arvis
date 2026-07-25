@@ -35,22 +35,13 @@ public methods.
   both the reference repository and the service fallbacks, use it, so they can
   no longer drop `owner_id`, `organization_id` or `resource_scope`. An unknown
   field name raises rather than building a divergent object.
-- Both-sided move governance (A-05): `vfs.move_item` reads the source and the
-  destination parent before any mutation and refuses, with no partial mutation,
-  a move into a parent the caller may not write, a move that crosses
-  organization or scope (opaque equality), a move of a scoped item to the
-  unscoped root, or a move with an indeterminate source or destination. A
-  cross-scope transfer is not an ordinary move.
-  - Resolver fail-open closed (A-03): on an UNEXPECTED metadata lookup failure the
-  item resolver no longer fabricates a resolved, caller-owned, unscoped resource
-  (which the policy would grant). It lets the exception PROPAGATE, and the
-  handler turns any exception raised during authorization into a fail-closed
-  `authorization_failure` refusal, so the syscall body never runs. This closes
-  the time-of-check/time-of-use gap where a transient first failure, once
-  swallowed, let the body read a second time and return a foreign resource on
-  fabricated metadata. Expected VFS conditions (item or parent not found) stay
-  neutral and still flow to their proper error codes; only an unresolvable
-  lookup denies.
+- Resolver fail-open closed (A-03): on ANY metadata lookup failure, including an
+  expected VFS domain error such as `VFSItemNotFoundError`, the item resolver no
+  longer fabricates a resolved, caller-owned, unscoped resource. It propagates
+  the exception, and the handler turns it into a fail-closed
+  `authorization_failure` refusal before the syscall body can perform a second
+  lookup. This closes the reproduced time-of-check/time-of-use path where the
+  first lookup failed and a second returned a foreign scoped resource.
 - Governed collections (A-04): `vfs.list` and `vfs.tree` evaluate every returned
   item against the full policy, not just the caller's own scope at the syscall
   boundary. Only accessible items survive; an item whose evaluation errors is
@@ -70,13 +61,16 @@ public methods.
   organization and scope as a governed invariant CENTRALIZED in `VFSService`,
   the common boundary of every creation path. The service derives the parent's
   context, imposes it on the repository call, then verifies the created item
-  carries it; a non-conforming item is rolled back and the creation refused.
-  Security does not depend on the repository honouring the constraint. Because
-  the invariant lives in the service, the ZIP import path (which reaches the
-  service directly, without a creation syscall) inherits the parent's
-  organization and scope on every descendant. Root creation inherits nothing and
-  stays unscoped.
-
+  carries it. A missing read-after-create result is no longer replaced by a
+  synthetic item. Unreadable or non-conforming creations are deleted, deletion
+  is verified, and the creation is refused. A failed or ineffective rollback is
+  no longer swallowed: it produces the distinct
+  `inheritance_rollback_failed` refusal. Because the invariant lives in the
+  service, the ZIP import path (which reaches the service directly, without a
+  creation syscall) inherits the parent's organization and scope on every
+  descendant. Root creation inherits nothing and stays unscoped. Host
+  persistence adapters remain responsible for atomic creation and reliable
+  read-after-create/delete semantics.
 
 ### Added
 
@@ -88,20 +82,29 @@ public methods.
   a host adapter that does not set it is unchanged. `HOST_API_VERSION` stays
   `1.0` per the additive-changes-remain-free rule (VERSIONING.md); the beta
   contract manifest is regenerated to record the new field.
-- The reference `VFSService` and in-memory repository creation methods accept
-  optional inherited `organization_id` and `resource_scope` (default `None`,
-  behaviour-neutral), which the kernel uses to impose creation inheritance.
+- Repository creation methods accept optional inherited `organization_id` and
+  `resource_scope` (default `None`, behaviour-neutral). `VFSService` derives
+  both values from the parent and always passes them to the repository; its own
+  public creation methods deliberately do not accept caller-supplied scope.
   Neither contract is part of `host_api`.
 - An adversarial isolation suite (`tests/kernel_core/access/`) locking each
   finding: positional compatibility, reconstruction preservation, end-to-end
-  denial on indeterminate lookup over every item-referencing syscall, no
-  collection leak, cross-scope move refusal, and creation-inheritance
-  verification including a disobedient-service rollback.
+  denial on expected and unexpected indeterminate lookups, no collection leak,
+  cross-scope move refusal, creation-inheritance verification and explicit
+  failed/ineffective rollback reporting.
+- Installed-wheel black-box compliance covers the legacy positional
+  `VFSItem` constructor, exact-scope authorization, missing/wrong-scope refusal
+  and the expected-error-then-foreign-resource A-03 regression.
 
 ### Changed
 
 - Package version moves to `0.1.0b3`; README, source fallback and public status
   are coherent with the beta.
+- Item-referencing syscalls now return `security_error` with
+  `reason_code=authorization_failure` when the item or parent cannot be
+  resolved during authorization, including ordinary not-found conditions.
+  This intentional fail-closed change avoids revealing whether an inaccessible
+  identifier exists and prevents a second lookup after indeterminate metadata.
 - `ARVIS_ACCESS_SPEC_V1` and `ARVIS_VFS_SPEC_V1` document the resource-scope
   invariants: opacity and the injectable coverage rule, the cumulative
   organization + capability + scope condition, the None-is-covered semantics,

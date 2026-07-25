@@ -20,6 +20,7 @@ promises a host, and must be deliberate.
 """
 
 import os
+from types import SimpleNamespace
 
 import pytest
 
@@ -217,3 +218,128 @@ def test_host_api_surface_resolves_as_promised() -> None:
             assert hasattr(module, symbol)
         total += len(exported)
     assert total == 53
+
+
+def test_vfsitem_b2_positional_constructor_from_the_wheel() -> None:
+    """b3/A-01: the additive scope field does not shift the b2 constructor."""
+    from arvis.host_api.vfs import VFSItem
+
+    item = VFSItem(
+        "id-1",
+        "probe.txt",
+        "file",
+        None,
+        "alice",
+        "acme",
+        "text/plain",
+        123,
+        456,
+    )
+
+    assert item.mime == "text/plain"
+    assert item.file_size == 123
+    assert item.created_at == 456
+    assert item.resource_scope is None
+
+
+class _BlackboxScopedVFS:
+    """Minimal host service built only from public host-api types."""
+
+    def get_item(self, *, user_id: str, item_id: str):
+        from arvis.host_api.vfs import VFSItem
+
+        return VFSItem(
+            item_id=item_id,
+            display_name="matter.txt",
+            item_type="file",
+            parent_id=None,
+            owner_id="alice",
+            organization_id="acme",
+            resource_scope="scope:A",
+        )
+
+
+@pytest.mark.parametrize(
+    ("grants", "allowed"),
+    [
+        (frozenset({"read", "scope:A"}), True),
+        (frozenset({"read"}), False),
+        (frozenset({"read", "scope:B"}), False),
+    ],
+)
+def test_vfs_scope_authorization_from_the_wheel(
+    grants: frozenset[str],
+    allowed: bool,
+) -> None:
+    """b3: organization, capability and exact scope are cumulative."""
+    from arvis.host_api.access import OrganizationScopedAuthorization, Principal
+    from arvis.host_api.services import KernelServiceRegistry, Syscall, SyscallHandler
+
+    services = KernelServiceRegistry(
+        vfs_service=_BlackboxScopedVFS(),
+        authorization_service=OrganizationScopedAuthorization(),
+    )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(
+        extra={},
+        principal=Principal(
+            user_id="bob",
+            organization_id="acme",
+            grants=grants,
+        ),
+    )
+
+    result = handler.handle(
+        Syscall(name="vfs.get", args={"ctx": ctx, "user_id": "bob", "item_id": "i1"})
+    )
+
+    assert result.success is allowed
+    if not allowed:
+        assert result.error is not None
+        assert result.error.details.get("reason_code") == "access_denied"
+
+
+class _BlackboxExpectedFailureThenForeignVFS:
+    """Expected first failure followed by a foreign resource on a second read."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def get_item(self, *, user_id: str, item_id: str):
+        from arvis.host_api.vfs import VFSItem, VFSItemNotFoundError
+
+        self.calls += 1
+        if self.calls == 1:
+            raise VFSItemNotFoundError(f"item not found: {item_id}")
+        return VFSItem(
+            item_id=item_id,
+            display_name="secret.txt",
+            item_type="file",
+            parent_id=None,
+            owner_id="someone_else",
+            organization_id="acme",
+            resource_scope="scope:A",
+        )
+
+
+def test_vfs_expected_lookup_failure_fails_closed_from_the_wheel() -> None:
+    """b3/A-03: expected lookup errors cannot authorize a second read."""
+    from arvis.host_api.access import OrganizationScopedAuthorization, Principal
+    from arvis.host_api.services import KernelServiceRegistry, Syscall, SyscallHandler
+
+    vfs = _BlackboxExpectedFailureThenForeignVFS()
+    services = KernelServiceRegistry(
+        vfs_service=vfs,
+        authorization_service=OrganizationScopedAuthorization(),
+    )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="bob"))
+
+    result = handler.handle(
+        Syscall(name="vfs.get", args={"ctx": ctx, "user_id": "bob", "item_id": "i1"})
+    )
+
+    assert result.success is False
+    assert vfs.calls == 1
+    assert result.error is not None
+    assert result.error.details.get("reason_code") == "authorization_failure"

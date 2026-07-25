@@ -29,6 +29,7 @@ from arvis.kernel_core.syscalls.syscall_registry import (
 from arvis.kernel_core.vfs.exceptions import (
     VFSCycleError,
     VFSFolderNotEmptyError,
+    VFSInheritanceRollbackError,
     VFSInheritanceViolationError,
     VFSInvalidNameError,
     VFSItemNotFoundError,
@@ -118,16 +119,13 @@ def _item_owner_resolver(
     - the reference is ABSENT (creation at the root): not an error, the
       caller acts on its own scope, ownership is the caller and the resource
       is genuinely unscoped (resource_scope None, the historical behaviour);
-    - the lookup FAILS (exception): the metadata is INDETERMINATE. The
-      resolver must never fabricate RESOLVED metadata from an error, which is
-      exactly what the previous code did (it copied the caller as owner and
-      None as scope, both looking like a resolved, grantable resource). It
-      leaves organization and scope unresolved and does not raise: the
-      syscall body is the single authority to execute and map errors, and it
-      calls the same lookup, so it fails on the same condition and returns a
-      failure (an expected VFS error code, or a boundary violation), never
-      the resource. The operation therefore cannot succeed on an
-      indeterminate lookup, which is fail-closed by construction.
+    - the lookup FAILS for any reason: the metadata is INDETERMINATE. The
+      exception propagates to ``SyscallHandler``, which emits an
+      ``authorization_failure`` refusal and never dispatches the syscall body.
+      This includes expected domain errors such as ``VFSItemNotFoundError``:
+      absorbing one would allow a second, time-of-check/time-of-use lookup to
+      return a different resource after authorization was granted on fabricated
+      caller-owned metadata.
     """
 
     def _resolve(
@@ -146,35 +144,15 @@ def _item_owner_resolver(
         vfs: VFSService | None = services.vfs_service
         if vfs is not None and isinstance(reference, str):
             # Read the resource to authorize against its real owner,
-            # organization and scope.
-            try:
-                item = vfs.get_item(user_id=user_id, item_id=reference)
-            except VFS_EXPECTED_ERRORS:
-                # An EXPECTED VFS condition (item or parent not found, name
-                # conflict, ...) is a fact about the resource, not an
-                # indeterminate authorization: stay neutral (caller-owned) so
-                # the syscall body maps it to its proper error code. The body
-                # remains the single authority for these.
-                owner_id = user_id
-                organization_id = None
-                resource_scope = None
-            else:
-                owner_id = item.owner_id
-                organization_id = item.organization_id
-                resource_scope = item.resource_scope
-
-            # An UNEXPECTED failure (transient outage, proxy, cache,
-            # inconsistency) makes the authorization metadata INDETERMINATE.
-            # The resolver MUST NOT fabricate a resolved, caller-owned,
-            # unscoped context from it (audit A-03, counter-audit B3-VFS-01).
-            # It is NOT caught here, so it PROPAGATES: the handler wraps any
-            # exception raised by the access resolver into a fail-closed
-            # authorization_failure refusal, and the syscall body never runs.
-            # This closes the TOCTOU where a transient first failure, once
-            # swallowed, let the body read a second time and return a foreign
-            # resource on fabricated metadata. Only an unresolvable lookup
-            # denies; a resource genuinely read with resource_scope=None keeps
-            # the historical behaviour.
+            # organization and scope. NO lookup exception is absorbed here:
+            # expected and unexpected failures both mean the authorization
+            # metadata could not be resolved for this operation. The handler
+            # converts the propagated exception into a fail-closed
+            # authorization_failure, before the body can perform another read.
+            item = vfs.get_item(user_id=user_id, item_id=reference)
+            owner_id = item.owner_id
+            organization_id = item.organization_id
+            resource_scope = item.resource_scope
 
         return AccessContext(
             principal=principal,
@@ -583,6 +561,13 @@ def vfs_create_folder(
     # An inheritance violation surfaces as a fail-closed security refusal.
     try:
         item = vfs.create_folder(user_id=user_id, name=name, parent_id=parent_id)
+    except VFSInheritanceRollbackError:
+        return _deny(
+            "vfs.create_folder",
+            "inheritance_rollback_failed",
+            "create refused: the repository persisted an item with invalid "
+            "inheritance and could not prove its rollback",
+        )
     except VFSInheritanceViolationError:
         return _deny(
             "vfs.create_folder",
@@ -640,6 +625,13 @@ def vfs_create_file(
             parent_id=parent_id,
             size=size,
             mime=mime,
+        )
+    except VFSInheritanceRollbackError:
+        return _deny(
+            "vfs.create_file",
+            "inheritance_rollback_failed",
+            "create refused: the repository persisted an item with invalid "
+            "inheritance and could not prove its rollback",
         )
     except VFSInheritanceViolationError:
         return _deny(
