@@ -22,6 +22,8 @@ Three residual defects the counter-audit reproduced on the b3 candidate:
 
 from types import SimpleNamespace
 
+import pytest
+
 from arvis.kernel_core.access.decision import AccessDecision, AccessVerdict
 from arvis.kernel_core.access.models import AccessContext, Principal
 from arvis.kernel_core.access.policy import (
@@ -85,6 +87,102 @@ def test_b3_vfs_01_transient_resolver_failure_denies_before_execution():
     assert vfs.calls == 1, "the body performed a second lookup after auth failure"
     assert result.error is not None
     assert result.error.details.get("reason_code") == "authorization_failure"
+
+
+class _AlwaysFlakyVFS:
+    """Every call raises: the transient failure never clears within the
+    operation. Used to check the multi-syscall denial and the single-lookup
+    property across item-referencing syscalls."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
+        self.calls += 1
+        raise RuntimeError("transient lookup failure")
+
+    def list_items(self, user_id: str) -> list[VFSItem]:
+        self.calls += 1
+        raise RuntimeError("transient lookup failure")
+
+    def create_folder(self, **kwargs: object) -> VFSItem:
+        raise AssertionError("body must not run after an auth failure")
+
+    def create_file_item(self, **kwargs: object) -> VFSItem:
+        raise AssertionError("body must not run after an auth failure")
+
+    def rename_item(self, **kwargs: object) -> VFSItem:
+        raise AssertionError("body must not run after an auth failure")
+
+    def move_item(self, **kwargs: object) -> VFSItem:
+        raise AssertionError("body must not run after an auth failure")
+
+    def delete_item(self, **kwargs: object) -> None:
+        raise AssertionError("body must not run after an auth failure")
+
+
+@pytest.mark.parametrize(
+    ("syscall_name", "extra_args"),
+    [
+        ("vfs.get", {"item_id": "i1"}),
+        ("vfs.rename_item", {"item_id": "i1", "new_name": "x"}),
+        ("vfs.move_item", {"item_id": "i1", "parent_id": "p1"}),
+        ("vfs.delete_item", {"item_id": "i1"}),
+    ],
+)
+def test_b3_vfs_01_indeterminate_lookup_denies_across_syscalls(
+    syscall_name, extra_args
+):
+    """An indeterminate lookup denies for every item-referencing syscall, and
+    the resolver's failure means the body never runs (the create/rename/move/
+    delete methods assert if called)."""
+    vfs = _AlwaysFlakyVFS()
+    services = KernelServiceRegistry(
+        vfs_service=vfs,
+        authorization_service=OrganizationScopedAuthorization(),
+    )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="bob"))
+
+    result = handler.handle(
+        Syscall(name=syscall_name, args={"ctx": ctx, "user_id": "bob", **extra_args})
+    )
+
+    assert result.success is False, f"{syscall_name} granted on indeterminate lookup"
+    assert result.error is not None
+    assert result.error.details.get("reason_code") == "authorization_failure"
+
+
+class _GenuinelyUnscopedVFS:
+    """A store that successfully returns a real, owner-owned, unscoped item."""
+
+    def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
+        return VFSItem(
+            item_id=item_id,
+            display_name="own.txt",
+            item_type="file",
+            parent_id=None,
+            owner_id=user_id,
+        )
+
+
+def test_b3_vfs_01_genuinely_unscoped_resource_stays_compatible():
+    """A resource actually read with resource_scope=None is NOT an
+    indeterminate lookup: it keeps the historical behaviour and the owner may
+    read it. The doctrine-B change must not conflate a real None with a lookup
+    failure (audit A-03 acceptance)."""
+    services = KernelServiceRegistry(
+        vfs_service=_GenuinelyUnscopedVFS(),
+        authorization_service=OrganizationScopedAuthorization(),
+    )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="owner"))
+
+    result = handler.handle(
+        Syscall(name="vfs.get", args={"ctx": ctx, "user_id": "owner", "item_id": "i1"})
+    )
+
+    assert result.success is True, "a genuinely unscoped owned resource was denied"
 
 
 # ---------------------------------------------------------------------------

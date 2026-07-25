@@ -875,7 +875,15 @@ class ExplodingZipService(StubZipIngestService):
         raise RuntimeError("unexpected zip corruption")
 
 
-def test_vfs_get_syscall_maps_unexpected_boundary_violation() -> None:
+def test_vfs_get_syscall_unexpected_failure_denies_at_authorization() -> None:
+    """An UNEXPECTED VFS failure on vfs.get is now caught during authorization,
+    not mapped by the body. The item access resolver reads the resource first
+    to authorize against its real scope; an unexpected exception there is
+    indeterminate authorization metadata and propagates, so the handler refuses
+    fail-closed with reason_code=authorization_failure and the body never runs
+    (doctrine B, counter-audit B3-VFS-01). This replaces the former behaviour
+    where the resolver swallowed the exception and the body mapped it to a
+    boundary violation, the swallow that opened the TOCTOU."""
     handler = _make_handler(
         vfs_service=ExplodingVFSService(),
     )
@@ -892,15 +900,7 @@ def test_vfs_get_syscall_maps_unexpected_boundary_violation() -> None:
 
     assert result.success is False
     assert result.error is not None
-
-    assert result.error.code == "syscall_boundary_violation"
-
-    assert result.error.details["syscall"] == "vfs.get"
-
-    assert result.error.details["subsystem"] == "kernel.syscall.vfs"
-
-    assert result.error.details["retry_class"] == "unknown"
-
+    assert result.error.details["reason_code"] == "authorization_failure"
     assert result.error.details["exception_type"] == "RuntimeError"
 
 

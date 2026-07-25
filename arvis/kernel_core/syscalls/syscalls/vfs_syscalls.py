@@ -144,28 +144,36 @@ def _item_owner_resolver(
 
         vfs: VFSService | None = services.vfs_service
         if vfs is not None and isinstance(reference, str):
+            # Read the resource to authorize against its real owner,
+            # organization and scope.
             try:
                 item = vfs.get_item(user_id=user_id, item_id=reference)
-            except Exception:  # arvis-broad: any lookup failure is indeterminate
-                # The lookup failed, so the authorization metadata is
-                # INDETERMINATE. The resolver must never read this as an
-                # unscoped, caller-owned resource that the policy would grant
-                # (audit A-03). It also must not raise: the syscall body is
-                # the single authority to execute and map errors, and it
-                # calls the SAME lookup, so it will fail on the same
-                # condition and return a failure (an expected VFS error code,
-                # or a boundary violation), never the resource. Leaving the
-                # access context UNRESOLVED (no organization, no scope, and
-                # crucially no successful item read) is therefore fail-closed
-                # by construction: the operation cannot succeed. What the
-                # resolver must not do is fabricate resolved metadata from an
-                # error, which is exactly the bug this closes.
+            except VFS_EXPECTED_ERRORS:
+                # An EXPECTED VFS condition (item or parent not found, name
+                # conflict, ...) is a fact about the resource, not an
+                # indeterminate authorization: stay neutral (caller-owned) so
+                # the syscall body maps it to its proper error code. The body
+                # remains the single authority for these.
+                owner_id = user_id
                 organization_id = None
                 resource_scope = None
             else:
                 owner_id = item.owner_id
                 organization_id = item.organization_id
                 resource_scope = item.resource_scope
+
+            # An UNEXPECTED failure (transient outage, proxy, cache,
+            # inconsistency) makes the authorization metadata INDETERMINATE.
+            # The resolver MUST NOT fabricate a resolved, caller-owned,
+            # unscoped context from it (audit A-03, counter-audit B3-VFS-01).
+            # It is NOT caught here, so it PROPAGATES: the handler wraps any
+            # exception raised by the access resolver into a fail-closed
+            # authorization_failure refusal, and the syscall body never runs.
+            # This closes the TOCTOU where a transient first failure, once
+            # swallowed, let the body read a second time and return a foreign
+            # resource on fabricated metadata. Only an unresolvable lookup
+            # denies; a resource genuinely read with resource_scope=None keeps
+            # the historical behaviour.
 
         return AccessContext(
             principal=principal,
