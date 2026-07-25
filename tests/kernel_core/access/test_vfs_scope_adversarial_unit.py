@@ -298,6 +298,77 @@ def test_a04_tree_does_not_leak_uncovered_item():
     assert "b1" not in flat, "vfs.tree leaked an item in an uncovered scope"
 
 
+def _raising_scope_covers(principal: Principal, resource_scope: str | None) -> bool:
+    """A host rule that raises on the secret item's scope, to prove an item
+    whose evaluation errors is EXCLUDED, never included by default."""
+    if resource_scope == "scope:B":
+        raise RuntimeError("policy evaluation failed for this item")
+    if resource_scope is None:
+        return True
+    return resource_scope == "scope:A"
+
+
+def test_a04_list_excludes_item_whose_evaluation_errors():
+    """A metadata or policy error on one item hides that item and does not
+    widen the result (audit A-04 acceptance)."""
+    services = KernelServiceRegistry(
+        vfs_service=_TwoScopeVFS(),
+        authorization_service=OrganizationScopedAuthorization(
+            scope_covers=_raising_scope_covers
+        ),
+    )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    member = Principal(
+        user_id="caller",
+        organization_id="acme",
+        grants=frozenset({CAPABILITY_READ}),
+    )
+    ctx = SimpleNamespace(extra={}, principal=member)
+    result = handler.handle(
+        Syscall(name="vfs.list", args={"ctx": ctx, "user_id": "caller"})
+    )
+    assert result.success is True
+    ids = {entry["item_id"] for entry in result.result}
+    assert ids == {"a1"}, "an item whose evaluation errored was not excluded"
+
+
+class _UnscopedVFS:
+    """A store whose items carry no scope: the historical, owner-scoped case."""
+
+    def list_items(self, user_id: str) -> list[VFSItem]:
+        return [
+            VFSItem(
+                item_id="u1",
+                display_name="own.txt",
+                item_type="file",
+                parent_id=None,
+                owner_id=user_id,
+            )
+        ]
+
+    def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
+        return self.list_items(user_id)[0]
+
+
+def test_a04_unscoped_items_stay_visible_to_owner():
+    """A genuinely unscoped (owner-scoped) resource keeps its historical
+    visibility: filtering must not hide it from its owner."""
+    services = KernelServiceRegistry(
+        vfs_service=_UnscopedVFS(),
+        authorization_service=OrganizationScopedAuthorization(
+            scope_covers=_covers_scope_A
+        ),
+    )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="owner"))
+    result = handler.handle(
+        Syscall(name="vfs.list", args={"ctx": ctx, "user_id": "owner"})
+    )
+    assert result.success is True
+    ids = {entry["item_id"] for entry in result.result}
+    assert ids == {"u1"}
+
+
 # ---------------------------------------------------------------------------
 # A-05: move across scopes accepted
 # ---------------------------------------------------------------------------

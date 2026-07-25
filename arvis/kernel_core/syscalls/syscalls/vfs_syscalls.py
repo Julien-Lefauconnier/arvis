@@ -12,8 +12,10 @@ from arvis.errors.base import (
 from arvis.errors.normalization import normalize_error
 from arvis.errors.provenance import cause_from_exception
 from arvis.errors.syscall import SyscallBoundaryViolationError
+from arvis.kernel_core.access.decision import AccessDecision
 from arvis.kernel_core.access.identity import principal_from_context
 from arvis.kernel_core.access.models import AccessContext, Principal
+from arvis.kernel_core.access.policy import AuthorizationPolicy
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
@@ -48,6 +50,7 @@ from arvis.kernel_core.vfs.zip.service import ZipIngestDecision, ZipIngestServic
 
 class SyscallHandlerLike(Protocol):
     services: KernelServiceRegistry
+    authorization_service: AuthorizationPolicy
 
 
 # =====================================================
@@ -341,6 +344,50 @@ ZIP_EXPECTED_ERRORS = (
 )
 
 
+def _visible_items(
+    handler: SyscallHandlerLike,
+    args: Mapping[str, Any],
+    items: list[VFSItem],
+) -> list[VFSItem]:
+    """Keep only the items the caller may access under the full policy.
+
+    Collection syscalls (vfs.list, vfs.tree) authorize the caller's own scope
+    at the syscall boundary, but the store may return items in scopes or
+    organizations the principal is not cleared for. Each returned item must
+    therefore satisfy the SAME policy vfs.get applies to a single item (audit
+    A-04): its owner, organization and resource_scope are evaluated, and only
+    ALLOW items survive. A metadata error on one item excludes that item, and
+    never widens the result.
+
+    The scopeless, owner-scoped items keep their historical behaviour: under
+    the reference policies a caller acting on its own scope owns them, so they
+    are covered.
+    """
+    policy = handler.authorization_service
+    principal = principal_from_context(args.get("ctx"))
+    if principal is None:
+        principal = Principal(user_id=args["user_id"])
+
+    visible: list[VFSItem] = []
+    for item in items:
+        context = AccessContext(
+            principal=principal,
+            effect=SyscallEffect.READ,
+            resource_owner_id=item.owner_id,
+            resource_organization_id=item.organization_id,
+            resource_id=item.item_id,
+            resource_scope=item.resource_scope,
+            syscall_name="vfs.list",
+        )
+        try:
+            verdict = policy.decide(context)
+        except Exception:  # arvis-broad: an item that cannot be judged is hidden
+            continue
+        if verdict.decision is AccessDecision.ALLOW:
+            visible.append(item)
+    return visible
+
+
 # =====================================================
 # VFS SYSCALLS
 # =====================================================
@@ -352,12 +399,14 @@ ZIP_EXPECTED_ERRORS = (
     summary="List the items in the user's governed VFS scope.",
     access=_scope_owner_resolver(SyscallEffect.READ, "vfs.list"),
 )
-def vfs_list(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResult:
+def vfs_list(handler: SyscallHandlerLike, user_id: str, **kwargs: Any) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
 
-    items = vfs.list_items(user_id)
+    items = _visible_items(
+        handler, {"user_id": user_id, **kwargs}, vfs.list_items(user_id)
+    )
     return SyscallResult(success=True, result=[_serialize_vfs_item(i) for i in items])
 
 
@@ -401,12 +450,19 @@ def vfs_get(
     summary="Return the user's VFS as a tree projection.",
     access=_scope_owner_resolver(SyscallEffect.READ, "vfs.tree"),
 )
-def vfs_tree(handler: SyscallHandlerLike, user_id: str, **_: Any) -> SyscallResult:
+def vfs_tree(handler: SyscallHandlerLike, user_id: str, **kwargs: Any) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
 
-    tree = build_vfs_tree(vfs.list_items(user_id))
+    # Filter the flat item list BEFORE building the tree, so no forbidden node
+    # is ever materialized. A covered item whose parent is filtered out
+    # surfaces as a root (its own coverage stands); the forbidden parent is
+    # never revealed (audit A-04).
+    visible = _visible_items(
+        handler, {"user_id": user_id, **kwargs}, vfs.list_items(user_id)
+    )
+    tree = build_vfs_tree(visible)
     return SyscallResult(success=True, result=_serialize_tree(tree))
 
 
