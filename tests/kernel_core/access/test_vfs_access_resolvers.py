@@ -28,9 +28,15 @@ class _FakeVFS:
     in-memory repository cannot reproduce on its own.
     """
 
-    def __init__(self, owner_id: str, organization_id: str | None = None) -> None:
+    def __init__(
+        self,
+        owner_id: str,
+        organization_id: str | None = None,
+        resource_scope: str | None = None,
+    ) -> None:
         self._owner_id = owner_id
         self._organization_id = organization_id
+        self._resource_scope = resource_scope
 
     def get_item(self, *, user_id: str, item_id: str) -> VFSItem:
         return VFSItem(
@@ -40,6 +46,7 @@ class _FakeVFS:
             parent_id=None,
             owner_id=self._owner_id,
             organization_id=self._organization_id,
+            resource_scope=self._resource_scope,
         )
 
 
@@ -118,6 +125,49 @@ def test_item_resolver_defaults_organization_to_none_when_unreadable():
 
     assert context.resource_owner_id == "bob"
     assert context.resource_organization_id is None
+
+
+def test_item_resolver_populates_resource_scope():
+    """The item resolver copies the item's resource_scope verbatim into the
+    AccessContext, alongside owner and organization (V7b: the host adapter
+    fills it from the piece's attachment and compartments; ARVIS stays
+    opaque to its content)."""
+    resolver = _item_owner_resolver(SyscallEffect.READ, "vfs.get", id_arg="item_id")
+    services = KernelServiceRegistry(
+        vfs_service=_FakeVFS(
+            owner_id="alice",
+            organization_id="acme",
+            resource_scope="rsc:client:3/matter:7|financier",
+        ),
+    )
+
+    context = resolver({"user_id": "bob", "item_id": "i1"}, services)
+
+    assert context.resource_scope == "rsc:client:3/matter:7|financier"
+
+
+def test_item_resolver_defaults_resource_scope_to_none_when_unreadable():
+    """An unreadable item yields no scope: the behaviour-neutral fallback
+    (a scopeless resource stays covered)."""
+    resolver = _item_owner_resolver(SyscallEffect.READ, "vfs.get", id_arg="item_id")
+    services = KernelServiceRegistry(vfs_service=None)
+
+    context = resolver({"user_id": "bob", "item_id": "i1"}, services)
+
+    assert context.resource_scope is None
+
+
+def test_item_resolver_scope_none_when_item_carries_no_scope():
+    """An item without a scope (the default) yields a None resource_scope,
+    so an item that predates scoped grants keeps its former behaviour."""
+    resolver = _item_owner_resolver(SyscallEffect.READ, "vfs.get", id_arg="item_id")
+    services = KernelServiceRegistry(
+        vfs_service=_FakeVFS(owner_id="alice", organization_id="acme"),
+    )
+
+    context = resolver({"user_id": "bob", "item_id": "i1"}, services)
+
+    assert context.resource_scope is None
 
 
 # ---------------------------------------------------------------------------

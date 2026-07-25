@@ -33,6 +33,14 @@ integration path for developers adopting ARVIS.
 
 ### Added
 
+- `VFSItem` gains an optional `resource_scope: str | None = None` field, the
+  item's opaque narrower-than-organization scope. The item access resolver
+  copies it verbatim into the `AccessContext`, where the injected scope rule
+  decides coverage; ARVIS never parses it. Additive and backward-compatible:
+  the field defaults to `None` (a scopeless item, the pre-scoped behaviour),
+  so a host adapter that does not set it is unchanged. `HOST_API_VERSION`
+  stays `1.0` per the additive-changes-remain-free rule (VERSIONING.md); the
+  beta contract manifest is regenerated to record the new field.
 - A stack-neutral
   `docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md` explaining ARVIS as
   the governance boundary inside a complete sovereign assistant.

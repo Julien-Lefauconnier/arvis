@@ -16,6 +16,12 @@ class VFSItem:
     parent_id: str | None
     owner_id: str
     organization_id: str | None = None
+    # Opaque narrower-than-organization scope of this item (a matter, a
+    # project, whatever the host layer names it). ARVIS never parses it: the
+    # item resolver copies it verbatim into the AccessContext, where the
+    # injected scope rule decides coverage. None means the item is not
+    # sub-scoped, the behaviour every item had before scoped grants existed.
+    resource_scope: str | None = None
     mime: str | None = None
     file_size: int | None = None
     created_at: int | None = None

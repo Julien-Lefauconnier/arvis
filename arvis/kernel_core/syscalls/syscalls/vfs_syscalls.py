@@ -123,6 +123,7 @@ def _item_owner_resolver(
         reference = args.get(id_arg)
         owner_id = user_id
         organization_id: str | None = None
+        resource_scope: str | None = None
 
         vfs: VFSService | None = services.vfs_service
         if vfs is not None and isinstance(reference, str):
@@ -130,9 +131,11 @@ def _item_owner_resolver(
                 item = vfs.get_item(user_id=user_id, item_id=reference)
                 owner_id = item.owner_id
                 organization_id = item.organization_id
+                resource_scope = item.resource_scope
             except Exception:  # arvis-broad: best-effort owner resolution
                 owner_id = user_id
                 organization_id = None
+                resource_scope = None
 
         return AccessContext(
             principal=principal,
@@ -140,6 +143,7 @@ def _item_owner_resolver(
             resource_owner_id=owner_id,
             resource_organization_id=organization_id,
             resource_id=reference if isinstance(reference, str) else None,
+            resource_scope=resource_scope,
             syscall_name=syscall_name,
         )
 
