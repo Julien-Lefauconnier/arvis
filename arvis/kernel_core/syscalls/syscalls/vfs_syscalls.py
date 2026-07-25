@@ -361,6 +361,8 @@ def _visible_items(
     handler: SyscallHandlerLike,
     args: Mapping[str, Any],
     items: list[VFSItem],
+    *,
+    syscall_name: str,
 ) -> list[VFSItem]:
     """Keep only the items the caller may access under the full policy.
 
@@ -371,6 +373,14 @@ def _visible_items(
     A-04): its owner, organization and resource_scope are evaluated, and only
     ALLOW items survive. A metadata error on one item excludes that item, and
     never widens the result.
+
+    ``syscall_name`` is the REAL calling syscall (vfs.list or vfs.tree), passed
+    verbatim into each item's AccessContext (counter-audit B3-VFS-03). A host
+    policy that derives a distinct capability per syscall, list_read versus
+    tree_read, then judges each item under the operation actually performed;
+    hardcoding one name would let one operation borrow the other's capability.
+    The tree projection can reveal more structure than a flat list, so a host
+    may legitimately govern them apart.
 
     The scopeless, owner-scoped items keep their historical behaviour: under
     the reference policies a caller acting on its own scope owns them, so they
@@ -390,7 +400,7 @@ def _visible_items(
             resource_organization_id=item.organization_id,
             resource_id=item.item_id,
             resource_scope=item.resource_scope,
-            syscall_name="vfs.list",
+            syscall_name=syscall_name,
         )
         try:
             verdict = policy.decide(context)
@@ -481,7 +491,10 @@ def vfs_list(handler: SyscallHandlerLike, user_id: str, **kwargs: Any) -> Syscal
         return _missing_service_error("no_vfs_service")
 
     items = _visible_items(
-        handler, {"user_id": user_id, **kwargs}, vfs.list_items(user_id)
+        handler,
+        {"user_id": user_id, **kwargs},
+        vfs.list_items(user_id),
+        syscall_name="vfs.list",
     )
     return SyscallResult(success=True, result=[_serialize_vfs_item(i) for i in items])
 
@@ -536,7 +549,10 @@ def vfs_tree(handler: SyscallHandlerLike, user_id: str, **kwargs: Any) -> Syscal
     # surfaces as a root (its own coverage stands); the forbidden parent is
     # never revealed (audit A-04).
     visible = _visible_items(
-        handler, {"user_id": user_id, **kwargs}, vfs.list_items(user_id)
+        handler,
+        {"user_id": user_id, **kwargs},
+        vfs.list_items(user_id),
+        syscall_name="vfs.tree",
     )
     tree = build_vfs_tree(visible)
     return SyscallResult(success=True, result=_serialize_tree(tree))

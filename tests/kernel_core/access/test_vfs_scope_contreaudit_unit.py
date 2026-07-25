@@ -275,6 +275,52 @@ def test_b3_vfs_03_tree_is_judged_under_its_own_syscall_name():
     assert "t1" in flat, "tree was judged under the wrong syscall_name and hid the item"
 
 
+class _ListReadOnlyPolicy:
+    """Symmetric to _TreeReadOnlyPolicy: grants only vfs.list, denies vfs.tree.
+    Proves the two syscall identities are not confused in either direction,
+    both at the syscall boundary and in per-item filtering."""
+
+    def decide(self, context: AccessContext) -> AccessVerdict:
+        if context.syscall_name == "vfs.list":
+            return AccessVerdict(AccessDecision.ALLOW)
+        return AccessVerdict(AccessDecision.DENY, ACCESS_DENIED_REASON_CODE)
+
+
+def test_b3_vfs_03_list_granted_tree_denied_are_not_confused():
+    """A policy that grants vfs.list and denies vfs.tree lets the list through
+    and refuses the tree. Both the boundary resolver and the per-item filter
+    present the real syscall_name, so the two identities are never confused:
+    list is not silently denied under a tree rule, and tree does not borrow
+    the list grant (counter-audit B3-VFS-03, reverse direction)."""
+    services = KernelServiceRegistry(
+        vfs_service=_OneItemVFS(),
+        authorization_service=_ListReadOnlyPolicy(),
+    )
+    handler = SyscallHandler(runtime_state=None, scheduler=None, services=services)
+    ctx = SimpleNamespace(
+        extra={},
+        principal=Principal(
+            user_id="u", organization_id="acme", grants=frozenset({CAPABILITY_READ})
+        ),
+    )
+
+    list_result = handler.handle(
+        Syscall(name="vfs.list", args={"ctx": ctx, "user_id": "u"})
+    )
+    assert list_result.success is True
+    assert "t1" in {e["item_id"] for e in list_result.result}, (
+        "list was denied though the policy grants vfs.list"
+    )
+
+    # tree is refused, and crucially it is refused as vfs.tree (its own
+    # identity), not granted by borrowing the vfs.list rule. The refusal here
+    # is the boundary resolver, which already carries syscall_name=vfs.tree.
+    tree_result = handler.handle(
+        Syscall(name="vfs.tree", args={"ctx": ctx, "user_id": "u"})
+    )
+    assert tree_result.success is False, "tree borrowed the vfs.list grant"
+
+
 # ---------------------------------------------------------------------------
 # B3-VFS-02 acceptance: real ZIP import inherits scope on every descendant
 # ---------------------------------------------------------------------------
