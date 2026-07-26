@@ -63,6 +63,11 @@ class PipelineContextLike(Protocol):
     extra: dict[str, Any]
 
 
+_RESERVED_RESOLVED_ACCESS_ARGS: frozenset[str] = frozenset(
+    {"_resolved_resource", "_resolved_lookup_error"}
+)
+
+
 def _execution_state_from_ctx(ctx: Any) -> Any | None:
     execution = getattr(ctx, "execution", None)
     runtime = getattr(execution, "execution_state", None)
@@ -252,6 +257,30 @@ class SyscallHandler:
             )
             self._safe_journal(ctx, syscall, failure, started_tick)
             return ctx, None, started_tick, failure
+
+        reserved_args = sorted(
+            _RESERVED_RESOLVED_ACCESS_ARGS.intersection(syscall.args)
+        )
+        if reserved_args:
+            failure = self._failure_from_error(
+                ctx,
+                SyscallValidationError(
+                    "syscall arguments contain kernel-reserved access handoff fields",
+                    code=ErrorCode.INVALID_SYSCALL_ARGS,
+                    origin=ErrorOrigin(
+                        component="SyscallHandler",
+                        subsystem="kernel.syscall",
+                        syscall=syscall.name,
+                    ),
+                    details={
+                        "syscall": syscall.name,
+                        "reason_code": "reserved_syscall_argument",
+                        "reserved_arguments": ",".join(reserved_args),
+                    },
+                ),
+            )
+            self._safe_journal(ctx, syscall, failure, started_tick)
+            return ctx, fn, started_tick, failure
 
         try:
             inspect.signature(fn).bind(self, **syscall.args)

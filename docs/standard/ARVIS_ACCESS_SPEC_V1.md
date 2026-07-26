@@ -133,23 +133,32 @@ A resource that belongs to an organization AND carries a scope is ALLOW only if
 the principal belongs to the organization, holds the required capability, AND
 the scope is covered. The three conditions are cumulative.
 
-### 4.2 Resolution failure is not an unscoped resource
+### 4.2 Resolved lookup outcomes
 
 A policy decides on **resolved** metadata. The resource resolver that populates
 `resource_owner_id`, `resource_organization_id` and `resource_scope` MUST
-distinguish two cases:
+distinguish three cases:
 
 * the resource reference is **absent** (for example creation at the root): not
   an error, the resource is genuinely unscoped, `resource_scope` is `None`;
-* the resource lookup **fails**, whether with an expected domain error such as
-  `VFSItemNotFoundError` or an unexpected infrastructure error: the metadata is
-  **indeterminate** and MUST NOT be presented as a resolved, unscoped,
-  caller-owned resource. The resolver MUST propagate the failure. The
-  `SyscallHandler` converts every authorization-machinery exception into an
-  `authorization_failure` refusal and MUST NOT dispatch the syscall body. This
-  single-attempt rule prevents a second time-of-check/time-of-use lookup from
-  returning a resource after authorization was evaluated on fabricated
-  metadata.
+* the lookup produces an **expected terminal condition**, such as
+  `VFSItemNotFoundError`: no resource has been authorized. The resolver MAY
+  carry that condition with a neutral context solely so a caller otherwise
+  entitled to the addressed owner scope receives the precise domain code. The
+  syscall body MUST consume the carried condition WITHOUT reading or mutating
+  the service. It MUST NOT treat the neutral context as authority over a
+  resource that appears later;
+* the lookup fails **unexpectedly** (infrastructure, proxy, cache or other
+  indeterminate failure): the resolver MUST propagate the failure. The
+  `SyscallHandler` converts the authorization-machinery exception into an
+  `authorization_failure` refusal and MUST NOT dispatch the syscall body.
+
+For a successful pure read, the resolver SHOULD carry the exact resource it
+authorized and the body SHOULD return that instance without a second lookup.
+The resource and expected-error outcomes are mutually exclusive, and their
+kernel handoff fields MUST NOT be caller-supplied. These rules prevent a
+time-of-check/time-of-use retry from returning or mutating a resource after
+authorization was evaluated on an absence.
 
 ---
 
@@ -270,8 +279,11 @@ An implementation conforms to this specification if and only if:
 * a `None` scope is covered, and belonging to an organization with the required
   capability does not by itself grant access to a scoped resource whose scope
   the principal's grants do not cover;
-* a resource-resolution failure never yields ALLOW: an indeterminate lookup is
-  not presented as an unscoped, caller-owned resource.
+* an unexpected resource-resolution failure never yields ALLOW;
+* an expected terminal lookup condition may preserve its precise domain code
+  only if the body consumes it without any second lookup or effect;
+* an internal resolved-resource/error handoff is unambiguous and cannot be
+  supplied by a syscall caller.
 
 ---
 

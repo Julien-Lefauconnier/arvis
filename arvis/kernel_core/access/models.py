@@ -118,14 +118,30 @@ class ResolvedAccess:
     - it READ the resource: ``resource`` holds it, ``lookup_error`` is None. A
       pure-READ body returns it directly (single-read).
     - the lookup raised an EXPECTED condition (not-found, ...): ``resource`` is
-      None and ``lookup_error`` holds that exception. A pure-READ body re-raises
-      or maps it to its precise code WITHOUT a second lookup, so a live store
+      None and ``lookup_error`` holds that exception. Every receiving body maps
+      it to its precise code WITHOUT a second lookup or effect, so a live store
       cannot answer the retry with a different resource (the TOCTOU that an
-      absorbed expected failure would reopen). This gives finesse AND safety at
-      once.
+      absorbed expected failure would reopen). This gives finesse AND safety
+      at once.
     - it read NOTHING (absent reference, root creation): both are None and the
       body proceeds as before."""
 
     context: AccessContext
     resource: object | None = None
     lookup_error: Exception | None = None
+
+    def __post_init__(self) -> None:
+        """Keep the carried lookup outcome unambiguous.
+
+        A resolver may report a resource, an expected lookup error, or neither.
+        Reporting both would let a body choose whichever branch was more
+        permissive and would make the authorization handoff ambiguous.
+        """
+        if not isinstance(self.context, AccessContext):
+            raise TypeError("context must be an AccessContext")
+        if self.lookup_error is not None and not isinstance(
+            self.lookup_error, Exception
+        ):
+            raise TypeError("lookup_error must be an Exception or None")
+        if self.resource is not None and self.lookup_error is not None:
+            raise ValueError("resource and lookup_error are mutually exclusive")

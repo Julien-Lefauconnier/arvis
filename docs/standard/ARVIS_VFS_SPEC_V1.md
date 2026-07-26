@@ -1016,19 +1016,25 @@ Returns:
 ### 23.2 Write syscalls
 
 > Governance (mutation atomicity is the store's responsibility): a write syscall
-> authorizes against the target's current labels (owner, organization, scope),
-> then asks the service to mutate BY ID. ARVIS is a governance kernel, not a
-> transactional engine: it does not, and cannot, make the store-level mutation
-> atomic with the authorization read, because the store stays live between the
-> two and ARVIS does not own it. A host that requires strict serializability
-> (the target's labels cannot change between authorization and mutation) MUST
-> provide it in its repository, through a compare-and-swap on the labels or an
-> equivalent transaction. This is deliberately NOT faked at the kernel level:
-> passing a pre-read in-memory snapshot to the mutation would only displace the
-> window while creating a false assurance of atomicity. Single-read (23.1)
-> therefore applies to the pure-READ `vfs.get`, where it genuinely closes the
-> gap; write syscalls get the same expected/unexpected finesse but carry no such
-> guarantee about store-level atomicity.
+> first resolves and authorizes an EXISTING target's current labels (owner,
+> organization, scope), then asks the service to mutate BY ID. ARVIS is a
+> governance kernel, not a transactional engine: it does not, and cannot, make
+> that store-level mutation atomic with the successful authorization read,
+> because the store stays live between the two and ARVIS does not own it. A host
+> that requires strict serializability (the target's labels cannot change
+> between authorization and mutation) MUST provide it in its repository,
+> through a compare-and-swap on the labels or an equivalent transaction. This
+> is deliberately NOT faked at the kernel level: passing a pre-read in-memory
+> snapshot to the mutation would only displace the window while creating a
+> false assurance of atomicity.
+>
+> An authorization-time EXPECTED ABSENCE is different: it is a terminal lookup
+> outcome, not permission to act on an item that may appear later. Every VFS
+> body consumes the carried error and returns its precise public code WITHOUT
+> touching the service. Thus "absent during authorization, present during
+> dispatch" never reaches create, delete, rename, move, ZIP analysis or ZIP
+> execution. Store atomicity is required only after a real target was found and
+> authorized.
 
 #### `vfs.create_folder`
 
@@ -1217,12 +1223,13 @@ Resolving an item or parent for authorization can itself fail, and the two kinds
 of failure are distinguished (fail-closed does not mean fail-opaque):
 
 - an EXPECTED VFS condition (the item or parent does not exist, and the other
-  conditions above) is a fact about the resource, not indeterminate
-  authorization. The resolver stays neutral for the decision and the body maps
-  the SAME condition to its precise code (`vfs_item_not_found`, ...), exactly as
-  it does when no scope is involved. For a pure-READ syscall the resolver
-  additionally captures the exception and the body maps it WITHOUT a second
-  lookup (single-read, see 23.1);
+  conditions above) is a terminal fact about the lookup, not indeterminate
+  infrastructure and not authority over a later resource. The resolver carries
+  it with a neutral decision context; every item/parent VFS body maps that SAME
+  condition to its precise code (`vfs_item_not_found`, ...) WITHOUT reading or
+  mutating the service. For a parent reference, a missing item lookup is
+  translated to the public `vfs_parent_not_found` code. A successful pure read
+  likewise returns the exact carried resource (single-read, see 23.1);
 - an UNEXPECTED failure (a transient outage, proxy, cache, inconsistency) leaves
   the authorization metadata indeterminate: it becomes `security_error` with
   `reason_code=authorization_failure`, and the body is not dispatched.

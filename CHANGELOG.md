@@ -12,9 +12,10 @@ versioning throughout the pre-1.0 series.
 ## [0.1.0b4] - 2026-07-26
 
 Corrective beta release restoring the not-found / denied distinction that the
-0.1.0b3 strict resolver doctrine erased, and closing the read
-time-of-check/time-of-use gap at its ROOT for `vfs.get` through a single read.
-The guiding principle is that fail-closed does not mean fail-opaque. The public
+0.1.0b3 strict resolver doctrine erased, while closing the
+time-of-check/time-of-use gap at its root for `vfs.get` and preventing an
+authorization-time absence from reaching any later VFS read or effect. The
+guiding principle is that fail-closed does not mean fail-opaque. The public
 surface is unchanged: `HOST_API_VERSION` stays `1.0`, no `host_api` module
 moved, and the beta contract manifest is unchanged (the new `ResolvedAccess`
 type is internal to the kernel, not exported).
@@ -32,6 +33,15 @@ type is internal to the kernel, not exported).
   place of a bare `AccessContext`; it is additive and backward compatible
   (resolvers that read nothing keep returning `AccessContext`, treated as no
   carried resource), so non-VFS resolvers are unchanged.
+- Expected-error terminal handoff (all item/parent VFS syscalls): when the
+  resolver observes a normal missing-item or missing-parent condition, it
+  carries that exact terminal outcome to the body. The body maps the precise
+  public VFS code WITHOUT reading or mutating the service. An item that appears
+  after the authorization miss is therefore never returned, renamed, moved or
+  deleted, and a parent that appears after the miss never receives a new child
+  or ZIP import. Kernel-reserved handoff arguments are rejected when supplied
+  by a caller, and an ambiguous handoff carrying both a resource and an error
+  cannot be constructed.
 - Anti-enumeration preserved by the denied case, not by erasing not-found: a
   principal without access to an EXISTING item is denied by the owner,
   organization and scope policy (`access_denied`), indistinguishable from any
@@ -43,22 +53,25 @@ type is internal to the kernel, not exported).
   distinguishes an EXPECTED VFS condition (item or parent not found, ...) from an
   UNEXPECTED failure. An expected condition no longer becomes an opaque
   `authorization_failure`; the resolver stays neutral for the decision and the
-  syscall body maps the SAME condition to its precise code (`vfs_item_not_found`,
-  `vfs_parent_not_found`, ...), exactly as when no scope is involved. For
-  `vfs.get` the resolver captures the expected exception so the body maps it
-  WITHOUT a second lookup, giving finesse and closing the TOCTOU at once. An
-  UNEXPECTED failure still denies fail-closed with `authorization_failure`, so
-  the indeterminate case that b3 A-03 targeted stays closed. This corrects the
-  b3 doctrine, which propagated EVERY lookup failure (expected included) and so
-  erased the legitimate not-found / denied distinction.
+  syscall body maps the SAME terminal condition to its precise code
+  (`vfs_item_not_found`, `vfs_parent_not_found`, ...) WITHOUT touching the
+  service again. For `vfs.get`, a successful lookup similarly carries the exact
+  authorized item to the body. This gives finesse and closes the expected-error
+  TOCTOU at once for reads and effects. An UNEXPECTED failure still denies
+  fail-closed with `authorization_failure`, so the indeterminate case that b3
+  A-03 targeted stays closed. This corrects the b3 doctrine, which propagated
+  EVERY lookup failure (expected included) and so erased the legitimate
+  not-found / denied distinction.
 - Mutation atomicity is documented as the store's responsibility, not the
-  kernel's (VFS spec 23.2). A write syscall authorizes against the target's
-  current labels and mutates by id; ARVIS is a governance kernel, not a
-  transactional engine, and does not fake store-level atomicity by passing a
-  pre-read snapshot to the mutation (which would only displace the window while
-  creating a false assurance). A host requiring strict serializability provides
-  it in its repository (compare-and-swap or transaction). Write syscalls get the
-  same expected/unexpected finesse but carry no store-atomicity guarantee.
+  kernel's (VFS spec 23.2) only after the resolver actually found and authorized
+  the target. A write syscall then mutates by id; ARVIS is a governance kernel,
+  not a transactional engine, and does not fake store-level atomicity by
+  passing a pre-read snapshot to the mutation (which would only displace the
+  window while creating a false assurance). A host requiring strict
+  serializability provides it in its repository (compare-and-swap or
+  transaction). Conversely, a resolver miss is terminal and never reaches the
+  mutation, so "absent during authorization, present during dispatch" cannot
+  become an effect.
 
 ### Notes
 

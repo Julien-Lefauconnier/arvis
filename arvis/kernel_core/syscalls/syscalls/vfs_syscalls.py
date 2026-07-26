@@ -171,7 +171,17 @@ def _item_owner_resolver(
                 owner_id = user_id
                 organization_id = None
                 resource_scope = None
-                lookup_error = exc
+                # ``VFSService.get_item`` reports a missing lookup target as an
+                # item error. For parent-referencing syscalls preserve the
+                # body-level public contract by translating that same absence
+                # to the precise parent code before handing it over.
+                if isinstance(exc, VFSItemNotFoundError) and id_arg in {
+                    "parent_id",
+                    "target_parent_id",
+                }:
+                    lookup_error = VFSParentNotFoundError(str(exc))
+                else:
+                    lookup_error = exc
             else:
                 owner_id = item.owner_id
                 organization_id = item.organization_id
@@ -366,6 +376,41 @@ ZIP_EXPECTED_ERRORS = (
 )
 
 
+def _captured_vfs_lookup_failure(
+    lookup_error: Exception | None,
+    *,
+    syscall_name: str,
+) -> SyscallResult | None:
+    """Map a resolver lookup outcome without performing a second operation.
+
+    An expected lookup error is the authoritative outcome already observed at
+    authorization time. Every VFS body that uses ``_item_owner_resolver`` must
+    consume it before touching the service. This preserves precise domain
+    errors without turning an authorized absence into permission to read or
+    mutate a resource that appears before dispatch.
+
+    Unexpected errors normally propagate from the resolver and never reach
+    this helper. The defensive branch remains fail-closed if a custom resolver
+    nevertheless carries one.
+    """
+    if lookup_error is None:
+        return None
+    if isinstance(lookup_error, VFS_EXPECTED_ERRORS):
+        return SyscallResult.failure(_map_vfs_error(lookup_error))
+    return SyscallResult.failure(
+        SyscallBoundaryViolationError(
+            "Unexpected captured VFS authorization lookup error",
+            details={
+                "syscall": syscall_name,
+                "subsystem": "kernel.syscall.vfs",
+                "retry_class": "unknown",
+                "exception_type": type(lookup_error).__name__,
+            },
+            cause=cause_from_exception(lookup_error),
+        )
+    )
+
+
 def _visible_items(
     handler: SyscallHandlerLike,
     args: Mapping[str, Any],
@@ -526,6 +571,13 @@ def vfs_get(
     if vfs is None:
         return _missing_service_error("no_vfs_service")
 
+    captured_failure = _captured_vfs_lookup_failure(
+        _resolved_lookup_error,
+        syscall_name="vfs.get",
+    )
+    if captured_failure is not None:
+        return captured_failure
+
     # Single-read (b4): the access resolver already read this item to authorize
     # it, and handed over the OUTCOME of that read. The body never performs a
     # second lookup a live store could answer with a different resource, so what
@@ -538,9 +590,6 @@ def vfs_get(
         return SyscallResult(
             success=True, result=_serialize_vfs_item(_resolved_resource)
         )
-    if isinstance(_resolved_lookup_error, VFS_EXPECTED_ERRORS):
-        return SyscallResult.failure(_map_vfs_error(_resolved_lookup_error))
-
     # Fallback for a direct call without the handler (no resolver ran): read and
     # map expected VFS conditions to their precise error codes.
     try:
@@ -602,11 +651,19 @@ def vfs_create_folder(
     user_id: str,
     name: str,
     parent_id: str | None = None,
+    _resolved_lookup_error: Exception | None = None,
     **_: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
+
+    captured_failure = _captured_vfs_lookup_failure(
+        _resolved_lookup_error,
+        syscall_name="vfs.create_folder",
+    )
+    if captured_failure is not None:
+        return captured_failure
 
     # Creation inheritance (the child carries the parent's organization and
     # scope) is derived, imposed and verified inside VFSService, the common
@@ -662,11 +719,19 @@ def vfs_create_file(
     parent_id: str | None = None,
     size: int | None = None,
     mime: str | None = None,
+    _resolved_lookup_error: Exception | None = None,
     **_: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
+
+    captured_failure = _captured_vfs_lookup_failure(
+        _resolved_lookup_error,
+        syscall_name="vfs.create_file",
+    )
+    if captured_failure is not None:
+        return captured_failure
 
     # Creation inheritance is derived, imposed and verified inside VFSService
     # (audit A-06, counter-audit B3-VFS-02). An inheritance violation surfaces
@@ -724,11 +789,19 @@ def vfs_delete_item(
     handler: SyscallHandlerLike,
     user_id: str,
     item_id: str,
+    _resolved_lookup_error: Exception | None = None,
     **_: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
+
+    captured_failure = _captured_vfs_lookup_failure(
+        _resolved_lookup_error,
+        syscall_name="vfs.delete_item",
+    )
+    if captured_failure is not None:
+        return captured_failure
 
     try:
         vfs.delete_item(user_id=user_id, item_id=item_id)
@@ -764,11 +837,19 @@ def vfs_rename_item(
     user_id: str,
     item_id: str,
     new_name: str,
+    _resolved_lookup_error: Exception | None = None,
     **_: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
+
+    captured_failure = _captured_vfs_lookup_failure(
+        _resolved_lookup_error,
+        syscall_name="vfs.rename_item",
+    )
+    if captured_failure is not None:
+        return captured_failure
 
     try:
         item = vfs.rename_item(user_id=user_id, item_id=item_id, new_name=new_name)
@@ -804,11 +885,20 @@ def vfs_move_item(
     user_id: str,
     item_id: str,
     parent_id: str | None = None,
+    _resolved_resource: object | None = None,
+    _resolved_lookup_error: Exception | None = None,
     **kwargs: Any,
 ) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
+
+    captured_failure = _captured_vfs_lookup_failure(
+        _resolved_lookup_error,
+        syscall_name="vfs.move_item",
+    )
+    if captured_failure is not None:
+        return captured_failure
 
     # Govern BOTH sides of the move (audit A-05). The resolver already
     # governed the source (id_arg=item_id). Here, before any mutation, read
@@ -816,16 +906,20 @@ def vfs_move_item(
     # source's governed area or writes into a parent the caller may not write.
     # All refusals happen BEFORE vfs.move_item, so no partial mutation occurs.
     args = {"user_id": user_id, "ctx": kwargs.get("ctx")}
-    try:
-        source = vfs.get_item(user_id=user_id, item_id=item_id)
-    except VFS_EXPECTED_ERRORS as exc:
-        return SyscallResult.failure(_map_vfs_error(exc))
-    except Exception:  # arvis-broad: source indeterminate, refuse the move
-        return _deny(
-            "vfs.move_item",
-            "move_source_unresolved",
-            "move refused: the source item could not be resolved",
-        )
+    if isinstance(_resolved_resource, VFSItem):
+        source = _resolved_resource
+    else:
+        # Direct-call fallback: no handler resolver supplied a source.
+        try:
+            source = vfs.get_item(user_id=user_id, item_id=item_id)
+        except VFS_EXPECTED_ERRORS as exc:
+            return SyscallResult.failure(_map_vfs_error(exc))
+        except Exception:  # arvis-broad: source indeterminate, refuse the move
+            return _deny(
+                "vfs.move_item",
+                "move_source_unresolved",
+                "move refused: the source item could not be resolved",
+            )
 
     if parent_id is not None:
         try:
@@ -902,11 +996,19 @@ def vfs_zip_analyze(
     zip_path: str,
     user_id: str,
     target_parent_id: str | None = None,
+    _resolved_lookup_error: Exception | None = None,
     **_: Any,
 ) -> SyscallResult:
     zip_service = _get_zip(handler)
     if zip_service is None:
         return _missing_service_error("no_zip_ingest_service")
+
+    captured_failure = _captured_vfs_lookup_failure(
+        _resolved_lookup_error,
+        syscall_name="vfs.zip.analyze",
+    )
+    if captured_failure is not None:
+        return captured_failure
 
     decision = zip_service.analyze_and_validate(
         zip_path=zip_path,
@@ -932,11 +1034,19 @@ def vfs_zip_execute(
     target_parent_id: str | None = None,
     keep_zip: bool = False,
     plan: ZipImportPlan | None = None,
+    _resolved_lookup_error: Exception | None = None,
     **_: Any,
 ) -> SyscallResult:
     zip_service = _get_zip(handler)
     if zip_service is None:
         return _missing_service_error("no_zip_ingest_service")
+
+    captured_failure = _captured_vfs_lookup_failure(
+        _resolved_lookup_error,
+        syscall_name="vfs.zip.execute",
+    )
+    if captured_failure is not None:
+        return captured_failure
 
     try:
         result = zip_service.execute_from_path(

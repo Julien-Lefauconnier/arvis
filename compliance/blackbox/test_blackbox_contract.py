@@ -304,6 +304,7 @@ class _BlackboxExpectedFailureThenForeignVFS:
 
     def __init__(self) -> None:
         self.calls = 0
+        self.deleted = False
 
     def get_item(self, *, user_id: str, item_id: str):
         from arvis.host_api.vfs import VFSItem, VFSItemNotFoundError
@@ -320,6 +321,9 @@ class _BlackboxExpectedFailureThenForeignVFS:
             organization_id="acme",
             resource_scope="scope:A",
         )
+
+    def delete_item(self, *, user_id: str, item_id: str) -> None:
+        self.deleted = True
 
 
 def test_vfs_expected_lookup_failure_never_reaches_a_second_lookup_from_the_wheel() -> (
@@ -357,3 +361,34 @@ def test_vfs_expected_lookup_failure_never_reaches_a_second_lookup_from_the_whee
     assert result.result is None, "a foreign resource leaked through the retry"
     assert result.error is not None
     assert result.error.code == "vfs_item_not_found"
+
+
+def test_vfs_expected_lookup_failure_never_reaches_an_effect_from_the_wheel() -> None:
+    """b4 effect handoff: a captured not-found is mapped without dispatching
+    the VFS mutation, even if the live service would act on the identifier."""
+    from arvis.host_api.access import OrganizationScopedAuthorization, Principal
+    from arvis.host_api.services import KernelServiceRegistry, Syscall, SyscallHandler
+
+    vfs = _BlackboxExpectedFailureThenForeignVFS()
+    handler = SyscallHandler(
+        runtime_state=None,
+        scheduler=None,
+        services=KernelServiceRegistry(
+            vfs_service=vfs,
+            authorization_service=OrganizationScopedAuthorization(),
+        ),
+    )
+    ctx = SimpleNamespace(extra={}, principal=Principal(user_id="bob"))
+
+    result = handler.handle(
+        Syscall(
+            name="vfs.delete_item",
+            args={"ctx": ctx, "user_id": "bob", "item_id": "i1"},
+        )
+    )
+
+    assert result.success is False
+    assert result.error is not None
+    assert result.error.code == "vfs_item_not_found"
+    assert vfs.calls == 1
+    assert vfs.deleted is False
