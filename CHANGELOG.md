@@ -349,7 +349,7 @@ and the retained findings of the independent a15 audit. No new subsystem.
   dataclass is genuinely immutable and `immutability` is now accurate;
   `deterministic` is documented as purity over the canonical source,
   with no cross-run identity claim.
-- `docs/math/M4` deduplicated (283 to 139 lines): the two pasted
+- `docs/math/M4_adaptive_stability.md` deduplicated (283 to 139 lines): the two pasted
   versions were proven strictly identical; the French LLM-session
   dialogue is purged.
 - Scientific wording aligned: the stability specification announces its
@@ -592,7 +592,7 @@ one, which is the point of the change rather than a side effect.
   install run before publication, and the published artifact is the one that was
   verified, passed between jobs rather than rebuilt.
 
-## [0.1.0a12] - 2026-07-22
+## [0.1.0a12] - 2026-07-20
 
 Version bump and the first publication path. No kernel logic changes.
 
@@ -604,6 +604,14 @@ Version bump and the first publication path. No kernel logic changes.
 ### Changed
 
 - Bumped the package version from `0.1.0a11` to `0.1.0a12`.
+
+> **Pre-history notice.** The entries from `0.1.0a1` through `0.1.0a11`
+> below predate this repository's git history (first commit: 2026-07-23)
+> and were never published: no git tag and no PyPI artifact corresponds
+> to them. They are kept as the project's working journal from before
+> publication, and cannot be independently verified against a released
+> artifact. Verifiable history starts at `0.1.0a12` (first PyPI release,
+> 2026-07-20) and `0.1.0a13` (first git tag).
 
 ## [0.1.0a11] - 2026-07-19
 
@@ -742,7 +750,7 @@ the canonicalization domain was not fully injective, and the execution
 capability was publicly mintable and reusable. This release closes all
 four, plus the confirmation, durability, run-identity and hygiene
 findings, each pinned with its reproduced attack vector in
-`tests/adversarial/test_campaign6_audit_regression.py`.
+`tests/adversarial/test_campaign_audit_regression_2.py`.
 
 ### Security
 
@@ -1404,7 +1412,7 @@ together: a failing guarantee mechanism can never relax.
   `required_consent` (opaque consent key) and `reversible` (undo-ability), plus
   the derived `crosses_trust_boundary` property. ARVIS does not interpret the
   opaque labels; the host maps them onto its consent system, data taxonomy and
-  egress policy. Defaults preserve prior tool behavior. `examples/05` extended
+  egress policy. Defaults preserve prior tool behavior. `examples/05_tool_authorization.py` extended
   to contrast a sovereign tool with a connected/egress one, and the tool docs
   (authoring guide, tool system spec) document the manifest.
 - Governed input-risk gate: an explicit top-level `risk` scalar in the cognitive
