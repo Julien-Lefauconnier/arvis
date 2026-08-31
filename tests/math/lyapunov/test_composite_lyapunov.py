@@ -137,7 +137,7 @@ def test_W_with_manual_Tx(comp):
 
 
 def test_small_gain(comp):
-    assert comp.check_small_gain(eta=0.05) is True
+    assert comp.check_small_gain(eta=0.05, alpha=0.3, L_T=1.0) is True
     assert comp.check_small_gain(eta=0.5, alpha=0.1, L_T=2.0) is False
 
 
@@ -167,3 +167,22 @@ def test_delta_W_zero_if_stationary(comp, symbolic_empty):
     )
 
     assert abs(delta) < 1e-9
+
+
+def test_delta_W_is_undefined_across_target_availability_change(comp, symbolic_empty):
+    """Audit M5 (MATH-A M4): when the symbolic anchor exists on one side
+    only, W_prev and W_next are evaluations of two different energy
+    functions; their difference used to come back as a number (-0.2991
+    on a strictly identical state) and that sign fed recovery
+    detection. It is now honestly undefined."""
+    state = LyapunovState(0.5, 0.5, 0.5, 0.5)
+    slow = SlowState(0.5, 0.5, 0.5, 0.5)
+    delta = comp.delta_W(
+        fast_prev=state,
+        fast_next=state,
+        slow_prev=slow,
+        slow_next=slow,
+        symbolic_prev=None,
+        symbolic_next=symbolic_empty,
+    )
+    assert delta is None

@@ -25,9 +25,18 @@ class CompositeLyapunov:
     - z is the slow / reflexive latent state
     - T(x) is the hybrid target map induced by symbolic + fast state
 
-    Important:
-    - no clamping: W is a genuine energy, not a bounded score
-    - delta_W is the true energy variation between two time steps
+    Honest bounds (audit M4, campaign MATH-A M4): V_fast is a clamped
+    convex combination in [0, 1] and the mismatch term is bounded by
+    the state geometry, so W is a BOUNDED score (roughly [0, 1 +
+    lambda_mismatch * dim]), not an unbounded energy. Past component
+    saturation, the fast part of delta_W is blind to further
+    degradation; the monitor's PAC risk ceiling covers that regime.
+
+    delta_W is the energy variation between two steps measured UNDER
+    THE SAME target availability: when one side has a symbolic anchor
+    and the other does not, the two W values belong to different
+    energy functions and their difference means nothing, so delta_W
+    reports None instead of a number (audit M5).
     """
 
     lambda_mismatch: float = 0.5
@@ -71,7 +80,7 @@ class CompositeLyapunov:
         slow_next: SlowState | None,
         symbolic_prev: SymbolicState | None = None,
         symbolic_next: SymbolicState | None = None,
-    ) -> float:
+    ) -> float | None:
         # -----------------------------------------
         # FAST-ONLY fallback
         # -----------------------------------------
@@ -80,24 +89,23 @@ class CompositeLyapunov:
             v_next = float(lyapunov_value(fast_next))
             return v_next - v_prev
 
-        def _zero_target(slow: SlowState | None) -> np.ndarray:
-            """
-            Safe fallback when no symbolic anchor AND slow state is missing.
-            Ensures delta_W remains well-defined.
-            """
-            if slow is not None:
-                return np.zeros_like(slow.as_vector(), dtype=float)
-            return np.zeros(1, dtype=float)
+        # A delta compares two evaluations of the SAME energy. When the
+        # symbolic anchor exists on one side only, W_prev and W_next use
+        # different target maps and their difference is not an energy
+        # variation: its sign could flip on the anchor's appearance
+        # alone, and that sign feeds recovery detection (audit M5).
+        if (symbolic_prev is None) != (symbolic_next is None):
+            return None
 
         T_prev = (
             target_map(symbolic_prev, fast=fast_prev)
             if symbolic_prev is not None
-            else _zero_target(slow_prev)
+            else np.zeros_like(slow_prev.as_vector(), dtype=float)
         )
         T_next = (
             target_map(symbolic_next, fast=fast_next)
             if symbolic_next is not None
-            else _zero_target(slow_next)
+            else np.zeros_like(slow_next.as_vector(), dtype=float)
         )
 
         # True energy variation
@@ -121,9 +129,17 @@ class CompositeLyapunov:
 
     def check_small_gain(
         self,
-        eta: float = 0.05,
-        alpha: float = 0.3,
-        L_T: float = 1.0,
+        eta: float,
+        alpha: float,
+        L_T: float,
     ) -> bool:
+        """Small-gain check kappa_eff = alpha - gamma_z * eta * L_T > 0.
+
+        alpha (the decrease rate of A6) and L_T (the target-map
+        Lipschitz constant of A7) are NOT measured at runtime: the
+        caller must supply the values it assumes or estimated, and owns
+        that assumption. The old defaults (0.3, 1.0) made the check
+        pass by construction (audit M6).
+        """
         kappa_eff = float(alpha) - self.gamma_z * float(eta) * float(L_T)
         return kappa_eff > 1e-6

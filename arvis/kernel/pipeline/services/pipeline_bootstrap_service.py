@@ -129,6 +129,10 @@ class PipelineBootstrapService:
 
         comp = CompositeLyapunov()
 
+        # DECLARED bootstrap assumption, not a measurement: these are
+        # the constants the 0.1 series assumes for the small-gain
+        # condition (audit M6). A host with better estimates should
+        # perform its own check with them.
         if not comp.check_small_gain(
             eta=0.05,
             alpha=0.3,

@@ -28,15 +28,16 @@ class ConversationCompositeStability:
             return 0.0
 
         try:
-            return float(
-                self._lyapunov.delta_W(
-                    fast_prev=fast_prev,
-                    fast_next=fast_next,
-                    slow_prev=slow_prev,
-                    slow_next=slow_next,
-                    symbolic_prev=symbolic_prev,
-                    symbolic_next=symbolic_next,
-                )
+            delta = self._lyapunov.delta_W(
+                fast_prev=fast_prev,
+                fast_next=fast_next,
+                slow_prev=slow_prev,
+                slow_next=slow_next,
+                symbolic_prev=symbolic_prev,
+                symbolic_next=symbolic_next,
             )
+            # Undefined across a target-availability change (M5): treat
+            # as no measured variation.
+            return float(delta) if delta is not None else 0.0
         except (TypeError, ValueError, OverflowError):
             return 0.0

@@ -251,5 +251,5 @@ def test_real_composite_small_gain_sanity(comp: CompositeLyapunov):
     Not a projection test strictly speaking, but a minimal integration sanity check:
     the real CompositeLyapunov still exposes the small-gain guard used by the core.
     """
-    assert comp.check_small_gain(eta=0.05) is True
+    assert comp.check_small_gain(eta=0.05, alpha=0.3, L_T=1.0) is True
     assert comp.check_small_gain(eta=0.5, alpha=0.1, L_T=2.0) is False
