@@ -64,7 +64,6 @@ def test_iterative_and_classic_pipeline_do_not_crash():
 def test_scheduler_with_iterative_executor():
     runtime_state = CognitiveRuntimeState()
     executor = PipelineExecutor(pipeline=DummyPipeline())
-    executor.use_iterative = True
 
     scheduler = CognitiveScheduler(
         runtime_state=runtime_state, pipeline_executor=executor

@@ -32,13 +32,3 @@ class InvalidPipelineContextError(PipelineRuntimeError):
 class PipelineExecutionContractViolation(PipelineRuntimeError):
     default_code = ErrorCode.PIPELINE_EXECUTION_CONTRACT_VIOLATION
     severity = ArvisErrorSeverity.FATAL
-
-
-class PipelineFinalizeContractViolation(
-    PipelineExecutionContractViolation,
-):
-    default_code = ErrorCode.PIPELINE_FINALIZE_CONTRACT_VIOLATION
-
-
-class PipelineExecutionReturnedNone(PipelineRuntimeError):
-    default_code = ErrorCode.PIPELINE_EXECUTION_RETURNED_NONE

@@ -26,7 +26,16 @@ class DummyPipelineResult:
 
 
 class DummyPipeline:
-    def run(self, ctx):
+    """Zero-stage fake honoring the executor's typed contract
+    (campaign STRUCT, LOT S2: the duck-typed run() fallback is gone)."""
+
+    def iter_stages(self):
+        return []
+
+    def _prepare_run(self, ctx):
+        pass
+
+    def finalize_run(self, ctx):
         return DummyPipelineResult()
 
 
@@ -77,8 +86,8 @@ def test_scheduler_executes_highest_priority_process():
 
 
 def test_scheduler_waits_confirmation_when_pipeline_requires_it():
-    class ConfirmationPipeline:
-        def run(self, ctx):
+    class ConfirmationPipeline(DummyPipeline):
+        def finalize_run(self, ctx):
             return DummyPipelineResult(can_execute=False, requires_confirmation=True)
 
     runtime_state = CognitiveRuntimeState()
