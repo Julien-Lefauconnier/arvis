@@ -276,3 +276,33 @@ With M13, ARVIS positions itself as:
 - and **clearly defined non-claims** and failure boundaries
 
 This level of transparency and boundary specification constitutes a meaningful scientific standard for a cognitive runtime system.
+
+---
+
+## Current frontier (updated 2026-08-31, campaign MATH-A)
+
+What moved since this document was first written:
+
+- The contraction monitor (v0) is the DEFAULT core model: every
+  governed run measures the four-axis Lyapunov state, V, delta-V (on
+  threaded turns), a PAC-certified risk ceiling, hybrid drift and an
+  empirical regime. The trajectory machinery is engine-driven; the
+  cross-turn thread remains host-owned by lifecycle doctrine.
+- A5 is stated in class-K form: the implemented V satisfies it; the
+  quadratic bounds belong to the quadratic family variant.
+- The empirical contraction factor (1 - W_next/W_prev, with divergence
+  accounting) is estimated at runtime and is DISTINCT from A12's
+  theoretical kappa_eff, whose constants (alpha, L_T) remain declared
+  assumptions, not measurements. This is the sharpest open problem:
+  measuring or bounding alpha and L_T on the projected dynamics.
+- The gate enforces refusal-first ordering, a worst-axis refusal at
+  saturation, monotone strictness composition, and a recovery
+  relaxation thresholded (1e-3), bounded by the collapse threshold and
+  capped at REQUIRE_CONFIRMATION. These are tested properties, not
+  aspirations (tests/math/gate/, tests/kernel/gate/).
+
+Still open, unchanged: enforced small-gain with measured constants,
+dwell-time switching enforcement, ISS/noise certification
+(noise_robustness_ok and mode_stability_ok are not evaluated), and any
+guarantee over the unprojected dynamics.
+

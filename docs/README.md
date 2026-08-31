@@ -79,3 +79,6 @@ says nothing about an axis the runtime never evaluates.
 [TOOL_SYSTEM_V1.md](tools/TOOL_SYSTEM_V1.md) for the model,
 [TOOL_LIFECYCLE.md](tools/TOOL_LIFECYCLE.md) for what happens to a call, and
 [TOOL_AUTHORING_GUIDE.md](tools/TOOL_AUTHORING_GUIDE.md) to write one.
+
+The mathematical corpus (M0-M15) has its own index with the
+implementation frontier: [math/README.md](math/README.md).

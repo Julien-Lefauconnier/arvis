@@ -9,6 +9,53 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+Campaign MATH-A (2026-08-31): the default engine measures its own
+science. Resolves the audit's central finding (the Lyapunov machinery
+was wired but never evaluated on any default path).
+
+### Added
+
+- **The contraction monitor is the default core model**
+  (`CognitiveOSConfig.core_model`; explicit `None` opts out). Every
+  governed run measures a four-axis Lyapunov state, its energy V, a
+  drift score, a PAC-certified risk ceiling and an empirical regime;
+  `stability_score = 1 - V`; a view with no conclusion reports honest
+  absence. The monitor declares its calibration in a
+  `governance_manifest()` bound into the run commitment.
+- **Threaded scientific state is a public contract**:
+  `run(..., extra={"scientific_state": s})` in,
+  `extra["scientific_state_next"]` out; documented in
+  `docs/architecture/RUNTIME_LIFECYCLE.md`, runnable in
+  `examples/12_threaded_stability.py`, pinned by
+  `compliance/internal_invariants/core/test_threaded_state_contract.py`
+  (channel keys, JSON round-trip, deterministic trajectories, safe
+  degradation).
+- **Worst-axis refusal guard** in `lyapunov_gate`
+  (`axis_abstain_threshold`, default 0.95): a single saturated axis
+  refuses even when the convex mean dilutes it (decision DM3).
+- Live-path gate properties (Hypothesis): kernel totality,
+  refusal-first over the whole input space, declared-risk bands held
+  at every trajectory depth (DM1), fail-closed on a raising core
+  model. Per-package ratcheting coverage floors for the decisive
+  packages (`scripts/check_module_coverage.py`, gate + CI).
+
+### Changed
+
+- The contraction estimator keeps divergences visible: reporting floor
+  -1.0 (was 0.0, which made a x100 blow-up look neutral), divergence
+  streak counted on the raw value; one divergence caps the regime at
+  "marginal", a streak forces "unstable". The module states it
+  estimates the EMPIRICAL contraction factor, distinct from A12's
+  theoretical kappa_eff.
+- `CompositeLyapunov`: the docstring tells the truth (W is a bounded
+  score); `delta_W` returns None across a target-availability change
+  instead of a meaningless number; `check_small_gain` requires its
+  constants (the old defaults made it pass by construction).
+- Assumption A5 restated in class-K form (the quadratic bounds were
+  unsatisfiable by the implemented V; exponential-rate results belong
+  to the quadratic family). `docs/math/README.md` indexes the corpus
+  with the implementation frontier; M13 carries the current frontier.
+
 Cleanup campaign (2026-08-31): behavior, plumbing and documentation
 honesty. No new features; the deep math track (wiring the contraction
 monitor into the default engine, revising assumptions A5/A12) is
