@@ -1,0 +1,7 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability (private)
+    url: https://github.com/Julien-Lefauconnier/arvis/security/advisories/new
+    about: >-
+      Please report vulnerabilities privately, never as public issues.
+      Email works too: admin@veramem.com (see SECURITY.md).

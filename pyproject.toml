@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 
 authors = [
-  { name="Julien Lefauconnier", email="jlefauconnier@proton.me" }
+  { name="Julien Lefauconnier", email="admin@veramem.com" }
 ]
 
 license = "Apache-2.0"

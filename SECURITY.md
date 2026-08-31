@@ -2,11 +2,24 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in ARVIS, please report it by email:
+If you discover a security vulnerability in ARVIS, report it privately:
 
-admin@veramem.com
+- preferred: [GitHub private vulnerability reporting](https://github.com/Julien-Lefauconnier/arvis/security/advisories/new)
+- or by email: admin@veramem.com
 
 Please do not open public issues for security vulnerabilities.
+
+You will receive an acknowledgement within 5 business days. ARVIS is
+maintained by a single maintainer; triage and fixes are prioritized over
+feature work, and you will be kept informed of progress until resolution.
+Coordinated disclosure is expected: please allow a fix to be released
+before publishing details.
+
+## Supported versions
+
+Only the latest published pre-release on PyPI receives security fixes.
+Older alphas and betas are not patched retroactively; upgrading to the
+newest release is the supported remediation.
 
 ---
 
