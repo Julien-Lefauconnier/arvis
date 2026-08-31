@@ -1,4 +1,4 @@
-# arvis/cognition/observability/predictive_snapshot.py
+# arvis/math/observability/predictive_snapshot.py
 
 from dataclasses import dataclass
 

@@ -1,4 +1,4 @@
-# compliance/scenarios/loader.py
+# compliance/internal_invariants/scenarios/loader.py
 
 from pathlib import Path
 

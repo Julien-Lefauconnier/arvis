@@ -1,4 +1,4 @@
-# backend/tests/contract/test_arvis_contract.py
+# tests/contracts/test_arvis_contract.py
 """
 Compatibility contract between veramem and the arvis public surface.
 

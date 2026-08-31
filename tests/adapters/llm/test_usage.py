@@ -1,4 +1,4 @@
-# tests/unit/llm/test_usage.py
+# tests/adapters/llm/test_usage.py
 
 from arvis.adapters.llm.contracts.usage import LLMUsage
 

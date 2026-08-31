@@ -1,4 +1,4 @@
-# tests/errors/test_error_base.py
+# tests/errors/test_base_errors.py
 
 from __future__ import annotations
 

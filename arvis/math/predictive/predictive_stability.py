@@ -1,4 +1,4 @@
-# arvis/math/predicitive/predictive_stability.py
+# arvis/math/predictive/predictive_stability.py
 
 from __future__ import annotations
 

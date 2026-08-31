@@ -1,4 +1,4 @@
-# tests/api/test_timeline_view.py
+# tests/api/test_api_timeline_view.py
 
 from arvis.api.os import CognitiveOS
 from arvis.api.timeline import TimelineView

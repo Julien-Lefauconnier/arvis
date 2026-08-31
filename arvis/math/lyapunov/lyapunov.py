@@ -1,4 +1,4 @@
-# arvis/math/lyuapunov/lyapunov.py
+# arvis/math/lyapunov/lyapunov.py
 
 from __future__ import annotations
 

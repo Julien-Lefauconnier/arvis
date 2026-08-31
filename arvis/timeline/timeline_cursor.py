@@ -1,4 +1,4 @@
-# arvis//timeline/timeline_cursor.py
+# arvis/timeline/timeline_cursor.py
 from __future__ import annotations
 
 from dataclasses import dataclass

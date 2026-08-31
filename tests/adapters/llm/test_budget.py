@@ -1,4 +1,4 @@
-# tests/unit/llm/test_budget.py
+# tests/adapters/llm/test_budget.py
 
 from arvis.adapters.llm.governance.budget import LLMBudget
 

@@ -1,4 +1,4 @@
-# test/cognition/conflict/test_conflict_extractor_edges.py
+# tests/cognition/conflict/test_conflict_extractor_edges.py
 
 
 from arvis.cognition.conflict.conflict_extractor import extract_conflicts_from_bundle

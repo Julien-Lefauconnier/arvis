@@ -1,4 +1,4 @@
-# arvis/adapters/llm/observation/providers/mock.py
+# arvis/adapters/llm/observability/providers/mock.py
 
 from typing import Any
 

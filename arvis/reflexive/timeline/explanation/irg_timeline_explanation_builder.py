@@ -1,4 +1,4 @@
-# arvis/reflexive/explanation/timeline/irg_timeline_explanation_builder.py
+# arvis/reflexive/timeline/explanation/irg_timeline_explanation_builder.py
 
 from arvis.reflexive.timeline.aggregation.irg_timeline_temporal_memory import (
     IRGTimelineTemporalMemory,

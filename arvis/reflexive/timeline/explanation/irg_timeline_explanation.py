@@ -1,4 +1,4 @@
-# arvis/reflexive/explanation/timeline/irg_timeline_explanation.py
+# arvis/reflexive/timeline/explanation/irg_timeline_explanation.py
 
 from collections.abc import Sequence
 from dataclasses import dataclass

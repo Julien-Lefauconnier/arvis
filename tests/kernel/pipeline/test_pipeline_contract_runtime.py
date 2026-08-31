@@ -1,4 +1,4 @@
-# tests/runtime/test_pipeline_contract_runtime.py
+# tests/kernel/pipeline/test_pipeline_contract_runtime.py
 
 from __future__ import annotations
 

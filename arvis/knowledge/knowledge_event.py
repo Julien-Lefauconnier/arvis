@@ -1,4 +1,4 @@
-# arvis/cognition/knowledge/knowledge_event.py
+# arvis/knowledge/knowledge_event.py
 
 from dataclasses import dataclass
 from datetime import datetime

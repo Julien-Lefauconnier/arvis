@@ -1,4 +1,4 @@
-# tests/tools/test_tool_governance_lot_c.py
+# tests/tools/test_tool_governance.py
 
 """Tool execution governance (lot C: F-014, F-016, F-020).
 

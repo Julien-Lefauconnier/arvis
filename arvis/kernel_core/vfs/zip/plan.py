@@ -1,4 +1,4 @@
-# arvis/kernel_core/vsf/zip/plan.py
+# arvis/kernel_core/vfs/zip/plan.py
 
 from __future__ import annotations
 

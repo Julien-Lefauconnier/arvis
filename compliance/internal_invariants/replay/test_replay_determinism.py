@@ -1,4 +1,4 @@
-# compliance/replay/test_replay_determinism.py
+# compliance/internal_invariants/replay/test_replay_determinism.py
 
 from compliance.internal_invariants.helpers import replay_from_ir, run_ctx
 from compliance.internal_invariants.scenarios.builders import build_nominal_context

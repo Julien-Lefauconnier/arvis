@@ -20,6 +20,12 @@ run_full_gate() {
   echo "==> Mypy strict"
   "$PY" -m mypy arvis --strict
 
+  echo "==> Markdown path references"
+  "$PY" scripts/check_md_refs.py
+
+  echo "==> Path headers"
+  "$PY" scripts/check_path_headers.py
+
   run_security_gate
 
   echo "==> Pytest with coverage"

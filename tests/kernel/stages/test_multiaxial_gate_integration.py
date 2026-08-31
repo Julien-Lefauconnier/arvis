@@ -1,4 +1,4 @@
-# tests/kernel/test_multiaxial_gate_integration.py
+# tests/kernel/stages/test_multiaxial_gate_integration.py
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext

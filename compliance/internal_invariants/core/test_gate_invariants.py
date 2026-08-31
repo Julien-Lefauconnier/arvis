@@ -1,4 +1,4 @@
-# compliance/core/test_gate_invariants.py
+# compliance/internal_invariants/core/test_gate_invariants.py
 
 from arvis.ir.gate import CognitiveGateVerdictIR
 from compliance.internal_invariants.helpers import run_ctx

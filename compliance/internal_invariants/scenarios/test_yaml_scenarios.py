@@ -1,4 +1,4 @@
-# compliance/core/test_yaml_scenarios.py
+# compliance/internal_invariants/scenarios/test_yaml_scenarios.py
 
 import pytest
 

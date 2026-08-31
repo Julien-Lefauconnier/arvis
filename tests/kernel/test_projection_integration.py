@@ -1,4 +1,4 @@
-# tests/kernel/pipeline/test_projection_integration.py
+# tests/kernel/test_projection_integration.py
 
 
 def test_projection_integration_basic():

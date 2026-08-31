@@ -1,4 +1,4 @@
-# tests/kernel/pipeline/stages/test_passive_context_stage.py
+# tests/kernel/stages/test_passive_context_stage.py
 
 from arvis.kernel.pipeline.stages.passive_context_stage import PassiveContextStage
 

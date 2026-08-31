@@ -1,4 +1,4 @@
-# test/cognition/coherence/test_coherence_policy.py
+# tests/cognition/coherence/test_coherence_policy.py
 
 from arvis.cognition.coherence.change_budget import ChangeBudget
 from arvis.cognition.coherence.coherence_policy import CoherencePolicy

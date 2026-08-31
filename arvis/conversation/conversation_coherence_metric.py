@@ -1,4 +1,4 @@
-# arvisconversation/conversation_coherence_metric.py
+# arvis/conversation/conversation_coherence_metric.py
 
 from arvis.conversation.conversation_state import ConversationState
 

@@ -1,4 +1,4 @@
-# compliance/scenarios/builders.py
+# compliance/internal_invariants/scenarios/builders.py
 
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
 from arvis.kernel.pipeline.gate_overrides import GateOverrides

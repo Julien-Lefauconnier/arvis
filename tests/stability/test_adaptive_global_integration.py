@@ -1,4 +1,4 @@
-# tests/math/stability/test_adaptive_global_integration.py
+# tests/stability/test_adaptive_global_integration.py
 
 from types import SimpleNamespace
 

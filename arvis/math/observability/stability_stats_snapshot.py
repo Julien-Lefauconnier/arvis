@@ -1,4 +1,4 @@
-# arvis/cognition/observability/stability_stats_snapshot.py
+# arvis/math/observability/stability_stats_snapshot.py
 
 from dataclasses import dataclass
 

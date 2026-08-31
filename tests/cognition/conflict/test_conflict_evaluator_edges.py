@@ -1,4 +1,4 @@
-# test/cognition/conflict/test_conflict_evaluator_edges.py
+# tests/cognition/conflict/test_conflict_evaluator_edges.py
 
 from arvis.cognition.conflict.conflict_evaluator import ConflictEvaluator
 from arvis.cognition.conflict.conflict_signal import ConflictSignal

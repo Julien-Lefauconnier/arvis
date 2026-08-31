@@ -1,4 +1,4 @@
-# compliance/helpers.py
+# compliance/internal_invariants/helpers.py
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 

@@ -1,4 +1,4 @@
-# test/math/confidence/test_system_confidence.py
+# tests/math/confidence/test_system_confidence.py
 
 from arvis.math.confidence.system_confidence import (
     SystemConfidenceInputs,

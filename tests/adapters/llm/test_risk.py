@@ -1,4 +1,4 @@
-# tests/unit/llm/test_risk.py
+# tests/adapters/llm/test_risk.py
 
 from arvis.adapters.llm.governance.risk import LLMRisk, LLMRiskLevel
 

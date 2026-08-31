@@ -1,4 +1,4 @@
-# tests/kernel/stages/test_gate_robust_interpretation_and_iss_trace.py
+# tests/kernel/stages/test_gate_stage_robust_interpratation_and_iss_trace.py
 
 
 from arvis.kernel.pipeline.stages.gate_stage import GateStage

@@ -1,4 +1,4 @@
-# arvis/cognition/observability/symbolic_state.py
+# arvis/math/state/symbolic_state.py
 
 from dataclasses import dataclass
 

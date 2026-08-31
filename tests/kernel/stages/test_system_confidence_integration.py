@@ -1,4 +1,4 @@
-# tests/kernel/test_system_confidence_integration.py
+# tests/kernel/stages/test_system_confidence_integration.py
 
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext

@@ -1365,7 +1365,7 @@ The VFS currently integrates through syscall journaling and runtime event emissi
 
 ### 28.6 Action layer alignment
 
-`arvis/action/catalog/vfs_actions.py` exists and provides a strong basis for future policy coupling, but action-policy integration is not part of V1.
+A VFS action catalog does not exist yet (an earlier draft of this section asserted one did; the file it named was never in the repository). The `arvis/action/` layer is the natural place for future policy coupling, but action-policy integration is not part of V1.
 
 ---
 

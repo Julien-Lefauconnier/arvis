@@ -1,4 +1,4 @@
-# tests/kernel/gate/test_confidence_control_integration.py
+# tests/kernel/stages/test_confidence_control_integration.py
 
 
 def test_confidence_flags_present(pipeline, ctx):

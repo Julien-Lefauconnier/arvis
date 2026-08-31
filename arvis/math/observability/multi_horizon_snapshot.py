@@ -1,4 +1,4 @@
-# arvis/cognition/observability/multi_horizon_snapshot.py
+# arvis/math/observability/multi_horizon_snapshot.py
 
 from dataclasses import dataclass
 

@@ -1,4 +1,4 @@
-# arvis/adapters/llm/observation/providers/base.py
+# arvis/adapters/llm/observability/providers/base.py
 
 from abc import ABC, abstractmethod
 from typing import Any

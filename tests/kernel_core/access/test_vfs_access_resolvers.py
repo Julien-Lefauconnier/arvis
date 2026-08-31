@@ -1,4 +1,4 @@
-# tests/kernel_core/syscalls/test_vfs_access_resolvers.py
+# tests/kernel_core/access/test_vfs_access_resolvers.py
 
 import inspect
 from types import SimpleNamespace

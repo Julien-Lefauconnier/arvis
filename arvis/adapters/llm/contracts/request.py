@@ -1,4 +1,4 @@
-# arvis/adapters/llm/contracts/contracts/request.py
+# arvis/adapters/llm/contracts/request.py
 
 from typing import Any
 

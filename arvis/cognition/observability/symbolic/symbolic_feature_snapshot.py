@@ -1,4 +1,4 @@
-# arvis/cognition/observability/symbolic_feature_snapshot.py
+# arvis/cognition/observability/symbolic/symbolic_feature_snapshot.py
 
 from dataclasses import dataclass
 

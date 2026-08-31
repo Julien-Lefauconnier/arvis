@@ -1,4 +1,4 @@
-# arvis/math//lyapunov/lyapunov_observer.py
+# arvis/kernel/observability/lyapunov_observer.py
 
 from dataclasses import dataclass
 from typing import Any

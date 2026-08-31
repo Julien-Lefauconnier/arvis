@@ -1,4 +1,4 @@
-# tests/cognition/coherence/test_change_budget.py
+# tests/cognition/coherence/test_coherence_change_budget.py
 
 import pytest
 

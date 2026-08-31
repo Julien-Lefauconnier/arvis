@@ -1,4 +1,4 @@
-# tests/kernel/stages/tests_fusion_invariants_gate.py
+# tests/kernel/stages/test_fusion_invariants_gate.py
 
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
