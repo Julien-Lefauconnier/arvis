@@ -25,6 +25,13 @@ class LyapunovVerdict(StrEnum):
 class LyapunovGateParams:
     eps: float = 0.05
     abstain_threshold: float = 0.8
+    # Worst-axis guard (decision DM3, campaign MATH-A M4). V is a
+    # convex mean, so a single saturated axis is diluted by a factor of
+    # four: risk=1.0 alone gives V=0.25 and the mean threshold never
+    # refuses (audit M3). A single axis at or above this level refuses
+    # outright, whatever the mean says. Strictly monotone hardening;
+    # 0.95 means "essentially saturated", tunable per host.
+    axis_abstain_threshold: float = 0.95
 
     eps_adaptive: EpsAdaptiveParams = field(default_factory=EpsAdaptiveParams)
     mode: CognitiveMode = CognitiveMode.NORMAL
@@ -62,6 +69,18 @@ def lyapunov_gate(
 
     # Global safety on instantaneous fast energy
     if v >= params.abstain_threshold:
+        return LyapunovVerdict.ABSTAIN
+
+    # Worst-axis refusal (DM3): the mean must not average away a
+    # single saturated axis.
+    clamped = current.clamped()
+    worst_axis = max(
+        clamped.budget_used,
+        clamped.risk,
+        clamped.uncertainty,
+        clamped.governance,
+    )
+    if worst_axis >= params.axis_abstain_threshold:
         return LyapunovVerdict.ABSTAIN
 
     d = delta_V(previous, current)

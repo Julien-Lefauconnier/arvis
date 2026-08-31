@@ -57,11 +57,29 @@ $$
 
 ## 4. Lyapunov Assumptions
 
-### A5: Positive Definiteness
+### A5: Positive Definiteness (class-K form)
+
+There exist class-K functions $`\alpha_1, \alpha_2`$ such that, on the
+projected domain:
 
 $$
-c_1 \|x\|^2 \leq V_q(x) \leq c_2 \|x\|^2
+\alpha_1(\|x\|) \leq V_q(x) \leq \alpha_2(\|x\|)
 $$
+
+**Why the class-K form (audit M2, campaign MATH-A M4).** The quadratic
+form $`c_1\|x\|^2 \leq V_q(x) \leq c_2\|x\|^2`$ previously stated
+here is UNSATISFIABLE by the implemented $`V`$: the constructive
+candidate (`arvis/math/lyapunov/lyapunov.py`) is a clamped convex
+combination of normalized axes, hence of order $`\|x\|`$ near the
+origin, and no finite $`c_2`$ bounds a linear function by a quadratic
+there. The class-K form is the standard weakening that the implemented
+$`V`$ satisfies on the unit hypercube (with $`\alpha_i`$ linear), and
+the Lyapunov results of M2/M6/M7 that only need positive definiteness
+and radial monotonicity carry through with it. Results that genuinely
+require quadratic bounds (exponential-rate statements) apply to the
+quadratic family (`arvis/math/lyapunov/quadratic_lyapunov.py`,
+$`V_q(x) = x^\top P_q x`$), which satisfies the quadratic form by
+construction and remains available as the paper-aligned variant.
 
 ### A6: Decrease Condition
 
