@@ -9,6 +9,79 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+Cleanup campaign (2026-08-31): behavior, plumbing and documentation
+honesty. No new features; the deep math track (wiring the contraction
+monitor into the default engine, revising assumptions A5/A12) is
+deliberately not part of this pass.
+
+### Security
+
+- **Gate: refusal-first ordering.** The stable-flag fast path no longer
+  short-circuits the collapse-risk and CRITICAL-mode refusals
+  (previously `stable=True` with `delta_w=-1e-12` produced ALLOW at
+  `collapse_risk=0.99` in CRITICAL mode).
+- **Gate: bounded, capped recovery.** Recovery detection requires a
+  real improvement (`RECOVERY_MIN_IMPROVEMENT = 1e-3`), the kernel
+  reports recovery but never relaxes its own verdict, the policy
+  relaxation shares the abstain threshold
+  (`COLLAPSE_ABSTAIN_THRESHOLD`), and every recovery relaxation caps at
+  REQUIRE_CONFIRMATION (the former `recovery_to_allow` jump is gone).
+- **Fusion pruned to observation-only.** The multiaxial fusion's dead
+  composite/global axes (never wired in production; one branch relaxed
+  REQUIRE_CONFIRMATION to ALLOW against the strictness order) are
+  removed; enforcement lives in the policy layer.
+  `MultiaxialInputs` loses `use_composite`, `global_action`, `delta_w`.
+
+### Changed
+
+- **Honest observability.** `StabilityView` axes are optional; a run
+  that measured nothing reports `None`/`n/a` instead of fabricated
+  zeros, and `summary()` shows the caller-declared risk under its own
+  `DeclaredRisk` label. The consumer schema already allowed null.
+- **Reflexive introspection describes reality.** The world-model
+  introspector (four phantom modules) is deleted; the math declaration
+  names only real import paths with an explicit execution status
+  (`default_path` vs `host_driven`); static declarations say so.
+- **README shows real outputs**, the actual thresholds (0.4/0.8), the
+  pure-payload precondition, a Runtime profiles section (production is
+  harden-only), and a Validation section aligned with what the suite
+  establishes.
+- LICENSE restored to the canonical Apache-2.0 text (the distributed
+  copy was missing the final paragraph of section 4 and the APPENDIX);
+  `license-files` no longer ships `AUTHORS_NOTE.md` (moved to docs/).
+- Canonical contact unified to admin@veramem.com.
+- The VeraMem document (previously VERAMEM_CASE_STUDY.md) renamed to
+  `docs/integration/VERAMEM_INTEGRATION_PATTERN.md` and reframed (author's own host, not
+  an independent adoption); the ARVIS-vs-LLM comparison document removed pending a
+  comparison that names real comparables.
+- Reason-code registry: 15 codes emitted by no code path are now
+  `reserved` instead of normative/informative.
+- RFC 2119/8174 boilerplate added to every spec; the spec hierarchy
+  declares the status of the two out-of-stack standard documents.
+
+### Removed
+
+- `arvis/interfaces/` and `arvis.kernel.kernel_contract`
+  (zero implementations, usages and tests).
+- `compute_public_api_fingerprint` / `PUBLIC_API_FINGERPRINT`
+  (unconsumed clone of the shipped fingerprint).
+- Duplicate snapshot dataclasses in `arvis/stability/` (the
+  `arvis.math.observability` copies are the single source; the public
+  import path re-exports).
+- Two fake adversarial test files whose assertions could not fail.
+
+### Tests
+
+- New ratchets: README outputs executed and compared
+  (`tests/docs/test_readme_outputs.py`), reason-code registry
+  bidirectional check, import-closure burn-down
+  (`tests/contracts/test_import_closure.py`, 91 entries frozen),
+  Markdown path references and path headers verified in the gate and
+  CI (50 wrong headers fixed).
+- Gate safety properties pinned red-first
+  (`tests/math/gate/test_gate_safety_ordering.py`); strict-sign
+  assertions on `delta_W`.
+
 ## [0.1.0b4] - 2026-07-26
 
 Corrective beta release restoring the not-found / denied distinction that the
