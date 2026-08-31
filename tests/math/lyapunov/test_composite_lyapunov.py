@@ -50,8 +50,11 @@ def test_delta_W_negative_on_improvement(comp, symbolic_empty):
         symbolic_prev=symbolic_empty,
         symbolic_next=symbolic_empty,
     )
-    # Fast improvement should not increase energy if slow is aligned
-    assert delta < 1e-6
+    # A genuine improvement must DECREASE the energy, strictly. The
+    # previous assertion (delta < 1e-6) accepted zero and even small
+    # positives: a delta_W hardwired to 0.0 passed a test named
+    # "negative_on_improvement" (audit T1, 2026-08).
+    assert delta < -1e-6
 
 
 def test_delta_W_positive_on_degradation(comp, symbolic_empty):
@@ -73,7 +76,10 @@ def test_delta_W_positive_on_degradation(comp, symbolic_empty):
         symbolic_next=symbolic_empty,
     )
 
-    assert delta > -1e-6
+    # Strictly positive, for the symmetric reason: the previous
+    # assertion (delta > -1e-6) accepted zero and small negatives under
+    # a name promising a positive sign (audit T1, 2026-08).
+    assert delta > 1e-6
 
 
 def test_delta_W_sensitive_to_slow_mismatch(comp, symbolic_empty):
