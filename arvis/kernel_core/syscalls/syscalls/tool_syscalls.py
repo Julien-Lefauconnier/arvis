@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any
 
 from arvis.errors.base import (
     ArvisError,
@@ -20,17 +20,12 @@ from arvis.kernel_core.syscalls.syscall_registry import (
 )
 from arvis.tools.manager import ToolAuthorizationOutcome
 
-
-class SyscallHandlerLike(Protocol):
-    runtime_state: Any | None
-
-    def _execute_tool_authorized(
-        self, authorized: Any, result: Any, ctx: Any
-    ) -> Any: ...
+if TYPE_CHECKING:
+    from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 
 
 def _compute_artifact_timestamp(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     kwargs: dict[str, Any],
 ) -> float:
     """
@@ -53,7 +48,7 @@ def _compute_artifact_timestamp(
 
 
 def _dispatch_authorized_tool(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     result: Any,
     ctx: Any,
     authorization: ToolAuthorizationOutcome,
@@ -104,7 +99,7 @@ def _normalize_tool_error(tool_error: Any, success: bool) -> ArvisError | None:
 
 
 def _build_tool_artifact(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     tool_result: Any,
     kwargs: dict[str, Any],
 ) -> ExecutionArtifact:
@@ -149,7 +144,7 @@ def _build_tool_artifact(
     access=turn_owner_resolver(SyscallEffect.EFFECT, "tool.execute"),
 )
 def tool_execute(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     result: Any,
     ctx: Any,
     authorization: Any | None = None,

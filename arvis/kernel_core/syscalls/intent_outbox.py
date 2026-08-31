@@ -10,7 +10,7 @@ from __future__ import annotations
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any
 
 from arvis.kernel_core.access.identity import (
     authenticated_principal_from_context,
@@ -27,21 +27,13 @@ from arvis.kernel_core.syscalls.engagement import (
     effect_engagement_digest,
     effect_parameters_from_result,
 )
+from arvis.kernel_core.syscalls.protocols import (
+    PipelineContextLike,
+    RuntimeStateLike,
+)
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall
 from arvis.tools.manager import ToolAuthorizationOutcome
-
-
-class RuntimeStateLike(Protocol):
-    """Minimal runtime event surface required by the outbox."""
-
-    def append_event(self, name: str, payload: dict[str, Any]) -> None: ...
-
-
-class PipelineContextLike(Protocol):
-    """Minimal journal surface required by the outbox."""
-
-    extra: dict[str, Any]
 
 
 @dataclass(frozen=True, slots=True)

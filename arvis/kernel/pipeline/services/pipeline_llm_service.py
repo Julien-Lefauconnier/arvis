@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from arvis.adapters.llm.contracts.request import LLMRequest
 from arvis.adapters.llm.validation.output_validator import (
@@ -18,29 +18,23 @@ from arvis.errors.factories import (
     build_llm_retryable_error,
 )
 from arvis.errors.manager import ErrorManager
-from arvis.kernel.pipeline.context.runtime_bindings_context import (
-    PipelineRuntimeBindingsContext,
-)
 from arvis.kernel.pipeline.runtime_bindings import PipelineRuntimeBindings
 from arvis.kernel.pipeline.services.pipeline_retry_budget import PipelineRetryBudget
 from arvis.kernel.pipeline.services.pipeline_retry_policy import PipelineRetryPolicy
 from arvis.kernel_core.syscalls.artifact import ExecutionArtifact
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 
-
-class PipelineContextLike(Protocol):
-    extra: dict[str, Any]
-    runtime_bindings: PipelineRuntimeBindingsContext
-
-
-class SyscallHandlerLike(Protocol):
-    def handle(self, syscall: Syscall) -> SyscallResult: ...
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+    from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 
 
 class PipelineLLMService:
     @staticmethod
     def generate_text(
-        ctx: PipelineContextLike,
+        ctx: CognitivePipelineContext,
         *,
         request: LLMRequest,
         preferred_provider: str | None = None,
@@ -223,7 +217,7 @@ class PipelineLLMService:
     def _execute_llm_syscall(
         *,
         runtime: PipelineRuntimeBindings,
-        ctx: PipelineContextLike,
+        ctx: CognitivePipelineContext,
         request: LLMRequest,
         preferred_provider: str | None,
     ) -> SyscallResult:
@@ -245,7 +239,7 @@ class PipelineLLMService:
 
     @staticmethod
     def _extract_content(
-        ctx: PipelineContextLike,
+        ctx: CognitivePipelineContext,
         *,
         stage: str,
         result: SyscallResult,
@@ -291,7 +285,7 @@ class PipelineLLMService:
 
     @staticmethod
     def _record_error(
-        ctx: PipelineContextLike,
+        ctx: CognitivePipelineContext,
         *,
         stage: str,
         error_code: str,
@@ -324,7 +318,7 @@ class PipelineLLMService:
 
     @staticmethod
     def _record_attempt(
-        ctx: PipelineContextLike,
+        ctx: CognitivePipelineContext,
         *,
         stage: str,
         attempt: int,
@@ -362,7 +356,7 @@ class PipelineLLMService:
         )
 
     @staticmethod
-    def _get_tick(ctx: PipelineContextLike) -> int:
+    def _get_tick(ctx: CognitivePipelineContext) -> int:
         runtime = getattr(ctx.runtime_bindings, "runtime", None)
 
         if runtime is not None and hasattr(runtime, "syscall_handler"):
@@ -376,7 +370,7 @@ class PipelineLLMService:
 
     @staticmethod
     def _resolve_runtime_bindings(
-        ctx: PipelineContextLike,
+        ctx: CognitivePipelineContext,
     ) -> PipelineRuntimeBindings | None:
         bindings = getattr(ctx, "runtime_bindings", None)
 
@@ -399,7 +393,7 @@ class PipelineLLMService:
                 if not isinstance(process_id_obj, str):
                     return None
                 return PipelineRuntimeBindings(
-                    syscall_handler=cast(SyscallHandlerLike, handler_obj),
+                    syscall_handler=cast("SyscallHandler", handler_obj),
                     process_id=process_id_obj,
                     run_id=run_id,
                 )
@@ -409,7 +403,7 @@ class PipelineLLMService:
             return None
 
         return PipelineRuntimeBindings(
-            syscall_handler=cast(SyscallHandlerLike, handler_obj),
+            syscall_handler=cast("SyscallHandler", handler_obj),
             process_id=process_id_obj,
             run_id=run_id,
         )
@@ -421,7 +415,7 @@ class PipelineLLMService:
 
     @staticmethod
     def _record_validation_failure(
-        ctx: PipelineContextLike,
+        ctx: CognitivePipelineContext,
         *,
         stage: str,
         errors: list[Any],
@@ -435,7 +429,7 @@ class PipelineLLMService:
 
     @staticmethod
     def _record_llm_runtime_metadata(
-        ctx: PipelineContextLike,
+        ctx: CognitivePipelineContext,
         result: SyscallResult,
     ) -> None:
         artifact = result.result

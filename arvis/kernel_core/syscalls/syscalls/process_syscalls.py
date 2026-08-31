@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any
 
 from arvis.errors.base import (
     ErrorDomain,
@@ -17,15 +17,8 @@ from arvis.kernel_core.syscalls.syscall_registry import (
     register_syscall,
 )
 
-
-class SchedulerLike(Protocol):
-    def enqueue(self, process: Any) -> None: ...
-    def suspend(self, process_id: CognitiveProcessId) -> None: ...
-    def resume(self, process_id: CognitiveProcessId) -> None: ...
-
-
-class SyscallHandlerLike(Protocol):
-    scheduler: SchedulerLike
+if TYPE_CHECKING:
+    from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 
 
 @register_syscall(
@@ -35,7 +28,7 @@ class SyscallHandlerLike(Protocol):
     access=kernel_internal_resolver("process.spawn"),
 )
 def process_spawn(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     process: Any,
     *,
     ctx: Any = None,
@@ -69,7 +62,7 @@ def process_spawn(
     access=kernel_internal_resolver("process.suspend"),
 )
 def process_suspend(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     process_id: CognitiveProcessId,
     *,
     ctx: Any = None,
@@ -104,7 +97,7 @@ def process_suspend(
     access=kernel_internal_resolver("process.resume"),
 )
 def process_resume(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     process_id: CognitiveProcessId,
     *,
     ctx: Any = None,

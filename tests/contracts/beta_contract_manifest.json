@@ -857,7 +857,7 @@
       "SyscallHandler": {
         "kind": "class",
         "methods": {
-          "__init__": "(self, runtime_state: RuntimeStateLike | None, scheduler: Any, services: KernelServiceRegistry | None = None) -> None",
+          "__init__": "(self, runtime_state: RuntimeStateLike | None, scheduler: SchedulerLike, services: KernelServiceRegistry | None = None) -> None",
           "begin_run": "(self, run_id: str) -> None",
           "handle": "(self, syscall: Syscall) -> SyscallResult"
         },

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any
 
 from arvis.errors.base import (
     ArvisRuntimeError,
@@ -18,7 +18,6 @@ from arvis.kernel_core.access.identity import principal_from_context
 from arvis.kernel_core.access.models import AccessContext, Principal, ResolvedAccess
 from arvis.kernel_core.access.policy import (
     ACCESS_DENIED_REASON_CODE,
-    AuthorizationPolicy,
 )
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import SyscallResult
@@ -49,14 +48,12 @@ from arvis.kernel_core.vfs.zip.models import (
 )
 from arvis.kernel_core.vfs.zip.service import ZipIngestDecision, ZipIngestService
 
+if TYPE_CHECKING:
+    from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
+
 # =====================================================
 # PROTOCOL
 # =====================================================
-
-
-class SyscallHandlerLike(Protocol):
-    services: KernelServiceRegistry
-    authorization_service: AuthorizationPolicy
 
 
 # =====================================================
@@ -64,11 +61,11 @@ class SyscallHandlerLike(Protocol):
 # =====================================================
 
 
-def _get_vfs(handler: SyscallHandlerLike) -> VFSService | None:
+def _get_vfs(handler: SyscallHandler) -> VFSService | None:
     return handler.services.vfs_service
 
 
-def _get_zip(handler: SyscallHandlerLike) -> ZipIngestService | None:
+def _get_zip(handler: SyscallHandler) -> ZipIngestService | None:
     return handler.services.zip_ingest_service
 
 
@@ -412,7 +409,7 @@ def _captured_vfs_lookup_failure(
 
 
 def _visible_items(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     args: Mapping[str, Any],
     items: list[VFSItem],
     *,
@@ -485,7 +482,7 @@ def _deny(syscall_name: str, reason_code: str, message: str) -> SyscallResult:
 
 
 def _may_write_to(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     args: Mapping[str, Any],
     parent: VFSItem,
 ) -> bool:
@@ -539,7 +536,7 @@ def _same_governed_area(source: VFSItem, parent: VFSItem) -> bool:
     summary="List the items in the user's governed VFS scope.",
     access=_scope_owner_resolver(SyscallEffect.READ, "vfs.list"),
 )
-def vfs_list(handler: SyscallHandlerLike, user_id: str, **kwargs: Any) -> SyscallResult:
+def vfs_list(handler: SyscallHandler, user_id: str, **kwargs: Any) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
@@ -560,7 +557,7 @@ def vfs_list(handler: SyscallHandlerLike, user_id: str, **kwargs: Any) -> Syscal
     access=_item_owner_resolver(SyscallEffect.READ, "vfs.get", id_arg="item_id"),
 )
 def vfs_get(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     user_id: str,
     item_id: str,
     _resolved_resource: object | None = None,
@@ -619,7 +616,7 @@ def vfs_get(
     summary="Return the user's VFS as a tree projection.",
     access=_scope_owner_resolver(SyscallEffect.READ, "vfs.tree"),
 )
-def vfs_tree(handler: SyscallHandlerLike, user_id: str, **kwargs: Any) -> SyscallResult:
+def vfs_tree(handler: SyscallHandler, user_id: str, **kwargs: Any) -> SyscallResult:
     vfs = _get_vfs(handler)
     if vfs is None:
         return _missing_service_error("no_vfs_service")
@@ -647,7 +644,7 @@ def vfs_tree(handler: SyscallHandlerLike, user_id: str, **kwargs: Any) -> Syscal
     ),
 )
 def vfs_create_folder(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     user_id: str,
     name: str,
     parent_id: str | None = None,
@@ -713,7 +710,7 @@ def vfs_create_folder(
     ),
 )
 def vfs_create_file(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     user_id: str,
     name: str,
     parent_id: str | None = None,
@@ -786,7 +783,7 @@ def vfs_create_file(
     ),
 )
 def vfs_delete_item(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     user_id: str,
     item_id: str,
     _resolved_lookup_error: Exception | None = None,
@@ -833,7 +830,7 @@ def vfs_delete_item(
     ),
 )
 def vfs_rename_item(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     user_id: str,
     item_id: str,
     new_name: str,
@@ -881,7 +878,7 @@ def vfs_rename_item(
     ),
 )
 def vfs_move_item(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     user_id: str,
     item_id: str,
     parent_id: str | None = None,
@@ -992,7 +989,7 @@ def vfs_move_item(
     ),
 )
 def vfs_zip_analyze(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     zip_path: str,
     user_id: str,
     target_parent_id: str | None = None,
@@ -1028,7 +1025,7 @@ def vfs_zip_analyze(
     ),
 )
 def vfs_zip_execute(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     zip_path: str,
     user_id: str,
     target_parent_id: str | None = None,
@@ -1103,7 +1100,7 @@ def _deserialize_zip_plan(data: dict[str, Any]) -> ZipImportPlan:
     summary="Compute a zip import plan without modifying the VFS.",
 )
 def vfs_zip_plan(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     zip_root: dict[str, Any],
     plan: dict[str, Any],
     **_: Any,

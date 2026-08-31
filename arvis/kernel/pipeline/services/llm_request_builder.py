@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any
 
 from arvis.adapters.llm.context.arvis_context_mapper import ARVISContextMapper
 from arvis.adapters.llm.contracts.options import LLMOptions
@@ -16,22 +16,16 @@ from arvis.adapters.llm.policy.linguistic_frame_mapper import (
 from arvis.adapters.llm.prompts.builder import PromptBuilder
 from arvis.adapters.llm.prompts.prompt_to_messages import PromptToMessagesMapper
 
-
-class CognitiveStateLike(Protocol):
-    regime: Any
-    uncertainty: Any
-    risk: Any
-
-
-class PipelineContextLike(Protocol):
-    extra: dict[str, Any]
-    cognitive_state: CognitiveStateLike | None
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
 
 class LLMRequestBuilder:
     @staticmethod
     def build_intent_enrichment_request(
-        ctx: PipelineContextLike,
+        ctx: CognitivePipelineContext,
         intent: Any,
     ) -> LLMRequest:
         arvis_ctx = ARVISContextMapper.from_pipeline_ctx(ctx)

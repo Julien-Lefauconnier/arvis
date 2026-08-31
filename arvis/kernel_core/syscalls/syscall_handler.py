@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Protocol, cast
+from typing import Any, cast
 
 from arvis.errors import ErrorOrigin
 from arvis.errors.base import ArvisSecurityError
@@ -35,6 +35,11 @@ from arvis.kernel_core.syscalls.intent_outbox import (
     IntentOutboxService,
     RecordedIntent,
 )
+from arvis.kernel_core.syscalls.protocols import (
+    PipelineContextLike,
+    RuntimeStateLike,
+    SchedulerLike,
+)
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
 from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
 from arvis.kernel_core.syscalls.syscall_registry import (
@@ -51,17 +56,6 @@ from arvis.tools.manager import (
     _ToolEffectBoundary,
 )
 from arvis.tools.runtime.runtime_bindings import resolve_process_id, resolve_run_id
-
-
-class RuntimeStateLike(Protocol):
-    scheduler_state: Any
-
-    def append_event(self, name: str, payload: dict[str, Any]) -> None: ...
-
-
-class PipelineContextLike(Protocol):
-    extra: dict[str, Any]
-
 
 _RESERVED_RESOLVED_ACCESS_ARGS: frozenset[str] = frozenset(
     {"_resolved_resource", "_resolved_lookup_error"}
@@ -81,7 +75,7 @@ class SyscallHandler:
     def __init__(
         self,
         runtime_state: RuntimeStateLike | None,
-        scheduler: Any,
+        scheduler: SchedulerLike,
         services: KernelServiceRegistry | None = None,
     ) -> None:
         self.runtime_state = runtime_state

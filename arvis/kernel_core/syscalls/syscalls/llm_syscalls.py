@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from arvis.adapters.llm.contracts.execution_result import LLMExecutionResult
 from arvis.adapters.llm.contracts.request import LLMRequest
@@ -32,17 +32,12 @@ class LLMAdapterLike(Protocol):
     ) -> LLMExecutionResult: ...
 
 
-class ServiceRegistryLike(Protocol):
-    llm_adapter: LLMAdapterLike | None
-
-
-class SyscallHandlerLike(Protocol):
-    services: ServiceRegistryLike
-    runtime_state: Any | None
+if TYPE_CHECKING:
+    from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 
 
 def _compute_artifact_timestamp(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     kwargs: dict[str, Any],
 ) -> float:
     tick = kwargs.get("tick")
@@ -64,13 +59,13 @@ def _compute_artifact_timestamp(
     access=turn_owner_resolver(SyscallEffect.EFFECT, "llm.generate"),
 )
 def llm_generate(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     request: LLMRequest,
     ctx: Any | None = None,
     preferred_provider: str | None = None,
     **kwargs: Any,
 ) -> SyscallResult:
-    adapter = handler.services.llm_adapter
+    adapter: LLMAdapterLike | None = handler.services.llm_adapter
 
     if adapter is None:
         return SyscallResult.failure(

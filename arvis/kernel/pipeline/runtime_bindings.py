@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING
 
-from arvis.kernel_core.syscalls.syscall import Syscall, SyscallResult
-
-
-class SyscallHandlerLike(Protocol):
-    def handle(self, syscall: Syscall) -> SyscallResult: ...
+if TYPE_CHECKING:
+    from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 
 
 @dataclass(frozen=True, slots=True)
 class PipelineRuntimeBindings:
-    syscall_handler: SyscallHandlerLike
+    syscall_handler: SyscallHandler
     process_id: str
     run_id: str | None = None

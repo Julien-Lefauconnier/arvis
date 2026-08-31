@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any
 
 from arvis.errors.base import (
     ArvisRuntimeError,
@@ -15,17 +15,8 @@ from arvis.kernel_core.syscalls.syscall_registry import (
     register_syscall,
 )
 
-
-class InterruptBusLike(Protocol):
-    def emit(self, interrupt: Any) -> None: ...
-
-
-class RuntimeStateLike(Protocol):
-    interrupt_bus: InterruptBusLike
-
-
-class SyscallHandlerLike(Protocol):
-    runtime_state: RuntimeStateLike | None
+if TYPE_CHECKING:
+    from arvis.kernel_core.syscalls.syscall_handler import SyscallHandler
 
 
 @register_syscall(
@@ -35,7 +26,7 @@ class SyscallHandlerLike(Protocol):
     access=kernel_internal_resolver("interrupt.emit"),
 )
 def interrupt_emit(
-    handler: SyscallHandlerLike,
+    handler: SyscallHandler,
     interrupt: Any,
     *,
     ctx: Any = None,
