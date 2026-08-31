@@ -88,6 +88,7 @@ runtime API above) is BLOCKED before execution.
 | `09_multi_engine_hosting.py`    | One engine per unit of work (host-side parallelism) |
 | `10_runtime_inspection.py`      | Production observability & inspection        |
 | `11_governed_assistant.py`      | Reference assistant: read vs confirmed external effect |
+| `12_threaded_stability.py`      | Scientific state threaded across governed turns |
 
 ---
 

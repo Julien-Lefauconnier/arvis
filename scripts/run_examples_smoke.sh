@@ -19,6 +19,7 @@ EXAMPLES=(
   examples/09_multi_engine_hosting.py
   examples/10_runtime_inspection.py
   examples/11_governed_assistant.py
+  examples/12_threaded_stability.py
 )
 
 failures=()

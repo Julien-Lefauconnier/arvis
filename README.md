@@ -414,6 +414,7 @@ Included examples:
 9. Multi-engine hosting (one engine per governed turn)
 10. Runtime inspection
 11. Governed-assistant reference integration
+12. Threaded stability (scientific state across governed turns)
 
 See: `examples/README.md`
 
