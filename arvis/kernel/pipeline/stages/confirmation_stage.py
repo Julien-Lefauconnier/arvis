@@ -189,10 +189,10 @@ class ConfirmationStage:
         runtime.metadata["confirmation_required"] = requires_confirmation
         runtime.metadata["confirmation_needed"] = needs_confirmation
 
-        # -------------------------------------------------
-        # Compatibility projection handled centrally by
-        # PipelineExecutionSyncService.
-        # -------------------------------------------------
+        # Runtime execution authority is owned by
+        # CognitiveExecutionState; the execution stage resolves and
+        # stamps it (the legacy sync projection was removed in
+        # campaign STRUCT, LOT S3).
 
         self._debug(
             ctx,

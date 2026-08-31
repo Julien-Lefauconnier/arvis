@@ -25,6 +25,9 @@ from arvis.kernel.pipeline.factories import (
     PipelineResultFactory,
     PipelineTraceFactory,
 )
+from arvis.kernel.pipeline.services.pipeline_ir_bootstrap_service import (
+    PipelineIRBootstrapService,
+)
 from arvis.kernel.pipeline.services.pipeline_ir_service import (
     PipelineIRService,
 )
@@ -179,7 +182,7 @@ class PipelineFinalizeService:
         # COGNITIVE IR lifecycle
         # -----------------------------------------------------
         try:
-            pipeline._refresh_ir_context_extra(ctx)
+            PipelineIRBootstrapService.refresh_context_extra(ctx)
         except Exception as exc:
             capture_pipeline_contract_failure(
                 ctx,

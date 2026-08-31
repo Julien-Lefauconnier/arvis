@@ -8,6 +8,9 @@ from typing import TYPE_CHECKING
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
+from arvis.kernel.pipeline.services.pipeline_error_service import (
+    PipelineErrorService,
+)
 
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline import (
@@ -33,13 +36,7 @@ class PipelineRunnerService:
         ctx: CognitivePipelineContext,
         stage: PipelineStage,
     ) -> None:
-        pipeline._safe_run(stage, ctx)
-
-        # -----------------------------------------
-        # Legacy compatibility projection
-        # -----------------------------------------
-        if stage is pipeline.execution_stage:
-            pipeline._sync_execution_flags(ctx)
+        PipelineErrorService.safe_stage_run(pipeline, stage, ctx)
 
     @staticmethod
     def run_all(

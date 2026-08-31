@@ -1,12 +1,12 @@
 # tests/kernel/test_pipeline_memory_ir_context.py
 
-from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.pipeline.services.pipeline_ir_bootstrap_service import (
+    PipelineIRBootstrapService,
+)
 
 
 def test_bootstrap_ir_context_prefers_memory_projection():
-    pipeline = CognitivePipeline()
-
     ctx = CognitivePipelineContext(
         user_id="u1",
         cognitive_input={},
@@ -21,7 +21,7 @@ def test_bootstrap_ir_context_prefers_memory_projection():
         "has_language_pref": True,
     }
 
-    pipeline._bootstrap_ir_context(ctx)
+    PipelineIRBootstrapService.bootstrap_context(ctx)
 
     assert ctx.ir_context is not None
     assert ctx.ir_context.long_memory_preferences == {
@@ -36,8 +36,6 @@ def test_bootstrap_ir_context_prefers_memory_projection():
 
 
 def test_bootstrap_ir_context_falls_back_to_long_memory():
-    pipeline = CognitivePipeline()
-
     ctx = CognitivePipelineContext(
         user_id="u1",
         cognitive_input={},
@@ -47,7 +45,7 @@ def test_bootstrap_ir_context_falls_back_to_long_memory():
         },
     )
 
-    pipeline._bootstrap_ir_context(ctx)
+    PipelineIRBootstrapService.bootstrap_context(ctx)
 
     assert ctx.ir_context is not None
     assert ctx.ir_context.long_memory_preferences == {"language": True}
@@ -55,13 +53,11 @@ def test_bootstrap_ir_context_falls_back_to_long_memory():
 
 
 def test_bootstrap_ir_context_keeps_existing_ir_context():
-    pipeline = CognitivePipeline()
-
     ctx = CognitivePipelineContext(
         user_id="u1",
         cognitive_input={},
     )
-    pipeline._bootstrap_ir_context(ctx)
+    PipelineIRBootstrapService.bootstrap_context(ctx)
     first = ctx.ir_context
 
     ctx.memory_projection = {
@@ -69,14 +65,12 @@ def test_bootstrap_ir_context_keeps_existing_ir_context():
         "constraints": ["no_tracking"],
     }
 
-    pipeline._bootstrap_ir_context(ctx)
+    PipelineIRBootstrapService.bootstrap_context(ctx)
 
     assert ctx.ir_context is first
 
 
 def test_bootstrap_ir_context_exposes_memory_projection_safely():
-    pipeline = CognitivePipeline()
-
     ctx = CognitivePipelineContext(
         user_id="u1",
         cognitive_input={},
@@ -93,7 +87,7 @@ def test_bootstrap_ir_context_exposes_memory_projection_safely():
         "has_timezone": True,
     }
 
-    pipeline._bootstrap_ir_context(ctx)
+    PipelineIRBootstrapService.bootstrap_context(ctx)
 
     ir = ctx.ir_context
     assert ir is not None
@@ -107,8 +101,6 @@ def test_bootstrap_ir_context_exposes_memory_projection_safely():
 
 
 def test_bootstrap_ir_context_memory_projection_defaults_are_safe():
-    pipeline = CognitivePipeline()
-
     ctx = CognitivePipelineContext(
         user_id="u1",
         cognitive_input={},
@@ -116,7 +108,7 @@ def test_bootstrap_ir_context_memory_projection_defaults_are_safe():
     )
     ctx.memory_projection = None
 
-    pipeline._bootstrap_ir_context(ctx)
+    PipelineIRBootstrapService.bootstrap_context(ctx)
 
     ir = ctx.ir_context
     assert ir is not None
@@ -130,8 +122,6 @@ def test_bootstrap_ir_context_memory_projection_defaults_are_safe():
 
 
 def test_bootstrap_ir_context_does_not_expose_raw_memory_entries():
-    pipeline = CognitivePipeline()
-
     ctx = CognitivePipelineContext(
         user_id="u1",
         cognitive_input={},
@@ -144,7 +134,7 @@ def test_bootstrap_ir_context_does_not_expose_raw_memory_entries():
         "raw_values": {"secret": "forbidden"},
     }
 
-    pipeline._bootstrap_ir_context(ctx)
+    PipelineIRBootstrapService.bootstrap_context(ctx)
 
     ir = ctx.ir_context
     assert ir is not None

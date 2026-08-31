@@ -12,29 +12,23 @@ from arvis.kernel.pipeline.cognitive_pipeline_result import CognitivePipelineRes
 from arvis.kernel.pipeline.services.pipeline_bootstrap_service import (
     PipelineBootstrapService,
 )
-from arvis.kernel.pipeline.services.pipeline_compatibility_service import (
-    PipelineCompatibilityService,
+from arvis.kernel.pipeline.services.pipeline_finalize_service import (
+    PipelineFinalizeService,
 )
-from arvis.kernel.pipeline.services.pipeline_execution_service import (
-    PipelineExecutionService,
-)
-from arvis.kernel.pipeline.services.pipeline_execution_sync_service import (
-    PipelineExecutionSyncService,
-)
-from arvis.kernel.pipeline.services.pipeline_iteration_service import (
-    PipelineIterationService,
-)
-from arvis.kernel.pipeline.services.pipeline_lifecycle_service import (
-    PipelineLifecycleService,
+from arvis.kernel.pipeline.services.pipeline_input_service import (
+    PipelineInputService,
 )
 from arvis.kernel.pipeline.services.pipeline_preparation_service import (
     PipelinePreparationService,
 )
+from arvis.kernel.pipeline.services.pipeline_replay_service import (
+    PipelineReplayService,
+)
+from arvis.kernel.pipeline.services.pipeline_runner_service import (
+    PipelineRunnerService,
+)
 from arvis.kernel.pipeline.services.pipeline_runtime_service import (
     PipelineRuntimeService,
-)
-from arvis.kernel.pipeline.services.pipeline_stage_execution_service import (
-    PipelineStageExecutionService,
 )
 from arvis.kernel.pipeline.services.pipeline_stage_registry_service import (
     PipelineStageRegistryService,
@@ -137,40 +131,6 @@ class CognitivePipeline:
             user_id,
         )
 
-    # -----------------------------------------------------
-    # COMPATIBILITY WRAPPERS
-    # Legacy internal API preserved while delegating to
-    # service layer. Some runtime/tests still call these.
-    # -----------------------------------------------------
-    def _safe_run(
-        self,
-        stage: PipelineStage,
-        ctx: CognitivePipelineContext,
-    ) -> None:
-        PipelineCompatibilityService.safe_run(
-            self,
-            stage,
-            ctx,
-        )
-
-    def _bootstrap_ir_input(
-        self,
-        ctx: CognitivePipelineContext,
-    ) -> None:
-        PipelineCompatibilityService.bootstrap_ir_input(ctx)
-
-    def _bootstrap_ir_context(
-        self,
-        ctx: CognitivePipelineContext,
-    ) -> None:
-        PipelineCompatibilityService.bootstrap_ir_context(ctx)
-
-    def _refresh_ir_context_extra(
-        self,
-        ctx: CognitivePipelineContext,
-    ) -> None:
-        PipelineCompatibilityService.refresh_ir_context_extra(ctx)
-
     def _prepare_run(
         self,
         ctx: CognitivePipelineContext,
@@ -180,18 +140,12 @@ class CognitivePipeline:
             ctx,
         )
 
-    def _sync_execution_flags(
-        self,
-        ctx: CognitivePipelineContext,
-    ) -> None:
-        PipelineExecutionSyncService.run(ctx)
-
     def run_stage(
         self,
         ctx: CognitivePipelineContext,
         stage: PipelineStage,
     ) -> None:
-        PipelineStageExecutionService.run_stage(
+        PipelineRunnerService.run_stage(
             self,
             ctx,
             stage,
@@ -205,31 +159,27 @@ class CognitivePipeline:
         Public entrypoint for external callers.
         Converts raw input into a pipeline context.
         """
-        return PipelineLifecycleService.run_from_input(
-            self,
-            input_data,
-        )
+        ctx = PipelineInputService.build_context(input_data)
+        return self.run(ctx)
 
     def run(
         self,
         ctx: CognitivePipelineContext,
     ) -> CognitivePipelineResult:
-        return PipelineExecutionService.run(
-            self,
-            ctx,
-        )
+        PipelineRunnerService.run_all(self, ctx)
+        return self.finalize_run(ctx)
 
     def run_iter(
         self,
         ctx: CognitivePipelineContext,
     ) -> Iterator[PipelineStage]:
-        yield from PipelineIterationService.run_iter(
+        yield from PipelineRunnerService.run_iter(
             self,
             ctx,
         )
 
     def finalize_run(self, ctx: CognitivePipelineContext) -> CognitivePipelineResult:
-        return PipelineLifecycleService.finalize(
+        return PipelineFinalizeService.run(
             self,
             ctx,
         )
@@ -238,7 +188,5 @@ class CognitivePipeline:
         """
         Replay pipeline from canonical IR (deterministic mode).
         """
-        return PipelineLifecycleService.run_from_ir(
-            self,
-            ir,
-        )
+        ctx = PipelineReplayService.build_context(ir)
+        return self.run(ctx)
