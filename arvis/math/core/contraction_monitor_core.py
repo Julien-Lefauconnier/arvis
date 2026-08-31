@@ -153,6 +153,37 @@ class ContractionMonitorCore:
                 "cs_boundary must be 'fixed_lambda', 'stitched' or 'bernstein'"
             )
 
+    def governance_manifest(self) -> dict[str, Any]:
+        """Declarative identity for commitment fingerprinting.
+
+        Binds the monitor's actual calibration into the run commitment
+        (component_fingerprint_material), so two runs governed by
+        differently calibrated monitors never share a commitment while
+        pretending to be the same component.
+        """
+        cfg = self._cfg
+        return {
+            "component": "contraction_monitor_core",
+            "version": "v0",
+            "config": {
+                "tau_risk": cfg.tau_risk,
+                "tau_uncertainty": cfg.tau_uncertainty,
+                "uncertainty_saturation": cfg.uncertainty_saturation,
+                "drift_alpha": cfg.drift_alpha,
+                "governance_default": cfg.governance_default,
+                "risk_window": cfg.risk_window,
+                "risk_delta": cfg.risk_delta,
+                "risk_bound": cfg.risk_bound,
+                "risk_horizon": cfg.risk_horizon,
+                "cs_boundary": cfg.cs_boundary,
+                "verdict_ok_ceiling": cfg.verdict_ok_ceiling,
+                "verdict_critical_ceiling": cfg.verdict_critical_ceiling,
+                "regime_window": cfg.regime_window,
+                "regime_min_samples": cfg.regime_min_samples,
+                "intent_governance": dict(cfg.intent_governance),
+            },
+        }
+
     def compute(
         self, bundle: Any, prior_in: Mapping[str, Any] | None
     ) -> tuple[MonitorSnapshot, dict[str, Any]]:

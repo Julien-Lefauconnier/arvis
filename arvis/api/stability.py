@@ -6,6 +6,7 @@ Public stability interfaces and snapshots.
 
 from dataclasses import dataclass
 
+from arvis.math.core.normalization import clamp01
 from arvis.math.observability.global_forecast_snapshot import (
     GlobalForecastSnapshot,
 )
@@ -65,8 +66,21 @@ class StabilityView:
                 regime=None,
             )
 
+        # A measured Lyapunov energy V (in [0, 1]) defines the score as
+        # its complement: stability_score = 1 - V. The energy lives on
+        # the embedded core snapshot when the scientific result wraps a
+        # monitor snapshot (campaign MATH-A, M1).
+        score = _number("score", "stability_score")
+        if score is None:
+            inner = getattr(snapshot, "core_snapshot", None)
+            energy = getattr(inner, "energy_v", None) if inner is not None else None
+            if energy is None:
+                energy = getattr(snapshot, "energy_v", None)
+            if energy is not None:
+                score = 1.0 - clamp01(float(energy))
+
         return StabilityView(
-            stability_score=_number("score", "stability_score"),
+            stability_score=score,
             risk_level=_number("collapse_risk", "risk"),
             regime=str(regime) if regime is not None else None,
         )

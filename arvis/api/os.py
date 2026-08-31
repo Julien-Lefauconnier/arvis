@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from arvis.adapters.tools.gates import ConsentGate, EgressGate
@@ -15,6 +15,7 @@ from arvis.api.views.cognitive_result_view import CognitiveResultView
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel_core.access.models import AuthenticatedPrincipal
 from arvis.kernel_core.syscalls.audit_sink import DurableAuditSink
+from arvis.math.core.contraction_monitor_core import ContractionMonitorCore
 from arvis.stability.stability_snapshot import StabilitySnapshot
 from arvis.telemetry.adapters.stability import stability_event
 from arvis.telemetry.sink import NullTelemetrySink, TelemetrySink
@@ -41,7 +42,17 @@ class CognitiveOSConfig:
     adapter_registry: dict[str, Any] | None = None
     runtime_mode: RuntimeMode | str = RuntimeMode.LOCAL
     telemetry_sink: TelemetrySink | None = None
-    core_model: Any | None = None
+    # Campaign MATH-A (M1, decision DM2): the default engine measures
+    # its own science. The contraction monitor is the default core
+    # model, so every governed run carries a measured Lyapunov state,
+    # energy, drift, PAC risk ceiling and regime instead of constructor
+    # zeros. An explicit ``core_model=None`` remains the documented
+    # opt-out (measure nothing); a host may inject its own calibrated
+    # monitor, as the reference host integration does. The monitor
+    # measures the COGNITION only: a caller-declared risk scalar stays
+    # governed by the input-risk gate and never feeds the measured axes
+    # (decision DM1).
+    core_model: Any | None = field(default_factory=ContractionMonitorCore)
     # F-001: host-only controls injected by composition; never read
     # from request payloads or ctx.extra. Rejected in the production
     # runtime profile.

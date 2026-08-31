@@ -241,9 +241,7 @@ class CognitiveResultView:
         return CognitiveResultView(
             decision=getattr(execution, "action_decision", None),
             stability=stability,
-            stability_view=(
-                StabilityView.from_snapshot(stability) if stability else None
-            ),
+            stability_view=_stability_view_or_none(stability),
             trace=trace,
             trace_view=(DecisionTraceView.from_trace(trace) if trace else None),
             timeline=timeline_snapshot,
@@ -448,3 +446,19 @@ class CognitiveResultView:
             parts.append(f"DeclaredRisk={declared:.2f}")
 
         return " | ".join(parts)
+
+
+def _stability_view_or_none(stability: Any) -> StabilityView | None:
+    """Build the stability view, or report honest absence.
+
+    A run that measured nothing (opt-out core model, or a snapshot with
+    no conclusion) yields no view at all rather than a view of Nones:
+    downstream consumers can rely on ``stability_view is None`` meaning
+    "this run carried no stability assessment" (campaign MATH-A, M1).
+    """
+    if not stability:
+        return None
+    view = StabilityView.from_snapshot(stability)
+    if view.stability_score is None and view.risk_level is None and view.regime is None:
+        return None
+    return view

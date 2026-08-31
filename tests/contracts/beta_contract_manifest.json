@@ -275,7 +275,7 @@
             "type": "ConsentGate | None"
           },
           "core_model": {
-            "default": "None",
+            "default_factory": "arvis.math.core.contraction_monitor_core.ContractionMonitorCore",
             "type": "Any | None"
           },
           "egress_gate": {
@@ -309,7 +309,7 @@
         },
         "kind": "dataclass",
         "methods": {
-          "__init__": "(self, enable_trace: bool = True, strict_mode: bool = False, adapter_registry: dict[str, Any] | None = None, runtime_mode: RuntimeMode | str = <RuntimeMode.LOCAL: 'local'>, telemetry_sink: TelemetrySink | None = None, core_model: Any | None = None, runtime_controls: TrustedRuntimeControls | None = None, consent_gate: ConsentGate | None = None, egress_gate: EgressGate | None = None, audit_commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, confirmation_registry: Any | None = None, audit_intent_sink: DurableAuditSink | Callable[[dict[str, Any]], None] | None = None, host_context: dict[str, Any] | None = None) -> None",
+          "__init__": "(self, enable_trace: bool = True, strict_mode: bool = False, adapter_registry: dict[str, Any] | None = None, runtime_mode: RuntimeMode | str = <RuntimeMode.LOCAL: 'local'>, telemetry_sink: TelemetrySink | None = None, core_model: Any | None = <_HAS_DEFAULT_FACTORY_CLASS>, runtime_controls: TrustedRuntimeControls | None = None, consent_gate: ConsentGate | None = None, egress_gate: EgressGate | None = None, audit_commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, confirmation_registry: Any | None = None, audit_intent_sink: DurableAuditSink | Callable[[dict[str, Any]], None] | None = None, host_context: dict[str, Any] | None = None) -> None",
           "production": "(**overrides: Any) -> CognitiveOSConfig"
         },
         "properties": {}
@@ -394,7 +394,8 @@
         "kind": "class",
         "methods": {
           "__init__": "(self, config: MonitorConfig | None = None) -> None",
-          "compute": "(self, bundle: Any, prior_in: Mapping[str, Any] | None) -> tuple[MonitorSnapshot, dict[str, Any]]"
+          "compute": "(self, bundle: Any, prior_in: Mapping[str, Any] | None) -> tuple[MonitorSnapshot, dict[str, Any]]",
+          "governance_manifest": "(self) -> dict[str, Any]"
         },
         "properties": {}
       },
@@ -1244,7 +1245,7 @@
           "type": "ConsentGate | None"
         },
         "core_model": {
-          "default": "None",
+          "default_factory": "arvis.math.core.contraction_monitor_core.ContractionMonitorCore",
           "type": "Any | None"
         },
         "egress_gate": {
@@ -1278,7 +1279,7 @@
       },
       "kind": "dataclass",
       "methods": {
-        "__init__": "(self, enable_trace: bool = True, strict_mode: bool = False, adapter_registry: dict[str, Any] | None = None, runtime_mode: RuntimeMode | str = <RuntimeMode.LOCAL: 'local'>, telemetry_sink: TelemetrySink | None = None, core_model: Any | None = None, runtime_controls: TrustedRuntimeControls | None = None, consent_gate: ConsentGate | None = None, egress_gate: EgressGate | None = None, audit_commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, confirmation_registry: Any | None = None, audit_intent_sink: DurableAuditSink | Callable[[dict[str, Any]], None] | None = None, host_context: dict[str, Any] | None = None) -> None",
+        "__init__": "(self, enable_trace: bool = True, strict_mode: bool = False, adapter_registry: dict[str, Any] | None = None, runtime_mode: RuntimeMode | str = <RuntimeMode.LOCAL: 'local'>, telemetry_sink: TelemetrySink | None = None, core_model: Any | None = <_HAS_DEFAULT_FACTORY_CLASS>, runtime_controls: TrustedRuntimeControls | None = None, consent_gate: ConsentGate | None = None, egress_gate: EgressGate | None = None, audit_commitment_policy: AuditCommitmentPolicy = <AuditCommitmentPolicy.DEGRADED: 'degraded'>, confirmation_registry: Any | None = None, audit_intent_sink: DurableAuditSink | Callable[[dict[str, Any]], None] | None = None, host_context: dict[str, Any] | None = None) -> None",
         "production": "(**overrides: Any) -> CognitiveOSConfig"
       },
       "properties": {}

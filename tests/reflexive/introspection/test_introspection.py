@@ -56,7 +56,7 @@ def test_math_declaration_reports_execution_status_honestly() -> None:
     assert math["kind"] == "static_declaration"
     statuses = {c["module"]: c["status"] for c in math["components"]}
     assert set(statuses.values()) <= {"default_path", "host_driven"}
-    assert statuses["arvis.math.lyapunov.lyapunov_gate"] == "host_driven"
+    assert statuses["arvis.math.lyapunov.lyapunov_gate"] == "default_path"
     assert statuses["arvis.kernel.gate.input_risk"] == "default_path"
 
 

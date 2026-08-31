@@ -90,4 +90,12 @@ class CognitiveCoreEngine:
             core_snapshot=core_snapshot,
             reflexive_state=reflexive_state,
             next_scientific_state=next_state,
+            # M1 (MATH-A): the regime conclusion and stability verdict a
+            # core reaches must survive into the scientific result; they
+            # are what the observability layer treats as "this run
+            # measured something" (an all-None conclusion reads as an
+            # absent assessment downstream).
+            drift_score=float(getattr(core_snapshot, "drift_score", 0.0) or 0.0),
+            regime=getattr(core_snapshot, "regime", None),
+            stable=getattr(core_snapshot, "stable", None),
         )

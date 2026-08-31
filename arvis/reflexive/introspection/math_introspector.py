@@ -8,14 +8,18 @@ class MathIntrospector:
 
     This is a hand-maintained declaration (``kind: static_declaration``),
     not a derivation from the code. Its previous version described a
-    ``global_stability_monitor`` module that does not exist and implied
-    the Lyapunov machinery drives the default decision path; it does not
-    (audit A3 / M1, 2026-08). Every module named here exists, under its
-    real import path, with an honest execution status:
+    ``global_stability_monitor`` module that does not exist, and at the
+    time of the audit the Lyapunov machinery did not drive the default
+    decision path at all (audit A3 / M1, 2026-08; wired by campaign
+    MATH-A). Every module named here exists, under its real import
+    path, with an honest execution status:
 
-    - ``default_path``: exercised by the default engine on a governed run;
+    - ``default_path``: exercised by the default engine on a governed run
+      (since MATH-A M1 the contraction monitor is the default core
+      model, so the Lyapunov measurement chain is engine-driven; the
+      trajectory branch needs host-threaded ``scientific_state``);
     - ``host_driven``: present and tested, but only evaluated when the
-      host supplies the required state (the default engine does not).
+      host supplies the required state.
     """
 
     def describe(self) -> dict[str, Any]:
@@ -23,9 +27,10 @@ class MathIntrospector:
             "name": "stability_system",
             "kind": "static_declaration",
             "description": (
-                "Threshold-based input-risk gating on the default path, "
-                "with a composite Lyapunov energy layer that is evaluated "
-                "only when a host supplies the Lyapunov state."
+                "Measured Lyapunov energy, PAC risk ceiling and regime "
+                "on every governed run (default contraction monitor), "
+                "with threshold-based gating of caller-declared risk; "
+                "the delta-V trajectory branch runs on threaded turns."
             ),
             "components": [
                 {
@@ -64,20 +69,25 @@ class MathIntrospector:
                         "constructive stability energy V(x) over "
                         "budget_used, risk, uncertainty, governance"
                     ),
-                    "status": "host_driven",
+                    "status": "default_path",
                 },
                 {
                     "module": "arvis.math.lyapunov.lyapunov_gate",
-                    "role": "local stability gating using delta-V bounds",
-                    "status": "host_driven",
+                    "role": (
+                        "local stability gating using delta-V bounds; "
+                        "live from the second turn when the host "
+                        "threads scientific_state"
+                    ),
+                    "status": "default_path",
                 },
                 {
                     "module": "arvis.math.core.contraction_monitor_core",
                     "role": (
-                        "builds the Lyapunov state from observations; "
-                        "instantiated by hosts, not by the default engine"
+                        "builds the Lyapunov state, energy, PAC risk "
+                        "ceiling and regime from observations; the "
+                        "default core model since MATH-A M1"
                     ),
-                    "status": "host_driven",
+                    "status": "default_path",
                 },
                 {
                     "module": "arvis.math.adaptive.adaptive_kappa_eff",

@@ -136,11 +136,15 @@ Commitment     : b94e25dea93a541e...
 Trace          : Available
 ```
 
-`summary()` gives the one-line form; axes the run did not measure print
-as `n/a`, and the caller-declared risk appears under its own label:
+`summary()` gives the one-line form. The measured axes and the
+caller-declared assertion are deliberately distinct: `Stability`,
+`Risk` and `Regime` are what the engine's contraction monitor measured
+about this run's cognition (first turn: `warmup`), while
+`DeclaredRisk` is the untrusted scalar the caller asserted, and only
+the declared-risk gate acts on it:
 
 ```text
-Decision=ActionDecision(allowed=False, ...) | Stability=n/a | Risk=n/a | Regime=n/a | DeclaredRisk=0.92
+Decision=ActionDecision(allowed=False, ...) | Stability=0.85 | Risk=0.00 | Regime=warmup | DeclaredRisk=0.92
 ```
 
 > Note (0.1.0-beta): the gate grades an explicit finite top-level `risk`
@@ -384,8 +388,8 @@ Current suite includes:
 What the suite does **not** yet establish, honestly: scheduler
 *fairness* is only covered by single-tick priority tests (no starvation
 or bounded-wait property), and the Lyapunov decrease property is
-exercised at unit level, not on the default engine path (which does not
-evaluate the Lyapunov machinery; see Known Limitations).
+asserted at unit level and on threaded-state runs, not yet as a
+closed-loop property over long adversarial trajectories.
 
 ---
 
@@ -471,17 +475,22 @@ experimental, and out of scope for the 0.1 series:
   cannot certify: with `input_risk_mode = "harden_only"`, every declared
   risk value, including `0.0`, is BLOCKED. The graded three-band gate is
   a property of the default (`local`) profile.
-* the **Lyapunov machinery is host-driven, not engine-driven**: the
-  default engine path never populates the Lyapunov state, so
-  `lyapunov_gate` and the composite energy are not evaluated on a
-  default governed run. The decisive policy on that path is the
-  two-threshold input-risk gate. Hosts that want the trajectory
-  machinery must supply the state (e.g. by instantiating
-  `ContractionMonitorCore` and feeding its snapshots), which is exactly
-  what the reference host integration does.
+* the **contraction monitor is the default core model**: every governed
+  run measures a Lyapunov state, its energy V, a drift score, a PAC
+  risk ceiling and an empirical regime (`ContractionMonitorCore`;
+  `core_model=None` opts out). The measured axes never act on a
+  caller-declared risk scalar, which stays governed by the input-risk
+  gate alone. **Trajectory properties need threaded state**: the
+  engine is one-turn by design, so delta-V (and the Lyapunov gate's
+  trajectory branch) only become live when the host threads the
+  replayable `scientific_state` between turns
+  (`run(..., extra={"scientific_state": previous})`, read back from
+  `extra["scientific_state_next"]`). A first, unthreaded turn is
+  conservative by construction.
 * **stability axes are reported only when measured**: `summary()` and
   the stability view return `n/a`/`null` for axes the run did not
-  compute, rather than zeros.
+  compute, rather than zeros (`stability_score` is `1 - V`, the
+  complement of the measured energy).
 
 **Experimental (present, not part of the stable public API):**
 

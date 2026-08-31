@@ -81,7 +81,12 @@ def test_readme_summary_line_is_real() -> None:
     produced = (
         CognitiveOS().run(user_id="demo", cognitive_input={"risk": 0.92}).summary()
     )
-    for token in ("Stability=n/a", "Risk=n/a", "Regime=n/a", "DeclaredRisk=0.92"):
+    for token in (
+        "Stability=0.85",
+        "Risk=0.00",
+        "Regime=warmup",
+        "DeclaredRisk=0.92",
+    ):
         assert token in produced, (
             f"summary() lost its documented label {token!r}:\n{produced}"
         )
