@@ -7,6 +7,18 @@
 > [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174) when, and only
 > when, they appear in all capitals, as shown here.
 
+> **Implementation frontier (2026-08, campaign STRUCT LOT S1).** The
+> implemented slice of this spec is the act taxonomy
+> (`arvis/linguistic/acts/act_types.py`) and the generation frame
+> (`arvis/linguistic/generation/generation_frame.py`), both consumed
+> by the LLM adapter (`arvis/adapters/llm/policy/`,
+> `arvis/adapters/llm/prompts/`). The LinguisticAct object, the gate
+> mapping, the frame builder, the lexicon contract and the
+> linguistic-side prompt builder were design ahead of implementation,
+> never wired into the runtime, and have been removed from the tree;
+> their specification below is retained as the normative design for a
+> future realization layer, and the removed code is in git history.
+
 ## 1. Purpose
 
 The Linguistic Layer defines how a structured response plan is transformed into a realized communicative output.
@@ -106,8 +118,8 @@ Constraints:
 Defined in:
 
 ```text
-gate_mapping.py
-act_types.py
+act_types.py     (implemented: the act taxonomy)
+gate_mapping.py  (design only: removed from the tree, see frontier note)
 ```
 
 Maps:
@@ -158,11 +170,7 @@ Constraints:
 
 ---
 
-### Frame Builder
-
-```text
-frame_builder.py
-```
+### Frame Builder (design only)
 
 Builds:
 
@@ -174,6 +182,11 @@ Constraints:
 
 - MUST be deterministic
 - MUST preserve all ResponsePlan constraints exactly
+
+Not implemented: the runtime builds prompts directly from the
+generation frame through the LLM adapter
+(`arvis/adapters/llm/prompts/builder.py`). A dedicated frame builder
+comes back with the realization layer that needs it.
 
 ---
 
@@ -193,24 +206,20 @@ Constraints:
 
 ---
 
-## 7. Lexicon System
+## 7. Lexicon System (design only)
 
 ### Definition
 
 Provides controlled vocabulary and domain-specific language.
 
-Located in:
-
-```text
-arvis/linguistic/lexicon/
-```
+Not in the tree: the lexicon contract (entry and snapshot shapes) was
+specified and coded ahead of any consumer, and removed as unwired
+design (see frontier note). This section remains its normative
+definition.
 
 ---
 
-### Components
-
-- lexicon_entry.py
-- lexicon_snapshot.py
+### Contract
 
 The kernel defines the lexicon CONTRACT: what an entry is, and what a snapshot
 of the active lexicon looks like. It deliberately ships no domain lexicon.
@@ -258,12 +267,13 @@ arvis/linguistic/realization/
 
 ### Components
 
-- prompt_builder.py
-- llm_executor.py
-
-The kernel builds the prompt and drives the executor. Turning a structured
-representation into finished wording, with its templates, is realization and
-lives in the layer built on top of ARVIS.
+The implemented path is the LLM adapter: the prompt is built by
+`arvis/adapters/llm/prompts/builder.py` against a `PromptContract`,
+and driven by the adapter's runtime executor. Turning a structured
+representation into finished wording, with its templates, is
+realization and lives in the layer built on top of ARVIS (the
+linguistic-side prompt builder existed only as unwired design and was
+removed, see frontier note).
 
 ---
 

@@ -1,10 +1,14 @@
 # tests/contracts/test_import_closure.py
 """Ratchet: no module of ``arvis/`` may quietly become unreachable.
 
-Reachability is computed statically (ast-level imports) from three
+Reachability is computed statically (ast-level imports) from four
 root sets that together define the supported surface:
 
 - ``arvis`` itself (the public ``__init__``),
+- every ``arvis.api`` module (the curated public namespaces:
+  ``arvis.api.cognition/math/memory/reasoning`` are re-export facades
+  a host imports directly, so the public ``__init__`` does not have
+  to reach them),
 - every ``arvis.host_api`` module (the documented host surface),
 - every module of the veramem consumed surface
   (``tests/contracts/test_veramem_consumed_surface.py``), since the
@@ -12,18 +16,29 @@ root sets that together define the supported surface:
 
 A module reachable from none of these is dead weight: it still counts
 in the coverage denominator, keeps its tests alive, and collides with
-living names (audit A2, 2026-08, found 91 such modules; the veramem
-surface legitimizes a part of them).
+living names (audit A2, 2026-08, found 91 such modules).
 
-The frozen KNOWN_UNREACHABLE list below is a burn-down, not a licence:
+History of the burn-down: the audit froze 91 entries; campaign
+"mise au propre" LOT 7 built this ratchet; campaign STRUCT LOT S1
+deleted the dead conversation layer (38), the unwired
+predictive/probabilistic math layer (14) and the remaining dead
+chains (32: kernel adapter rule engine, dead LLM contracts and
+observability providers, lexicon and dead linguistic acts, runtime
+snapshots, raw signal layer, redaction, orphan cognition flows),
+and promoted the four ``arvis.api`` namespaces to roots.
+
+KNOWN_UNREACHABLE is now NOT a burn-down anymore: every remaining
+entry is a deliberate keep, unreachable from the production roots
+but consumed by the test and compliance suites as a harness. The
+ratchet still enforces both directions:
 
 - a module that becomes unreachable and is NOT listed fails the test
   (no new dead code);
 - a listed module that becomes reachable, or disappears, also fails
-  (the list must shrink with reality, never lag behind it).
+  (the list must keep matching reality).
 
-Removing an entry is the desired direction; adding one requires the
-same justification as adding dead code, because it is one.
+Adding an entry requires the same justification as adding dead code,
+because outside the harness case it is one.
 """
 
 from __future__ import annotations
@@ -36,52 +51,22 @@ from tests.contracts.test_veramem_consumed_surface import CONSUMED_SURFACE
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = ROOT / "arvis"
 
-# Burn-down list frozen 2026-08-31 (campaign "mise au propre", LOT 7).
-# Every entry was verified unreachable from the three root sets at that
-# date. The largest block is the standalone conversation orchestration
-# layer (only continuation/pending_turn are consumed); the math block is
-# the predictive/probabilistic layer the default engine does not drive.
+# Deliberate keeps (last reviewed 2026-08-31, campaign STRUCT LOT S1):
+# unreachable from the production roots, but load-bearing test
+# harnesses. Each entry names its consumers.
+#
+# - projection_api: the trajectory harness behind the projection
+#   property suite (tests/math/test_projection_*.py,
+#   tests/fixtures/projection_cases.py, and the adaptive kappa
+#   trajectory test). It IS the M3/M10 validation program.
+# - vfs.repositories(.in_memory): the in-memory VFS repository the
+#   adversarial access-control tests drive
+#   (tests/kernel_core/access/test_vfs_scope_*.py).
 KNOWN_UNREACHABLE: frozenset[str] = frozenset(
     {
-        "arvis.adapters.kernel.kernel_adapter",
-        "arvis.adapters.kernel.mappers",
-        "arvis.adapters.kernel.mappers.ir_to_canonical",
-        "arvis.adapters.kernel.rules",
-        "arvis.adapters.kernel.rules.base_rule",
-        "arvis.adapters.kernel.rules.decision_rules",
-        "arvis.adapters.kernel.rules.fallback_rules",
-        "arvis.adapters.kernel.rules.gate_rules",
-        "arvis.adapters.kernel.rules.state_rules",
-        "arvis.adapters.kernel.signals.signal_semantics",
-        "arvis.adapters.llm.contracts.error_payload",
-        "arvis.adapters.llm.contracts.result",
-        "arvis.adapters.llm.observability.providers",
-        "arvis.adapters.llm.observability.providers.base",
-        "arvis.adapters.llm.observability.providers.mock",
-        "arvis.adapters.llm.observability.risk_mapper",
-        "arvis.api.cognition",
-        "arvis.api.math",
-        "arvis.api.memory",
-        "arvis.api.reasoning",
-        "arvis.cognition.confirmation.confirmation_flow",
-        "arvis.cognition.conflict.conflict_impact",
         "arvis.cognition.projection.projection_api",
-        "arvis.kernel_core.process.snapshot",
         "arvis.kernel_core.vfs.repositories",
         "arvis.kernel_core.vfs.repositories.in_memory",
-        "arvis.linguistic.acts.gate_mapping",
-        "arvis.linguistic.acts.linguistic_act",
-        "arvis.linguistic.generation.frame_builder",
-        "arvis.linguistic.generation.prompt_builder",
-        "arvis.linguistic.lexicon",
-        "arvis.linguistic.lexicon.lexicon_entry",
-        "arvis.linguistic.lexicon.lexicon_snapshot",
-        "arvis.runtime.runtime_snapshot",
-        "arvis.runtime.runtime_snapshot_builder",
-        "arvis.signals.canonical.canonical_signal_invariants",
-        "arvis.signals.signal",
-        "arvis.signals.signal_invariants",
-        "arvis.telemetry.redaction",
     }
 )
 
@@ -157,6 +142,10 @@ def _closure(roots: set[str], modules: dict[str, Path]) -> set[str]:
 def _unreachable_now() -> set[str]:
     modules = _all_modules()
     roots = {"arvis"}
+    # arvis.api.* is the curated public namespace layer: hosts import
+    # these facades directly (arvis.api.math, arvis.api.cognition, ...),
+    # so they are roots of the supported surface, not dead code.
+    roots.update(name for name in modules if name.startswith("arvis.api"))
     roots.update(name for name in modules if name.startswith("arvis.host_api"))
     roots.update(CONSUMED_SURFACE.keys())
     reached = _closure(roots, modules)
