@@ -30,12 +30,6 @@ from arvis.tools.authorized_invocation import (
 from arvis.tools.effect_dispatcher import EffectDispatcher
 from arvis.tools.registry import ToolRegistry
 from arvis.tools.tool_result import ToolResult
-from arvis.tools.tool_schema import schema_violation
-
-
-def _schema_violation(instance: Any, schema: dict[str, Any]) -> str | None:
-    """Backward-compatible private alias for the shared schema validator."""
-    return schema_violation(instance, schema)
 
 
 @dataclass(slots=True)

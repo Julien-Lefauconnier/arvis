@@ -1,10 +1,18 @@
-# arvis/cognition/observability/global_forecast_snapshot.py
+# arvis/math/observability/global_forecast_snapshot.py
 
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class GlobalForecastSnapshot:
+    """
+    Declarative stability forecast snapshot.
+
+    Kernel guarantees:
+    - numeric only
+    - no forecasting logic
+    """
+
     predicted_mean_delta: float
     slope: float
     collapse_risk: float

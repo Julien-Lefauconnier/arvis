@@ -48,19 +48,6 @@ STANDARD_VERSION: Final[str] = "draft-v1"
 # -----------------------------------------------------
 # New short fingerprint (optional modern export)
 # -----------------------------------------------------
-def compute_public_api_fingerprint() -> str:
-    try:
-        import arvis
-
-        exported = getattr(arvis, "__all__", None)
-        if not exported:
-            raise RuntimeError
-        payload = "|".join(sorted(exported))
-    except (ImportError, RuntimeError):
-        payload = f"bootstrap:{PACKAGE_VERSION}:{API_VERSION}"
-    return hashlib.sha256(payload.encode()).hexdigest()[:16]
-
-
 # -----------------------------------------------------
 # LEGACY TESTED FUNCTION (64 chars)
 # Must remain 64-char sha256 string
@@ -82,4 +69,3 @@ def compute_api_fingerprint() -> str:
 # Public constants (eager, safe via fallback)
 # -----------------------------------------------------
 API_FINGERPRINT: Final[str] = compute_api_fingerprint()
-PUBLIC_API_FINGERPRINT: Final[str] = compute_public_api_fingerprint()
