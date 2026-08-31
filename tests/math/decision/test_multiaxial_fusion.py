@@ -1,4 +1,16 @@
 # tests/math/decision/test_multiaxial_fusion.py
+"""The assessment-phase fusion is observation-only.
+
+The former composite and global-policy axes were pruned (audit G3,
+decision D1, 2026-08): production never wired their knobs, the branches
+existed only for these unit tests, and one of them relaxed
+REQUIRE_CONFIRMATION to ALLOW against the verdict-strictness order.
+What remains is a passthrough that records observations; these tests
+pin exactly that, so any reintroduction of a decision in the fusion
+shows up as a failure here.
+"""
+
+import itertools
 
 from arvis.math.decision.multiaxial_fusion import (
     MultiaxialInputs,
@@ -7,97 +19,39 @@ from arvis.math.decision.multiaxial_fusion import (
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
-def test_multiaxial_keeps_fast_verdict_when_no_constraints():
-    result = multiaxial_fusion(
-        MultiaxialInputs(
-            fast_verdict=LyapunovVerdict.ALLOW,
-            delta_w=0.0,
-            switching_safe=True,
-            global_safe=True,
-            use_composite=False,
-            global_action="ignore",
+def test_fusion_passes_every_verdict_through_unchanged():
+    for verdict, switching_safe in itertools.product(
+        list(LyapunovVerdict), [True, False]
+    ):
+        result = multiaxial_fusion(
+            MultiaxialInputs(fast_verdict=verdict, switching_safe=switching_safe)
         )
-    )
+        assert result.verdict is verdict, (
+            "the fusion is observation-only; enforcement belongs to the "
+            f"policy layer (got {result.verdict} for {verdict})"
+        )
 
-    assert result.verdict == LyapunovVerdict.ALLOW
+
+def test_fusion_records_no_reason_when_nothing_observed():
+    result = multiaxial_fusion(
+        MultiaxialInputs(fast_verdict=LyapunovVerdict.ALLOW, switching_safe=True)
+    )
     assert result.reasons == []
-
-
-def test_multiaxial_composite_positive_requires_confirmation():
-    result = multiaxial_fusion(
-        MultiaxialInputs(
-            fast_verdict=LyapunovVerdict.ALLOW,
-            delta_w=0.5,
-            switching_safe=True,
-            global_safe=True,
-            use_composite=True,
-            global_action="ignore",
-        )
-    )
-
-    assert result.verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
-    assert "composite_positive_delta_w" in result.reasons
-
-
-def test_multiaxial_composite_negative_promotes_allow():
-    result = multiaxial_fusion(
-        MultiaxialInputs(
-            fast_verdict=LyapunovVerdict.REQUIRE_CONFIRMATION,
-            delta_w=-0.5,
-            switching_safe=True,
-            global_safe=True,
-            use_composite=True,
-            global_action="ignore",
-        )
-    )
-
-    assert result.verdict == LyapunovVerdict.ALLOW
-    assert "composite_negative_delta_w" in result.reasons
-
-
-def test_multiaxial_global_confirm_overrides():
-    result = multiaxial_fusion(
-        MultiaxialInputs(
-            fast_verdict=LyapunovVerdict.ALLOW,
-            delta_w=-0.5,
-            switching_safe=True,
-            global_safe=False,
-            use_composite=True,
-            global_action="confirm",
-        )
-    )
-
-    assert result.verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
-    assert "global_instability_confirm" in result.reasons
-
-
-def test_multiaxial_global_abstain_overrides():
-    result = multiaxial_fusion(
-        MultiaxialInputs(
-            fast_verdict=LyapunovVerdict.ALLOW,
-            delta_w=-0.5,
-            switching_safe=True,
-            global_safe=False,
-            use_composite=True,
-            global_action="abstain",
-        )
-    )
-
-    assert result.verdict == LyapunovVerdict.ABSTAIN
-    assert "global_instability_abstain" in result.reasons
 
 
 def test_multiaxial_switching_is_monitoring_only():
     result = multiaxial_fusion(
-        MultiaxialInputs(
-            fast_verdict=LyapunovVerdict.ALLOW,
-            delta_w=None,
-            switching_safe=False,
-            global_safe=True,
-            use_composite=False,
-            global_action="ignore",
-        )
+        MultiaxialInputs(fast_verdict=LyapunovVerdict.ALLOW, switching_safe=False)
     )
-
     assert result.verdict == LyapunovVerdict.ALLOW
     assert "switching_unsafe_monitoring" in result.reasons
+
+
+def test_dead_decision_knobs_stay_pruned():
+    """The pruned knobs must not quietly return: a decision axis in the
+    fusion needs a production caller and a policy-layer justification
+    first (see multiaxial_fusion's docstring)."""
+    fields = set(MultiaxialInputs.__dataclass_fields__)
+    assert "use_composite" not in fields
+    assert "global_action" not in fields
+    assert "delta_w" not in fields

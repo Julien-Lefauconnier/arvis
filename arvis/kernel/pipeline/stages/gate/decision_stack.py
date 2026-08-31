@@ -55,6 +55,7 @@ from arvis.kernel.pipeline.stages.gate.trace_helpers import (
 from arvis.math.gate.gate_adapter import ensure_lyapunov_state
 from arvis.math.gate.gate_entry import run_gate_kernel
 from arvis.math.gate.gate_fusion import run_fusion
+from arvis.math.gate.gate_kernel import COLLAPSE_ABSTAIN_THRESHOLD
 from arvis.math.gate.gate_policy import apply_gate_policy
 from arvis.math.gate.gate_types import GateKernelInputs
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
@@ -537,28 +538,32 @@ def apply_recovery_override(
 
     if recovery_detected or kernel_result.recovery_detected:
         if verdict == LyapunovVerdict.ABSTAIN:
-            validity = getattr(ctx, "validity_envelope", None)
+            # Bounded relaxation (audit G2, 2026-08). Two changes to the
+            # previous behavior:
+            # - REQUIRE_CONFIRMATION is the cap. A recovering system
+            #   stops refusing; it does not self-approve. The former
+            #   recovery_to_allow path jumped ABSTAIN -> ALLOW on the
+            #   strength of a validity envelope read before this run
+            #   had even built one.
+            # - The relaxation is refused entirely at or above the
+            #   collapse-risk abstain threshold, so it can never undo
+            #   the signal that caused the refusal.
+            collapse = float(getattr(ctx, "collapse_risk", 0.0) or 0.0)
+            if collapse >= COLLAPSE_ABSTAIN_THRESHOLD:
+                return verdict
 
-            if (
+            validity = getattr(ctx, "validity_envelope", None)
+            stable_recovery = (
                 validity is not None
                 and validity.valid
                 and not (adaptive_metrics and adaptive_metrics.is_unstable)
-            ):
-                record_verdict_transition(
-                    ctx,
-                    stage="recovery_to_allow",
-                    before=verdict,
-                    after=LyapunovVerdict.ALLOW,
-                    reason="stable_recovery",
-                )
-                return LyapunovVerdict.ALLOW
-
+            )
             record_verdict_transition(
                 ctx,
                 stage="recovery_to_confirmation",
                 before=verdict,
                 after=LyapunovVerdict.REQUIRE_CONFIRMATION,
-                reason="uncertain_recovery",
+                reason="stable_recovery" if stable_recovery else "uncertain_recovery",
             )
             return LyapunovVerdict.REQUIRE_CONFIRMATION
     return verdict

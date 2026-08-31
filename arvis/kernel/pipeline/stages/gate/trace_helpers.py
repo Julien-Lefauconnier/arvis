@@ -17,8 +17,11 @@ VERDICT_PROVENANCE_KEY = "verdict_provenance"
 GLOBAL_STABILITY_PROVENANCE = "global_stability_fusion"
 ASSESSMENT_PROVENANCE = "stability_assessment"
 
-# Fusion reason marking an ABSTAIN produced by the global stability axis
-# itself (multiaxial fusion wired with global_action="abstain").
+# Fusion reason that used to mark an ABSTAIN produced by the global
+# stability axis of the multiaxial fusion. That axis was pruned (audit
+# G3 / D1, 2026-08): the fusion is observation-only and no production
+# code emits this marker anymore. The constant stays so that traces and
+# provenance checks keep recognizing it in recorded histories.
 _GLOBAL_ABSTAIN_MARKER = "global_stability_enforced:abstain"
 
 
