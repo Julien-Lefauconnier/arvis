@@ -149,8 +149,8 @@ This reference does not ship:
 It is a map for integrating the kernel correctly, not a second application
 distribution.
 
-## Concrete case study
+## Concrete integration pattern
 
-[VeraMem integration case study](../integration/VERAMEM_CASE_STUDY.md) shows
+[VeraMem integration pattern](../integration/VERAMEM_INTEGRATION_PATTERN.md) shows
 how a real assistant can instantiate these roles while keeping its product
 services and infrastructure outside ARVIS.

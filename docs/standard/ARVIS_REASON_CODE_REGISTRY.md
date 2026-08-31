@@ -1,5 +1,12 @@
 # ARVIS Reason Code Registry v1 (Draft)
 
+> The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL
+> NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY**, and
+> **OPTIONAL** in this document are to be interpreted as described in
+> [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) and
+> [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174) when, and only
+> when, they appear in all capitals, as shown here.
+
 ## Status
 - Version: v1 (Draft)
 - Scope: Normative (Core)
@@ -107,13 +114,27 @@ Each reason code MUST define a severity:
 
 ## 4. Canonical Reason Codes (v1)
 
+Three types appear in the tables below, and the normative/reserved
+distinction is enforced by `tests/docs/test_reason_code_registry.py`:
+
+- **normative**: the code is emitted by the current implementation and
+  its documented effect binds that implementation.
+- **informative**: emitted, observability only, no gating effect.
+- **reserved**: registered for a documented purpose but emitted by no
+  code path today. A reserved code carries no implemented guarantee;
+  emitting one promotes it (and the ratchet test requires the table to
+  say so).
+
+Fifteen codes previously labeled normative or informative were emitted
+by nothing (audit O3, 2026-08); they are now reserved.
+
 ---
 
 ### 4.1 Projection Layer
 
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
-| `projection_missing` | high | normative | ≤ REQUIRE_CONFIRMATION |
+| `projection_missing` | high | reserved | ≤ REQUIRE_CONFIRMATION |
 | `projection_invalid` | critical | normative | ABSTAIN |
 | `projection_boundary` | medium | normative | REQUIRE_CONFIRMATION |
 | `projection_unsafe` | critical | normative | ABSTAIN |
@@ -125,9 +146,9 @@ Each reason code MUST define a severity:
 
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
-| `validity_invalid` | critical | normative | ABSTAIN |
-| `validity_degraded` | medium | normative | REQUIRE_CONFIRMATION |
-| `validity_unknown` | high | normative | ≤ REQUIRE_CONFIRMATION |
+| `validity_invalid` | critical | reserved | ABSTAIN |
+| `validity_degraded` | medium | reserved | REQUIRE_CONFIRMATION |
+| `validity_unknown` | high | reserved | ≤ REQUIRE_CONFIRMATION |
 
 ---
 
@@ -136,8 +157,8 @@ Each reason code MUST define a severity:
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
 | `kappa_violation` | critical | normative | ABSTAIN |
-| `kappa_boundary` | medium | normative | REQUIRE_CONFIRMATION |
-| `kappa_unstable` | high | normative | no ALLOW |
+| `kappa_boundary` | medium | reserved | REQUIRE_CONFIRMATION |
+| `kappa_unstable` | high | reserved | no ALLOW |
 
 ---
 
@@ -146,8 +167,8 @@ Each reason code MUST define a severity:
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
 | `global_instability_confirmed` | critical | normative | ABSTAIN |
-| `global_instability_suspected` | high | normative | ≤ REQUIRE_CONFIRMATION |
-| `local_instability_detected` | medium | normative | REQUIRE_CONFIRMATION |
+| `global_instability_suspected` | high | reserved | ≤ REQUIRE_CONFIRMATION |
+| `local_instability_detected` | medium | reserved | REQUIRE_CONFIRMATION |
 
 ---
 
@@ -156,9 +177,9 @@ Each reason code MUST define a severity:
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
 | `adaptive_instability_veto` | critical | normative | ABSTAIN |
-| `adaptive_band_critical` | high | normative | ≤ REQUIRE_CONFIRMATION |
+| `adaptive_band_critical` | high | reserved | ≤ REQUIRE_CONFIRMATION |
 | `adaptive_margin_warning` | medium | normative | REQUIRE_CONFIRMATION |
-| `adaptive_unavailable` | low | informative | none |
+| `adaptive_unavailable` | low | reserved | none |
 
 ---
 
@@ -167,8 +188,8 @@ Each reason code MUST define a severity:
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
 | `fusion_fallback` | medium | normative | downgrade |
-| `fusion_override` | high | normative | downgrade |
-| `fusion_consensus` | low | informative | none |
+| `fusion_override` | high | reserved | downgrade |
+| `fusion_consensus` | low | reserved | none |
 | `recovery_post_fusion_override` | medium | normative | downgrade |
 | `gate_policy_adjustment` | medium | normative | downgrade |
 
@@ -190,9 +211,9 @@ They MUST remain consistent with the final verdict.
 
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
-| `input_missing` | high | normative | ≤ REQUIRE_CONFIRMATION |
-| `input_corrupted` | critical | normative | ABSTAIN |
-| `state_inconsistent` | critical | normative | ABSTAIN |
+| `input_missing` | high | reserved | ≤ REQUIRE_CONFIRMATION |
+| `input_corrupted` | critical | reserved | ABSTAIN |
+| `state_inconsistent` | critical | reserved | ABSTAIN |
 | `unknown_error` | critical | normative | ABSTAIN |
 
 ---

@@ -1,5 +1,12 @@
 # ARVIS Syscall System
 
+> The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL
+> NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY**, and
+> **OPTIONAL** in this document are to be interpreted as described in
+> [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) and
+> [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174) when, and only
+> when, they appear in all capitals, as shown here.
+
 ## Overview
 
 The ARVIS Syscall System is the **exclusive interface for all side-effects** in the Cognitive Operating System.

@@ -1,5 +1,12 @@
 # ARVIS Specification Hierarchy v1
 
+> The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL
+> NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY**, and
+> **OPTIONAL** in this document are to be interpreted as described in
+> [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) and
+> [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174) when, and only
+> when, they appear in all capitals, as shown here.
+
 ## Status
 
 * Version: v1
@@ -19,6 +26,20 @@ It establishes:
 * how the standard is structured as a whole
 
 This file is the **entry point for understanding ARVIS as a standard system**.
+
+### Documents outside this hierarchy
+
+Two top-level documents predate this hierarchy and are NOT part of the
+normative stack it governs (audit M7, 2026-08):
+
+* `docs/ARVIS_STANDARD_V1.md`: a narrative overview of the draft
+  standard (status: informative). Where it disagrees with a spec listed
+  below, the spec wins.
+* `ARVIS_STABILITY_CORE_SPECIFICATIONS.md` (repository root): the
+  historical mathematical specification the `docs/math/` corpus grew
+  from (status: historical/informative). The runtime's actual
+  guarantees are the ones `VERSIONING.md` states; where this document
+  claims more, `VERSIONING.md` wins.
 
 ---
 
@@ -262,7 +283,6 @@ Rules:
 * `ARCHITECTURE.md`
 * `OVERVIEW.md`
 * `WHY_ARVIS.md`
-* `ARVIS_VS_LLM.md`
 * `REFLEXIVE.md`
 * `COGNITIVE_STATE.md`
 * `IR.md` (non-normative overview)

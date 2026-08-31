@@ -218,7 +218,8 @@ integration path for developers adopting ARVIS.
 - A stack-neutral
   `docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md` explaining ARVIS as
   the governance boundary inside a complete sovereign assistant.
-- A concise `docs/integration/VERAMEM_CASE_STUDY.md` mapping a real host
+- A concise `docs/integration/VERAMEM_INTEGRATION_PATTERN.md` (published
+  at the time as VERAMEM_CASE_STUDY.md, renamed 2026-08) mapping a host
   application onto that architecture without turning VeraMem infrastructure
   into an ARVIS dependency.
 - `examples/11_governed_assistant.py`: registration, registry freeze, an

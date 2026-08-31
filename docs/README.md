@@ -18,7 +18,6 @@ detail. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 | You want to | Read |
 | --- | --- |
 | understand what ARVIS is for | [WHY_ARVIS.md](WHY_ARVIS.md), [OVERVIEW.md](OVERVIEW.md) |
-| see how it differs from calling a model | [ARVIS_VS_LLM.md](ARVIS_VS_LLM.md) |
 | know what is promised, and how far | [../VERSIONING.md](../VERSIONING.md) |
 | write a tool | [tools/TOOL_AUTHORING_GUIDE.md](tools/TOOL_AUTHORING_GUIDE.md) |
 | contribute | [../CONTRIBUTING.md](../CONTRIBUTING.md) |
@@ -50,7 +49,7 @@ compliance suite.
 | [VERSIONS.md](VERSIONS.md) | which version constant governs what |
 
 For a concrete but non-normative application mapping, see the
-[VeraMem integration case study](integration/VERAMEM_CASE_STUDY.md).
+[VeraMem integration pattern](integration/VERAMEM_INTEGRATION_PATTERN.md).
 
 Read `EFFECT_PATH.md` before changing anything under `kernel_core/syscalls/` or
 `tools/`. Its invariants are pinned by `tests/adversarial/`, and a change that

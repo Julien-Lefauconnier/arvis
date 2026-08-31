@@ -30,6 +30,11 @@ Helpers:
 - is_low()
 - is_moderate()
 - is_high()
+
+Note: these signal bands (0.3 / 0.7 / 0.85) are descriptive
+observability vocabulary and deliberately distinct from the input-risk
+gate's decision thresholds (0.4 / 0.8, `arvis/kernel/gate/input_risk.py`).
+`is_high()` describes a signal; only the gate's constants decide.
 - is_critical()
 - is_transition_zone()
 - is_unstable_zone()
@@ -64,9 +69,10 @@ Helpers:
 
 Controllers should never depend directly on raw floats.
 
-Instead, they should:
+Instead, they should coerce at the boundary:
+
 ```python
-from arvis.math.signals.utils import signal_value
+from arvis.math.signals.coercion import to_float, to_risk
 ```
 
 or use semantic helpers:

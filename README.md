@@ -311,10 +311,11 @@ Start with:
 
 * [Reference architecture: sovereign, governed AI assistant](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md)
 * [Runnable governed-assistant example](https://github.com/Julien-Lefauconnier/arvis/blob/main/examples/11_governed_assistant.py)
-* [VeraMem integration case study](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/integration/VERAMEM_CASE_STUDY.md)
+* [VeraMem integration pattern](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/integration/VERAMEM_INTEGRATION_PATTERN.md)
 
-The architecture is implementation-neutral. VeraMem is a real application of
-the pattern, not a dependency or required deployment stack.
+The architecture is implementation-neutral. VeraMem is the author's own
+application of the pattern (not an independent adoption), and neither a
+dependency nor a required deployment stack.
 
 ---
 
@@ -422,7 +423,7 @@ Start here:
 * `docs/WHY_ARVIS.md`
 * `docs/ARCHITECTURE.md`
 * `docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md`
-* `docs/integration/VERAMEM_CASE_STUDY.md`
+* `docs/integration/VERAMEM_INTEGRATION_PATTERN.md`
 * `docs/PIPELINE.md`
 * `docs/IR.md`
 * `docs/REFLEXIVE.md`

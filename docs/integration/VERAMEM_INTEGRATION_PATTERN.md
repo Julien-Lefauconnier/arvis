@@ -1,10 +1,12 @@
-# Case study: applying the reference architecture in VeraMem
+# Integration pattern: applying the reference architecture in VeraMem
 
-VeraMem is a concrete host application for ARVIS. This case study explains the
-architectural relationship at a high level so an integrator can project ARVIS
-into a real system. It is descriptive, not a public contract for VeraMem and
-does not expose production configuration, credentials or proprietary business
-logic.
+VeraMem is the author's own host application for ARVIS, not an independent
+adoption: read this as an illustrative integration pattern, not as a case
+study with deployment evidence (it deliberately contains no dates, scale,
+metrics or incident history). It explains the architectural relationship at
+a high level so an integrator can project ARVIS into a real system. It is
+descriptive, not a public contract for VeraMem, and does not expose
+production configuration, credentials or proprietary business logic.
 
 Read the generic
 [governed-assistant reference architecture](../architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md)
@@ -73,7 +75,7 @@ The LLM never receives authority to send the message. The connector never
 receives mutable cognition state. The product host never receives a sanctioned
 shortcut around the effect path.
 
-## Why publish this case study
+## Why publish this pattern
 
 ARVIS is intentionally abstract. VeraMem demonstrates that its boundaries map
 onto familiar product concerns:

@@ -30,6 +30,13 @@ class RiskSignal(BaseSignal):
     # -----------------------------------------
     # Semantic helpers
     # -----------------------------------------
+    # These descriptive bands (0.3 / 0.7 / 0.85) are OBSERVABILITY
+    # vocabulary. They are deliberately distinct from the DECISION
+    # thresholds of the input-risk gate (0.4 / 0.8, see
+    # arvis/kernel/gate/input_risk.py): is_moderate() being True does
+    # not imply the gate asks for confirmation, and is_high() does not
+    # imply it refuses. Only the gate's constants gate (audit M7,
+    # 2026-08).
 
     def level(self) -> float:
         return self.value
