@@ -2,6 +2,9 @@
 
 from types import SimpleNamespace
 
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
@@ -16,21 +19,17 @@ def _pipeline():
     )
 
 
-def _ctx():
-    return SimpleNamespace(
-        prev_lyap=1.0,
-        cur_lyap=0.9,
-        delta_w_history=[],
-        extra={},
-        switching_runtime=None,
-        switching_params=None,
-        control_snapshot=None,
-        collapse_risk=0.0,
-        stable=True,
-        global_stability_action="ignore",
-        _epsilon=1.0,
-        _cognitive_mode=None,
-    )
+def _ctx() -> CognitivePipelineContext:
+    """Real pipeline context seeded through the canonical scientific
+    paths (campaign STRUCT, LOT S4)."""
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.scientific.lyapunov.prev_lyap = 1.0
+    ctx.scientific.lyapunov.cur_lyap = 0.9
+    ctx.scientific.composite.delta_w_history = []
+    ctx.scientific.core.collapse_risk = 0.0
+    ctx.scientific.regime_state.stable = True
+    ctx._epsilon = 1.0
+    return ctx
 
 
 def test_kappa_margin_critical_forces_confirmation():
@@ -38,7 +37,7 @@ def test_kappa_margin_critical_forces_confirmation():
     ctx = _ctx()
     pipeline = _pipeline()
 
-    ctx.adaptive_snapshot = AdaptiveSnapshot(
+    ctx.scientific.adaptive.adaptive_snapshot = AdaptiveSnapshot(
         kappa_eff=0.9,
         margin=-0.01,
         regime="critical",
@@ -60,7 +59,7 @@ def test_kappa_margin_warning_is_traced():
     ctx = _ctx()
     pipeline = _pipeline()
 
-    ctx.adaptive_snapshot = AdaptiveSnapshot(
+    ctx.scientific.adaptive.adaptive_snapshot = AdaptiveSnapshot(
         kappa_eff=0.7,
         margin=-0.03,
         regime="stable",

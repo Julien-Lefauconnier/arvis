@@ -67,21 +67,17 @@ def test_fusion_failure_fails_closed(monkeypatch):
 # ---------------------------------------------------------------
 
 
-def _stage_ctx() -> SimpleNamespace:
-    return SimpleNamespace(
-        prev_lyap=1.0,
-        cur_lyap=0.9,
-        delta_w_history=[],
-        extra={},
-        switching_runtime=None,
-        switching_params=None,
-        control_snapshot=None,
-        collapse_risk=0.0,
-        stable=True,
-        global_stability_action="ignore",
-        _epsilon=1.0,
-        _cognitive_mode=None,
-    )
+def _stage_ctx() -> CognitivePipelineContext:
+    """Real pipeline context seeded through the canonical scientific
+    paths (campaign STRUCT, LOT S4)."""
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.scientific.lyapunov.prev_lyap = 1.0
+    ctx.scientific.lyapunov.cur_lyap = 0.9
+    ctx.scientific.composite.delta_w_history = []
+    ctx.scientific.core.collapse_risk = 0.0
+    ctx.scientific.regime_state.stable = True
+    ctx._epsilon = 1.0
+    return ctx
 
 
 def test_unavailable_validity_envelope_fails_closed(monkeypatch):

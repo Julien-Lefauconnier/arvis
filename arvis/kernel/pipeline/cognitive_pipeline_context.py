@@ -199,6 +199,19 @@ class CognitivePipelineContext:
     adaptive_control: Any | None = None
     slow_divergence: float | None = None
 
+    # Gate-published channels (declared in LOT S4; the gate stage
+    # previously created them dynamically at initialization).
+    stability_certificate: dict[str, Any] = field(
+        default_factory=lambda: {
+            "local": False,
+            "global": True,
+            "switching": True,
+            "delta_negative": True,
+            "exponential": True,
+        }
+    )
+    system_confidence: float = 0.0
+
     # Private mirror channel: single-writer scalar mirrors consumed by
     # the gate, the projection and the IR adapter. Scheduled for
     # migration into typed sub-contexts (LOT S4); do not add users.

@@ -2,34 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.errors.manager import ErrorManager
-from arvis.kernel.pipeline.context.scientific_accessors import (
-    cur_lyap as get_cur_lyap,
-)
-from arvis.kernel.pipeline.context.scientific_accessors import (
-    cur_slow as get_cur_slow,
-)
-from arvis.kernel.pipeline.context.scientific_accessors import (
-    cur_symbolic as get_cur_symbolic,
-)
-from arvis.kernel.pipeline.context.scientific_accessors import (
-    prev_lyap as get_prev_lyap,
-)
-from arvis.kernel.pipeline.context.scientific_accessors import (
-    prev_slow as get_prev_slow,
-)
-from arvis.kernel.pipeline.context.scientific_accessors import (
-    prev_symbolic as get_prev_symbolic,
-)
-from arvis.kernel.pipeline.context.scientific_accessors import (
-    scientific,
-    set_delta_w,
-    set_stable,
-    set_w_current,
-    set_w_prev,
-)
 from arvis.kernel.pipeline.stages.gate.models import CompositeMetrics
 from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
 from arvis.math.lyapunov.lyapunov import (
@@ -37,21 +12,20 @@ from arvis.math.lyapunov.lyapunov import (
     lyapunov_value,
 )
 
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+
 
 def _is_valid_fast_state(value: Any) -> bool:
-    """
-    Structural validation for Lyapunov-compatible states.
-    """
+    """Structural validation for Lyapunov-compatible states."""
     return isinstance(value, float) or hasattr(value, "clamped")
 
 
 def _fast_energy(value: Any) -> float:
-    """
-    Canonical coercion helper for fast Lyapunov energy.
-
-    Transitional compatibility:
-    supports both float injections and LyapunovState runtime objects.
-    """
+    """Canonical coercion for fast Lyapunov energy: supports both
+    float injections and LyapunovState runtime objects."""
     if isinstance(value, (float, int)):
         return float(value)
 
@@ -59,16 +33,8 @@ def _fast_energy(value: Any) -> float:
 
 
 def _coerce_fast_state(value: Any) -> LyapunovState:
-    """
-    Transitional compatibility adapter.
-
-    CompositeLyapunov internally expects a LyapunovState,
-    but runtime/compliance paths may still inject raw float
-    Lyapunov energies.
-
-    This helper canonicalizes the runtime value into a strict
-    LyapunovState object before entering the math layer.
-    """
+    """Canonicalize a runtime value (state or injected raw energy)
+    into a strict LyapunovState before entering the math layer."""
     if isinstance(value, LyapunovState):
         return value
 
@@ -76,47 +42,43 @@ def _coerce_fast_state(value: Any) -> LyapunovState:
 
 
 def _is_valid_slow_state(value: Any) -> bool:
-    """
-    Structural validation for SlowState-compatible objects.
-    """
+    """Structural validation for SlowState-compatible objects: absent
+    is acceptable, a present value must be an actual SlowState."""
     return value is None or hasattr(value, "as_vector")
 
 
-def compute_composite_metrics(ctx: Any) -> CompositeMetrics:
-    runtime = scientific(ctx)
+def compute_composite_metrics(ctx: CognitivePipelineContext) -> CompositeMetrics:
+    """Composite W metrics from the canonical scientific context.
 
-    composite_ctx = runtime.composite
-    regime_ctx = runtime.regime_state
+    Campaign STRUCT (LOT S4): the context is the real, typed pipeline
+    context; the scientific sub-contexts are the single storage (the
+    mirror double-writes through the accessor layer are gone).
+    """
+    composite_ctx = ctx.scientific.composite
+    lyap_ctx = ctx.scientific.lyapunov
+    regime_ctx = ctx.scientific.regime_state
 
-    prev_slow = get_prev_slow(ctx)
-    cur_slow = get_cur_slow(ctx)
+    prev_slow = composite_ctx.prev_slow
+    cur_slow = composite_ctx.cur_slow
 
-    prev_symbolic = get_prev_symbolic(ctx)
-    cur_symbolic = get_cur_symbolic(ctx)
+    prev_symbolic = composite_ctx.prev_symbolic
+    cur_symbolic = composite_ctx.cur_symbolic
 
-    prev_lyap = get_prev_lyap(ctx)
-    cur_lyap = get_cur_lyap(ctx)
+    prev_lyap = lyap_ctx.prev_lyap
+    cur_lyap = lyap_ctx.cur_lyap
 
     # ==========================================================
     # Explicit Lyapunov injection path
     #
-    # Compliance/YAML scenarios may directly inject:
-    #   - ctx.prev_lyap
-    #   - ctx.cur_lyap
-    #
-    # In this case we must compute the composite energy directly
-    # from these states and expose the resulting delta_w back into
-    # the runtime context.
-    #
-    # Without this explicit path, the gate stack may incorrectly
-    # fall back to synthetic/default values and downgrade nominal
-    # local scenarios into REQUIRE_CONFIRMATION.
+    # Compliance/YAML scenarios inject states (and possibly an exact
+    # delta) through the host extra channel; the gate preserves the
+    # injected values instead of recomputing a synthetic composite
+    # energy from partially initialized runtime state, so semantic
+    # replay stays deterministic.
     # ==========================================================
 
-    preserve_injected = bool(
-        getattr(ctx, "extra", {}).get("preserve_injected_lyapunov", False)
-    )
-    injected_delta = getattr(ctx, "extra", {}).get("delta_w")
+    preserve_injected = bool(ctx.extra.get("preserve_injected_lyapunov", False))
+    injected_delta = ctx.extra.get("delta_w")
 
     if preserve_injected and injected_delta is not None:
         delta = float(injected_delta)
@@ -124,17 +86,14 @@ def compute_composite_metrics(ctx: Any) -> CompositeMetrics:
         composite_ctx.delta_w = delta
         regime_ctx.stable = bool(delta <= 0.0)
 
-        set_delta_w(ctx, delta)
-        set_stable(ctx, bool(delta <= 0.0))
-
         return CompositeMetrics(
             prev_slow=prev_slow,
             cur_slow=cur_slow,
             prev_symbolic=prev_symbolic,
             cur_symbolic=cur_symbolic,
             delta_w=delta,
-            w_prev=getattr(ctx, "w_prev", None),
-            w_current=getattr(ctx, "w_current", None),
+            w_prev=composite_ctx.w_prev,
+            w_current=composite_ctx.w_current,
         )
 
     if (
@@ -145,26 +104,7 @@ def compute_composite_metrics(ctx: Any) -> CompositeMetrics:
         and _is_valid_slow_state(prev_slow)
         and _is_valid_slow_state(cur_slow)
     ):
-        comp = CompositeLyapunov(lambda_mismatch=0.5, gamma_z=1.0)
-
         try:
-            # ----------------------------------------------------------
-            # Explicit compliance/YAML injection path
-
-            # In compliance scenarios we preserve the exact injected
-            # Lyapunov delta instead of recomputing a synthetic
-            # composite energy from partially initialized runtime state.
-
-            # This guarantees deterministic semantic replay between:
-
-            # YAML scenario
-            # -> pipeline context
-            # -> gate kernel
-
-            # without introducing hidden slow/symbolic reconstruction
-            # drift.
-            # ----------------------------------------------------------
-
             injected_w_prev = _fast_energy(prev_lyap)
             injected_w_current = _fast_energy(cur_lyap)
 
@@ -172,9 +112,6 @@ def compute_composite_metrics(ctx: Any) -> CompositeMetrics:
 
             composite_ctx.delta_w = injected_delta_w
             regime_ctx.stable = bool(injected_delta_w <= 0.0)
-
-            set_delta_w(ctx, injected_delta_w)
-            set_stable(ctx, bool(injected_delta_w <= 0.0))
 
             return CompositeMetrics(
                 prev_slow=prev_slow,
@@ -186,7 +123,6 @@ def compute_composite_metrics(ctx: Any) -> CompositeMetrics:
                 w_current=float(injected_w_current),
             )
         except Exception as exc:
-            ctx.extra["composite_injected_error"] = repr(exc)
             ErrorManager.capture_exception(
                 ctx,
                 exc,
@@ -258,60 +194,45 @@ def compute_composite_metrics(ctx: Any) -> CompositeMetrics:
     )
 
 
-def expose_composite_metrics(ctx: Any, composite: CompositeMetrics) -> None:
-    scientific = getattr(ctx, "scientific", None)
-    preserve_injected = bool(
-        getattr(ctx, "extra", {}).get("preserve_injected_lyapunov", False)
-    )
+def expose_composite_metrics(
+    ctx: CognitivePipelineContext, composite: CompositeMetrics
+) -> None:
+    scientific = ctx.scientific
+    preserve_injected = bool(ctx.extra.get("preserve_injected_lyapunov", False))
 
-    injected_delta = getattr(ctx, "extra", {}).get("delta_w")
-    injected_stable = getattr(ctx, "extra", {}).get("stable")
+    injected_delta = ctx.extra.get("delta_w")
+    injected_stable = ctx.extra.get("stable")
 
-    if scientific is not None:
-        scientific.composite.w_prev = composite.w_prev
-        scientific.composite.w_current = composite.w_current
-        scientific.composite.prev_slow = composite.prev_slow
-        scientific.composite.cur_slow = composite.cur_slow
+    scientific.composite.w_prev = composite.w_prev
+    scientific.composite.w_current = composite.w_current
+    scientific.composite.prev_slow = composite.prev_slow
+    scientific.composite.cur_slow = composite.cur_slow
 
-        scientific.composite.prev_symbolic = composite.prev_symbolic
-        scientific.composite.cur_symbolic = composite.cur_symbolic
-
-    set_w_prev(ctx, composite.w_prev)
-    set_w_current(ctx, composite.w_current)
+    scientific.composite.prev_symbolic = composite.prev_symbolic
+    scientific.composite.cur_symbolic = composite.cur_symbolic
 
     if preserve_injected and injected_delta is not None and composite.delta_w == 0.0:
-        if scientific is not None:
-            scientific.composite.delta_w = float(injected_delta)
-
-        set_delta_w(ctx, float(injected_delta))
+        scientific.composite.delta_w = float(injected_delta)
 
         if injected_stable is not None:
-            set_stable(ctx, bool(injected_stable))
+            scientific.regime_state.stable = bool(injected_stable)
         return
 
-    if scientific is not None:
-        scientific.composite.delta_w = composite.delta_w
-
-    set_delta_w(ctx, composite.delta_w)
+    scientific.composite.delta_w = composite.delta_w
 
     if composite.delta_w is not None:
-        set_stable(ctx, bool(composite.delta_w <= 0.0))
+        scientific.regime_state.stable = bool(composite.delta_w <= 0.0)
 
 
 def detect_recovery(
-    ctx: Any,
+    ctx: CognitivePipelineContext,
     delta_w: float | None,
     w_prev: float | None,
     w_current: float | None,
 ) -> bool:
-    runtime = getattr(ctx, "scientific", None)
+    prev_lyap = ctx.scientific.lyapunov.prev_lyap
+    cur_lyap = ctx.scientific.lyapunov.cur_lyap
 
-    if runtime is not None:
-        prev_lyap = get_prev_lyap(ctx)
-        cur_lyap = get_cur_lyap(ctx)
-    else:
-        prev_lyap = getattr(ctx, "prev_lyap", None)
-        cur_lyap = getattr(ctx, "cur_lyap", None)
     recovery_detected = False
     try:
         if delta_w is not None and delta_w < 0:
@@ -368,47 +289,30 @@ def compute_composite_recommendation(
 
 
 def detect_slow_drift(
-    ctx: Any,
+    ctx: CognitivePipelineContext,
     prev_slow: Any,
     cur_slow: Any,
     delta_w: float | None,
 ) -> None:
-    runtime = getattr(ctx, "scientific", None)
+    drift_ctx = ctx.scientific.drift
+    lyap_ctx = ctx.scientific.lyapunov
 
-    if runtime is not None:
-        composite_ctx = runtime.composite
-        lyap_ctx = runtime.lyapunov
-        drift_ctx = runtime.drift
+    composite_ctx = ctx.scientific.composite
+    prev_slow = (
+        composite_ctx.prev_slow if composite_ctx.prev_slow is not None else prev_slow
+    )
+    cur_slow = (
+        composite_ctx.cur_slow if composite_ctx.cur_slow is not None else cur_slow
+    )
 
-        prev_slow = (
-            composite_ctx.prev_slow
-            if composite_ctx.prev_slow is not None
-            else prev_slow
-        )
+    prev_lyap = lyap_ctx.prev_lyap
+    cur_lyap = lyap_ctx.cur_lyap
 
-        cur_slow = (
-            composite_ctx.cur_slow if composite_ctx.cur_slow is not None else cur_slow
-        )
-
-        prev_lyap = lyap_ctx.prev_lyap
-        cur_lyap = lyap_ctx.cur_lyap
-    else:
-        drift_ctx = None
-        prev_lyap = getattr(ctx, "prev_lyap", None)
-        cur_lyap = getattr(ctx, "cur_lyap", None)
     try:
         # Fallback path when no structured slow-state exists.
         if prev_slow is None or cur_slow is None:
-            hist = (
-                drift_ctx.lyap_history
-                if drift_ctx is not None
-                else ctx.extra.setdefault("lyap_history", [])
-            )
-            delta_hist = (
-                drift_ctx.lyap_delta_history
-                if drift_ctx is not None
-                else ctx.extra.setdefault("lyap_delta_history", [])
-            )
+            hist = drift_ctx.lyap_history
+            delta_hist = drift_ctx.lyap_delta_history
 
             if (
                 cur_lyap is not None
@@ -432,24 +336,16 @@ def detect_slow_drift(
 
             small_increases = [d for d in diffs if 0 < d < 0.01]
             if len(small_increases) >= 4:
-                if drift_ctx is not None:
-                    drift_ctx.slow_drift_warning = True
-                ctx.extra["slow_drift_warning"] = True
+                drift_ctx.slow_drift_warning = True
         else:
             slow_delta = abs(cur_slow - prev_slow)
-            drift_history = (
-                drift_ctx.slow_drift_history
-                if drift_ctx is not None
-                else ctx.extra.setdefault("slow_drift_history", [])
-            )
+            drift_history = drift_ctx.slow_drift_history
             drift_history.append(slow_delta)
             if len(drift_history) > 10:
                 drift_history.pop(0)
             avg_drift = sum(drift_history) / len(drift_history)
             if delta_w is not None and delta_w > 0 and avg_drift < 0.002:
-                if drift_ctx is not None:
-                    drift_ctx.slow_drift_warning = True
-                ctx.extra["slow_drift_warning"] = True
+                drift_ctx.slow_drift_warning = True
     except Exception as exc:
         ErrorManager.capture_exception(
             ctx,

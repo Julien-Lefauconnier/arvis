@@ -2,6 +2,9 @@
 
 from types import SimpleNamespace
 
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from tests.fixtures.builders.context_builder import build_test_context
@@ -501,7 +504,8 @@ def test_gate_stage_full_slow_drift_detection(monkeypatch):
 
     GateStage().run(None, ctx)
 
-    assert "slow_drift_warning" in ctx.extra
+    # Canonical channel (LOT S4): the extra mirror is gone.
+    assert ctx.scientific.drift.slow_drift_warning is True
 
 
 # --------------------------------------------------
@@ -1069,11 +1073,17 @@ def test_trace_and_iss_exception(monkeypatch):
 
 
 def test_gate_stage_bootstrap_defaults(monkeypatch):
-    ctx = SimpleNamespace(
-        prev_lyap=1.0,
-        cur_lyap=0.8,
-        stable=True,
-    )
+    # LOT S4: the gate no longer conjures channels onto duck contexts;
+    # the real context DECLARES them, and the gate runs on a fresh one.
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.scientific.lyapunov.prev_lyap = 1.0
+    ctx.scientific.lyapunov.cur_lyap = 0.8
+    ctx.scientific.regime_state.stable = True
+
+    assert ctx.delta_w_history is not None
+    assert ctx.extra == {}
+    assert ctx.stability_certificate["global"] is True
+    assert ctx.system_confidence == 0.0
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
@@ -1090,26 +1100,22 @@ def test_gate_stage_bootstrap_defaults(monkeypatch):
 
     GateStage().run(None, ctx)
 
-    assert hasattr(ctx, "delta_w_history")
-    assert hasattr(ctx, "extra")
-    assert hasattr(ctx, "stability_certificate")
-    assert hasattr(ctx, "system_confidence")
+    assert ctx.gate_result is not None
 
 
 def test_gate_stage_creates_pipeline_observers(monkeypatch):
-    ctx = SimpleNamespace(
-        prev_lyap=1.0,
-        cur_lyap=0.8,
-        stable=True,
-        extra={},
-        delta_w_history=[],
-        switching_runtime=type("R", (), {"dwell_time": lambda self: 1.0})(),
-        switching_params=type(
-            "P",
-            (),
-            {"J": 1.0, "eta": 0.1, "alpha": 0.1, "gamma_z": 1.0, "L_T": 1.0},
-        )(),
-    )
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.scientific.lyapunov.prev_lyap = 1.0
+    ctx.scientific.lyapunov.cur_lyap = 0.8
+    ctx.scientific.regime_state.stable = True
+    ctx.scientific.switching.switching_runtime = type(
+        "R", (), {"dwell_time": lambda self: 1.0}
+    )()
+    ctx.scientific.switching.switching_params = type(
+        "P",
+        (),
+        {"J": 1.0, "eta": 0.1, "alpha": 0.1, "gamma_z": 1.0, "L_T": 1.0},
+    )()
 
     class Pipeline:
         adaptive_kappa_estimator = object()

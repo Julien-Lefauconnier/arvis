@@ -2,36 +2,40 @@
 
 
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.control.eps_adaptive import CognitiveMode
 
 
-class DummyCtx:
-    def __init__(self):
-        self.cur_lyap = 1.0
-        self.prev_lyap = 1.0
-        self.delta_w_history = []
-        self.collapse_risk = 0.0
-        self._cognitive_mode = CognitiveMode.NORMAL
-        self._epsilon = 0.1
+def DummyCtx() -> CognitivePipelineContext:
+    """Real pipeline context seeded through the canonical scientific
+    paths (campaign STRUCT, LOT S4)."""
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
 
-        self.switching_runtime = None
-        self.switching_params = None
+    lyap = ctx.scientific.lyapunov
+    lyap.cur_lyap = 1.0
+    lyap.prev_lyap = 1.0
 
-        self.stable = True
+    ctx.scientific.composite.delta_w_history = []
+    ctx.scientific.core.collapse_risk = 0.0
+    ctx.scientific.regime_state.stable = True
 
-        self.extra = {}
+    ctx._cognitive_mode = CognitiveMode.NORMAL
+    ctx._epsilon = 0.1
 
-        self.control_snapshot = CognitiveControlSnapshot(
-            gate_mode="test",
-            epsilon=0.1,
-            smoothed_risk=0.0,
-            lyap_verdict=None,
-            exploration=0.5,
-            drift=0.0,
-            regime="test",
-            calibration=None,
-        )
+    ctx.control_snapshot = CognitiveControlSnapshot(
+        gate_mode="test",
+        epsilon=0.1,
+        smoothed_risk=0.0,
+        lyap_verdict=None,
+        exploration=0.5,
+        drift=0.0,
+        regime="test",
+        calibration=None,
+    )
+    return ctx
 
 
 def test_confidence_baseline():
@@ -45,7 +49,7 @@ def test_confidence_baseline():
 
 def test_low_confidence_escalation():
     ctx = DummyCtx()
-    ctx.collapse_risk = 1.0  # force mauvaise confiance
+    ctx.scientific.core.collapse_risk = 1.0  # force poor confidence
 
     GateStage().run(None, ctx)
 

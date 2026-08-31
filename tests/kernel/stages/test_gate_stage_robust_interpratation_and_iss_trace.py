@@ -151,7 +151,7 @@ def test_slow_drift_detection():
         stage.run(pipeline, ctx)
         ctx.scientific.lyapunov.prev = ctx.scientific.lyapunov.current
 
-        if ctx.extra.get("slow_drift_warning"):
+        if ctx.scientific.drift.slow_drift_warning:
             triggered = True
 
     assert isinstance(triggered, bool)

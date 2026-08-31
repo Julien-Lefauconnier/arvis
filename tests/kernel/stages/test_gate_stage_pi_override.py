@@ -1,45 +1,38 @@
 # tests/kernel/stages/test_gate_stage_pi_override.py
 
-from types import SimpleNamespace
 from unittest.mock import patch
 
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.kernel.pipeline.stages.gate_stage import GateStage
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 # ============================================================
-# Dummy context minimal compatible GateStage
+# Real pipeline context seeded through the canonical scientific
+# paths (campaign STRUCT, LOT S4: the gate consumes the typed
+# context; the legacy root-attribute hydration is gone).
 # ============================================================
 
 
-class DummyCtx:
-    def __init__(self):
-        self.extra = {}
-        self.prev_lyap = 0.5
-        self.cur_lyap = 0.4
-        self.delta_w = -0.1
-        self.w_prev = 0.5
-        self.w_current = 0.4
+def DummyCtx() -> CognitivePipelineContext:
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
 
-        self.stable = True
+    lyap = ctx.scientific.lyapunov
+    lyap.prev_lyap = 0.5
+    lyap.cur_lyap = 0.4
 
-        self.switching_runtime = None
-        self.switching_params = None
+    composite = ctx.scientific.composite
+    composite.delta_w = -0.1
+    composite.w_prev = 0.5
+    composite.w_current = 0.4
 
-        self.symbolic_state = None
-        self.symbolic_state_prev = None
-        self.slow_state = None
-        self.slow_state_prev = None
+    ctx.scientific.regime_state.stable = True
+    ctx.scientific.core.collapse_risk = 0.0
 
-        self.collapse_risk = 0.0
+    ctx.projection.pi_state = object()
 
-        self.projection = SimpleNamespace(
-            certificate=None,
-            view=None,
-            projected_state=None,
-            pi_state=object(),
-        )
-
-        self.gate_result = None
+    return ctx
 
 
 class DummyPipeline:
