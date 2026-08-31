@@ -94,8 +94,22 @@ engine = ArvisEngine()
 
 result = engine.ask("Should this high-risk transaction be approved?")
 
-print(result.summary())
+print(result.explain())
 ```
+
+Output (deterministic; the commitment hash is stable for identical input):
+
+```text
+Status         : REQUIRES_CONFIRMATION
+Approval Need  : YES
+Reason         : execution_blocked
+Commitment     : de29cac2ee667de9...
+Trace          : Available
+```
+
+A bare text prompt is governed with a minimal projection, so it lands in
+`REQUIRES_CONFIRMATION`: the engine has no basis to allow it and refuses
+to execute it silently (see the note below).
 
 Advanced runtime access:
 
@@ -106,29 +120,48 @@ os = CognitiveOS()
 
 result = os.run(
     user_id="demo",
-    cognitive_input={
-        "risk": 0.92,
-        "action": "wire_transfer",
-    }
+    cognitive_input={"risk": 0.92},
 )
 
-print(result.summary())
+print(result.explain())
 ```
 
 High-risk input is refused before execution:
 
 ```text
-Status        : BLOCKED
-Approval Need : YES
-Commitment    : 8642d95cfdb73c16...
+Status         : BLOCKED
+Approval Need  : NO
+Reason         : execution_blocked
+Commitment     : b94e25dea93a541e...
+Trace          : Available
 ```
 
-> Note (0.1.0-beta): the gate grades an explicit finite top-level `risk` scalar:
-> low → ALLOWED, medium → REQUIRES_CONFIRMATION, high → BLOCKED (see
-> `examples/09_multi_engine_hosting.py`). This risk policy applies only to an
-> explicit `risk` field; `NaN` and infinities fail closed to BLOCKED. A bare
-> text prompt is governed with a minimal projection (REQUIRES_CONFIRMATION),
-> not a full natural-language projection.
+`summary()` gives the one-line form; axes the run did not measure print
+as `n/a`, and the caller-declared risk appears under its own label:
+
+```text
+Decision=ActionDecision(allowed=False, ...) | Stability=n/a | Risk=n/a | Regime=n/a | DeclaredRisk=0.92
+```
+
+> Note (0.1.0-beta): the gate grades an explicit finite top-level `risk`
+> scalar with two documented thresholds (`arvis/kernel/gate/input_risk.py`):
+> `risk < 0.4` → ALLOWED, `0.4 <= risk < 0.8` → REQUIRES_CONFIRMATION,
+> `risk >= 0.8` → BLOCKED. Two preconditions apply:
+>
+> 1. **Pure payload.** Grading (and therefore the ALLOWED band) applies only
+>    to a payload whose single key is `risk` (`{"risk": 0.3}`). A mixed
+>    payload (`{"risk": 0.3, "action": ...}`) carries content: the declared
+>    risk may only harden the verdict of that content, never relax it, so a
+>    mixed payload is governed by the projection verdict (BLOCKED for
+>    unprojected content in this beta).
+> 2. **Graded mode.** The default (`local`) profile grades; the `production`
+>    profile sets the input-risk gate to *harden-only*, where a declared
+>    risk never unlocks execution and every band is refused. See
+>    [Runtime profiles](#runtime-profiles).
+>
+> `NaN` and infinities fail closed to BLOCKED. A bare text prompt is
+> governed with a minimal projection (REQUIRES_CONFIRMATION), not a full
+> natural-language projection.
 
 ### Engine lifecycle
 
@@ -146,6 +179,33 @@ contract test keeps every example on that pattern
 (`tests/contracts/test_examples_lifecycle.py`).
 
 ---
+
+## Runtime profiles
+
+`CognitiveOSConfig` ships two named profiles, and the difference is not
+cosmetic:
+
+| Posture | `local` (default) | `production` |
+|---|---|---|
+| Input-risk gate | graded (three bands above) | **harden-only: every declared risk is refused** |
+| Tool gates | permissive default | deny-by-default |
+| Tool registry | open | frozen |
+| Host runtime controls | accepted | rejected |
+| Global stability action | monitor | confirm |
+| Switching envelope | monitor | enforce |
+
+The default profile is a *development* posture for embedding and
+iteration. `CognitiveOSConfig.production()` is the deployment posture: in
+this beta it refuses every input the partial projection cannot certify,
+including a pure `{"risk": 0.0}` payload. That is deliberate fail-closed
+behavior, not a bug, and it means the graded three-band flow shown above
+is a property of the default profile only.
+
+```python
+from arvis import CognitiveOS, CognitiveOSConfig
+
+os = CognitiveOS(config=CognitiveOSConfig.production())
+```
 
 ## Public API Levels
 
@@ -310,15 +370,21 @@ ARVIS is validated like infrastructure.
 
 Current suite includes:
 
-* 2900+ passing tests
-* unit tests
-* integration tests
-* deterministic replay verification
-* adversarial scenarios
-* scheduler fairness tests
+* 3000+ passing tests (unit, integration, property-based)
+* deterministic replay verification (full-IR comparison)
+* adversarial regression tests pinning reproduced attack vectors
+  (`tests/adversarial/test_campaign_audit_regression*.py`, VFS scope
+  campaigns)
 * hashchain integrity tests
-* mathematical invariants
+* gate safety-ordering and bounded-recovery properties
+  (`tests/math/gate/test_gate_safety_ordering.py`)
 * runtime robustness checks
+
+What the suite does **not** yet establish, honestly: scheduler
+*fairness* is only covered by single-tick priority tests (no starvation
+or bounded-wait property), and the Lyapunov decrease property is
+exercised at unit level, not on the default engine path (which does not
+evaluate the Lyapunov machinery; see Known Limitations).
 
 ---
 
@@ -387,8 +453,9 @@ experimental, and out of scope for the 0.1 series:
 **Stable (documented, tested):**
 
 * governed decision pipeline and admissibility gate
-* graded risk gate for an explicit top-level `risk` scalar
-  (low → ALLOWED, medium → REQUIRES_CONFIRMATION, high → BLOCKED)
+* graded risk gate for an explicit top-level `risk` scalar, default
+  profile, pure payload (`< 0.4` → ALLOWED, `0.4`–`0.8` →
+  REQUIRES_CONFIRMATION, `>= 0.8` → BLOCKED; see the Quick Start note)
 * deterministic, replayable IR (projection / validity / stability / adaptive /
   tools axes exposed in the public view) and timeline commitment
 * syscall boundary for external effects, including a governed `llm.generate`
@@ -396,6 +463,24 @@ experimental, and out of scope for the 0.1 series:
 * tool authorization boundary (per-spec risk budget)
 * sealed tool effect context and receipt-activated single-use capabilities
 * typed runtime error model
+
+**Behavioral caveats (know these before deploying):**
+
+* the **`production` profile refuses everything** the partial projection
+  cannot certify: with `input_risk_mode = "harden_only"`, every declared
+  risk value, including `0.0`, is BLOCKED. The graded three-band gate is
+  a property of the default (`local`) profile.
+* the **Lyapunov machinery is host-driven, not engine-driven**: the
+  default engine path never populates the Lyapunov state, so
+  `lyapunov_gate` and the composite energy are not evaluated on a
+  default governed run. The decisive policy on that path is the
+  two-threshold input-risk gate. Hosts that want the trajectory
+  machinery must supply the state (e.g. by instantiating
+  `ContractionMonitorCore` and feeding its snapshots), which is exactly
+  what the reference host integration does.
+* **stability axes are reported only when measured**: `summary()` and
+  the stability view return `n/a`/`null` for axes the run did not
+  compute, rather than zeros.
 
 **Experimental (present, not part of the stable public API):**
 
