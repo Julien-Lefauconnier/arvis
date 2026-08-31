@@ -8,13 +8,31 @@ from typing import Any
 
 from arvis.adapters.tools.gates import ConsentGate, EgressGate
 from arvis.api.audit import AuditCommitmentPolicy
-from arvis.api.os_internals import CognitiveOSInternals
+from arvis.api.commitment import (
+    config_fingerprint,
+    policies_fingerprint,
+    syscall_journal_digest,
+)
+from arvis.api.ir import build_ir_view
+from arvis.api.runtime.cognitive_runtime import CognitiveRuntime
 from arvis.api.runtime_controls import TrustedRuntimeControls
 from arvis.api.runtime_mode import RuntimeMode, coerce_runtime_mode
 from arvis.api.views.cognitive_result_view import CognitiveResultView
+from arvis.cognition.state.cognitive_state import CognitiveState
+from arvis.ir.cognitive_ir import CognitiveIR
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+    apply_runtime_postures,
+)
+from arvis.kernel.pipeline.gate_overrides import GateOverrides
+from arvis.kernel.replay_engine import ReplayEngine
 from arvis.kernel_core.access.models import AuthenticatedPrincipal
+from arvis.kernel_core.host_declaration import resolve_host_context
 from arvis.kernel_core.syscalls.audit_sink import DurableAuditSink
+from arvis.kernel_core.syscalls.intent_result_bijection import (
+    verify_intent_result_bijection,
+)
 from arvis.math.core.contraction_monitor_core import ContractionMonitorCore
 from arvis.stability.stability_snapshot import StabilitySnapshot
 from arvis.telemetry.adapters.stability import stability_event
@@ -151,7 +169,7 @@ class CognitiveOSConfig:
 # -----------------------------------------------------
 # Public Runtime Entrypoint
 # -----------------------------------------------------
-class CognitiveOS(CognitiveOSInternals):
+class CognitiveOS:
     def __init__(
         self,
         config: CognitiveOSConfig | None = None,
@@ -398,3 +416,400 @@ class CognitiveOS(CognitiveOSInternals):
         from arvis.api.version import PACKAGE_VERSION
 
         return PACKAGE_VERSION
+
+    # -------------------------------------------------
+    # Internals (merged from api/os_internals, campaign STRUCT LOT S3)
+    # -------------------------------------------------
+    def _build_context(
+        self,
+        user_id: str,
+        cognitive_input: Any,
+        *,
+        conversation_context: Any = None,
+        timeline: Any = None,
+        confirmation_result: Any = None,
+        extra: dict[str, Any] | None = None,
+        principal: AuthenticatedPrincipal | None = None,
+    ) -> CognitivePipelineContext:
+        ctx = CognitivePipelineContext(
+            user_id=user_id,
+            cognitive_input=cognitive_input,
+            conversation_context=conversation_context,
+            timeline=timeline or [],
+            confirmation_result=confirmation_result,
+            extra=extra if extra is not None else {},
+        )
+        if principal is not None:
+            ctx.principal = principal
+
+        runtime_policy = ctx.runtime_policy
+
+        # F-001: host controls come from composition (config), never
+        # from the request-facing extra channel.
+        controls = getattr(self.config, "runtime_controls", None)
+        if controls is not None:
+            runtime_policy.force_tool = controls.force_tool
+            runtime_policy.force_execution = controls.force_execution
+            ctx.gate_overrides = GateOverrides(
+                force_safe_projection=controls.force_safe_projection,
+                force_safe_switching=controls.force_safe_switching,
+            )
+        # Postures are applied through the shared helper so the replay
+        # context builder reproduces the exact same block from the
+        # recorded profile (D-a; single source of truth).
+        apply_runtime_postures(ctx, coerce_runtime_mode(self.config.runtime_mode).value)
+
+        runtime_policy.retry_requested = bool(ctx.extra.get("retry_tool", False))
+        runtime_policy.retry_count = int(ctx.extra.get("tool_retry_count", 0) or 0)
+
+        return ctx
+
+    def _execute(
+        self,
+        user_id: str,
+        cognitive_input: Any,
+        *,
+        conversation_context: Any = None,
+        timeline: Any = None,
+        confirmation_result: Any = None,
+        extra: dict[str, Any] | None = None,
+        principal: AuthenticatedPrincipal | None = None,
+    ) -> tuple[CognitiveState | None, Any]:
+        execution = self.runtime.execute(
+            self._build_context(
+                user_id=user_id,
+                cognitive_input=cognitive_input,
+                conversation_context=conversation_context,
+                timeline=timeline,
+                confirmation_result=confirmation_result,
+                extra=extra,
+                principal=principal,
+            )
+        )
+        return execution.state, execution.result
+
+    def _build_runtime(self) -> CognitiveRuntime:
+        return CognitiveRuntime(
+            pipeline=self.pipeline,
+            adapters=self.config.adapter_registry,
+            tool_executor=self._tool_executor,
+            # One registry: the runtime and its tool manager govern the
+            # same tool surface the host registered on (previously the
+            # runtime built its own empty registry and the policy was
+            # evaluated against it).
+            tool_registry=self.tool_registry,
+            consent_gate=self.config.consent_gate,
+            egress_gate=self.config.egress_gate,
+            # F-017/F-018: deny-by-default gates in the PRODUCTION profile.
+            require_gates=self.config.runtime_mode is RuntimeMode.PRODUCTION,
+            audit_intent_sink=self.config.audit_intent_sink,
+            confirmation_registry=self.config.confirmation_registry,
+            # D4-e: effectful production requires a durable sink; the
+            # refusal happens at the first effect, not at boot, so a
+            # production profile without effects stays valid.
+            require_durable_intent_sink=(
+                self.config.runtime_mode is RuntimeMode.PRODUCTION
+            ),
+            require_authenticated_principal=(
+                self.config.runtime_mode is RuntimeMode.PRODUCTION
+            ),
+            # Campaign 5 (D-1): opaque host-declared governance context,
+            # resolved (canonical) and threaded to the kernel service
+            # registry; the conventional instance label is stamped on
+            # every governed intent.
+            host_context=resolve_host_context(self.config.host_context),
+        )
+
+    def _format_run_output(
+        self,
+        state: CognitiveState | None,
+        result: Any,
+    ) -> CognitiveResultView:
+        """Single public return type (beta contract, BETA-02).
+
+        Trace mode builds the full view. The legacy no-trace mode and
+        the fake-executor fallback return a minimal view carrying the
+        decision only: with enable_trace=False no trace and no
+        commitment can exist, and the view says so by construction.
+        """
+        if not self.config.enable_trace:
+            return self._minimal_result_view(
+                result, self.config.audit_commitment_policy
+            )
+
+        # trace mode normal
+        if state is not None:
+            return self._build_trace_result(state, result)
+
+        # fallback fake executors/tests
+        return self._minimal_result_view(result, self.config.audit_commitment_policy)
+
+    @staticmethod
+    def _minimal_result_view(
+        result: Any, policy: AuditCommitmentPolicy
+    ) -> CognitiveResultView:
+        """Minimal no-trace view, in contract (audit a16, blocker 1).
+
+        With enable_trace=False no commitment can exist; the view says
+        so explicitly instead of falling back to out-of-contract
+        defaults: it carries the policy actually configured, the reason
+        trace_disabled, and the F-015 degradation semantics (REQUIRED
+        is already rejected at config construction; DEGRADED marks the
+        absence, OPTIONAL tolerates it).
+        """
+        return CognitiveResultView(
+            decision=getattr(result, "action_decision", None),
+            stability=None,
+            stability_view=None,
+            trace=None,
+            commitment_policy=policy.value,
+            commitment_reason="trace_disabled",
+            commitment_degraded=policy is AuditCommitmentPolicy.DEGRADED,
+        )
+
+    def _run_single(
+        self,
+        user_id: str,
+        cognitive_input: Any,
+        *,
+        conversation_context: Any = None,
+        timeline: Any = None,
+        confirmation_result: Any = None,
+        extra: dict[str, Any] | None = None,
+        principal: AuthenticatedPrincipal | None = None,
+    ) -> CognitiveResultView:
+        state, result = self._execute(
+            user_id=user_id,
+            cognitive_input=cognitive_input,
+            conversation_context=conversation_context,
+            timeline=timeline,
+            confirmation_result=confirmation_result,
+            extra=extra,
+            principal=principal,
+        )
+        return self._format_run_output(state, result)
+
+    def _export_ir(
+        self,
+        state: CognitiveState,
+    ) -> dict[str, Any]:
+        return build_ir_view(state)
+
+    def _build_ir_from_input(
+        self,
+        user_id: str,
+        cognitive_input: Any,
+        *,
+        conversation_context: Any = None,
+        timeline: Any = None,
+        confirmation_result: Any = None,
+        extra: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        state, result = self._execute(
+            user_id=user_id,
+            cognitive_input=cognitive_input,
+            conversation_context=conversation_context,
+            timeline=timeline,
+            confirmation_result=confirmation_result,
+            extra=extra,
+        )
+        exported = self._export_ir(
+            self._require_state(
+                state,
+                message=(
+                    "IR export requires a CognitiveState, but execution returned none."
+                ),
+            ),
+        )
+        # D-a: run_ir carries the same commitment_inputs block as the
+        # result view export (public contract: run_ir == to_ir).
+        inputs, _unavailable_reason = self._build_commitment_inputs(result)
+        if inputs is not None and isinstance(exported, dict):
+            exported = {**exported, "commitment_inputs": inputs}
+        return exported
+
+    def _replay_ir(
+        self,
+        ir: dict[str, Any],
+    ) -> Any:
+        parsed = CognitiveIR.from_dict(ir)
+        engine = ReplayEngine()
+        return engine.replay_ir(
+            parsed,
+            pipeline=self.pipeline,
+        )
+
+    def _replay_view(
+        self,
+        ir: dict[str, Any],
+    ) -> CognitiveResultView:
+        result = self._replay_ir(ir)
+        state = getattr(result, "cognitive_state", None)
+
+        typed_state = self._require_state(
+            state,
+            message="Replay result missing cognitive_state",
+        )
+
+        # D-a: on replay the non-cognitive components are reused
+        # verbatim from the exported IR, never recomputed from the
+        # replayer's environment. A divergent environment stays
+        # detectable by comparing the declared block to the local one.
+        declared = ir.get("commitment_inputs")
+        return CognitiveResultView.from_state(
+            typed_state,
+            result,
+            commitment_policy=self._commitment_policy(),
+            commitment_inputs=declared if isinstance(declared, dict) else None,
+        )
+
+    def _verify_replay_view(
+        self,
+        replay_view: CognitiveResultView,
+        *,
+        expected_global_commitment: str,
+    ) -> CognitiveResultView:
+        self._verify_replay_commitment(
+            replay_view,
+            expected_global_commitment,
+        )
+        return replay_view
+
+    def _verified_replay_view(
+        self,
+        ir: dict[str, Any],
+        *,
+        expected_global_commitment: str,
+    ) -> CognitiveResultView:
+        return self._verify_replay_view(
+            self._replay_view(ir),
+            expected_global_commitment=expected_global_commitment,
+        )
+
+    def _recomposed_replay_view(
+        self,
+        ir: dict[str, Any],
+    ) -> CognitiveResultView:
+        """Recompose without authentication (D-6, explicitly unverified)."""
+        return self._replay_view(ir)
+
+    def _verify_replay_commitment(
+        self,
+        replay_view: CognitiveResultView,
+        expected_global_commitment: str,
+    ) -> None:
+        # Campaign 5 (D-6): the expected commitment is mandatory and
+        # must come from OUTSIDE the IR. There is no early return: a
+        # caller reaching here has asked for authentication, so a
+        # missing external anchor or a missing replay commitment is a
+        # verification failure, never a silent pass.
+        if not expected_global_commitment:
+            raise RuntimeError(
+                "Replay verification failed: no expected_global_commitment "
+                "supplied. Authentication requires an external anchor; use "
+                "replay_recomposed() to recompose without authenticating."
+            )
+
+        replay_commitment = replay_view.global_commitment
+
+        if replay_commitment is None:
+            raise RuntimeError(
+                "Replay verification failed: replay global_commitment is missing"
+            )
+
+        if replay_commitment != expected_global_commitment:
+            raise RuntimeError(
+                "Replay verification failed: global_commitment mismatch "
+                f"(expected={expected_global_commitment}, "
+                f"got={replay_commitment})"
+            )
+
+    def _build_trace_result(
+        self,
+        state: CognitiveState | None,
+        result: Any,
+    ) -> CognitiveResultView:
+        typed_state = self._require_state(
+            state,
+            message=(
+                "Trace mode requires a CognitiveState, but execution "
+                "returned none. Use enable_trace=False for fake "
+                "executors/tests, or ensure the pipeline builds "
+                "ctx.cognitive_state."
+            ),
+        )
+
+        inputs, unavailable_reason = self._build_commitment_inputs(result)
+        return CognitiveResultView.from_state(
+            typed_state,
+            result,
+            commitment_policy=self._commitment_policy(),
+            commitment_inputs=inputs,
+            commitment_inputs_reason=unavailable_reason,
+        )
+
+    def _build_commitment_inputs(
+        self, result: Any
+    ) -> tuple[dict[str, Any] | None, str | None]:
+        """Non-cognitive commitment components, from the live environment.
+
+        F-007-a5: registry manifest fingerprint, effective config
+        fingerprint, active policy tables, and the digest of the
+        redacted syscall journals (intents and results).
+
+        P0-1-a6 (decision D4-c): the intent/result bijection is
+        verified here, where the journals are read, before any
+        composition. An effect intent without its journaled result, or
+        an execution marked audit-incomplete by the handler, yields no
+        commitment with the dedicated reason "audit_incomplete": the
+        effect happened, and arvis refuses to pretend it proved it.
+
+        Returns (inputs, unavailable_reason); (None, None) when a
+        component cannot be produced for any other cause. The
+        commitment machinery records the absence (REQUIRED refuses,
+        DEGRADED flags), never a partially bound commitment.
+        """
+        try:
+            execution = getattr(result, "execution", result)
+            execution_state = getattr(execution, "execution_state", None)
+            intents = getattr(execution_state, "syscall_intents", None) or []
+            results = getattr(execution_state, "syscall_results", None) or []
+
+            metadata = getattr(execution_state, "metadata", None)
+            if isinstance(metadata, dict) and metadata.get("audit_incomplete"):
+                return None, "audit_incomplete"
+
+            # D-5: strict one-to-one intent/result bijection. The a7
+            # membership check missed duplicate intents, orphan results
+            # and syscall mismatches; the dedicated verifier requires an
+            # exact correspondence and fails closed on any deviation.
+            bijection = verify_intent_result_bijection(intents, results)
+            if not bijection.ok:
+                return None, "audit_incomplete"
+
+            return {
+                "registry_fingerprint": self.tool_registry.fingerprint(),
+                "config_fingerprint": config_fingerprint(self.config),
+                "policies_fingerprint": policies_fingerprint(),
+                "syscall_journal_sha256": syscall_journal_digest(intents, results),
+            }, None
+        except Exception:  # arvis-broad: commitment absence is governed
+            return None, None
+
+    def _commitment_policy(self) -> AuditCommitmentPolicy:
+        policy = getattr(self.config, "audit_commitment_policy", None)
+        if isinstance(policy, AuditCommitmentPolicy):
+            return policy
+        return AuditCommitmentPolicy.DEGRADED
+
+    def _require_state(
+        self,
+        state: CognitiveState | None,
+        *,
+        message: str = (
+            "IR export requires a CognitiveState, but execution returned none."
+        ),
+    ) -> CognitiveState:
+        if state is None:
+            raise RuntimeError(message)
+        return state

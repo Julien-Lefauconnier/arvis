@@ -10,7 +10,7 @@ class ControlInertiaSnapshot:
     persistence: int
 
 
-class RegimeInertiaController:
+class ControlInertia:
     """
     Temporal inertia and hysteresis for cognitive mode stability.
 
@@ -85,33 +85,3 @@ class RegimeInertiaController:
             smoothed_risk=smoothed,
             persistence=count,
         )
-
-    # -------------------------------------------------
-    # Simple smoothing API (used by ChatService)
-    # -------------------------------------------------
-    def smooth(
-        self,
-        *,
-        new_value: float,
-        previous_value: float | None,
-    ) -> float:
-        """
-        Lightweight exponential smoothing.
-
-        This provides a low-level inertia filter for
-        control signals (e.g. exploration factor).
-
-        It is intentionally decoupled from the high-level
-        SAFE / ABSTAIN regime inertia handled in `update()`.
-        """
-
-        if previous_value is None:
-            return float(new_value)
-
-        return float(
-            self.alpha * float(new_value) + (1.0 - self.alpha) * float(previous_value)
-        )
-
-
-# backward compatibility
-ControlInertia = RegimeInertiaController

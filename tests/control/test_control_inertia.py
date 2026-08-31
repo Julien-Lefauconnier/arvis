@@ -80,22 +80,6 @@ def test_inertia_none_risk():
     assert snap.smoothed_risk == 0.0
 
 
-def test_smooth_api_basic():
-    inertia = ControlInertia(alpha=0.5)
-
-    v = inertia.smooth(new_value=1.0, previous_value=0.0)
-
-    assert 0.0 < v < 1.0
-
-
-def test_smooth_api_no_previous():
-    inertia = ControlInertia()
-
-    v = inertia.smooth(new_value=0.7, previous_value=None)
-
-    assert v == 0.7
-
-
 def test_inertia_eventual_return_to_normal():
     inertia = ControlInertia(persistence_steps=1)
 
