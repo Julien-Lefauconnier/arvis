@@ -16,6 +16,6 @@ def build_capability_snapshot() -> CapabilitySnapshot:
 
     return CapabilitySnapshot(
         version="1.0",
-        generated_from="registry",
+        generated_from="static_registry",
         capabilities=capabilities_sorted,
     )

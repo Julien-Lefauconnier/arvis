@@ -16,9 +16,6 @@ from arvis.reflexive.introspection.runtime_introspector import RuntimeIntrospect
 from arvis.reflexive.introspection.uncertainty_introspector import (
     UncertaintyIntrospector,
 )
-from arvis.reflexive.introspection.world_model_introspector import (
-    WorldModelIntrospector,
-)
 
 
 class ArvisIntrospectionService:
@@ -28,11 +25,14 @@ class ArvisIntrospectionService:
         runtime = RuntimeIntrospector().snapshot()
         cognition = CognitionIntrospector().describe()
         math = MathIntrospector().describe()
-        world_model = WorldModelIntrospector().describe()
         counterfactual = CounterfactualIntrospector().describe()
         decision = DecisionIntrospector().describe()
         uncertainty = UncertaintyIntrospector().describe()
         return {
+            # The overview aggregates hand-maintained declarations
+            # (each introspector says what it is); it is sealed by the
+            # attestation for integrity, not derived from the code.
+            "provenance": "static_declaration",
             "identity": {
                 "name": "ARVIS",
                 "type": "Adaptive Resilient Vigilant Intelligence System",
@@ -43,7 +43,6 @@ class ArvisIntrospectionService:
             "cognition": cognition,
             "runtime": runtime,
             "math": math,
-            "world_model": world_model,
             "counterfactual": counterfactual,
             "decision": decision,
             "uncertainty": uncertainty,

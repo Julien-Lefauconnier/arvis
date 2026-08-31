@@ -405,13 +405,46 @@ class CognitiveResultView:
         """
         return pformat(self.to_dict(), sort_dicts=False)
 
-    def summary(self) -> str:
-        if not self.stability_view:
-            return "No stability data"
+    def _declared_input_risk(self) -> float | None:
+        """The caller-declared risk scalar of this run, when there was one.
 
-        return (
-            f"Decision={self.decision} | "
-            f"Stability={self.stability_view.stability_score:.2f} | "
-            f"Risk={self.stability_view.risk_level:.2f} | "
-            f"Regime={self.stability_view.regime}"
-        )
+        Read from the exported IR's input block: it is an INPUT the
+        caller asserted (and the input-risk gate graded), not a measured
+        stability quantity, and the summary labels it accordingly.
+        """
+        ir = self._ir
+        if not isinstance(ir, dict):
+            return None
+        input_block = ir.get("input")
+        if not isinstance(input_block, dict):
+            return None
+        metadata = input_block.get("metadata")
+        if not isinstance(metadata, dict):
+            return None
+        value = metadata.get("risk")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return None
+        return float(value)
+
+    def summary(self) -> str:
+        # An axis the run did not measure prints as n/a; zeros here used
+        # to be fabricated defaults (audit C5, 2026-08). The declared
+        # input risk, when the run was gated on one, is shown under its
+        # own honest label.
+        def _fmt(value: float | None) -> str:
+            return f"{value:.2f}" if value is not None else "n/a"
+
+        view = self.stability_view
+        parts = [f"Decision={self.decision}"]
+        if view is not None:
+            parts.append(f"Stability={_fmt(view.stability_score)}")
+            parts.append(f"Risk={_fmt(view.risk_level)}")
+            parts.append(f"Regime={view.regime if view.regime is not None else 'n/a'}")
+        else:
+            parts.append("Stability=n/a | Risk=n/a | Regime=n/a")
+
+        declared = self._declared_input_risk()
+        if declared is not None:
+            parts.append(f"DeclaredRisk={declared:.2f}")
+
+        return " | ".join(parts)

@@ -10,6 +10,7 @@ class DecisionIntrospector:
 
     def describe(self) -> dict[str, Any]:
         return {
+            "kind": "static_declaration",
             "name": "decision_engine",
             "description": (
                 "The decision engine routes user intents and proposes "

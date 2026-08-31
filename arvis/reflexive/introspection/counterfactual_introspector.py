@@ -10,6 +10,7 @@ class CounterfactualIntrospector:
 
     def describe(self) -> dict[str, Any]:
         return {
+            "kind": "static_declaration",
             "name": "counterfactual_reasoning",
             "description": (
                 "ARVIS evaluates alternative decisions by simulating "
