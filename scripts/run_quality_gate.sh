@@ -32,8 +32,12 @@ run_full_gate() {
   "$PY" -m pytest \
     --cov=arvis \
     --cov-report=term-missing \
+    --cov-report=json:coverage.json \
     --cov-fail-under=90 \
     -q
+
+  echo "==> Per-package coverage floors"
+  "$PY" scripts/check_module_coverage.py coverage.json
 
   echo "==> Examples smoke"
   PYTHON="$PY" bash scripts/run_examples_smoke.sh

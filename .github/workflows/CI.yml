@@ -104,7 +104,13 @@ jobs:
           pip install -e . --no-deps
 
       - name: Run tests
-        run: pytest --cov=arvis --cov-report=xml --cov-fail-under=90 --maxfail=1 --disable-warnings -q
+        run: pytest --cov=arvis --cov-report=xml --cov-report=json:coverage.json --cov-fail-under=90 --maxfail=1 --disable-warnings -q
+
+      - name: Per-package coverage floors
+        # The aggregate floor let a 59%-covered gate-policy module hide
+        # inside a 91% total; the decisive packages carry their own
+        # ratcheting floors (audit G4 / MATH-A M3).
+        run: python scripts/check_module_coverage.py coverage.json
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'

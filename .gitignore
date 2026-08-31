@@ -70,3 +70,4 @@ Thumbs.db
 *.swp
 .ipynb_checkpoints/
 examples/video_script_DRAFT.md
+coverage.json
