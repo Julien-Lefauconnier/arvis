@@ -39,9 +39,12 @@ def test_growth_gives_unstable_regime():
 
     assert snap.is_available is True
     assert snap.kappa_raw == pytest.approx(-0.2)
-    assert snap.kappa_clipped == pytest.approx(0.0)
-    assert snap.kappa_smoothed == pytest.approx(0.0)
+    # G5 (MATH-A M4): the divergence stays visible instead of being
+    # clipped to a neutral 0.0 before smoothing.
+    assert snap.kappa_clipped == pytest.approx(-0.2)
+    assert snap.kappa_smoothed == pytest.approx(-0.2)
     assert snap.regime == "unstable"
+    assert snap.divergence_streak == 1
 
 
 def test_smoothing_behaves_as_expected():

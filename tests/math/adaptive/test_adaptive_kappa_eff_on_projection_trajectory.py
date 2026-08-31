@@ -67,7 +67,9 @@ def test_adaptive_kappa_is_defined_on_projection_trajectory():
         assert snap.kappa_smoothed is not None
         assert not math.isnan(snap.kappa_smoothed)
         assert not math.isinf(snap.kappa_smoothed)
-        assert 0.0 <= snap.kappa_smoothed <= est.config.kappa_max
+        # G5 (MATH-A M4): the smoothed factor may dip below zero on a
+        # divergence; the honest bounds are the configured clip range.
+        assert est.config.kappa_min <= snap.kappa_smoothed <= est.config.kappa_max
 
 
 def test_adaptive_kappa_on_projection_trajectory_produces_valid_margin():
