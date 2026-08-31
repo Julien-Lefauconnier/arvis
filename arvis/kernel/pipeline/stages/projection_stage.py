@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.errors.boundaries.pipeline import (
     capture_pipeline_runtime_failure,
 )
 from arvis.math.projection.projection_view import ProjectionView
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
 
 class ProjectionStage:
@@ -20,7 +26,7 @@ class ProjectionStage:
     - Run certification (Π_cert)
     """
 
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         self._compute_projection(pipeline, ctx, allow_overwrite=False)
 
     def refresh(self, pipeline: Any, ctx: Any) -> None:

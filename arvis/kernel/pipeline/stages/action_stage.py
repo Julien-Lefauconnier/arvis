@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.action.action_context import ActionContext
 from arvis.action.action_decision import ActionDecision
@@ -10,9 +10,15 @@ from arvis.action.action_evaluator import evaluate_action
 from arvis.action.action_mode import ActionMode
 from arvis.action.action_resolver import resolve_action
 
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+
 
 class ActionStage:
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         runtime = ctx.execution.execution_state
 
         can_execute = runtime.can_execute if runtime is not None else False

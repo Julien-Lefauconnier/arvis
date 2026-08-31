@@ -22,6 +22,7 @@ from arvis.math.state.symbolic_state import (
 from arvis.math.switching.switching_runtime import (
     SwitchingRuntime,
 )
+from arvis.reasoning.reasoning_intent import ReasoningIntent
 
 
 @dataclass
@@ -30,6 +31,10 @@ class PipelineScientificCoreContext:
     collapse_risk: RiskSignal | float = 0.0
     uncertainty: UncertaintySignal | float | None = None
     drift_score: DriftSignal | float = 0.0
+    # Declared in campaign STRUCT LOT S2. Always None on the default
+    # path today: the intent mapper requires an UncertaintyFrame that
+    # no default path constructs (see the control stage note).
+    uncertainty_intent: list[ReasoningIntent] | None = None
 
 
 @dataclass

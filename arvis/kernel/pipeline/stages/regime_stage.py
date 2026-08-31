@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from arvis.math.switching.regime_mapper import map_regime
 
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+
 
 class RegimeStage:
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         scientific = ctx.scientific
         regime_ctx = scientific.regime_state
         switching_ctx = scientific.switching

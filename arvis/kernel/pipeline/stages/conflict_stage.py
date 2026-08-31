@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from arvis.cognition.conflict.conflict_extractor import extract_conflicts_from_bundle
 
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+
 
 class ConflictStage:
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         bundle = ctx.decision_layer.bundle
 
         # -----------------------------------------

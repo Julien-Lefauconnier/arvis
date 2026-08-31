@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
 from arvis.math.control.confidence_control import (
     ConfidenceControlInputs,
     apply_confidence_control,
 )
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
 
 class ControlFeedbackStage:
@@ -21,7 +27,7 @@ class ControlFeedbackStage:
     - Update control_snapshot
     """
 
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         gate_result = getattr(ctx, "gate_result", None)
 
         # Gate not executed yet → skip

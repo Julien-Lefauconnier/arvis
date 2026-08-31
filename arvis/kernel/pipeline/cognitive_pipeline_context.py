@@ -9,6 +9,8 @@ from arvis.cognition.bundle.cognitive_bundle_snapshot import (
 )
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationResult
+from arvis.cognition.conflict.conflict_policy_result import ConflictPolicyResult
+from arvis.cognition.conflict.conflict_signal import ConflictSignal
 from arvis.cognition.conversation.conversation_context import ConversationContext
 from arvis.cognition.conversation.conversation_signal import ConversationSignal
 from arvis.cognition.decision.decision_result import DecisionResult
@@ -170,6 +172,40 @@ class CognitivePipelineContext:
     control_snapshot: Any | None = None
     control: Any | None = None
     change_budget: Any | None = None
+
+    # -------------------------
+    # Stage-published working state (declared in campaign STRUCT,
+    # LOT S2)
+    # -------------------------
+    # These fields used to be set dynamically by stages and read
+    # downstream through getattr with defaults, invisible to the type
+    # checker. Declaring them makes the inter-stage protocol explicit
+    # and typo-safe. Several carry Any deliberately: their writers
+    # publish heterogeneous shapes today (see the control stage notes);
+    # tightening them is part of the ctx.extra / mirror migration
+    # (LOT S4).
+    conflict: list[ConflictPolicyResult] | None = None
+    conflict_pressure: ConflictSignal | None = None
+    # float today (control stage), TemporalPressureSnapshot upstream
+    # (temporal stage): the control stage overwrites the snapshot.
+    temporal_pressure: Any | None = None
+    # TemporalModulation upstream; the control stage overwrites it
+    # with an ad-hoc multiplier object that bypasses the kernel
+    # invariant (flagged there).
+    temporal_modulation: Any | None = None
+    memory_mode: str | None = None
+    memory_constraints_active: bool = False
+    kappa_band: str | None = None
+    adaptive_control: Any | None = None
+    slow_divergence: float | None = None
+
+    # Private mirror channel: single-writer scalar mirrors consumed by
+    # the gate, the projection and the IR adapter. Scheduled for
+    # migration into typed sub-contexts (LOT S4); do not add users.
+    _dv: float | None = None
+    _epsilon: float | None = None
+    _effective_epsilon: float | None = None
+    _cognitive_mode: Any | None = None
 
     # -------------------------
     # Gate layer

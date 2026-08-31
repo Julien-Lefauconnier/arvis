@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.cognition.execution.executable_intent import ExecutableIntent
 from arvis.kernel.pipeline.services.llm_request_builder import LLMRequestBuilder
 from arvis.kernel.pipeline.services.pipeline_llm_service import PipelineLLMService
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.types.timestamps import utcnow
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
 
 class IntentStage:
@@ -24,7 +30,7 @@ class IntentStage:
             " ".join(str(part) for part in parts)
         )
 
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         if getattr(ctx, "_tool_forced_execution", False):
             self._debug(ctx, "[INTENT DEBUG] SKIP (forced tool execution)")
 

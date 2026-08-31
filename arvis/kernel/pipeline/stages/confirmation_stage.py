@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationStatus
@@ -12,6 +12,12 @@ from arvis.cognition.conflict.conflict_confirmation import (
 from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.types.identifiers import deterministic_id
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
 
 class ConfirmationStage:
@@ -27,7 +33,7 @@ class ConfirmationStage:
             " ".join(str(part) for part in parts)
         )
 
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         self._debug(ctx, "\n[CONFIRMATION DEBUG] START")
         self._debug(
             ctx,

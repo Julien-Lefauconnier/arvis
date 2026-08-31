@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from arvis.cognition.coherence.change_budget import ChangeBudget
 from arvis.cognition.conversation.conversation_signal import ConversationSignal
 from arvis.errors.manager import ErrorManager
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
 
 class PassiveContextStage:
@@ -23,7 +29,7 @@ class PassiveContextStage:
     Pure ctx mutation, no hard dependency guarantees.
     """
 
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         # ensure extra dict exists
         if not hasattr(ctx, "extra") or ctx.extra is None:
             ctx.extra = {}
@@ -122,7 +128,7 @@ class PassiveContextStage:
         # -----------------------------------------------------
         # CONVERSATION PROJECTION (PASSIVE)
         # -----------------------------------------------------
-        if getattr(ctx, "conversation_context", None) is not None:
+        if ctx.conversation_context is not None:
             state = getattr(ctx.conversation_context, "state", None)
 
             ctx.conversation_signal = ConversationSignal(

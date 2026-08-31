@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.kernel.pipeline.context.scientific_accessors import (
     scientific,
@@ -35,9 +35,15 @@ from arvis.kernel.pipeline.stages.gate.switching import (
 )
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+
 
 class GateStage:
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         overrides = resolve_overrides(ctx)
 
         initialize_context(ctx)

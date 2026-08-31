@@ -15,7 +15,7 @@ from .action_template import ActionTemplate
 def evaluate_action(
     verdict: Any,
     template: ActionTemplate,
-    risk: RiskSignal,
+    risk: RiskSignal | float,
     context: ActionContext | None = None,
 ) -> ActionDecision:
     """

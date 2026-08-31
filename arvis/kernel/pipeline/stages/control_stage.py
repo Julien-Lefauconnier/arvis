@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
 from arvis.kernel.pipeline.context.scientific_accessors import (
@@ -24,7 +24,12 @@ from arvis.math.adaptive.adaptive_control_policy import AdaptiveControlPolicy
 from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.signals import UncertaintySignal
-from arvis.uncertainty.uncertainty_to_intent_mapper import map_uncertainty_to_intent
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
 
 class ControlStage:
@@ -32,7 +37,7 @@ class ControlStage:
         # Lazy adaptive control (safe: no dependency on pipeline init)
         self._adaptive_policy = AdaptiveControlPolicy()
 
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         # -----------------------------------------
         # 1. HYSTERESIS
         # -----------------------------------------
@@ -53,16 +58,25 @@ class ControlStage:
             float(get_collapse_risk(ctx))
         )
 
-        try:
-            ctx.scientific.core.uncertainty_intent = map_uncertainty_to_intent(
-                ctx.scientific.core.uncertainty
-            )
-        except (AttributeError, TypeError, ValueError, OverflowError):
-            ctx.scientific.core.uncertainty_intent = None
+        # Honest absence (campaign STRUCT, LOT S2): the previous code
+        # called map_uncertainty_to_intent(UncertaintySignal), but the
+        # mapper requires an UncertaintyFrame (axes, label, frame_id),
+        # so the call raised AttributeError on every run and a broad
+        # except silently produced None. No default path builds an
+        # UncertaintyFrame today; the channel is declared and stays
+        # None until one does.
+        ctx.scientific.core.uncertainty_intent = None
 
         # -----------------------------------------
         # 3. TEMPORAL
         # -----------------------------------------
+        # FLAGGED (campaign STRUCT, LOT S2, decision pending): this
+        # binary rewrite OVERWRITES the TemporalPressureSnapshot and
+        # TemporalModulation the temporal stage computed two stages
+        # earlier, and the 1.2 multiplier bypasses TemporalModulation's
+        # [0, 1] clamp through an ad-hoc object, WIDENING epsilon when
+        # a timeline is present. Kept as-is pending the ownership
+        # decision (respect the clamp = strictly more conservative).
         if getattr(ctx, "timeline", None):
             ctx.temporal_pressure = 1.0
             ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.2})()
@@ -96,6 +110,9 @@ class ControlStage:
         epsilon *= getattr(regime_control, "epsilon_multiplier", 1.0)
         epsilon *= getattr(ctx.temporal_modulation, "epsilon_multiplier", 1.0)
 
+        # FLAGGED (same as block 3): identical rewrite after the value
+        # was consumed above; a duplicate store the ownership decision
+        # will remove.
         if getattr(ctx, "timeline", None):
             ctx.temporal_pressure = 1.0
             ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.2})()
@@ -107,7 +124,6 @@ class ControlStage:
         # 6.5 MEMORY-AWARE MODULATION (OS layer)
         # -----------------------------------------
         try:
-            decision_layer = getattr(ctx, "decision_layer", None)
             decision_layer = getattr(ctx, "decision_layer", None)
             bundle = getattr(decision_layer, "bundle", None)
             memory_features = getattr(bundle, "memory_features", {}) if bundle else {}

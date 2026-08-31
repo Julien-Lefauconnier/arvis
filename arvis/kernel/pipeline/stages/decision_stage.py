@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Any
+from typing import TYPE_CHECKING
 
 from arvis.adapters.ir.decision_adapter import DecisionIRAdapter
 from arvis.cognition.decision.decision_result import DecisionResult
 from arvis.errors.boundaries.pipeline import (
     capture_pipeline_degraded_failure,
 )
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
 
 class DecisionStage:
@@ -22,7 +28,7 @@ class DecisionStage:
     - no side effects outside ctx mutation
     """
 
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         raw_result = pipeline.decision.evaluate(ctx)
 
         # -----------------------------------------------------

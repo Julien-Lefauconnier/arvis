@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.cognition.explanation.explanation_snapshot import ExplanationSnapshot
 from arvis.cognition.introspection.introspection_snapshot import IntrospectionSnapshot
@@ -10,9 +10,15 @@ from arvis.cognition.retrieval.cognitive_retrieval_snapshot import (
     CognitiveRetrievalSnapshot,
 )
 
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+
 
 class BundleStage:
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         introspection = ctx.introspection or IntrospectionSnapshot()
         explanation = ctx.explanation or ExplanationSnapshot()
 

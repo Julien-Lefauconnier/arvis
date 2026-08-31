@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
 from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+
 
 class ExecutionStage:
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         verdict = ctx.gate_result
 
         # -------------------------------------------------

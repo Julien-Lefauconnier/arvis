@@ -1,6 +1,9 @@
 # tests/kernel/stages/test_passive_context_stage_extra.py
 
 
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.kernel.pipeline.stages.passive_context_stage import PassiveContextStage
 
 # ============================================================
@@ -8,8 +11,10 @@ from arvis.kernel.pipeline.stages.passive_context_stage import PassiveContextSta
 # ============================================================
 
 
-class DummyCtx:
-    pass
+def DummyCtx() -> CognitivePipelineContext:
+    """A real pipeline context: the stage signature is typed now
+    (campaign STRUCT, LOT S2), so the tests drive the real object."""
+    return CognitivePipelineContext(user_id="test", cognitive_input={})
 
 
 class DummyPipeline:
@@ -206,7 +211,10 @@ def test_no_conversation_context():
 
     PassiveContextStage().run(pipeline, ctx)
 
-    assert not hasattr(ctx, "conversation_signal")
+    # The channel is a declared field on the real context (campaign
+    # STRUCT, LOT S2): absence is expressed as None, not as a missing
+    # attribute.
+    assert ctx.conversation_signal is None
 
 
 # ============================================================

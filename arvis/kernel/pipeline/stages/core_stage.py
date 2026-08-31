@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -23,9 +23,29 @@ from arvis.math.lyapunov.slow_state import SlowState
 from arvis.math.lyapunov.target_map import target_map
 from arvis.math.signals import DriftSignal, RiskSignal
 
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
+
+
+def _normalize_lyap(x: Any) -> LyapunovState | None:
+    """Interpret a fast-state channel value as a LyapunovState.
+
+    The lyapunov channels are typed ``LyapunovState | float | None``
+    for host-injected states; a scalar is lifted through
+    ``LyapunovState.from_scalar`` exactly as the core path does.
+    """
+    if x is None:
+        return None
+    if isinstance(x, LyapunovState):
+        return x
+    return LyapunovState.from_scalar(x)
+
 
 class CoreStage:
-    def run(self, pipeline: Any, ctx: Any) -> None:
+    def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
         if not hasattr(ctx, "scientific"):
             from arvis.kernel.pipeline.context.scientific_context import (
                 PipelineScientificContext,
@@ -117,24 +137,19 @@ class CoreStage:
         # 2. Lyapunov states
         # -----------------------------------------
 
-        new_cur = getattr(scientific_snapshot, "cur_lyap", None) or getattr(
-            core_snapshot, "cur_lyap", None
+        new_cur = _normalize_lyap(
+            getattr(scientific_snapshot, "cur_lyap", None)
+            or getattr(core_snapshot, "cur_lyap", None)
         )
-
-        def _normalize_lyap(x: Any) -> LyapunovState | None:
-            if x is None:
-                return None
-            if isinstance(x, LyapunovState):
-                return x
-            return LyapunovState.from_scalar(x)
-
-        new_cur = _normalize_lyap(new_cur)
 
         # -----------------------------------------
         # Compliance / injected-state preservation
         # -----------------------------------------
         if preserve_injected and injected_cur is not None and new_cur is None:
-            new_cur = injected_cur
+            # Injected states arrive as LyapunovState (the compliance
+            # builders lift scalars before injecting); the normalizer
+            # is an identity there and lifts a raw scalar the same way.
+            new_cur = _normalize_lyap(injected_cur)
 
         # Causal convention:
         # prev = last cycle current, cur = current cycle current
@@ -145,7 +160,10 @@ class CoreStage:
         # fast dynamics snapshot
         # -----------------------------------------
         try:
-            x_prev = prev_lyap_before
+            # Normalized locally: the stored channel may carry a
+            # host-injected scalar (preservation semantics keep the
+            # stored value raw).
+            x_prev = _normalize_lyap(prev_lyap_before)
             x_next = new_cur
 
             delta_norm = None
@@ -188,7 +206,7 @@ class CoreStage:
         # Paper-aligned quadratic fast state
         # -----------------------------------------
         prev_q = lyap_ctx.cur_quadratic_lyap_state
-        cur_q = project_operational_to_quadratic(lyap_ctx.cur_lyap)
+        cur_q = project_operational_to_quadratic(_normalize_lyap(lyap_ctx.cur_lyap))
 
         lyap_ctx.prev_quadratic_lyap_state = prev_q
         lyap_ctx.cur_quadratic_lyap_state = cur_q
@@ -339,7 +357,7 @@ class CoreStage:
                 if symbolic_for_T is not None:
                     T_x = target_map(
                         symbolic_for_T,
-                        fast=lyap_ctx.cur_lyap,
+                        fast=_normalize_lyap(lyap_ctx.cur_lyap),
                     )
                 else:
                     T_x = np.zeros_like(prev_slow_before.as_vector(), dtype=float)
