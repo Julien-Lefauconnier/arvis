@@ -146,10 +146,10 @@ class PipelineFinalizeService:
             ctx.gate_result = LyapunovVerdict.ABSTAIN
 
         gate_decision_trace = GateTraceBuilder.build(
-            tuple(ctx.extra.get("verdict_transition_trace", []) or ())
+            tuple(ctx.journal.verdict_transition_trace)
         )
 
-        raw_reason_codes = ctx.extra.get("final_reason_codes", ()) or ()
+        raw_reason_codes = ctx.journal.final_reason_codes
         final_reason_codes = ReasonCodeNormalizer.normalize(raw_reason_codes)
 
         if isinstance(ctx.gate_result, LyapunovVerdict):

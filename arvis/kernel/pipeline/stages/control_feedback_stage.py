@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
+from arvis.kernel.pipeline.context.journal_context import journal_of
 from arvis.math.control.confidence_control import (
     ConfidenceControlInputs,
     apply_confidence_control,
@@ -39,7 +40,7 @@ class ControlFeedbackStage:
             return
 
         system_confidence = float(getattr(ctx, "system_confidence", 0.0))
-        rec = ctx.extra.get("composite_gate_recommendation")
+        rec = ctx.scientific.composite.recommendation
 
         # -----------------------------------------
         # Confidence control
@@ -83,6 +84,8 @@ class ControlFeedbackStage:
         ctx.extra["confidence_flags"] = list(new_flags)
 
         if "very_low_confidence" in new_flags:
+            if (journal := journal_of(ctx)) is not None:
+                journal.low_confidence_escalation = True
             ctx.extra["low_confidence_escalation"] = True
 
         # -----------------------------------------

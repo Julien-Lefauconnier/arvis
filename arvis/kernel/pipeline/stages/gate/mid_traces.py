@@ -56,7 +56,12 @@ def write_mid_traces(
     try:
         if ctx.validity_envelope is not None:
             ctx.extra["validity_envelope_extended"] = {
-                **ctx.extra.get("validity_envelope", {}),
+                **(
+                    vars(ctx.scientific.adaptive.validity_envelope)
+                    if getattr(ctx, "scientific", None) is not None
+                    and ctx.scientific.adaptive.validity_envelope is not None
+                    else {}
+                ),
                 "projection_valid": bool(
                     prev_lyap(ctx) is not None or cur_lyap(ctx) is not None
                 ),

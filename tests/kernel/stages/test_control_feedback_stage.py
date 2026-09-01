@@ -108,7 +108,7 @@ def test_basic_confidence(monkeypatch):
 
 def test_strong_decrease(monkeypatch):
     ctx = make_ctx()
-    ctx.extra["composite_gate_recommendation"] = "strong_decrease"
+    ctx.scientific.composite.recommendation = "strong_decrease"
 
     def fake_control(inputs):
         return DummyControl(epsilon=1.0, exploration=1.0, flags=[])
@@ -132,7 +132,7 @@ def test_strong_decrease(monkeypatch):
 
 def test_soft_decrease(monkeypatch):
     ctx = make_ctx()
-    ctx.extra["composite_gate_recommendation"] = "soft_decrease"
+    ctx.scientific.composite.recommendation = "soft_decrease"
 
     def fake_control(inputs):
         return DummyControl(epsilon=1.0, exploration=1.0, flags=[])
@@ -155,7 +155,7 @@ def test_soft_decrease(monkeypatch):
 
 def test_strong_increase(monkeypatch):
     ctx = make_ctx()
-    ctx.extra["composite_gate_recommendation"] = "strong_increase"
+    ctx.scientific.composite.recommendation = "strong_increase"
 
     def fake_control(inputs):
         return DummyControl(epsilon=1.0, exploration=1.0, flags=[])

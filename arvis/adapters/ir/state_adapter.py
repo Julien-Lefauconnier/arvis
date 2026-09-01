@@ -155,12 +155,12 @@ class StateIRAdapter:
             ),
         )
 
-        extra = getattr(ctx, "extra", {}) or {}
+        journal = ctx.journal
         early_warning = bool(
-            extra.get("low_confidence_escalation")
-            or extra.get("global_instability_warning")
-            or extra.get("switching_warning")
-            or extra.get("exponential_bound_warning")
+            journal.low_confidence_escalation
+            or journal.global_instability_warning
+            or journal.switching_warning
+            or journal.exponential_bound_warning
             or fused_risk >= 0.75
         )
 

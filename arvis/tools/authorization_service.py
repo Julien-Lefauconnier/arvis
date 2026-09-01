@@ -64,7 +64,15 @@ def resolve_turn_risk(ctx: Any) -> float:
     candidates: list[float] = []
     extra = getattr(ctx, "extra", None)
     if isinstance(extra, dict):
-        declared = extra.get("input_risk")
+        journal = getattr(ctx, "journal", None)
+        if journal is not None:
+            # Typed channel (campaign OBS, LOT O2): on real contexts the
+            # gate-recorded risk is read from the journal, so a value
+            # injected directly into ctx.extra can no longer steer tool
+            # authorization (the extra key remains as an export).
+            declared = journal.input_risk
+        else:
+            declared = extra.get("input_risk")
         if isinstance(declared, (int, float)) and not isinstance(declared, bool):
             candidates.append(float(declared))
     assessed = getattr(ctx, "collapse_risk", None)

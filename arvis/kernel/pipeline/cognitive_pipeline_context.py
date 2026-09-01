@@ -30,6 +30,9 @@ from arvis.kernel.pipeline.context.error_context import (
 from arvis.kernel.pipeline.context.execution_context import (
     PipelineExecutionContext,
 )
+from arvis.kernel.pipeline.context.journal_context import (
+    PipelineJournalContext,
+)
 from arvis.kernel.pipeline.context.observability_context import (
     PipelineObservabilityContext,
 )
@@ -103,6 +106,14 @@ class CognitivePipelineContext:
     # -------------------------
     scientific: PipelineScientificContext = field(
         default_factory=PipelineScientificContext,
+    )
+
+    # -------------------------
+    # Journal context (typed storage of cross-component signals;
+    # ctx.extra carries the exports, see the extra doctrine below)
+    # -------------------------
+    journal: PipelineJournalContext = field(
+        default_factory=PipelineJournalContext,
     )
 
     # -------------------------

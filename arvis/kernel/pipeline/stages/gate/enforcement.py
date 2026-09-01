@@ -5,6 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.errors.manager import ErrorManager
+from arvis.kernel.pipeline.context.journal_context import (
+    fusion_reasons_of,
+    journal_of,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
@@ -69,10 +73,12 @@ def apply_projection_enforcement(
         if projection_cert is None:
             return verdict
 
-        projection_reasons = ctx.extra.setdefault("fusion_reasons", [])
+        projection_reasons = fusion_reasons_of(ctx)
         ctx.extra["projection_domain_valid"] = bool(domain_valid)
         ctx.extra["projection_margin"] = margin
         ctx.extra["projection_safe"] = bool(is_safe)
+        if (journal := journal_of(ctx)) is not None:
+            journal.projection_lyapunov_compatible = bool(lyapunov_compatible)
         ctx.extra["projection_lyapunov_compatible"] = bool(lyapunov_compatible)
 
         if (
@@ -144,9 +150,7 @@ def apply_projection_enforcement(
             if projected_state is not None:
                 coherence = projected_state.state_signals.get("coherence_score")
                 if coherence is not None and coherence < 0.1:
-                    ctx.extra.setdefault("fusion_reasons", []).append(
-                        "low_coherence_signal"
-                    )
+                    fusion_reasons_of(ctx).append("low_coherence_signal")
         except Exception as exc:
             ErrorManager.capture_exception(
                 ctx,
@@ -182,7 +186,7 @@ def apply_kappa_hard_block(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
         else:
             metrics = getattr(ctx, "global_stability_metrics", None)
         if metrics is not None and getattr(metrics, "kappa_violation", False):
-            reasons = ctx.extra.setdefault("fusion_reasons", [])
+            reasons = fusion_reasons_of(ctx)
             if "kappa_violation" not in reasons:
                 reasons.append("kappa_violation")
             record_verdict_transition(
@@ -192,6 +196,8 @@ def apply_kappa_hard_block(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
                 after=LyapunovVerdict.ABSTAIN,
                 reason="kappa_violation",
             )
+            if (journal := journal_of(ctx)) is not None:
+                journal.kappa_hard_block = True
             ctx.extra["kappa_hard_block"] = True
             ctx.extra["kappa_gap"] = getattr(metrics, "kappa_gap", None)
             verdict = LyapunovVerdict.ABSTAIN

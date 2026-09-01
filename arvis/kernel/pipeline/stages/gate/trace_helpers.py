@@ -6,6 +6,10 @@ from typing import Any
 
 from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
+from arvis.kernel.pipeline.context.journal_context import (
+    fusion_reasons_of,
+    verdict_transition_trace_of,
+)
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.lyapunov.verdict_order import is_relaxation, strictness
 
@@ -32,10 +36,7 @@ def record_verdict_transition(
     after: LyapunovVerdict,
     reason: str,
 ) -> None:
-    trace = ctx.extra.setdefault("verdict_transition_trace", [])
-    if not isinstance(trace, list):
-        ctx.extra["verdict_transition_trace"] = []
-        trace = ctx.extra["verdict_transition_trace"]
+    trace = verdict_transition_trace_of(ctx)
 
     trace.append(
         {"stage": stage, "before": str(before), "after": str(after), "reason": reason}
@@ -78,7 +79,7 @@ def seed_verdict_provenance(ctx: Any, verdict: LyapunovVerdict) -> None:
         return
     if verdict_provenance(ctx, verdict) is not None:
         return
-    reasons = extra.get("fusion_reasons")
+    reasons = fusion_reasons_of(ctx)
     reason_list = reasons if isinstance(reasons, list) else []
     if verdict == LyapunovVerdict.ABSTAIN and _GLOBAL_ABSTAIN_MARKER in reason_list:
         source = GLOBAL_STABILITY_PROVENANCE

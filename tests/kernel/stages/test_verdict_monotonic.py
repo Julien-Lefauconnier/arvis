@@ -15,6 +15,9 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from arvis.kernel.pipeline.context.journal_context import (
+    PipelineJournalContext,
+)
 from arvis.kernel.pipeline.stages.gate.stability import (
     apply_global_stability_policy,
 )
@@ -42,7 +45,7 @@ VERDICTS = [
 
 
 def _ctx(**kwargs):
-    return SimpleNamespace(extra={}, **kwargs)
+    return SimpleNamespace(extra={}, journal=PipelineJournalContext(), **kwargs)
 
 
 # ---------------------------------------------------------------
@@ -219,7 +222,8 @@ def test_confirm_kappa_flag_blocks_sanctioned_relaxation():
     ctx.extra[VERDICT_PROVENANCE_KEY] = {
         "ABSTAIN": GLOBAL_STABILITY_PROVENANCE,
     }
-    ctx.extra["kappa_hard_block"] = True
+    # Typed channel (campaign OBS, LOT O2): the policy reads the journal.
+    ctx.journal.kappa_hard_block = True
     out = apply_global_stability_policy(ctx, LyapunovVerdict.ABSTAIN, global_safe=False)
     assert out is LyapunovVerdict.ABSTAIN
 
@@ -267,7 +271,8 @@ def test_global_policy_monotone_except_sanctioned(
     if provenance is not None:
         ctx.extra[VERDICT_PROVENANCE_KEY] = {"ABSTAIN": provenance}
     if kappa_flag:
-        ctx.extra["kappa_hard_block"] = True
+        # Typed channel (campaign OBS, LOT O2): the policy reads the journal.
+        ctx.journal.kappa_hard_block = True
 
     out = apply_global_stability_policy(ctx, verdict, global_safe=False)
 

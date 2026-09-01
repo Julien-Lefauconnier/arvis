@@ -10,6 +10,7 @@ from arvis.cognition.conflict.conflict_confirmation import (
     requires_conflict_confirmation,
 )
 from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
+from arvis.kernel.pipeline.context.journal_context import journal_of
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.types.identifiers import deterministic_id
 
@@ -59,10 +60,14 @@ class ConfirmationStage:
         if ctx.confirmation_result is not None:
             if ctx.confirmation_result.status == ConfirmationStatus.CONFIRMED:
                 verdict = LyapunovVerdict.ALLOW
+                if (journal := journal_of(ctx)) is not None:
+                    journal.confirmation_override = True
                 ctx.extra["confirmation_override"] = True
 
             elif ctx.confirmation_result.status == ConfirmationStatus.REJECTED:
                 verdict = LyapunovVerdict.ABSTAIN
+                if (journal := journal_of(ctx)) is not None:
+                    journal.confirmation_override = True
                 ctx.extra["confirmation_override"] = True
 
             ctx.gate_result = verdict

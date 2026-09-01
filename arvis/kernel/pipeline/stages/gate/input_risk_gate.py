@@ -48,6 +48,9 @@ from arvis.kernel.gate.input_risk import (
     read_input_risk,
     resolve_input_risk_verdict,
 )
+from arvis.kernel.pipeline.context.journal_context import (
+    replace_fusion_reasons,
+)
 from arvis.kernel.pipeline.stages.gate.trace_helpers import (
     record_verdict_transition,
     verdict_provenance,
@@ -133,6 +136,9 @@ def _null_invalid_risk_in_context(ctx: Any, cognitive_input: Any) -> None:
         sanitized_input["risk"] = None
         ctx.cognitive_input = sanitized_input
 
+        journal = getattr(ctx, "journal", None)
+        if journal is not None:
+            journal.input_risk = None
         extra = getattr(ctx, "extra", None)
         if isinstance(extra, dict):
             extra["input_risk"] = None
@@ -161,13 +167,21 @@ def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict
             # conservative and leave the verdict untouched.
             return verdict
 
+        journal = getattr(ctx, "journal", None)
+        if journal is not None:
+            journal.input_risk = risk
         extra["input_risk"] = risk
 
-        fusion_reasons = extra.get("fusion_reasons")
-        current_reasons = fusion_reasons if isinstance(fusion_reasons, list) else []
+        if journal is not None:
+            current_reasons: list[str] = journal.fusion_reasons
+            kappa_blocked = journal.kappa_hard_block
+        else:
+            fusion_reasons = extra.get("fusion_reasons")
+            current_reasons = fusion_reasons if isinstance(fusion_reasons, list) else []
+            kappa_blocked = bool(extra.get("kappa_hard_block"))
 
         # Never relax a real safety veto (kappa / adaptive instability).
-        if extra.get("kappa_hard_block") or any(
+        if kappa_blocked or any(
             reason in _REAL_SAFETY_VETOES for reason in current_reasons
         ):
             return verdict
@@ -191,7 +205,7 @@ def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict
                     reason="input_risk_policy",
                 )
                 if _HARDEN_STAGE not in current_reasons:
-                    extra["fusion_reasons"] = [*current_reasons, _HARDEN_STAGE]
+                    replace_fusion_reasons(ctx, [*current_reasons, _HARDEN_STAGE])
             return hardened
 
         if is_relaxation(verdict, risk_verdict):
@@ -226,7 +240,7 @@ def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict
         ]
         if _GOVERNING_REASON not in superseded:
             superseded.append(_GOVERNING_REASON)
-        extra["fusion_reasons"] = superseded
+        replace_fusion_reasons(ctx, superseded)
 
         return risk_verdict
 

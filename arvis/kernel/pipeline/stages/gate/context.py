@@ -35,6 +35,21 @@ def initialize_context(ctx: CognitivePipelineContext) -> logging.Logger:
     exist. What remains is the real work: composite defaults and the
     compliance injection channel.
     """
+    # Journal aliases (campaign OBS, LOT O2): the typed journal lists
+    # are the storage; the extra keys expose the SAME list objects as
+    # exports, so host-visible content stays byte-identical while
+    # arvis code reads only the journal. A pre-seeded export list
+    # (direct compositions, tests) is adopted as storage.
+    journal = ctx.journal
+    for key, attr in (
+        ("fusion_reasons", "fusion_reasons"),
+        ("verdict_transition_trace", "verdict_transition_trace"),
+    ):
+        seeded = ctx.extra.get(key)
+        if isinstance(seeded, list) and seeded is not getattr(journal, attr):
+            setattr(journal, attr, seeded)
+        ctx.extra[key] = getattr(journal, attr)
+
     composite = ctx.scientific.composite
     lyap = ctx.scientific.lyapunov
 

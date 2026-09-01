@@ -6,6 +6,10 @@ from typing import Any
 
 from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
+from arvis.kernel.pipeline.context.journal_context import (
+    fusion_reasons_of,
+    journal_of,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.models import StabilityEnvelope
 from arvis.kernel.pipeline.stages.gate.trace_helpers import (
@@ -51,7 +55,8 @@ def apply_global_stability_policy(
     provenance (projection, kappa, memory, adaptive, ...) is never
     relaxed; unknown provenance fails closed.
     """
-    if ctx.extra.get("_hard_adaptive_veto", False):
+    journal = journal_of(ctx)
+    if journal is not None and journal.hard_adaptive_veto:
         return verdict
 
     if global_safe:
@@ -59,7 +64,7 @@ def apply_global_stability_policy(
 
     try:
         action = getattr(ctx, "global_stability_action", "confirm")
-        reasons = ctx.extra.setdefault("fusion_reasons", [])
+        reasons = fusion_reasons_of(ctx)
 
         if action != "ignore" and "global_instability_confirm" not in reasons:
             reasons.append("global_instability_confirm")
@@ -68,7 +73,7 @@ def apply_global_stability_policy(
             if verdict == LyapunovVerdict.ABSTAIN:
                 provenance = verdict_provenance(ctx, LyapunovVerdict.ABSTAIN)
                 relaxable = provenance in _RELAXABLE_ABSTAIN_PROVENANCE and not (
-                    ctx.extra.get("kappa_hard_block")
+                    journal is not None and journal.kappa_hard_block
                 )
                 if relaxable:
                     record_verdict_transition(
@@ -248,12 +253,20 @@ def build_stability_envelope(
     )
 
     if not envelope.global_safe:
+        if (journal := journal_of(ctx)) is not None:
+            journal.global_instability = True
+        if (journal := journal_of(ctx)) is not None:
+            journal.global_instability_warning = True
         ctx.extra["global_instability"] = True
         ctx.extra["global_instability_warning"] = True
     if not envelope.switching_safe:
+        if (journal := journal_of(ctx)) is not None:
+            journal.switching_warning = True
         ctx.extra["switching_warning"] = True
         ctx.extra["switching_violation"] = True
     if envelope.w_bound_ratio is not None and envelope.w_bound_ratio > w_bound_tol:
+        if (journal := journal_of(ctx)) is not None:
+            journal.exponential_bound_warning = True
         ctx.extra["exponential_bound_warning"] = True
 
     return envelope
@@ -313,7 +326,8 @@ def build_validity_envelope(
             projection_available and projection_domain_valid and projection_safe
         )
         exponential_safe = w_ratio is None or w_ratio <= w_bound_tol
-        adaptive_band = ctx.extra.get("kappa_band")
+        journal = journal_of(ctx)
+        adaptive_band = journal.kappa_band if journal is not None else None
 
         # -----------------------------------------------------
         # Switching safety envelope mode (audit F-004, lot A4).
@@ -348,8 +362,10 @@ def build_validity_envelope(
         # -----------------------------------------------------
 
         if not switching_safe:
+            if (journal := journal_of(ctx)) is not None:
+                journal.switching_warning = True
             ctx.extra["switching_warning"] = True
-            ctx.extra.setdefault("fusion_reasons", []).append("switching_soft_warning")
+            fusion_reasons_of(ctx).append("switching_soft_warning")
 
         ctx.extra["validity_envelope"] = validity_envelope.__dict__.copy()
     except Exception as exc:

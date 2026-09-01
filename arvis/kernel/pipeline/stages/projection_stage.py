@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from arvis.errors.boundaries.pipeline import (
     capture_pipeline_runtime_failure,
 )
+from arvis.kernel.pipeline.context.journal_context import journal_of
 from arvis.math.projection.projection_view import ProjectionView
 
 if TYPE_CHECKING:
@@ -52,10 +53,14 @@ class ProjectionStage:
             if hasattr(pipeline.pi_impl, "project_structured"):
                 pi_state = pipeline.pi_impl.project_structured(ctx)
                 ctx.projection.structured_projection = pi_state
+                if (journal := journal_of(ctx)) is not None:
+                    journal.pi_structured_available = True
                 ctx.extra["pi_structured_available"] = True
                 ctx.extra["projection_structured"] = True
             else:
                 ctx.projection.structured_projection = None
+                if (journal := journal_of(ctx)) is not None:
+                    journal.pi_structured_available = False
                 ctx.extra["pi_structured_available"] = False
                 ctx.extra["projection_structured"] = False
 

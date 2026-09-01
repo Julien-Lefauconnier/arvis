@@ -8,6 +8,11 @@ from typing import Any, cast
 
 from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
+from arvis.kernel.pipeline.context.journal_context import (
+    fusion_reasons_of,
+    journal_of,
+    replace_fusion_reasons,
+)
 from arvis.kernel.pipeline.context.scientific_accessors import (
     cur_lyap as get_cur_lyap,
 )
@@ -151,6 +156,8 @@ class GateDecisionStack:
             assessment.recovery_detected or kernel_result.recovery_detected
         )
         if recovery_detected:
+            if (journal := journal_of(ctx)) is not None:
+                journal.recovery_detected = True
             ctx.extra["recovery_detected"] = True
 
         pre_verdict = kernel_result.pre_verdict
@@ -198,18 +205,20 @@ class GateDecisionStack:
         ctx.extra["gating_regime"] = regime.value
         if regime is GatingRegime.ANSWER:
             ctx.extra["action_assessment_reasons"] = list(
-                dict.fromkeys(ctx.extra.get("fusion_reasons", []))
+                dict.fromkeys(fusion_reasons_of(ctx))
             )
-            ctx.extra["fusion_reasons"] = []
+            replace_fusion_reasons(ctx, [])
             verdict = apply_answer_gate(ctx, verdict=verdict)
             sync_confirmation_flags(ctx, verdict)
             if "fusion_trace" in ctx.extra:
                 ctx.extra["fusion_trace"]["final_verdict"] = str(verdict)
             reason_codes = tuple(
                 str(code).strip()
-                for code in dict.fromkeys(ctx.extra.get("fusion_reasons", []))
+                for code in dict.fromkeys(fusion_reasons_of(ctx))
                 if str(code).strip()
             )
+            if (journal := journal_of(ctx)) is not None:
+                journal.final_reason_codes = tuple(reason_codes)
             ctx.extra["final_reason_codes"] = reason_codes
             return GateDecisionResult(
                 verdict=verdict,
@@ -271,7 +280,7 @@ class GateDecisionStack:
             if envelope and not bool(getattr(envelope, "valid", True)):
                 reason_code = f"validity_{envelope.reason}"
 
-                fusion_reasons = ctx.extra.setdefault("fusion_reasons", [])
+                fusion_reasons = fusion_reasons_of(ctx)
 
                 if reason_code not in fusion_reasons:
                     fusion_reasons.append(reason_code)
@@ -387,10 +396,12 @@ class GateDecisionStack:
 
         reason_codes = tuple(
             str(code).strip()
-            for code in dict.fromkeys(ctx.extra.get("fusion_reasons", []))
+            for code in dict.fromkeys(fusion_reasons_of(ctx))
             if str(code).strip()
         )
 
+        if (journal := journal_of(ctx)) is not None:
+            journal.final_reason_codes = tuple(reason_codes)
         ctx.extra["final_reason_codes"] = reason_codes
 
         return GateDecisionResult(
@@ -416,12 +427,12 @@ def map_kernel_reasons(
             mapped_reasons.append("adaptive_instability_veto")
         else:
             mapped_reasons.append(r)
-    ctx.extra.setdefault("fusion_reasons", []).extend(mapped_reasons)
+    fusion_reasons_of(ctx).extend(mapped_reasons)
 
     if adaptive_metrics and adaptive_metrics.is_available:
         margin = adaptive_metrics.margin
         if margin is not None and -0.02 < margin <= 0:
-            ctx.extra.setdefault("fusion_reasons", []).append("adaptive_margin_warning")
+            fusion_reasons_of(ctx).append("adaptive_margin_warning")
 
 
 def run_gate_fusion(
@@ -446,7 +457,7 @@ def run_gate_fusion(
         )
         verdict: LyapunovVerdict = cast(LyapunovVerdict, fusion.verdict)
         if kernel_result.final_verdict == LyapunovVerdict.ABSTAIN:
-            ctx.extra.setdefault("fusion_reasons", []).append("kernel_abstain_signal")
+            fusion_reasons_of(ctx).append("kernel_abstain_signal")
         if (
             adaptive_metrics is not None
             and getattr(adaptive_metrics, "is_available", False)
@@ -460,8 +471,8 @@ def run_gate_fusion(
                 reason="adaptive_metrics_unstable",
             )
             verdict = LyapunovVerdict.ABSTAIN
-        existing = list(ctx.extra.get("fusion_reasons", []))
-        ctx.extra["fusion_reasons"] = list(dict.fromkeys(existing + fusion.reasons))
+        existing = list(fusion_reasons_of(ctx))
+        replace_fusion_reasons(ctx, dict.fromkeys(existing + fusion.reasons))
 
         try:
             if delta_w is not None:
@@ -518,10 +529,8 @@ def run_gate_fusion(
             after=LyapunovVerdict.ABSTAIN,
             reason="gate_exception",
         )
-        existing = list(ctx.extra.get("fusion_reasons", []))
-        ctx.extra["fusion_reasons"] = list(
-            dict.fromkeys(existing + ["fusion_fallback"])
-        )
+        existing = list(fusion_reasons_of(ctx))
+        replace_fusion_reasons(ctx, dict.fromkeys(existing + ["fusion_fallback"]))
         ctx.extra["fusion_error"] = True
         return verdict
 

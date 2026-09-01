@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.errors.manager import ErrorManager
+from arvis.kernel.pipeline.context.journal_context import journal_of
 from arvis.kernel.pipeline.context.scientific_accessors import (
     adaptive_snapshot,
     set_adaptive_snapshot,
@@ -95,6 +96,8 @@ def apply_kappa_margin_layer(
         else:
             kappa_band = "stable"
 
+        if (journal := journal_of(ctx)) is not None:
+            journal.kappa_band = kappa_band
         ctx.extra["kappa_band"] = kappa_band
 
         reasons = ctx.extra.setdefault(
@@ -152,6 +155,8 @@ def apply_final_adaptive_veto(
         and getattr(adaptive_metrics, "is_available", False)
         and getattr(adaptive_metrics, "is_unstable", False)
     ):
+        if (journal := journal_of(ctx)) is not None:
+            journal.hard_adaptive_veto = True
         ctx.extra["_hard_adaptive_veto"] = True
         record_verdict_transition(
             ctx,

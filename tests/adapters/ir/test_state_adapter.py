@@ -22,7 +22,8 @@ def test_state_adapter_builds_state_from_context() -> None:
     ctx.observability.projections.global_stability = {"fused_risk": 0.44}
     ctx.control_snapshot = SimpleNamespace(epsilon=0.55, smoothed_risk=0.66)
     ctx.scientific.core.drift_score = 0.07
-    ctx.extra = {"global_instability_warning": True}
+    # Typed channel (campaign OBS, LOT O2): early_warning reads the journal.
+    ctx.journal.global_instability_warning = True
     ctx.introspection = "irg-state"
 
     ir = StateIRAdapter.from_context(ctx)

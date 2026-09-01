@@ -6,6 +6,7 @@ from typing import Any
 
 from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
+from arvis.kernel.pipeline.context.journal_context import fusion_reasons_of
 from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
@@ -19,7 +20,7 @@ def apply_memory_policy(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict:
         memory_pressure = float(memory_features.get("memory_pressure", 0.0))
         has_constraints = bool(memory_features.get("has_constraints", False))
 
-        reasons = ctx.extra.setdefault("fusion_reasons", [])
+        reasons = fusion_reasons_of(ctx)
 
         if memory_pressure > 0.8:
             if "memory_pressure_hard" not in reasons:
