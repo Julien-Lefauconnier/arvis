@@ -5,7 +5,11 @@ Scans every tracked ``*.md`` file for references that look like repository
 paths: Markdown links with relative targets, and backticked tokens shaped
 like paths (``arvis/...``, ``docs/...``, ``tests/...``, ``scripts/...``,
 ``examples/...``, ``compliance/...``): and fails when a referenced path
-does not exist in the working tree.
+is not TRACKED by git. Resolution is deliberately against ``git
+ls-files``, not the working tree: a stale untracked leftover (a
+``__pycache__`` surviving a deleted package, a build artifact) must not
+make a broken reference pass locally while a clean CI checkout fails
+(the exact divergence this line closed on 2026-09-01).
 
 A documentation file that attests the existence of an artifact which is not
 there is a defect of the same class as a failing test: it produces false
@@ -32,7 +36,10 @@ ROOT = Path(__file__).resolve().parents[1]
 # Tokens that look like paths but are legitimately absent or symbolic.
 # Format: exact token -> dated one-line justification.
 ALLOWLIST: dict[str, str] = {
-    # "docs/example.md": "2026-08-31 illustrative placeholder in spec X",
+    "arvis/interfaces": (
+        "2026-09-01 CHANGELOG 'Removed' entry records the deletion of "
+        "this package; the reference is history, the absence is the point"
+    ),
 }
 
 TOP_DIRS = (
@@ -91,14 +98,36 @@ def _candidates(md_file: Path) -> list[tuple[int, str]]:
     return found
 
 
+def _tracked_paths() -> set[str]:
+    """Every tracked file, plus every directory a tracked file implies."""
+    out = subprocess.run(
+        ["git", "ls-files"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    paths: set[str] = set()
+    for line in out.stdout.splitlines():
+        if not line:
+            continue
+        paths.add(line)
+        parent = Path(line).parent
+        while str(parent) not in {".", ""}:
+            paths.add(str(parent))
+            parent = parent.parent
+    return paths
+
+
 def main() -> int:
+    tracked = _tracked_paths()
     errors: list[str] = []
     for md_file in _tracked_md_files():
         rel_md = md_file.relative_to(ROOT)
         for lineno, ref in _candidates(md_file):
             if ref in ALLOWLIST:
                 continue
-            if not (ROOT / ref).exists():
+            if ref not in tracked:
                 errors.append(f"{rel_md}:{lineno}: {ref}")
     if errors:
         print(f"{len(errors)} Markdown reference(s) point to missing paths:")
