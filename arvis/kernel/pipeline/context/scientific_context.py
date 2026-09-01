@@ -41,7 +41,6 @@ class PipelineScientificCoreContext:
 class PipelineLyapunovContext:
     prev_lyap: LyapunovState | float | None = None
     cur_lyap: LyapunovState | float | None = None
-    prev_quadratic_lyap_state: Any | None = None
     cur_quadratic_lyap_state: Any | None = None
     quadratic_lyap_snapshot: Any | None = None
     quadratic_comparability: Any | None = None
@@ -105,10 +104,7 @@ class PipelineAdaptiveContext:
     adaptive_snapshot: AdaptiveSnapshot | None = None
     validity_envelope: ValidityEnvelope | None = None
     use_paper_slow_dynamics: bool = False
-    use_paper_composite_gate: bool = False
     global_stability_metrics: Any | None = None
-    enforce_global_stability: bool = False
-    global_stability_action: str = "ignore"
 
 
 @dataclass

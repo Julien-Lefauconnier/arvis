@@ -37,7 +37,6 @@ def test_gate_stores_fusion_reasons():
     pipeline.core = pipeline.core.__class__(core_model=StableCore())
 
     ctx = make_ctx()
-    ctx.use_paper_composite_gate = True
 
     pipeline.run(ctx)
     pipeline.run(ctx)

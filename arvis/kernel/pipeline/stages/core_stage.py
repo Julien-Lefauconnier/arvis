@@ -208,7 +208,6 @@ class CoreStage:
         prev_q = lyap_ctx.cur_quadratic_lyap_state
         cur_q = project_operational_to_quadratic(_normalize_lyap(lyap_ctx.cur_lyap))
 
-        lyap_ctx.prev_quadratic_lyap_state = prev_q
         lyap_ctx.cur_quadratic_lyap_state = cur_q
 
         try:

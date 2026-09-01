@@ -63,7 +63,6 @@ def _base_ctx() -> CognitivePipelineContext:
     ctx.scientific.composite.delta_w_history = []
     ctx._epsilon = 1.0
     ctx._cognitive_mode = CognitiveMode.NORMAL
-    ctx.use_paper_composite_gate = False
 
     return ctx
 
