@@ -94,8 +94,10 @@ class CoreStage:
         core_ctx.scientific_snapshot = scientific_snapshot
 
         next_state = getattr(scientific_snapshot, "next_scientific_state", None)
-        if next_state is not None and isinstance(extra, dict):
-            extra["scientific_state_next"] = next_state
+        if next_state is not None:
+            core_ctx.next_scientific_state = next_state
+            if isinstance(extra, dict):
+                extra["scientific_state_next"] = next_state
 
         core_snapshot = (
             getattr(scientific_snapshot, "core_snapshot", None) or scientific_snapshot

@@ -28,6 +28,10 @@ from arvis.reasoning.reasoning_intent import ReasoningIntent
 @dataclass
 class PipelineScientificCoreContext:
     scientific_snapshot: Any | None = None
+    # The opaque cross-turn blob the host feeds back next turn. Typed
+    # storage is the source of truth (DM-F3); the extra export stays
+    # byte-identical for the documented host contract.
+    next_scientific_state: dict[str, Any] | None = None
     collapse_risk: RiskSignal | float = 0.0
     uncertainty: UncertaintySignal | float | None = None
     drift_score: DriftSignal | float = 0.0

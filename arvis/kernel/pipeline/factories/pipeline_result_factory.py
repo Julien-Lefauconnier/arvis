@@ -59,6 +59,7 @@ class PipelineResultFactory:
                 scientific=ctx.scientific.core.scientific_snapshot,
                 control=ctx.control_snapshot,
                 cognitive_state=ctx.observability.state.cognitive_state,
+                next_scientific_state=ctx.scientific.core.next_scientific_state,
             ),
             bundle=ctx.decision_layer.bundle,
             decision=ctx.decision_layer.decision_result,

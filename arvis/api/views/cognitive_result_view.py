@@ -68,6 +68,11 @@ class CognitiveResultView:
     commitment_policy: str = AuditCommitmentPolicy.DEGRADED.value
     commitment_reason: str | None = None
     commitment_degraded: bool = False
+    # Opaque cross-turn state (DM-F3): a host feeds this blob back as
+    # extra["scientific_state"] on the next turn so the monitor keeps
+    # its trajectory. Deliberately absent from to_dict(): it is host
+    # plumbing, not part of the serialized decision contract.
+    next_scientific_state: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         """Contract invariants at construction (a17): the serialized
@@ -258,6 +263,11 @@ class CognitiveResultView:
             commitment_policy=commitment_policy.value,
             commitment_reason=commitment_reason,
             commitment_degraded=commitment_degraded,
+            next_scientific_state=(
+                getattr(observability, "next_scientific_state", None)
+                if observability is not None
+                else None
+            ),
         )
 
     def to_dict(self) -> dict[str, Any]:
