@@ -95,6 +95,20 @@ def test_metrics_cover_the_nine_families_of_m10() -> None:
     assert observed["gate_distribution"]["by_family"].keys() == set(FAMILIES)
 
 
+def test_verdict_shares_are_always_fully_encoded() -> None:
+    """Disclosed instrument correction of campaign run 1: a zero
+    verdict share is an explicit 0.0, never a missing key, so the
+    fail-closed judge can resolve zero-observation criteria."""
+    corpus = build_smoke_corpus()
+    observed = compute_all(run_corpus(corpus))
+
+    dist = observed["gate_distribution"]
+    subs = [dist["overall"], dist["given_expansion"], dist["given_contraction"]]
+    subs.extend(dist["by_family"].values())
+    for sub in subs:
+        assert {"ALLOW", "REQUIRE_CONFIRMATION", "ABSTAIN"} <= set(sub)
+
+
 def test_the_monotone_invariant_holds_on_the_smoke_corpus() -> None:
     """M10 5.4's hard invariant, checked directly on measurements: no
     transition ever relaxes an ABSTAIN past REQUIRE_CONFIRMATION."""

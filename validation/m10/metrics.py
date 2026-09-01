@@ -106,14 +106,29 @@ def kappa_violations(ms: list[TurnMeasurement]) -> dict[str, Any]:
     }
 
 
+_VERDICTS = ("ALLOW", "REQUIRE_CONFIRMATION", "ABSTAIN")
+
+
 def gate_distribution(ms: list[TurnMeasurement]) -> dict[str, Any]:
     """5.5: verdict marginals, per family and conditioned on the sign
-    of the consumed energy delta."""
+    of the consumed energy delta.
+
+    Instrument correction (disclosed, campaign MATH-B run 1): the
+    first encoder emitted only the verdicts present in the sample, so
+    a zero share came back as a MISSING key and the fail-closed judge
+    scored the two zero-observation criteria (adversarial ALLOW,
+    expansion ALLOW) as unresolvable failures. Every canonical verdict
+    now always carries an explicit share; the registered thresholds
+    were not touched.
+    """
 
     def dist(sub: list[TurnMeasurement]) -> dict[str, float]:
         counts = Counter(m.final_verdict or "UNKNOWN" for m in sub)
         total = len(sub)
-        return {k: _share(v, total) for k, v in sorted(counts.items())}
+        shares = {k: _share(v, total) for k, v in sorted(counts.items())}
+        for verdict in _VERDICTS:
+            shares.setdefault(verdict, 0.0)
+        return shares
 
     by_family: dict[str, dict[str, float]] = {}
     for family in sorted({m.family for m in ms}):
