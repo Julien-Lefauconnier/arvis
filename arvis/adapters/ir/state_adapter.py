@@ -5,9 +5,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from hashlib import sha256
 from json import dumps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.ir.state import CognitiveRiskIR, CognitiveStateIR
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline_context import (
+        CognitivePipelineContext,
+    )
 
 _IR_VERSION = "1.0"
 
@@ -101,8 +106,8 @@ class StateIRAdapter:
         return getattr(ctx, legacy, None)
 
     @staticmethod
-    def from_context(ctx: object) -> CognitiveStateIR:
-        bundle = getattr(ctx, "bundle", None)
+    def from_context(ctx: CognitivePipelineContext) -> CognitiveStateIR:
+        bundle = ctx.decision_layer.bundle
         bundle_id = str(getattr(bundle, "bundle_id", "bundle"))
 
         base_risk = _as_float(getattr(ctx, "collapse_risk", 0.0), 0.0)
@@ -191,7 +196,7 @@ class StateIRAdapter:
             irg=getattr(ctx, "irg", None) or getattr(ctx, "introspection", None),
             regime=getattr(ctx, "regime", None),
             stable=getattr(ctx, "stable", None),
-            system_tension=getattr(ctx, "system_tension", None),
+            system_tension=ctx.observability.diagnostics.system_tension,
             drift=getattr(ctx, "drift_score", None),
             projection_valid=StateIRAdapter._projection_attr(
                 ctx, "domain_valid", "projection_domain_valid"

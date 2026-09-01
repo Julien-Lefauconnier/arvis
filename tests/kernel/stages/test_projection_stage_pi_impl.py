@@ -1,32 +1,24 @@
 # tests/kernel/stages/test_projection_stage_pi_impl.py
 
-from types import SimpleNamespace
 
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.kernel.pipeline.stages.projection_stage import ProjectionStage
 from arvis.kernel.projection.domain import NumericBounds, ProjectionDomain
 from arvis.kernel.projection.pi_impl import PiImpl
 from arvis.kernel.projection.validator import ProjectionValidator
 
 
-class DummyCtx:
-    def __init__(self) -> None:
-        self.system_tension = 55.0
-        self.conflict_pressure = 10.0
-        self.coherence_score = 0.75
-        self.control_signal = 20.0
-        self.adaptive_kappa_eff = 0.2
-
-        self.projection = SimpleNamespace(
-            runtime_projection=None,
-            structured_projection=None,
-            view=None,
-            view_raw=None,
-            certificate=None,
-            domain_valid=None,
-            margin=None,
-        )
-
-        self.extra = {}
+def DummyCtx() -> CognitivePipelineContext:
+    """Real pipeline context (campaign STRUCT, LOT S4)."""
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.observability.diagnostics.system_tension = 55.0
+    ctx.conflict_pressure = 10.0
+    ctx.coherence_score = 0.75
+    ctx.control_signal = 20.0
+    ctx.adaptive_kappa_eff = 0.2
+    return ctx
 
 
 class DummyPipeline:

@@ -1,17 +1,21 @@
 # tests/kernel/test_pi_impl.py
 
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.kernel.projection.pi_impl import PiImpl
 
 
-class DummyCtx:
-    def __init__(self) -> None:
-        self.system_tension = 42.0
-        self.conflict_pressure = 12.5
-        self.coherence_score = 0.8
-        self.control_signal = 30.0
-        self.adaptive_kappa_eff = 0.25
-        self.predictive_snapshot = {"ok": True}
-        self.projection_view = None
+def DummyCtx() -> CognitivePipelineContext:
+    """Real pipeline context (campaign STRUCT, LOT S4)."""
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.observability.diagnostics.system_tension = 42.0
+    ctx.conflict_pressure = 12.5
+    ctx.coherence_score = 0.8
+    ctx.control_signal = 30.0
+    ctx.adaptive_kappa_eff = 0.25
+    ctx.observability.predictive_snapshot = {"ok": True}
+    return ctx
 
 
 def test_pi_impl_projects_runtime_signals():

@@ -111,7 +111,7 @@ class ObservabilityBuilder:
         # -------------------------
         symbolic_state = SymbolicState(
             intent_type=str(
-                getattr(getattr(ctx, "decision_result", None), "signal", "unknown")
+                getattr(ctx.decision_layer.decision_result, "signal", "unknown")
             ),
             intent_confidence=1.0,
             gate_verdict=str(ctx.gate_result),

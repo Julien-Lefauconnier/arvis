@@ -34,7 +34,7 @@ class IntentStage:
         if getattr(ctx, "_tool_forced_execution", False):
             self._debug(ctx, "[INTENT DEBUG] SKIP (forced tool execution)")
 
-        runtime = getattr(ctx, "execution_state", None)
+        runtime = ctx.execution.execution_state
 
         can_execute = runtime.can_execute if runtime is not None else False
 

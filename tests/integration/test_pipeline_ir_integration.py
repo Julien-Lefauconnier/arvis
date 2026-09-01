@@ -40,7 +40,9 @@ def test_pipeline_run_from_input_exports_ir(monkeypatch) -> None:
     monkeypatch.setattr(
         pipeline.bundle_stage,
         "run",
-        lambda _p, ctx: setattr(ctx, "bundle", SimpleNamespace(bundle_id="bundle-1")),
+        lambda _p, ctx: setattr(
+            ctx.decision_layer, "bundle", SimpleNamespace(bundle_id="bundle-1")
+        ),
     )
     monkeypatch.setattr(
         pipeline.conflict_stage,

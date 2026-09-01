@@ -41,13 +41,13 @@ class CognitiveStateBuilder:
         # -----------------------------------------
         ir_input = getattr(ctx, "ir_input", None)
         ir_context = getattr(ctx, "ir_context", None)
-        ir_decision = getattr(ctx, "ir_decision", None)
+        ir_decision = ctx.decision_layer.ir_decision
         ir_state = getattr(ctx, "ir_state", None)
         ir_gate = getattr(ctx, "ir_gate", None)
 
         return CognitiveState(
             bundle_id=ir.bundle_id,
-            decision=getattr(ctx, "action_decision", None),
+            decision=ctx.execution.action_decision,
             trace=getattr(ctx, "trace", None),
             timeline=timeline,
             stability=CognitiveStability(

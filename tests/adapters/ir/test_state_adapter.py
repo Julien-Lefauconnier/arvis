@@ -5,21 +5,25 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from arvis.adapters.ir.state_adapter import StateIRAdapter
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 
 
 def test_state_adapter_builds_state_from_context() -> None:
-    ctx = SimpleNamespace(
-        bundle=SimpleNamespace(bundle_id="bundle-1"),
-        collapse_risk=0.2,
-        multi_horizon=SimpleNamespace(risk=0.11),
-        global_forecast={"world_risk": 0.22},
-        predictive_snapshot=SimpleNamespace(forecast_risk=0.33),
-        global_stability={"fused_risk": 0.44},
-        control_snapshot=SimpleNamespace(epsilon=0.55, smoothed_risk=0.66),
-        drift_score=0.07,
-        extra={"global_instability_warning": True},
-        introspection="irg-state",
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.decision_layer.bundle = SimpleNamespace(bundle_id="bundle-1")
+    ctx.scientific.core.collapse_risk = 0.2
+    ctx.observability.projections.multi_horizon = SimpleNamespace(risk=0.11)
+    ctx.observability.projections.global_forecast = {"world_risk": 0.22}
+    ctx.observability.projections.predictive_snapshot = SimpleNamespace(
+        forecast_risk=0.33
     )
+    ctx.observability.projections.global_stability = {"fused_risk": 0.44}
+    ctx.control_snapshot = SimpleNamespace(epsilon=0.55, smoothed_risk=0.66)
+    ctx.scientific.core.drift_score = 0.07
+    ctx.extra = {"global_instability_warning": True}
+    ctx.introspection = "irg-state"
 
     ir = StateIRAdapter.from_context(ctx)
 
@@ -36,13 +40,10 @@ def test_state_adapter_builds_state_from_context() -> None:
 
 
 def test_state_adapter_falls_back_to_context_values() -> None:
-    ctx = SimpleNamespace(
-        bundle=SimpleNamespace(bundle_id="bundle-2"),
-        collapse_risk=0.81,
-        control_snapshot=None,
-        drift_score=0.02,
-        extra={},
-    )
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.decision_layer.bundle = SimpleNamespace(bundle_id="bundle-2")
+    ctx.scientific.core.collapse_risk = 0.81
+    ctx.scientific.core.drift_score = 0.02
 
     ir = StateIRAdapter.from_context(ctx)
 

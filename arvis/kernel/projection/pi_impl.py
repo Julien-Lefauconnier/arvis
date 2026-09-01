@@ -43,7 +43,7 @@ class PiImpl:
         control_signals: dict[str, float] = {}
         trace_features: dict[str, float] = {}
 
-        system_tension = getattr(ctx, "system_tension", None)
+        system_tension = ctx.observability.diagnostics.system_tension
         state_signals["system_tension"] = self._coerce(system_tension, 0.0)
 
         conflict_pressure = getattr(ctx, "conflict_pressure", None)
@@ -127,7 +127,7 @@ class PiImpl:
 
     def project_structured(self, ctx: Any) -> PiState:
         ir_state = getattr(ctx, "ir_state", None)
-        ir_decision = getattr(ctx, "ir_decision", None)
+        ir_decision = ctx.decision_layer.ir_decision
         ir_gate = getattr(ctx, "ir_gate", None)
 
         # =========================
@@ -135,7 +135,7 @@ class PiImpl:
         # =========================
 
         coherence = self._coerce(getattr(ctx, "coherence_score", None), 0.5)
-        tension = self._coerce(getattr(ctx, "system_tension", None), 0.0)
+        tension = self._coerce(ctx.observability.diagnostics.system_tension, 0.0)
         drift = self._coerce(getattr(ctx, "drift_score", None), 0.0)
 
         conflict_pressure = self._coerce(getattr(ctx, "collapse_risk", None), 0.0)

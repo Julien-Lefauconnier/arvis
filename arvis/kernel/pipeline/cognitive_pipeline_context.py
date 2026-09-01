@@ -3,30 +3,23 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-from arvis.action.action_decision import ActionDecision
-from arvis.cognition.bundle.cognitive_bundle_snapshot import (
-    CognitiveBundleSnapshot,
-)
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationResult
 from arvis.cognition.conflict.conflict_policy_result import ConflictPolicyResult
 from arvis.cognition.conflict.conflict_signal import ConflictSignal
 from arvis.cognition.conversation.conversation_context import ConversationContext
 from arvis.cognition.conversation.conversation_signal import ConversationSignal
-from arvis.cognition.decision.decision_result import DecisionResult
 from arvis.cognition.events.base_event import BaseEvent
 from arvis.cognition.governance.governance_decision import GovernanceDecision
 from arvis.cognition.pending.pending_cognitive_action import PendingCognitiveAction
 from arvis.cognition.policy import CognitivePolicyResult
 from arvis.errors.base import ArvisError
 from arvis.ir.context import CognitiveContextIR
-from arvis.ir.decision import CognitiveDecisionIR
 from arvis.ir.envelope import CognitiveIREnvelope
 from arvis.ir.gate import CognitiveGateIR
 from arvis.ir.input import CognitiveInputIR
 from arvis.ir.state import CognitiveStateIR
 from arvis.kernel.execution.cognitive_execution_state import CognitiveExecutionState
-from arvis.kernel.execution.execution_gate_status import ExecutionGateStatus
 from arvis.kernel.pipeline.context.decision_context import (
     PipelineDecisionContext,
 )
@@ -434,14 +427,6 @@ class CognitivePipelineContext:
     def cognitive_state(self, value: Any | None) -> None:
         self.observability.state.cognitive_state = value
 
-    @property
-    def system_tension(self) -> Any | None:
-        return self.observability.diagnostics.system_tension
-
-    @system_tension.setter
-    def system_tension(self, value: Any | None) -> None:
-        self.observability.diagnostics.system_tension = value
-
     def _ensure_execution_state(
         self,
     ) -> CognitiveExecutionState:
@@ -461,87 +446,11 @@ class CognitivePipelineContext:
     ) -> None:
         self.execution.executable_intent = value
 
-    @property
-    def action_decision(
-        self,
-    ) -> ActionDecision | None:
-        return self.execution.action_decision
-
-    @action_decision.setter
-    def action_decision(
-        self,
-        value: ActionDecision | None,
-    ) -> None:
-        self.execution.action_decision = value
-
-    @property
-    def execution_state(
-        self,
-    ) -> CognitiveExecutionState | None:
-        return self.execution.execution_state
-
-    @execution_state.setter
-    def execution_state(
-        self,
-        value: CognitiveExecutionState | None,
-    ) -> None:
-        self.execution.execution_state = value
-
     # Legacy projection properties
-    @property
-    def can_execute(self) -> bool:
-        return self._ensure_execution_state().can_execute
-
-    @can_execute.setter
-    def can_execute(self, value: bool) -> None:
-        self._ensure_execution_state().can_execute = value
-
-    @property
-    def requires_confirmation(self) -> bool:
-        return self._ensure_execution_state().requires_confirmation
-
-    @requires_confirmation.setter
-    def requires_confirmation(self, value: bool) -> None:
-        self._ensure_execution_state().requires_confirmation = value
-
-    @property
-    def execution_status(self) -> ExecutionGateStatus | None:
-        return self._ensure_execution_state().execution_status
-
-    @execution_status.setter
-    def execution_status(
-        self,
-        value: ExecutionGateStatus | None,
-    ) -> None:
-        self._ensure_execution_state().execution_status = value
 
     # -----------------------------------------------------
     # Decision compatibility layer
     # -----------------------------------------------------
-
-    @property
-    def decision_result(self) -> DecisionResult | None:
-        return self.decision_layer.decision_result
-
-    @decision_result.setter
-    def decision_result(self, value: DecisionResult | None) -> None:
-        self.decision_layer.decision_result = value
-
-    @property
-    def ir_decision(self) -> CognitiveDecisionIR | None:
-        return self.decision_layer.ir_decision
-
-    @ir_decision.setter
-    def ir_decision(self, value: CognitiveDecisionIR | None) -> None:
-        self.decision_layer.ir_decision = value
-
-    @property
-    def bundle(self) -> CognitiveBundleSnapshot | None:
-        return self.decision_layer.bundle
-
-    @bundle.setter
-    def bundle(self, value: CognitiveBundleSnapshot | None) -> None:
-        self.decision_layer.bundle = value
 
     # -----------------------------------------------------
     # Canonical scientific compatibility properties
@@ -826,38 +735,6 @@ class CognitivePipelineContext:
     @_last_tool_spec.setter
     def _last_tool_spec(self, value: Any | None) -> None:
         self.tooling.last_tool_spec = value
-
-    @property
-    def force_tool(self) -> str | None:
-        return self.runtime_policy.force_tool
-
-    @force_tool.setter
-    def force_tool(self, value: str | None) -> None:
-        self.runtime_policy.force_tool = value
-
-    @property
-    def _force_execution(self) -> bool:
-        return self.runtime_policy.force_execution
-
-    @_force_execution.setter
-    def _force_execution(self, value: bool) -> None:
-        self.runtime_policy.force_execution = value
-
-    @property
-    def retry_tool(self) -> bool:
-        return self.runtime_policy.retry_requested
-
-    @retry_tool.setter
-    def retry_tool(self, value: bool) -> None:
-        self.runtime_policy.retry_requested = value
-
-    @property
-    def tool_retry_count(self) -> int:
-        return self.runtime_policy.retry_count
-
-    @tool_retry_count.setter
-    def tool_retry_count(self, value: int) -> None:
-        self.runtime_policy.retry_count = value
 
 
 PRODUCTION_PROFILE = "production"

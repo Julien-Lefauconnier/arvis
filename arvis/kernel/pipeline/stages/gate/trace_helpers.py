@@ -136,7 +136,7 @@ def sync_confirmation_flags(ctx: Any, verdict: LyapunovVerdict) -> None:
         ctx.extra["requires_confirmation"] = requires_confirmation
         ctx.extra["needs_confirmation"] = requires_confirmation
 
-        runtime = getattr(ctx, "execution_state", None)
+        runtime = ctx.execution.execution_state
         if runtime is not None:
             runtime.needs_confirmation = requires_confirmation
 

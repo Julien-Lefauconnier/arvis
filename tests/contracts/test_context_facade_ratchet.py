@@ -15,7 +15,14 @@ in Lot 4b. This test freezes the exact set of facade properties:
 The frozen list was measured after the A2.1 dead-alias purge (five
 aliases with zero attribute access and zero string/getattr access were
 removed: control_runtime, quadratic_lyap_snapshot, runtime_projection,
-structured_projection, use_paper_slow_dynamics).
+structured_projection, use_paper_slow_dynamics). Campaign STRUCT
+LOT S4b migrated and removed the decision/execution/policy family
+(ir_decision, decision_result, bundle, action_decision,
+system_tension, execution_state, execution_status, can_execute,
+requires_confirmation, force_tool, _force_execution, retry_tool,
+tool_retry_count): their reader sites use the sub-contexts
+(decision_layer, execution, observability.diagnostics,
+runtime_policy) directly.
 """
 
 from __future__ import annotations
@@ -26,31 +33,22 @@ from arvis.kernel.pipeline.cognitive_pipeline_context import (
 
 FROZEN_FACADE_PROPERTIES = frozenset(
     {
-        "_force_execution",
         "_last_tool_spec",
         "_tool_failure",
         "_tool_success",
-        "action_decision",
         "adaptive_snapshot",
-        "bundle",
-        "can_execute",
         "cognitive_state",
         "collapse_risk",
         "cur_lyap",
-        "decision_result",
         "delta_w",
         "delta_w_history",
         "drift_score",
         "errors",
         "executable_intent",
-        "execution_state",
-        "execution_status",
         "fast_dynamics",
-        "force_tool",
         "global_forecast",
         "global_stability",
         "global_stability_metrics",
-        "ir_decision",
         "ir_state",
         "multi_horizon",
         "perturbation",
@@ -58,8 +56,6 @@ FROZEN_FACADE_PROPERTIES = frozenset(
         "prev_lyap",
         "quadratic_comparability",
         "regime",
-        "requires_confirmation",
-        "retry_tool",
         "scientific_snapshot",
         "slow_state",
         "slow_state_prev",
@@ -75,9 +71,7 @@ FROZEN_FACADE_PROPERTIES = frozenset(
         "symbolic_features",
         "symbolic_state",
         "symbolic_state_prev",
-        "system_tension",
         "theoretical_regime",
-        "tool_retry_count",
         "uncertainty",
         "validity_envelope",
         "w_current",

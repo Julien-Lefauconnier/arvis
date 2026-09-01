@@ -441,14 +441,14 @@ class PipelineLLMService:
         observation = meta.get("llm_observation")
         if isinstance(observation, dict):
             ctx.extra["llm_observation"] = observation
-            execution_state = getattr(ctx, "execution_state", None)
+            execution_state = ctx.execution.execution_state
             if execution_state is not None:
                 execution_state.llm.observation = observation
 
         evaluation = meta.get("llm_evaluation")
         if isinstance(evaluation, dict):
             ctx.extra["llm_evaluation"] = evaluation
-            execution_state = getattr(ctx, "execution_state", None)
+            execution_state = ctx.execution.execution_state
             if execution_state is not None:
                 execution_state.llm.evaluation = evaluation
             return
@@ -458,7 +458,7 @@ class PipelineLLMService:
                 observation
             )
             ctx.extra["llm_evaluation"] = inferred
-            execution_state = getattr(ctx, "execution_state", None)
+            execution_state = ctx.execution.execution_state
             if execution_state is not None:
                 execution_state.llm.evaluation = inferred
 

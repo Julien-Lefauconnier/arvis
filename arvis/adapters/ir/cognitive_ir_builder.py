@@ -39,7 +39,7 @@ class CognitiveIRBuilder:
         return CognitiveIR(
             input=getattr(ctx, "ir_input", None),
             context=getattr(ctx, "ir_context", None),
-            decision=getattr(ctx, "ir_decision", None),
+            decision=ctx.decision_layer.ir_decision,
             state=getattr(ctx, "ir_state", None),
             gate=getattr(ctx, "ir_gate", None),
             projection=getattr(ctx, "ir_projection", None),

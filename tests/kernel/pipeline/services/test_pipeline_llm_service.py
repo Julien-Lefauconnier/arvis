@@ -14,6 +14,9 @@ from arvis.errors.base import (
     ArvisExternalError,
     ArvisRuntimeError,
 )
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.kernel.pipeline.services.pipeline_llm_service import (
     PipelineLLMService,
 )
@@ -483,13 +486,10 @@ def test_pipeline_llm_service_records_structured_output() -> None:
 def test_pipeline_llm_service_records_llm_runtime_metadata(
     mocker,
 ) -> None:
-    ctx = SimpleNamespace(
-        extra={
-            "_allow_mock_runtime": True,
-        },
-        runtime_bindings=build_runtime_bindings(
-            syscall_handler=object(),
-        ),
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.extra["_allow_mock_runtime"] = True
+    ctx.runtime_bindings = build_runtime_bindings(
+        syscall_handler=object(),
     )
 
     mocker.patch(
