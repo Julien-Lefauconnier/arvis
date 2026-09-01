@@ -135,13 +135,11 @@ class GateDecisionStack:
             adaptive_available=bool(
                 assessment.adaptive_metrics and assessment.adaptive_metrics.is_available
             ),
-            cognitive_mode=getattr(ctx, "_cognitive_mode", None),
+            cognitive_mode=ctx._cognitive_mode,
             # The declared channel default is None (campaign STRUCT,
             # LOT S2); an unset epsilon keeps its historical 1.0.
             epsilon=(
-                float(raw_epsilon)
-                if (raw_epsilon := getattr(ctx, "_epsilon", None)) is not None
-                else 1.0
+                float(raw_epsilon) if (raw_epsilon := ctx._epsilon) is not None else 1.0
             ),
         )
 

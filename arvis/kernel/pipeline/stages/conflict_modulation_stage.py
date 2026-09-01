@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 class ConflictModulationStage:
     def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
-        conflict_pressure = getattr(ctx, "conflict_pressure", None)
+        conflict_pressure = ctx.conflict_pressure
 
         if conflict_pressure is None:
             conflict_pressure = pipeline.conflict_pressure_engine.compute([])

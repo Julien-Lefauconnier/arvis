@@ -77,7 +77,7 @@ class ControlStage:
         # [0, 1] clamp through an ad-hoc object, WIDENING epsilon when
         # a timeline is present. Kept as-is pending the ownership
         # decision (respect the clamp = strictly more conservative).
-        if getattr(ctx, "timeline", None):
+        if ctx.timeline:
             ctx.temporal_pressure = 1.0
             ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.2})()
         else:
@@ -113,7 +113,7 @@ class ControlStage:
         # FLAGGED (same as block 3): identical rewrite after the value
         # was consumed above; a duplicate store the ownership decision
         # will remove.
-        if getattr(ctx, "timeline", None):
+        if ctx.timeline:
             ctx.temporal_pressure = 1.0
             ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.2})()
         else:
@@ -124,7 +124,7 @@ class ControlStage:
         # 6.5 MEMORY-AWARE MODULATION (OS layer)
         # -----------------------------------------
         try:
-            decision_layer = getattr(ctx, "decision_layer", None)
+            decision_layer = ctx.decision_layer
             bundle = getattr(decision_layer, "bundle", None)
             memory_features = getattr(bundle, "memory_features", {}) if bundle else {}
 
@@ -214,7 +214,7 @@ class ControlStage:
         else:
             ctx.adaptive_control = None
 
-        confidence = getattr(ctx, "regime_confidence", None)
+        confidence = ctx.regime_confidence
 
         if confidence is None:
             confidence = 0.0  # safe fallback

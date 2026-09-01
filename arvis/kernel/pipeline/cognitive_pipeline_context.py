@@ -6,7 +6,6 @@ from typing import Any
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationResult
 from arvis.cognition.conflict.conflict_policy_result import ConflictPolicyResult
-from arvis.cognition.conflict.conflict_signal import ConflictSignal
 from arvis.cognition.conversation.conversation_context import ConversationContext
 from arvis.cognition.conversation.conversation_signal import ConversationSignal
 from arvis.cognition.events.base_event import BaseEvent
@@ -53,6 +52,7 @@ from arvis.kernel_core.access.models import Principal
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov import LyapunovState
 from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
+from arvis.math.signals.conflict import ConflictSignal as ConflictPressureSignal
 
 
 @dataclass(kw_only=True)
@@ -178,7 +178,7 @@ class CognitivePipelineContext:
     # tightening them is part of the ctx.extra / mirror migration
     # (LOT S4).
     conflict: list[ConflictPolicyResult] | None = None
-    conflict_pressure: ConflictSignal | None = None
+    conflict_pressure: ConflictPressureSignal | None = None
     # float today (control stage), TemporalPressureSnapshot upstream
     # (temporal stage): the control stage overwrites the snapshot.
     temporal_pressure: Any | None = None
@@ -191,6 +191,7 @@ class CognitivePipelineContext:
     kappa_band: str | None = None
     adaptive_control: Any | None = None
     slow_divergence: float | None = None
+    regime_confidence: float | None = None
 
     # Gate-published channels (declared in LOT S4; the gate stage
     # previously created them dynamically at initialization).
@@ -268,8 +269,31 @@ class CognitivePipelineContext:
     )
 
     # -------------------------
-    # Extensions
+    # Extra channel (doctrine, campaign STRUCT LOT S4)
     # -------------------------
+    # ``extra`` serves exactly two roles today:
+    #
+    # 1. HOST BOUNDARY CHANNEL: keys a host passes into run(...) or
+    #    reads back from the result. Documented keys: input_data,
+    #    session_id, conversation_mode, retrieval_snapshot,
+    #    scientific_state (in) / scientific_state_next (out; the
+    #    threaded trajectory contract), retry_tool, tool_retry_count,
+    #    and the compliance injection channel
+    #    (preserve_injected_lyapunov, delta_w, stable).
+    #    Host CONTROLS never ride this channel (F-001): postures and
+    #    overrides come from composition.
+    #
+    # 2. RUN OBSERVABILITY JOURNAL: keys the stages export for views,
+    #    IR and tests (fusion_reasons, verdict_transition_trace,
+    #    final_reason_codes, monitor_snapshot, input_risk, warnings,
+    #    llm_observation/evaluation, tool_results, syscall_results,
+    #    ...). These are OUTPUT records, written once and never used
+    #    to steer a later stage; migrating them into typed
+    #    observability contexts is the tracked follow-up of this
+    #    campaign.
+    #
+    # Internal stage-to-stage state does NOT belong here: it goes in
+    # declared fields or the typed sub-contexts.
     extra: dict[str, Any] = field(default_factory=dict)
 
     # -------------------------

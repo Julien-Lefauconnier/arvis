@@ -114,11 +114,13 @@ def enforce_monotone(
 
 def sync_confirmation_flags(ctx: Any, verdict: LyapunovVerdict) -> None:
     try:
-        conflict_signal = getattr(ctx, "conflict_signal", None)
+        # Honest constant (campaign STRUCT, LOT S4): the historical read
+        # was getattr(ctx, "conflict_signal", None), an attribute nothing
+        # in the tree ever writes, so the value was 0.0 on every run.
+        # Wiring the REAL conflict channel (ctx.conflict_pressure) into
+        # this flag is a behavior decision recorded in the campaign
+        # report, not taken silently here.
         conflict_value = 0.0
-
-        if conflict_signal is not None:
-            conflict_value = float(getattr(conflict_signal, "global_score", 0.0))
 
         requires_confirmation = (
             verdict == LyapunovVerdict.REQUIRE_CONFIRMATION

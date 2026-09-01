@@ -12,7 +12,7 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 def apply_memory_policy(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict:
     try:
-        decision_layer = getattr(ctx, "decision_layer", None)
+        decision_layer = ctx.decision_layer
         bundle = getattr(decision_layer, "bundle", None)
         memory_features = getattr(bundle, "memory_features", {}) if bundle else {}
 

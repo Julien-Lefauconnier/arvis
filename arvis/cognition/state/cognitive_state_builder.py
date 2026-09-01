@@ -28,7 +28,7 @@ class CognitiveStateBuilder:
         # -----------------------------------------
         # TIMELINE NORMALIZATION
         # -----------------------------------------
-        timeline_obj = getattr(ctx, "timeline", None)
+        timeline_obj = ctx.timeline
         timeline: SignalJournal
 
         if isinstance(timeline_obj, SignalJournal):

@@ -97,8 +97,8 @@ class ControlFeedbackStage:
             drift=base.drift,
             regime=base.regime,
             calibration=base.calibration,
-            temporal_pressure=getattr(ctx, "temporal_pressure", None),
-            temporal_modulation=getattr(ctx, "temporal_modulation", None),
+            temporal_pressure=ctx.temporal_pressure,
+            temporal_modulation=ctx.temporal_modulation,
         )
         ctx._effective_epsilon = float(new_epsilon)
 

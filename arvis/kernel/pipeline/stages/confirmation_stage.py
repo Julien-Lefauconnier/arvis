@@ -48,7 +48,7 @@ class ConfirmationStage:
         self._debug(
             ctx,
             "incoming conflict_pressure:",
-            getattr(ctx, "conflict_pressure", None),
+            ctx.conflict_pressure,
         )
 
         verdict = ctx.gate_result
@@ -76,7 +76,7 @@ class ConfirmationStage:
         # -----------------------------------------
         # 2. CONFLICT PRESSURE
         # -----------------------------------------
-        conflict_pressure = getattr(ctx, "conflict_pressure", None)
+        conflict_pressure = ctx.conflict_pressure
 
         if conflict_pressure is None:
             conflict_pressure = getattr(

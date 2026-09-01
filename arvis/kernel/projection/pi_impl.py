@@ -46,7 +46,7 @@ class PiImpl:
         system_tension = ctx.observability.diagnostics.system_tension
         state_signals["system_tension"] = self._coerce(system_tension, 0.0)
 
-        conflict_pressure = getattr(ctx, "conflict_pressure", None)
+        conflict_pressure = ctx.conflict_pressure
         risk_signals["conflict_pressure"] = self._coerce(conflict_pressure, 0.0)
 
         coherence_score = getattr(ctx, "coherence_score", None)

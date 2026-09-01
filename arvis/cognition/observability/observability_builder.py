@@ -35,7 +35,7 @@ class ObservabilityBuilder:
     """
 
     def build(self, ctx: Any) -> dict[str, Any]:
-        conflict_pressure = getattr(ctx, "conflict_pressure", None)
+        conflict_pressure = ctx.conflict_pressure
         conflict_level = self._signal(conflict_pressure)
         collapse = self._signal(ctx.collapse_risk)
         drift = self._signal(ctx.drift_score)
@@ -84,7 +84,7 @@ class ObservabilityBuilder:
             verdict=str(ctx.gate_result),
             score=1.0 - self._signal(ctx.collapse_risk),
             confidence=1.0,
-            samples=len(getattr(ctx, "timeline", [])),
+            samples=len(ctx.timeline),
             mean_dv=self._signal(ctx.drift_score),
             std_dv=0.0,
             instability_rate=self._signal(ctx.collapse_risk),

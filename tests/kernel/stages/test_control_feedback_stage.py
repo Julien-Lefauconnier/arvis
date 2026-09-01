@@ -1,10 +1,12 @@
 # tests/kernel/stages/test_control_feedback_stage.py
 
-from types import SimpleNamespace
 
 import pytest
 
 from arvis.cognition.control.cognitive_control_snapshot import CognitiveControlSnapshot
+from arvis.kernel.pipeline.cognitive_pipeline_context import (
+    CognitivePipelineContext,
+)
 from arvis.kernel.pipeline.stages.control_feedback_stage import ControlFeedbackStage
 
 # --------------------------------------------------
@@ -24,24 +26,24 @@ class DummyControl:
 # --------------------------------------------------
 
 
-def make_ctx():
-    return SimpleNamespace(
-        gate_result="ALLOW",
-        control_snapshot=CognitiveControlSnapshot(
-            gate_mode="test",
-            epsilon=1.0,
-            smoothed_risk=0.0,
-            lyap_verdict="ALLOW",
-            exploration=1.0,
-            drift=0.0,
-            regime="stable",
-            calibration=None,
-            temporal_pressure=None,
-            temporal_modulation=None,
-        ),
-        system_confidence=0.5,
-        extra={},
+def make_ctx() -> CognitivePipelineContext:
+    """Real pipeline context (campaign STRUCT, LOT S4)."""
+    ctx = CognitivePipelineContext(user_id="test", cognitive_input={})
+    ctx.gate_result = "ALLOW"
+    ctx.control_snapshot = CognitiveControlSnapshot(
+        gate_mode="test",
+        epsilon=1.0,
+        smoothed_risk=0.0,
+        lyap_verdict="ALLOW",
+        exploration=1.0,
+        drift=0.0,
+        regime="stable",
+        calibration=None,
+        temporal_pressure=None,
+        temporal_modulation=None,
     )
+    ctx.system_confidence = 0.5
+    return ctx
 
 
 # --------------------------------------------------
