@@ -21,14 +21,14 @@ def make_ctx():
         regime="stable",
     )
 
-    ctx.scientific.prev_lyap = 1.0
-    ctx.scientific.cur_lyap = 0.8
+    ctx.scientific.lyapunov.prev_lyap = 1.0
+    ctx.scientific.lyapunov.cur_lyap = 0.8
 
-    ctx.scientific.slow_state_prev = None
-    ctx.scientific.slow_state = None
+    ctx.scientific.lyapunov.slow_state_prev = None
+    ctx.scientific.lyapunov.slow_state = None
 
-    ctx.scientific.symbolic_state_prev = None
-    ctx.scientific.symbolic_state = None
+    ctx.scientific.lyapunov.symbolic_state_prev = None
+    ctx.scientific.lyapunov.symbolic_state = None
 
     ctx.scientific.switching.switching_runtime = None
     ctx.scientific.switching.switching_params = None
@@ -253,7 +253,7 @@ def test_kappa_violation(monkeypatch):
 def test_composite_recommendation(monkeypatch):
     ctx = make_ctx()
     ctx.scientific.lyapunov.current = 2.0
-    ctx.scientific.cur_lyap = 2.0  # delta positive → decrease
+    ctx.scientific.lyapunov.cur_lyap = 2.0  # delta positive → decrease
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
