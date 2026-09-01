@@ -168,12 +168,14 @@ def judge(
 
 # ---------------------------------------------------------------------------
 # Campaign 2 (D-2.0, MATH-C LOT C3): the same registered discipline.
+# STATUS: REGISTERED by the owner on 2026-09-01, unmodified, before
+# any full D-2.0 run (DM-C2).
 # ---------------------------------------------------------------------------
 
 REGISTRATION_D2 = {
-    "status": "proposed",
-    "registered_by": None,
-    "registered_on": None,
+    "status": "registered",
+    "registered_by": "Julien Lefauconnier",
+    "registered_on": "2026-09-01",
 }
 
 # Identical to the D-1.0 set except 5.1: the contraction-dominance
