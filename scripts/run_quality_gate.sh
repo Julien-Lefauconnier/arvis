@@ -26,6 +26,9 @@ run_full_gate() {
   echo "==> Path headers"
   "$PY" scripts/check_path_headers.py
 
+  echo "==> Broad except discipline"
+  "$PY" scripts/check_broad_excepts.py
+
   run_security_gate
 
   echo "==> Pytest with coverage"
