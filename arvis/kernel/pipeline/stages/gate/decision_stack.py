@@ -210,8 +210,7 @@ class GateDecisionStack:
             replace_fusion_reasons(ctx, [])
             verdict = apply_answer_gate(ctx, verdict=verdict)
             sync_confirmation_flags(ctx, verdict)
-            if "fusion_trace" in ctx.extra:
-                ctx.extra["fusion_trace"]["final_verdict"] = str(verdict)
+            _patch_fusion_trace_final_verdict(ctx, verdict)
             reason_codes = tuple(
                 str(code).strip()
                 for code in dict.fromkeys(fusion_reasons_of(ctx))
@@ -391,8 +390,7 @@ class GateDecisionStack:
         verdict = apply_input_risk_gate(ctx, verdict)
         sync_confirmation_flags(ctx, verdict)
 
-        if "fusion_trace" in ctx.extra:
-            ctx.extra["fusion_trace"]["final_verdict"] = str(verdict)
+        _patch_fusion_trace_final_verdict(ctx, verdict)
 
         reason_codes = tuple(
             str(code).strip()
@@ -580,3 +578,15 @@ def apply_recovery_override(
             )
             return LyapunovVerdict.REQUIRE_CONFIRMATION
     return verdict
+
+
+def _patch_fusion_trace_final_verdict(ctx: Any, verdict: Any) -> None:
+    """Stamp the fused verdict into the observer's trace (journal
+    storage; the extra export aliases the same dict)."""
+    journal = journal_of(ctx)
+    trace = journal.fusion_trace if journal is not None else None
+    if trace is None:
+        exported = ctx.extra.get("fusion_trace")
+        trace = exported if isinstance(exported, dict) else None
+    if trace is not None:
+        trace["final_verdict"] = str(verdict)

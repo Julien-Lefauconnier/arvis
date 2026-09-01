@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
+from arvis.kernel.pipeline.context.journal_context import journal_of
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 
 if TYPE_CHECKING:
@@ -213,7 +214,7 @@ class GateObserver:
         # -----------------------------------------
         # fusion_trace
         # -----------------------------------------
-        ctx.extra["fusion_trace"] = {
+        fusion_trace_payload: dict[str, Any] = {
             "pre_verdict": str(pre_verdict),
             "final_verdict": str(final_verdict),
             "delta_w": delta_w,
@@ -231,6 +232,9 @@ class GateObserver:
             "projection": projection_summary,
             "reasons": list(ctx.extra.get("fusion_reasons", [])),
         }
+        if (journal := journal_of(ctx)) is not None:
+            journal.fusion_trace = fusion_trace_payload
+        ctx.extra["fusion_trace"] = fusion_trace_payload
 
         # -----------------------------------------
         # theoretical_trace

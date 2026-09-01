@@ -8,6 +8,7 @@ from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.context.journal_context import (
     fusion_reasons_of,
+    verdict_provenance_of,
     verdict_transition_trace_of,
 )
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
@@ -42,9 +43,8 @@ def record_verdict_transition(
         {"stage": stage, "before": str(before), "after": str(after), "reason": reason}
     )
     if strictness(after) > strictness(before):
-        ledger = ctx.extra.setdefault(VERDICT_PROVENANCE_KEY, {})
-        if isinstance(ledger, dict):
-            ledger[after.name] = stage
+        ledger = verdict_provenance_of(ctx)
+        ledger[after.name] = stage
     ctx.extra["last_verdict_source"] = stage
     ctx.extra["last_verdict_reason"] = reason
 
@@ -55,10 +55,7 @@ def verdict_provenance(ctx: Any, verdict: LyapunovVerdict) -> str | None:
     Consumers must treat a missing entry as unknown and fail closed
     (no relaxation).
     """
-    extra = getattr(ctx, "extra", None)
-    if not isinstance(extra, dict):
-        return None
-    ledger = extra.get(VERDICT_PROVENANCE_KEY)
+    ledger = verdict_provenance_of(ctx)
     if not isinstance(ledger, dict):
         return None
     value = ledger.get(verdict.name)
@@ -85,9 +82,8 @@ def seed_verdict_provenance(ctx: Any, verdict: LyapunovVerdict) -> None:
         source = GLOBAL_STABILITY_PROVENANCE
     else:
         source = ASSESSMENT_PROVENANCE
-    ledger = extra.setdefault(VERDICT_PROVENANCE_KEY, {})
-    if isinstance(ledger, dict):
-        ledger[verdict.name] = source
+    ledger = verdict_provenance_of(ctx)
+    ledger[verdict.name] = source
 
 
 def enforce_monotone(

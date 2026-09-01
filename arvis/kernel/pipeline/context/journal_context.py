@@ -47,6 +47,12 @@ class PipelineJournalContext:
     # sanitized); consumed by the tool authorization layer.
     input_risk: float | None = None
 
+    # ---- verdict provenance ledger and gate fusion trace ----
+    # (LOT O3: the last two cross-component structures to leave the
+    # extra bus; the accessors below keep the exports aliased.)
+    verdict_provenance: dict[str, str] = field(default_factory=dict)
+    fusion_trace: dict[str, Any] | None = None
+
 
 def journal_of(ctx: Any) -> PipelineJournalContext | None:
     """The context's journal, or None on partial duck contexts.
@@ -121,3 +127,24 @@ def verdict_transition_trace_of(ctx: Any) -> list[Any]:
         if isinstance(trace, list):
             return trace
     return []
+
+
+def verdict_provenance_of(ctx: Any) -> dict[str, str]:
+    """The verdict provenance ledger, same aliasing contract as
+    ``fusion_reasons_of`` (the export key is "verdict_provenance")."""
+    journal: PipelineJournalContext | None = getattr(ctx, "journal", None)
+    if journal is not None:
+        extra = getattr(ctx, "extra", None)
+        if isinstance(extra, dict):
+            exported = extra.get("verdict_provenance")
+            if exported is not journal.verdict_provenance:
+                if isinstance(exported, dict) and not journal.verdict_provenance:
+                    journal.verdict_provenance = exported
+                extra["verdict_provenance"] = journal.verdict_provenance
+        return journal.verdict_provenance
+    extra = getattr(ctx, "extra", None)
+    if isinstance(extra, dict):
+        ledger = extra.setdefault("verdict_provenance", {})
+        if isinstance(ledger, dict):
+            return ledger
+    return {}

@@ -24,7 +24,6 @@ from arvis.kernel.pipeline.stages.gate.stability import (
 from arvis.kernel.pipeline.stages.gate.trace_helpers import (
     ASSESSMENT_PROVENANCE,
     GLOBAL_STABILITY_PROVENANCE,
-    VERDICT_PROVENANCE_KEY,
     enforce_monotone,
     record_verdict_transition,
     seed_verdict_provenance,
@@ -192,7 +191,7 @@ def test_confirm_keeps_confirmation():
 
 def test_confirm_never_relaxes_foreign_abstain():
     ctx = _ctx(global_stability_action="confirm")
-    ctx.extra[VERDICT_PROVENANCE_KEY] = {"ABSTAIN": "kappa_hard_block"}
+    ctx.journal.verdict_provenance = {"ABSTAIN": "kappa_hard_block"}
     out = apply_global_stability_policy(ctx, LyapunovVerdict.ABSTAIN, global_safe=False)
     assert out is LyapunovVerdict.ABSTAIN
     trace = ctx.extra["verdict_transition_trace"]
@@ -208,7 +207,7 @@ def test_confirm_fails_closed_on_unknown_provenance():
 
 def test_confirm_reinterprets_global_stability_abstain():
     ctx = _ctx(global_stability_action="confirm")
-    ctx.extra[VERDICT_PROVENANCE_KEY] = {
+    ctx.journal.verdict_provenance = {
         "ABSTAIN": GLOBAL_STABILITY_PROVENANCE,
     }
     out = apply_global_stability_policy(ctx, LyapunovVerdict.ABSTAIN, global_safe=False)
@@ -219,7 +218,7 @@ def test_confirm_reinterprets_global_stability_abstain():
 
 def test_confirm_kappa_flag_blocks_sanctioned_relaxation():
     ctx = _ctx(global_stability_action="confirm")
-    ctx.extra[VERDICT_PROVENANCE_KEY] = {
+    ctx.journal.verdict_provenance = {
         "ABSTAIN": GLOBAL_STABILITY_PROVENANCE,
     }
     # Typed channel (campaign OBS, LOT O2): the policy reads the journal.
@@ -269,7 +268,7 @@ def test_global_policy_monotone_except_sanctioned(
     confirm, no kappa hard block. Everything else is monotone."""
     ctx = _ctx(global_stability_action=action)
     if provenance is not None:
-        ctx.extra[VERDICT_PROVENANCE_KEY] = {"ABSTAIN": provenance}
+        ctx.journal.verdict_provenance = {"ABSTAIN": provenance}
     if kappa_flag:
         # Typed channel (campaign OBS, LOT O2): the policy reads the journal.
         ctx.journal.kappa_hard_block = True
