@@ -9,6 +9,68 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+Campaign OBS (2026-09-01): the observability journal and the end of
+the mirrors. The ctx.extra dict is no longer a hidden control-flow
+bus: arvis reads its own signals from the typed journal and the
+bounded sub-contexts, the extra keys remain as byte-identical
+write-only exports for hosts, and two ratchets freeze the result. No
+veramem-facing surface changed (mirror 60/60 at every lot; mutation
+replay 9/5/9, identical to post-STRUCT).
+
+### Changed
+
+- **The run journal is typed storage** (PipelineJournalContext): the
+  gate reason and trace accumulators (fusion_reasons,
+  verdict_transition_trace), the cross-component scalars (recovery,
+  vetoes, kappa band and one-shot latch, warnings, escalations,
+  structural risk, input risk, confirmation override), the verdict
+  provenance ledger and the gate fusion trace. The extra exports are
+  aliased to the same objects, so host-visible content is unchanged;
+  accessors adopt pre-seeded export lists and keep duck-tolerance
+  contracts holding.
+- **The root context facade is retired**: the 43 remaining mirror
+  properties on CognitivePipelineContext and the 36 dead second-level
+  mirrors on PipelineScientificContext are migrated and deleted.
+  Typed callsites use the bounded sub-context paths; duck-tolerant
+  callsites go through scientific_accessors (uniformly duck-tolerant),
+  the new observability_accessors and tooling_accessors; the math
+  layer chains getattr on the canonical shape and stays import-free
+  of the kernel.
+- The gate confirmation flag consumes the real declared
+  ctx.conflict_pressure through the same canonical threshold function
+  as the confirmation stage (decision DS4a; the historical read was a
+  phantom attribute, 0.0 on every run), and DecisionTrace.conflict
+  carries the declared conflict channel instead of an extra key
+  nothing writes (DS4b). Hardening-only, pinned by property tests.
+- build_test_context seeds the canonical tension channel
+  (observability.diagnostics.system_tension); the historical dynamic
+  attribute reached no reader, so tension seeded by tests now
+  actually flows into the projection (decision DS5; no pinned
+  expectation moved).
+
+### Removed
+
+- The prepare/finalize lifecycle latches left the extra bus for
+  declared private fields: a host-seeded key can no longer skip
+  preparation or inject a foreign cached result past the gate; the
+  confirmation override propagated into the serialized IR record now
+  comes from the journal only (the ALLOW-with-vetoes override
+  injection is closed). The dunder extra keys remain as write-only
+  exports.
+- Seventeen scientific accessors with zero callers.
+
+### Added
+
+- **The extra-read ratchet** (tests/contracts/test_extra_read_ratchet):
+  a parent-aware AST scan of arvis/ resolves local aliases and
+  classifies every read of an extra mapping; the 49 surviving
+  (file, key) pairs are frozen with their category (host-input,
+  accumulator export, accessor fallback, mapping-only boundary, the
+  kappa latch) and the list is enforced in both directions.
+- The facade ratchet becomes a floor with a shadow guard: the context
+  defines no properties at all, and no retired mirror name may
+  reappear as a dynamic instance attribute after a default run.
+
 Campaign STRUCT (2026-08-31 / 2026-09-01): structural consolidation.
 The audit's frozen dead weight is gone, the hot path is typed against
 the real objects, and the mirror/extra channels have a doctrine. No
