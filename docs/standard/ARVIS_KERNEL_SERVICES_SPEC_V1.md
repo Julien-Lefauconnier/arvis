@@ -49,11 +49,19 @@ Central container for all services:
 
 ```python
 KernelServiceRegistry(
-    vfs_service: Optional[VFSService],
-    zip_ingest_service: Optional[ZipIngestService],
-    memory_service: Optional[MemoryService],
+    tool_executor,
+    vfs_service,
+    zip_ingest_service,
+    tool_manager,
+    llm_adapter,
+    authorization_service,
+    audit_intent_sink,
+    require_durable_intent_sink,
 )
 ```
+
+(A memory service binding is design ahead of implementation; the
+registry carries none today. See ARVIS_MEMORY_SPEC_V1.md.)
 
 ### Properties
 
@@ -113,9 +121,11 @@ Properties:
 
 ---
 
-### MemoryService
+### MemoryService (design, not implemented)
 
-The MemoryService is responsible for:
+No MemoryService exists in the tree today; long-term memory has no
+governed write path yet (ARVIS_MEMORY_SPEC_V1.md carries the same
+frontier). As specified, the MemoryService is responsible for:
 
 - controlled memory mutations
 - policy enforcement (scope, consent, retention)

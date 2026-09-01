@@ -286,9 +286,10 @@ SyscallResult(
 Examples:
 
 - tool.execute
+- llm.generate
 - process.*
-- memory.*
 - interrupt.*
+- vfs.*
 
 ---
 
@@ -393,7 +394,7 @@ User Input
 → Scheduler.enqueue
 → Scheduler.tick
     → select process
-    → PipelineExecutor.execute_stage
+    → PipelineExecutor.execute_process
 → (repeat until completion)
 → finalize_run()
 → Syscall execution (if needed)

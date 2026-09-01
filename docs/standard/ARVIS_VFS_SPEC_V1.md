@@ -916,8 +916,13 @@ ARVIS now uses a `KernelServiceRegistry` to inject subsystem services into the s
 The registry currently exposes:
 
 - `tool_executor`
+- `tool_manager`
 - `vfs_service`
 - `zip_ingest_service`
+- `llm_adapter`
+- `authorization_service`
+- `audit_intent_sink`
+- `require_durable_intent_sink`
 
 ### 21.3 Architectural benefit
 

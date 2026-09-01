@@ -232,9 +232,11 @@ CognitiveIR:
   decision: CognitiveDecisionIR
   state: CognitiveStateIR | null
   gate: CognitiveGateIR
-  stability: StabilityIR | null
-  adaptive: AdaptiveIR | null
-  syscalls: list[SyscallResult] | null
+  projection: object | null   (ProjectionIRAdapter payload)
+  validity: object | null     (ValidityIRAdapter payload)
+  stability: object | null    (StabilityIRAdapter payload)
+  adaptive: object | null     (AdaptiveIRAdapter payload)
+  tools: list[dict] | null
 ```
 #### Invariants
 
@@ -495,11 +497,15 @@ MemoryLongSnapshot is the audit surface of memory.
 
 ---
 
-### 4.16 LinguisticAct
+### 4.16 LinguisticAct (design, removed from tree)
 
 #### Role
 
-Represents the canonical communicative act derived from a ResponsePlan.
+Specified as the canonical communicative act derived from a
+ResponsePlan. The object was removed with the unwired linguistic
+slice (only the LinguisticActType taxonomy survives; see
+ARVIS_LINGUISTIC_SPEC_V1.md's implementation frontier). Retained here
+as the normative design for a future realization layer.
 
 ```yaml
 LinguisticAct:

@@ -9,9 +9,22 @@
 ## Kernel Memory Subsystem: ARVIS-MEM-01
 
 **Version:** 1.0  
-**Status:** Stable (implementation-aligned)  
+**Status:** Design specification, partially implemented (see the
+implementation frontier below)  
 **Scope:** Kernel Core  
-**Applies to:** `arvis/kernel_core/memory/*`  
+**Applies to:** `arvis/memory/*` (the flat `memory_long_*` module set)
+
+> **Implementation frontier (2026-09).** The implemented slice is the
+> flat long-memory module set under `arvis/memory/`: MemoryLongEntry,
+> MemoryLongRecord, MemoryLongSnapshot, MemoryLongRepository (an ABC
+> with `list_entries`, `list_active_entries`,
+> `list_active_entries_batch`, `revoke`), the policy gate, the
+> projector, the registry, the service and the governance module. The
+> layered package structure, the `memory.*` syscalls, the
+> KernelServiceRegistry `memory_service` binding and the per-entry
+> mutation methods specified below are design ahead of
+> implementation: none of them exist in the tree today. Long-term
+> memory is an experimental surface (see the README limitations).
 
 ---
 
@@ -109,15 +122,19 @@ Direct repository access is forbidden in kernel execution paths.
 
 ### 3.1 Layered structure
 
+Specified layering (design), implemented today as a flat module set
+under `arvis/memory/` (`memory_long_repository.py`,
+`memory_long_policy_gate.py`, `memory_long_projector.py`,
+`memory_long_snapshot.py`, `memory_long_service.py`,
+`memory_long_registry.py`, `governance.py`):
+
 ```text
 memory/
   ├── repository        (storage contract)
-  ├── repositories      (implementations)
   ├── policy            (filtering rules)
   ├── projection        (execution view)
   ├── snapshot          (deterministic representation)
-  ├── service           (orchestration)
-  └── adapters          (integration with pipeline / IR / legacy long-memory bridge)
+  └── service           (orchestration)
 ```
 
 ---
@@ -148,7 +165,7 @@ IR-safe context exposure
 
 ## 4. Domain Model
 
-### 4.1 MemoryEntry
+### 4.1 MemoryEntry (implemented as MemoryLongEntry)
 
 Represents a single memory record.
 
@@ -164,7 +181,7 @@ Represents a single memory record.
 
 ---
 
-### 4.2 MemorySnapshot
+### 4.2 MemorySnapshot (implemented as MemoryLongSnapshot)
 
 Represents the deterministic view of memory.
 
@@ -192,13 +209,19 @@ The repository:
 
 ### 5.2 Required methods
 
+Implemented on MemoryLongRepository:
+
 - list_entries(user_id)
 - list_active_entries(user_id)
 - list_active_entries_batch(user_ids)
+- revoke(...)
+
+Specified but not implemented (design; per-entry mutation belongs to
+a future write path):
+
 - get_entry(user_id, key)
 - add_entry(...)
 - replace_entry(...)
-- revoke_entry(...)
 
 ---
 
@@ -307,7 +330,8 @@ The MemoryService orchestrates:
 
 ## 10. Kernel Service Registry Integration
 
-The memory subsystem is exposed via:
+Design target (not implemented; the registry has no memory binding
+today):
 
 ```python
 KernelServiceRegistry.memory_service
@@ -323,9 +347,12 @@ KernelServiceRegistry.memory_service
 
 ---
 
-## 11. Syscall Interface
+## 11. Syscall Interface (design, not registered)
 
-### 11.1 Supported syscalls
+No `memory.*` syscall is registered in the tree today; this section
+is the normative design for the future write path.
+
+### 11.1 Specified syscalls
 
 #### Read
 - memory.list
@@ -387,10 +414,11 @@ Memory is time-dependent. Recomputing would:
 
 ### 13.1 Context injection
 
-Memory snapshot is injected into:
+Memory state reaches the pipeline context through:
 
 ```text
-CognitivePipelineContext.long_memory_snapshot
+CognitivePipelineContext.long_memory      (dict payload)
+CognitivePipelineContext.memory_snapshot  (snapshot object)
 ```
 
 ---

@@ -139,18 +139,14 @@ $$
 ### 6.1 Core API
 
 ```python
-result = arvis.run(observation: Observation) -> COSResult
+result = CognitiveOS().run(user_id=..., cognitive_input=...)
+# -> CognitiveResultView
 ```
 
-Returns:
-
-{
-  "decision": ...,
-  "confidence": ...,
-  "gate_result": ...,
-  "stability": ...,
-  "trace": ...
-}
+Returns a normalized result view whose dict form carries the
+decision, gate verdict and reasons, stability axes, and the trace
+reference (see arvis/api/views/cognitive_result_view.py for the
+authoritative shape).
 
 ### 6.2 Cognitive Signals
 

@@ -38,8 +38,8 @@ Pipeline execution
 In implementation:
 
 ```python
-ctx.cognitive_state = CognitiveStateBuilder.from_context(ctx)
-CognitiveStateContract.validate(ctx.cognitive_state)
+ctx.observability.state.cognitive_state = CognitiveStateBuilder.from_context(ctx)
+CognitiveStateContract.validate(ctx.observability.state.cognitive_state)
 ```
 
 The builder is responsible for normalization and field aggregation.  
@@ -159,7 +159,7 @@ The Cognitive State is NOT exposed directly.
 It is transformed into IR:
 
 ```python
-StateIRAdapter.from_state(ctx.cognitive_state)
+StateIRAdapter.from_state(ctx.observability.state.cognitive_state)
 ```
 
 ### Key distinction:

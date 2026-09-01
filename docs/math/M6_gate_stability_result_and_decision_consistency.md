@@ -69,8 +69,8 @@ $$
 
 The Gate decision may be modified by post-processing overrides:
 
-1. Recovery override  
-  - If recovery is detected and validity is satisfied, the system may promote a non-allow verdict to ALLOW.
+1. Recovery override (bounded)  
+  - If recovery is detected and validity is satisfied, the system may soften an ABSTAIN to REQUIRE_CONFIRMATION. It never promotes to ALLOW: a recovering system stops refusing, it does not self-approve, and the relaxation is refused at or above the collapse abstention threshold (audit G2).
 
 2. Uncertain recovery  
   - If recovery is detected but validity is not guaranteed, the system must enforce REQUIRE_CONFIRMATION.

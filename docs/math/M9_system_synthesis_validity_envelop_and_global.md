@@ -70,8 +70,8 @@ containing five boolean flags + metadata:
 
 Exposed via:
 ```python
-ctx.validity_envelope
-ctx.extra["validity_envelope"]
+ctx.scientific.adaptive.validity_envelope
+ctx.extra["validity_envelope"]  # host-facing export
 ```
 ---
 

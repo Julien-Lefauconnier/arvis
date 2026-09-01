@@ -293,7 +293,8 @@ Core methods:
 ```python
 run(...)
 run_ir(...)
-replay(...)
+replay_verified(...)
+replay_recomposed(...)
 inspect(...)
 register_tool(...)
 ```

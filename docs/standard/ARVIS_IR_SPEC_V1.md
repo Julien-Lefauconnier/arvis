@@ -109,8 +109,11 @@ The IR remains the authoritative representation.
 
 External projections MAY introduce runtime metadata.
 
-To ensure consistency, projections MUST define a semantic fingerprint
-mechanism allowing deterministic comparison with the source IR.
+To ensure consistency, a projection MUST remain deterministically
+derivable from the source IR (the historical semantic-fingerprint
+mechanism left the tree with the kernel-adapter rule engine; the
+surviving consistency guarantees are the canonical serializer and the
+IR hash).
 
 If origin is None, it MUST be normalized to a deterministic default value ("unknown").
 
@@ -171,9 +174,11 @@ CognitiveIR:
   decision: CognitiveDecisionIR
   state: CognitiveStateIR | null
   gate: CognitiveGateIR
-  stability: StabilityIR | null
-  adaptive: AdaptiveIR | null
-  tools: list[ToolResultIR] | null
+  projection: object | null   (ProjectionIRAdapter payload)
+  validity: object | null     (ValidityIRAdapter payload)
+  stability: object | null    (StabilityIRAdapter payload)
+  adaptive: object | null     (AdaptiveIRAdapter payload)
+  tools: list[dict] | null    (ToolResult-shaped entries, see below)
 ```
 
 ---
@@ -301,7 +306,8 @@ They are:
 
 Structure:
 
-ToolResultIR:
+Each tools entry (a plain dict in CognitiveIR.tools, built from the
+ToolResult fields):
   tool_name: str
   success: bool
   output: Any | null

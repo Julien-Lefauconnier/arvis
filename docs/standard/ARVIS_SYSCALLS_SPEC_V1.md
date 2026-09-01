@@ -227,9 +227,12 @@ Examples:
 
 ---
 
-### 3. Memory Syscalls
+### 3. Memory Syscalls (design, not registered)
 
-Memory syscalls are **strictly limited to mutation operations**.
+No `memory.*` syscall is registered in the tree today (the registered
+set is `tool.execute`, `llm.generate`, `process.*`, `interrupt.emit`,
+`arvis.describe_self`, `vfs.*`). As specified, memory syscalls are
+**strictly limited to mutation operations**.
 
 ARVIS enforces a **snapshot-based memory model**, where:
 

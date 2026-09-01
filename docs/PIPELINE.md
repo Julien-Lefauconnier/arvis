@@ -52,6 +52,7 @@ The pipeline is logically sequential:
 → Execution
 → Action
 → Intent
+→ Runtime
 ```
 
 ---
@@ -185,14 +186,10 @@ Service responsibilities include:
 - input preparation
 - IR bootstrap
 - stage registry construction
-- stage execution
-- iteration lifecycle
-- runtime compatibility
+- preparation and finalization (idempotent, typed lifecycle latches)
 - replay execution
 - observability
-- finalization
 - error handling
-- execution synchronization
 
 Factories include:
 
@@ -233,7 +230,8 @@ _safe_run(stage, ctx)
 If a stage fails:
 
 - execution continues
-- error is recorded in ctx.extra["errors"]
+- error is recorded in ctx.error_state.errors (exported to hosts
+  under ctx.extra["errors"] at the runtime boundary)
 
 This ensures:
 
@@ -275,8 +273,8 @@ Initializes decision context.
 
 Outputs:
 
-- ctx.decision_result
-- ctx.control_runtime
+- ctx.decision_layer.decision_result
+- ctx.runtime_bindings.control_runtime
 
 ---
 
@@ -313,7 +311,7 @@ Builds unified cognitive representation.
 
 Outputs:
 
-- ctx.bundle
+- ctx.decision_layer.bundle
 
 ---
 
@@ -376,7 +374,7 @@ Applies projection constraints:
 
 Outputs:
 
-- ctx.projection_certificate
+- ctx.projection.certificate
 
 ---
 
@@ -448,7 +446,21 @@ Produces executable cognitive intent.
 
 Outputs:
 
-- ctx.executable_intent
+- ctx.execution.executable_intent
+
+---
+
+### 18. Runtime Stage
+
+Publishes the run's risk and action into the per-user control runtime
+and updates the switching runtime and global stability observer.
+
+Outputs:
+
+- ctx.runtime_bindings.control_runtime (last_risk, inertia_risk,
+  last_action)
+- ctx.scientific.switching.switching_runtime (regime update)
+- ctx.scientific.adaptive.global_stability_metrics
 
 ---
 

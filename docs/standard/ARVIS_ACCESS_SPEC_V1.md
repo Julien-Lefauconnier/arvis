@@ -182,9 +182,9 @@ authorization was evaluated on an absence.
 * The absence of a configured policy MUST be treated as the default
   owner-scoped policy (Section 7), never as unconditional allow.
 
-> Enforcement wiring in the handler is specified here but delivered as a
-> distinct, behaviour-neutral increment, so that the core boundary edit is
-> reviewed in isolation.
+> Enforcement wiring is live in the handler: SyscallHandler resolves
+> the access context and calls the authorization service's decide()
+> before dispatch.
 
 ### 5.1 Identity Transport and Trust Boundary
 

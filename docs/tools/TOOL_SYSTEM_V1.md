@@ -16,7 +16,8 @@ This system is fully compatible with:
 
 This component belongs to:
 
-- Specification Hierarchy Level 4 (Execution Model)
+- Specification Hierarchy Level 5 (Execution Model; see
+  ARVIS_SPEC_HIERARCHY.md)
 
 ---
 
@@ -110,10 +111,11 @@ Additionally:
 
 ### 3. Observability
 
-Every tool execution produces:
+Every tool execution produces a ToolResult (the syscall envelope
+around it is SyscallResult(success, result, error)):
 
 ```python
-SyscallResult(
+ToolResult(
     tool_name: str
     success: bool
     output: Any

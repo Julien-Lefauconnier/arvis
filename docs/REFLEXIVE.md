@@ -190,7 +190,12 @@ Examples:
 - stability evolution
 - historical summaries
 
-Implemented through external signal/timeline integrations
+Implemented through:
+
+```text
+reflexive/timeline/aggregation/
+reflexive/timeline/explanation/
+```
 
 ---
 
@@ -216,20 +221,11 @@ reflexive/compliance/
 
 ### 6. Reflexive Rendering
 
-Structured introspection outputs can be transformed into readable views.
-
-Examples:
-
-- perator dashboards
-- machine-readable snapshots
-- audit summaries
-- explainability reports
-
-Implemented through:
-
-```text
-reflexive/rendering/
-```
+Structured introspection outputs (frozen snapshots, attestations,
+timeline explanations) are machine-readable by construction; readable
+views (operator dashboards, audit summaries, explainability reports)
+are rendered by the host from those payloads. There is no rendering
+package inside arvis: rendering is host territory by design.
 
 ---
 

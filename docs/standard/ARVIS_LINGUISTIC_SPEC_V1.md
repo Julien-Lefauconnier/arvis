@@ -257,11 +257,8 @@ Constraints:
 
 Transforms structured representation into final output.
 
-Located in:
-
-```text
-arvis/linguistic/realization/
-```
+Located in the host layer (there is no realization package inside
+arvis; see the implementation frontier above).
 
 ---
 
@@ -407,9 +404,12 @@ CognitiveIR → ResponsePlan → LinguisticAct → GenerationFrame → Output
 
 Public objects include:
 
-- LinguisticAct
 - ResponsePlan
 - ResponseStrategyDecision
+
+(LinguisticAct was removed from the tree with the unwired linguistic
+slice; only the LinguisticActType taxonomy survives. See the
+implementation frontier above.)
 
 These objects MUST comply with ARVIS_PUBLIC_OBJECT.md invariants.
 

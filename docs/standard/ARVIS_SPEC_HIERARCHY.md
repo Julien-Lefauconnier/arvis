@@ -198,8 +198,11 @@ Defines:
 This layer includes:
 
 - Kernel Adapter
-- Rule Engine (projection only)
 - Canonical Signal Factory
+- Timeline projection
+
+(The rule engine was removed from the tree; see
+docs/architecture/KERNEL_ADAPTERS.md.)
 
 Rules:
 

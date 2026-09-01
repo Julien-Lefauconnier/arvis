@@ -28,13 +28,16 @@ This observation is derived from the cognitive pipeline and may include:
 - structured signals (state descriptors, symbolic outputs)
 - external signals (environment, uncertainty sources)
 
-At the current implementation stage:
+At the current implementation stage the active observation carries
+five bounded axes:
 
 $$
-o_t^{(\text{active})} = \{\text{system\_tension}\}
+o_t^{(\text{active})} = \{\text{system\_tension},\ \text{conflict\_pressure},\ \text{coherence\_score},\ \text{control\_signal},\ \text{adaptive\_kappa\_eff}\}
 $$
 
-but the protocol is designed to support richer observation structures in the future.
+(system_tension and conflict_pressure are always emitted; the other
+three when numerically present), and the protocol is designed to
+support richer observation structures in the future.
 
 ---
 

@@ -17,10 +17,13 @@ They are grouped by layer and enforced at every cognitive step.
 
 - Terminal states are:
   - COMPLETED
-  - WAITING_CONFIRMATION
   - ABORTED
 
   → Terminal processes MUST NOT be re-enqueued.
+
+- WAITING_CONFIRMATION is a parked, resumable state (not terminal):
+  a parked process leaves the schedulable set and re-enters READY
+  only through an explicit resume or interrupt wake.
 
 - Scheduler MUST be deterministic:
   - identical state → identical scheduling decision
@@ -205,13 +208,18 @@ No other component may produce a terminal result.
 - Timeline exposure explanation must be built-in and declarative.
 - Runtime state MUST be introspectable through reflexive interfaces.
 
-## 5. Conversation Orchestration Invariants (partial v0.1)
+## 5. Conversation State Invariants
 
-- Collapse guard must detect and prevent divergence.
-- Attractor model must maintain coherence.
-- Regime switching must be hysteresis-protected.
-- Stability controller must enforce coherence bounds.
-- Conversation orchestration MUST remain independent from scheduler execution.
+> Implementation frontier (2026-09-01): the standalone conversation
+> orchestration layer (collapse guard, attractor model, conversation
+> stability controller) was removed as dead code in the consolidation
+> campaigns. What remains in the tree are the typed conversation
+> state and signal objects the pipeline consumes.
+
+- Conversation state and signals are declared, typed inputs; they
+  never carry control flow outside the pipeline's declared channels.
+- Regime switching in the control layer remains hysteresis-protected
+  (mode_hysteresis), independent of any conversation layer.
 
 **Violation of any invariant results in rejection or non-compliance.**
 

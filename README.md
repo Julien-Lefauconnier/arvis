@@ -375,7 +375,9 @@ ARVIS is validated like infrastructure.
 
 Current suite includes:
 
-* 3000+ passing tests (unit, integration, property-based)
+* 2900+ passing tests (unit, integration, property-based; the count
+  went *down* across the consolidation campaigns because dead layers
+  left with their tests)
 * deterministic replay verification (full-IR comparison)
 * adversarial regression tests pinning reproduced attack vectors
   (`tests/adversarial/test_campaign_audit_regression*.py`, VFS scope
@@ -383,13 +385,20 @@ Current suite includes:
 * hashchain integrity tests
 * gate safety-ordering and bounded-recovery properties
   (`tests/math/gate/test_gate_safety_ordering.py`)
+* multi-tick scheduler starvation-freedom properties: budget depletion,
+  not aging, is what prevents starvation, and it is pinned as such over
+  whole runs (`tests/runtime/test_scheduler_starvation_properties.py`)
+* contract ratchets that can only tighten: import closure, the frozen
+  internal `ctx.extra` read surface, and a context facade floor with a
+  shadow-attribute guard
 * runtime robustness checks
 
-What the suite does **not** yet establish, honestly: scheduler
-*fairness* is only covered by single-tick priority tests (no starvation
-or bounded-wait property), and the Lyapunov decrease property is
-asserted at unit level and on threaded-state runs, not yet as a
-closed-loop property over long adversarial trajectories.
+What the suite does **not** yet establish, honestly: the Lyapunov
+decrease property is asserted at unit level and on threaded-state
+runs, not yet as a closed-loop property over long adversarial
+trajectories, and the switching guard evaluates its theorem with
+default constants (alpha, L_T) that have not been measured on real
+traces.
 
 ---
 
@@ -496,7 +505,9 @@ experimental, and out of scope for the 0.1 series:
 **Experimental (present, not part of the stable public API):**
 
 * long-term memory
-* conversation orchestration
+* conversation state types (the standalone conversation orchestration
+  layer was removed as dead code in the consolidation campaigns; what
+  remains are the typed signals the pipeline consumes)
 * natural-language input surface: a bare text prompt is governed with a
   *minimal* projection (REQUIRES_CONFIRMATION), not a full cognitive projection
 * real LLM providers: the governed adapter path is wired end to end, but the

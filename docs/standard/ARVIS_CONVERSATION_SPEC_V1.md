@@ -7,6 +7,20 @@
 > [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174) when, and only
 > when, they appear in all capitals, as shown here.
 
+> **Implementation frontier (2026-09, campaign STRUCT LOT S1).** The
+> implemented slice of this spec is the typed conversation state and
+> signal objects (`arvis/cognition/conversation/`: ConversationContext,
+> ConversationSignal, ConversationState, ResponsePlan,
+> ResponseStrategyDecision, ResponseStrategyType, response
+> realization mode) plus the continuation types
+> (`arvis/conversation/continuation.py`, `pending_turn.py`). The
+> standalone orchestration layer specified below (the orchestrator,
+> the memory bridge and policy, the adaptive and stability
+> controllers, the plan builder) was design ahead of implementation,
+> never wired into the runtime, and has been removed from the tree;
+> its specification is retained as the normative design for a host or
+> a future layer, and the removed code is in git history.
+
 ## 1. Purpose
 
 The Conversation Layer defines how a validated cognitive decision is transformed into a communicable structured response.
@@ -71,7 +85,7 @@ The following objects are defined as PUBLIC OBJECTS in ARVIS_PUBLIC_OBJECT.md:
 Defined in:
 
 ```text
-arvis/conversation/response_strategy_decision.py
+arvis/cognition/conversation/response_strategy_decision.py
 ```
 
 Represents:
@@ -112,9 +126,11 @@ Defines the canonical strategy space.
 Defined in:
 
 ```text
-response_plan.py
-response_plan_builder.py
+arvis/cognition/conversation/response_plan.py
 ```
+
+(The plan builder is part of the removed orchestration layer; see the
+implementation frontier above.)
 
 Represents a structured plan for communication.
 
@@ -161,13 +177,9 @@ Constraints:
 
 ---
 
-### 4.5 ConversationOrchestrator
+### 4.5 ConversationOrchestrator (design, removed from tree)
 
-Defined in:
-
-```text
-conversation_orchestrator.py
-```
+Specified role (see the implementation frontier above):
 
 Role:
 
@@ -265,12 +277,8 @@ These adaptations MUST:
 
 ## 7. Memory Integration
 
-The Conversation Layer integrates memory through:
-
-```text
-conversation_memory_bridge.py
-conversation_memory_policy.py
-```
+The Conversation Layer design integrates memory through a bridge and
+a policy (removed from the tree; see the implementation frontier):
 
 Responsibilities:
 
@@ -290,10 +298,9 @@ IMPORTANT:
 
 ## 8. Adaptive Control
 
-Conversation is dynamically regulated by:
-
-- conversation_adaptive_controller.py
-- conversation_stability_controller.py
+The design regulates conversation through adaptive and stability
+controllers (removed from the tree; see the implementation
+frontier):
 
 This ensures:
 

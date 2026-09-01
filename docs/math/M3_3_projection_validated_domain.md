@@ -109,15 +109,14 @@ $$
 
 The current implemented projection operates on a **minimal** runtime observation space.
 
-At this stage, the primary validated signal is:
+At this stage, the validated signals are:
 
 $$
-o_t^{(\text{cert})} = \{\text{system\_tension}\}
+o_t^{(\text{cert})} = \{\text{system\_tension},\ \text{conflict\_pressure},\ \text{coherence\_score},\ \text{control\_signal},\ \text{adaptive\_kappa\_eff}\}
 $$
 
 **Properties:**
-- scalar
-- bounded
+- bounded, per-axis
 - deterministic
 - directly usable by safety logic
 
@@ -134,8 +133,15 @@ The validated domain is operationally defined by:
 
 ### 4.1 Numeric boundedness
 $$
-\text{system\_tension} \in [0, 100]
+\text{system\_tension} \in [0, 100],\quad \text{conflict\_pressure} \in [0, 100],\quad \text{control\_signal} \in [0, 100]
 $$
+$$
+\text{coherence\_score} \in [0, 1],\quad \text{adaptive\_kappa\_eff} \in [0, 1],\quad \text{payload} \le 10000
+$$
+
+A declared-but-missing bounded key marks the domain invalid
+(<key>_present = False): the bounds are load-bearing, not
+decorative.
 
 ### 4.2 Finite representation
 - no NaN

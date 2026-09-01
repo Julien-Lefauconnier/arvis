@@ -24,7 +24,7 @@ $x_t \in \mathbb{R}^n$
 Fast contracting dynamics governed by $f_q$.
 
 **Implementation**  
-`ctx.cur_lyap`, `ctx.prev_lyap`
+`ctx.scientific.lyapunov.cur_lyap`, `ctx.scientific.lyapunov.prev_lyap`
 
 **Interpretation**  
 The implementation does not represent $x_t$ explicitly. Instead, it operates on a compressed Lyapunov-relevant projection of the state.  
@@ -39,7 +39,7 @@ $z_t \in \mathbb{R}^m$ with slow adaptation:
 $z_{t+1} = (1-\eta)z_t + \eta T(x_t)$
 
 **Implementation**  
-`ctx.slow_state`, `ctx.symbolic_state`
+`ctx.scientific.lyapunov.slow_state`, `ctx.scientific.lyapunov.symbolic_state`
 
 **Extension**  
 The implementation introduces a **symbolic / cognitive state layer** that is:
@@ -56,7 +56,8 @@ $z_t^{\text{impl}} = (z_t^{\text{metric}}, z_t^{\text{symbolic}})$
 $q_t \in Q$ (discrete switching mode)
 
 **Implementation**  
-`ctx.switching_runtime`, `ctx.switching_params`, `ctx.switching_metrics`
+`ctx.scientific.switching` (switching_runtime, switching_params,
+switching_metrics)
 
 **Interpretation**  
 Switching is implemented as a constraint-evaluated runtime process including dwell-time estimation, switching frequency monitoring, and stability condition evaluation.  
@@ -96,14 +97,14 @@ $W_q(x,z) = V_q(x) + \lambda \|z - T(x)\|^2$
 $\Delta W_t = W_{t+1} - W_t$
 
 **Implementation**  
-`ctx.delta_w`
+`ctx.scientific.composite.delta_w`
 
 **Extension**  
 Computed under partial observability and fallback-compatible. Introduces robust observability without requiring full state access.
 
 ### 2.3 Temporal Extension (Implementation only)
 
-`ctx.delta_w_history`  
+`ctx.scientific.composite.delta_w_history`  
 Used for:
 - empirical stability monitoring (M10 protocol, planned; not yet executed)
 - global stability guards
