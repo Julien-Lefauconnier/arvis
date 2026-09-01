@@ -1,0 +1,390 @@
+{
+  "corpus_version": "D-2.0",
+  "master_seed": 20260902,
+  "trajectories": [
+    {
+      "family": "nominal",
+      "id": "nominal-00",
+      "seed": 3508120656,
+      "turns": 24
+    },
+    {
+      "family": "nominal",
+      "id": "nominal-01",
+      "seed": 3207780673,
+      "turns": 24
+    },
+    {
+      "family": "nominal",
+      "id": "nominal-02",
+      "seed": 3526076521,
+      "turns": 24
+    },
+    {
+      "family": "nominal",
+      "id": "nominal-03",
+      "seed": 2312593006,
+      "turns": 24
+    },
+    {
+      "family": "nominal",
+      "id": "nominal-04",
+      "seed": 3974943167,
+      "turns": 24
+    },
+    {
+      "family": "nominal",
+      "id": "nominal-05",
+      "seed": 2030453013,
+      "turns": 24
+    },
+    {
+      "family": "nominal",
+      "id": "nominal-06",
+      "seed": 3107275319,
+      "turns": 24
+    },
+    {
+      "family": "nominal",
+      "id": "nominal-07",
+      "seed": 3641745214,
+      "turns": 24
+    },
+    {
+      "family": "boundary",
+      "id": "boundary-00",
+      "seed": 848135412,
+      "turns": 16
+    },
+    {
+      "family": "boundary",
+      "id": "boundary-01",
+      "seed": 4170243497,
+      "turns": 16
+    },
+    {
+      "family": "boundary",
+      "id": "boundary-02",
+      "seed": 278541414,
+      "turns": 16
+    },
+    {
+      "family": "boundary",
+      "id": "boundary-03",
+      "seed": 4291454149,
+      "turns": 16
+    },
+    {
+      "family": "boundary",
+      "id": "boundary-04",
+      "seed": 4003274111,
+      "turns": 16
+    },
+    {
+      "family": "boundary",
+      "id": "boundary-05",
+      "seed": 1473718659,
+      "turns": 16
+    },
+    {
+      "family": "boundary",
+      "id": "boundary-06",
+      "seed": 2993478773,
+      "turns": 16
+    },
+    {
+      "family": "boundary",
+      "id": "boundary-07",
+      "seed": 1358092188,
+      "turns": 16
+    },
+    {
+      "family": "adversarial",
+      "id": "adversarial-00",
+      "seed": 3291312669,
+      "turns": 16
+    },
+    {
+      "family": "adversarial",
+      "id": "adversarial-01",
+      "seed": 1037631923,
+      "turns": 16
+    },
+    {
+      "family": "adversarial",
+      "id": "adversarial-02",
+      "seed": 3720515387,
+      "turns": 16
+    },
+    {
+      "family": "adversarial",
+      "id": "adversarial-03",
+      "seed": 3126394522,
+      "turns": 16
+    },
+    {
+      "family": "adversarial",
+      "id": "adversarial-04",
+      "seed": 142503914,
+      "turns": 16
+    },
+    {
+      "family": "adversarial",
+      "id": "adversarial-05",
+      "seed": 755159360,
+      "turns": 16
+    },
+    {
+      "family": "adversarial",
+      "id": "adversarial-06",
+      "seed": 2470765164,
+      "turns": 16
+    },
+    {
+      "family": "adversarial",
+      "id": "adversarial-07",
+      "seed": 2683032838,
+      "turns": 16
+    },
+    {
+      "family": "switching_stress",
+      "id": "switching_stress-00",
+      "seed": 1686201342,
+      "turns": 24
+    },
+    {
+      "family": "switching_stress",
+      "id": "switching_stress-01",
+      "seed": 2931961996,
+      "turns": 24
+    },
+    {
+      "family": "switching_stress",
+      "id": "switching_stress-02",
+      "seed": 907412256,
+      "turns": 24
+    },
+    {
+      "family": "switching_stress",
+      "id": "switching_stress-03",
+      "seed": 160797213,
+      "turns": 24
+    },
+    {
+      "family": "switching_stress",
+      "id": "switching_stress-04",
+      "seed": 928423681,
+      "turns": 24
+    },
+    {
+      "family": "switching_stress",
+      "id": "switching_stress-05",
+      "seed": 4053414565,
+      "turns": 24
+    },
+    {
+      "family": "switching_stress",
+      "id": "switching_stress-06",
+      "seed": 2617168498,
+      "turns": 24
+    },
+    {
+      "family": "switching_stress",
+      "id": "switching_stress-07",
+      "seed": 2442649123,
+      "turns": 24
+    },
+    {
+      "family": "long_horizon",
+      "id": "long_horizon-00",
+      "seed": 726639887,
+      "turns": 60
+    },
+    {
+      "family": "long_horizon",
+      "id": "long_horizon-01",
+      "seed": 1238190043,
+      "turns": 60
+    },
+    {
+      "family": "long_horizon",
+      "id": "long_horizon-02",
+      "seed": 558249814,
+      "turns": 60
+    },
+    {
+      "family": "long_horizon",
+      "id": "long_horizon-03",
+      "seed": 3496228732,
+      "turns": 60
+    },
+    {
+      "family": "long_horizon",
+      "id": "long_horizon-04",
+      "seed": 2802875332,
+      "turns": 60
+    },
+    {
+      "family": "long_horizon",
+      "id": "long_horizon-05",
+      "seed": 1285352316,
+      "turns": 60
+    },
+    {
+      "family": "long_horizon",
+      "id": "long_horizon-06",
+      "seed": 3679395923,
+      "turns": 60
+    },
+    {
+      "family": "long_horizon",
+      "id": "long_horizon-07",
+      "seed": 53773529,
+      "turns": 60
+    },
+    {
+      "family": "conflicting",
+      "id": "conflicting-00",
+      "seed": 1700750970,
+      "turns": 16
+    },
+    {
+      "family": "conflicting",
+      "id": "conflicting-01",
+      "seed": 535278229,
+      "turns": 16
+    },
+    {
+      "family": "conflicting",
+      "id": "conflicting-02",
+      "seed": 3042511438,
+      "turns": 16
+    },
+    {
+      "family": "conflicting",
+      "id": "conflicting-03",
+      "seed": 528116428,
+      "turns": 16
+    },
+    {
+      "family": "conflicting",
+      "id": "conflicting-04",
+      "seed": 859710724,
+      "turns": 16
+    },
+    {
+      "family": "conflicting",
+      "id": "conflicting-05",
+      "seed": 2248930104,
+      "turns": 16
+    },
+    {
+      "family": "conflicting",
+      "id": "conflicting-06",
+      "seed": 4144838621,
+      "turns": 16
+    },
+    {
+      "family": "conflicting",
+      "id": "conflicting-07",
+      "seed": 1081944458,
+      "turns": 16
+    },
+    {
+      "family": "declared_risk",
+      "id": "declared_risk-00",
+      "seed": 3032723854,
+      "turns": 24
+    },
+    {
+      "family": "declared_risk",
+      "id": "declared_risk-01",
+      "seed": 3910680249,
+      "turns": 24
+    },
+    {
+      "family": "declared_risk",
+      "id": "declared_risk-02",
+      "seed": 2260087854,
+      "turns": 24
+    },
+    {
+      "family": "declared_risk",
+      "id": "declared_risk-03",
+      "seed": 1715469685,
+      "turns": 24
+    },
+    {
+      "family": "declared_risk",
+      "id": "declared_risk-04",
+      "seed": 3432831445,
+      "turns": 24
+    },
+    {
+      "family": "declared_risk",
+      "id": "declared_risk-05",
+      "seed": 2032451112,
+      "turns": 24
+    },
+    {
+      "family": "declared_risk",
+      "id": "declared_risk-06",
+      "seed": 547720634,
+      "turns": 24
+    },
+    {
+      "family": "declared_risk",
+      "id": "declared_risk-07",
+      "seed": 2891551110,
+      "turns": 24
+    },
+    {
+      "family": "nominal_feedback",
+      "id": "nominal_feedback-00",
+      "seed": 1688469904,
+      "turns": 24
+    },
+    {
+      "family": "nominal_feedback",
+      "id": "nominal_feedback-01",
+      "seed": 3041973989,
+      "turns": 24
+    },
+    {
+      "family": "nominal_feedback",
+      "id": "nominal_feedback-02",
+      "seed": 547670623,
+      "turns": 24
+    },
+    {
+      "family": "nominal_feedback",
+      "id": "nominal_feedback-03",
+      "seed": 56738970,
+      "turns": 24
+    },
+    {
+      "family": "nominal_feedback",
+      "id": "nominal_feedback-04",
+      "seed": 1188497719,
+      "turns": 24
+    },
+    {
+      "family": "nominal_feedback",
+      "id": "nominal_feedback-05",
+      "seed": 1096408436,
+      "turns": 24
+    },
+    {
+      "family": "nominal_feedback",
+      "id": "nominal_feedback-06",
+      "seed": 1528155765,
+      "turns": 24
+    },
+    {
+      "family": "nominal_feedback",
+      "id": "nominal_feedback-07",
+      "seed": 897977538,
+      "turns": 24
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# validation/m10/artifacts_d2/.gitignore
+# Campaign 2 per-turn measurements regenerate bit-for-bit:
+# python -m validation.m10 run2
+measurements.json
