@@ -5,7 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.errors.manager import ErrorManager
-from arvis.kernel.pipeline.context.journal_context import journal_of
+from arvis.kernel.pipeline.context.journal_context import (
+    fusion_reasons_of,
+    journal_of,
+)
 from arvis.kernel.pipeline.context.scientific_accessors import (
     adaptive_snapshot,
     set_adaptive_snapshot,
@@ -100,16 +103,15 @@ def apply_kappa_margin_layer(
             journal.kappa_band = kappa_band
         ctx.extra["kappa_band"] = kappa_band
 
-        reasons = ctx.extra.setdefault(
-            "fusion_reasons",
-            [],
-        )
+        reasons = fusion_reasons_of(ctx)
 
         if kappa_band == "critical":
             if "kappa_margin_critical" not in reasons:
                 reasons.append("kappa_margin_critical")
 
             if pre_verdict == LyapunovVerdict.ALLOW:
+                if journal is not None:
+                    journal.kappa_margin_forced_confirmation = True
                 ctx.extra["_kappa_margin_forced_confirmation"] = True
 
         elif kappa_band == "warning":
@@ -129,10 +131,23 @@ def updated_pre_verdict(
     pre_verdict: LyapunovVerdict,
     adaptive_metrics: AdaptiveSnapshot | None,
 ) -> LyapunovVerdict:
-    if ctx.extra.pop(
-        "_kappa_margin_forced_confirmation",
-        False,
-    ):
+    # One-shot consume of the kappa-margin latch. The journal is the
+    # storage (LOT O3); the export key is popped alongside so the
+    # host-visible extra stays byte-identical. The pop result is still
+    # honored on its own: a seeded forcing flag must keep forcing
+    # (F-001, hardening-only), and partial duck contexts have no
+    # journal at all.
+    forced_export = bool(
+        ctx.extra.pop(
+            "_kappa_margin_forced_confirmation",
+            False,
+        )
+    )
+    forced = forced_export
+    if (journal := journal_of(ctx)) is not None:
+        forced = forced or journal.kappa_margin_forced_confirmation
+        journal.kappa_margin_forced_confirmation = False
+    if forced:
         return LyapunovVerdict.REQUIRE_CONFIRMATION
 
     if (

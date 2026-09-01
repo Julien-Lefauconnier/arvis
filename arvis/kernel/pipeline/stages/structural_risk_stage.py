@@ -35,7 +35,6 @@ class StructuralRiskStage:
         # -----------------------------------------
         # STRUCTURAL RISK FLAG (non-math layer)
         # -----------------------------------------
-        if slow_divergence is not None and slow_divergence > 0.05:
-            ctx.extra["structural_risk"] = True
-        else:
-            ctx.extra["structural_risk"] = False
+        flagged = slow_divergence is not None and slow_divergence > 0.05
+        ctx.journal.structural_risk = flagged
+        ctx.extra["structural_risk"] = flagged

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from arvis.adapters.ir.gate_adapter import GateIRAdapter
 from arvis.adapters.ir.state_adapter import StateIRAdapter
@@ -46,10 +46,13 @@ class PipelineFinalizeService:
         pipeline: CognitivePipeline,
         ctx: CognitivePipelineContext,
     ) -> CognitivePipelineResult:
-        if ctx.extra.get("__pipeline_finalized", False):
-            cached = ctx.extra.get("__pipeline_result")
+        # Typed latch and result cache (LOT O3); the extra keys below
+        # are write-only exports, so seeding them cannot inject a
+        # foreign result past the gate.
+        if ctx._pipeline_finalized:
+            cached = ctx._pipeline_result
             if cached is not None:
-                return cast(CognitivePipelineResult, cached)
+                return cached
 
         # -----------------------------------------------------
         # Runtime-owned execution authority
@@ -268,6 +271,8 @@ class PipelineFinalizeService:
             requires_confirmation=requires_confirmation,
         )
 
+        ctx._pipeline_finalized = True
+        ctx._pipeline_result = result
         ctx.extra["__pipeline_finalized"] = True
         ctx.extra["__pipeline_result"] = result
 

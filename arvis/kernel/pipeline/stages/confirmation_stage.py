@@ -122,11 +122,14 @@ class ConfirmationStage:
         # -----------------------------------------
         # 2.5 STRUCTURAL RISK (non-math layer)
         # -----------------------------------------
-        structural_risk = getattr(
-            ctx,
-            "extra",
-            {},
-        ).get("structural_risk", False)
+        if (journal := journal_of(ctx)) is not None:
+            structural_risk = journal.structural_risk
+        else:
+            structural_risk = getattr(
+                ctx,
+                "extra",
+                {},
+            ).get("structural_risk", False)
 
         self._debug(
             ctx,

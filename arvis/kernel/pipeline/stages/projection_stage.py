@@ -139,10 +139,12 @@ class ProjectionStage:
             )
             ctx.extra["projection_source"] = "PiImpl"
 
+            if (journal := journal_of(ctx)) is not None:
+                structured = journal.pi_structured_available
+            else:
+                structured = bool(ctx.extra.get("pi_structured_available"))
             ctx.extra["projection_semantics"] = (
-                "structured+certified"
-                if ctx.extra.get("pi_structured_available")
-                else "flat+certified"
+                "structured+certified" if structured else "flat+certified"
             )
 
         except Exception as exc:

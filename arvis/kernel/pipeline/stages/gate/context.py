@@ -5,6 +5,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, cast
 
+from arvis.kernel.pipeline.context.journal_context import (
+    fusion_reasons_of,
+    verdict_transition_trace_of,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 
 if TYPE_CHECKING:
@@ -38,17 +42,11 @@ def initialize_context(ctx: CognitivePipelineContext) -> logging.Logger:
     # Journal aliases (campaign OBS, LOT O2): the typed journal lists
     # are the storage; the extra keys expose the SAME list objects as
     # exports, so host-visible content stays byte-identical while
-    # arvis code reads only the journal. A pre-seeded export list
-    # (direct compositions, tests) is adopted as storage.
-    journal = ctx.journal
-    for key, attr in (
-        ("fusion_reasons", "fusion_reasons"),
-        ("verdict_transition_trace", "verdict_transition_trace"),
-    ):
-        seeded = ctx.extra.get(key)
-        if isinstance(seeded, list) and seeded is not getattr(journal, attr):
-            setattr(journal, attr, seeded)
-        ctx.extra[key] = getattr(journal, attr)
+    # arvis code reads only the journal. The accessors adopt a
+    # pre-seeded export list (direct compositions, tests) as storage
+    # and install the export alias.
+    fusion_reasons_of(ctx)
+    verdict_transition_trace_of(ctx)
 
     composite = ctx.scientific.composite
     lyap = ctx.scientific.lyapunov

@@ -410,10 +410,7 @@ def apply_validity_enforcement(
         if validity is not None and requires_enforcement:
             reason_code = f"validity_{validity.reason}"
 
-            fusion_reasons = ctx.extra.setdefault(
-                "fusion_reasons",
-                [],
-            )
+            fusion_reasons = fusion_reasons_of(ctx)
 
             if reason_code not in fusion_reasons:
                 fusion_reasons.append(reason_code)

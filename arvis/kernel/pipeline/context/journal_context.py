@@ -35,11 +35,17 @@ class PipelineJournalContext:
     # Gate-side adaptive band (distinct from the control stage's
     # ctx.kappa_band channel).
     kappa_band: str | None = None
+    # One-shot latch: a critical kappa margin on an ALLOW pre-verdict
+    # forces confirmation; consumed (and reset) by updated_pre_verdict.
+    kappa_margin_forced_confirmation: bool = False
     global_instability: bool = False
     global_instability_warning: bool = False
     switching_warning: bool = False
     exponential_bound_warning: bool = False
     low_confidence_escalation: bool = False
+    # Structural risk flag raised on slow-state divergence; consumed
+    # by the confirmation stage's requirement decision.
+    structural_risk: bool = False
     projection_lyapunov_compatible: bool | None = None
     pi_structured_available: bool = False
     confirmation_override: bool = False

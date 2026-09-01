@@ -54,7 +54,9 @@ class PipelinePreparationService:
         # -----------------------------------------
         # Idempotent lifecycle guard
         # -----------------------------------------
-        if ctx.extra.get("__pipeline_prepared", False):
+        # Typed latch (LOT O3); the extra key below is a write-only
+        # export, so a host-seeded key cannot skip preparation.
+        if ctx._pipeline_prepared:
             return
 
         # -----------------------------------------
@@ -114,4 +116,5 @@ class PipelinePreparationService:
         # -----------------------------------------
         # Lifecycle prepared marker
         # -----------------------------------------
+        ctx._pipeline_prepared = True
         ctx.extra["__pipeline_prepared"] = True

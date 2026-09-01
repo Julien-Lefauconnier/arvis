@@ -34,7 +34,12 @@ class PipelineTraceFactory:
             confirmation_result=ctx.confirmation_result,
             action_decision=ctx.execution.action_decision,
             executable_intent=ctx.executable_intent,
-            conflict=ctx.extra.get("conflict"),
+            # Historical phantom: this slot read ctx.extra["conflict"],
+            # which nothing ever writes; the declared channel is
+            # ctx.conflict. Kept explicitly None pending the decision
+            # on wiring the conflict channel into the trace (would
+            # change trace content).
+            conflict=None,
             predictive=ctx.predictive_snapshot,
             stability=ctx.global_stability,
             symbolic=symbolic_state(ctx),

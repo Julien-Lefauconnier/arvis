@@ -202,11 +202,13 @@ class PipelineIRBootstrapService:
 
         current_extra = dict(ir_context.extra or {})
 
-        propagated_keys = ("confirmation_override",)
-
-        for key in propagated_keys:
-            if key in ctx.extra:
-                current_extra[key] = ctx.extra[key]
+        # Propagate the confirmation override into the serialized IR
+        # record from the journal (LOT O3), not from the extra bus:
+        # only the confirmation stage can grant an override, so a
+        # host-seeded extra key can no longer make the IR validator
+        # accept an ALLOW verdict that carries veto reasons.
+        if ctx.journal.confirmation_override:
+            current_extra["confirmation_override"] = True
 
         ctx.ir_context = replace(
             ir_context,

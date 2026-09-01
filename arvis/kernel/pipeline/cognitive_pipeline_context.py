@@ -1,7 +1,7 @@
 # arvis/kernel/pipeline/cognitive_pipeline_context.py
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationResult
@@ -58,6 +58,11 @@ from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov import LyapunovState
 from arvis.math.signals import DriftSignal, RiskSignal, UncertaintySignal
 from arvis.math.signals.conflict import ConflictSignal as ConflictPressureSignal
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.cognitive_pipeline_result import (
+        CognitivePipelineResult,
+    )
 
 
 @dataclass(kw_only=True)
@@ -257,6 +262,20 @@ class CognitivePipelineContext:
     # -------------------------
     execution: PipelineExecutionContext = field(
         default_factory=PipelineExecutionContext,
+    )
+
+    # Lifecycle latches (campaign OBS, LOT O3). Typed storage for the
+    # prepare/finalize idempotency guards and the finalized-result
+    # cache. The historical ``__pipeline_prepared`` /
+    # ``__pipeline_finalized`` / ``__pipeline_result`` extra keys
+    # remain as write-only exports for byte-identical host output;
+    # arvis reads only these fields, so seeding the extra keys can no
+    # longer skip preparation or hijack the cached result.
+    _pipeline_prepared: bool = False
+    _pipeline_finalized: bool = False
+    _pipeline_result: "CognitivePipelineResult | None" = field(
+        default=None,
+        repr=False,
     )
 
     # -----------------------------------------------------
