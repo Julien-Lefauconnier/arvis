@@ -9,8 +9,25 @@ from typing import Any
 
 @dataclass(frozen=True)
 class NumericBounds:
+    """An admissible interval, plus which of its ends means DANGER.
+
+    The margin used to be ``min(value - min, max - value)``: the
+    distance to the nearest end, whatever that end meant. Several
+    axes have a healthy extreme that IS a bound (zero conflict
+    pressure, full coherence), so their healthiest possible value
+    measured a margin of 0.0 and was read as boundary proximity
+    (DM-F3, campaign FIX: this floored every healthy turn at
+    REQUIRE_CONFIRMATION and is why ALLOW never appeared, in the
+    quickstart or across the 3072 turns of the M10 campaigns).
+
+    Both ends are dangerous by default, so an axis that declares
+    nothing keeps the historical, conservative behavior.
+    """
+
     min_value: float
     max_value: float
+    danger_low: bool = True
+    danger_high: bool = True
 
     def contains(self, value: float) -> bool:
         return self.min_value <= value <= self.max_value
@@ -18,7 +35,15 @@ class NumericBounds:
     def margin(self, value: float) -> float:
         if not self.contains(value):
             return -1.0
-        return min(value - self.min_value, self.max_value - value)
+        distances: list[float] = []
+        if self.danger_low:
+            distances.append(value - self.min_value)
+        if self.danger_high:
+            distances.append(self.max_value - value)
+        if not distances:
+            # No dangerous end: anywhere inside is fully interior.
+            return max(self.max_value - self.min_value, 0.0)
+        return min(distances)
 
 
 @dataclass(frozen=True)

@@ -200,7 +200,7 @@
           "fusion_adaptive_hard_veto": 102,
           "local_soft_filter": 1,
           "memory_hard_block": 22,
-          "projection_boundary_enforcement": 93,
+          "projection_boundary_enforcement": 70,
           "projection_hard_block": 35,
           "validity_envelope_enforcement": 5
         }
@@ -303,7 +303,7 @@
         "transition_stages": {
           "final_adaptive_hard_veto": 111,
           "fusion_adaptive_hard_veto": 111,
-          "projection_boundary_enforcement": 128
+          "projection_boundary_enforcement": 11
         }
       }
     },
@@ -398,8 +398,7 @@
         "tightening_rate": 0.348958333333,
         "transition_stages": {
           "input_risk_gate": 67,
-          "input_risk_relax_denied": 60,
-          "projection_boundary_enforcement": 192
+          "input_risk_relax_denied": 60
         }
       }
     },
@@ -502,7 +501,7 @@
           "fusion_adaptive_hard_veto": 454,
           "local_soft_filter": 2,
           "memory_hard_block": 64,
-          "projection_boundary_enforcement": 480,
+          "projection_boundary_enforcement": 160,
           "validity_envelope_enforcement": 2
         }
       }
@@ -605,7 +604,6 @@
           "final_adaptive_hard_veto": 165,
           "fusion_adaptive_hard_veto": 165,
           "local_soft_filter": 3,
-          "projection_boundary_enforcement": 192,
           "validity_envelope_enforcement": 4
         }
       }
@@ -707,8 +705,7 @@
         "transition_stages": {
           "final_adaptive_hard_veto": 16,
           "fusion_adaptive_hard_veto": 16,
-          "local_soft_filter": 102,
-          "projection_boundary_enforcement": 192
+          "local_soft_filter": 102
         }
       }
     },
@@ -806,7 +803,7 @@
         "transition_stages": {
           "final_adaptive_hard_veto": 184,
           "fusion_adaptive_hard_veto": 184,
-          "projection_boundary_enforcement": 192
+          "projection_boundary_enforcement": 187
         }
       }
     }
@@ -947,7 +944,7 @@
         "input_risk_relax_denied": 60,
         "local_soft_filter": 108,
         "memory_hard_block": 170,
-        "projection_boundary_enforcement": 1508,
+        "projection_boundary_enforcement": 467,
         "projection_hard_block": 124,
         "validity_envelope_enforcement": 11
       }

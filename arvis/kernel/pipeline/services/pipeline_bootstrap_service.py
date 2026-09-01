@@ -216,13 +216,19 @@ class PipelineBootstrapService:
         pipeline.pi_impl = PiImpl()
         pipeline.pi_operator = PiOperator()
 
+        # Which END of each axis means danger (DM-F3, campaign FIX).
+        # An axis whose healthy extreme IS a bound must not report
+        # boundary proximity there: zero tension, zero conflict and
+        # full coherence are the safest states, not domain edges.
+        # control_signal keeps both ends dangerous (no control and
+        # saturated control are both worth a confirmation).
         pipeline.projection_domain = ProjectionDomain(
             bounds={
-                "state.system_tension": NumericBounds(0.0, 100.0),
-                "state.coherence_score": NumericBounds(0.0, 1.0),
-                "risk.conflict_pressure": NumericBounds(0.0, 100.0),
+                "state.system_tension": NumericBounds(0.0, 100.0, danger_low=False),
+                "state.coherence_score": NumericBounds(0.0, 1.0, danger_high=False),
+                "risk.conflict_pressure": NumericBounds(0.0, 100.0, danger_low=False),
                 "control.control_signal": NumericBounds(0.0, 100.0),
-                "trace.adaptive_kappa_eff": NumericBounds(0.0, 1.0),
+                "trace.adaptive_kappa_eff": NumericBounds(0.0, 1.0, danger_high=False),
             },
             max_payload_size=10000,
         )
