@@ -71,8 +71,9 @@ class CognitivePipelineResult:
 
     # -----------------------------------------------------
     # Transitional compatibility properties
-    # TODO(arvis-result-v2):
-    # remove after full migration to nested result model
+    # Tracked in VERSIONING.md, "Transitional surfaces on the way
+    # out": removed under the deprecation window once the nested
+    # result model is the only documented read path.
     # -----------------------------------------------------
 
     @property

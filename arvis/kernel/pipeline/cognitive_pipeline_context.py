@@ -277,8 +277,9 @@ class CognitivePipelineContext:
     # -----------------------------------------------------
     # Transitional compatibility input preserved during
     # runtime ownership migration.
-    # TODO(arvis-runtime-v2):
-    # remove once all callsites migrated to ctx.execution.*
+    # Tracked in VERSIONING.md, "Transitional surfaces on the way
+    # out": removed under the deprecation window once every callsite
+    # composes ctx.execution.* directly.
     legacy_execution_state: CognitiveExecutionState | None = field(
         default=None,
         repr=False,

@@ -84,6 +84,7 @@ runtime API above) is BLOCKED before execution.
 | `04_human_confirmation.py`      | Human approval for sensitive actions         |
 | `05_tool_authorization.py`      | Tool authorization + capability manifest (sovereignty/egress/consent) |
 | `06_finance_risk_screening.py`  | Trade / risk pre-execution controls          |
+| `07_session_threading.py`       | Carrying the trajectory across turns (see `docs/PATH_TO_ALLOW.md`) |
 | `08_timeline_audit.py`          | Hash-linked timeline commitments             |
 | `09_multi_engine_hosting.py`    | One engine per unit of work (host-side parallelism) |
 | `10_runtime_inspection.py`      | Production observability & inspection        |

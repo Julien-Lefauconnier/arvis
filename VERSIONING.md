@@ -79,6 +79,25 @@ mapped in [docs/VERSIONS.md](docs/VERSIONS.md). Two of them are both called
 `IR_VERSION` and are not the same thing, which is worth knowing before reading
 a mismatch as a defect.
 
+### Transitional surfaces on the way out
+
+Two internal surfaces are kept only for compatibility during an
+ownership migration, and are tracked here rather than as code
+comments (campaign FIX, LOT F3):
+
+- `CognitivePipelineResult` compatibility properties (`scientific`,
+  and its siblings) mirror the nested result model. They stay until
+  the nested model is the only documented read path; hosts should
+  read `result.observability.*` today.
+- `CognitivePipelineContext.legacy_execution_state` is a
+  transitional input that seeds `ctx.execution.execution_state`. It
+  has one remaining caller in the tree (a test) and no host is
+  expected to set it; hosts should compose `ctx.execution.*`.
+
+Both follow the deprecation window above when they are removed: the
+warning ships first, the removal follows a published release. Until
+then they are supported, not merely tolerated.
+
 ## Guarantee scope
 
 The formal results in `docs/math/` (M1 to M15) hold **on the documented

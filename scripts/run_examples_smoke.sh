@@ -15,6 +15,7 @@ EXAMPLES=(
   examples/04_human_confirmation.py
   examples/05_tool_authorization.py
   examples/06_finance_risk_screening.py
+  examples/07_session_threading.py
   examples/08_timeline_audit.py
   examples/09_multi_engine_hosting.py
   examples/10_runtime_inspection.py
