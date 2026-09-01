@@ -56,3 +56,77 @@ def test_feedback_family_contracts_along_the_transient() -> None:
     assert deltas and all(d < 0 for d in deltas), deltas
     energies = [m.energy_v for m in first if m.energy_v is not None]
     assert energies[0] > energies[-1]
+
+
+def test_feedback_law_reacts_to_tightened_verdicts() -> None:
+    """The state-feedback semantic itself: after a tightened verdict
+    the channels relax faster (rho_tightened) than after none; both
+    match the published law exactly."""
+    from validation.m10.corpus import FEEDBACK_LAW
+    from validation.m10.runner import _feedback_turn
+
+    corpus = build_smoke_corpus_d2()
+    spec = next(t for t in corpus.trajectories if t.family == "nominal_feedback")
+    turn = spec.turns[1]
+    state = {"retrieval_confidence": 0.50, "memory_pressure": 0.50}
+
+    free, _ = _feedback_turn(turn, dict(state), None)
+    tight, _ = _feedback_turn(turn, dict(state), "REQUIRE_CONFIRMATION")
+
+    targets = FEEDBACK_LAW["targets"]
+    jitter = FEEDBACK_LAW["jitter_scale"]
+
+    def expected(rho: float, name: str, spec_value: float) -> float:
+        target = targets[name]
+        value = (
+            target + rho * (state[name] - target) + jitter * (spec_value - state[name])
+        )
+        return round(min(1.0, max(0.0, value)), 6)
+
+    assert free.retrieval_confidence == expected(
+        FEEDBACK_LAW["rho_free"], "retrieval_confidence", turn.retrieval_confidence
+    )
+    assert tight.retrieval_confidence == expected(
+        FEEDBACK_LAW["rho_tightened"],
+        "retrieval_confidence",
+        turn.retrieval_confidence,
+    )
+    # tightened relaxes strictly harder toward the calm target
+    assert tight.retrieval_confidence > free.retrieval_confidence
+    assert tight.memory_pressure < free.memory_pressure
+
+
+def test_campaign2_criteria_differ_from_d1_only_on_5_1() -> None:
+    """DM-C2 pin: PROPOSED_D2 is the registered D-1.0 set with exactly
+    one change, the 5.1 subject family."""
+    from validation.m10.thresholds import PROPOSED, PROPOSED_D2
+
+    assert PROPOSED_D2["lyapunov_evolution"]["nominal_contraction_dominates"] == (
+        "families.nominal_feedback.lyapunov_evolution.p_contraction",
+        ">=",
+        0.60,
+    )
+    for family, criteria in PROPOSED.items():
+        for name, spec in criteria.items():
+            if (family, name) == (
+                "lyapunov_evolution",
+                "nominal_contraction_dominates",
+            ):
+                continue
+            assert PROPOSED_D2[family][name] == spec
+
+
+def test_the_published_feedback_law_constants() -> None:
+    """The law is part of D-2.0's published identity: its constants
+    are pinned as literals (MATH-C mutation replay, survivor M4: a
+    mechanism pin that reads FEEDBACK_LAW mutates in lockstep with
+    it and cannot catch a drifted constant)."""
+    from validation.m10.corpus import FEEDBACK_LAW
+
+    assert FEEDBACK_LAW == {
+        "targets": {"retrieval_confidence": 0.97, "memory_pressure": 0.02},
+        "rho_free": 0.92,
+        "rho_tightened": 0.85,
+        "tightened_verdicts": ("REQUIRE_CONFIRMATION", "ABSTAIN"),
+        "jitter_scale": 0.02,
+    }
