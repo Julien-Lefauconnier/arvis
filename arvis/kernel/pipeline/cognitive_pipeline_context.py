@@ -6,6 +6,8 @@ from typing import Any
 from arvis.cognition.confirmation.confirmation_request import ConfirmationRequest
 from arvis.cognition.confirmation.confirmation_result import ConfirmationResult
 from arvis.cognition.conflict.conflict_policy_result import ConflictPolicyResult
+from arvis.cognition.control.temporal_modulation import TemporalModulation
+from arvis.cognition.control.temporal_pressure import TemporalPressureSnapshot
 from arvis.cognition.conversation.conversation_context import ConversationContext
 from arvis.cognition.conversation.conversation_signal import ConversationSignal
 from arvis.cognition.events.base_event import BaseEvent
@@ -179,13 +181,10 @@ class CognitivePipelineContext:
     # (LOT S4).
     conflict: list[ConflictPolicyResult] | None = None
     conflict_pressure: ConflictPressureSignal | None = None
-    # float today (control stage), TemporalPressureSnapshot upstream
-    # (temporal stage): the control stage overwrites the snapshot.
-    temporal_pressure: Any | None = None
-    # TemporalModulation upstream; the control stage overwrites it
-    # with an ad-hoc multiplier object that bypasses the kernel
-    # invariant (flagged there).
-    temporal_modulation: Any | None = None
+    # Single-writer channel owned by the temporal stage (DS3, LOT S5):
+    # the control stage consumes the clamped modulation.
+    temporal_pressure: TemporalPressureSnapshot | None = None
+    temporal_modulation: TemporalModulation | None = None
     memory_mode: str | None = None
     memory_constraints_active: bool = False
     kappa_band: str | None = None

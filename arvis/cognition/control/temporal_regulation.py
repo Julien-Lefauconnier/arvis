@@ -1,13 +1,7 @@
 # arvis/cognition/control/temporal_regulation.py
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True)
-class TemporalModulation:
-    risk_multiplier: float = 1.0
-    epsilon_multiplier: float = 1.0
+from arvis.cognition.control.temporal_modulation import TemporalModulation
 
 
 class TemporalRegulation:

@@ -68,21 +68,15 @@ class ControlStage:
         ctx.scientific.core.uncertainty_intent = None
 
         # -----------------------------------------
-        # 3. TEMPORAL
+        # 3. TEMPORAL (decision DS3, LOT S5)
         # -----------------------------------------
-        # FLAGGED (campaign STRUCT, LOT S2, decision pending): this
-        # binary rewrite OVERWRITES the TemporalPressureSnapshot and
-        # TemporalModulation the temporal stage computed two stages
-        # earlier, and the 1.2 multiplier bypasses TemporalModulation's
-        # [0, 1] clamp through an ad-hoc object, WIDENING epsilon when
-        # a timeline is present. Kept as-is pending the ownership
-        # decision (respect the clamp = strictly more conservative).
-        if ctx.timeline:
-            ctx.temporal_pressure = 1.0
-            ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.2})()
-        else:
-            ctx.temporal_pressure = 0.0
-            ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.0})()
+        # The temporal stage is the single owner of
+        # ctx.temporal_pressure / ctx.temporal_modulation; this stage
+        # only CONSUMES the clamped modulation (block 6). The historical
+        # binary rewrite (an ad-hoc 1.2 multiplier bypassing
+        # TemporalModulation's [0, 1] clamp, widening epsilon whenever a
+        # timeline was present) is gone: a timeline can only keep or
+        # tighten epsilon, per the monotone-hardening doctrine.
 
         # -----------------------------------------
         # 4. EPSILON
@@ -108,17 +102,8 @@ class ControlStage:
         # 6. MODULATION
         # -----------------------------------------
         epsilon *= getattr(regime_control, "epsilon_multiplier", 1.0)
-        epsilon *= getattr(ctx.temporal_modulation, "epsilon_multiplier", 1.0)
-
-        # FLAGGED (same as block 3): identical rewrite after the value
-        # was consumed above; a duplicate store the ownership decision
-        # will remove.
-        if ctx.timeline:
-            ctx.temporal_pressure = 1.0
-            ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.2})()
-        else:
-            ctx.temporal_pressure = 0.0
-            ctx.temporal_modulation = type("Tmp", (), {"epsilon_multiplier": 1.0})()
+        if ctx.temporal_modulation is not None:
+            epsilon *= ctx.temporal_modulation.epsilon_multiplier
 
         # -----------------------------------------
         # 6.5 MEMORY-AWARE MODULATION (OS layer)
