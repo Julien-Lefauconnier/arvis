@@ -61,3 +61,41 @@ def test_pipeline_finalize_fail_closed_on_contract_violation() -> None:
     assert error["policy"] == "fail_closed"
 
     assert error["replay_safe"] is False
+
+
+# ---------------------------------------------------------------
+# Campaign RELEASE (LOT R2): the two lifecycle contract guards.
+# Finalize is a runtime-authority boundary: a context reaching it
+# without an execution_state, or with an execution_state that never
+# received a status, is a permanent contract violation, captured and
+# raised (fail closed), never silently defaulted.
+# ---------------------------------------------------------------
+
+from arvis.errors.base import ArvisRuntimeError  # noqa: E402
+from arvis.errors.codes import ErrorCode  # noqa: E402
+
+
+def test_finalize_without_execution_state_fails_closed() -> None:
+    pipeline = CognitivePipeline()
+    ctx = build_finalize_compatible_context()
+    ctx.execution.execution_state = None
+
+    with pytest.raises(ArvisRuntimeError) as exc_info:
+        PipelineFinalizeService.run(pipeline, ctx)
+
+    assert exc_info.value.code == ErrorCode.PIPELINE_FINALIZE_CONTRACT_VIOLATION
+    assert exc_info.value.details["missing"] == "execution_state"
+    assert exc_info.value.details["retry_class"] == "permanent"
+
+
+def test_finalize_without_execution_status_fails_closed() -> None:
+    pipeline = CognitivePipeline()
+    ctx = build_finalize_compatible_context()
+    assert ctx.execution.execution_state is not None
+    ctx.execution.execution_state.execution_status = None
+
+    with pytest.raises(ArvisRuntimeError) as exc_info:
+        PipelineFinalizeService.run(pipeline, ctx)
+
+    assert exc_info.value.code == ErrorCode.PIPELINE_FINALIZE_CONTRACT_VIOLATION
+    assert exc_info.value.details["missing"] == "runtime.execution_status"
