@@ -11,6 +11,20 @@ versioning throughout the pre-1.0 series.
 
 ### Added
 
+- Campaign FIX: the audit follow-up. `docs/PATH_TO_ALLOW.md` maps
+  the four conditions between a call and an ALLOW and states what
+  0.1.x cannot reach; `examples/07_session_threading.py` fills the
+  long-standing numbering gap and demonstrates the host threading
+  contract with a fresh engine per turn. The result view exposes
+  `next_scientific_state`, so that documented contract is reachable
+  without reading a mutated `extra` dict. A new gate check
+  (`scripts/check_broad_excepts.py`) keeps every broad except
+  honest, contract pins cover the three real LLM providers, and the
+  audit's gray zones (Lyapunov observer, temporal memory,
+  governance evaluator) are exercised. Two transitional surfaces are
+  tracked in VERSIONING.md instead of TODO markers; the tree carries
+  none.
+
 - Campaign MATH-C: corpus D-2.0 with the state-feedback nominal
   family (the contraction regime encoded in the input dynamics, the
   D-1.0 lesson applied), campaign 2 registered and executed: 12 of
@@ -33,6 +47,27 @@ versioning throughout the pre-1.0 series.
   published report-only (no runtime default changes).
 
 ### Fixed
+
+- The projection domain margin measures the DANGEROUS bounds only.
+  It measured the distance to the nearest bound whatever that bound
+  meant, so an axis at its healthy extreme counted as boundary
+  proximity: `risk.conflict_pressure` is fed by the collapse risk,
+  whose healthy value is exactly its lower bound, so a system at
+  zero collapse risk was read as sitting on the domain edge and
+  floored at REQUIRE_CONFIRMATION. Bounds now declare which end is
+  dangerous (both by default). Measured: spurious boundary flags
+  fall from 1376 to 467 turns on D-2.0, zero verdict flips, both
+  registered judgments unchanged.
+- Telemetry emits per event: one shared try guarded the whole
+  emission block and returned on the first exception, so a single
+  malformed payload silently suppressed every following event of the
+  turn.
+- The global-stability duck default is fail-closed in both layers
+  (the math layer defaulted to "ignore" while the kernel layer
+  defaulted to "confirm"). Declared profiles are untouched.
+- A declared no-LLM posture is state, not an error: it was captured
+  into the error journal on every turn, the last noise of a nominal
+  run. The nominal error journal is now empty.
 
 - Published campaign artifacts are serialized with floats rounded
   to 12 decimals: the first third-party reproduction (macOS arm64
