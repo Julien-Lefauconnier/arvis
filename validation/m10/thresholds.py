@@ -1,12 +1,12 @@
 # validation/m10/thresholds.py
 """Pre-registered pass criteria for the M10 campaign (DM-B2).
 
-STATUS: PROPOSED, NOT YET REGISTERED. The protocol requires the
-thresholds fixed and published BEFORE the campaign runs (M10 5.1 and
-9.2). The values below are the proposal put to the project owner;
-they become registered when the owner fixes them, and the campaign
-report must be produced against the registered set, unmodified. A
-failed criterion is reported as failed, never re-thresholded.
+STATUS: REGISTERED. The protocol requires the thresholds fixed and
+published BEFORE the campaign runs (M10 5.1 and 9.2). The set below
+was proposed to the project owner and registered by him, unmodified,
+before any full-corpus run; the campaign report is produced against
+this registered set. A failed criterion is reported as failed, never
+re-thresholded.
 
 Each criterion names the metric field it judges (see metrics.py) and
 the direction of the comparison.
@@ -17,9 +17,9 @@ from __future__ import annotations
 from typing import Any
 
 REGISTRATION = {
-    "status": "proposed",
-    "registered_by": None,
-    "registered_on": None,
+    "status": "registered",
+    "registered_by": "Julien Lefauconnier",
+    "registered_on": "2026-09-01",
 }
 
 # family -> criterion name -> (metric path, comparator, value)
