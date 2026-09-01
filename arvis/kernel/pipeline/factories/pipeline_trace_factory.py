@@ -34,12 +34,11 @@ class PipelineTraceFactory:
             confirmation_result=ctx.confirmation_result,
             action_decision=ctx.execution.action_decision,
             executable_intent=ctx.executable_intent,
-            # Historical phantom: this slot read ctx.extra["conflict"],
-            # which nothing ever writes; the declared channel is
-            # ctx.conflict. Kept explicitly None pending the decision
-            # on wiring the conflict channel into the trace (would
-            # change trace content).
-            conflict=None,
+            # Campaign OBS (decision DS4b): this slot historically read
+            # ctx.extra["conflict"], a key nothing writes (None on
+            # every run). It now carries the declared channel the
+            # conflict stage actually writes.
+            conflict=ctx.conflict,
             predictive=ctx.predictive_snapshot,
             stability=ctx.global_stability,
             symbolic=symbolic_state(ctx),
