@@ -1,28 +1,28 @@
 {
   "alpha": {
-    "contraction_share": 0.5380434782608695,
-    "mean": 0.3631369680152212,
-    "median": 0.34790365744870666,
-    "p10": 0.09127789046653167,
-    "p90": 0.6217579250720461,
+    "contraction_share": 0.538043478261,
+    "mean": 0.363136968015,
+    "median": 0.347903657449,
+    "p10": 0.091277890467,
+    "p90": 0.621757925072,
     "samples": 99
   },
   "l_t": {
-    "max_ratio": 0.7358955884836188,
-    "median": 0.12618255466079478,
-    "p90": 0.20881465985550754,
-    "p99": 0.3602137998955574,
+    "max_ratio": 0.735895588484,
+    "median": 0.126182554661,
+    "p90": 0.208814659856,
+    "p99": 0.360213799896,
     "samples": 4000
   },
   "small_gain": {
     "alpha_assumed": 0.15,
-    "alpha_measured_median": 0.34790365744870666,
-    "alpha_measured_p10": 0.09127789046653167,
+    "alpha_measured_median": 0.347903657449,
+    "alpha_measured_p10": 0.091277890467,
     "kappa_eff_assumed": 0.13,
-    "kappa_eff_measured_conservative": 0.08407361446862052,
+    "kappa_eff_measured_conservative": 0.084073614469,
     "l_t_assumed": 1.0,
-    "l_t_measured_median": 0.12618255466079478,
-    "l_t_measured_p99": 0.3602137998955574,
+    "l_t_measured_median": 0.126182554661,
+    "l_t_measured_p99": 0.360213799896,
     "small_gain_positive_measured": true
   }
 }

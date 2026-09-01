@@ -568,3 +568,16 @@ measurements are untracked and regenerate identically). The gate
 pins the D-2.0 identity: the eight families as a literal, manifest
 reproducibility, and the deterministic contracting transient of the
 feedback family.
+
+Scope of the byte-identity guarantee, sharpened by the first
+third-party reproduction: the owner's macOS arm64 run reproduced
+every manifest and judgment byte-for-byte but drifted a single
+double by one ulp (a family ``sup_w_max``, 0.9532080249999999
+against 0.953208025) relative to the Linux x86-64 reference, the
+signature of fused-multiply-add reductions in the numeric backend.
+Aggregates absorb such noise; a raw ``max`` publishes it. Published
+artifacts are therefore serialized with floats rounded to 12
+decimals, far above the 1e-16 relative ulp noise and far below any
+scientific meaning in these metrics; internal judge comparisons
+stay raw. Determinism is exact within a platform, and the published
+text is now identical across platforms.

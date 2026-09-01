@@ -34,6 +34,12 @@ versioning throughout the pre-1.0 series.
 
 ### Fixed
 
+- Published campaign artifacts are serialized with floats rounded
+  to 12 decimals: the first third-party reproduction (macOS arm64
+  against the Linux reference) drifted one double by one ulp through
+  FMA reductions and broke byte-identity of a published file. The
+  rounding absorbs cross-platform ulp noise; judge comparisons stay
+  raw and determinism remains exact within a platform.
 - The slow-drift detector measures structured slow states again. The
   scalar-era code computed abs(cur - prev) on SlowState objects that
   carry no subtraction, a TypeError swallowed as

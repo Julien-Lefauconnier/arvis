@@ -130,3 +130,30 @@ def test_the_published_feedback_law_constants() -> None:
         "tightened_verdicts": ("REQUIRE_CONFIRMATION", "ABSTAIN"),
         "jitter_scale": 0.02,
     }
+
+
+def test_published_artifacts_absorb_last_ulp_platform_noise() -> None:
+    """Third-party reproduction (macOS arm64, FMA reductions) drifted
+    one double by one ulp in a family sup_w_max against the Linux
+    x86-64 reference, breaking byte-identity of a published artifact.
+    Published floats are rounded to 12 decimals at serialization so
+    both platforms write the same text; 12 decimals sits far above
+    the 1e-16 relative ulp noise and far below any scientific
+    meaning in these metrics."""
+    from validation.m10.__main__ import _round_floats
+
+    linux = 0.9532080249999999
+    darwin = 0.953208025
+
+    assert _round_floats(linux) == _round_floats(darwin)
+    tree = {
+        "x": [linux, 3, "keep"],
+        "t": (darwin,),
+        "flag": True,
+        "none": None,
+    }
+    out = _round_floats(tree)
+    assert out["x"][0] == round(darwin, 12)
+    assert out["x"][1] == 3 and out["x"][2] == "keep"
+    assert out["t"][0] == round(darwin, 12)
+    assert out["flag"] is True and out["none"] is None

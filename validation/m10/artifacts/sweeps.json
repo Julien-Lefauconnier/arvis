@@ -1,13 +1,13 @@
 {
   "collapse_threshold": {
-    "flip_mass_to_0.7": 0.014583333333333334,
+    "flip_mass_to_0.7": 0.014583333333,
     "flip_mass_to_0.75": 0.00625,
-    "flip_mass_to_0.85": 0.001388888888888889,
-    "flip_mass_to_0.9": 0.0020833333333333333,
-    "mass_above_0.7": 0.19583333333333333,
+    "flip_mass_to_0.85": 0.001388888889,
+    "flip_mass_to_0.9": 0.002083333333,
+    "mass_above_0.7": 0.195833333333,
     "mass_above_0.75": 0.1875,
-    "mass_above_0.85": 0.1798611111111111,
-    "mass_above_0.9": 0.17916666666666667,
+    "mass_above_0.85": 0.179861111111,
+    "mass_above_0.9": 0.179166666667,
     "mass_above_threshold": 0.18125,
     "samples": 1440,
     "threshold": 0.8
@@ -29,8 +29,8 @@
         "REQUIRE_CONFIRMATION": 0.703125
       },
       "risk_verdict": {
-        "CRITICAL": 0.5833333333333334,
-        "WARN": 0.4166666666666667
+        "CRITICAL": 0.583333333333,
+        "WARN": 0.416666666667
       },
       "turns": 192
     }
@@ -38,22 +38,22 @@
   "margin_edges": {
     "edge_-0.02": {
       "mass_above_edge": 0.965,
-      "mass_within_0.005": 0.011666666666666667,
-      "mass_within_0.01": 0.024166666666666666,
+      "mass_within_0.005": 0.011666666667,
+      "mass_within_0.01": 0.024166666667,
       "mass_within_0.02": 0.055,
       "mass_within_0.05": 0.18
     },
     "edge_-0.05": {
-      "mass_above_edge": 0.9783333333333334,
+      "mass_above_edge": 0.978333333333,
       "mass_within_0.005": 0.0,
-      "mass_within_0.01": 0.0033333333333333335,
-      "mass_within_0.02": 0.010833333333333334,
-      "mass_within_0.05": 0.06916666666666667
+      "mass_within_0.01": 0.003333333333,
+      "mass_within_0.02": 0.010833333333,
+      "mass_within_0.05": 0.069166666667
     },
     "edge_0.0": {
       "mass_above_edge": 0.9225,
-      "mass_within_0.005": 0.034166666666666665,
-      "mass_within_0.01": 0.06416666666666666,
+      "mass_within_0.005": 0.034166666667,
+      "mass_within_0.01": 0.064166666667,
       "mass_within_0.02": 0.1125,
       "mass_within_0.05": 0.2825
     },
@@ -76,8 +76,8 @@
         "REQUIRE_CONFIRMATION": 0.703125
       },
       "risk_verdict": {
-        "CRITICAL": 0.5833333333333334,
-        "WARN": 0.4166666666666667
+        "CRITICAL": 0.583333333333,
+        "WARN": 0.416666666667
       },
       "turns": 192
     },
@@ -108,8 +108,8 @@
         "REQUIRE_CONFIRMATION": 0.703125
       },
       "risk_verdict": {
-        "CRITICAL": 0.5833333333333334,
-        "WARN": 0.4166666666666667
+        "CRITICAL": 0.583333333333,
+        "WARN": 0.416666666667
       },
       "turns": 192
     },
@@ -140,8 +140,8 @@
         "REQUIRE_CONFIRMATION": 0.703125
       },
       "risk_verdict": {
-        "CRITICAL": 0.5833333333333334,
-        "WARN": 0.4166666666666667
+        "CRITICAL": 0.583333333333,
+        "WARN": 0.416666666667
       },
       "turns": 192
     },

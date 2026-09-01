@@ -56,10 +56,28 @@ def _observed(ms: list[TurnMeasurement]) -> dict[str, Any]:
     return observed
 
 
+def _round_floats(node: Any) -> Any:
+    """Platform-stable publishing: floats are rounded to 12 decimals
+    before serialization. The first third-party reproduction of the
+    campaign artifacts (macOS arm64 against the Linux x86-64
+    reference) drifted a single double by one ulp through FMA
+    reductions and broke byte-identity of a published file; 12
+    decimals absorbs that 1e-16 relative noise without touching any
+    scientific meaning. Internal judge comparisons stay raw."""
+    if isinstance(node, float):
+        return round(node, 12)
+    if isinstance(node, dict):
+        return {key: _round_floats(value) for key, value in node.items()}
+    if isinstance(node, (list, tuple)):
+        return [_round_floats(value) for value in node]
+    return node
+
+
 def _write(name: str, payload: dict[str, Any], root: Path | None = None) -> Path:
     target = root if root is not None else ARTIFACTS
     target.mkdir(parents=True, exist_ok=True)
     path = target / name
+    payload = _round_floats(payload)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     return path
 

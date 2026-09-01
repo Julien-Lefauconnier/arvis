@@ -10,7 +10,7 @@
   },
   "adaptive_estimation.estimator_availability": {
     "comparator": ">=",
-    "observed": 0.8333333333333334,
+    "observed": 0.833333333333,
     "passed": true,
     "path": "overall.adaptive_estimation.availability",
     "threshold": 0.5
@@ -24,7 +24,7 @@
   },
   "envelope_compliance.envelope_alive_in_domain": {
     "comparator": ">=",
-    "observed": 0.17570664629488159,
+    "observed": 0.175706646295,
     "passed": true,
     "path": "overall.envelope_compliance.envelope_valid_rate_in_domain",
     "threshold": 0.1
@@ -45,7 +45,7 @@
   },
   "iss_residual.bounded_energy": {
     "comparator": "<=",
-    "observed": 1.4963140099999999,
+    "observed": 1.49631401,
     "passed": true,
     "path": "overall.iss_residual.sup_w_max",
     "threshold": 6.0
@@ -66,14 +66,14 @@
   },
   "lyapunov_evolution.bounded_expansion": {
     "comparator": "<=",
-    "observed": 0.5632499999999999,
+    "observed": 0.56325,
     "passed": true,
     "path": "overall.lyapunov_evolution.max_expansion",
     "threshold": 1.5
   },
   "lyapunov_evolution.nominal_contraction_dominates": {
     "comparator": ">=",
-    "observed": 0.5163043478260869,
+    "observed": 0.516304347826,
     "passed": false,
     "path": "families.nominal.lyapunov_evolution.p_contraction",
     "threshold": 0.6

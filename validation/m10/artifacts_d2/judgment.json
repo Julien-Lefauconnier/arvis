@@ -10,7 +10,7 @@
   },
   "adaptive_estimation.estimator_availability": {
     "comparator": ">=",
-    "observed": 0.8480392156862745,
+    "observed": 0.848039215686,
     "passed": true,
     "path": "overall.adaptive_estimation.availability",
     "threshold": 0.5
@@ -24,7 +24,7 @@
   },
   "envelope_compliance.envelope_alive_in_domain": {
     "comparator": ">=",
-    "observed": 0.15782493368700265,
+    "observed": 0.157824933687,
     "passed": true,
     "path": "overall.envelope_compliance.envelope_valid_rate_in_domain",
     "threshold": 0.1
@@ -45,7 +45,7 @@
   },
   "iss_residual.bounded_energy": {
     "comparator": "<=",
-    "observed": 1.5634762050000002,
+    "observed": 1.563476205,
     "passed": true,
     "path": "overall.iss_residual.sup_w_max",
     "threshold": 6.0
