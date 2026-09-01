@@ -42,7 +42,11 @@ def apply_gate_policy(
     # -----------------------------------------
     # 2. GLOBAL POLICY
     # -----------------------------------------
-    action = getattr(ctx, "global_stability_action", "ignore")
+    # Duck default unified fail-closed (DM-F1, campaign FIX): a host
+    # context that never declared the knob confirms, in BOTH layers
+    # (the kernel layer already did); profiled contexts keep their
+    # declared posture (local "ignore", production "confirm").
+    action = getattr(ctx, "global_stability_action", "confirm")
 
     if envelope.hard_block:
         if "global" in (envelope.hard_reason or ""):
