@@ -201,10 +201,13 @@ def test_pipeline_llm_service_missing_handler_records_error() -> None:
 
     assert content is None
 
-    error = ctx.extra["errors"][0]
-
-    assert error["details"]["stage"] == "TestStage"
-    assert error["details"]["llm_error"] == "missing_runtime_bindings"
+    # DM-F2 (campaign FIX): a declared no-LLM posture is state, not a
+    # failure; the nominal error journal stays empty and the posture
+    # is exported for observability.
+    assert ctx.extra.get("errors", []) == []
+    posture = ctx.extra["llm_posture"]
+    assert posture["stage"] == "TestStage"
+    assert posture["state"] == "no_runtime_bindings"
 
 
 def test_pipeline_llm_service_failure_records_error() -> None:

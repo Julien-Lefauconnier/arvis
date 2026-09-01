@@ -45,11 +45,16 @@ class PipelineLLMService:
         runtime = PipelineLLMService._resolve_runtime_bindings(ctx)
 
         if runtime is None:
-            PipelineLLMService._record_error(
-                ctx,
-                stage=stage,
-                error_code="missing_runtime_bindings",
-            )
+            # DM-F2 (campaign FIX): a host that declared no runtime
+            # bindings is a legitimate no-LLM posture, not a failure.
+            # It used to be captured as an error on every turn, the
+            # only remaining noise of a nominal run; it is exported as
+            # state so the nominal error journal stays empty and any
+            # future entry there is signal.
+            ctx.extra["llm_posture"] = {
+                "stage": stage,
+                "state": "no_runtime_bindings",
+            }
             return None
 
         policy = retry_policy or PipelineRetryPolicy(max_attempts=1)
