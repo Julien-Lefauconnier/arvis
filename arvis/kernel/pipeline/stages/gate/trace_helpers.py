@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from arvis.cognition.conflict.conflict_confirmation import (
+    requires_conflict_confirmation,
+)
 from arvis.errors.manager import ErrorManager
 from arvis.errors.pipeline import PipelineStageDegradedError
 from arvis.kernel.pipeline.context.journal_context import (
@@ -111,18 +114,23 @@ def enforce_monotone(
 
 def sync_confirmation_flags(ctx: Any, verdict: LyapunovVerdict) -> None:
     try:
-        # Honest constant (campaign STRUCT, LOT S4): the historical read
-        # was getattr(ctx, "conflict_signal", None), an attribute nothing
-        # in the tree ever writes, so the value was 0.0 on every run.
-        # Wiring the REAL conflict channel (ctx.conflict_pressure) into
-        # this flag is a behavior decision recorded in the campaign
-        # report, not taken silently here.
-        conflict_value = 0.0
+        # Campaign OBS (decision DS4a): the historical read here was
+        # getattr(ctx, "conflict_signal", None), an attribute nothing
+        # ever writes (0.0 on every run). The flag now consumes the
+        # real declared channel through the SAME canonical threshold
+        # function the confirmation stage applies, so the gate-time
+        # exports agree with the confirmation decision instead of
+        # ignoring conflict. Direction is hardening-only: pressure can
+        # raise the flag, never lower it (F-001).
+        conflict_pressure = getattr(ctx, "conflict_pressure", None)
+        conflict_value = (
+            float(conflict_pressure) if conflict_pressure is not None else 0.0
+        )
 
         requires_confirmation = (
             verdict == LyapunovVerdict.REQUIRE_CONFIRMATION
             or verdict == LyapunovVerdict.ABSTAIN
-            or conflict_value > 0.0
+            or requires_conflict_confirmation(conflict_value)
         )
 
         # -------------------------------------------------
