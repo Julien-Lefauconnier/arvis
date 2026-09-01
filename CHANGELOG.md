@@ -11,6 +11,16 @@ versioning throughout the pre-1.0 series.
 
 ### Added
 
+- Campaign MATH-C: corpus D-2.0 with the state-feedback nominal
+  family (the contraction regime encoded in the input dynamics, the
+  D-1.0 lesson applied), campaign 2 registered and executed: 12 of
+  12 criteria passed, with the treatment/control contrast
+  (p_contraction 1.000 on the feedback family against 0.495 on the
+  exogenous control) and the adaptive layer shown to respond to
+  measured contraction in both directions. The composite fast-energy
+  shortcut was measured (full-W variant on D-1.0) and kept as the
+  documented v0 design (DM-C1); full wiring is re-posed at DM4.
+
 - Campaign MATH-B: the M10 empirical validation campaign executed on
   the synthetic corpus D-1.0 (56 trajectories, 1440 turns, published
   seeds). New top-level `validation/` package (excluded from the
@@ -23,6 +33,15 @@ versioning throughout the pre-1.0 series.
   published report-only (no runtime default changes).
 
 ### Fixed
+
+- The slow-drift detector measures structured slow states again. The
+  scalar-era code computed abs(cur - prev) on SlowState objects that
+  carry no subtraction, a TypeError swallowed as
+  slow_drift_detection_failure on every structured turn; structured
+  pairs now use the euclidean norm of their vector delta (the scalar
+  path is kept for duck compatibility). The revived signal stays
+  observability-only: it has no runtime consumer, so no verdict
+  moves.
 
 - The adaptive runtime observer reads the estimator's smoothed
   contraction factor again. Since the MATH-A snapshot rename it read

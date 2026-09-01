@@ -1,7 +1,7 @@
 # M10: Empirical Stability Validation Protocol and Campaign Report
 
-> **Status: protocol executed on a synthetic corpus; report in
-> section 10.** Sections 1 to 9 are the registered protocol,
+> **Status: protocol executed on synthetic corpora; reports in
+> sections 10 and 11.** Sections 1 to 9 are the registered protocol,
 > unchanged. Campaign MATH-B (2026-09-01) executed it on the
 > deterministic synthetic corpus $\mathcal{D}$ = D-1.0 with
 > pre-registered thresholds; section 10 records the observed values,
@@ -39,7 +39,7 @@ When executed, this protocol is intended to provide:
 |---------|-----------------------------------|------------------------------|
 | M0–M9   | Theoretical / structural          | Written, self-consistent     |
 | M3 Phase A | Empirical, offline, projection layer | Executed (`tests/math/`) |
-| M10     | Empirical, runtime, closed loop   | **Executed on D-1.0 (sec. 10)** |
+| M10     | Empirical, runtime, closed loop   | **Executed: D-1.0 (sec. 10), D-2.0 (sec. 11)** |
 
 ---
 
@@ -112,7 +112,7 @@ $\mathcal{D}$ bit-for-bit and rerun every metric.
 ## 5. Metrics and Pass Criteria
 
 Every subsection states the metric and the criterion the runtime has
-to satisfy. The observed values are recorded in section 10.
+to satisfy. The observed values are recorded in sections 10 and 11.
 
 ### 5.1 Lyapunov Evolution
 
@@ -449,11 +449,22 @@ DM4).
    $\delta = 0.01$, certifying OK ($\leq 0.15$) needs on the order
    of 100 clean turns; 24-turn trajectories cannot reach it.
 4. **The composite fast-energy shortcut discards slow coupling
-   exactly when the state is complete** (found in LOT B1, kept
-   as-is): on complete quadruples the gate consumes the fast energy
-   directly and the slow term only enters on incomplete states. The
-   corpus therefore exercises the fast path; the slow-coupling term
-   of M7 remains validated only by unit fixtures.
+   exactly when the state is complete** (found in LOT B1): on
+   complete quadruples the gate consumes the fast energy directly
+   and the slow term only enters on incomplete states. The corpus
+   therefore exercises the fast path; the slow-coupling term of M7
+   remains validated only by unit fixtures. Campaign MATH-C measured
+   the full-W variant on D-1.0 before deciding (LOT C2): wiring
+   W = V + lambda*mismatch everywhere breaks the registered ISS
+   bound (sup W 8.81 against 6.0, the mismatch term dominating),
+   moves 57 of 1440 verdicts in BOTH directions (37 relaxations, 20
+   tightenings, so not a hardening-only change under F-001), lifts
+   nominal contraction from 0.516 to 0.592 without passing, and
+   shrinks the measured conservative small-gain margin from 0.084
+   to 0.052. Decision DM-C1 (owner, 2026-09-01): the shortcut is
+   the v0 design, kept and documented here; full wiring is re-posed
+   at DM4 with lambda calibrated on real traffic rather than the
+   arbitrary 0.5.
 
 ### 10.6 Sensitivity (LOT B4)
 
@@ -483,3 +494,77 @@ calibration of runtime defaults (DM-B1, DM4); and the ALLOW side of
 the gate distribution is untested at this level because ALLOW is
 unreachable on cold synthetic turns by design of the provenance and
 monitoring guards.
+
+---
+
+## 11. Campaign 2 Report: MATH-C, 2026-09-01 (corpus D-2.0)
+
+### 11.1 Why a second corpus
+
+Section 10.2's failed criterion taught that on an exogenous input
+walk, contraction dominance measures the corpus, not the kernel.
+D-2.0 encodes A12's contraction regime in the input dynamics: a new
+``nominal_feedback`` family whose fast input channels start stressed
+and relax geometrically toward published targets, faster when the
+previous final verdict tightened (the complete loop: verdict back
+into input). The law's constants are published as ``FEEDBACK_LAW``
+in ``validation/m10/corpus.py`` and executed by the harness; the
+seven D-1.0 families are regenerated under D-2.0's own master seed
+(20260902) as controls. 64 trajectories, 1632 turns, bit-for-bit
+reproducible.
+
+### 11.2 Registration and judgment
+
+The campaign 2 criteria (``PROPOSED_D2``) are the registered D-1.0
+set with one change, published before any run: 5.1 judges the
+feedback family. The owner registered the set unmodified on
+2026-09-01 (DM-C2), before the first full D-2.0 run.
+
+**12 of 12 criteria passed**, including:
+
+| Criterion | Registered | Observed |
+|---|---|---|
+| 5.1 feedback contraction dominates | >= 0.60 | **1.000** |
+| 5.1 bounded expansion | <= 1.50 | 0.554 |
+| 5.2 no divergence / bounded energy | == 0, <= 6.0 | 0, 1.563 |
+| 5.3 estimator availability | >= 0.50 | 0.848 |
+| 5.4 ABSTAIN never relaxed (M6) | == 0 | 0 |
+| 5.5 adversarial ALLOW, expansion ALLOW | <= 0, <= 0.05 | 0.0, 0.0 |
+| 5.7 negative feedback consistency | >= 0.95 | 1.00 |
+
+### 11.3 The treatment/control contrast
+
+The same run carries both nominal families:
+
+- ``nominal_feedback`` (contraction encoded in inputs):
+  p_contraction **1.000**;
+- ``nominal`` (exogenous walk, the D-1.0 control): p_contraction
+  0.495.
+
+This is the D-1.0 lesson demonstrated in one experiment: the
+projection-to-energy chain tracks the input dynamics faithfully, and
+the 5.1 criterion is meaningful exactly when the corpus declares
+what the inputs do.
+
+### 11.4 The adaptive layer discriminates in both directions
+
+On D-1.0 the revived adaptive layer vetoed almost everything (bands:
+hard 1107 of 1200 available turns; final verdict by hard veto on 952
+of 1248 threaded turns) because the corpus energy did not contract.
+On D-2.0's feedback family the same layer, unchanged, reads the
+contracting energy and stands down: bands hard 16 / critical 66 /
+warning 77 / stable 25, ABSTAIN 10.9% and REQUIRE_CONFIRMATION 89.1%
+on the family. Together the two campaigns show the DM-B0 layer is
+not a constant brake: it responds to measured contraction in both
+directions, which is the behavior A12 asks of it. ALLOW remains 0.0
+corpus-wide (the provenance and cold-monitoring floors of section
+10.3, unchanged by design).
+
+### 11.5 Reproduction
+
+``python -m validation.m10 run2`` regenerates the campaign 2
+artifacts under ``validation/m10/artifacts_d2/`` (the per-turn
+measurements are untracked and regenerate identically). The gate
+pins the D-2.0 identity: the eight families as a literal, manifest
+reproducibility, and the deterministic contracting transient of the
+feedback family.
