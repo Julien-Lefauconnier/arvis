@@ -9,6 +9,91 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+Campaign STRUCT (2026-08-31 / 2026-09-01): structural consolidation.
+The audit's frozen dead weight is gone, the hot path is typed against
+the real objects, and the mirror/extra channels have a doctrine. No
+veramem-facing surface changed (mirror 60/60 at every lot).
+
+### Removed
+
+- **The dead-code burn-down is complete**: 91 unreachable modules at
+  the audit, 0 pending today. This campaign deleted the standalone
+  conversation orchestration layer (38 modules), the unwired
+  predictive/probabilistic math layer (14) and the remaining dead
+  chains (32: the kernel adapter rule engine, dead LLM contracts and
+  observability providers, the lexicon and dead linguistic acts,
+  runtime snapshots, the raw signal layer, redaction, orphan
+  cognition flows), each verified importer-free. The import-closure
+  ratchet now lists only three deliberate test harnesses
+  (projection_api, the in-memory VFS repository), and `arvis.api.*`
+  joined the closure roots as the curated public namespace.
+  KERNEL_ADAPTERS.md and the linguistic spec carry dated
+  implementation frontiers instead of describing deleted code.
+- The pipeline's delegation-only facades (Iteration, StageExecution,
+  Execution, Lifecycle, Compatibility, ExecutionSync services), the
+  executor's speculative signal machinery (pipeline_contract.py) and
+  its impossible duck-typing guards, the CognitiveOSInternals mixin
+  (merged into CognitiveOS), ControlInertia's phantom smooth() API
+  and its backward-compatibility alias. The kernel pipeline's
+  12-module import cycle is gone; the repository import graph's
+  non-trivial SCCs drop from 6+ to 4, none in kernel/pipeline.
+- Thirteen mirror properties (the decision/execution/policy family)
+  left CognitivePipelineContext after their reader sites migrated to
+  the sub-contexts, following the facade ratchet's protocol.
+
+### Changed
+
+- **The twenty pipeline stages are typed against the real
+  CognitivePipelineContext and CognitivePipeline** (they ran on
+  Any/Any). Typing surfaced 47 real findings, each resolved at its
+  source: the stage-published working state is now declared on the
+  context (conflict, conflict_pressure, temporal channels, memory
+  modes, kappa_band, adaptive_control, slow_divergence,
+  regime_confidence, the gate's stability_certificate and
+  system_confidence, and the private mirror scalars); the syscall
+  layer keeps ONE protocol per concept
+  (kernel_core/syscalls/protocols.py) instead of fourteen local
+  re-declarations, and types its handlers nominally.
+- **The gate consumes the canonical scientific context**: the
+  gate-entry hydration walk (an identity on real contexts) is
+  reduced to its one live copy (the slow/symbolic bridge into the
+  composite slots) plus the compliance injection channel; the
+  composite evaluation stops double-writing through the accessor
+  layer; the drift channel lives only in its sub-context.
+- **ctx.extra carries its doctrine**: a host boundary channel
+  (documented keys; controls never ride it) plus the run
+  observability journal, whose migration into typed observability
+  contexts is the named follow-up.
+- CognitiveControlEngine.compute is seven named, independently
+  degrading steps (485 to 290 lines, public signature unchanged);
+  GateObserver.build takes one typed GateObservation instead of
+  eighteen keyword parameters.
+- The scheduler's anti-starvation mechanism is pinned by multi-tick
+  properties: budget depletion (not aging, which cannot close a
+  priority gap) is what guarantees every budgeted process runs.
+
+### Fixed
+
+- **The temporal stage owns the temporal channel (decision DS3,
+  RED-first)**: the control stage no longer overwrites the computed
+  TemporalPressureSnapshot/TemporalModulation with an ad-hoc binary
+  object whose 1.2 multiplier bypassed the [0, 1] clamp. A timeline
+  can now only keep or tighten epsilon (monotone hardening). The
+  invariant-free duplicate TemporalModulation class in
+  temporal_regulation.py is unified with the canonical clamped one.
+- The uncertainty-intent path was dead by type error (the mapper
+  requires an UncertaintyFrame; the control stage passed an
+  UncertaintySignal and a broad except silently produced None on
+  every run): the channel is declared, honest, and the impossible
+  call plus its orphaned mapper are gone.
+- Two same-name class collisions resolved where the wrong one could
+  bind: ConflictSignal (the raw cognition event vs the math pressure
+  signal; the context channel carries the math signal) and
+  TemporalModulation (above). A phantom gate read
+  (ctx.conflict_signal, never written, contribution 0.0) is now an
+  explicit constant with the wiring decision recorded in the
+  campaign report.
+
 Campaign MATH-A (2026-08-31): the default engine measures its own
 science. Resolves the audit's central finding (the Lyapunov machinery
 was wired but never evaluated on any default path).
