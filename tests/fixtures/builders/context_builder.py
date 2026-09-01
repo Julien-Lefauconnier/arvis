@@ -51,7 +51,10 @@ def build_test_context(
     ctx.scientific.switching.switching_safe = switching_safe
     ctx.scientific.composite.delta_w = delta_w
 
-    ctx.observability.system_tension = system_tension
+    # Canonical tension channel (decision DS5): the projection, trace
+    # and state IR read observability.diagnostics.system_tension; the
+    # historical dynamic-attribute seed reached nothing.
+    ctx.observability.diagnostics.system_tension = system_tension
 
     return ctx
 

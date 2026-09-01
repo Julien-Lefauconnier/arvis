@@ -9,10 +9,6 @@ from arvis.kernel.pipeline.context.scientific_context import (
 )
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.lyapunov.lyapunov import LyapunovState
-from arvis.math.lyapunov.slow_state import SlowState
-from arvis.math.state.symbolic_state import (
-    SymbolicState,
-)
 
 
 def scientific(ctx: Any) -> PipelineScientificContext:
@@ -37,40 +33,12 @@ def prev_lyap(ctx: Any) -> LyapunovState | float | None:
     return scientific(ctx).lyapunov.prev_lyap
 
 
-def set_prev_lyap(ctx: Any, value: LyapunovState | float | None) -> None:
-    scientific(ctx).lyapunov.prev_lyap = value
-
-
 def cur_lyap(ctx: Any) -> LyapunovState | float | None:
     return scientific(ctx).lyapunov.cur_lyap
 
 
-def set_cur_lyap(ctx: Any, value: LyapunovState | float | None) -> None:
-    scientific(ctx).lyapunov.cur_lyap = value
-
-
 def delta_w(ctx: Any) -> float | None:
     return scientific(ctx).composite.delta_w
-
-
-def set_delta_w(ctx: Any, value: float | None) -> None:
-    scientific(ctx).composite.delta_w = value
-
-
-def w_prev(ctx: Any) -> float | None:
-    return scientific(ctx).composite.w_prev
-
-
-def set_w_prev(ctx: Any, value: float | None) -> None:
-    scientific(ctx).composite.w_prev = value
-
-
-def w_current(ctx: Any) -> float | None:
-    return scientific(ctx).composite.w_current
-
-
-def set_w_current(ctx: Any, value: float | None) -> None:
-    scientific(ctx).composite.w_current = value
 
 
 def stable(ctx: Any) -> bool | None:
@@ -81,26 +49,6 @@ def stable(ctx: Any) -> bool | None:
         return bool(value) if value is not None else None
 
     return getattr(ctx, "stable", None)
-
-
-def set_stable(ctx: Any, value: bool | None) -> None:
-    scientific(ctx).regime_state.stable = value
-
-
-def prev_slow(ctx: Any) -> SlowState | None:
-    return scientific(ctx).composite.prev_slow
-
-
-def cur_slow(ctx: Any) -> SlowState | None:
-    return scientific(ctx).composite.cur_slow
-
-
-def prev_symbolic(ctx: Any) -> SymbolicState | None:
-    return scientific(ctx).composite.prev_symbolic
-
-
-def cur_symbolic(ctx: Any) -> SymbolicState | None:
-    return scientific(ctx).composite.cur_symbolic
 
 
 def adaptive_snapshot(ctx: Any) -> AdaptiveSnapshot | None:
@@ -151,10 +99,6 @@ def uncertainty(ctx: Any) -> Any:
     return scientific(ctx).core.uncertainty
 
 
-def uncertainty_intent(ctx: Any) -> Any:
-    return scientific(ctx).core.uncertainty_intent
-
-
 # ============================================================
 # REGIME
 # ============================================================
@@ -162,10 +106,6 @@ def uncertainty_intent(ctx: Any) -> Any:
 
 def regime(ctx: Any) -> Any:
     return scientific(ctx).regime_state.regime
-
-
-def regime_confidence(ctx: Any) -> Any:
-    return scientific(ctx).regime_state.regime_confidence
 
 
 def theoretical_regime(ctx: Any) -> Any:
@@ -213,15 +153,3 @@ def delta_w_history(ctx: Any) -> list[float]:
 # ============================================================
 # ADAPTIVE
 # ============================================================
-
-
-def validity_envelope(ctx: Any) -> Any:
-    return scientific(ctx).adaptive.validity_envelope
-
-
-def set_validity_envelope(ctx: Any, value: Any) -> None:
-    scientific(ctx).adaptive.validity_envelope = value
-
-
-def global_stability_metrics(ctx: Any) -> Any:
-    return scientific(ctx).adaptive.global_stability_metrics
