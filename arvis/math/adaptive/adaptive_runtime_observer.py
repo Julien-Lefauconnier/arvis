@@ -33,10 +33,15 @@ class AdaptiveRuntimeObserver:
 
         snap = self.estimator.update(W_prev=W_prev, W_next=W_next)
 
-        kappa_eff: float | None = getattr(snap, "kappa_eff", None)
+        # Direct, typed reads (DM-B0): the estimator snapshot carries
+        # kappa_raw/kappa_clipped/kappa_smoothed since MATH-A M4; a
+        # getattr on the historical "kappa_eff" name silently returned
+        # None and left this whole layer structurally dead on every
+        # live path (only injected snapshots ever exercised the bands).
+        kappa_eff: float | None = snap.kappa_smoothed
         margin: float | None = None
 
-        if getattr(snap, "is_available", False) and kappa_eff is not None:
+        if snap.is_available and kappa_eff is not None:
             margin = self.estimator.adaptive_switching_margin(
                 J=J,
                 tau_d=tau_d,

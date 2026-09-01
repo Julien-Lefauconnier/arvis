@@ -60,6 +60,22 @@ def test_threading_produces_live_trajectory_quantities() -> None:
     assert taus and max(t for t in taus if t is not None) >= 4.0
 
 
+def test_the_adaptive_layer_is_live_on_threaded_turns() -> None:
+    """DM-B0 (RED-first): with the observer reading the estimator's
+    smoothed factor, threaded turns (fast state, switching runtime
+    and adaptive observer carried across turns) must yield available
+    adaptive snapshots; the layer's availability on live paths is
+    exactly what the bug suppressed."""
+    corpus = build_smoke_corpus()
+    nominal = next(t for t in corpus.trajectories if t.family == "nominal")
+
+    ms = run_trajectory(nominal)
+
+    assert any(m.adaptive_available for m in ms[1:]), [
+        (m.turn_index, m.adaptive_available) for m in ms
+    ]
+
+
 def test_metrics_cover_the_nine_families_of_m10() -> None:
     corpus = build_smoke_corpus()
     observed = compute_all(run_corpus(corpus))

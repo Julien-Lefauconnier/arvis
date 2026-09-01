@@ -25,14 +25,37 @@ def test_adaptive_runtime_observer_basic():
     assert result.regime in {"stable", "critical", "unstable"}
 
 
+def test_real_estimator_snapshot_reaches_the_observer():
+    """DM-B0 (campaign MATH-B, RED-first): with the real estimator and
+    a contracting pair, the observer must surface the smoothed factor.
+    The MATH-A rename left the observer reading ``snap.kappa_eff``, a
+    field the estimator snapshot no longer carries, so every live path
+    came back unavailable and the kappa-band layer only ever fired on
+    injected snapshots."""
+    est = AdaptiveKappaEffEstimator()
+    observer = AdaptiveRuntimeObserver(estimator=est)
+
+    result = observer.update(
+        W_prev=10.0,
+        W_next=8.0,
+        J=1.1,
+        tau_d=10.0,
+    )
+
+    assert result.available is True
+    assert result.kappa_eff == est.kappa_smoothed
+    assert result.margin is not None and result.margin < 0
+    assert result.regime == "stable"
+
+
 # --------------------------------------------------
 # Mock estimator
 # --------------------------------------------------
 
 
 class DummySnap:
-    def __init__(self, kappa_eff, is_available=True):
-        self.kappa_eff = kappa_eff
+    def __init__(self, kappa_smoothed, is_available=True):
+        self.kappa_smoothed = kappa_smoothed
         self.is_available = is_available
 
 
