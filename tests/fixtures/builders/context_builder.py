@@ -72,7 +72,7 @@ def attach_test_ir(
         risk_level=0.2,
     )
 
-    ctx.ir_state = CognitiveStateIR(
+    ctx.observability.state.ir_state = CognitiveStateIR(
         state_id="s1",
         bundle_id="b1",
         dv=0.1,

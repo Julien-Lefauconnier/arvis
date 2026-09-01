@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.ir.cognitive_ir import CognitiveIR
+from arvis.kernel.pipeline.context.observability_accessors import (
+    ir_state as ir_state_of,
+)
 
 
 class CognitiveIRBuilder:
@@ -40,7 +43,7 @@ class CognitiveIRBuilder:
             input=getattr(ctx, "ir_input", None),
             context=getattr(ctx, "ir_context", None),
             decision=ctx.decision_layer.ir_decision,
-            state=getattr(ctx, "ir_state", None),
+            state=ir_state_of(ctx),
             gate=getattr(ctx, "ir_gate", None),
             projection=getattr(ctx, "ir_projection", None),
             validity=getattr(ctx, "ir_validity", None),

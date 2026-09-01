@@ -24,4 +24,4 @@ def test_stability_certificate_consistency(pipeline, ctx):
     assert cert["global"] == ctx.global_stability_safe
 
     # switching flag must match context
-    assert cert["switching"] == ctx.switching_safe
+    assert cert["switching"] == ctx.scientific.switching.switching_safe

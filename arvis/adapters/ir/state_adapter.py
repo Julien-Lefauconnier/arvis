@@ -8,6 +8,33 @@ from json import dumps
 from typing import TYPE_CHECKING, Any
 
 from arvis.ir.state import CognitiveRiskIR, CognitiveStateIR
+from arvis.kernel.pipeline.context.observability_accessors import (
+    global_forecast as global_forecast_of,
+)
+from arvis.kernel.pipeline.context.observability_accessors import (
+    global_stability as global_stability_of,
+)
+from arvis.kernel.pipeline.context.observability_accessors import (
+    multi_horizon as multi_horizon_of,
+)
+from arvis.kernel.pipeline.context.observability_accessors import (
+    predictive_snapshot as predictive_snapshot_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    collapse_risk as collapse_risk_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    delta_w as delta_w_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    drift_score as drift_score_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    regime as regime_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    stable as stable_of,
+)
 
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline_context import (
@@ -110,24 +137,22 @@ class StateIRAdapter:
         bundle = ctx.decision_layer.bundle
         bundle_id = str(getattr(bundle, "bundle_id", "bundle"))
 
-        base_risk = _as_float(getattr(ctx, "collapse_risk", 0.0), 0.0)
+        base_risk = _as_float(collapse_risk_of(ctx), 0.0)
 
         mh_risk = _as_float(
-            _maybe_get(getattr(ctx, "multi_horizon", None), "risk", "fused_risk"),
+            _maybe_get(multi_horizon_of(ctx), "risk", "fused_risk"),
             base_risk,
         )
         world_risk = _as_float(
-            _maybe_get(getattr(ctx, "global_forecast", None), "world_risk", "risk"),
+            _maybe_get(global_forecast_of(ctx), "world_risk", "risk"),
             base_risk,
         )
         forecast_risk = _as_float(
-            _maybe_get(
-                getattr(ctx, "predictive_snapshot", None), "forecast_risk", "risk"
-            ),
+            _maybe_get(predictive_snapshot_of(ctx), "forecast_risk", "risk"),
             world_risk,
         )
         fused_risk = _as_float(
-            _maybe_get(getattr(ctx, "global_stability", None), "fused_risk", "risk"),
+            _maybe_get(global_stability_of(ctx), "fused_risk", "risk"),
             max(base_risk, mh_risk, world_risk, forecast_risk),
         )
 
@@ -150,8 +175,8 @@ class StateIRAdapter:
         dv = _as_float(
             getattr(ctx, "_dv", None),
             _as_float(
-                getattr(ctx, "drift_score", None),
-                _as_float(getattr(ctx, "delta_w", None), 0.0),
+                drift_score_of(ctx),
+                _as_float(delta_w_of(ctx), 0.0),
             ),
         )
 
@@ -191,13 +216,13 @@ class StateIRAdapter:
             collapse_risk=risk_ir,
             epsilon=epsilon,
             early_warning=early_warning,
-            world_prediction=getattr(ctx, "predictive_snapshot", None),
-            forecast=getattr(ctx, "global_forecast", None),
+            world_prediction=predictive_snapshot_of(ctx),
+            forecast=global_forecast_of(ctx),
             irg=getattr(ctx, "irg", None) or getattr(ctx, "introspection", None),
-            regime=getattr(ctx, "regime", None),
-            stable=getattr(ctx, "stable", None),
+            regime=regime_of(ctx),
+            stable=stable_of(ctx),
             system_tension=ctx.observability.diagnostics.system_tension,
-            drift=getattr(ctx, "drift_score", None),
+            drift=drift_score_of(ctx),
             projection_valid=StateIRAdapter._projection_attr(
                 ctx, "domain_valid", "projection_domain_valid"
             ),

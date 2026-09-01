@@ -7,7 +7,7 @@ def test_global_stability_policy_ignore(pipeline, ctx):
     ctx.global_stability_action = "ignore"
 
     # simulate instability
-    ctx.delta_w_history = [1.0, 1.0, 1.0]
+    ctx.scientific.composite.delta_w_history = [1.0, 1.0, 1.0]
 
     pipeline.run(ctx)
 
@@ -21,7 +21,7 @@ def test_global_stability_policy_confirm(pipeline, ctx):
     ctx.global_stability_action = "confirm"
 
     # force instability
-    ctx.delta_w_history = [10.0, 10.0, 10.0]
+    ctx.scientific.composite.delta_w_history = [10.0, 10.0, 10.0]
 
     pipeline.run(ctx)
 
@@ -40,7 +40,7 @@ def test_global_stability_policy_abstain(pipeline, ctx):
     ctx.global_stability_action = "abstain"
 
     # force instability
-    ctx.delta_w_history = [10.0, 10.0, 10.0]
+    ctx.scientific.composite.delta_w_history = [10.0, 10.0, 10.0]
 
     pipeline.run(ctx)
 

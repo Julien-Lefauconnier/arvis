@@ -24,11 +24,11 @@ class ConflictModulationStage:
         pressure_value = conflict_pressure.global_score
 
         adjusted_risk = apply_conflict_to_risk(
-            base_risk=float(ctx.collapse_risk),
+            base_risk=float(ctx.scientific.core.collapse_risk),
             conflict_pressure=pressure_value,
         )
 
-        ctx.collapse_risk = RiskSignal(adjusted_risk)
+        ctx.scientific.core.collapse_risk = RiskSignal(adjusted_risk)
 
         # expose for downstream stages
         ctx.conflict_pressure = conflict_pressure

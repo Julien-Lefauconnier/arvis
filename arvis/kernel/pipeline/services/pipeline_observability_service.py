@@ -69,29 +69,30 @@ class PipelineObservabilityService:
                 component="PipelineObservabilityService.projection_refresh",
             )
 
-        ctx.predictive_snapshot = obs["predictive"]
-        ctx.multi_horizon = obs["multi"]
-        ctx.global_forecast = obs["forecast"]
-        ctx.global_stability = obs["stability"]
-        ctx.stability_stats = obs["stats"]
+        projections = ctx.observability.projections
+        projections.predictive_snapshot = obs["predictive"]
+        projections.multi_horizon = obs["multi"]
+        projections.global_forecast = obs["forecast"]
+        projections.global_stability = obs["stability"]
+        projections.stability_stats = obs["stats"]
 
-        ctx.symbolic_state = obs["symbolic_state"]
-        ctx.symbolic_drift = obs["symbolic_drift"]
-        ctx.symbolic_features = obs["symbolic_features"]
+        ctx.scientific.lyapunov.symbolic_state = obs["symbolic_state"]
+        ctx.observability.symbolic.symbolic_drift = obs["symbolic_drift"]
+        ctx.observability.symbolic.symbolic_features = obs["symbolic_features"]
 
         try:
             projector = StabilityStateProjector()
             stats = StabilityStatistics()
 
-            projected = projector.project(ctx.global_stability)
+            projected = projector.project(projections.global_stability)
             computed = stats.compute(cast(StabilityStatsSnapshot, projected))
 
-            ctx.stability_projection = projected
-            ctx.stability_statistics = computed
+            projections.stability_projection = projected
+            projections.stability_statistics = computed
 
         except Exception as exc:
-            ctx.stability_projection = None
-            ctx.stability_statistics = None
+            projections.stability_projection = None
+            projections.stability_statistics = None
             capture_observability_failure(
                 ctx,
                 exc,

@@ -14,10 +14,16 @@ from arvis.kernel.pipeline.context.journal_context import (
     replace_fusion_reasons,
 )
 from arvis.kernel.pipeline.context.scientific_accessors import (
+    collapse_risk as collapse_risk_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
     cur_lyap as get_cur_lyap,
 )
 from arvis.kernel.pipeline.context.scientific_accessors import (
     prev_lyap as get_prev_lyap,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    scientific as scientific_of,
 )
 from arvis.kernel.pipeline.context.scientific_accessors import (
     stable as get_stable,
@@ -124,7 +130,7 @@ class GateDecisionStack:
             slow_cur=composite.cur_slow,
             symbolic_prev=composite.prev_symbolic,
             symbolic_cur=composite.cur_symbolic,
-            collapse_risk=float(getattr(ctx, "collapse_risk", 0.0)),
+            collapse_risk=float(collapse_risk_of(ctx) or 0.0),
             stable=get_stable(ctx),
             switching_safe=bool(assessment.switching_safe),
             global_safe=bool(assessment.global_safe),
@@ -243,7 +249,7 @@ class GateDecisionStack:
                 adaptive_metrics=assessment.adaptive_metrics,
             )
         except Exception as exc:
-            ctx.validity_envelope = None
+            scientific_of(ctx).adaptive.validity_envelope = None
             ErrorManager.attach(
                 ctx,
                 PipelineStageDegradedError(
@@ -321,7 +327,7 @@ class GateDecisionStack:
         built_envelope = (
             getattr(getattr(scientific, "adaptive", None), "validity_envelope", None)
             if scientific is not None
-            else getattr(ctx, "validity_envelope", None)
+            else scientific_of(ctx).adaptive.validity_envelope
         )
         if envelope is None and built_envelope is None:
             # F-005: an envelope that could not be built is unknown
@@ -559,11 +565,11 @@ def apply_recovery_override(
             # - The relaxation is refused entirely at or above the
             #   collapse-risk abstain threshold, so it can never undo
             #   the signal that caused the refusal.
-            collapse = float(getattr(ctx, "collapse_risk", 0.0) or 0.0)
+            collapse = float(collapse_risk_of(ctx) or 0.0)
             if collapse >= COLLAPSE_ABSTAIN_THRESHOLD:
                 return verdict
 
-            validity = getattr(ctx, "validity_envelope", None)
+            validity = scientific_of(ctx).adaptive.validity_envelope
             stable_recovery = (
                 validity is not None
                 and validity.valid

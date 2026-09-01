@@ -10,6 +10,9 @@ from arvis.kernel.pipeline.context.execution_context import (
 from arvis.kernel.pipeline.context.runtime_bindings_context import (
     PipelineRuntimeBindingsContext,
 )
+from arvis.kernel.pipeline.context.scientific_context import (
+    PipelineScientificContext,
+)
 
 
 def build_runtime_test_context() -> SimpleNamespace:
@@ -22,7 +25,9 @@ def build_runtime_test_context() -> SimpleNamespace:
     - runtime binding migration
     - scheduler/runtime integration tests
 
-    Intentionally lightweight and mutable.
+    Intentionally lightweight and mutable. Carries the canonical
+    scientific sub-context so seeds and reads use the same paths as
+    the real pipeline context (the root facade mirrors are retired).
     """
 
     ctx = SimpleNamespace()
@@ -30,5 +35,7 @@ def build_runtime_test_context() -> SimpleNamespace:
     ctx.execution = PipelineExecutionContext()
 
     ctx.runtime_bindings = PipelineRuntimeBindingsContext()
+
+    ctx.scientific = PipelineScientificContext()
 
     return ctx

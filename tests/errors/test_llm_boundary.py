@@ -24,8 +24,8 @@ def test_capture_llm_runtime_failure() -> None:
         message="LLM runtime failure",
     )
 
-    assert ctx.errors
-    assert ctx.errors[-1].details["boundary"] == "llm_runtime"
+    assert ctx.error_state.errors
+    assert ctx.error_state.errors[-1].details["boundary"] == "llm_runtime"
 
 
 def test_capture_llm_degraded_failure() -> None:
@@ -38,9 +38,9 @@ def test_capture_llm_degraded_failure() -> None:
         message="LLM degraded mode",
     )
 
-    assert ctx.errors
-    assert ctx.errors[-1].details["boundary"] == "llm_degraded"
-    assert ctx.errors[-1].details["severity"] == "degraded"
+    assert ctx.error_state.errors
+    assert ctx.error_state.errors[-1].details["boundary"] == "llm_degraded"
+    assert ctx.error_state.errors[-1].details["severity"] == "degraded"
 
 
 def test_capture_llm_contract_failure() -> None:
@@ -53,10 +53,10 @@ def test_capture_llm_contract_failure() -> None:
         message="LLM contract failure",
     )
 
-    assert ctx.errors
-    assert ctx.errors[-1].details["boundary"] == "llm_contract"
+    assert ctx.error_state.errors
+    assert ctx.error_state.errors[-1].details["boundary"] == "llm_contract"
 
-    assert ctx.errors[-1].details["severity"] == "contract_violation"
+    assert ctx.error_state.errors[-1].details["severity"] == "contract_violation"
 
 
 def test_attach_llm_error() -> None:
@@ -66,5 +66,5 @@ def test_attach_llm_error() -> None:
 
     attach_llm_error(ctx, error)
 
-    assert ctx.errors
-    assert ctx.errors[-1] is error
+    assert ctx.error_state.errors
+    assert ctx.error_state.errors[-1] is error

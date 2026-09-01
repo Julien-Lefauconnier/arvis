@@ -10,10 +10,11 @@ def test_pipeline_exposes_math_objects():
 
     pipeline.run(ctx)
 
-    assert hasattr(ctx, "fast_dynamics")
-    assert hasattr(ctx, "perturbation")
-    assert hasattr(ctx, "delta_w")
-    assert hasattr(ctx, "theoretical_regime")
+    regime_state = ctx.scientific.regime_state
+    assert hasattr(regime_state, "fast_dynamics")
+    assert hasattr(regime_state, "perturbation")
+    assert hasattr(ctx.scientific.composite, "delta_w")
+    assert hasattr(regime_state, "theoretical_regime")
 
 
 def test_fast_dynamics_consistency_in_pipeline():
@@ -23,7 +24,7 @@ def test_fast_dynamics_consistency_in_pipeline():
     pipeline.run(ctx)
     pipeline.run(ctx)
 
-    fd = ctx.fast_dynamics
+    fd = ctx.scientific.regime_state.fast_dynamics
 
     if fd and fd.is_valid():
         assert fd.delta_norm >= 0
@@ -35,13 +36,13 @@ def test_perturbation_exists_in_pipeline():
 
     pipeline.run(ctx)
 
-    assert ctx.perturbation is not None
+    assert ctx.scientific.regime_state.perturbation is not None
 
 
 def test_pipeline_exposes_composite_metrics(pipeline, ctx):
     pipeline.run(ctx)
 
-    assert ctx.w_current is not None
-    assert ctx.delta_w is not None
-    assert ctx.switching_runtime is not None
-    assert ctx.switching_metrics is not None
+    assert ctx.scientific.composite.w_current is not None
+    assert ctx.scientific.composite.delta_w is not None
+    assert ctx.scientific.switching.switching_runtime is not None
+    assert ctx.scientific.switching.switching_metrics is not None

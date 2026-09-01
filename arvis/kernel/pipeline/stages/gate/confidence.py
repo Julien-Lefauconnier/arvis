@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.kernel.pipeline.context.scientific_accessors import (
+    collapse_risk as collapse_risk_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
     cur_lyap,
     prev_lyap,
 )
@@ -26,7 +29,7 @@ def compute_gate_system_confidence(
         switching_safe=bool(switching_safe),
         has_history=prev_lyap(ctx) is not None,
         has_observability=cur_lyap(ctx) is not None,
-        collapse_risk=float(getattr(ctx, "collapse_risk", 0.0) or 0.0),
+        collapse_risk=float(collapse_risk_of(ctx) or 0.0),
     )
     system_confidence = compute_system_confidence(confidence_inputs)
     ctx.extra["system_confidence"] = system_confidence

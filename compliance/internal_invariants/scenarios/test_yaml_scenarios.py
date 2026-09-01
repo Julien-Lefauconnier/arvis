@@ -60,8 +60,8 @@ def test_yaml_scenarios(name):
     print("extra:", ctx.extra)
 
     print("\n--- INTERNAL STATE ---")
-    print("delta_w:", getattr(ctx, "delta_w", None))
-    print("stable:", getattr(ctx, "stable", None))
+    print("delta_w:", ctx.scientific.composite.delta_w)
+    print("stable:", ctx.scientific.regime_state.stable)
     print("projection_domain_valid:", ctx.projection.domain_valid)
     print("projection_margin:", ctx.projection.margin)
 

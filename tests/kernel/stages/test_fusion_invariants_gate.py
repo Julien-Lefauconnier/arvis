@@ -5,7 +5,7 @@ from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 def test_gate_single_decision_point(pipeline, ctx):
     ctx.global_stability_action = "confirm"
-    ctx.delta_w_history = [10.0, 10.0, 10.0]
+    ctx.scientific.composite.delta_w_history = [10.0, 10.0, 10.0]
 
     pipeline.run(ctx)
 
@@ -24,7 +24,7 @@ def test_gate_single_decision_point(pipeline, ctx):
 
 def test_fusion_reason_consistency(pipeline, ctx):
     ctx.global_stability_action = "abstain"
-    ctx.delta_w_history = [10.0, 10.0, 10.0]
+    ctx.scientific.composite.delta_w_history = [10.0, 10.0, 10.0]
 
     pipeline.run(ctx)
 
@@ -66,7 +66,7 @@ def test_fusion_trace_structure(pipeline, ctx):
 
 def test_trace_matches_verdict(pipeline, ctx):
     ctx.global_stability_action = "abstain"
-    ctx.delta_w_history = [10.0, 10.0, 10.0]
+    ctx.scientific.composite.delta_w_history = [10.0, 10.0, 10.0]
 
     pipeline.run(ctx)
 

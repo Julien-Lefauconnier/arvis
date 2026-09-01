@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from arvis.kernel.pipeline.context.scientific_accessors import (
     scientific,
+    set_adaptive_snapshot,
 )
 from arvis.kernel.pipeline.stages.gate.adaptive import compute_adaptive_metrics
 from arvis.kernel.pipeline.stages.gate.composite import (
@@ -61,13 +62,7 @@ class GateStage:
             w_current=composite.w_current,
         )
 
-        # -----------------------------------------------------
-        # Transitional runtime mirror synchronization
-        #
-        # Some downstream legacy decision layers still consume
-        # ctx.adaptive_snapshot directly.
-        # -----------------------------------------------------
-        ctx.adaptive_snapshot = adaptive_metrics
+        set_adaptive_snapshot(ctx, adaptive_metrics)
 
         global_safe = compute_global_stability(ctx, composite.delta_w)
         recovery_detected = detect_recovery(

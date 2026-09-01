@@ -186,7 +186,7 @@ class CognitiveRuntime:
 
         return RuntimeExecutionResult(
             result=result,
-            state=ctx.cognitive_state,
+            state=ctx.observability.state.cognitive_state,
         )
 
     # ---------------------------------------------------------

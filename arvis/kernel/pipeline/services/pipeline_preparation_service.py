@@ -74,11 +74,14 @@ class PipelinePreparationService:
         # -----------------------------------------
         # Switching runtime bootstrap
         # -----------------------------------------
-        if ctx.switching_params is None:
-            ctx.switching_params = PipelinePreparationService.DEFAULT_SWITCHING_PARAMS
+        switching = ctx.scientific.switching
+        if switching.switching_params is None:
+            switching.switching_params = (
+                PipelinePreparationService.DEFAULT_SWITCHING_PARAMS
+            )
 
-        if ctx.switching_runtime is None:
-            ctx.switching_runtime = SwitchingRuntime()
+        if switching.switching_runtime is None:
+            switching.switching_runtime = SwitchingRuntime()
 
         # -----------------------------------------
         # Quadratic comparability projection
@@ -89,10 +92,10 @@ class PipelinePreparationService:
             None,
         )
 
-        if comp is not None and ctx.switching_params is not None:
-            p = ctx.switching_params
+        if comp is not None and switching.switching_params is not None:
+            p = switching.switching_params
 
-            ctx.switching_params = SwitchingParams(
+            switching.switching_params = SwitchingParams(
                 alpha=float(p.alpha),
                 gamma_z=float(p.gamma_z),
                 eta=float(p.eta),

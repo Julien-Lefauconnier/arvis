@@ -78,7 +78,11 @@ def apply_gate_policy(
 
         if not adaptive_block:
             if verdict == LyapunovVerdict.ABSTAIN:
-                collapse = float(getattr(ctx, "collapse_risk", 0.0))
+                # Canonical read with math-layer duck tolerance (LOT O4:
+                # the root facade mirror is gone; chained getattr keeps
+                # this layer import-free of the kernel).
+                core = getattr(getattr(ctx, "scientific", None), "core", None)
+                collapse = float(getattr(core, "collapse_risk", 0.0))
                 if collapse < COLLAPSE_ABSTAIN_THRESHOLD:
                     reasons.append("recovery_hard_override")
                     return LyapunovVerdict.REQUIRE_CONFIRMATION

@@ -12,6 +12,9 @@ import pytest
 
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
+from arvis.kernel.pipeline.context.scientific_context import (
+    PipelineScientificContext,
+)
 from arvis.kernel_core.access.models import Principal
 from arvis.math.signals import RiskSignal
 from arvis.tools.executor import ToolExecutor
@@ -19,6 +22,13 @@ from arvis.tools.manager import ToolManager, _resolve_turn_risk
 from arvis.tools.registry import ToolRegistry
 from tests.fixtures.builders.effect_context_builder import build_effect_context
 from tests.support.tool_execution import run_tool_for_tests
+
+
+def _scientific_with_risk(value: float) -> PipelineScientificContext:
+    scientific = PipelineScientificContext()
+    scientific.core.collapse_risk = RiskSignal(value)
+    return scientific
+
 
 # ---------------------------------------------------------------
 # Invocation fields
@@ -76,15 +86,24 @@ def test_turn_risk_reads_declared_input_risk():
 
 
 def test_turn_risk_reads_assessed_collapse_risk():
-    ctx = SimpleNamespace(extra={}, collapse_risk=RiskSignal(0.4))
+    ctx = SimpleNamespace(
+        extra={},
+        scientific=_scientific_with_risk(0.4),
+    )
     assert _resolve_turn_risk(ctx) == 0.4
 
 
 def test_turn_risk_composes_by_hardening():
     # The stricter of the declared and assessed signals wins.
-    ctx = SimpleNamespace(extra={"input_risk": 0.3}, collapse_risk=RiskSignal(0.8))
+    ctx = SimpleNamespace(
+        extra={"input_risk": 0.3},
+        scientific=_scientific_with_risk(0.8),
+    )
     assert _resolve_turn_risk(ctx) == 0.8
-    ctx = SimpleNamespace(extra={"input_risk": 0.9}, collapse_risk=RiskSignal(0.2))
+    ctx = SimpleNamespace(
+        extra={"input_risk": 0.9},
+        scientific=_scientific_with_risk(0.2),
+    )
     assert _resolve_turn_risk(ctx) == 0.9
 
 

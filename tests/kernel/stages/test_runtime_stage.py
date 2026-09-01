@@ -54,10 +54,10 @@ def test_runtime_full():
     ctx = build_runtime_test_context()
 
     ctx.runtime_bindings.control_runtime = DummyRuntime()
-    ctx.collapse_risk = 0.3
+    ctx.scientific.core.collapse_risk = 0.3
     ctx.execution.action_decision = DummyAction("RUN")
-    ctx.switching_runtime = DummySwitchingRuntime()
-    ctx.regime = "stable"
+    ctx.scientific.switching.switching_runtime = DummySwitchingRuntime()
+    ctx.scientific.regime_state.regime = "stable"
 
     pipeline = DummyPipeline(observer=DummyObserver())
 
@@ -72,10 +72,10 @@ def test_runtime_full():
     assert runtime.last_action == "RUN"
 
     # switching
-    assert ctx.switching_runtime.updated == "stable"
+    assert ctx.scientific.switching.switching_runtime.updated == "stable"
 
     # observer
-    assert ctx.global_stability_metrics == {"ok": True}
+    assert ctx.scientific.adaptive.global_stability_metrics == {"ok": True}
 
 
 # ============================================================
@@ -88,7 +88,7 @@ def test_runtime_exception():
 
     # force failure
     ctx.runtime_bindings.control_runtime = None
-    ctx.collapse_risk = 0.3
+    ctx.scientific.core.collapse_risk = 0.3
     ctx.execution.action_decision = None
 
     pipeline = DummyPipeline()
@@ -104,7 +104,7 @@ def test_runtime_exception():
 
 def test_switching_missing_runtime():
     ctx = build_runtime_test_context()
-    ctx.regime = "stable"
+    ctx.scientific.regime_state.regime = "stable"
 
     pipeline = DummyPipeline()
 
@@ -120,13 +120,13 @@ def test_switching_missing_runtime():
 
 def test_switching_missing_regime():
     ctx = build_runtime_test_context()
-    ctx.switching_runtime = DummySwitchingRuntime()
+    ctx.scientific.switching.switching_runtime = DummySwitchingRuntime()
 
     pipeline = DummyPipeline()
 
     RuntimeStage().run(pipeline, ctx)
 
-    assert ctx.switching_runtime.updated is None
+    assert ctx.scientific.switching.switching_runtime.updated is None
 
 
 # ============================================================
@@ -140,8 +140,8 @@ def test_switching_exception():
             raise ValueError
 
     ctx = build_runtime_test_context()
-    ctx.switching_runtime = BrokenSwitch()
-    ctx.regime = "stable"
+    ctx.scientific.switching.switching_runtime = BrokenSwitch()
+    ctx.scientific.regime_state.regime = "stable"
 
     pipeline = DummyPipeline()
 
@@ -161,7 +161,7 @@ def test_observer_none():
     RuntimeStage().run(pipeline, ctx)
 
     # nothing set
-    assert not hasattr(ctx, "global_stability_metrics")
+    assert ctx.scientific.adaptive.global_stability_metrics is None
 
 
 # ============================================================
@@ -176,4 +176,4 @@ def test_observer_exception():
 
     RuntimeStage().run(pipeline, ctx)
 
-    assert ctx.global_stability_metrics is None
+    assert ctx.scientific.adaptive.global_stability_metrics is None

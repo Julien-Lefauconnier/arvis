@@ -22,8 +22,8 @@ class ToolFeedbackStage:
 
         success = last.get("result") is not None
 
-        ctx._tool_success = success
-        ctx._tool_failure = not success
+        ctx.tooling.tool_success = success
+        ctx.tooling.tool_failure = not success
 
         ctx.extra["tool_feedback"] = {
             "tool": last.get("tool"),

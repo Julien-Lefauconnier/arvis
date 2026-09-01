@@ -2,6 +2,10 @@
 
 from typing import Any
 
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    collapse_risk as collapse_risk_of,
+)
+
 
 class ToolRetryPolicy:
     """
@@ -13,11 +17,12 @@ class ToolRetryPolicy:
     """
 
     def evaluate(self, ctx: Any) -> None:
-        if not getattr(ctx, "_tool_failure", False):
+        tooling = getattr(ctx, "tooling", None)
+        if not getattr(tooling, "tool_failure", False):
             return
 
         # --- respect tool spec (F-016: retry requires idempotence) ---
-        last_tool = getattr(ctx, "_last_tool_spec", None)
+        last_tool = getattr(tooling, "last_tool_spec", None)
         if last_tool is None:
             # Unknown effect semantics: an automatic replay could
             # re-fire a non-idempotent effect, so no spec means no
@@ -32,7 +37,7 @@ class ToolRetryPolicy:
             return
 
         # retry only if system is safe enough
-        risk = float(getattr(ctx, "collapse_risk", 0.0))
+        risk = float(collapse_risk_of(ctx) or 0.0)
 
         if risk > 0.6:
             return

@@ -23,7 +23,7 @@ def test_pipeline_finalize_fail_closed_on_contract_violation() -> None:
     ctx = build_finalize_compatible_context()
 
     # Force finalize validation path
-    ctx.cognitive_state = object()
+    ctx.observability.state.cognitive_state = object()
 
     with patch(
         "arvis.contracts.cognitive_state_contract.CognitiveStateContract.validate",

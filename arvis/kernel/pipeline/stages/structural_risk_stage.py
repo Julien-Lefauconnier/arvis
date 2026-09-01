@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 
 class StructuralRiskStage:
     def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
-        prev_slow = getattr(ctx, "slow_state_prev", None)
-        cur_slow = getattr(ctx, "slow_state", None)
+        prev_slow = ctx.scientific.lyapunov.slow_state_prev
+        cur_slow = ctx.scientific.lyapunov.slow_state
 
         slow_divergence = None
 

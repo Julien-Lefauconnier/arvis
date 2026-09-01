@@ -2,7 +2,7 @@
 
 
 def test_confidence_flags_present(pipeline, ctx):
-    ctx.delta_w_history = [10.0, 10.0, 10.0]
+    ctx.scientific.composite.delta_w_history = [10.0, 10.0, 10.0]
 
     pipeline.run(ctx)
 
@@ -10,7 +10,7 @@ def test_confidence_flags_present(pipeline, ctx):
 
 
 def test_low_confidence_escalation_flag(pipeline, ctx):
-    ctx.delta_w_history = [10.0, 10.0, 10.0]
+    ctx.scientific.composite.delta_w_history = [10.0, 10.0, 10.0]
 
     pipeline.run(ctx)
 

@@ -5,12 +5,15 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.adapters.llm.contracts.context import ARVISContext
+from arvis.kernel.pipeline.context.observability_accessors import (
+    cognitive_state as cognitive_state_of,
+)
 
 
 class ARVISContextMapper:
     @staticmethod
     def from_pipeline_ctx(ctx: Any) -> ARVISContext:
-        state = getattr(ctx, "cognitive_state", None)
+        state = cognitive_state_of(ctx)
 
         if state is None:
             return ARVISContext(

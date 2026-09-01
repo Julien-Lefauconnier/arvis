@@ -12,6 +12,9 @@ from arvis.cognition.state.cognitive_state import (
     CognitiveState,
 )
 from arvis.kernel.pipeline.cognitive_pipeline_context import CognitivePipelineContext
+from arvis.kernel.pipeline.context.observability_accessors import (
+    ir_state as ir_state_of,
+)
 from arvis.signals.signal_journal import SignalJournal
 
 
@@ -42,7 +45,7 @@ class CognitiveStateBuilder:
         ir_input = getattr(ctx, "ir_input", None)
         ir_context = getattr(ctx, "ir_context", None)
         ir_decision = ctx.decision_layer.ir_decision
-        ir_state = getattr(ctx, "ir_state", None)
+        ir_state = ir_state_of(ctx)
         ir_gate = getattr(ctx, "ir_gate", None)
 
         return CognitiveState(

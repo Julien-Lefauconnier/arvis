@@ -735,7 +735,7 @@ class CognitiveOS:
                 "Trace mode requires a CognitiveState, but execution "
                 "returned none. Use enable_trace=False for fake "
                 "executors/tests, or ensure the pipeline builds "
-                "ctx.cognitive_state."
+                "the run's cognitive state."
             ),
         )
 

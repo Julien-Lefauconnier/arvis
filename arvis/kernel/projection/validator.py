@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    delta_w as delta_w_of,
+)
 from arvis.math.projection.projection_view import ProjectionView
 
 from .certificate import (
@@ -98,7 +101,7 @@ class ProjectionValidator:
         lyapunov_ok = True
         if ctx is not None:
             try:
-                delta_w = getattr(ctx, "delta_w", None)
+                delta_w = delta_w_of(ctx)
                 dv = getattr(ctx, "_dv", None)
 
                 if delta_w is not None:

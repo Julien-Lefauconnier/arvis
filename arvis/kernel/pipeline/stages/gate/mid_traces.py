@@ -54,7 +54,7 @@ def write_mid_traces(
         _attach_mid_trace_failure(ctx, "iss_perturbation_trace", exc)
 
     try:
-        if ctx.validity_envelope is not None:
+        if ctx.scientific.adaptive.validity_envelope is not None:
             ctx.extra["validity_envelope_extended"] = {
                 **(
                     vars(ctx.scientific.adaptive.validity_envelope)
@@ -66,7 +66,7 @@ def write_mid_traces(
                     prev_lyap(ctx) is not None or cur_lyap(ctx) is not None
                 ),
                 "switching_constraints_valid": bool(
-                    getattr(ctx, "switching_safe", False)
+                    bool(ctx.scientific.switching.switching_safe)
                 ),
                 "perturbation_bounded": True,
             }

@@ -1,13 +1,22 @@
 # tests/math/core/test_perturbation.py
 
+from types import SimpleNamespace
+
 from arvis.math.core.perturbation import compute_perturbation
 
 
 class DummyCtx:
-    uncertainty = 0.1
-    drift_score = 0.2
-    collapse_risk = 0.3
-    symbolic_drift = 0.4
+    """Canonical duck shape: the math layer reads the scientific and
+    observability sub-contexts (the root facade mirrors are retired)."""
+
+    scientific = SimpleNamespace(
+        core=SimpleNamespace(
+            uncertainty=0.1,
+            drift_score=0.2,
+            collapse_risk=0.3,
+        )
+    )
+    observability = SimpleNamespace(symbolic=SimpleNamespace(symbolic_drift=0.4))
 
 
 def test_perturbation_computation():

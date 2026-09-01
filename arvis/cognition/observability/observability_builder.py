@@ -10,7 +10,13 @@ from arvis.cognition.observability.symbolic.symbolic_feature_snapshot import (
     SymbolicFeatureSnapshot,
 )
 from arvis.kernel.pipeline.context.scientific_accessors import (
+    collapse_risk as collapse_risk_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
     cur_lyap,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    drift_score as drift_score_of,
 )
 from arvis.math.observability.global_forecast_snapshot import (
     GlobalForecastSnapshot,
@@ -37,8 +43,8 @@ class ObservabilityBuilder:
     def build(self, ctx: Any) -> dict[str, Any]:
         conflict_pressure = ctx.conflict_pressure
         conflict_level = self._signal(conflict_pressure)
-        collapse = self._signal(ctx.collapse_risk)
-        drift = self._signal(ctx.drift_score)
+        collapse = self._signal(collapse_risk_of(ctx))
+        drift = self._signal(drift_score_of(ctx))
 
         tension = SystemTensionSignal(
             collapse=collapse,
@@ -68,26 +74,26 @@ class ObservabilityBuilder:
 
         multi = MultiHorizonSnapshot(
             collapse_risk=collapse,
-            stability_confidence=1.0 - self._signal(ctx.collapse_risk),
-            early_warning=self._signal(ctx.collapse_risk) > 0.7,
+            stability_confidence=1.0 - self._signal(collapse_risk_of(ctx)),
+            early_warning=self._signal(collapse_risk_of(ctx)) > 0.7,
         )
 
         forecast = GlobalForecastSnapshot(
-            predicted_mean_delta=self._signal(ctx.drift_score),
+            predicted_mean_delta=self._signal(drift_score_of(ctx)),
             slope=drift,
             collapse_risk=collapse,
             time_to_critical=None,
-            early_warning=self._signal(ctx.collapse_risk) > 0.7,
+            early_warning=self._signal(collapse_risk_of(ctx)) > 0.7,
         )
 
         internal_stability = GlobalStabilitySnapshot(
             verdict=str(ctx.gate_result),
-            score=1.0 - self._signal(ctx.collapse_risk),
+            score=1.0 - self._signal(collapse_risk_of(ctx)),
             confidence=1.0,
             samples=len(ctx.timeline),
-            mean_dv=self._signal(ctx.drift_score),
+            mean_dv=self._signal(drift_score_of(ctx)),
             std_dv=0.0,
-            instability_rate=self._signal(ctx.collapse_risk),
+            instability_rate=self._signal(collapse_risk_of(ctx)),
             collapse_risk=collapse,
             last_v=_lyap_scalar(current_lyap),
             reasons=(
@@ -100,9 +106,9 @@ class ObservabilityBuilder:
         stability = StabilitySnapshot.from_global(internal_stability)
 
         stats = StabilityStatsSnapshot(
-            mean_delta=self._signal(ctx.drift_score),
-            contraction_rate=1.0 - self._signal(ctx.collapse_risk),
-            instability_rate=self._signal(ctx.collapse_risk),
+            mean_delta=self._signal(drift_score_of(ctx)),
+            contraction_rate=1.0 - self._signal(collapse_risk_of(ctx)),
+            instability_rate=self._signal(collapse_risk_of(ctx)),
             samples=len(ctx.timeline),
         )
 
@@ -123,9 +129,9 @@ class ObservabilityBuilder:
         )
 
         symbolic_drift = SymbolicDriftSnapshot(
-            drift_score=self._signal(ctx.drift_score),
+            drift_score=self._signal(drift_score_of(ctx)),
             regime=SymbolicRegime.OK
-            if self._signal(ctx.collapse_risk) < 0.5
+            if self._signal(collapse_risk_of(ctx)) < 0.5
             else SymbolicRegime.WARNING,
             intent_switch=False,
             gate_switch=False,
@@ -139,7 +145,7 @@ class ObservabilityBuilder:
             contradiction_density=0.0,
             gate_switch_rate=0.0,
             policy_disagreement_rate=0.0,
-            symbolic_drift_score=self._signal(ctx.drift_score),
+            symbolic_drift_score=self._signal(drift_score_of(ctx)),
             edges_count=0,
             mean_edge_weight=0.0,
             max_edge_weight=0.0,

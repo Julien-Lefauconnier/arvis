@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING
 from arvis.errors.boundaries.pipeline import (
     capture_pipeline_degraded_failure,
 )
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    scientific as scientific_of,
+)
 
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
@@ -26,8 +29,8 @@ class RuntimeStage:
                     ctx.runtime_bindings.control_runtime = runtime
 
             if runtime is not None:
-                runtime.last_risk = float(ctx.collapse_risk)
-                runtime.inertia_risk = float(ctx.collapse_risk)
+                runtime.last_risk = float(ctx.scientific.core.collapse_risk)
+                runtime.inertia_risk = float(ctx.scientific.core.collapse_risk)
                 runtime.last_action = str(
                     getattr(ctx.execution.action_decision, "mode", None)
                 )
@@ -44,8 +47,8 @@ class RuntimeStage:
         #  Switching runtime
         # -----------------------------------------
         try:
-            switching_runtime = getattr(ctx, "switching_runtime", None)
-            regime = getattr(ctx, "regime", None)
+            switching_runtime = scientific_of(ctx).switching.switching_runtime
+            regime = scientific_of(ctx).regime_state.regime
 
             if switching_runtime is not None and regime is not None:
                 switching_runtime.update(str(regime))
@@ -64,9 +67,9 @@ class RuntimeStage:
             observer = getattr(pipeline, "global_stability_observer", None)
             if observer:
                 metrics = observer.update(ctx)
-                ctx.global_stability_metrics = metrics
+                scientific_of(ctx).adaptive.global_stability_metrics = metrics
         except Exception as exc:
-            ctx.global_stability_metrics = None
+            scientific_of(ctx).adaptive.global_stability_metrics = None
             capture_pipeline_degraded_failure(
                 ctx,
                 exc,

@@ -20,6 +20,9 @@ from arvis.errors.tool_runtime import (
     ToolTimeoutError,
     UnknownToolError,
 )
+from arvis.kernel.pipeline.context.tooling_accessors import (
+    tooling as tooling_of,
+)
 from arvis.tools.authorized_invocation import (
     AuthorizedInvocation,
     InvocationAuthority,
@@ -68,7 +71,7 @@ class EffectDispatcher:
             prepared = self._prepare(invocation, result, ctx)
         except Exception as exc:  # arvis-broad: normalize pre-effect preparation
             with suppress(Exception):
-                ctx._tool_failure = True
+                tooling_of(ctx).tool_failure = True
             return self._preparation_failure(tool_name, exc)
         if prepared is None or isinstance(prepared, ToolResult):
             return prepared
@@ -97,7 +100,7 @@ class EffectDispatcher:
                 ctx=ctx,
             )
         except Exception as exc:
-            ctx._tool_failure = True
+            tooling_of(ctx).tool_failure = True
             normalized_error = normalize_error(exc)
             return ToolResult(
                 tool_name=tool_name,
@@ -134,7 +137,7 @@ class EffectDispatcher:
         }
         tool = self._registry.get(tool_name)
         if tool is None:
-            ctx._tool_failure = True
+            tooling_of(ctx).tool_failure = True
             return ToolResult(
                 tool_name=tool_name,
                 success=False,
@@ -146,7 +149,7 @@ class EffectDispatcher:
         try:
             spec = self._registry.verified_spec(tool_name)
         except ArvisSecurityError as exc:
-            ctx._tool_failure = True
+            tooling_of(ctx).tool_failure = True
             return ToolResult(
                 tool_name=tool_name,
                 success=False,
@@ -155,11 +158,11 @@ class EffectDispatcher:
                 effect_boundary=PRE_EFFECT_REFUSAL,
             )
         if spec is not None:
-            ctx._last_tool_spec = spec
+            tooling_of(ctx).last_tool_spec = spec
         if spec is not None and spec.input_schema:
             violation = schema_violation(validation_payload, spec.input_schema)
             if violation is not None:
-                ctx._tool_failure = True
+                tooling_of(ctx).tool_failure = True
                 return ToolResult(
                     tool_name=tool_name,
                     success=False,
@@ -173,7 +176,7 @@ class EffectDispatcher:
         try:
             tool.validate(validation_runtime)
         except Exception as exc:
-            ctx._tool_failure = True
+            tooling_of(ctx).tool_failure = True
             normalized_error = normalize_error(exc)
             return ToolResult(
                 tool_name=tool_name,
@@ -223,7 +226,7 @@ class EffectDispatcher:
             and spec.timeout_seconds is not None
             and latency > float(spec.timeout_seconds) * 1000.0
         ):
-            ctx._tool_failure = True
+            tooling_of(ctx).tool_failure = True
             return ToolResult(
                 tool_name=tool_name,
                 success=False,
@@ -240,7 +243,7 @@ class EffectDispatcher:
         if spec is not None and spec.output_schema:
             violation = schema_violation(output, spec.output_schema)
             if violation is not None:
-                ctx._tool_failure = True
+                tooling_of(ctx).tool_failure = True
                 return ToolResult(
                     tool_name=tool_name,
                     success=False,

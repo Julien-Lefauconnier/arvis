@@ -6,6 +6,5 @@ def test_pipeline_tracks_global_stability(pipeline, ctx):
     for _ in range(5):
         pipeline.run(ctx)
 
-    assert hasattr(ctx, "delta_w_history")
-    assert isinstance(ctx.delta_w_history, list)
+    assert isinstance(ctx.scientific.composite.delta_w_history, list)
     assert hasattr(ctx, "global_stability_safe")

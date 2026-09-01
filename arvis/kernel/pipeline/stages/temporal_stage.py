@@ -64,8 +64,11 @@ class TemporalStage:
         # -----------------------------------------
         # 3. apply modulation
         # -----------------------------------------
-        adjusted_risk = float(ctx.collapse_risk) * temporal_modulation.risk_multiplier
-        ctx.collapse_risk = RiskSignal(adjusted_risk)
+        adjusted_risk = (
+            float(ctx.scientific.core.collapse_risk)
+            * temporal_modulation.risk_multiplier
+        )
+        ctx.scientific.core.collapse_risk = RiskSignal(adjusted_risk)
 
         # -----------------------------------------
         # 4. expose

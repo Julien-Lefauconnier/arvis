@@ -142,7 +142,7 @@ def _policy_ctx(collapse_risk: float) -> SimpleNamespace:
         extra={},
         theoretical_enforcement_mode="monitor",
         global_stability_action="ignore",
-        collapse_risk=collapse_risk,
+        scientific=SimpleNamespace(core=SimpleNamespace(collapse_risk=collapse_risk)),
     )
 
 

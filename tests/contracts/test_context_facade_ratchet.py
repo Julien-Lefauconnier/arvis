@@ -1,37 +1,41 @@
 # tests/contracts/test_context_facade_ratchet.py
-"""Ratchet: the CognitivePipelineContext compatibility facade only shrinks.
+"""Ratchet: the CognitivePipelineContext root facade stays retired.
 
-The context is already decomposed into sub-contexts (the
-arvis/kernel/pipeline/context/ package); the property layer on
-CognitivePipelineContext is a DELIBERATE compatibility facade. The
-projection alias family (arvis-projection-v2) was migrated and removed
-in Lot 4b. This test freezes the exact set of facade properties:
+History: the context was decomposed into bounded sub-contexts (the
+arvis/kernel/pipeline/context/ package) and the root property layer was
+kept as a DELIBERATE compatibility facade, frozen by this test and only
+allowed to shrink. It shrank in steps: the A2.1 dead-alias purge, the
+projection alias family (arvis-projection-v2, Lot 4b), the
+decision/execution/policy family (campaign STRUCT, LOT S4b), and
+finally the complete retirement of the remaining 43 mirrors in campaign
+OBS (LOT O4): scientific (core, lyapunov, composite, regime, switching,
+adaptive), observability (projections, symbolic, state), execution,
+error and tooling families. Every callsite reads its bounded
+sub-context directly (typed sites) or through the duck-tolerant
+accessor modules (scientific_accessors, observability_accessors,
+tooling_accessors).
 
-  - adding a new facade property fails this test (new code must use the
-    sub-context directly, e.g. ctx.projection.certificate);
-  - removing one (after migrating its callsites) requires updating the
-    frozen list below, a deliberate, reviewed act.
+Two properties of the retirement are pinned here:
 
-The frozen list was measured after the A2.1 dead-alias purge (five
-aliases with zero attribute access and zero string/getattr access were
-removed: control_runtime, quadratic_lyap_snapshot, runtime_projection,
-structured_projection, use_paper_slow_dynamics). Campaign STRUCT
-LOT S4b migrated and removed the decision/execution/policy family
-(ir_decision, decision_result, bundle, action_decision,
-system_tension, execution_state, execution_status, can_execute,
-requires_confirmation, force_tool, _force_execution, retry_tool,
-tool_retry_count): their reader sites use the sub-contexts
-(decision_layer, execution, observability.diagnostics,
-runtime_policy) directly.
+1. The context defines NO properties at all. A new property is a new
+   facade; new code uses the sub-context paths.
+2. No retired mirror name reappears as a dynamic instance attribute
+   after a full pipeline run. The context is a plain dataclass, so a
+   stale writer (``ctx.delta_w = ...``) would not fail loudly; it would
+   create a shadow attribute the canonical readers never see. This
+   guard makes that failure loud.
 """
 
 from __future__ import annotations
 
+import inspect
+
+from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
 from arvis.kernel.pipeline.cognitive_pipeline_context import (
     CognitivePipelineContext,
 )
 
-FROZEN_FACADE_PROPERTIES = frozenset(
+RETIRED_FACADE_PROPERTIES = frozenset(
     {
         "_last_tool_spec",
         "_tool_failure",
@@ -80,23 +84,56 @@ FROZEN_FACADE_PROPERTIES = frozenset(
 )
 
 
-def test_context_facade_only_shrinks() -> None:
+def test_context_defines_no_properties() -> None:
+    """Direction 1: the facade stays empty (the ratchet's floor)."""
     actual = {
         name
-        for name, value in vars(CognitivePipelineContext).items()
-        if isinstance(value, property)
+        for name, member in inspect.getmembers(CognitivePipelineContext)
+        if isinstance(member, property)
     }
-
-    added = actual - FROZEN_FACADE_PROPERTIES
-    removed = FROZEN_FACADE_PROPERTIES - actual
-
-    assert not added, (
-        "New compatibility properties on CognitivePipelineContext: "
-        f"{sorted(added)}. New code must use the sub-contexts directly "
-        "(ctx.projection.*, ctx.scientific.*, ...)."
+    assert not actual, (
+        f"CognitivePipelineContext grew properties again: {sorted(actual)}. "
+        "The root facade was retired in campaign OBS (LOT O4); use the "
+        "bounded sub-contexts (ctx.scientific.*, ctx.observability.*, "
+        "ctx.execution.*, ctx.tooling.*, ctx.error_state.*) or the "
+        "accessor modules."
     )
-    assert not removed, (
-        "Facade properties removed without updating the frozen list: "
-        f"{sorted(removed)}. If their callsites were migrated "
-        "(arvis-projection-v2), update FROZEN_FACADE_PROPERTIES."
+
+
+class _GuardCoreModel:
+    def compute(self, bundle):  # type: ignore[no-untyped-def]
+        class _Snapshot:
+            collapse_risk = 0.2
+            drift_score = 0.1
+            regime = "stable"
+            stable = True
+            prev_lyap = 0.5
+            cur_lyap = 0.4
+
+        return _Snapshot()
+
+
+def test_no_retired_name_shadows_the_context_after_a_run() -> None:
+    """Direction 2: no stale writer resurrects a retired mirror.
+
+    The context is a plain dataclass: ``ctx.delta_w = x`` would succeed
+    silently and fork the state from the canonical
+    ``scientific.composite.delta_w``. Running the default pipeline and
+    inspecting the instance dict makes any such straggler loud.
+    """
+    ctx = CognitivePipelineContext(
+        cognitive_input={},
+        user_id="facade_guard",
+        timeline=[],
+        introspection=None,
+        explanation=None,
+    )
+    pipeline = CognitivePipeline(core_model=_GuardCoreModel())
+    pipeline.run(ctx)
+
+    shadows = RETIRED_FACADE_PROPERTIES & set(vars(ctx))
+    assert not shadows, (
+        f"Retired mirror name(s) written as dynamic attributes during a "
+        f"default run: {sorted(shadows)}. Migrate the writer to the "
+        "canonical sub-context path."
     )

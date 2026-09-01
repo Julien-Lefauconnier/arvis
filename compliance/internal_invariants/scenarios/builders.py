@@ -150,7 +150,7 @@ def build_context_from_yaml(data):
             def dwell_time(self):
                 return float(switching.get("tau_d", 1.0))
 
-        ctx.switching_runtime = DummyRuntime()
+        ctx.scientific.switching.switching_runtime = DummyRuntime()
     # -----------------------------------------
     # Optional test overrides
     # -----------------------------------------

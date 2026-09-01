@@ -33,6 +33,6 @@ def test_pipeline_contract_outputs_signals():
     ctx = make_ctx()
     pipeline.run(ctx)
 
-    assert isinstance(ctx.collapse_risk, RiskSignal)
-    assert isinstance(ctx.uncertainty, UncertaintySignal)
-    assert isinstance(ctx.drift_score, DriftSignal)
+    assert isinstance(ctx.scientific.core.collapse_risk, RiskSignal)
+    assert isinstance(ctx.scientific.core.uncertainty, UncertaintySignal)
+    assert isinstance(ctx.scientific.core.drift_score, DriftSignal)

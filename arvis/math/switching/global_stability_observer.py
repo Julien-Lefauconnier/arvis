@@ -46,9 +46,14 @@ class GlobalStabilityObserver:
     def update(self, ctx: Any) -> GlobalStabilityMetrics:
         self.t += 1
 
-        W = getattr(ctx, "w_current", None)
-        runtime = getattr(ctx, "switching_runtime", None)
-        params = getattr(ctx, "switching_params", None)
+        # Canonical sub-context reads with math-layer duck tolerance
+        # (LOT O4: the root facade mirrors are gone; chained getattr
+        # keeps this layer import-free of the kernel).
+        scientific = getattr(ctx, "scientific", None)
+        W = getattr(getattr(scientific, "composite", None), "w_current", None)
+        switching = getattr(scientific, "switching", None)
+        runtime = getattr(switching, "switching_runtime", None)
+        params = getattr(switching, "switching_params", None)
 
         if W is None or runtime is None or params is None:
             return GlobalStabilityMetrics(

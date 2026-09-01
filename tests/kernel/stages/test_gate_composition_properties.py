@@ -131,28 +131,28 @@ def _build(ctx, switching_safe: bool) -> None:
 def test_switching_soft_mode_is_observability_only():
     ctx = _envelope_ctx()
     _build(ctx, switching_safe=False)
-    assert ctx.validity_envelope.valid is True
+    assert ctx.scientific.adaptive.validity_envelope.valid is True
     assert "switching_soft_warning" in ctx.extra["fusion_reasons"]
 
 
 def test_switching_enforce_mode_feeds_the_envelope():
     ctx = _envelope_ctx(switching_envelope_mode="enforce")
     _build(ctx, switching_safe=False)
-    assert ctx.validity_envelope.valid is False
-    assert ctx.validity_envelope.reason == "switching_violation"
+    assert ctx.scientific.adaptive.validity_envelope.valid is False
+    assert ctx.scientific.adaptive.validity_envelope.reason == "switching_violation"
 
 
 def test_switching_enforce_mode_keeps_safe_switching_valid():
     ctx = _envelope_ctx(switching_envelope_mode="enforce")
     _build(ctx, switching_safe=True)
-    assert ctx.validity_envelope.valid is True
+    assert ctx.scientific.adaptive.validity_envelope.valid is True
 
 
 def test_switching_unknown_mode_fails_closed_into_enforcement():
     ctx = _envelope_ctx(switching_envelope_mode="whatever")
     _build(ctx, switching_safe=False)
-    assert ctx.validity_envelope.valid is False
-    assert ctx.validity_envelope.reason == "switching_violation"
+    assert ctx.scientific.adaptive.validity_envelope.valid is False
+    assert ctx.scientific.adaptive.validity_envelope.reason == "switching_violation"
 
 
 # ---------------------------------------------------------------
@@ -269,7 +269,7 @@ def test_pipeline_trace_has_no_unsanctioned_relaxation(
         timeline=[],
     )
     ctx.global_stability_action = action
-    ctx.delta_w_history = list(history)
+    ctx.scientific.composite.delta_w_history = list(history)
 
     pipeline.run(ctx)
 

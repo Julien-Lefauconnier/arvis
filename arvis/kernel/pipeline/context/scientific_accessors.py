@@ -144,15 +144,15 @@ def collapse_risk(ctx: Any) -> Any:
 
 
 def drift_score(ctx: Any) -> Any:
-    return ctx.scientific.core.drift_score
+    return scientific(ctx).core.drift_score
 
 
 def uncertainty(ctx: Any) -> Any:
-    return ctx.scientific.core.uncertainty
+    return scientific(ctx).core.uncertainty
 
 
 def uncertainty_intent(ctx: Any) -> Any:
-    return ctx.scientific.core.uncertainty_intent
+    return scientific(ctx).core.uncertainty_intent
 
 
 # ============================================================
@@ -161,23 +161,23 @@ def uncertainty_intent(ctx: Any) -> Any:
 
 
 def regime(ctx: Any) -> Any:
-    return ctx.scientific.regime_state.regime
+    return scientific(ctx).regime_state.regime
 
 
 def regime_confidence(ctx: Any) -> Any:
-    return ctx.scientific.regime_state.regime_confidence
+    return scientific(ctx).regime_state.regime_confidence
 
 
 def theoretical_regime(ctx: Any) -> Any:
-    return ctx.scientific.regime_state.theoretical_regime
+    return scientific(ctx).regime_state.theoretical_regime
 
 
 def fast_dynamics(ctx: Any) -> Any:
-    return ctx.scientific.regime_state.fast_dynamics
+    return scientific(ctx).regime_state.fast_dynamics
 
 
 def perturbation(ctx: Any) -> Any:
-    return ctx.scientific.regime_state.perturbation
+    return scientific(ctx).regime_state.perturbation
 
 
 # ============================================================
@@ -186,12 +186,42 @@ def perturbation(ctx: Any) -> Any:
 
 
 def symbolic_state(ctx: Any) -> Any:
-    return ctx.scientific.lyapunov.symbolic_state
+    return scientific(ctx).lyapunov.symbolic_state
 
 
 def quadratic_lyap_snapshot(ctx: Any) -> Any:
-    return ctx.scientific.lyapunov.quadratic_lyap_snapshot
+    return scientific(ctx).lyapunov.quadratic_lyap_snapshot
 
 
 def quadratic_comparability(ctx: Any) -> Any:
-    return ctx.scientific.lyapunov.quadratic_comparability
+    return scientific(ctx).lyapunov.quadratic_comparability
+
+
+# ============================================================
+# SWITCHING / COMPOSITE HISTORY
+# ============================================================
+
+
+def switching_safe(ctx: Any) -> Any:
+    return scientific(ctx).switching.switching_safe
+
+
+def delta_w_history(ctx: Any) -> list[float]:
+    return scientific(ctx).composite.delta_w_history
+
+
+# ============================================================
+# ADAPTIVE
+# ============================================================
+
+
+def validity_envelope(ctx: Any) -> Any:
+    return scientific(ctx).adaptive.validity_envelope
+
+
+def set_validity_envelope(ctx: Any, value: Any) -> None:
+    scientific(ctx).adaptive.validity_envelope = value
+
+
+def global_stability_metrics(ctx: Any) -> Any:
+    return scientific(ctx).adaptive.global_stability_metrics

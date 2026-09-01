@@ -2,6 +2,9 @@
 
 from types import SimpleNamespace
 
+from arvis.kernel.pipeline.context.scientific_context import (
+    PipelineScientificContext,
+)
 from arvis.kernel.pipeline.stages.projection_stage import ProjectionStage
 from arvis.kernel.projection.validator import ProjectionValidator
 
@@ -186,7 +189,8 @@ def test_projection_validator_prefers_delta_w_over_dv():
     validator = ProjectionValidator(domain=DummyDomain())
 
     class Ctx:
-        delta_w = 0.2
+        scientific = PipelineScientificContext()
+        scientific.composite.delta_w = 0.2
         _dv = -0.5
 
     cert = validator.validate({"x": 0.1}, ctx=Ctx())
@@ -205,7 +209,8 @@ def test_projection_validator_rejects_positive_delta_w():
     validator = ProjectionValidator(domain=DummyDomain())
 
     class Ctx:
-        delta_w = 0.01
+        scientific = PipelineScientificContext()
+        scientific.composite.delta_w = 0.01
 
     cert = validator.validate({"x": 0.1}, ctx=Ctx())
 

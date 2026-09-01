@@ -33,14 +33,14 @@ class PipelineTraceFactory:
             confirmation_request=ctx.confirmation_request,
             confirmation_result=ctx.confirmation_result,
             action_decision=ctx.execution.action_decision,
-            executable_intent=ctx.executable_intent,
+            executable_intent=ctx.execution.executable_intent,
             # Campaign OBS (decision DS4b): this slot historically read
             # ctx.extra["conflict"], a key nothing writes (None on
             # every run). It now carries the declared channel the
             # conflict stage actually writes.
             conflict=ctx.conflict,
-            predictive=ctx.predictive_snapshot,
-            stability=ctx.global_stability,
+            predictive=ctx.observability.projections.predictive_snapshot,
+            stability=ctx.observability.projections.global_stability,
             symbolic=symbolic_state(ctx),
             system_tension=ctx.observability.diagnostics.system_tension,
             quadratic_lyapunov=quadratic_lyap_snapshot(ctx),

@@ -5,6 +5,30 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.adapters.llm.observability.observation import LLMObservation
+from arvis.kernel.pipeline.context.observability_accessors import (
+    ir_state as ir_state_of,
+)
+from arvis.kernel.pipeline.context.observability_accessors import (
+    predictive_snapshot as predictive_snapshot_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    collapse_risk as collapse_risk_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    delta_w as delta_w_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    drift_score as drift_score_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    regime as regime_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    switching_safe as switching_safe_of,
+)
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    uncertainty as uncertainty_of,
+)
 from arvis.math.projection.projection_view import ProjectionView
 
 from .llm_projection_mapper import LLMProjectionMapper
@@ -63,8 +87,7 @@ class PiImpl:
 
         metadata = {
             "source": "PiImpl",
-            "has_observability_snapshot": getattr(ctx, "predictive_snapshot", None)
-            is not None,
+            "has_observability_snapshot": predictive_snapshot_of(ctx) is not None,
         }
 
         extra = getattr(ctx, "extra", None)
@@ -126,7 +149,7 @@ class PiImpl:
     # =========================================
 
     def project_structured(self, ctx: Any) -> PiState:
-        ir_state = getattr(ctx, "ir_state", None)
+        ir_state = ir_state_of(ctx)
         ir_decision = ctx.decision_layer.ir_decision
         ir_gate = getattr(ctx, "ir_gate", None)
 
@@ -136,11 +159,11 @@ class PiImpl:
 
         coherence = self._coerce(getattr(ctx, "coherence_score", None), 0.5)
         tension = self._coerce(ctx.observability.diagnostics.system_tension, 0.0)
-        drift = self._coerce(getattr(ctx, "drift_score", None), 0.0)
+        drift = self._coerce(drift_score_of(ctx), 0.0)
 
-        conflict_pressure = self._coerce(getattr(ctx, "collapse_risk", None), 0.0)
+        conflict_pressure = self._coerce(collapse_risk_of(ctx), 0.0)
 
-        uncertainty = self._coerce(getattr(ctx, "uncertainty", None), 0.0)
+        uncertainty = self._coerce(uncertainty_of(ctx), 0.0)
 
         extra = getattr(ctx, "extra", None)
         llm_obs = None
@@ -292,9 +315,9 @@ class PiImpl:
         )
 
         # dynamics
-        regime = getattr(ctx, "regime", None)
+        regime = regime_of(ctx)
 
-        delta_w = self._coerce(getattr(ctx, "delta_w", None), 0.0)
+        delta_w = self._coerce(delta_w_of(ctx), 0.0)
 
         z_dyn = ZDynamicState(
             regime=regime,
@@ -314,12 +337,21 @@ class PiImpl:
         # Q STATE
         # =========================
 
+        # Canonical read; the historical duck default (True when the
+        # attribute is absent on a mock context) is preserved on the
+        # fallback branch, while a real context keeps its None -> False
+        # coercion through bool().
+        if getattr(ctx, "scientific", None) is not None:
+            switching_safe = bool(switching_safe_of(ctx))
+        else:
+            switching_safe = bool(getattr(ctx, "switching_safe", True))
+
         q = QState(
             regime_mode=regime,
             gate_mode=verdict,
             conversation_mode=None,
             execution_mode=None,
-            switching_safe=bool(getattr(ctx, "switching_safe", True)),
+            switching_safe=switching_safe,
         )
 
         # =========================

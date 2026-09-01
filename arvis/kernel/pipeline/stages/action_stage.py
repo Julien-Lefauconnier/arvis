@@ -126,7 +126,7 @@ class ActionStage:
         action_decision = evaluate_action(
             verdict=verdict,
             template=action_template,
-            risk=ctx.collapse_risk,
+            risk=ctx.scientific.core.collapse_risk,
             context=action_context,
         )
         if action_decision is None:
@@ -140,7 +140,7 @@ class ActionStage:
 
         action_decision = pipeline.action_policy.apply(
             decision=action_decision,
-            risk=ctx.collapse_risk,
+            risk=ctx.scientific.core.collapse_risk,
         )
 
         ctx.execution.action_decision = action_decision

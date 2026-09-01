@@ -13,6 +13,9 @@ from arvis.kernel.pipeline.context.scientific_accessors import (
     adaptive_snapshot,
     set_adaptive_snapshot,
 )
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    scientific as scientific_of,
+)
 from arvis.kernel.pipeline.stages.gate.trace_helpers import (
     record_verdict_transition,
 )
@@ -40,19 +43,22 @@ def compute_adaptive_metrics(
     metrics: AdaptiveSnapshot | None = None
 
     try:
+        switching_ctx = scientific_of(ctx).switching
+        switching_runtime = switching_ctx.switching_runtime
+        switching_params = switching_ctx.switching_params
         if (
             w_prev is not None
             and w_current is not None
-            and ctx.switching_runtime
-            and ctx.switching_params
+            and switching_runtime is not None
+            and switching_params is not None
         ):
             if not hasattr(pipeline, "adaptive_observer"):
                 pipeline.adaptive_observer = AdaptiveRuntimeObserver(
                     estimator=pipeline.adaptive_kappa_estimator
                 )
 
-            tau_d = float(ctx.switching_runtime.dwell_time())
-            J = float(ctx.switching_params.J)
+            tau_d = float(switching_runtime.dwell_time())
+            J = float(switching_params.J)
 
             metrics = pipeline.adaptive_observer.update(
                 W_prev=w_prev,

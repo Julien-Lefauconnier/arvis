@@ -19,6 +19,12 @@ from types import SimpleNamespace
 
 from arvis.adapters.tools.invocation import ToolInvocation
 from arvis.errors.codes import ErrorCode
+from arvis.kernel.pipeline.context.scientific_context import (
+    PipelineScientificContext,
+)
+from arvis.kernel.pipeline.context.tooling_context import (
+    PipelineToolingContext,
+)
 from arvis.tools.authorized_invocation import CapabilityActivationBinding
 from arvis.tools.base import BaseTool
 from arvis.tools.executor import ToolExecutor
@@ -113,7 +119,7 @@ def test_late_result_is_rejected_by_the_deadline():
     assert result.success is False
     assert result.error.code == ErrorCode.TOOL_TIMEOUT
     assert result.latency_ms is not None
-    assert ctx._tool_failure is True
+    assert ctx.tooling.tool_failure is True
 
 
 class _FastTool(BaseTool):
@@ -181,7 +187,7 @@ def test_invalid_input_is_denied_before_the_call():
     assert result.success is False
     assert result.error.code == ErrorCode.TOOL_INPUT_INVALID
     assert calls["n"] == 0
-    assert ctx._tool_failure is True
+    assert ctx.tooling.tool_failure is True
     # ZK: the offending value never surfaces in the error.
     assert "not_a_number" not in str(result.error.to_dict())
 
@@ -210,7 +216,7 @@ def test_invalid_output_gets_its_specific_status():
     assert result.success is False
     assert result.error.code == ErrorCode.TOOL_OUTPUT_INVALID
     assert calls["n"] == 1
-    assert ctx._tool_failure is True
+    assert ctx.tooling.tool_failure is True
 
 
 class _UnconstrainedTool(BaseTool):
@@ -241,13 +247,13 @@ def test_empty_schemas_do_not_constrain():
 
 def _retry_ctx(spec: ToolSpec | None) -> SimpleNamespace:
     ctx = SimpleNamespace(
-        _tool_failure=True,
-        collapse_risk=0.0,
+        tooling=PipelineToolingContext(tool_failure=True),
+        scientific=PipelineScientificContext(),
         runtime_policy=SimpleNamespace(retry_requested=False, retry_count=0),
         extra={},
     )
     if spec is not None:
-        ctx._last_tool_spec = spec
+        ctx.tooling.last_tool_spec = spec
     return ctx
 
 

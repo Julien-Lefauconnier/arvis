@@ -53,12 +53,12 @@ def test_pipeline_run_from_input_exports_ir(monkeypatch) -> None:
         pipeline.core_stage,
         "run",
         lambda _p, ctx: (
-            setattr(ctx, "scientific_snapshot", SimpleNamespace()),
-            setattr(ctx, "collapse_risk", 0.2),
-            setattr(ctx, "drift_score", 0.1),
+            setattr(ctx.scientific.core, "scientific_snapshot", SimpleNamespace()),
+            setattr(ctx.scientific.core, "collapse_risk", 0.2),
+            setattr(ctx.scientific.core, "drift_score", 0.1),
             setattr(ctx, "_dv", 0.1),
-            setattr(ctx, "regime", "neutral"),
-            setattr(ctx, "stable", True),
+            setattr(ctx.scientific.regime_state, "regime", "neutral"),
+            setattr(ctx.scientific.regime_state, "stable", True),
         ),
     )
     monkeypatch.setattr(

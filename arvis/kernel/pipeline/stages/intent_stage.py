@@ -56,14 +56,14 @@ class IntentStage:
         self._debug(ctx, "[INTENT DEBUG] action_decision:", action_decision)
 
         if verdict is None:
-            ctx.executable_intent = None
+            ctx.execution.executable_intent = None
             return
 
         if verdict == LyapunovVerdict.ABSTAIN:
-            ctx.executable_intent = None
+            ctx.execution.executable_intent = None
             return
 
-        ctx.executable_intent = ExecutableIntent(
+        ctx.execution.executable_intent = ExecutableIntent(
             bundle_id=str(ctx.decision_layer.bundle_id),
             user_id=ctx.user_id,
             intent_signature=str(
@@ -83,12 +83,12 @@ class IntentStage:
         self._debug(
             ctx,
             "[INTENT DEBUG] exported executable_intent:",
-            ctx.executable_intent,
+            ctx.execution.executable_intent,
         )
 
         request = LLMRequestBuilder.build_intent_enrichment_request(
             ctx,
-            ctx.executable_intent,  # ← clean
+            ctx.execution.executable_intent,  # clean
         )
 
         content = PipelineLLMService.generate_text(

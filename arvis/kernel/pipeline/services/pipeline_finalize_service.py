@@ -209,10 +209,11 @@ class PipelineFinalizeService:
         # -----------------------------------------------------
         # COGNITIVE STATE
         # -----------------------------------------------------
+        state_ctx = ctx.observability.state
         try:
-            ctx.cognitive_state = CognitiveStateBuilder.from_context(ctx)
+            state_ctx.cognitive_state = CognitiveStateBuilder.from_context(ctx)
         except Exception as exc:
-            ctx.cognitive_state = None
+            state_ctx.cognitive_state = None
 
             capture_pipeline_degraded_failure(
                 ctx,
@@ -225,12 +226,12 @@ class PipelineFinalizeService:
         # CONTRACT VALIDATION
         # -----------------------------------------------------
         try:
-            if ctx.cognitive_state is not None:
+            if state_ctx.cognitive_state is not None:
                 from arvis.contracts.cognitive_state_contract import (
                     CognitiveStateContract,
                 )
 
-                CognitiveStateContract.validate(ctx.cognitive_state)
+                CognitiveStateContract.validate(state_ctx.cognitive_state)
         except Exception as exc:
             capture_pipeline_contract_failure(
                 ctx,
@@ -244,10 +245,12 @@ class PipelineFinalizeService:
         # STATE IR
         # -----------------------------------------------------
         try:
-            if ctx.cognitive_state is not None:
-                ctx.ir_state = StateIRAdapter.from_state(ctx.cognitive_state)
+            if state_ctx.cognitive_state is not None:
+                state_ctx.ir_state = StateIRAdapter.from_state(
+                    state_ctx.cognitive_state
+                )
             else:
-                ctx.ir_state = None
+                state_ctx.ir_state = None
         except Exception as exc:
             capture_pipeline_degraded_failure(
                 ctx,
@@ -256,7 +259,7 @@ class PipelineFinalizeService:
                 message="State IR adapter failure",
             )
 
-            ctx.ir_state = None
+            state_ctx.ir_state = None
 
         # -----------------------------------------------------
         # Sync canonical projections

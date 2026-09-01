@@ -56,7 +56,7 @@ class PipelineIRService:
         # -----------------------------------------
         try:
             ctx.ir_validity = ValidityIRAdapter.from_validity(
-                getattr(ctx, "validity_envelope", None)
+                ctx.scientific.adaptive.validity_envelope
             )
         except Exception as exc:
             ctx.ir_validity = None
@@ -72,7 +72,7 @@ class PipelineIRService:
         # -----------------------------------------
         try:
             ctx.ir_stability = StabilityIRAdapter.from_stability(
-                getattr(ctx, "stability_projection", None)
+                ctx.observability.projections.stability_projection
             )
         except Exception as exc:
             ctx.ir_stability = None
@@ -88,7 +88,7 @@ class PipelineIRService:
         # -----------------------------------------
         try:
             ctx.ir_adaptive = AdaptiveIRAdapter.from_adaptive(
-                getattr(ctx, "adaptive_snapshot", None)
+                ctx.scientific.adaptive.adaptive_snapshot
             )
         except Exception as exc:
             ctx.ir_adaptive = None

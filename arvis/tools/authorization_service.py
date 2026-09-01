@@ -22,6 +22,9 @@ from arvis.adapters.tools.invocation import (
 from arvis.adapters.tools.policy import ToolPolicyEvaluator
 from arvis.errors.base import ArvisError, ArvisSecurityError
 from arvis.errors.tool_runtime import ToolInputValidationError, UnknownToolError
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    collapse_risk as collapse_risk_of,
+)
 from arvis.kernel_core.access.identity import (
     authenticated_principal_from_context,
     principal_from_context,
@@ -75,7 +78,7 @@ def resolve_turn_risk(ctx: Any) -> float:
             declared = extra.get("input_risk")
         if isinstance(declared, (int, float)) and not isinstance(declared, bool):
             candidates.append(float(declared))
-    assessed = getattr(ctx, "collapse_risk", None)
+    assessed = collapse_risk_of(ctx)
     if assessed is not None:
         try:
             candidates.append(float(assessed))

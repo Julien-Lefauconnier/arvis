@@ -26,8 +26,13 @@ class PiOperator:
         # -----------------------------------------
         # Context-aware parameters
         # -----------------------------------------
-        regime = getattr(getattr(ctx, "adaptive_snapshot", None), "regime", "stable")
-        validity = getattr(getattr(ctx, "validity_envelope", None), "valid", True)
+        adaptive_ctx = getattr(getattr(ctx, "scientific", None), "adaptive", None)
+        regime = getattr(
+            getattr(adaptive_ctx, "adaptive_snapshot", None), "regime", "stable"
+        )
+        validity = getattr(
+            getattr(adaptive_ctx, "validity_envelope", None), "valid", True
+        )
 
         # Projection strength
         if not validity:

@@ -7,6 +7,9 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from arvis.kernel.pipeline.context.journal_context import journal_of
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    delta_w_history as delta_w_history_of,
+)
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 
 if TYPE_CHECKING:
@@ -252,7 +255,7 @@ class GateObserver:
             "switching": MappingProxyType(dict(switching_metrics or {})),
             "global": {
                 "safe": bool(global_safe),
-                "history_len": len(ctx.delta_w_history),
+                "history_len": len(delta_w_history_of(ctx)),
             },
             "projection": {
                 **projection_summary,

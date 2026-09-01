@@ -10,6 +10,9 @@ from arvis.kernel.pipeline.context.journal_context import (
     fusion_reasons_of,
     journal_of,
 )
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    scientific as scientific_of,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.models import StabilityEnvelope
 from arvis.kernel.pipeline.stages.gate.trace_helpers import (
@@ -143,18 +146,11 @@ def apply_global_stability_policy(
 
 
 def compute_global_stability(ctx: Any, delta_w: float | None) -> bool:
-    scientific = getattr(ctx, "scientific", None)
-
-    if scientific is not None:
-        history = list(scientific.composite.delta_w_history)
-    else:
-        history = list(getattr(ctx, "delta_w_history", []))
+    composite = scientific_of(ctx).composite
+    history = list(composite.delta_w_history)
     if delta_w is not None:
         history.append(float(delta_w))
-    if scientific is not None:
-        scientific.composite.delta_w_history = history
-
-    ctx.delta_w_history = history
+    composite.delta_w_history = history
 
     global_safe = True
     try:
@@ -182,19 +178,12 @@ def compute_global_stability(ctx: Any, delta_w: float | None) -> bool:
 def compute_exponential_bound(ctx: Any) -> float | None:
     w_ratio = None
     try:
-        scientific = getattr(ctx, "scientific", None)
-
-        if scientific is not None:
-            metrics = scientific.adaptive.global_stability_metrics
-        else:
-            metrics = getattr(ctx, "global_stability_metrics", None)
+        adaptive = scientific_of(ctx).adaptive
+        metrics = adaptive.global_stability_metrics
         if metrics is None:
             observer = GlobalStabilityObserver()
             metrics = observer.update(ctx)
-            if scientific is not None:
-                scientific.adaptive.global_stability_metrics = metrics
-
-            ctx.global_stability_metrics = metrics
+            adaptive.global_stability_metrics = metrics
 
         if metrics is not None:
             w_ratio = getattr(metrics, "ratio", None)
@@ -285,7 +274,7 @@ def build_validity_envelope(
         if scientific is not None:
             metrics = scientific.adaptive.global_stability_metrics
         else:
-            metrics = getattr(ctx, "global_stability_metrics", None)
+            metrics = scientific_of(ctx).adaptive.global_stability_metrics
         kappa_safe = not bool(
             metrics is not None and getattr(metrics, "kappa_violation", False)
         )
@@ -355,7 +344,7 @@ def build_validity_envelope(
         if scientific is not None:
             scientific.adaptive.validity_envelope = validity_envelope
 
-        ctx.validity_envelope = validity_envelope
+        scientific_of(ctx).adaptive.validity_envelope = validity_envelope
 
         # -----------------------------------------------------
         # Soft switching observability
@@ -372,7 +361,7 @@ def build_validity_envelope(
         if scientific is not None:
             scientific.adaptive.validity_envelope = None
 
-        ctx.validity_envelope = None
+        scientific_of(ctx).adaptive.validity_envelope = None
 
         ErrorManager.attach(
             ctx,
@@ -398,7 +387,7 @@ def apply_validity_enforcement(
         if scientific is not None:
             validity = scientific.adaptive.validity_envelope
         else:
-            validity = getattr(ctx, "validity_envelope", None)
+            validity = scientific_of(ctx).adaptive.validity_envelope
         requires_enforcement = bool(
             validity is not None
             and (

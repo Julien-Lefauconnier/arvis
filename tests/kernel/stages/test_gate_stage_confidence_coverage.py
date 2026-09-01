@@ -99,8 +99,8 @@ def test_switching_warning():
         gamma_z = 1.0
         L_T = 1.0
 
-    ctx.switching_runtime = FakeRuntime()
-    ctx.switching_params = FakeParams()
+    ctx.scientific.switching.switching_runtime = FakeRuntime()
+    ctx.scientific.switching.switching_params = FakeParams()
 
     # force switching_condition = False
     import arvis.kernel.pipeline.stages.gate_stage as module

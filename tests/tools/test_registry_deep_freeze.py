@@ -256,7 +256,7 @@ def test_effect_dispatcher_refuses_a_diverged_surface_pre_effect():
     assert outcome.success is False
     assert outcome.effect_boundary == PRE_EFFECT_REFUSAL
     assert isinstance(outcome.error, ArvisSecurityError)
-    assert ctx._tool_failure is True
+    assert ctx.tooling.tool_failure is True
 
 
 def test_verified_spec_before_freeze_reads_the_captured_surface():

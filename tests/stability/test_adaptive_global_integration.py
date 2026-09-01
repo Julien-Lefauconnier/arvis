@@ -19,21 +19,29 @@ def test_global_stability_observer_includes_adaptive():
     obs = GlobalStabilityObserver()
 
     ctx1 = SimpleNamespace(
-        w_current=10.0,
-        switching_runtime=SimpleNamespace(
-            total_switches=0,
-            dwell_time=lambda: 10.0,
+        scientific=SimpleNamespace(
+            composite=SimpleNamespace(w_current=10.0),
+            switching=SimpleNamespace(
+                switching_runtime=SimpleNamespace(
+                    total_switches=0,
+                    dwell_time=lambda: 10.0,
+                ),
+                switching_params=_params(),
+            ),
         ),
-        switching_params=_params(),
     )
 
     ctx2 = SimpleNamespace(
-        w_current=8.0,
-        switching_runtime=SimpleNamespace(
-            total_switches=1,
-            dwell_time=lambda: 10.0,
+        scientific=SimpleNamespace(
+            composite=SimpleNamespace(w_current=8.0),
+            switching=SimpleNamespace(
+                switching_runtime=SimpleNamespace(
+                    total_switches=1,
+                    dwell_time=lambda: 10.0,
+                ),
+                switching_params=_params(),
+            ),
         ),
-        switching_params=_params(),
     )
 
     obs.update(ctx1)
@@ -75,15 +83,15 @@ def test_dwell_time_exception():
         def dwell_time(self):
             raise RuntimeError()
 
-    ctx = type(
-        "C",
-        (),
-        {
-            "w_current": 1.0,
-            "switching_runtime": Runtime(),
-            "switching_params": _make_params(),
-        },
-    )()
+    ctx = SimpleNamespace(
+        scientific=SimpleNamespace(
+            composite=SimpleNamespace(w_current=1.0),
+            switching=SimpleNamespace(
+                switching_runtime=Runtime(),
+                switching_params=_make_params(),
+            ),
+        ),
+    )
 
     result = obs.update(ctx)
 
@@ -101,15 +109,15 @@ def test_adaptive_observer_exception(monkeypatch):
         def dwell_time(self):
             return 1.0
 
-    ctx = type(
-        "C",
-        (),
-        {
-            "w_current": 0.9,
-            "switching_runtime": Runtime(),
-            "switching_params": _make_params(),
-        },
-    )()
+    ctx = SimpleNamespace(
+        scientific=SimpleNamespace(
+            composite=SimpleNamespace(w_current=0.9),
+            switching=SimpleNamespace(
+                switching_runtime=Runtime(),
+                switching_params=_make_params(),
+            ),
+        ),
+    )
 
     monkeypatch.setattr(
         obs._adaptive_observer,
@@ -134,15 +142,15 @@ def test_adaptive_fallback_regimes():
         def dwell_time(self):
             return 1.0
 
-    ctx = type(
-        "C",
-        (),
-        {
-            "w_current": 1.0,
-            "switching_runtime": Runtime(),
-            "switching_params": _make_params(alpha=0.8, gamma_z=0.1, eta=0.5, L_T=0.5),
-        },
-    )()
+    ctx = SimpleNamespace(
+        scientific=SimpleNamespace(
+            composite=SimpleNamespace(w_current=1.0),
+            switching=SimpleNamespace(
+                switching_runtime=Runtime(),
+                switching_params=_make_params(alpha=0.8, gamma_z=0.1, eta=0.5, L_T=0.5),
+            ),
+        ),
+    )
 
     result = obs.update(ctx)
 
@@ -161,15 +169,15 @@ def test_kappa_gap_exception(monkeypatch):
         def dwell_time(self):
             return 1.0
 
-    ctx = type(
-        "C",
-        (),
-        {
-            "w_current": 1.0,
-            "switching_runtime": Runtime(),
-            "switching_params": _make_params(),
-        },
-    )()
+    ctx = SimpleNamespace(
+        scientific=SimpleNamespace(
+            composite=SimpleNamespace(w_current=1.0),
+            switching=SimpleNamespace(
+                switching_runtime=Runtime(),
+                switching_params=_make_params(),
+            ),
+        ),
+    )
 
     obs._prev_W = 1.2
 

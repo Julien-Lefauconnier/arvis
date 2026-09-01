@@ -222,7 +222,7 @@ def test_drift_is_propagated():
     result = pipeline.run(ctx)
 
     assert result.observability.control.drift is not None
-    assert isinstance(ctx.drift_score, DriftSignal)
+    assert isinstance(ctx.scientific.core.drift_score, DriftSignal)
 
 
 def test_pipeline_outputs_risk_signal():
@@ -231,7 +231,7 @@ def test_pipeline_outputs_risk_signal():
 
     pipeline.run(ctx)
 
-    assert isinstance(ctx.collapse_risk, RiskSignal)
+    assert isinstance(ctx.scientific.core.collapse_risk, RiskSignal)
 
 
 def test_pipeline_outputs_uncertainty_signal():
@@ -240,7 +240,7 @@ def test_pipeline_outputs_uncertainty_signal():
 
     pipeline.run(ctx)
 
-    assert isinstance(ctx.uncertainty, UncertaintySignal)
+    assert isinstance(ctx.scientific.core.uncertainty, UncertaintySignal)
 
 
 def test_pipeline_outputs_drift_signal():
@@ -249,7 +249,7 @@ def test_pipeline_outputs_drift_signal():
 
     pipeline.run(ctx)
 
-    assert isinstance(ctx.drift_score, DriftSignal)
+    assert isinstance(ctx.scientific.core.drift_score, DriftSignal)
 
 
 # =========================================================
@@ -516,7 +516,7 @@ def test_pipeline_blocks_when_delta_w_positive():
     pipeline.run(ctx)
     result = pipeline.run(ctx)
 
-    assert ctx.delta_w is not None
+    assert ctx.scientific.composite.delta_w is not None
 
     assert result.gate_result in {
         LyapunovVerdict.ALLOW,
@@ -584,5 +584,5 @@ def test_pipeline_exposes_delta_w_in_context():
     pipeline.run(ctx)
     pipeline.run(ctx)
 
-    assert hasattr(ctx, "delta_w")
-    assert ctx.delta_w is not None
+    assert ctx.scientific.composite is not None
+    assert ctx.scientific.composite.delta_w is not None

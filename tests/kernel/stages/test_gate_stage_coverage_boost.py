@@ -453,7 +453,7 @@ def test_validity_envelope_exception(monkeypatch):
 
     GateStage().run(None, ctx)
 
-    assert ctx.validity_envelope is None
+    assert ctx.scientific.adaptive.validity_envelope is None
 
 
 def test_no_observer_path(monkeypatch):
@@ -485,8 +485,8 @@ def test_no_observer_path(monkeypatch):
 def test_gate_stage_full_slow_drift_detection(monkeypatch):
     ctx = make_ctx()
 
-    ctx.slow_state_prev = 1.0
-    ctx.slow_state = 1.001
+    ctx.scientific.lyapunov.slow_state_prev = 1.0
+    ctx.scientific.lyapunov.slow_state = 1.001
     ctx.scientific.composite.delta_w = 0.1
 
     monkeypatch.setattr(
@@ -1015,7 +1015,7 @@ def test_validity_envelope_exception_real(monkeypatch):
 
     GateStage().run(None, ctx)
 
-    assert ctx.validity_envelope is None
+    assert ctx.scientific.adaptive.validity_envelope is None
 
     errors = ctx.extra.get("errors", [])
 
@@ -1080,7 +1080,7 @@ def test_gate_stage_bootstrap_defaults(monkeypatch):
     ctx.scientific.lyapunov.cur_lyap = 0.8
     ctx.scientific.regime_state.stable = True
 
-    assert ctx.delta_w_history is not None
+    assert ctx.scientific.composite.delta_w_history is not None
     assert ctx.extra == {}
     assert ctx.stability_certificate["global"] is True
     assert ctx.system_confidence == 0.0
@@ -1177,7 +1177,7 @@ def test_gate_stage_iss_exception_paths(monkeypatch):
 
 def test_gate_stage_validity_extended_exception(monkeypatch):
     ctx = make_ctx()
-    ctx.validity_envelope = SimpleNamespace(valid=True, reason="ok")
+    ctx.scientific.adaptive.validity_envelope = SimpleNamespace(valid=True, reason="ok")
     ctx.extra["validity_envelope"] = object()  # casse le **mapping unpack
 
     monkeypatch.setattr(

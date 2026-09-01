@@ -25,6 +25,9 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from arvis.kernel.pipeline.context.scientific_context import (
+    PipelineScientificContext,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.enforcement import (
     apply_kappa_hard_block,
@@ -155,11 +158,12 @@ def test_switching_safety_failure_reports_unsafe(monkeypatch):
     )
     ctx = SimpleNamespace(
         extra={},
-        switching_runtime=object(),
-        switching_params=object(),
+        scientific=PipelineScientificContext(),
     )
+    ctx.scientific.switching.switching_runtime = object()
+    ctx.scientific.switching.switching_params = object()
     assert compute_switching_safety(ctx, GateOverrides()) is False
-    assert ctx.switching_safe is False
+    assert ctx.scientific.switching.switching_safe is False
 
 
 def test_switching_host_override_still_forces_safe(monkeypatch):

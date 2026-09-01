@@ -52,7 +52,7 @@ def test_gate_global_policy_confirm():
 
     ctx = make_ctx()
     ctx.global_stability_action = "confirm"
-    ctx.delta_w_history = [10.0, 10.0, 10.0]
+    ctx.scientific.composite.delta_w_history = [10.0, 10.0, 10.0]
 
     result = pipeline.run(ctx)
 
@@ -70,7 +70,7 @@ def test_gate_global_policy_abstain():
 
     ctx = make_ctx()
     ctx.global_stability_action = "abstain"
-    ctx.delta_w_history = [10.0, 10.0, 10.0]
+    ctx.scientific.composite.delta_w_history = [10.0, 10.0, 10.0]
 
     result = pipeline.run(ctx)
 

@@ -9,6 +9,9 @@ from arvis.kernel.pipeline.context.journal_context import (
     fusion_reasons_of,
     journal_of,
 )
+from arvis.kernel.pipeline.context.scientific_accessors import (
+    scientific as scientific_of,
+)
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
@@ -184,7 +187,7 @@ def apply_kappa_hard_block(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
         if scientific is not None:
             metrics = scientific.adaptive.global_stability_metrics
         else:
-            metrics = getattr(ctx, "global_stability_metrics", None)
+            metrics = scientific_of(ctx).adaptive.global_stability_metrics
         if metrics is not None and getattr(metrics, "kappa_violation", False):
             reasons = fusion_reasons_of(ctx)
             if "kappa_violation" not in reasons:

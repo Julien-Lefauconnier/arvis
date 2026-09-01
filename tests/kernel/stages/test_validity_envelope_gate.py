@@ -50,7 +50,7 @@ def test_gate_exports_validity_envelope():
 
     stage.run(pipeline, ctx)
 
-    assert ctx.validity_envelope is not None
+    assert ctx.scientific.adaptive.validity_envelope is not None
     assert "validity_envelope" in ctx.extra
 
 
