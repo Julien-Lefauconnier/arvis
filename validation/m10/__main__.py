@@ -5,6 +5,8 @@ Commands:
   corpus    write the corpus manifest (the published identity of D)
   run       run the full campaign: measurements, metrics, estimator
             outputs and the threshold judgment, as JSON artifacts
+  sweep     run the LOT B4 sensitivity sweeps (flip distances plus
+            the warm-risk declared_risk variants) into sweeps.json
   smoke     run the tiny gate corpus and print the metric summary
 
 Artifacts land under validation/m10/artifacts/ (tracked once a
@@ -94,6 +96,20 @@ def cmd_run() -> int:
     return 0
 
 
+def cmd_sweep() -> int:
+    from validation.m10.sweeps import compute_sweeps
+
+    corpus = build_corpus()
+    print(
+        f"sweeping corpus {corpus.corpus_version} "
+        f"({len(corpus.trajectories)} trajectories)..."
+    )
+    ms = run_corpus(corpus)
+    path = _write("sweeps.json", compute_sweeps(corpus, ms))
+    print(f"sweeps -> {path}")
+    return 0
+
+
 def cmd_smoke() -> int:
     corpus = build_smoke_corpus()
     ms = run_corpus(corpus)
@@ -108,6 +124,8 @@ def main(argv: list[str]) -> int:
         return cmd_corpus()
     if command == "run":
         return cmd_run()
+    if command == "sweep":
+        return cmd_sweep()
     if command == "smoke":
         return cmd_smoke()
     print(__doc__)
