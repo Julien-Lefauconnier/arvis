@@ -288,6 +288,24 @@ def compute_composite_recommendation(
     return composite_recommendation
 
 
+def _slow_distance(prev: Any, cur: Any) -> float:
+    """Distance between two slow states (LOT C1, campaign MATH-C).
+
+    The scalar-era code computed abs(cur - prev); SlowState carries no
+    subtraction, so on every structured turn that raised a TypeError
+    swallowed as slow_drift_detection_failure and the detector
+    measured nothing. Structured states are compared by the euclidean
+    norm of their vector delta; scalar-era numeric values keep the
+    absolute difference (duck compatibility with existing hosts).
+    """
+    prev_vec = getattr(prev, "as_vector", None)
+    cur_vec = getattr(cur, "as_vector", None)
+    if callable(prev_vec) and callable(cur_vec):
+        delta = cur_vec() - prev_vec()
+        return float((delta * delta).sum() ** 0.5)
+    return abs(float(cur) - float(prev))
+
+
 def detect_slow_drift(
     ctx: CognitivePipelineContext,
     prev_slow: Any,
@@ -338,7 +356,7 @@ def detect_slow_drift(
             if len(small_increases) >= 4:
                 drift_ctx.slow_drift_warning = True
         else:
-            slow_delta = abs(cur_slow - prev_slow)
+            slow_delta = _slow_distance(prev_slow, cur_slow)
             drift_history = drift_ctx.slow_drift_history
             drift_history.append(slow_delta)
             if len(drift_history) > 10:
