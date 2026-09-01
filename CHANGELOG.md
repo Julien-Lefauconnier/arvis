@@ -9,6 +9,23 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+## [0.1.0b5] - 2026-09-01
+
+Four consolidation campaigns since b4, all behind a green quality
+gate, the veramem consumption mirror (60/60) and the beta contract
+manifest at every step: the public surface is intact, and the
+mutation counter-proof on the gate's three canonical mutations holds
+at 9/5/9 detections on live paths.
+
+Campaign RELEASE (2026-09-01): release hygiene. A claims audit of all
+74 Markdown documents against the tree (46 stale passages fixed:
+retired context paths, deleted layers described as current, wrong
+symbols and schemas; unbuilt designs now carry dated implementation
+frontiers), and thirty-five behavior pins on the weakest boundary
+paths (conflict-pressure host adoption, telemetry emission, IR and
+finalize failure semantics, timeline commitment wire contract, the
+long-memory surface, accessor fallbacks).
+
 Campaign OBS (2026-09-01): the observability journal and the end of
 the mirrors. The ctx.extra dict is no longer a hidden control-flow
 bus: arvis reads its own signals from the typed journal and the
