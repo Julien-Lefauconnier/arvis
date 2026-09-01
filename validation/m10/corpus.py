@@ -357,3 +357,120 @@ def build_smoke_corpus(master_seed: int = 42) -> CorpusSpec:
         master_seed=master_seed,
         trajectories=tuple(trajectories),
     )
+
+
+# ---------------------------------------------------------------------------
+# D-2.0: the state-feedback extension (campaign MATH-C, LOT C3)
+# ---------------------------------------------------------------------------
+
+FAMILIES_D2 = FAMILIES + ("nominal_feedback",)
+
+# The published feedback law, executed by the harness (runner.py): the
+# monitor's fast input channels start far from calm and relax toward
+# the targets at a geometric rate each turn, faster when the previous
+# final verdict tightened; a small jitter derived from the published
+# per-turn specs keeps the equilibrium alive. D-1.0's failed 5.1
+# criterion measured an exogenous walk; D-2.0 encodes the contraction
+# regime A12 speaks about in the input dynamics themselves.
+FEEDBACK_LAW: dict[str, Any] = {
+    "targets": {"retrieval_confidence": 0.97, "memory_pressure": 0.02},
+    "rho_free": 0.92,
+    "rho_tightened": 0.85,
+    "tightened_verdicts": ("REQUIRE_CONFIRMATION", "ABSTAIN"),
+    "jitter_scale": 0.02,
+}
+
+
+def _nominal_feedback_turn(rng: random.Random) -> TurnSpec:
+    """Base spec of a feedback turn: calm interior projection axes, a
+    deliberately stressed start on the fast input channels (the law
+    relaxes them toward the targets), plain low-ambiguity payloads."""
+    return TurnSpec(
+        payload={
+            "query": f"m10-fb-{rng.randrange(10**6)}",
+            "intent_type": "question",
+            "referential_ambiguity": round(rng.uniform(0.0, 0.15), 3),
+            "context_dependent": round(rng.uniform(0.0, 0.10), 3),
+        },
+        system_tension=round(rng.uniform(20.0, 40.0), 3),
+        coherence_score=round(rng.uniform(0.60, 0.80), 3),
+        control_signal=round(rng.uniform(20.0, 50.0), 3),
+        adaptive_kappa_eff=round(rng.uniform(0.25, 0.45), 3),
+        retrieval_confidence=round(rng.uniform(0.40, 0.55), 3),
+        memory_pressure=round(rng.uniform(0.45, 0.60), 3),
+    )
+
+
+def _trajectory_d2(family: str, seed: int, trajectory_id: str) -> TrajectorySpec:
+    if family != "nominal_feedback":
+        return _trajectory(family, seed, trajectory_id)
+    rng = random.Random(seed)
+    total = 24
+    slow_path = _slow_path(random.Random(seed ^ 0x5A5A5A5A), total, "contracting")
+    turns = [_nominal_feedback_turn(rng) for _ in range(total)]
+    turns = [
+        TurnSpec(
+            payload=t.payload,
+            system_tension=t.system_tension,
+            coherence_score=t.coherence_score,
+            control_signal=t.control_signal,
+            adaptive_kappa_eff=t.adaptive_kappa_eff,
+            retrieval_confidence=t.retrieval_confidence,
+            memory_pressure=t.memory_pressure,
+            conflict_pressure=t.conflict_pressure,
+            slow_state=slow_path[i],
+            drop_axes=t.drop_axes,
+        )
+        for i, t in enumerate(turns)
+    ]
+    return TrajectorySpec(
+        trajectory_id=trajectory_id,
+        family=family,
+        seed=seed,
+        turns=tuple(turns),
+    )
+
+
+def build_corpus_d2(
+    master_seed: int = 20260902,
+    trajectories_per_family: int = 8,
+    corpus_version: str = "D-2.0",
+) -> CorpusSpec:
+    """D-2.0: every D-1.0 family regenerated under its own master seed
+    plus the state-feedback nominal family. The manifest identifies
+    the corpus; the feedback law's constants are FEEDBACK_LAW."""
+    seeder = random.Random(master_seed)
+    trajectories: list[TrajectorySpec] = []
+    for family in FAMILIES_D2:
+        for i in range(trajectories_per_family):
+            seed = seeder.randrange(2**32)
+            trajectories.append(_trajectory_d2(family, seed, f"{family}-{i:02d}"))
+    return CorpusSpec(
+        corpus_version=corpus_version,
+        master_seed=master_seed,
+        trajectories=tuple(trajectories),
+    )
+
+
+def build_smoke_corpus_d2(master_seed: int = 43) -> CorpusSpec:
+    """Tiny D-2.0 for the gate: one short trajectory per family, the
+    feedback family kept longer so its transient is visible."""
+    seeder = random.Random(master_seed)
+    trajectories = []
+    for family in FAMILIES_D2:
+        seed = seeder.randrange(2**32)
+        full = _trajectory_d2(family, seed, f"smoke2-{family}")
+        keep = 8 if family == "nominal_feedback" else 6
+        trajectories.append(
+            TrajectorySpec(
+                trajectory_id=full.trajectory_id,
+                family=family,
+                seed=seed,
+                turns=full.turns[:keep],
+            )
+        )
+    return CorpusSpec(
+        corpus_version="D-2.0-smoke",
+        master_seed=master_seed,
+        trajectories=tuple(trajectories),
+    )

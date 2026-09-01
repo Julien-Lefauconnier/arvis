@@ -28,7 +28,12 @@ from arvis.math.core.contraction_monitor_core import (
     MonitorConfig,
 )
 from arvis.math.lyapunov.slow_state import SlowState
-from validation.m10.corpus import CorpusSpec, TrajectorySpec, TurnSpec
+from validation.m10.corpus import (
+    FEEDBACK_LAW,
+    CorpusSpec,
+    TrajectorySpec,
+    TurnSpec,
+)
 
 
 class _CorpusCoreModel:
@@ -220,6 +225,48 @@ def _measure(
     )
 
 
+def _feedback_turn(
+    turn: TurnSpec,
+    state: dict[str, float],
+    prev_verdict: str | None,
+) -> tuple[TurnSpec, dict[str, float]]:
+    """Apply the published state-feedback law (D-2.0): the fast input
+    channels relax geometrically toward the law's targets, faster when
+    the previous final verdict tightened; the spec's own values only
+    contribute a small jitter around the relaxed value. Returns the
+    effective turn and the next feedback state."""
+    targets: dict[str, float] = FEEDBACK_LAW["targets"]
+    tightened = prev_verdict in FEEDBACK_LAW["tightened_verdicts"]
+    rho = FEEDBACK_LAW["rho_tightened"] if tightened else FEEDBACK_LAW["rho_free"]
+    jitter_scale: float = FEEDBACK_LAW["jitter_scale"]
+
+    def relax(name: str, spec_value: float) -> float:
+        target = targets[name]
+        previous = state.get(name, spec_value)
+        jitter = jitter_scale * (spec_value - previous)
+        value = target + rho * (previous - target) + jitter
+        return round(min(1.0, max(0.0, value)), 6)
+
+    confidence = relax("retrieval_confidence", turn.retrieval_confidence)
+    pressure = relax("memory_pressure", turn.memory_pressure)
+    effective = TurnSpec(
+        payload=turn.payload,
+        system_tension=turn.system_tension,
+        coherence_score=turn.coherence_score,
+        control_signal=turn.control_signal,
+        adaptive_kappa_eff=turn.adaptive_kappa_eff,
+        retrieval_confidence=confidence,
+        memory_pressure=pressure,
+        conflict_pressure=turn.conflict_pressure,
+        slow_state=turn.slow_state,
+        drop_axes=turn.drop_axes,
+    )
+    return effective, {
+        "retrieval_confidence": confidence,
+        "memory_pressure": pressure,
+    }
+
+
 def run_trajectory(
     spec: TrajectorySpec,
     monitor_config: MonitorConfig | None = None,
@@ -232,8 +279,13 @@ def run_trajectory(
     switching_runtime: Any = None
     adaptive_observer: Any = None
     threaded = spec.family != "declared_risk"
+    feedback = spec.family == "nominal_feedback"
+    feedback_state: dict[str, float] = {}
 
     for index, turn in enumerate(spec.turns):
+        if feedback:
+            prev_verdict = measurements[-1].final_verdict if measurements else None
+            turn, feedback_state = _feedback_turn(turn, feedback_state, prev_verdict)
         pipeline = CognitivePipeline(
             core_model=_CorpusCoreModel(
                 ContractionMonitorCore(monitor_config or MonitorConfig()),

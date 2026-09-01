@@ -129,12 +129,16 @@ def resolve(path: str, observed: dict[str, Any]) -> float | None:
     return float(node) if isinstance(node, (int, float)) else None
 
 
-def judge(observed: dict[str, Any]) -> dict[str, Any]:
+def judge(
+    observed: dict[str, Any],
+    criteria_set: dict[str, dict[str, tuple[str, str, float]]] | None = None,
+    registration: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Evaluate every criterion; missing data is a FAIL (fail-closed:
     a metric the run could not observe cannot pass)."""
     results: dict[str, Any] = {}
     passed = failed = 0
-    for family, criteria in PROPOSED.items():
+    for family, criteria in (criteria_set or PROPOSED).items():
         for name, (path, op, value) in criteria.items():
             got = resolve(path, observed)
             if got is None:
@@ -155,8 +159,35 @@ def judge(observed: dict[str, Any]) -> dict[str, Any]:
             passed += ok
             failed += not ok
     results["_summary"] = {
-        "registration": dict(REGISTRATION),
+        "registration": dict(registration or REGISTRATION),
         "passed": passed,
         "failed": failed,
     }
     return results
+
+
+# ---------------------------------------------------------------------------
+# Campaign 2 (D-2.0, MATH-C LOT C3): the same registered discipline.
+# ---------------------------------------------------------------------------
+
+REGISTRATION_D2 = {
+    "status": "proposed",
+    "registered_by": None,
+    "registered_on": None,
+}
+
+# Identical to the D-1.0 set except 5.1: the contraction-dominance
+# criterion now judges the family whose INPUT dynamics encode the
+# contraction regime (the D-1.0 lesson: on an exogenous walk that
+# criterion measured the corpus, not the kernel). The exogenous
+# nominal family stays in D-2.0 for continuity but is no longer the
+# subject of 5.1.
+PROPOSED_D2: dict[str, dict[str, tuple[str, str, float]]] = {
+    family: dict(criteria) for family, criteria in PROPOSED.items()
+}
+PROPOSED_D2["lyapunov_evolution"] = dict(PROPOSED_D2["lyapunov_evolution"])
+PROPOSED_D2["lyapunov_evolution"]["nominal_contraction_dominates"] = (
+    "families.nominal_feedback.lyapunov_evolution.p_contraction",
+    ">=",
+    0.60,
+)

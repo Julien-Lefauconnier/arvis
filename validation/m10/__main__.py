@@ -7,6 +7,8 @@ Commands:
             outputs and the threshold judgment, as JSON artifacts
   sweep     run the LOT B4 sensitivity sweeps (flip distances plus
             the warm-risk declared_risk variants) into sweeps.json
+  run2      run campaign 2 on the D-2.0 state-feedback corpus; its
+            artifacts land under artifacts_d2/ (MATH-C LOT C3)
   smoke     run the tiny gate corpus and print the metric summary
 
 Artifacts land under validation/m10/artifacts/ (tracked once a
@@ -20,7 +22,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from validation.m10.corpus import build_corpus, build_smoke_corpus
+from validation.m10.corpus import (
+    build_corpus,
+    build_corpus_d2,
+    build_smoke_corpus,
+)
 from validation.m10.estimators import (
     estimate_alpha,
     estimate_target_map_lipschitz,
@@ -28,9 +34,16 @@ from validation.m10.estimators import (
 )
 from validation.m10.metrics import compute_all
 from validation.m10.runner import TurnMeasurement, run_corpus
-from validation.m10.thresholds import PROPOSED, REGISTRATION, judge
+from validation.m10.thresholds import (
+    PROPOSED,
+    PROPOSED_D2,
+    REGISTRATION,
+    REGISTRATION_D2,
+    judge,
+)
 
 ARTIFACTS = Path(__file__).parent / "artifacts"
+ARTIFACTS_D2 = Path(__file__).parent / "artifacts_d2"
 
 
 def _observed(ms: list[TurnMeasurement]) -> dict[str, Any]:
@@ -43,9 +56,10 @@ def _observed(ms: list[TurnMeasurement]) -> dict[str, Any]:
     return observed
 
 
-def _write(name: str, payload: dict[str, Any]) -> Path:
-    ARTIFACTS.mkdir(parents=True, exist_ok=True)
-    path = ARTIFACTS / name
+def _write(name: str, payload: dict[str, Any], root: Path | None = None) -> Path:
+    target = root if root is not None else ARTIFACTS
+    target.mkdir(parents=True, exist_ok=True)
+    path = target / name
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     return path
 
@@ -96,6 +110,29 @@ def cmd_run() -> int:
     return 0
 
 
+def cmd_run2() -> int:
+    corpus = build_corpus_d2()
+    print(
+        f"running campaign 2 on {corpus.corpus_version} "
+        f"({len(corpus.trajectories)} trajectories)..."
+    )
+    ms = run_corpus(corpus)
+    observed = _observed(ms)
+    judgment = judge(observed, PROPOSED_D2, REGISTRATION_D2)
+    _write("corpus_manifest.json", corpus.manifest(), ARTIFACTS_D2)
+    _write("measurements.json", {"turns": [m.to_dict() for m in ms]}, ARTIFACTS_D2)
+    _write("metrics.json", observed, ARTIFACTS_D2)
+    _write("judgment.json", judgment, ARTIFACTS_D2)
+    summary = judgment["_summary"]
+    print(
+        f"turns={len(ms)}  criteria passed={summary['passed']} "
+        f"failed={summary['failed']}  "
+        f"registration={summary['registration']['status']}"
+    )
+    print(f"artifacts -> {ARTIFACTS_D2}")
+    return 0
+
+
 def cmd_sweep() -> int:
     from validation.m10.sweeps import compute_sweeps
 
@@ -126,6 +163,8 @@ def main(argv: list[str]) -> int:
         return cmd_run()
     if command == "sweep":
         return cmd_sweep()
+    if command == "run2":
+        return cmd_run2()
     if command == "smoke":
         return cmd_smoke()
     print(__doc__)
