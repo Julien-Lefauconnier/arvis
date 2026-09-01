@@ -1,0 +1,848 @@
+{
+  "families": {
+    "adversarial": {
+      "adaptive_estimation": {
+        "availability": 0.9375,
+        "available_turns": 120,
+        "band_counts": {
+          "critical": 8,
+          "hard": 109,
+          "warning": 3
+        },
+        "margin_mean": 0.07948908839541381,
+        "margin_samples": 120,
+        "turns": 128
+      },
+      "closed_loop_feedback": {
+        "control_reduction_signaled": 61,
+        "energy_increase_turns": 61,
+        "feedback_consistency": 1.0
+      },
+      "envelope_compliance": {
+        "domain_valid_rate": 0.2265625,
+        "envelope_valid_rate": 0.0078125,
+        "envelope_valid_rate_in_domain": 0.034482758620689655,
+        "in_domain_turns": 29,
+        "turns": 128
+      },
+      "gate_distribution": {
+        "by_family": {
+          "adversarial": {
+            "ABSTAIN": 1.0,
+            "ALLOW": 0.0,
+            "REQUIRE_CONFIRMATION": 0.0
+          }
+        },
+        "given_contraction": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "given_expansion": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "overall": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        }
+      },
+      "iss_residual": {
+        "divergent_trajectories": 0,
+        "empirical_gain_max": null,
+        "sup_w_max": 1.4658610699999999,
+        "sup_w_mean": 1.3507697812500001,
+        "trajectories": 8
+      },
+      "kappa_violations": {
+        "abstain_relaxed_past_confirmation": 0,
+        "margin_samples": 120,
+        "violation_rate": 0.9083333333333333,
+        "violations": 109
+      },
+      "lyapunov_evolution": {
+        "max_expansion": 0.22899999999999987,
+        "mean_delta": 0.0010979166666666678,
+        "p_contraction": 0.49166666666666664,
+        "p_expansion": 0.5083333333333333,
+        "p_marginal": 0.0,
+        "samples": 120
+      },
+      "perturbation_decomposition": {
+        "adversarial": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "noise": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "projection": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "switch": {
+          "max": 0.0,
+          "mean": 0.0
+        }
+      },
+      "projection_overrides": {
+        "comparable_turns": 128,
+        "final_stricter_than_pre": 0,
+        "pi_gate_non_allow": 0,
+        "tightening_rate": 0.0,
+        "transition_stages": {
+          "final_adaptive_hard_veto": 109,
+          "fusion_adaptive_hard_veto": 109,
+          "memory_hard_block": 83,
+          "projection_boundary_enforcement": 29,
+          "projection_hard_block": 99
+        }
+      }
+    },
+    "boundary": {
+      "adaptive_estimation": {
+        "availability": 0.9375,
+        "available_turns": 120,
+        "band_counts": {
+          "critical": 11,
+          "hard": 106,
+          "stable": 2,
+          "warning": 1
+        },
+        "margin_mean": 0.12171372163848182,
+        "margin_samples": 120,
+        "turns": 128
+      },
+      "closed_loop_feedback": {
+        "control_reduction_signaled": 60,
+        "energy_increase_turns": 60,
+        "feedback_consistency": 1.0
+      },
+      "envelope_compliance": {
+        "domain_valid_rate": 0.75,
+        "envelope_valid_rate": 0.0390625,
+        "envelope_valid_rate_in_domain": 0.052083333333333336,
+        "in_domain_turns": 96,
+        "turns": 128
+      },
+      "gate_distribution": {
+        "by_family": {
+          "boundary": {
+            "ABSTAIN": 0.9375,
+            "ALLOW": 0.0,
+            "REQUIRE_CONFIRMATION": 0.0625
+          }
+        },
+        "given_contraction": {
+          "ABSTAIN": 0.9166666666666666,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.08333333333333333
+        },
+        "given_expansion": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "overall": {
+          "ABSTAIN": 0.9375,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0625
+        }
+      },
+      "iss_residual": {
+        "divergent_trajectories": 0,
+        "empirical_gain_max": null,
+        "sup_w_max": 1.2093907499999998,
+        "sup_w_mean": 1.020242511875,
+        "trajectories": 8
+      },
+      "kappa_violations": {
+        "abstain_relaxed_past_confirmation": 0,
+        "margin_samples": 120,
+        "violation_rate": 0.8833333333333333,
+        "violations": 106
+      },
+      "lyapunov_evolution": {
+        "max_expansion": 0.29175,
+        "mean_delta": 0.000414583333333333,
+        "p_contraction": 0.5,
+        "p_expansion": 0.5,
+        "p_marginal": 0.0,
+        "samples": 120
+      },
+      "perturbation_decomposition": {
+        "adversarial": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "noise": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "projection": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "switch": {
+          "max": 0.0,
+          "mean": 0.0
+        }
+      },
+      "projection_overrides": {
+        "comparable_turns": 128,
+        "final_stricter_than_pre": 9,
+        "pi_gate_non_allow": 0,
+        "tightening_rate": 0.0703125,
+        "transition_stages": {
+          "final_adaptive_hard_veto": 106,
+          "fusion_adaptive_hard_veto": 106,
+          "memory_hard_block": 26,
+          "projection_boundary_enforcement": 96,
+          "projection_hard_block": 32,
+          "validity_envelope_enforcement": 2
+        }
+      }
+    },
+    "conflicting": {
+      "adaptive_estimation": {
+        "availability": 0.9375,
+        "available_turns": 120,
+        "band_counts": {
+          "critical": 11,
+          "hard": 104,
+          "warning": 5
+        },
+        "margin_mean": 0.0842877926438967,
+        "margin_samples": 120,
+        "turns": 128
+      },
+      "closed_loop_feedback": {
+        "control_reduction_signaled": 58,
+        "energy_increase_turns": 58,
+        "feedback_consistency": 1.0
+      },
+      "envelope_compliance": {
+        "domain_valid_rate": 1.0,
+        "envelope_valid_rate": 0.0625,
+        "envelope_valid_rate_in_domain": 0.0625,
+        "in_domain_turns": 128,
+        "turns": 128
+      },
+      "gate_distribution": {
+        "by_family": {
+          "conflicting": {
+            "ABSTAIN": 1.0,
+            "ALLOW": 0.0,
+            "REQUIRE_CONFIRMATION": 0.0
+          }
+        },
+        "given_contraction": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "given_expansion": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "overall": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        }
+      },
+      "iss_residual": {
+        "divergent_trajectories": 0,
+        "empirical_gain_max": null,
+        "sup_w_max": 1.4963140099999999,
+        "sup_w_mean": 1.092767549375,
+        "trajectories": 8
+      },
+      "kappa_violations": {
+        "abstain_relaxed_past_confirmation": 0,
+        "margin_samples": 120,
+        "violation_rate": 0.8666666666666667,
+        "violations": 104
+      },
+      "lyapunov_evolution": {
+        "max_expansion": 0.27375000000000005,
+        "mean_delta": 0.0013375000000000017,
+        "p_contraction": 0.5166666666666667,
+        "p_expansion": 0.48333333333333334,
+        "p_marginal": 0.0,
+        "samples": 120
+      },
+      "perturbation_decomposition": {
+        "adversarial": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "noise": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "projection": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "switch": {
+          "max": 0.0,
+          "mean": 0.0
+        }
+      },
+      "projection_overrides": {
+        "comparable_turns": 128,
+        "final_stricter_than_pre": 0,
+        "pi_gate_non_allow": 0,
+        "tightening_rate": 0.0,
+        "transition_stages": {
+          "final_adaptive_hard_veto": 104,
+          "fusion_adaptive_hard_veto": 104,
+          "projection_boundary_enforcement": 128
+        }
+      }
+    },
+    "declared_risk": {
+      "adaptive_estimation": {
+        "availability": 0.0,
+        "available_turns": 0,
+        "band_counts": {},
+        "margin_mean": null,
+        "margin_samples": 0,
+        "turns": 192
+      },
+      "closed_loop_feedback": {
+        "control_reduction_signaled": 0,
+        "energy_increase_turns": 0,
+        "feedback_consistency": 0.0
+      },
+      "envelope_compliance": {
+        "domain_valid_rate": 1.0,
+        "envelope_valid_rate": 1.0,
+        "envelope_valid_rate_in_domain": 1.0,
+        "in_domain_turns": 192,
+        "turns": 192
+      },
+      "gate_distribution": {
+        "by_family": {
+          "declared_risk": {
+            "ABSTAIN": 0.296875,
+            "ALLOW": 0.0,
+            "REQUIRE_CONFIRMATION": 0.703125
+          }
+        },
+        "given_contraction": {
+          "ABSTAIN": 0.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "given_expansion": {
+          "ABSTAIN": 0.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "overall": {
+          "ABSTAIN": 0.296875,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.703125
+        }
+      },
+      "iss_residual": {
+        "divergent_trajectories": 0,
+        "empirical_gain_max": null,
+        "sup_w_max": 0.266,
+        "sup_w_mean": 0.260375,
+        "trajectories": 8
+      },
+      "kappa_violations": {
+        "abstain_relaxed_past_confirmation": 0,
+        "margin_samples": 0,
+        "violation_rate": 0.0,
+        "violations": 0
+      },
+      "lyapunov_evolution": {
+        "max_expansion": 0.0,
+        "mean_delta": 0.0,
+        "p_contraction": 0.0,
+        "p_expansion": 0.0,
+        "p_marginal": 1.0,
+        "samples": 184
+      },
+      "perturbation_decomposition": {
+        "adversarial": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "noise": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "projection": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "switch": {
+          "max": 0.0,
+          "mean": 0.0
+        }
+      },
+      "projection_overrides": {
+        "comparable_turns": 192,
+        "final_stricter_than_pre": 57,
+        "pi_gate_non_allow": 0,
+        "tightening_rate": 0.296875,
+        "transition_stages": {
+          "input_risk_gate": 57,
+          "input_risk_relax_denied": 59,
+          "projection_boundary_enforcement": 192
+        }
+      }
+    },
+    "long_horizon": {
+      "adaptive_estimation": {
+        "availability": 0.9833333333333333,
+        "available_turns": 472,
+        "band_counts": {
+          "critical": 11,
+          "hard": 450,
+          "stable": 9,
+          "warning": 2
+        },
+        "margin_mean": 0.09519288146394499,
+        "margin_samples": 472,
+        "turns": 480
+      },
+      "closed_loop_feedback": {
+        "control_reduction_signaled": 259,
+        "energy_increase_turns": 259,
+        "feedback_consistency": 1.0
+      },
+      "envelope_compliance": {
+        "domain_valid_rate": 1.0,
+        "envelope_valid_rate": 0.016666666666666666,
+        "envelope_valid_rate_in_domain": 0.016666666666666666,
+        "in_domain_turns": 480,
+        "turns": 480
+      },
+      "gate_distribution": {
+        "by_family": {
+          "long_horizon": {
+            "ABSTAIN": 0.9541666666666667,
+            "ALLOW": 0.0,
+            "REQUIRE_CONFIRMATION": 0.04583333333333333
+          }
+        },
+        "given_contraction": {
+          "ABSTAIN": 0.9342723004694836,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.06572769953051644
+        },
+        "given_expansion": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "overall": {
+          "ABSTAIN": 0.9541666666666667,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.04583333333333333
+        }
+      },
+      "iss_residual": {
+        "divergent_trajectories": 0,
+        "empirical_gain_max": null,
+        "sup_w_max": 0.966586675,
+        "sup_w_mean": 0.8427709325,
+        "trajectories": 8
+      },
+      "kappa_violations": {
+        "abstain_relaxed_past_confirmation": 0,
+        "margin_samples": 472,
+        "violation_rate": 0.9533898305084746,
+        "violations": 450
+      },
+      "lyapunov_evolution": {
+        "max_expansion": 0.34900000000000003,
+        "mean_delta": 0.008251059322033901,
+        "p_contraction": 0.451271186440678,
+        "p_expansion": 0.548728813559322,
+        "p_marginal": 0.0,
+        "samples": 472
+      },
+      "perturbation_decomposition": {
+        "adversarial": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "noise": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "projection": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "switch": {
+          "max": 0.0,
+          "mean": 0.0
+        }
+      },
+      "projection_overrides": {
+        "comparable_turns": 480,
+        "final_stricter_than_pre": 12,
+        "pi_gate_non_allow": 0,
+        "tightening_rate": 0.025,
+        "transition_stages": {
+          "final_adaptive_hard_veto": 450,
+          "fusion_adaptive_hard_veto": 450,
+          "local_soft_filter": 1,
+          "memory_hard_block": 64,
+          "projection_boundary_enforcement": 480,
+          "validity_envelope_enforcement": 7
+        }
+      }
+    },
+    "nominal": {
+      "adaptive_estimation": {
+        "availability": 0.9583333333333334,
+        "available_turns": 184,
+        "band_counts": {
+          "critical": 10,
+          "hard": 154,
+          "stable": 15,
+          "warning": 5
+        },
+        "margin_mean": 0.1396965951347473,
+        "margin_samples": 184,
+        "turns": 192
+      },
+      "closed_loop_feedback": {
+        "control_reduction_signaled": 89,
+        "energy_increase_turns": 89,
+        "feedback_consistency": 1.0
+      },
+      "envelope_compliance": {
+        "domain_valid_rate": 1.0,
+        "envelope_valid_rate": 0.041666666666666664,
+        "envelope_valid_rate_in_domain": 0.041666666666666664,
+        "in_domain_turns": 192,
+        "turns": 192
+      },
+      "gate_distribution": {
+        "by_family": {
+          "nominal": {
+            "ABSTAIN": 0.8229166666666666,
+            "ALLOW": 0.0,
+            "REQUIRE_CONFIRMATION": 0.17708333333333334
+          }
+        },
+        "given_contraction": {
+          "ABSTAIN": 0.7263157894736842,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.2736842105263158
+        },
+        "given_expansion": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "overall": {
+          "ABSTAIN": 0.8229166666666666,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.17708333333333334
+        }
+      },
+      "iss_residual": {
+        "divergent_trajectories": 0,
+        "empirical_gain_max": null,
+        "sup_w_max": 0.72354054,
+        "sup_w_mean": 0.6283577075,
+        "trajectories": 8
+      },
+      "kappa_violations": {
+        "abstain_relaxed_past_confirmation": 0,
+        "margin_samples": 184,
+        "violation_rate": 0.8369565217391305,
+        "violations": 154
+      },
+      "lyapunov_evolution": {
+        "max_expansion": 0.4135,
+        "mean_delta": 0.0001168478260869561,
+        "p_contraction": 0.5163043478260869,
+        "p_expansion": 0.483695652173913,
+        "p_marginal": 0.0,
+        "samples": 184
+      },
+      "perturbation_decomposition": {
+        "adversarial": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "noise": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "projection": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "switch": {
+          "max": 0.0,
+          "mean": 0.0
+        }
+      },
+      "projection_overrides": {
+        "comparable_turns": 192,
+        "final_stricter_than_pre": 18,
+        "pi_gate_non_allow": 0,
+        "tightening_rate": 0.09375,
+        "transition_stages": {
+          "final_adaptive_hard_veto": 154,
+          "fusion_adaptive_hard_veto": 154,
+          "local_soft_filter": 3,
+          "projection_boundary_enforcement": 192,
+          "validity_envelope_enforcement": 15
+        }
+      }
+    },
+    "switching_stress": {
+      "adaptive_estimation": {
+        "availability": 0.9583333333333334,
+        "available_turns": 184,
+        "band_counts": {
+          "hard": 184
+        },
+        "margin_mean": 0.3242770118157285,
+        "margin_samples": 184,
+        "turns": 192
+      },
+      "closed_loop_feedback": {
+        "control_reduction_signaled": 96,
+        "energy_increase_turns": 96,
+        "feedback_consistency": 1.0
+      },
+      "envelope_compliance": {
+        "domain_valid_rate": 1.0,
+        "envelope_valid_rate": 0.041666666666666664,
+        "envelope_valid_rate_in_domain": 0.041666666666666664,
+        "in_domain_turns": 192,
+        "turns": 192
+      },
+      "gate_distribution": {
+        "by_family": {
+          "switching_stress": {
+            "ABSTAIN": 0.9583333333333334,
+            "ALLOW": 0.0,
+            "REQUIRE_CONFIRMATION": 0.041666666666666664
+          }
+        },
+        "given_contraction": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "given_expansion": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "overall": {
+          "ABSTAIN": 0.9583333333333334,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.041666666666666664
+        }
+      },
+      "iss_residual": {
+        "divergent_trajectories": 0,
+        "empirical_gain_max": null,
+        "sup_w_max": 1.445678075,
+        "sup_w_mean": 1.149937408125,
+        "trajectories": 8
+      },
+      "kappa_violations": {
+        "abstain_relaxed_past_confirmation": 0,
+        "margin_samples": 184,
+        "violation_rate": 1.0,
+        "violations": 184
+      },
+      "lyapunov_evolution": {
+        "max_expansion": 0.5632499999999999,
+        "mean_delta": 0.016480978260869573,
+        "p_contraction": 0.4782608695652174,
+        "p_expansion": 0.5217391304347826,
+        "p_marginal": 0.0,
+        "samples": 184
+      },
+      "perturbation_decomposition": {
+        "adversarial": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "noise": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "projection": {
+          "max": 0.0,
+          "mean": 0.0
+        },
+        "switch": {
+          "max": 0.0,
+          "mean": 0.0
+        }
+      },
+      "projection_overrides": {
+        "comparable_turns": 192,
+        "final_stricter_than_pre": 0,
+        "pi_gate_non_allow": 0,
+        "tightening_rate": 0.0,
+        "transition_stages": {
+          "final_adaptive_hard_veto": 184,
+          "fusion_adaptive_hard_veto": 184,
+          "projection_boundary_enforcement": 192
+        }
+      }
+    }
+  },
+  "overall": {
+    "adaptive_estimation": {
+      "availability": 0.8333333333333334,
+      "available_turns": 1200,
+      "band_counts": {
+        "critical": 51,
+        "hard": 1107,
+        "stable": 26,
+        "warning": 16
+      },
+      "margin_mean": 0.13713421337600387,
+      "margin_samples": 1200,
+      "turns": 1440
+    },
+    "closed_loop_feedback": {
+      "control_reduction_signaled": 623,
+      "energy_increase_turns": 623,
+      "feedback_consistency": 1.0
+    },
+    "envelope_compliance": {
+      "domain_valid_rate": 0.9090277777777778,
+      "envelope_valid_rate": 0.1597222222222222,
+      "envelope_valid_rate_in_domain": 0.17570664629488159,
+      "in_domain_turns": 1309,
+      "turns": 1440
+    },
+    "gate_distribution": {
+      "by_family": {
+        "adversarial": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "boundary": {
+          "ABSTAIN": 0.9375,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0625
+        },
+        "conflicting": {
+          "ABSTAIN": 1.0,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.0
+        },
+        "declared_risk": {
+          "ABSTAIN": 0.296875,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.703125
+        },
+        "long_horizon": {
+          "ABSTAIN": 0.9541666666666667,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.04583333333333333
+        },
+        "nominal": {
+          "ABSTAIN": 0.8229166666666666,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.17708333333333334
+        },
+        "switching_stress": {
+          "ABSTAIN": 0.9583333333333334,
+          "ALLOW": 0.0,
+          "REQUIRE_CONFIRMATION": 0.041666666666666664
+        }
+      },
+      "given_contraction": {
+        "ABSTAIN": 0.9220103986135182,
+        "ALLOW": 0.0,
+        "REQUIRE_CONFIRMATION": 0.0779896013864818
+      },
+      "given_expansion": {
+        "ABSTAIN": 1.0,
+        "ALLOW": 0.0,
+        "REQUIRE_CONFIRMATION": 0.0
+      },
+      "overall": {
+        "ABSTAIN": 0.85625,
+        "ALLOW": 0.0,
+        "REQUIRE_CONFIRMATION": 0.14375
+      }
+    },
+    "iss_residual": {
+      "divergent_trajectories": 0,
+      "empirical_gain_max": null,
+      "sup_w_max": 1.4963140099999999,
+      "sup_w_mean": 0.9064601272321428,
+      "trajectories": 56
+    },
+    "kappa_violations": {
+      "abstain_relaxed_past_confirmation": 0,
+      "margin_samples": 1200,
+      "violation_rate": 0.9225,
+      "violations": 1107
+    },
+    "lyapunov_evolution": {
+      "max_expansion": 0.5632499999999999,
+      "mean_delta": 0.005267702312138735,
+      "p_contraction": 0.41690751445086704,
+      "p_expansion": 0.45014450867052025,
+      "p_marginal": 0.1329479768786127,
+      "samples": 1384
+    },
+    "perturbation_decomposition": {
+      "adversarial": {
+        "max": 0.0,
+        "mean": 0.0
+      },
+      "noise": {
+        "max": 0.0,
+        "mean": 0.0
+      },
+      "projection": {
+        "max": 0.0,
+        "mean": 0.0
+      },
+      "switch": {
+        "max": 0.0,
+        "mean": 0.0
+      }
+    },
+    "projection_overrides": {
+      "comparable_turns": 1440,
+      "final_stricter_than_pre": 96,
+      "pi_gate_non_allow": 0,
+      "tightening_rate": 0.06666666666666667,
+      "transition_stages": {
+        "final_adaptive_hard_veto": 1107,
+        "fusion_adaptive_hard_veto": 1107,
+        "input_risk_gate": 57,
+        "input_risk_relax_denied": 59,
+        "local_soft_filter": 4,
+        "memory_hard_block": 173,
+        "projection_boundary_enforcement": 1309,
+        "projection_hard_block": 131,
+        "validity_envelope_enforcement": 24
+      }
+    }
+  }
+}

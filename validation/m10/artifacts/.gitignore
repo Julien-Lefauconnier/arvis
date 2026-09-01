@@ -1,0 +1,4 @@
+# validation/m10/artifacts/.gitignore
+# The per-turn measurements are 3 MB and bit-for-bit regenerable
+# from the published corpus manifest: python -m validation.m10 run
+measurements.json
