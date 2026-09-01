@@ -156,6 +156,293 @@ class CognitiveControlEngine:
             ):
                 degraded_components.append(component)
 
+    def _apply_temporal_pressure(
+        self,
+        runtime: CognitiveControlRuntime,
+        user_id: str,
+        fused_risk: float,
+    ) -> tuple[Any | None, float]:
+        """Additive risk pressure from the temporal model (degrades to
+        the unmodified risk)."""
+        temporal_pressure = None
+        try:
+            if self.deps.temporal_pressure is not None:
+                temporal_pressure = self.deps.temporal_pressure.compute(user_id)
+                fused_risk = clamp01(
+                    fused_risk
+                    + 0.2 * to_float(getattr(temporal_pressure, "pressure", 0.0), 0.0)
+                )
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="temporal_pressure",
+                exc=exc,
+            )
+            temporal_pressure = None
+        return temporal_pressure, fused_risk
+
+    def _apply_temporal_regulation(
+        self,
+        runtime: CognitiveControlRuntime,
+        user_id: str,
+        fused_risk: float,
+    ) -> tuple[Any | None, float]:
+        """Multiplicative risk regulation from the temporal model
+        (degrades to the unmodified risk)."""
+        temporal_modulation = None
+        try:
+            if self.deps.temporal_regulation is not None:
+                temporal_modulation = self.deps.temporal_regulation.compute(user_id)
+                fused_risk = clamp01(
+                    fused_risk
+                    * to_float(
+                        getattr(temporal_modulation, "risk_multiplier", 1.0), 1.0
+                    )
+                )
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="temporal_regulation",
+                exc=exc,
+            )
+            temporal_modulation = None
+        return temporal_modulation, fused_risk
+
+    def _push_local_dynamics(
+        self,
+        runtime: CognitiveControlRuntime,
+        core: Any,
+        budget: Any,
+        smoothed_risk: float,
+        cur_lyap: Any,
+    ) -> None:
+        """Feed the local dynamics estimator (observe-only, degrades
+        silently into the degradation journal)."""
+        try:
+            if runtime.local_dynamics is None and self.deps.local_dynamics_factory:
+                runtime.local_dynamics = self.deps.local_dynamics_factory()
+
+            if runtime.local_dynamics is not None and isinstance(
+                runtime.local_dynamics, HasPush
+            ):
+                runtime.local_dynamics.push(
+                    delta_v=to_float(getattr(core, "dv", 0.0), 0.0),
+                    features={
+                        "budget_ratio": self._budget_ratio(budget),
+                        "collapse_risk": to_float(smoothed_risk, 0.0),
+                        "V": float(V(cur_lyap)),
+                    },
+                )
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="local_dynamics",
+                exc=exc,
+            )
+
+    def _counterfactual_forcings(
+        self,
+        runtime: CognitiveControlRuntime,
+        smoothed_risk: float,
+        uncertainty: float,
+    ) -> tuple[bool, bool]:
+        """Counterfactual simulator decision as verdict forcings
+        (degrades to no forcing)."""
+        cf_force_abstain = False
+        cf_force_confirm = False
+        try:
+            if runtime.counterfactual is None and self.deps.counterfactual_factory:
+                runtime.counterfactual = self.deps.counterfactual_factory()
+
+            if runtime.counterfactual is not None and isinstance(
+                runtime.counterfactual, HasDecide
+            ):
+                cf_decision = runtime.counterfactual.decide(
+                    base_risk=to_float(smoothed_risk, 0.0),
+                    base_uncertainty=to_float(uncertainty, 0.5),
+                )
+
+                if getattr(cf_decision, "best_action", None) == "abstain":
+                    cf_force_abstain = True
+                elif getattr(cf_decision, "best_action", None) == "confirm":
+                    cf_force_confirm = True
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="counterfactual_simulator",
+                exc=exc,
+            )
+        return cf_force_abstain, cf_force_confirm
+
+    def _update_drift_detection(
+        self,
+        runtime: CognitiveControlRuntime,
+        user_id: str,
+        core: Any,
+    ) -> Any | None:
+        """Push dv into the stability stats and evaluate the drift
+        detector once enough samples exist (degrades to None)."""
+        drift_snapshot = None
+        try:
+            if self.deps.stability_stats is not None and isinstance(
+                self.deps.stability_stats, HasPushSnapshot
+            ):
+                self.deps.stability_stats.push(
+                    user_id, to_float(getattr(core, "dv", 0.0), 0.0)
+                )
+                stats = self.deps.stability_stats.snapshot(user_id)
+
+                if stats and getattr(stats, "samples", 0) > 20:
+                    if (
+                        runtime.drift_detector is None
+                        and self.deps.drift_detector_factory
+                    ):
+                        runtime.drift_detector = self.deps.drift_detector_factory()
+
+                    if runtime.drift_detector is not None and isinstance(
+                        runtime.drift_detector, HasEvaluate
+                    ):
+                        drift_snapshot = runtime.drift_detector.evaluate(
+                            contraction_rate=to_float(stats.contraction_rate, 0.0),
+                            instability_rate=to_float(stats.instability_rate, 0.0),
+                        )
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="stability_stats_or_drift_detector",
+                exc=exc,
+            )
+        return drift_snapshot
+
+    def _explore_and_scale_budget(
+        self,
+        runtime: CognitiveControlRuntime,
+        budget: Any,
+        irg: Any,
+        smoothed_risk: float,
+        drift_snapshot: Any | None,
+    ) -> Any | None:
+        """Exploration snapshot plus the IRG-scaled change budget
+        (each sub-step degrades independently)."""
+        exploration_snapshot = None
+        try:
+            if self.deps.exploration_controller is not None:
+                regime_name = (
+                    getattr(runtime.regime_control, "mode", None)
+                    if runtime.regime_control
+                    else None
+                )
+                drift_score = to_float(
+                    getattr(drift_snapshot, "drift_score", 0.0)
+                    if drift_snapshot
+                    else 0.0,
+                    0.0,
+                )
+
+                exploration_snapshot = self.deps.exploration_controller.compute(
+                    regime=regime_name,
+                    collapse_risk=to_risk(smoothed_risk),
+                    drift_score=to_drift(drift_score),
+                    stable=None,
+                )
+                runtime.exploration_state = exploration_snapshot
+
+                irg_factor = 1.0
+                try:
+                    irg_state = irg.snapshot()
+                    structural = to_float(
+                        getattr(irg_state, "structural_risk", 0.0), 0.0
+                    )
+                    irg_factor = max(0.05, min(1.0, 1.0 - structural))
+                except Exception as exc:
+                    self._attach_degraded(
+                        runtime,
+                        component="irg_factor",
+                        exc=exc,
+                    )
+                    irg_factor = 1.0
+
+                try:
+                    scaled = int(
+                        max(
+                            1,
+                            to_float(budget.max_changes, 1.0)
+                            * to_float(
+                                getattr(
+                                    exploration_snapshot, "change_budget_scale", 1.0
+                                ),
+                                1.0,
+                            )
+                            * to_float(irg_factor, 1.0),
+                        )
+                    )
+                    budget.max_changes = scaled
+                except Exception as exc:
+                    self._attach_degraded(
+                        runtime,
+                        component="exploration_budget_scaling",
+                        exc=exc,
+                    )
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="exploration_controller",
+                exc=exc,
+            )
+        return exploration_snapshot
+
+    def _bandit_verdict(
+        self,
+        runtime: CognitiveControlRuntime,
+        user_id: str,
+        smoothed_risk: float,
+        cf_force_abstain: bool,
+        lyap_verdict: LyapunovVerdict,
+    ) -> LyapunovVerdict:
+        """Counterfactual bandit recommendation, hardening-only over
+        the incoming verdict (degrades to the incoming verdict)."""
+        try:
+            if runtime.cf_bandit is None and self.deps.counterfactual_bandit_factory:
+                runtime.cf_bandit = self.deps.counterfactual_bandit_factory(user_id)
+
+            if runtime.cf_bandit is not None and isinstance(
+                runtime.cf_bandit, HasRecommend
+            ):
+                if (
+                    runtime.last_action is not None
+                    and runtime.last_risk is not None
+                    and isinstance(runtime.cf_bandit, HasUpdateFromRisks)
+                ):
+                    runtime.cf_bandit.update_from_risks(
+                        action=str(runtime.last_action),
+                        prev_risk=to_float(runtime.last_risk, 0.0),
+                        current_risk=to_float(smoothed_risk, 0.0),
+                    )
+
+                rec = runtime.cf_bandit.recommend(
+                    current_risk=to_float(smoothed_risk, 0.0)
+                )
+
+                if (
+                    rec == "abstain"
+                    and to_float(smoothed_risk, 0.0) >= 0.70
+                    and not cf_force_abstain
+                ):
+                    lyap_verdict = LyapunovVerdict.ABSTAIN
+                elif (
+                    rec == "confirm"
+                    and to_float(smoothed_risk, 0.0) >= 0.35
+                    and not cf_force_abstain
+                ):
+                    lyap_verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
+        except Exception as exc:
+            self._attach_degraded(
+                runtime,
+                component="counterfactual_bandit",
+                exc=exc,
+            )
+        return lyap_verdict
+
     def compute(
         self,
         *,
@@ -174,42 +461,16 @@ class CognitiveControlEngine:
         # ----------------------------------
         # Temporal pressure
         # ----------------------------------
-        temporal_pressure = None
-        try:
-            if self.deps.temporal_pressure is not None:
-                temporal_pressure = self.deps.temporal_pressure.compute(user_id)
-                fused_risk = clamp01(
-                    fused_risk
-                    + 0.2 * to_float(getattr(temporal_pressure, "pressure", 0.0), 0.0)
-                )
-        except Exception as exc:
-            self._attach_degraded(
-                runtime,
-                component="temporal_pressure",
-                exc=exc,
-            )
-            temporal_pressure = None
+        temporal_pressure, fused_risk = self._apply_temporal_pressure(
+            runtime, user_id, fused_risk
+        )
 
         # ----------------------------------
         # Temporal modulation
         # ----------------------------------
-        temporal_modulation = None
-        try:
-            if self.deps.temporal_regulation is not None:
-                temporal_modulation = self.deps.temporal_regulation.compute(user_id)
-                fused_risk = clamp01(
-                    fused_risk
-                    * to_float(
-                        getattr(temporal_modulation, "risk_multiplier", 1.0), 1.0
-                    )
-                )
-        except Exception as exc:
-            self._attach_degraded(
-                runtime,
-                component="temporal_regulation",
-                exc=exc,
-            )
-            temporal_modulation = None
+        temporal_modulation, fused_risk = self._apply_temporal_regulation(
+            runtime, user_id, fused_risk
+        )
 
         # ----------------------------------
         # Gate mode
@@ -337,7 +598,6 @@ class CognitiveControlEngine:
         # ----------------------------------
         # Drift / regime / exploration
         # ----------------------------------
-        drift_snapshot = None
         regime_snapshot = None
         exploration_snapshot = None
         calibration_snapshot = None
@@ -357,35 +617,7 @@ class CognitiveControlEngine:
                 exc=exc,
             )
 
-        try:
-            if self.deps.stability_stats is not None and isinstance(
-                self.deps.stability_stats, HasPushSnapshot
-            ):
-                self.deps.stability_stats.push(
-                    user_id, to_float(getattr(core, "dv", 0.0), 0.0)
-                )
-                stats = self.deps.stability_stats.snapshot(user_id)
-
-                if stats and getattr(stats, "samples", 0) > 20:
-                    if (
-                        runtime.drift_detector is None
-                        and self.deps.drift_detector_factory
-                    ):
-                        runtime.drift_detector = self.deps.drift_detector_factory()
-
-                    if runtime.drift_detector is not None and isinstance(
-                        runtime.drift_detector, HasEvaluate
-                    ):
-                        drift_snapshot = runtime.drift_detector.evaluate(
-                            contraction_rate=to_float(stats.contraction_rate, 0.0),
-                            instability_rate=to_float(stats.instability_rate, 0.0),
-                        )
-        except Exception as exc:
-            self._attach_degraded(
-                runtime,
-                component="stability_stats_or_drift_detector",
-                exc=exc,
-            )
+        drift_snapshot = self._update_drift_detection(runtime, user_id, core)
 
         try:
             if runtime.regime_estimator is None and self.deps.regime_estimator_factory:
@@ -409,95 +641,14 @@ class CognitiveControlEngine:
                 exc=exc,
             )
 
-        try:
-            if self.deps.exploration_controller is not None:
-                regime_name = (
-                    getattr(runtime.regime_control, "mode", None)
-                    if runtime.regime_control
-                    else None
-                )
-                drift_score = to_float(
-                    getattr(drift_snapshot, "drift_score", 0.0)
-                    if drift_snapshot
-                    else 0.0,
-                    0.0,
-                )
-
-                exploration_snapshot = self.deps.exploration_controller.compute(
-                    regime=regime_name,
-                    collapse_risk=to_risk(smoothed_risk),
-                    drift_score=to_drift(drift_score),
-                    stable=None,
-                )
-                runtime.exploration_state = exploration_snapshot
-
-                irg_factor = 1.0
-                try:
-                    irg_state = irg.snapshot()
-                    structural = to_float(
-                        getattr(irg_state, "structural_risk", 0.0), 0.0
-                    )
-                    irg_factor = max(0.05, min(1.0, 1.0 - structural))
-                except Exception as exc:
-                    self._attach_degraded(
-                        runtime,
-                        component="irg_factor",
-                        exc=exc,
-                    )
-                    irg_factor = 1.0
-
-                try:
-                    scaled = int(
-                        max(
-                            1,
-                            to_float(budget.max_changes, 1.0)
-                            * to_float(
-                                getattr(
-                                    exploration_snapshot, "change_budget_scale", 1.0
-                                ),
-                                1.0,
-                            )
-                            * to_float(irg_factor, 1.0),
-                        )
-                    )
-                    budget.max_changes = scaled
-                except Exception as exc:
-                    self._attach_degraded(
-                        runtime,
-                        component="exploration_budget_scaling",
-                        exc=exc,
-                    )
-        except Exception as exc:
-            self._attach_degraded(
-                runtime,
-                component="exploration_controller",
-                exc=exc,
-            )
+        exploration_snapshot = self._explore_and_scale_budget(
+            runtime, budget, irg, smoothed_risk, drift_snapshot
+        )
 
         # ----------------------------------
         # Local dynamics
         # ----------------------------------
-        try:
-            if runtime.local_dynamics is None and self.deps.local_dynamics_factory:
-                runtime.local_dynamics = self.deps.local_dynamics_factory()
-
-            if runtime.local_dynamics is not None and isinstance(
-                runtime.local_dynamics, HasPush
-            ):
-                runtime.local_dynamics.push(
-                    delta_v=to_float(getattr(core, "dv", 0.0), 0.0),
-                    features={
-                        "budget_ratio": self._budget_ratio(budget),
-                        "collapse_risk": to_float(smoothed_risk, 0.0),
-                        "V": float(V(cur_lyap)),
-                    },
-                )
-        except Exception as exc:
-            self._attach_degraded(
-                runtime,
-                component="local_dynamics",
-                exc=exc,
-            )
+        self._push_local_dynamics(runtime, core, budget, smoothed_risk, cur_lyap)
 
         # ----------------------------------
         # Adaptive controller
@@ -530,31 +681,9 @@ class CognitiveControlEngine:
         # ----------------------------------
         # Counterfactual simulator
         # ----------------------------------
-        cf_force_abstain = False
-        cf_force_confirm = False
-
-        try:
-            if runtime.counterfactual is None and self.deps.counterfactual_factory:
-                runtime.counterfactual = self.deps.counterfactual_factory()
-
-            if runtime.counterfactual is not None and isinstance(
-                runtime.counterfactual, HasDecide
-            ):
-                cf_decision = runtime.counterfactual.decide(
-                    base_risk=to_float(smoothed_risk, 0.0),
-                    base_uncertainty=to_float(uncertainty, 0.5),
-                )
-
-                if getattr(cf_decision, "best_action", None) == "abstain":
-                    cf_force_abstain = True
-                elif getattr(cf_decision, "best_action", None) == "confirm":
-                    cf_force_confirm = True
-        except Exception as exc:
-            self._attach_degraded(
-                runtime,
-                component="counterfactual_simulator",
-                exc=exc,
-            )
+        cf_force_abstain, cf_force_confirm = self._counterfactual_forcings(
+            runtime, smoothed_risk, uncertainty
+        )
 
         if cf_force_abstain:
             lyap_verdict = LyapunovVerdict.ABSTAIN
@@ -564,46 +693,9 @@ class CognitiveControlEngine:
         # ----------------------------------
         # Adaptive bandit
         # ----------------------------------
-        try:
-            if runtime.cf_bandit is None and self.deps.counterfactual_bandit_factory:
-                runtime.cf_bandit = self.deps.counterfactual_bandit_factory(user_id)
-
-            if runtime.cf_bandit is not None and isinstance(
-                runtime.cf_bandit, HasRecommend
-            ):
-                if (
-                    runtime.last_action is not None
-                    and runtime.last_risk is not None
-                    and isinstance(runtime.cf_bandit, HasUpdateFromRisks)
-                ):
-                    runtime.cf_bandit.update_from_risks(
-                        action=str(runtime.last_action),
-                        prev_risk=to_float(runtime.last_risk, 0.0),
-                        current_risk=to_float(smoothed_risk, 0.0),
-                    )
-
-                rec = runtime.cf_bandit.recommend(
-                    current_risk=to_float(smoothed_risk, 0.0)
-                )
-
-                if (
-                    rec == "abstain"
-                    and to_float(smoothed_risk, 0.0) >= 0.70
-                    and not cf_force_abstain
-                ):
-                    lyap_verdict = LyapunovVerdict.ABSTAIN
-                elif (
-                    rec == "confirm"
-                    and to_float(smoothed_risk, 0.0) >= 0.35
-                    and not cf_force_abstain
-                ):
-                    lyap_verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
-        except Exception as exc:
-            self._attach_degraded(
-                runtime,
-                component="counterfactual_bandit",
-                exc=exc,
-            )
+        lyap_verdict = self._bandit_verdict(
+            runtime, user_id, smoothed_risk, cf_force_abstain, lyap_verdict
+        )
 
         runtime.last_risk = to_float(smoothed_risk, 0.0)
         if lyap_verdict == LyapunovVerdict.ABSTAIN:

@@ -2,7 +2,7 @@
 
 from types import SimpleNamespace
 
-from arvis.kernel.observability.gate_observer import GateObserver
+from arvis.kernel.observability.gate_observer import GateObservation, GateObserver
 
 
 def test_gate_observer_exports_projection_trace():
@@ -39,24 +39,26 @@ def test_gate_observer_exports_projection_trace():
 
     observer.build(
         ctx,
-        pre_verdict="ALLOW",
-        final_verdict="REQUIRE_CONFIRMATION",
-        delta_w=-0.2,
-        w_prev=1.0,
-        w_current=0.8,
-        adaptive_metrics=None,
-        switching_safe=True,
-        global_safe=True,
-        envelope=envelope,
-        confidence_inputs=confidence_inputs,
-        system_confidence=0.77,
-        switching_metrics={"tau_d": 2.0},
-        stability_certificate={"local": True},
-        hard_block=False,
-        hard_reason=None,
-        w_ratio=1.01,
-        recovery_detected=False,
-        recovery_magnitude=None,
+        GateObservation(
+            pre_verdict="ALLOW",
+            final_verdict="REQUIRE_CONFIRMATION",
+            delta_w=-0.2,
+            w_prev=1.0,
+            w_current=0.8,
+            adaptive_metrics=None,
+            switching_safe=True,
+            global_safe=True,
+            envelope=envelope,
+            confidence_inputs=confidence_inputs,
+            system_confidence=0.77,
+            switching_metrics={"tau_d": 2.0},
+            stability_certificate={"local": True},
+            hard_block=False,
+            hard_reason=None,
+            w_ratio=1.01,
+            recovery_detected=False,
+            recovery_magnitude=None,
+        ),
     )
 
     assert "projection_trace" in ctx.extra
@@ -107,24 +109,26 @@ def test_gate_observer_marks_projection_disturbance_flag():
 
     observer.build(
         ctx,
-        pre_verdict="ALLOW",
-        final_verdict="REQUIRE_CONFIRMATION",
-        delta_w=0.1,
-        w_prev=1.0,
-        w_current=1.1,
-        adaptive_metrics=None,
-        switching_safe=True,
-        global_safe=True,
-        envelope=envelope,
-        confidence_inputs=confidence_inputs,
-        system_confidence=0.42,
-        switching_metrics={},
-        stability_certificate={},
-        hard_block=False,
-        hard_reason=None,
-        w_ratio=None,
-        recovery_detected=False,
-        recovery_magnitude=None,
+        GateObservation(
+            pre_verdict="ALLOW",
+            final_verdict="REQUIRE_CONFIRMATION",
+            delta_w=0.1,
+            w_prev=1.0,
+            w_current=1.1,
+            adaptive_metrics=None,
+            switching_safe=True,
+            global_safe=True,
+            envelope=envelope,
+            confidence_inputs=confidence_inputs,
+            system_confidence=0.42,
+            switching_metrics={},
+            stability_certificate={},
+            hard_block=False,
+            hard_reason=None,
+            w_ratio=None,
+            recovery_detected=False,
+            recovery_magnitude=None,
+        ),
     )
 
     assert ctx.extra["disturbance_signals"]["projection_lyapunov_incompatible"] is True

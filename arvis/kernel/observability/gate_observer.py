@@ -2,10 +2,78 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
+
+if TYPE_CHECKING:
+    from arvis.kernel.pipeline.stages.gate.models import (
+        CompositeMetrics,
+        GateDecisionResult,
+        StabilityAssessment,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class GateObservation:
+    """Everything the gate observer projects into ctx.extra, as one
+    typed value (campaign STRUCT, LOT S5: build() took twenty keyword
+    parameters, all derived from three gate result objects)."""
+
+    pre_verdict: Any
+    final_verdict: Any
+    delta_w: float | None
+    w_prev: float | None
+    w_current: float | None
+    adaptive_metrics: AdaptiveSnapshot | None
+    switching_safe: bool
+    global_safe: bool
+    envelope: Any
+    confidence_inputs: Any
+    system_confidence: float
+    switching_metrics: dict[str, Any]
+    stability_certificate: dict[str, Any]
+    hard_block: bool
+    hard_reason: str | None
+    w_ratio: float | None
+    recovery_detected: bool
+    recovery_magnitude: float | None
+
+    @classmethod
+    def from_gate_results(
+        cls,
+        composite: CompositeMetrics,
+        assessment: StabilityAssessment,
+        decision: GateDecisionResult,
+    ) -> GateObservation:
+        """Derive the observation from the gate's three result objects
+        (the single production call path)."""
+        return cls(
+            pre_verdict=decision.pre_verdict,
+            final_verdict=decision.verdict,
+            delta_w=composite.delta_w,
+            w_prev=composite.w_prev,
+            w_current=composite.w_current,
+            adaptive_metrics=assessment.adaptive_metrics,
+            switching_safe=assessment.switching_safe,
+            global_safe=assessment.global_safe,
+            envelope=assessment.envelope,
+            confidence_inputs=assessment.confidence_inputs,
+            system_confidence=assessment.system_confidence,
+            switching_metrics=assessment.switching_metrics,
+            stability_certificate=decision.stability_certificate,
+            hard_block=assessment.envelope.hard_block,
+            hard_reason=assessment.envelope.hard_reason,
+            w_ratio=assessment.w_ratio,
+            recovery_detected=assessment.recovery_detected,
+            recovery_magnitude=(
+                abs(composite.delta_w)
+                if (composite.delta_w is not None and assessment.recovery_detected)
+                else None
+            ),
+        )
 
 
 class GateObserver:
@@ -18,29 +86,21 @@ class GateObserver:
     - Only builds ctx.extra projections
     """
 
-    def build(
-        self,
-        ctx: Any,
-        *,
-        pre_verdict: Any,
-        final_verdict: Any,
-        delta_w: float | None,
-        w_prev: float | None,
-        w_current: float | None,
-        adaptive_metrics: AdaptiveSnapshot | None,
-        switching_safe: bool,
-        global_safe: bool,
-        envelope: Any,
-        confidence_inputs: Any,
-        system_confidence: float,
-        switching_metrics: dict[str, Any],
-        stability_certificate: dict[str, Any],
-        hard_block: bool,
-        hard_reason: str | None,
-        w_ratio: float | None,
-        recovery_detected: bool,
-        recovery_magnitude: float | None,
-    ) -> None:
+    def build(self, ctx: Any, observation: GateObservation) -> None:
+        pre_verdict = observation.pre_verdict
+        final_verdict = observation.final_verdict
+        delta_w = observation.delta_w
+        w_prev = observation.w_prev
+        w_current = observation.w_current
+        adaptive_metrics = observation.adaptive_metrics
+        switching_safe = observation.switching_safe
+        global_safe = observation.global_safe
+        envelope = observation.envelope
+        confidence_inputs = observation.confidence_inputs
+        system_confidence = observation.system_confidence
+        switching_metrics = observation.switching_metrics
+        stability_certificate = observation.stability_certificate
+
         ctx.extra["system_confidence"] = float(system_confidence)
         ctx.extra.setdefault("confidence_flags", [])
 
@@ -261,16 +321,16 @@ class GateObserver:
         # -----------------------------------------
         # hard_block_log (observability only)
         # -----------------------------------------
-        if hard_block:
+        if observation.hard_block:
             ctx.extra["hard_block_log"] = {
-                "reasons": hard_reason,
+                "reasons": observation.hard_reason,
                 "delta_w": delta_w,
-                "w_ratio": w_ratio,
+                "w_ratio": observation.w_ratio,
             }
 
         # -----------------------------------------
         # recovery signals (observability only)
         # -----------------------------------------
-        if recovery_detected:
+        if observation.recovery_detected:
             ctx.extra["recovery_detected"] = True
-            ctx.extra["recovery_magnitude"] = recovery_magnitude
+            ctx.extra["recovery_magnitude"] = observation.recovery_magnitude
