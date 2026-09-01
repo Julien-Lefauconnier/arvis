@@ -9,6 +9,30 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Added
+
+- Campaign MATH-B: the M10 empirical validation campaign executed on
+  the synthetic corpus D-1.0 (56 trajectories, 1440 turns, published
+  seeds). New top-level `validation/` package (excluded from the
+  wheel): deterministic seven-family corpus, closed-loop pipeline
+  harness, the nine metric families of M10 section 5, alpha and L_T
+  estimators, pre-registered thresholds, LOT B4 sensitivity sweeps,
+  and the published campaign artifacts. The M10 document now
+  carries the campaign report (section 10): 11 of 12 registered criteria
+  passed, the failure reported as failed; measured constants
+  published report-only (no runtime default changes).
+
+### Fixed
+
+- The adaptive runtime observer reads the estimator's smoothed
+  contraction factor again. Since the MATH-A snapshot rename it read
+  a field that no longer exists through a silent `getattr`, so the
+  whole adaptive layer (kappa bands, confirmation forcing, ABSTAIN
+  veto, recovery-relaxation block) was structurally dead on every
+  live path and only injected snapshots ever exercised it. The fix
+  is strictly hardening (RED-first, direction verified on every
+  consumer); the m10 harness now pins the layer's liveness.
+
 ## [0.1.0b5] - 2026-09-01
 
 Four consolidation campaigns since b4, all behind a green quality
