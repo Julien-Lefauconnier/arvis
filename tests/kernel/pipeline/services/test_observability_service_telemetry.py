@@ -213,3 +213,31 @@ def test_a_throwing_projection_refresh_is_captured_not_raised() -> None:
         "Projection refresh" in str(getattr(e, "message", e))
         for e in ctx.error_state.errors
     )
+
+
+class _FirstBoomSink:
+    """Raises on the first emit (the malformed payload), records the
+    rest."""
+
+    def __init__(self) -> None:
+        self.events: list[object] = []
+        self._calls = 0
+
+    def emit(self, event: object) -> None:
+        self._calls += 1
+        if self._calls == 1:
+            raise RuntimeError("malformed payload")
+        self.events.append(event)
+
+
+def test_one_malformed_event_does_not_kill_the_batch() -> None:
+    """Campaign FIX (LOT F1, RED-first): one try guarded the whole
+    emission block and its except returned, so the first malformed
+    payload silently suppressed every following event of the turn.
+    Emission must be fail-soft per event: the faulty one is skipped,
+    the others still reach the sink."""
+    sink = _FirstBoomSink()
+
+    PipelineObservabilityService().run(_pipeline(_full_obs(), sink), _ctx())
+
+    assert len(sink.events) >= 5, len(sink.events)

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, cast
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from arvis.errors.boundaries.observability import capture_observability_failure
 from arvis.errors.observability import (
@@ -104,33 +105,29 @@ class PipelineObservabilityService:
         # Surface the rich stability snapshot via telemetry (observe-only,
         # fail-safe; NullTelemetrySink is a no-op). obs["stability"] is the
         # full StabilitySnapshot, the authoritative stability source.
+        # Fail-soft PER EVENT (campaign FIX, LOT F1): one shared try
+        # used to return on the first exception, so a single malformed
+        # payload silently suppressed every following event of the
+        # turn. A faulty event is skipped; the others still emit; the
+        # run is never affected either way.
         sink = pipeline.telemetry_sink
         if not isinstance(sink, NullTelemetrySink):
-            try:
-                sink.emit(stability_event(obs["stability"]))
-                tension = obs.get("system_tension")
-                if tension is not None:
-                    sink.emit(system_tension_event(tension))
-                predictive = obs.get("predictive")
-                if predictive is not None:
-                    sink.emit(predictive_event(predictive))
-                multi = obs.get("multi")
-                if multi is not None:
-                    sink.emit(multi_horizon_event(multi))
-                forecast = obs.get("forecast")
-                if forecast is not None:
-                    sink.emit(forecast_event(forecast))
-                stats = obs.get("stats")
-                if stats is not None:
-                    sink.emit(stats_event(stats))
-                symbolic_state = obs.get("symbolic_state")
-                if symbolic_state is not None:
-                    sink.emit(symbolic_state_event(symbolic_state))
-                symbolic_drift = obs.get("symbolic_drift")
-                if symbolic_drift is not None:
-                    sink.emit(symbolic_drift_event(symbolic_drift))
-                symbolic_features = obs.get("symbolic_features")
-                if symbolic_features is not None:
-                    sink.emit(symbolic_features_event(symbolic_features))
-            except Exception:  # arvis-broad: telemetry must never affect a run
-                return
+            adapters: tuple[tuple[str, Callable[[Any], Any]], ...] = (
+                ("stability", stability_event),
+                ("system_tension", system_tension_event),
+                ("predictive", predictive_event),
+                ("multi", multi_horizon_event),
+                ("forecast", forecast_event),
+                ("stats", stats_event),
+                ("symbolic_state", symbolic_state_event),
+                ("symbolic_drift", symbolic_drift_event),
+                ("symbolic_features", symbolic_features_event),
+            )
+            for key, adapt in adapters:
+                value = obs.get(key)
+                if value is None:
+                    continue
+                try:
+                    sink.emit(adapt(value))
+                except Exception:  # arvis-broad: telemetry never affects a run
+                    continue
