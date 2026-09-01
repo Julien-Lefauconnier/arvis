@@ -24,9 +24,22 @@ def test_corpus_is_bit_for_bit_reproducible() -> None:
 
 
 def test_every_family_is_present_once() -> None:
+    """Pinned as a literal: comparing against FAMILIES would mutate in
+    lockstep with the corpus and can never catch a dropped family
+    (MATH-B mutation replay, survivor M7)."""
     corpus = build_smoke_corpus()
 
-    assert tuple(t.family for t in corpus.trajectories) == FAMILIES
+    expected = (
+        "nominal",
+        "boundary",
+        "adversarial",
+        "switching_stress",
+        "long_horizon",
+        "conflicting",
+        "declared_risk",
+    )
+    assert FAMILIES == expected
+    assert tuple(t.family for t in corpus.trajectories) == expected
 
 
 def test_measurements_are_complete_and_deterministic() -> None:
