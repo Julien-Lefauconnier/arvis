@@ -93,8 +93,12 @@ class ZipExecutor:
 
             create_tree(zip_root, target_parent_id)
 
-        if not keep_zip and os.path.exists(zip_path):
-            os.unlink(zip_path)
+        # DM-H1 (campaign HARDEN, audit P1-15d): the import used to
+        # unlink zip_path here unless keep_zip was True. zip_path is a
+        # HOST filesystem path received through a governed syscall
+        # whose every other write goes through the VFS; deleting the
+        # source archive is the host's act, never this executor's.
+        # keep_zip is kept as an accepted no-op so signatures hold.
 
         return {
             "status": "completed",
