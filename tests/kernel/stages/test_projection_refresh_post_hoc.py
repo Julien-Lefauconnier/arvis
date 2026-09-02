@@ -108,8 +108,31 @@ def test_refresh_publishes_a_distinct_post_hoc_attestation() -> None:
 
 def test_refresh_revalidates_the_decision_view_not_a_new_one() -> None:
     """The attestation answers "what do we now know about the
-    projection that decided", so it validates that same view."""
+    projection that decided", so it validates that same view.
+
+    The pi_impl stub here is deliberately STATEFUL, returning a
+    different view on every call: mutation replay showed that with a
+    deterministic stub, a mutant re-projecting a fresh view inside
+    refresh produced the same dict and survived this pin.
+    """
     seen: list[dict] = []
+
+    class _DriftingPiImpl:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def project(self, ctx):
+            self.calls += 1
+            tension = 0.4 + 0.1 * self.calls
+
+            class _DriftingState:
+                def to_projection_view(self_inner):
+                    return {"state.system_tension": tension}
+
+            return _DriftingState()
+
+        def project_previous(self, ctx):
+            return None
 
     class _SpyValidator(_CountingValidator):
         def validate(self, projection_view, previous_projected=None, ctx=None):
@@ -119,7 +142,9 @@ def test_refresh_revalidates_the_decision_view_not_a_new_one() -> None:
             )
 
     stage = ProjectionStage()
-    pipeline = SimpleNamespace(pi_impl=_PiImpl(), projection_validator=_SpyValidator())
+    pipeline = SimpleNamespace(
+        pi_impl=_DriftingPiImpl(), projection_validator=_SpyValidator()
+    )
     ctx = _ctx()
 
     stage.run(pipeline, ctx)
