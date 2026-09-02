@@ -2,43 +2,32 @@
 
 from __future__ import annotations
 
-from collections import defaultdict, deque
+from collections import deque
 
 from arvis.kernel_core.interrupts.interrupt import CognitiveInterrupt
-from arvis.kernel_core.interrupts.interrupt_type import CognitiveInterruptType
 
 
 class CognitiveInterruptBus:
-    """
-    Kernel-level interrupt dispatcher.
+    """Kernel-level interrupt queue with explicit-target routing.
 
     Responsibilities:
-    - queue interrupts
-    - dispatch to subscribers
+    - queue interrupts (``emit``)
+    - hand the drained batch to the scheduler (``drain``)
+    - name the processes an interrupt wakes (``match``)
+
+    DM-H4 (campaign HARDEN, audit P1-15b, 2026-09-02): the bus used to
+    carry a subscribe/unsubscribe half and a per-type subscriber table
+    that nothing in the runtime ever called; ``match`` could only ever
+    route by ``target_process_id`` in practice. The dead half is
+    removed rather than left to document a pub/sub that does not
+    exist; reintroducing one is a deliberate future design act.
     """
 
     def __init__(self) -> None:
         self._queue: deque[CognitiveInterrupt] = deque()
-        self._subscribers: dict[CognitiveInterruptType, list[str]] = defaultdict(list)
 
     def emit(self, interrupt: CognitiveInterrupt) -> None:
         self._queue.append(interrupt)
-
-    def subscribe(
-        self,
-        process_id: str,
-        interrupt_type: CognitiveInterruptType,
-    ) -> None:
-        if process_id not in self._subscribers[interrupt_type]:
-            self._subscribers[interrupt_type].append(process_id)
-
-    def unsubscribe(
-        self,
-        process_id: str,
-        interrupt_type: CognitiveInterruptType,
-    ) -> None:
-        if process_id in self._subscribers[interrupt_type]:
-            self._subscribers[interrupt_type].remove(process_id)
 
     def drain(self) -> list[CognitiveInterrupt]:
         events = list(self._queue)
@@ -46,16 +35,7 @@ class CognitiveInterruptBus:
         return events
 
     def match(self, interrupt: CognitiveInterrupt) -> list[str]:
-        """
-        Returns process_ids that should be woken up.
-        """
-        targets: list[str] = []
-
+        """Process ids to wake: the explicit target, or nobody."""
         if interrupt.target_process_id:
-            targets.append(interrupt.target_process_id)
-
-        for process_id in self._subscribers.get(interrupt.type, []):
-            if process_id not in targets:
-                targets.append(process_id)
-
-        return targets
+            return [interrupt.target_process_id]
+        return []

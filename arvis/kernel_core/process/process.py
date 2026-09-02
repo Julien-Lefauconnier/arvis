@@ -97,8 +97,6 @@ class CognitiveProcess:
         execution.pipeline_prepared = kwargs.get("pipeline_prepared", False)
         execution.pipeline_finalized = kwargs.get("pipeline_finalized", False)
 
-        interrupts.subscribed_interrupts = kwargs.get("subscribed_interrupts", set())
-
         self.descriptor = descriptor
         self.runtime = runtime
         self.execution = execution
@@ -206,16 +204,6 @@ class CognitiveProcess:
     @pipeline_finalized.setter
     def pipeline_finalized(self, value: bool) -> None:
         self.execution.pipeline_finalized = value
-
-    # interrupts
-
-    @property
-    def subscribed_interrupts(self) -> set[str]:
-        return self.interrupts.subscribed_interrupts
-
-    @subscribed_interrupts.setter
-    def subscribed_interrupts(self, value: set[str]) -> None:
-        self.interrupts.subscribed_interrupts = value
 
     # -------------------------
     # BUDGET
