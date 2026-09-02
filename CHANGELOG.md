@@ -11,6 +11,30 @@ versioning throughout the pre-1.0 series.
 
 ### Fixed
 
+- Campaign INTEGRITY: the public integrity surface tells the truth.
+  The emitted API `fingerprint` was computed eagerly during package
+  import, so the fallback branch fired on every normal import and
+  every result carried a bootstrap constant instead of the surface
+  hash the shipped schema documents; it is now computed lazily from
+  the real sorted `arvis.__all__` (the emitted value changes; no key
+  changed shape, `schema_version` stays 1.0). Four 'canonical' JSON
+  encoders with four parameter sets are now one
+  (`arvis/ir/serialization/canonical_json.py`): the public `hash_ir`
+  reproduces the committed digests verbatim, and the pinned
+  external-verifier recipe recomposes `global_commitment` from the
+  exported IR alone; non-finite floats refuse loudly instead of
+  hashing silently into non-JSON text. The anchor is the view's
+  `ir_hash`, which already used the canonical parameters, so no
+  committed result digest moves; `meta.canonical_hash` moves only on
+  non-ASCII content and becomes verifiable, and `decision_id` values
+  change (internal mint). The stability block now carries the
+  certified PAC ceiling beside the empirical rate (`risk_ucb`,
+  `risk_verdict`, additive), `summary()` prints
+  `RiskCeiling=1.00 (CRITICAL)` on a cold turn instead of a lone
+  `Risk=0.00`, and the trace's experimental stability sub-block stops
+  publishing a verdict under the key `regime`. The beta contract
+  manifest is regenerated (schema fingerprint only).
+
 - Campaign GATE-SEM: the integral audit's two semantic blockers. The
   adaptive stability layer failed OPEN on an empty dwell clock: the
   margin computation raised on `tau_d <= 0`, the gate stage
