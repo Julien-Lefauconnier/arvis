@@ -156,7 +156,15 @@ def redact_for_commitment(obj: Any) -> Any:
             else:
                 redacted[key] = redact_for_commitment(value)
         return redacted
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, tuple):
+        # The encoder tags tuples apart from lists on purpose; rebuilding
+        # every sequence as a list here erased that distinction before it
+        # reached the encoder, so two structurally different effects
+        # shared an engagement (campaign KERNEL, LOT K1). The docstring
+        # above always promised the opposite ("no type information is
+        # lost here").
+        return tuple(redact_for_commitment(v) for v in obj)
+    if isinstance(obj, list):
         return [redact_for_commitment(v) for v in obj]
     return obj
 

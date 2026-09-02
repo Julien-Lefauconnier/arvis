@@ -412,7 +412,7 @@ def _canonicalize(obj: Any, *, depth: int, path: str) -> JSONValue:
 
     # --- dataclasses and plain objects: attributes, injectively ---
     if is_dataclass(obj) and not isinstance(obj, type):
-        attrs = {f.name: getattr(obj, f.name, None) for f in fields(obj)}
+        attrs = _dataclass_attributes(obj, path=path)
         return _wrap(
             _TAG_OBJECT,
             {
@@ -432,6 +432,40 @@ def _canonicalize(obj: Any, *, depth: int, path: str) -> JSONValue:
 
     # No injective encoding: refuse rather than alias (fail-closed).
     raise NonCanonicalizableError(obj, path=path)
+
+
+def _dataclass_attributes(obj: Any, *, path: str) -> dict[str, Any]:
+    """Full attribute map of a dataclass instance (campaign KERNEL).
+
+    The declared fields alone are NOT the object's state: an instance
+    can carry attributes beyond them, and the branch that read only
+    ``fields(obj)`` made those invisible. Two payments differing by an
+    added ``beneficiary`` canonicalized identically, and the private
+    -attribute refusal below was never reached on this path, so a
+    dataclass answered differently from a plain object on the very
+    question this module exists to answer (aliasing is refused, not
+    encoded away).
+
+    The map is therefore the declared fields UNION the instance
+    attributes, with the same private-state refusal as a plain object.
+    A declared field that was never assigned is refused rather than
+    encoded as ``None``, which would alias it with an explicit None.
+    """
+    attrs: dict[str, Any] = {}
+    for f in fields(obj):
+        try:
+            attrs[f.name] = getattr(obj, f.name)
+        except AttributeError as exc:
+            raise NonCanonicalizableError(
+                obj,
+                path=f"{path} (declared field {f.name!r} is unset)",
+            ) from exc
+    # vars() raises TypeError on a slotted dataclass, which cannot
+    # carry undeclared attributes anyway: the declared map is complete.
+    instance_attrs = _object_attributes(obj, path=path)
+    if instance_attrs is not None:
+        attrs.update(instance_attrs)
+    return attrs
 
 
 def _object_attributes(obj: Any, *, path: str) -> dict[str, Any] | None:

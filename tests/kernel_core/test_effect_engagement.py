@@ -244,3 +244,23 @@ def test_engagement_binds_the_authorized_effect_context() -> None:
 
     assert changed_run != base
     assert _digest() == _digest(authorized_effect_context=None)
+
+
+def test_redaction_preserves_the_sequence_type() -> None:
+    """Campaign KERNEL (LOT K1), RED-first: the redaction docstring
+    promises "no type information is lost here", but it rebuilt every
+    sequence as a list, so a tuple and a list of the same items became
+    indistinguishable BEFORE reaching the injective encoder. The
+    encoder tags them apart on purpose; the layer above must not undo
+    that, or two structurally different effects share an engagement."""
+    from arvis.kernel_core.canonicalization import canonical_hash
+    from arvis.kernel_core.syscalls.engagement import redact_for_commitment
+
+    # the encoder distinguishes them
+    assert canonical_hash(("alice",)) != canonical_hash(["alice"])
+
+    # so the redaction must too
+    as_tuple = redact_for_commitment({"recipients": ("alice",)})
+    as_list = redact_for_commitment({"recipients": ["alice"]})
+
+    assert canonical_hash(as_tuple) != canonical_hash(as_list)
