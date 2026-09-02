@@ -33,8 +33,19 @@ class ZDecisionState:
 
 @dataclass(frozen=True)
 class ZGateState:
+    """Gate slice of the Z state.
+
+    ``safety_margin`` is ``None`` when the projection certified no
+    margin this turn (DM-F3: the projection measures only dangerous
+    bounds, so absence is a designed state, not a failure). A number
+    is a CERTIFIED margin and acts at face value: 0.0 is the worst
+    certified state (DM-H7, campaign HARDEN; the previous float-only
+    field coerced absence to 0.0, making the worst state and the
+    absent state indistinguishable).
+    """
+
     verdict: str
-    safety_margin: float
+    safety_margin: float | None
     veto_intensity: float
     confirmation_required: bool
 
@@ -84,11 +95,18 @@ class QState:
 
 @dataclass(frozen=True)
 class WState:
+    """Perturbation slice.
+
+    ``projection_residual`` is ``None`` exactly when the gate margin
+    is None (no certification this turn, DM-F3/DM-H7); a number is a
+    certified residual, 1.0 being the worst.
+    """
+
     uncertainty_pressure: float
     ambiguity_pressure: float
     observation_gap: float
     external_disturbance: float
-    projection_residual: float
+    projection_residual: float | None
     llm_risk_pressure: float = 0.0
 
 

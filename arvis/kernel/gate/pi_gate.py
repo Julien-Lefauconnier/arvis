@@ -32,13 +32,19 @@ class PiBasedGate:
         # 1. HARD SAFETY (ABSTAIN)
         # =========================================
 
-        # NOTE:
-        # residual == 1.0 can mean "no certification available"
-        # → do NOT treat as hard failure (intermediate phase)
+        # DM-H7 (campaign HARDEN, audit P1-10): absence is typed, not
+        # a sentinel. residual is None exactly when the projection
+        # certified nothing this turn (DM-F3 designed absence) and
+        # contributes no pressure; a NUMBER is a certified residual
+        # and acts at face value, 1.0 (margin 0.0) being the worst.
+        # The previous float-only code excluded residual >= 0.999 as
+        # "no certification", which also switched the layer off on
+        # the worst CERTIFIED state: margin 0.0 allowed while 0.05
+        # abstained (the audit's probe).
         residual = w.projection_residual
 
         if (
-            (residual > 0.7 and residual < 0.999)
+            (residual is not None and residual > 0.7)
             or x.conflict_pressure > 0.8
             or z.dynamics.runtime_instability > 0.8
             or w.llm_risk_pressure > 0.9
@@ -48,13 +54,7 @@ class PiBasedGate:
             if w.llm_risk_pressure > 0.9:
                 reasons.append("critical_llm_risk")
 
-            # NOTE:
-            # residual == 1.0 may represent
-            # "projection uncertified / unavailable"
-            # and MUST NOT dominate runtime risk.
-            effective_residual = (
-                0.0 if w.projection_residual >= 0.999 else w.projection_residual
-            )
+            effective_residual = residual if residual is not None else 0.0
 
             return CognitiveGateIR(
                 verdict=CognitiveGateVerdictIR.ABSTAIN,
@@ -74,10 +74,10 @@ class PiBasedGate:
 
         margin = z.gate.safety_margin
 
-        # NOTE:
-        # margin == 0.0 may mean "no certification available"
-        # → do NOT treat as low margin
-        effective_low_margin = margin < 0.3 and margin > 0.0
+        # A None margin is designed absence (DM-F3): no low-margin
+        # pressure. A certified margin below 0.3 is low, 0.0 included
+        # (it normally already abstained above through its residual).
+        effective_low_margin = margin is not None and margin < 0.3
 
         if base_verdict is CognitiveGateVerdictIR.ALLOW and (
             w.uncertainty_pressure > 0.6

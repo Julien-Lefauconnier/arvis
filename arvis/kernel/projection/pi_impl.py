@@ -293,12 +293,18 @@ class PiImpl:
             margin_source = projection.margin
         else:
             margin_source = getattr(ctx, "projection_margin", getattr(ctx, "m_t", None))
-        safety_margin = self._coerce(margin_source, 0.0)
+        # DM-H7 (campaign HARDEN, audit P1-10): absence stays None, it
+        # is never coerced to 0.0. A None margin is DM-F3's designed
+        # absence (the projection measures only dangerous bounds); a
+        # certified 0.0 is the worst state and acts as such downstream.
+        safety_margin = (
+            None if margin_source is None else self._coerce(margin_source, 0.0)
+        )
 
         z_gate = ZGateState(
             verdict=verdict,
             safety_margin=safety_margin,
-            veto_intensity=1.0 - safety_margin,
+            veto_intensity=0.0 if safety_margin is None else 1.0 - safety_margin,
             confirmation_required=(verdict == "require_confirmation"),
         )
 
@@ -405,7 +411,9 @@ class PiImpl:
             ambiguity_pressure=min(1.5, uncertainty + llm_pressure),
             observation_gap=max(uncertainty, llm_risk_pressure),
             external_disturbance=min(1.5, drift + llm_pressure + llm_risk_pressure),
-            projection_residual=1.0 - safety_margin,
+            projection_residual=(
+                None if safety_margin is None else 1.0 - safety_margin
+            ),
             llm_risk_pressure=llm_risk_pressure,
         )
 
