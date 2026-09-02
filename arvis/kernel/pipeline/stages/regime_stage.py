@@ -59,13 +59,13 @@ class RegimeStage:
         regime_ctx.theoretical_regime = theoretical_regime
 
         # -----------------------------------------
-        # 1. Update switching runtime
+        # 1. Switching runtime ownership (campaign PROJ, P3)
         # -----------------------------------------
-        if (
-            switching_ctx.switching_runtime is not None
-            and regime_ctx.regime is not None
-        ):
-            try:
-                switching_ctx.switching_runtime.update(regime_ctx.regime)
-            except Exception:  # arvis-broad: fail-soft runtime probe
-                pass
+        # This stage no longer ticks the dwell clock. It used to call
+        # switching_runtime.update() here, BEFORE the gate, while
+        # runtime_stage called it again AFTER the gate on the same
+        # object: two ticks per turn, so the guard read twice the real
+        # dwell and ln(J)/tau_d was half its true value, declaring
+        # switching safe with half the dwell actually served. The
+        # single owner is runtime_stage, post-decision, so the guard
+        # reads the dwell of COMPLETED turns (the conservative end).

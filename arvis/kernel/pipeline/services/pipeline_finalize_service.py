@@ -112,6 +112,34 @@ class PipelineFinalizeService:
         execution_status = runtime.execution_status
 
         # -----------------------------------------------------
+        # DWELL CLOCK THREADING (campaign PROJ, P3)
+        # -----------------------------------------------------
+        # The outgoing opaque blob gains the switching runtime's
+        # state, written here so it reflects the turn's completed
+        # regime update (runtime_stage runs before finalize). The
+        # monitor's from_dict ignores unknown keys, so older
+        # consumers and older blobs are unaffected.
+        try:
+            core_scientific = ctx.scientific.core
+            switching_runtime = ctx.scientific.switching.switching_runtime
+            outgoing_state = core_scientific.next_scientific_state
+            if isinstance(outgoing_state, dict) and switching_runtime is not None:
+                threaded_state = {
+                    **outgoing_state,
+                    "switching": switching_runtime.to_state(),
+                }
+                core_scientific.next_scientific_state = threaded_state
+                if isinstance(getattr(ctx, "extra", None), dict):
+                    ctx.extra["scientific_state_next"] = threaded_state
+        except Exception as exc:
+            capture_pipeline_degraded_failure(
+                ctx,
+                exc,
+                component="PipelineFinalizeService",
+                message="Dwell clock threading failure",
+            )
+
+        # -----------------------------------------------------
         # OBSERVABILITY
         # -----------------------------------------------------
         try:

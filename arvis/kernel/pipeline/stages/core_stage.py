@@ -22,6 +22,7 @@ from arvis.math.lyapunov.slow_dynamics import update_slow_state
 from arvis.math.lyapunov.slow_state import SlowState
 from arvis.math.lyapunov.target_map import target_map
 from arvis.math.signals import DriftSignal, RiskSignal
+from arvis.math.switching.switching_runtime import SwitchingRuntime
 
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
@@ -89,6 +90,19 @@ class CoreStage:
         # its schema; each core_model owns its own (de)serialization.
         extra = getattr(ctx, "extra", None)
         prior_state = extra.get("scientific_state") if isinstance(extra, dict) else None
+
+        # Dwell clock across the public contract (campaign PROJ, P3):
+        # the blob may carry the previous turn's switching clock under
+        # a "switching" section. This stage is the single ingestion
+        # point of the host blob, so the restore happens here; the
+        # runtime seeded by preparation is still pristine at this
+        # point of the turn. Absent or malformed sections keep the
+        # fresh clock, the historical behavior. The core model's own
+        # from_dict ignores the extra key.
+        if isinstance(prior_state, dict):
+            restored_clock = SwitchingRuntime.from_state(prior_state.get("switching"))
+            if restored_clock is not None:
+                ctx.scientific.switching.switching_runtime = restored_clock
 
         scientific_snapshot = pipeline.core.process(bundle, prior_state)
         core_ctx.scientific_snapshot = scientific_snapshot

@@ -43,6 +43,15 @@ class DummySwitchingRuntime:
 
 
 def test_full_flow():
+    """Campaign PROJ moved the last assertion of this test.
+
+    It required regime_stage to tick the switching runtime, which
+    pinned the double-tick defect: runtime_stage ticked the same
+    object again after the gate, so tau_d counted two per turn and
+    the switching guard read twice the real dwell. The clock's single
+    owner is now runtime_stage, post-decision; this stage classifies
+    the regime and ticks nothing.
+    """
     ctx = build_test_context()
     ctx.scientific.core.drift_score = DriftSignal(0.2)
     ctx.scientific.switching.switching_runtime = DummySwitchingRuntime()
@@ -54,7 +63,7 @@ def test_full_flow():
     assert ctx.scientific.regime_state.regime == "stable"
     assert ctx.scientific.regime_state.regime_confidence == 0.9
     assert ctx.scientific.regime_state.theoretical_regime is not None
-    assert ctx.scientific.switching.switching_runtime.updated == "stable"
+    assert ctx.scientific.switching.switching_runtime.updated is None
 
 
 # ============================================================

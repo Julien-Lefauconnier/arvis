@@ -81,6 +81,10 @@ class PipelinePreparationService:
             )
 
         if switching.switching_runtime is None:
+            # A fresh clock by default. When the host threads the
+            # opaque blob, core_stage (the single ingestion point of
+            # extra["scientific_state"]) restores the previous turn's
+            # clock over this one (campaign PROJ, P3).
             switching.switching_runtime = SwitchingRuntime()
 
         # -----------------------------------------

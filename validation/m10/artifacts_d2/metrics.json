@@ -2,14 +2,13 @@
   "families": {
     "adversarial": {
       "adaptive_estimation": {
-        "availability": 0.9375,
-        "available_turns": 120,
+        "availability": 0.875,
+        "available_turns": 112,
         "band_counts": {
-          "critical": 2,
-          "hard": 118
+          "hard": 112
         },
-        "margin_mean": 0.08091760576,
-        "margin_samples": 120,
+        "margin_mean": 0.156369020625,
+        "margin_samples": 112,
         "turns": 128
       },
       "closed_loop_feedback": {
@@ -57,9 +56,9 @@
       },
       "kappa_violations": {
         "abstain_relaxed_past_confirmation": 0,
-        "margin_samples": 120,
-        "violation_rate": 0.983333333333,
-        "violations": 118
+        "margin_samples": 112,
+        "violation_rate": 1.0,
+        "violations": 112
       },
       "lyapunov_evolution": {
         "max_expansion": 0.22325,
@@ -93,8 +92,8 @@
         "pi_gate_non_allow": 0,
         "tightening_rate": 0.0,
         "transition_stages": {
-          "final_adaptive_hard_veto": 118,
-          "fusion_adaptive_hard_veto": 118,
+          "final_adaptive_hard_veto": 112,
+          "fusion_adaptive_hard_veto": 112,
           "memory_hard_block": 84,
           "projection_boundary_enforcement": 39,
           "projection_hard_block": 89
@@ -103,16 +102,15 @@
     },
     "boundary": {
       "adaptive_estimation": {
-        "availability": 0.9375,
-        "available_turns": 120,
+        "availability": 0.875,
+        "available_turns": 112,
         "band_counts": {
-          "critical": 11,
-          "hard": 102,
-          "stable": 5,
-          "warning": 2
+          "critical": 1,
+          "hard": 110,
+          "warning": 1
         },
-        "margin_mean": 0.135938288641,
-        "margin_samples": 120,
+        "margin_mean": 0.209172325706,
+        "margin_samples": 112,
         "turns": 128
       },
       "closed_loop_feedback": {
@@ -130,15 +128,15 @@
       "gate_distribution": {
         "by_family": {
           "boundary": {
-            "ABSTAIN": 0.90625,
+            "ABSTAIN": 0.9609375,
             "ALLOW": 0.0,
-            "REQUIRE_CONFIRMATION": 0.09375
+            "REQUIRE_CONFIRMATION": 0.0390625
           }
         },
         "given_contraction": {
-          "ABSTAIN": 0.865671641791,
+          "ABSTAIN": 0.970149253731,
           "ALLOW": 0.0,
-          "REQUIRE_CONFIRMATION": 0.134328358209
+          "REQUIRE_CONFIRMATION": 0.029850746269
         },
         "given_expansion": {
           "ABSTAIN": 1.0,
@@ -146,9 +144,9 @@
           "REQUIRE_CONFIRMATION": 0.0
         },
         "overall": {
-          "ABSTAIN": 0.90625,
+          "ABSTAIN": 0.9609375,
           "ALLOW": 0.0,
-          "REQUIRE_CONFIRMATION": 0.09375
+          "REQUIRE_CONFIRMATION": 0.0390625
         }
       },
       "iss_residual": {
@@ -160,9 +158,9 @@
       },
       "kappa_violations": {
         "abstain_relaxed_past_confirmation": 0,
-        "margin_samples": 120,
-        "violation_rate": 0.85,
-        "violations": 102
+        "margin_samples": 112,
+        "violation_rate": 0.982142857143,
+        "violations": 110
       },
       "lyapunov_evolution": {
         "max_expansion": 0.45075,
@@ -192,15 +190,13 @@
       },
       "projection_overrides": {
         "comparable_turns": 128,
-        "final_stricter_than_pre": 12,
+        "final_stricter_than_pre": 6,
         "pi_gate_non_allow": 0,
-        "tightening_rate": 0.09375,
+        "tightening_rate": 0.046875,
         "transition_stages": {
-          "final_adaptive_hard_veto": 102,
-          "fusion_adaptive_hard_veto": 102,
-          "local_soft_filter": 1,
+          "final_adaptive_hard_veto": 110,
+          "fusion_adaptive_hard_veto": 110,
           "memory_hard_block": 22,
-          "memory_soft_constraint": 1,
           "projection_boundary_enforcement": 70,
           "projection_hard_block": 35,
           "validity_envelope_enforcement": 1
@@ -209,16 +205,13 @@
     },
     "conflicting": {
       "adaptive_estimation": {
-        "availability": 0.9375,
-        "available_turns": 120,
+        "availability": 0.875,
+        "available_turns": 112,
         "band_counts": {
-          "critical": 3,
-          "hard": 111,
-          "stable": 2,
-          "warning": 4
+          "hard": 112
         },
-        "margin_mean": 0.088659751622,
-        "margin_samples": 120,
+        "margin_mean": 0.167040048428,
+        "margin_samples": 112,
         "turns": 128
       },
       "closed_loop_feedback": {
@@ -266,9 +259,9 @@
       },
       "kappa_violations": {
         "abstain_relaxed_past_confirmation": 0,
-        "margin_samples": 120,
-        "violation_rate": 0.925,
-        "violations": 111
+        "margin_samples": 112,
+        "violation_rate": 1.0,
+        "violations": 112
       },
       "lyapunov_evolution": {
         "max_expansion": 0.304,
@@ -302,9 +295,9 @@
         "pi_gate_non_allow": 0,
         "tightening_rate": 0.0,
         "transition_stages": {
-          "final_adaptive_hard_veto": 111,
-          "fusion_adaptive_hard_veto": 111,
-          "projection_boundary_enforcement": 11
+          "final_adaptive_hard_veto": 112,
+          "fusion_adaptive_hard_veto": 112,
+          "projection_boundary_enforcement": 8
         }
       }
     },
@@ -405,16 +398,15 @@
     },
     "long_horizon": {
       "adaptive_estimation": {
-        "availability": 0.983333333333,
-        "available_turns": 472,
+        "availability": 0.966666666667,
+        "available_turns": 464,
         "band_counts": {
-          "critical": 10,
-          "hard": 454,
-          "stable": 7,
-          "warning": 1
+          "critical": 7,
+          "hard": 452,
+          "stable": 5
         },
-        "margin_mean": 0.089870325245,
-        "margin_samples": 472,
+        "margin_mean": 0.116639709618,
+        "margin_samples": 464,
         "turns": 480
       },
       "closed_loop_feedback": {
@@ -432,15 +424,15 @@
       "gate_distribution": {
         "by_family": {
           "long_horizon": {
-            "ABSTAIN": 0.964583333333,
-            "ALLOW": 0.004166666667,
-            "REQUIRE_CONFIRMATION": 0.03125
+            "ABSTAIN": 0.96875,
+            "ALLOW": 0.002083333333,
+            "REQUIRE_CONFIRMATION": 0.029166666667
           }
         },
         "given_contraction": {
-          "ABSTAIN": 0.958333333333,
-          "ALLOW": 0.009259259259,
-          "REQUIRE_CONFIRMATION": 0.032407407407
+          "ABSTAIN": 0.967592592593,
+          "ALLOW": 0.00462962963,
+          "REQUIRE_CONFIRMATION": 0.027777777778
         },
         "given_expansion": {
           "ABSTAIN": 1.0,
@@ -448,9 +440,9 @@
           "REQUIRE_CONFIRMATION": 0.0
         },
         "overall": {
-          "ABSTAIN": 0.964583333333,
-          "ALLOW": 0.004166666667,
-          "REQUIRE_CONFIRMATION": 0.03125
+          "ABSTAIN": 0.96875,
+          "ALLOW": 0.002083333333,
+          "REQUIRE_CONFIRMATION": 0.029166666667
         }
       },
       "iss_residual": {
@@ -462,9 +454,9 @@
       },
       "kappa_violations": {
         "abstain_relaxed_past_confirmation": 0,
-        "margin_samples": 472,
-        "violation_rate": 0.96186440678,
-        "violations": 454
+        "margin_samples": 464,
+        "violation_rate": 0.974137931034,
+        "violations": 452
       },
       "lyapunov_evolution": {
         "max_expansion": 0.33325,
@@ -494,30 +486,30 @@
       },
       "projection_overrides": {
         "comparable_turns": 480,
-        "final_stricter_than_pre": 6,
+        "final_stricter_than_pre": 7,
         "pi_gate_non_allow": 0,
-        "tightening_rate": 0.0125,
+        "tightening_rate": 0.014583333333,
         "transition_stages": {
-          "final_adaptive_hard_veto": 454,
-          "fusion_adaptive_hard_veto": 454,
-          "local_soft_filter": 2,
+          "final_adaptive_hard_veto": 452,
+          "fusion_adaptive_hard_veto": 452,
+          "local_soft_filter": 4,
           "memory_hard_block": 64,
-          "projection_boundary_enforcement": 160
+          "projection_boundary_enforcement": 152
         }
       }
     },
     "nominal": {
       "adaptive_estimation": {
-        "availability": 0.958333333333,
-        "available_turns": 184,
+        "availability": 0.916666666667,
+        "available_turns": 176,
         "band_counts": {
-          "critical": 9,
-          "hard": 165,
-          "stable": 7,
-          "warning": 3
+          "critical": 4,
+          "hard": 169,
+          "stable": 2,
+          "warning": 1
         },
-        "margin_mean": 0.177996859762,
-        "margin_samples": 184,
+        "margin_mean": 0.22448773486,
+        "margin_samples": 176,
         "turns": 192
       },
       "closed_loop_feedback": {
@@ -535,15 +527,15 @@
       "gate_distribution": {
         "by_family": {
           "nominal": {
-            "ABSTAIN": 0.885416666667,
-            "ALLOW": 0.020833333333,
-            "REQUIRE_CONFIRMATION": 0.09375
+            "ABSTAIN": 0.916666666667,
+            "ALLOW": 0.015625,
+            "REQUIRE_CONFIRMATION": 0.067708333333
           }
         },
         "given_contraction": {
-          "ABSTAIN": 0.846153846154,
-          "ALLOW": 0.043956043956,
-          "REQUIRE_CONFIRMATION": 0.10989010989
+          "ABSTAIN": 0.912087912088,
+          "ALLOW": 0.032967032967,
+          "REQUIRE_CONFIRMATION": 0.054945054945
         },
         "given_expansion": {
           "ABSTAIN": 1.0,
@@ -551,9 +543,9 @@
           "REQUIRE_CONFIRMATION": 0.0
         },
         "overall": {
-          "ABSTAIN": 0.885416666667,
-          "ALLOW": 0.020833333333,
-          "REQUIRE_CONFIRMATION": 0.09375
+          "ABSTAIN": 0.916666666667,
+          "ALLOW": 0.015625,
+          "REQUIRE_CONFIRMATION": 0.067708333333
         }
       },
       "iss_residual": {
@@ -565,9 +557,9 @@
       },
       "kappa_violations": {
         "abstain_relaxed_past_confirmation": 0,
-        "margin_samples": 184,
-        "violation_rate": 0.896739130435,
-        "violations": 165
+        "margin_samples": 176,
+        "violation_rate": 0.960227272727,
+        "violations": 169
       },
       "lyapunov_evolution": {
         "max_expansion": 0.37075,
@@ -597,28 +589,26 @@
       },
       "projection_overrides": {
         "comparable_turns": 192,
-        "final_stricter_than_pre": 3,
+        "final_stricter_than_pre": 1,
         "pi_gate_non_allow": 0,
-        "tightening_rate": 0.015625,
+        "tightening_rate": 0.005208333333,
         "transition_stages": {
-          "final_adaptive_hard_veto": 165,
-          "fusion_adaptive_hard_veto": 165,
-          "local_soft_filter": 3
+          "final_adaptive_hard_veto": 169,
+          "fusion_adaptive_hard_veto": 169,
+          "local_soft_filter": 1
         }
       }
     },
     "nominal_feedback": {
       "adaptive_estimation": {
-        "availability": 0.958333333333,
-        "available_turns": 184,
+        "availability": 0.916666666667,
+        "available_turns": 176,
         "band_counts": {
-          "critical": 66,
-          "hard": 16,
-          "stable": 25,
-          "warning": 77
+          "critical": 61,
+          "hard": 115
         },
-        "margin_mean": -0.016262427289,
-        "margin_samples": 184,
+        "margin_mean": 0.040707084953,
+        "margin_samples": 176,
         "turns": 192
       },
       "closed_loop_feedback": {
@@ -636,15 +626,15 @@
       "gate_distribution": {
         "by_family": {
           "nominal_feedback": {
-            "ABSTAIN": 0.109375,
+            "ABSTAIN": 0.625,
             "ALLOW": 0.0,
-            "REQUIRE_CONFIRMATION": 0.890625
+            "REQUIRE_CONFIRMATION": 0.375
           }
         },
         "given_contraction": {
-          "ABSTAIN": 0.086956521739,
+          "ABSTAIN": 0.625,
           "ALLOW": 0.0,
-          "REQUIRE_CONFIRMATION": 0.913043478261
+          "REQUIRE_CONFIRMATION": 0.375
         },
         "given_expansion": {
           "ABSTAIN": 0.0,
@@ -652,9 +642,9 @@
           "REQUIRE_CONFIRMATION": 0.0
         },
         "overall": {
-          "ABSTAIN": 0.109375,
+          "ABSTAIN": 0.625,
           "ALLOW": 0.0,
-          "REQUIRE_CONFIRMATION": 0.890625
+          "REQUIRE_CONFIRMATION": 0.375
         }
       },
       "iss_residual": {
@@ -666,9 +656,9 @@
       },
       "kappa_violations": {
         "abstain_relaxed_past_confirmation": 0,
-        "margin_samples": 184,
-        "violation_rate": 0.086956521739,
-        "violations": 16
+        "margin_samples": 176,
+        "violation_rate": 0.653409090909,
+        "violations": 115
       },
       "lyapunov_evolution": {
         "max_expansion": -1.05e-05,
@@ -698,25 +688,25 @@
       },
       "projection_overrides": {
         "comparable_turns": 192,
-        "final_stricter_than_pre": 102,
+        "final_stricter_than_pre": 8,
         "pi_gate_non_allow": 0,
-        "tightening_rate": 0.53125,
+        "tightening_rate": 0.041666666667,
         "transition_stages": {
-          "final_adaptive_hard_veto": 16,
-          "fusion_adaptive_hard_veto": 16,
-          "local_soft_filter": 102
+          "final_adaptive_hard_veto": 115,
+          "fusion_adaptive_hard_veto": 115,
+          "local_soft_filter": 8
         }
       }
     },
     "switching_stress": {
       "adaptive_estimation": {
-        "availability": 0.958333333333,
-        "available_turns": 184,
+        "availability": 0.916666666667,
+        "available_turns": 176,
         "band_counts": {
-          "hard": 184
+          "hard": 176
         },
-        "margin_mean": 0.326986660477,
-        "margin_samples": 184,
+        "margin_mean": 0.362523681166,
+        "margin_samples": 176,
         "turns": 192
       },
       "closed_loop_feedback": {
@@ -764,9 +754,9 @@
       },
       "kappa_violations": {
         "abstain_relaxed_past_confirmation": 0,
-        "margin_samples": 184,
+        "margin_samples": 176,
         "violation_rate": 1.0,
-        "violations": 184
+        "violations": 176
       },
       "lyapunov_evolution": {
         "max_expansion": 0.5535,
@@ -800,25 +790,25 @@
         "pi_gate_non_allow": 0,
         "tightening_rate": 0.0,
         "transition_stages": {
-          "final_adaptive_hard_veto": 184,
-          "fusion_adaptive_hard_veto": 184,
-          "projection_boundary_enforcement": 187
+          "final_adaptive_hard_veto": 176,
+          "fusion_adaptive_hard_veto": 176,
+          "projection_boundary_enforcement": 178
         }
       }
     }
   },
   "overall": {
     "adaptive_estimation": {
-      "availability": 0.848039215686,
-      "available_turns": 1384,
+      "availability": 0.813725490196,
+      "available_turns": 1328,
       "band_counts": {
-        "critical": 101,
-        "hard": 1150,
-        "stable": 46,
-        "warning": 87
+        "critical": 73,
+        "hard": 1246,
+        "stable": 7,
+        "warning": 2
       },
-      "margin_mean": 0.122113693744,
-      "margin_samples": 1384,
+      "margin_mean": 0.168861745217,
+      "margin_samples": 1328,
       "turns": 1632
     },
     "closed_loop_feedback": {
@@ -841,9 +831,9 @@
           "REQUIRE_CONFIRMATION": 0.0
         },
         "boundary": {
-          "ABSTAIN": 0.90625,
+          "ABSTAIN": 0.9609375,
           "ALLOW": 0.0,
-          "REQUIRE_CONFIRMATION": 0.09375
+          "REQUIRE_CONFIRMATION": 0.0390625
         },
         "conflicting": {
           "ABSTAIN": 1.0,
@@ -856,19 +846,19 @@
           "REQUIRE_CONFIRMATION": 0.651041666667
         },
         "long_horizon": {
-          "ABSTAIN": 0.964583333333,
-          "ALLOW": 0.004166666667,
-          "REQUIRE_CONFIRMATION": 0.03125
+          "ABSTAIN": 0.96875,
+          "ALLOW": 0.002083333333,
+          "REQUIRE_CONFIRMATION": 0.029166666667
         },
         "nominal": {
-          "ABSTAIN": 0.885416666667,
-          "ALLOW": 0.020833333333,
-          "REQUIRE_CONFIRMATION": 0.09375
+          "ABSTAIN": 0.916666666667,
+          "ALLOW": 0.015625,
+          "REQUIRE_CONFIRMATION": 0.067708333333
         },
         "nominal_feedback": {
-          "ABSTAIN": 0.109375,
+          "ABSTAIN": 0.625,
           "ALLOW": 0.0,
-          "REQUIRE_CONFIRMATION": 0.890625
+          "REQUIRE_CONFIRMATION": 0.375
         },
         "switching_stress": {
           "ABSTAIN": 0.958333333333,
@@ -877,9 +867,9 @@
         }
       },
       "given_contraction": {
-        "ABSTAIN": 0.73924380704,
-        "ALLOW": 0.007822685789,
-        "REQUIRE_CONFIRMATION": 0.252933507171
+        "ABSTAIN": 0.887874837027,
+        "ALLOW": 0.005215123859,
+        "REQUIRE_CONFIRMATION": 0.106910039113
       },
       "given_expansion": {
         "ABSTAIN": 1.0,
@@ -887,9 +877,9 @@
         "REQUIRE_CONFIRMATION": 0.0
       },
       "overall": {
-        "ABSTAIN": 0.782475490196,
-        "ALLOW": 0.003676470588,
-        "REQUIRE_CONFIRMATION": 0.213848039216
+        "ABSTAIN": 0.852328431373,
+        "ALLOW": 0.002450980392,
+        "REQUIRE_CONFIRMATION": 0.145220588235
       }
     },
     "iss_residual": {
@@ -901,9 +891,9 @@
     },
     "kappa_violations": {
       "abstain_relaxed_past_confirmation": 0,
-      "margin_samples": 1384,
-      "violation_rate": 0.830924855491,
-      "violations": 1150
+      "margin_samples": 1328,
+      "violation_rate": 0.938253012048,
+      "violations": 1246
     },
     "lyapunov_evolution": {
       "max_expansion": 0.5535,
@@ -933,18 +923,17 @@
     },
     "projection_overrides": {
       "comparable_turns": 1632,
-      "final_stricter_than_pre": 190,
+      "final_stricter_than_pre": 89,
       "pi_gate_non_allow": 0,
-      "tightening_rate": 0.116421568627,
+      "tightening_rate": 0.054534313725,
       "transition_stages": {
-        "final_adaptive_hard_veto": 1150,
-        "fusion_adaptive_hard_veto": 1150,
+        "final_adaptive_hard_veto": 1246,
+        "fusion_adaptive_hard_veto": 1246,
         "input_risk_gate": 67,
         "input_risk_relax_denied": 60,
-        "local_soft_filter": 108,
+        "local_soft_filter": 13,
         "memory_hard_block": 170,
-        "memory_soft_constraint": 1,
-        "projection_boundary_enforcement": 467,
+        "projection_boundary_enforcement": 447,
         "projection_hard_block": 124,
         "validity_envelope_enforcement": 1
       }

@@ -10,7 +10,7 @@
   },
   "adaptive_estimation.estimator_availability": {
     "comparator": ">=",
-    "observed": 0.848039215686,
+    "observed": 0.813725490196,
     "passed": true,
     "path": "overall.adaptive_estimation.availability",
     "threshold": 0.5
