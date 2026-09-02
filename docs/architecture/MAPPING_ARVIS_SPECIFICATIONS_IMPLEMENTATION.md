@@ -88,8 +88,12 @@ $W_q(x,z) = V_q(x) + \lambda \|z - T(x)\|^2$
 `CompositeLyapunov.W`, `CompositeLyapunov.delta_W`
 
 **Status**  
-✔ Structurally equivalent  
-✔ Same decomposition (fast + slow components)
+Implemented in `CompositeLyapunov`, with one deliberate divergence on
+the decisive path: the gate consumes the FAST energy V alone on
+complete quadruples (the measured full-W variant relaxed verdicts and
+broke the registered ISS bound; kept as the v0 design by decision
+DM-C1, M10 section 10.5, full wiring re-posed at DM4). W and delta_W
+are computed and published as observability.
 
 ### 2.2 Lyapunov Increment
 
@@ -106,7 +110,7 @@ Computed under partial observability and fallback-compatible. Introduces robust 
 
 `ctx.scientific.composite.delta_w_history`  
 Used for:
-- empirical stability monitoring (M10 protocol, planned; not yet executed)
+- empirical stability monitoring (M10, six campaigns executed; sections 10-16)
 - global stability guards
 
 ## 3. Switching Stability (Result ↔ Runtime)
@@ -174,7 +178,12 @@ $$
 
 ### 5.5 Interpretation
 
-The system is no longer heuristic: it is a **lattice-based decision system** with guaranteed properties of monotonicity, non-relaxation, and absorption of unsafe decisions.
+The decision layer is a **lattice-based composition** whose
+monotonicity and non-relaxation are pinned by tests (the trace
+grammar and the sanctioned-relaxation allowlist, campaign GATE-SEM).
+The inputs feeding that lattice remain partly heuristic (regime
+estimation, signal coercions); the lattice constrains how verdicts
+compose, not where the signals come from.
 
 ## 6. Dual Stability Structure
 
@@ -229,10 +238,16 @@ All guarantees apply only within the valid operating region $\mathcal{O}_{\text{
 
 ## 11. Theoretical Coverage vs System Scope
 
-**Fully Covered**
-- Lyapunov stability
-- Hybrid switching constraints
-- Practical stability (M8)
+**Covered with stated limits** (see M13 and VERSIONING for the
+axes not evaluated)
+- Lyapunov monitoring on the projected fast energy (the composite
+  full-W wiring is deferred, DM-C1/DM4)
+- Hybrid switching: measured and disclosed always
+  (`switching_safe_measured`); enforced in the enforce posture; the
+  default posture is monitor-only, and ALLOW requires the live
+  MEASURED adaptive margin instead (DM-G1/DM-G2bis)
+- Practical stability (M8): theory-level; the noise and mode axes
+  are not evaluated at runtime
 
 **Partially Formalized**
 - Decision algebra (M12)
@@ -263,7 +278,7 @@ The ARVIS implementation:
 -  preserves the theoretical stability core
 - ✔ introduces a decision lattice enforcing safety constraints
 - ✔ integrates energy and structural stability
-- prepares runtime empirical validation (M10 protocol, planned; the projection layer itself is validated offline per the M3 appendix)
+- carries runtime empirical validation (M10, six executed campaigns on two published corpora; the projection layer additionally holds offline Phase A evidence per the M3 appendix)
 
 **Final Insight**
 

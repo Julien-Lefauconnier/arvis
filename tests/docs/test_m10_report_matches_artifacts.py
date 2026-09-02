@@ -22,8 +22,11 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-M10 = ROOT / "docs" / "math" / (
-    "M10_empirical_stability_validation_and_runtime_validation.md"
+M10 = (
+    ROOT
+    / "docs"
+    / "math"
+    / ("M10_empirical_stability_validation_and_runtime_validation.md")
 )
 PATH_TO_ALLOW = ROOT / "docs" / "PATH_TO_ALLOW.md"
 ARTIFACTS = {
@@ -37,9 +40,7 @@ def _counts(corpus: str) -> dict[str, int]:
     overall = metrics["overall"]
     turns = int(overall["adaptive_estimation"]["turns"])
     rates = overall["gate_distribution"]["overall"]
-    counts = {
-        verdict: round(float(rate) * turns) for verdict, rate in rates.items()
-    }
+    counts = {verdict: round(float(rate) * turns) for verdict, rate in rates.items()}
     counts["turns"] = turns
     return counts
 
@@ -94,7 +95,9 @@ def test_path_to_allow_table_matches_the_artifacts() -> None:
     d1 = _counts("d1")
     d2 = _counts("d2")
 
-    allow = re.search(r"\| ALLOW \| (\d+) \(([\d.]+)%\) \| (\d+) \(([\d.]+)%\) \|", text)
+    allow = re.search(
+        r"\| ALLOW \| (\d+) \(([\d.]+)%\) \| (\d+) \(([\d.]+)%\) \|", text
+    )
     assert allow is not None, "PATH_TO_ALLOW ALLOW row not found"
     assert int(allow.group(1)) == d1["ALLOW"]
     assert int(allow.group(3)) == d2["ALLOW"]

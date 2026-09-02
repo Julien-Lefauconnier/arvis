@@ -928,19 +928,30 @@ $$
 W_q(x,z) = V_q(x) + \lambda \|z - T(x)\|^2
 $$
 
-2. It enforces a contraction condition:
+2. It monitors a contraction condition per step:
 
 $$
 W_{t+1} \le (1 - \kappa_{eff}) W_t + C
 $$
 
-3. It enforces the switching condition:
+3. It **measures the switching condition on every turn and always
+discloses the measurement**:
 
 $$
 \log J / \tau_d + \log(1 - \kappa_{eff}) < 0
 $$
 
-where \( J \) denotes the Lyapunov comparability ratio across regimes.
+where \( J \) denotes the Lyapunov comparability ratio across
+regimes. Enforcement postures may differ: an implementation MAY run
+the switching axis monitor-only by default, provided (a) the raw
+measured value is always published beside any posture-effective
+value (in the reference implementation:
+`switching_safe_measured` on the validity envelope, decision
+DM-G2), (b) an enforcing posture exists (`enforce`), and (c) a
+positive ALLOW verdict additionally requires a live MEASURED
+adaptive margin below zero, computed with the empirical contraction
+factor on a floored dwell (decisions DM-G1 and DM-G2bis): an empty
+dwell clock refuses, never silently passes.
 
 4. It guarantees bounded disturbance handling.
 
@@ -949,6 +960,28 @@ where \( J \) denotes the Lyapunov comparability ratio across regimes.
 Extensions beyond this core are permitted but **must not violate** these conditions.
 
 Implementations **MUST** expose sufficient observability to verify these conditions at runtime or through testing.
+
+### Reference-implementation disclosures (2026-09-02)
+
+Read with `docs/architecture/MAPPING_ARVIS_SPECIFICATIONS_IMPLEMENTATION.md`
+and the M10 report; the reference implementation deliberately
+diverges from this document in three places, each recorded as a
+decision rather than silently:
+
+- **The slow law is off by default.** The z-dynamics of this
+  document exist behind `use_paper_slow_dynamics`, disabled; the
+  default slow state comes from the reflexive layer or zero. The
+  composite mismatch term is therefore computed against that state,
+  not the paper's filter.
+- **The decisive energy is the fast V.** On complete state
+  quadruples the gate consumes V alone; the full composite W is
+  computed and published as observability (decision DM-C1; measured
+  full wiring re-posed at DM4).
+- **The dwell time is a proxy.** `dwell_time()` returns the steps
+  since the last switch divided by the total switch count once any
+  switch occurred; that shrinks with switch count, which makes the
+  T1 reading MORE conservative under frequent switching, not less.
+  It is not the average dwell of the hybrid-systems literature.
 
 Any violation of the above conditions invalidates ARVIS compliance.
 

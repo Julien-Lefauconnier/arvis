@@ -20,7 +20,7 @@ It enforces scientific honesty by defining the **non-claims** as rigorously as t
 | Layer     | Role                                      | Nature                     |
 |-----------|-------------------------------------------|----------------------------|
 | M0-M9     | Formal system definition + core results  | Conditional results and proof skeletons |
-| M10       | Empirical validation protocol             | Protocol, planned (not yet executed) |
+| M10       | Empirical validation protocol             | Protocol plus six executed campaign reports (M10 sections 10-15) |
 | M11-M12   | Projection-control operator, decision lattice | Conditional results and proof skeletons |
 | M13       | Limits, non-claims & open problems        | Critical boundary analysis (this document) |
 
@@ -205,10 +205,11 @@ V_t = \mathrm{valid} \quad \not\Rightarrow \quad \mathrm{absolute\ safety}
 
 ### 11.1 Dataset Dependence
 
-The M10 campaign has not been executed: it is a pre-registered
-protocol. Every metric it will collect depends on the finite corpus
-$\mathcal{D}$ that the protocol requires to be constructed, versioned
-and published.
+Six M10 campaigns have been executed (MATH-B through GATE-SEM,
+2026-09; M10 sections 10 through 15, reading rules in section 16) on
+two published synthetic corpora, D-1.0 and D-2.0. Every collected
+metric depends on those finite corpora, and the limits below apply
+to them in full: they are synthetic, engineered, and small.
 
 **Limitation**  
 - incomplete coverage possible,
@@ -256,8 +257,10 @@ ARVIS is:
 
 > a **bounded-domain**, **Lyapunov-grounded**, **adaptive** cognitive operating system  
 > with **provable practical stability** (conditional),  
-> a **pre-registered empirical runtime validation protocol** (M10, planned;
-> the projection layer carries offline Phase A evidence per the M3 appendix),  
+> a **pre-registered and executed empirical runtime validation protocol**
+> (M10, six campaigns on two published corpora, one registered criterion
+> reported failed; the projection layer carries offline Phase A evidence
+> per the M3 appendix),  
 > and **explicitly characterized limits and failure modes**.
 
 ## 16. Scientific Positioning
@@ -292,9 +295,12 @@ What moved since this document was first written:
   quadratic bounds belong to the quadratic family variant.
 - The empirical contraction factor (1 - W_next/W_prev, with divergence
   accounting) is estimated at runtime and is DISTINCT from A12's
-  theoretical kappa_eff, whose constants (alpha, L_T) remain declared
-  assumptions, not measurements. This is the sharpest open problem:
-  measuring or bounding alpha and L_T on the projected dynamics.
+  theoretical kappa_eff. The MATH-B campaign MEASURED alpha (median
+  0.348) and L_T (p99 0.360) on the corpora, report-only by decision
+  DM-B1: the runtime constants remain the declared assumptions, and
+  wiring measured constants into runtime defaults is deferred to DM4.
+  The sharpest open problem is therefore no longer measuring the
+  constants but adopting the measurements.
 - The gate enforces refusal-first ordering, a worst-axis refusal at
   saturation, monotone strictness composition, and a recovery
   relaxation thresholded (1e-3), bounded by the collapse threshold and

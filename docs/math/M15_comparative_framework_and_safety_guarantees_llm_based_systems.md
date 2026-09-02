@@ -164,7 +164,7 @@ $$
 
 **Definition**:
 ```math
-G : \mathcal{D} \mapsto \{\text{ALLOW}, \text{CONFIRM}, \text{ABSTAIN}\}
+G : \mathcal{D} \mapsto \{\text{ALLOW}, \text{REQUIRE\_CONFIRMATION}, \text{ABSTAIN}\}
 ```
 
 **Safety guarantee** (M6):  
@@ -216,21 +216,27 @@ W(t) \leq C \, e^{-\beta t} \, W(0) + \Gamma(\|w\|) + r
 - can be gamed.
 
 **ARVIS Safety**:
-- mathematical,
+- mathematical in form,
 - invariant-based,
-- verifiable at runtime,
+- measured and auditable at runtime (the M10 campaigns; the
+  guarantees themselves remain conditional, M13),
 - independent of task reward or preference data.
 
 **Key insight**  
 **Alignment ≠ Stability**  
-ARVIS provides **stability guarantees** even if alignment fails.
+ARVIS addresses the STABILITY axis, which is orthogonal to
+alignment: it bounds the dynamics of the governed decision loop, not
+the content a model produces. It is a complement to alignment work,
+never a substitute for it, and an aligned-looking system can still
+be refused for instability just as an unstable one cannot be saved
+by alignment.
 
 ## 11. Failure Mode Comparison
 
 | System | Typical failures                              | ARVIS modeling / mitigation                  |
 |--------|-----------------------------------------------|----------------------------------------------|
 | RL     | Reward hacking, divergence, instability       | Not applicable (ARVIS is not reward-driven)  |
-| LLM    | Hallucination, unsafe output, incoherence     | Gate blocks + W(t) bounds                    |
+| LLM    | Hallucination, unsafe output, incoherence     | OUT OF SCOPE for content (ARVIS makes no claim about what a model says, see VERSIONING); the gate bounds the decision DYNAMICS around the model |
 | ARVIS  | Domain violation, perturbation overflow, estimator error | Explicitly characterized (M13)               |
 
 ## 12. Theoretical Guarantee Summary (ARVIS on LLM Systems)
@@ -257,7 +263,7 @@ ARVIS provides **stability guarantees** even if alignment fails.
 
 ARVIS introduces:
 
-> the first **Lyapunov-stable dynamical framework** specifically designed for LLM-based cognitive systems
+> a **Lyapunov-grounded dynamical framework** designed for LLM-based cognitive systems (priority claims are for reviewers to judge, not this document to assert)
 
 ## 15. Positioning vs Existing AI Safety Work
 

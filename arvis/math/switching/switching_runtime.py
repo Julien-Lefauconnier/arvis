@@ -71,14 +71,17 @@ class SwitchingRuntime:
     # Dwell-time (paper alignment)
     # -----------------------------------------
     def dwell_time(self) -> float:
-        """
-        Average dwell-time proxy.
+        """Conservative dwell-time proxy (NOT the literature's average
+        dwell).
 
-        If no switch occurred:
-            return time spent in current regime.
-
-        Otherwise:
-            return average steps between switches.
+        No switch yet: the steps spent in the current regime. After
+        any switch: steps since the last switch divided by the total
+        switch count, which SHRINKS as switches accumulate. A smaller
+        value makes the T1 reading harder to satisfy, so frequent
+        switching reads as less safe, never more; the trade-off is
+        that a long-stable system that switched often in the past is
+        under-credited. Documented in the core specification's
+        reference-implementation disclosures (campaign HONEST-DOCS).
         """
         if self.total_switches == 0:
             return float(self.steps_since_switch)
