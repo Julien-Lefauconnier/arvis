@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from hashlib import sha256
-from json import dumps
 from typing import Any
 
 from arvis.ir.decision import (
@@ -14,10 +12,15 @@ from arvis.ir.decision import (
     CognitiveKnowledgeIR,
     CognitiveUncertaintyIR,
 )
+from arvis.ir.serialization.canonical_json import canonical_json_hash
 
 
 def _hash(payload: dict[str, Any]) -> str:
-    return sha256(dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
+    # DM-I2: the id mint uses the shared canonical JSON instead of a
+    # private parameter set (default separators plus a silent
+    # default=str coercion). The payload is built from strings only,
+    # so the coercion was dead weight hiding future type drift.
+    return canonical_json_hash(payload)
 
 
 def _string_value(value: object | None, default: str = "") -> str:

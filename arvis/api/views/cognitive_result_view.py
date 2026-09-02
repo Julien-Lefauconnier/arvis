@@ -31,6 +31,7 @@ from arvis.api.version import API_VERSION, api_fingerprint
 from arvis.api.views.decision_status import DecisionStatus
 from arvis.cognition.state.cognitive_state import CognitiveState
 from arvis.errors.base import ArvisSecurityError
+from arvis.ir.serialization.canonical_json import canonical_json_bytes
 from arvis.reflexive.snapshot.reflexive_snapshot import ReflexiveSnapshot
 from arvis.signals.signal_journal import SignalJournal
 
@@ -120,13 +121,9 @@ class CognitiveResultView:
         commitment_reason: str | None = None
 
         try:
-            ir_bytes = json.dumps(
-                ir_payload,
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=True,
-                allow_nan=False,
-            ).encode("utf-8")
+            # DM-I2: the canonical bytes come from the single helper,
+            # so the public hash_ir reproduces this digest verbatim.
+            ir_bytes = canonical_json_bytes(ir_payload)
             ir_hash = sha256(ir_bytes).hexdigest()
         except (TypeError, ValueError):
             ir_hash = None

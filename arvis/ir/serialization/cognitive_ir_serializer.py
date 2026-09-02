@@ -78,10 +78,13 @@ class CognitiveIRSerializer:
     def to_json(cls, ir: Any) -> str:
         canonical = cls.to_canonical_dict(ir)
 
+        # DM-I2: same JSON parameters as the shared canonical helper
+        # (the dict is already canonically ordered by canonicalize(),
+        # float rounding above stays this serializer's own contract).
         return json.dumps(
             canonical,
             separators=(",", ":"),
-            ensure_ascii=False,
+            ensure_ascii=True,
             allow_nan=False,
         )
 

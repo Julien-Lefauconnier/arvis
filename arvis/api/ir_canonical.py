@@ -2,31 +2,33 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from typing import Any
+
+from arvis.ir.serialization.canonical_json import (
+    canonical_json,
+    canonical_json_hash,
+)
 
 
 def canonicalize_ir(ir: dict[str, Any]) -> str:
-    """
-    Canonical JSON serialization for ARVIS IR.
+    """Canonical JSON serialization for ARVIS IR.
 
-    Guarantees:
-    - sorted keys
-    - stable separators
-    - UTF-8 safe
+    Campaign INTEGRITY (DM-I2): backed by the single canonical JSON
+    parameter set (sorted keys, compact separators, ascii-escaped,
+    non-finite floats refused), so this public helper produces exactly
+    the bytes the result view commits. Before the campaign it
+    serialized with ``ensure_ascii=False`` and accepted NaN, so the
+    exported tool could not reproduce ``CognitiveResultView.ir_hash``
+    on any non-ASCII payload.
     """
-    return json.dumps(
-        ir,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-    )
+    return canonical_json(ir)
 
 
 def hash_ir(ir: dict[str, Any]) -> str:
+    """Stable SHA-256 hash of the canonical IR.
+
+    Reproduces both digests a result carries: ``view.ir_hash`` (over
+    the detached IR payload) and ``ir["meta"]["canonical_hash"]``
+    (over the IR without that field).
     """
-    Stable SHA-256 hash of canonical IR.
-    """
-    payload = canonicalize_ir(ir).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
+    return canonical_json_hash(ir)
