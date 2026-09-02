@@ -104,10 +104,28 @@ def compute_gate_kernel(inputs: GateKernelInputs) -> GateKernelResult:
     # Minimal local stability fallback (acceptance)
     # -------------------------------------------------
     # Compliance YAML scenarios may inject a certified local delta_w
-    # without full Lyapunov objects. With every refusal condition
-    # clear, an explicitly stable system with a strictly decreasing
-    # certified delta earns a local ALLOW pre-verdict.
-    elif inputs.stable is True and inputs.delta_w is not None and inputs.delta_w < 0:
+    # WITHOUT full Lyapunov objects; that absence (cur_lyap is None)
+    # is what identifies them. With every refusal condition clear, an
+    # explicitly stable system with a real certified decrease (beyond
+    # the recovery noise floor) earns a local ALLOW pre-verdict.
+    #
+    # Campaign GATE-SEM (DM-G3, audit P0-2): this branch used to fire
+    # on ANY stable turn with a negative delta. On the live path
+    # ``stable`` is literally ``delta_w <= 0``, so every contracting
+    # turn short-circuited ``lyapunov_gate`` and neither the
+    # ``abstain_threshold`` (V >= 0.8) nor the DM3 worst-axis refusal
+    # ever executed on real traffic: a state with its risk axis
+    # saturated at 1.0 earned ALLOW, and a decrease of -1e-18
+    # qualified. The branch is now reserved for the injected-scalar
+    # case its own comment always described, with the shared noise
+    # floor applied; every turn carrying a Lyapunov quadruple goes
+    # through the gate.
+    elif (
+        inputs.cur_lyap is None
+        and inputs.stable is True
+        and inputs.delta_w is not None
+        and inputs.delta_w <= -RECOVERY_MIN_IMPROVEMENT
+    ):
         pre_verdict = LyapunovVerdict.ALLOW
 
     elif inputs.cur_lyap is None:
