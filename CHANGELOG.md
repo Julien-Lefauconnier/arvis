@@ -9,6 +9,45 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Fixed
+
+- Campaign GATE-SEM: the integral audit's two semantic blockers. The
+  adaptive stability layer failed OPEN on an empty dwell clock: the
+  margin computation raised on `tau_d <= 0`, the gate stage
+  swallowed the exception, and every veto treated the absent layer
+  as no constraint, so the first threaded turn of a trajectory (the
+  switching condition violated by six orders of magnitude) was the
+  easiest turn to certify. 8 of 13 D-1.0 and 13 of 15 D-2.0 final
+  ALLOW sat on that hole, including all 8 `nominal_feedback` ALLOW
+  the SEUIL entry below celebrates; they are withdrawn. The margin
+  now computes on the shared dwell floor and an empty clock vetoes
+  (DM-G1); a genuinely absent layer floors ALLOW on any turn
+  carrying both energies (`adaptive_unavailable`, promoted to a
+  normative reason code); the validity envelope refuses to certify
+  without the layer and exports `switching_safe_measured` beside the
+  posture-effective value (DM-G2). Separately, the gate kernel's
+  acceptance shortcut pre-empted `lyapunov_gate` on every live
+  contracting turn (`stable` is literally `delta_w <= 0` there), so
+  the mean-energy and DM3 worst-axis refusals never ran on real
+  traffic: a state with its risk axis saturated at 1.0 earned a
+  pre-verdict ALLOW. The shortcut is reserved for the injected
+  scalar case it always described (DM-G3), and the stage-side
+  recovery detector applies the kernel's noise floor so -1e-18 can
+  no longer feed the sanctioned relaxation (DM-G4). Republished:
+  D-1.0 5 ALLOW, D-2.0 4, judgments unchanged (11 of 12, 12 of 12),
+  no verdict relaxed anywhere, base ABSTAIN preserved bit for bit.
+  M10 section 15.
+
+- The verdict transition trace recorded transitions that never
+  happened: 431 phantom `ABSTAIN -> REQUIRE_CONFIRMATION` boundary
+  entries per corpus plus thousands of no-op veto entries, about 96
+  per cent of the published audit trail. Every record site is
+  guarded to real changes; denial events keep their explicit
+  `_denied` records; the trace grammar is pinned (no-op entries only
+  from event stages, relaxation entries only from the sanctioned
+  stages). D-1.0: 3145 entries to 122. Same defect class as the
+  DM-P2 certificate fix.
+
 ### Added
 
 - Campaign FIX: the audit follow-up. `docs/PATH_TO_ALLOW.md` maps
