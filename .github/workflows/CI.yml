@@ -5,8 +5,20 @@ on:
     branches: [main]
   pull_request:
 
+# Least privilege (campaign HARDEN, audit P1-12): every job reads the
+# repository and nothing else; release.yml raises its own scoped
+# permissions where provenance requires them.
+permissions:
+  contents: read
+
+# One run per ref: a superseded push stops paying for its CI.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-and-type:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
 
     strategy:
@@ -26,7 +38,7 @@ jobs:
 
       - name: Install deps
         run: |
-          pip install --upgrade pip
+          pip install --upgrade pip==26.2.1
           # Locked gate environment (audit a13, P1-03): the full
           # transitive set is frozen; the package itself installs on top
           # without resolving anything.
@@ -53,7 +65,7 @@ jobs:
         # the gate script.
         run: |
           python -m venv /tmp/auditenv
-          /tmp/auditenv/bin/pip install --quiet --upgrade pip
+          /tmp/auditenv/bin/pip install --quiet --upgrade pip==26.2.1
           /tmp/auditenv/bin/pip install --quiet pip-audit==2.10.1
           PIP_AUDIT=/tmp/auditenv/bin/pip-audit \
             bash scripts/run_quality_gate.sh audit
@@ -62,6 +74,7 @@ jobs:
         run: bash scripts/run_quality_gate.sh security
 
   test:
+    timeout-minutes: 30
     # The Python matrix runs on Linux; macOS (arm64) is added on one
     # version because this library publishes cross-platform
     # reproducibility guarantees (M10 section 9) and a real one-ulp
@@ -91,7 +104,7 @@ jobs:
 
       - name: Install deps
         run: |
-          pip install --upgrade pip
+          pip install --upgrade pip==26.2.1
           # Locked gate environment (audit a13, P1-03): the full
           # transitive set is frozen; the package itself installs on top
           # without resolving anything.
@@ -114,6 +127,7 @@ jobs:
         uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
 
   min-deps:
+    timeout-minutes: 30
     # Minimum supported dependencies (audit a15, 7.4): the published
     # lower bounds are installed exactly and the full suite runs on the
     # most constrained interpreter. The locked jobs above remain the
@@ -128,7 +142,7 @@ jobs:
           cache: "pip"
       - name: Install minimum runtime bounds and pinned test tools
         run: |
-          pip install --upgrade pip
+          pip install --upgrade pip==26.2.1
           # Runtime minima, exactly as published.
           pip install "jsonschema==4.26.0" "pydantic==2.8.0" "numpy==2.4.1"
           # Gate tooling: pyyaml is read by the compliance scenario
@@ -142,6 +156,7 @@ jobs:
         run: pytest --maxfail=1 --disable-warnings -q
 
   wheel-compliance:
+    timeout-minutes: 30
     # Black-box compliance against a freshly built wheel on every push
     # and pull request (audit a15, 7.5), not only at release time: a
     # packaging rupture (missing package data, broken entry point) is
@@ -155,10 +170,11 @@ jobs:
           cache: "pip"
       - name: Black-box compliance against the built wheel
         run: |
-          pip install --upgrade pip
+          pip install --upgrade pip==26.2.1
           bash scripts/run_blackbox_against_wheel.sh
 
   smoke:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
 
     steps:
@@ -173,7 +189,7 @@ jobs:
 
       - name: Install deps
         run: |
-          pip install --upgrade pip
+          pip install --upgrade pip==26.2.1
           # Locked gate environment (audit a13, P1-03): the full
           # transitive set is frozen; the package itself installs on top
           # without resolving anything.
@@ -184,6 +200,7 @@ jobs:
         run: bash scripts/run_quality_gate.sh examples
 
   build:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
 
     steps:
@@ -198,8 +215,8 @@ jobs:
 
       - name: Install build tooling
         run: |
-          pip install --upgrade pip
-          pip install build twine
+          pip install --upgrade pip==26.2.1
+          pip install build==1.5.0 twine==6.2.0
 
       - name: Build sdist and wheel
         run: python -m build
@@ -219,7 +236,7 @@ jobs:
       - name: Install built wheel in a clean env and smoke-import
         run: |
           python -m venv /tmp/wheelenv
-          /tmp/wheelenv/bin/pip install --upgrade pip
+          /tmp/wheelenv/bin/pip install --upgrade pip==26.2.1
           /tmp/wheelenv/bin/pip install "$(ls dist/*.whl)"
           cd /tmp
           /tmp/wheelenv/bin/python -c "import arvis; print('arvis', arvis.__version__); from arvis import ArvisEngine, CognitiveOS, CognitiveOSConfig; print('public API import OK')"
