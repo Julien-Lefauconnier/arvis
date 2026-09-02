@@ -117,6 +117,21 @@ class ZipExecutor:
         imported_files: list[str],
         skipped_files: list[dict[str, str]],
     ) -> None:
+        # DM-H3 (campaign HARDEN, audit P1-15a): the analyzer's
+        # supported verdict now governs the content import. The VFS
+        # item was already created (the tree stays faithful); the
+        # CONTENT of an unsupported entry is refused, recorded under
+        # the reason the analyzer computed. Before this, the field was
+        # computed, serialized and never read.
+        if zip_node.supported is False:
+            skipped_files.append(
+                {
+                    "name": zip_node.name,
+                    "reason": zip_node.reason or "unsupported_file_type",
+                }
+            )
+            return
+
         if self.content_importer is None:
             imported_files.append(zip_node.name)
             return
