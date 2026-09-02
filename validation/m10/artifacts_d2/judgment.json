@@ -24,7 +24,7 @@
   },
   "envelope_compliance.envelope_alive_in_domain": {
     "comparator": ">=",
-    "observed": 0.157824933687,
+    "observed": 1.0,
     "passed": true,
     "path": "overall.envelope_compliance.envelope_valid_rate_in_domain",
     "threshold": 0.1

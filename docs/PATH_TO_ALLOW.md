@@ -14,14 +14,16 @@ current tree; the numbers come from the M10 campaigns
 ## The short answer
 
 `ALLOW` requires a **measured contraction on a threaded trajectory
-inside the projected domain**. Four conditions, in the order a host
+inside the projected domain**. Five conditions, in the order a host
 meets them:
 
 1. the host carries the trajectory across turns,
-2. the switching guard has a dwell history,
+2. the input carries structured signals, so there is an energy to
+   measure at all,
 3. the projected observation sits inside the domain, away from its
    dangerous bounds,
-4. the composite energy actually decreases on that turn.
+4. the composite energy actually decreases on that turn,
+5. it decreases by more than the soft-filter threshold.
 
 Miss any one and the verdict floors at `REQUIRES_CONFIRMATION`. That
 is the monotone-hardening doctrine (F-001) doing its job: a floor is
@@ -56,25 +58,23 @@ Runnable version: `examples/07_session_threading.py`. Without
 threading the regime stays `warmup` forever, however many calls the
 host makes; with it, the regime moves at turn 9.
 
-## 2. The switching guard needs a dwell history
+## 2. Give the kernel something to measure
 
-The switching condition is `ln(J) / tau_d < kappa_eff`, where
-`tau_d` is the dwell time: how long the system has stayed in one
-regime. A fresh runtime has `tau_d = 0`, which makes the left-hand
-side enormous and the guard unsafe, and adds
-`switching_unsafe_monitoring` to the reasons.
+A bare informational input, a plain text prompt with no structured
+signals, does not produce a full cognitive projection. ARVIS attaches
+the minimal certificate (see `arvis/kernel/projection/certificate.py`)
+so the turn is still governed rather than surprisingly rejected, but
+there is no composite energy on that path: `delta_w` stays `None`,
+and a contraction that was never measured is never certified.
 
-**This is the honest v0 limit.** The dwell clock lives on a live
-runtime object inside the pipeline, and the opaque blob of step 1
-does not carry it, so a host driving ARVIS through `ArvisEngine`
-cannot yet accumulate dwell time across calls. A host that owns the
-pipeline directly (a deep integration) can, by carrying the
-switching runtime across turns; the measured effect is `tau_d`
-climbing 0 → 38 over 20 turns, after which the switching reason
-disappears.
+Measured on the public contract: 40 threaded turns of plain text
+prompts return `REQUIRES_CONFIRMATION` throughout, `delta_w` `None`
+on every one of them. Threading is necessary and it is not
+sufficient.
 
-Carrying the dwell clock through the public contract is planned work,
-not a configuration you are missing.
+If your integration only ever sends bare prompts, treat
+`REQUIRES_CONFIRMATION` as the correct and permanent answer. `ALLOW`
+is not withheld from you; it is undefined for that input.
 
 ## 3. Stay inside the domain, away from the dangerous bounds
 
@@ -111,28 +111,75 @@ the verdict floors at `REQUIRES_CONFIRMATION`. This is by design and
 will not change: `ALLOW` means "the trajectory demonstrably
 contracted", not "nothing bad was observed".
 
-On the D-2.0 corpus, whose feedback family contracts on every turn
-(`p_contraction = 1.000`), the gate's own pre-verdict is `ALLOW` on
-102 of 192 turns: the energy criterion is reachable and reached.
+Until campaign ALLOW, this section described a condition the kernel
+could not actually evaluate. The projection certificate assessed its
+Lyapunov axis against `ctx._dv`, a private attribute holding the
+drift score, which is clamped to [0, 1] and therefore never
+negative. Any drift at all was published as a measured Lyapunov
+incompatibility, which floored the verdict twice over
+(`projection_unsafe` and `validity_projection_unavailable`). The
+axis is now assessed against the composite energy delta or reported
+unassessed, and the two reason codes went from 1270 occurrences on
+the D-2.0 corpus to zero. M10 section 12 has the full account.
 
-## What 0.1.x does not let you reach
+## 5. It has to decrease by enough
 
-Being explicit, since the campaigns measured it: **`ALLOW` as a
-final verdict was observed 0 times across the 3072 turns of both M10
-campaigns.** Where the gate said `ALLOW` (102 turns), later layers
-floored it: the local soft filter with `projection_unsafe` and
-`projection_lyapunov_incompatible`, and the adaptive hard veto.
+A contraction weaker than `delta_w_soft_threshold` (-0.05 by
+default) is floored with reason `weak_stability`, in the local soft
+filter of the decision stack. A turn whose energy fell by 0.04 is
+contracting, and it will still land on `REQUIRES_CONFIRMATION`.
 
-So today, a `0.1.x` host should design for a two-level ladder
-(`REQUIRES_CONFIRMATION` and `ABSTAIN`) and treat `ALLOW` as a
-capability under construction, not as the normal outcome of a
-healthy run. The graded input-risk path is the one place where the
-ladder is fully exercised today, with zero bleed between bands (see
-M10 section 10.3).
+This is currently the dominant remaining floor. On the D-2.0 corpus
+it accounts for 108 of the 113 turns where the gate's own pre-verdict
+is `ALLOW` and the final verdict is not. The constant is
+conventional, not calibrated; the M10 campaigns now publish the ΔW
+scale a calibration would need, and that calibration is tracked as
+its own change rather than tuned in place.
 
-If your integration needs `ALLOW` to be reachable, the open items
-are the dwell clock of step 2 and the soft-filter conditions above.
-Both are tracked; neither is a setting you can flip.
+## What 0.1.x lets you reach
+
+`ALLOW` is reachable. Measured on the current tree, across both M10
+campaigns:
+
+| | D-1.0 (1440 turns) | D-2.0 (1632 turns) |
+|---|---|---|
+| ALLOW | 22 (1.53%) | 6 (0.37%) |
+| REQUIRES_CONFIRMATION | 185 | 349 |
+| ABSTAIN | 1233 | 1277 |
+
+Every one of those turns has a strictly negative composite delta,
+and they occur only in the `nominal` and `long_horizon` families.
+The `adversarial`, `conflicting`, `boundary`, `declared_risk`,
+`switching_stress` and `nominal_feedback` distributions are
+unchanged by the fix, and adversarial `ALLOW` remains 0.0.
+
+Conditional on a turn that actually contracted, `ALLOW` reaches
+3.8% overall on D-1.0 and 15.8% on its nominal family.
+
+So a 0.1.x host should still design for the two-level ladder
+(`REQUIRES_CONFIRMATION` and `ABSTAIN`) as the common case, and
+treat `ALLOW` as an outcome that a well-instrumented, threaded,
+genuinely contracting session can now reach rather than a capability
+under construction.
+
+## What 0.1.x still does not let you reach
+
+The switching guard needs a dwell history. The switching condition is
+`ln(J) / tau_d < kappa_eff`, where `tau_d` is how long the system has
+stayed in one regime. A fresh runtime has `tau_d = 0`, which makes
+the left-hand side enormous and adds `switching_unsafe_monitoring`
+to the reasons.
+
+The dwell clock lives on a live runtime object inside the pipeline,
+and the opaque blob of step 1 does not carry it, so a host driving
+ARVIS through `ArvisEngine` cannot yet accumulate dwell time across
+calls. A host that owns the pipeline directly (a deep integration)
+can, by carrying the switching runtime across turns; the measured
+effect is `tau_d` climbing 0 to 38 over 20 turns, after which the
+switching reason disappears.
+
+Carrying the dwell clock through the public contract is planned work,
+not a configuration you are missing.
 
 ## Debugging your own runs
 
@@ -151,4 +198,5 @@ bag["verdict_transition_trace"]  # every tightening, with its stage
 ```
 
 A verdict you did not expect is always explained by one of those
-five.
+five. `delta_w` at `None` in the same bag is the signature of step 2:
+nothing was measured, so nothing could be certified.

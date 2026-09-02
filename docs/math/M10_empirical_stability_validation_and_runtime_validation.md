@@ -581,3 +581,156 @@ decimals, far above the 1e-16 relative ulp noise and far below any
 scientific meaning in these metrics; internal judge comparisons
 stay raw. Determinism is exact within a platform, and the published
 text is now identical across platforms.
+
+## 12. Campaign 3 Report: ALLOW, 2026-09-02
+
+### 12.1 The defect: a drift magnitude read as an energy derivative
+
+Sections 10.3 and 11.4 both closed on the same observation, treated
+as a design floor: ALLOW was never observed as a final verdict, 0
+times across the 3072 turns of campaigns 1 and 2. That reading was
+wrong. The floor was a defect in the projection certificate.
+
+``ProjectionValidator`` assessed ``lyapunov_compatibility_ok``
+against the composite energy delta, and fell back to the private
+``ctx._dv`` attribute when no delta was available:
+
+```python
+delta_w = delta_w_of(ctx)
+dv = getattr(ctx, "_dv", None)
+if delta_w is not None:
+    lyapunov_ok = float(delta_w) <= self.lyapunov_positive_threshold
+elif dv is not None:
+    lyapunov_ok = float(dv) <= self.lyapunov_positive_threshold
+```
+
+Two facts make the fallback a defect rather than a degraded mode.
+
+``ctx._dv`` is written by the core stage as
+``float(core_ctx.drift_score)``, and ``DriftSignal.__post_init__``
+stores ``clamp01(abs(value))``. The value is a magnitude in [0, 1]
+and is never negative, so ``dv <= 1e-9`` held only when drift was
+exactly zero. Any drift at all was published as a measured Lyapunov
+incompatibility. The suite's own fixtures record the intent that was
+lost: the sibling test seeded ``_dv = -0.1``, a value the clamp makes
+unreachable in the running system, which is the clearest evidence
+the branch was written against a signed derivative that never
+arrived on that attribute.
+
+And ``composite.delta_w`` is written by the gate stage, which runs
+after the projection stage. On the certificate the gate consumes,
+the delta is therefore always ``None``. The fallback was not an edge
+case: it was the branch taken on every certified turn. Instrumented
+over campaign 2, ``ProjectionValidator.validate`` was called 3264
+times for 1632 turns, and every one of the 1632 pre-gate calls took
+the fallback. The second call per turn is
+``PipelineObservabilityService``, which refreshes the certificate
+during finalize, after the verdict is decided: the corrected
+certificate existed, but only in the observability export, never in
+the decision.
+
+The consequence chain is mechanical:
+
+```
+lyapunov_compatibility_ok = False
+  -> is_projection_safe = False
+      -> projection_unsafe                    (soft floor on ALLOW)
+      -> projection_available = False          in the validity envelope
+          -> validity_projection_unavailable   (second floor)
+```
+
+### 12.2 Effect on both campaigns
+
+The axis is now assessed only against the composite delta. When no
+delta is available it is reported unassessed in ``checks_detail``
+and excluded from the certification level, which is the treatment
+noise robustness and mode stability already receive (section 5.9). A
+delta that is present but uncoercible stays fail-closed under F-002.
+
+| | D-1.0 before | D-1.0 after | D-2.0 before | D-2.0 after |
+|---|---|---|---|---|
+| ``projection_unsafe`` | (see note) | **0** | 1270 | **0** |
+| ``projection_lyapunov_incompatible`` | (see note) | **0** | 1270 | **0** |
+| ``validity_projection_unavailable`` | (see note) | 131 | 1394 | 124 |
+| envelope alive in domain | 0.1757 | **1.000** | 0.1578 | **1.000** |
+| ABSTAIN | 0.85625 | **0.85625** | 0.782475 | **0.782475** |
+| REQUIRE_CONFIRMATION | 0.14375 | 0.128472 | 0.217525 | 0.213848 |
+| ALLOW | 0.0 | **0.015278** | 0.0 | **0.003676** |
+
+Note: the per-turn measurement files are untracked (section 11.5),
+so the before counts are reported for the corpus on which they were
+instrumented live during the investigation. The envelope rate is a
+tracked metric and carries the same evidence on both corpora.
+
+The registered judgments are unchanged: **11 of 12 on D-1.0 and 12
+of 12 on D-2.0**, the same criteria passing and the same one
+failing.
+
+### 12.3 What the relaxation did and did not touch
+
+This campaign lifts a floor, which under F-001 requires the floor to
+be shown illegitimate rather than merely inconvenient. The measured
+containment:
+
+- **ABSTAIN is bit-identical on both corpora**, 1233 and 1277 turns.
+  No refusal was relaxed. The change moves REQUIRE_CONFIRMATION to
+  ALLOW and nothing else.
+- ALLOW appears in two families only, ``nominal`` (15 and 4) and
+  ``long_horizon`` (7 and 2). The ``adversarial``, ``conflicting``,
+  ``boundary``, ``declared_risk``, ``switching_stress`` and
+  ``nominal_feedback`` distributions are unchanged to the digit.
+- Criterion 5.5 (adversarial never ALLOW) still observes 0.0, and it
+  now observes it on a system where ALLOW is reachable, which is the
+  first campaign in which that criterion carries information.
+- Every ALLOW turn has a strictly negative composite delta, from
+  -0.0575 to -0.4148.
+
+Conditional on a contracting turn, ALLOW reaches 0.0381 overall and
+0.1579 on the nominal family of D-1.0.
+
+### 12.4 A threshold that has stopped discriminating
+
+``envelope_compliance.envelope_alive_in_domain`` was registered at
+>= 0.10 and observed 0.1757 and 0.1578. Those numbers were the
+defect: the validity envelope was dead on roughly five turns out of
+six inside its own domain. It now observes 1.000 on both corpora.
+
+The criterion still passes, but at a threshold it can no longer
+fail. It is recorded here as non-discriminating and must be
+re-registered before campaign 4 rather than carried forward as
+evidence. Registering a replacement now, after seeing the result,
+would be exactly the post-hoc move section 9 forbids.
+
+### 12.5 What ALLOW still requires
+
+ALLOW is reachable, and it is still not the outcome of an ordinary
+quickstart turn. Measured on the public ``ArvisEngine`` contract, 40
+threaded turns of plain text prompts return REQUIRES_CONFIRMATION
+throughout, with ``delta_w`` at ``None`` on every turn: a bare
+informational input produces the minimal certificate of section 3.3,
+so there is no measured contraction to certify. The defect this
+campaign closed affected structured, certified turns; it never
+touched the bare-prompt path, which floors for the honest reason.
+
+The two conditions that remain, both documented in
+``docs/PATH_TO_ALLOW.md``:
+
+1. the switching dwell clock still cannot cross the public contract,
+   so a host driving the engine accumulates no dwell time;
+2. ``delta_w_soft_threshold`` (-0.05) floors a contraction that is
+   real but weaker than the threshold, with reason
+   ``weak_stability``. On D-2.0 that single condition accounts for
+   108 of the 113 turns where the gate says ALLOW and the final
+   verdict does not. The constant is conventional; the campaigns now
+   provide the ΔW scale needed to calibrate it, and that calibration
+   is a dedicated change with its own registration.
+
+### 12.6 Reproduction
+
+``python -m validation.m10 run`` and ``run2`` regenerate both
+campaigns. Mutation replay on the certificate surface: 7 mutants, 6
+killed. The survivor, folding the unassessed axis back into the
+certification level, is an equivalent mutant: no reachable state has
+``lyapunov_assessed`` false while ``lyapunov_ok`` is false, so no
+test can distinguish it. It is reported rather than papered over
+with a pin that would assert nothing.
