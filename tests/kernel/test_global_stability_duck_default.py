@@ -42,5 +42,10 @@ def test_math_layer_duck_default_matches() -> None:
     from arvis.math.gate import gate_policy
 
     src = inspect.getsource(gate_policy)
-    assert 'getattr(ctx, "global_stability_action", "confirm")' in src
+    # Campaign SURFACE typed the postures: the duck default is the
+    # same fail-closed member, spelled as the enum.
+    assert (
+        'getattr(ctx, "global_stability_action", GlobalStabilityAction.CONFIRM)' in src
+    )
     assert '"global_stability_action", "ignore"' not in src
+    assert '"global_stability_action", GlobalStabilityAction.IGNORE' not in src

@@ -52,6 +52,11 @@ from arvis.kernel.pipeline.context.tooling_context import (
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.trace.decision_trace import DecisionTrace
 from arvis.kernel_core.access.models import Principal
+from arvis.math.gate.gate_postures import (
+    GlobalStabilityAction,
+    InputRiskMode,
+    SwitchingEnvelopeMode,
+)
 from arvis.math.signals.conflict import ConflictSignal as ConflictPressureSignal
 
 if TYPE_CHECKING:
@@ -153,18 +158,19 @@ class CognitivePipelineContext:
 
     # -----------------------------------------
     # Global stability enforcement policy
-    # "ignore" | "confirm" | "abstain"
+    # (GlobalStabilityAction; campaign SURFACE typed the postures,
+    # wire values unchanged, plain strings still compare equal)
     # -----------------------------------------
-    global_stability_action: str = "ignore"
-    # A4/B5: switching safety envelope mode. "soft" keeps switching as
+    global_stability_action: str = GlobalStabilityAction.IGNORE
+    # A4/B5: switching safety envelope mode. SOFT keeps switching as
     # observability only; any other value feeds the measured switching
-    # safety into the validity envelope. Production sets "enforce".
-    switching_envelope_mode: str = "soft"
-    # F-001-a5: input-risk posture. "graded" allows the pure-scalar
+    # safety into the validity envelope. Production sets ENFORCE.
+    switching_envelope_mode: str = SwitchingEnvelopeMode.SOFT
+    # F-001-a5: input-risk posture. GRADED allows the pure-scalar
     # grading path of the input-risk gate; any other value (production
-    # sets "harden_only", unknown values included) restricts a declared
+    # sets HARDEN_ONLY, unknown values included) restricts a declared
     # risk to harden-only.
-    input_risk_mode: str = "graded"
+    input_risk_mode: str = InputRiskMode.GRADED
 
     # Governance profile that set the postures above ("local",
     # "production"). Recorded into CognitiveContextIR.runtime_mode so a
@@ -437,6 +443,6 @@ def apply_runtime_postures(
     """
     ctx.runtime_profile = runtime_profile or "local"
     if ctx.runtime_profile == PRODUCTION_PROFILE:
-        ctx.global_stability_action = "confirm"
-        ctx.switching_envelope_mode = "enforce"
-        ctx.input_risk_mode = "harden_only"
+        ctx.global_stability_action = GlobalStabilityAction.CONFIRM
+        ctx.switching_envelope_mode = SwitchingEnvelopeMode.ENFORCE
+        ctx.input_risk_mode = InputRiskMode.HARDEN_ONLY

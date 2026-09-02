@@ -21,6 +21,10 @@ from arvis.kernel.pipeline.stages.gate.trace_helpers import (
     verdict_provenance,
 )
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
+from arvis.math.gate.gate_postures import (
+    GlobalStabilityAction,
+    SwitchingEnvelopeMode,
+)
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.lyapunov.verdict_order import max_strictness
 from arvis.math.stability.global_guard import GlobalStabilityGuard
@@ -66,13 +70,13 @@ def apply_global_stability_policy(
         return verdict
 
     try:
-        action = getattr(ctx, "global_stability_action", "confirm")
+        action = getattr(ctx, "global_stability_action", GlobalStabilityAction.CONFIRM)
         reasons = fusion_reasons_of(ctx)
 
         if action != "ignore" and "global_instability_confirm" not in reasons:
             reasons.append("global_instability_confirm")
 
-        if action == "confirm":
+        if action == GlobalStabilityAction.CONFIRM:
             if verdict == LyapunovVerdict.ABSTAIN:
                 provenance = verdict_provenance(ctx, LyapunovVerdict.ABSTAIN)
                 relaxable = provenance in _RELAXABLE_ABSTAIN_PROVENANCE and not (
@@ -107,7 +111,7 @@ def apply_global_stability_policy(
                 )
             return hardened
 
-        if action == "abstain":
+        if action == GlobalStabilityAction.ABSTAIN:
             if "global_instability_abstain" not in reasons:
                 reasons.append("global_instability_abstain")
             if verdict != LyapunovVerdict.ABSTAIN:
@@ -329,9 +333,13 @@ def build_validity_envelope(
         # enforcement.
         # -----------------------------------------------------
 
-        switching_mode = getattr(ctx, "switching_envelope_mode", "soft")
+        switching_mode = getattr(
+            ctx, "switching_envelope_mode", SwitchingEnvelopeMode.SOFT
+        )
         effective_switching_safe = (
-            True if switching_mode == "soft" else bool(switching_safe)
+            True
+            if switching_mode == SwitchingEnvelopeMode.SOFT
+            else bool(switching_safe)
         )
 
         validity_envelope = build_math_validity_envelope(

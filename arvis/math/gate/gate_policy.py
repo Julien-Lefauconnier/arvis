@@ -6,6 +6,7 @@ from typing import Any
 
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.gate.gate_kernel import COLLAPSE_ABSTAIN_THRESHOLD
+from arvis.math.gate.gate_postures import GlobalStabilityAction
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.lyapunov.verdict_order import max_strictness
 
@@ -46,14 +47,14 @@ def apply_gate_policy(
     # context that never declared the knob confirms, in BOTH layers
     # (the kernel layer already did); profiled contexts keep their
     # declared posture (local "ignore", production "confirm").
-    action = getattr(ctx, "global_stability_action", "confirm")
+    action = getattr(ctx, "global_stability_action", GlobalStabilityAction.CONFIRM)
 
     if envelope.hard_block:
         if "global" in (envelope.hard_reason or ""):
-            if action == "abstain":
+            if action == GlobalStabilityAction.ABSTAIN:
                 reasons.append("global_instability_abstain")
                 return LyapunovVerdict.ABSTAIN
-            elif action == "confirm":
+            elif action == GlobalStabilityAction.CONFIRM:
                 reasons.append("global_instability_confirm")
                 # Monotone (F-001): confirm is a floor, it never
                 # overwrites a stricter verdict.

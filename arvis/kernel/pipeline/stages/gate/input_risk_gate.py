@@ -55,6 +55,7 @@ from arvis.kernel.pipeline.stages.gate.trace_helpers import (
     record_verdict_transition,
     verdict_provenance,
 )
+from arvis.math.gate.gate_postures import InputRiskMode
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.lyapunov.verdict_order import is_relaxation, max_strictness
 
@@ -103,9 +104,9 @@ _GOVERNING_REASON = "input_risk_gate"
 _HARDEN_STAGE = "input_risk_harden"
 
 # Posture under which the pure-scalar grading path is active. Any other
-# value of ctx.input_risk_mode (production sets "harden_only", unknown
+# value of ctx.input_risk_mode (production sets HARDEN_ONLY, unknown
 # values included) fails closed to harden-only.
-_GRADED_MODE = "graded"
+_GRADED_MODE = InputRiskMode.GRADED
 
 
 def _null_invalid_risk_in_context(ctx: Any, cognitive_input: Any) -> None:
