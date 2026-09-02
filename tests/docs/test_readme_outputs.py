@@ -84,6 +84,7 @@ def test_readme_summary_line_is_real() -> None:
     for token in (
         "Stability=0.85",
         "Risk=0.00",
+        "RiskCeiling=1.00 (CRITICAL)",
         "Regime=warmup",
         "DeclaredRisk=0.92",
     ):

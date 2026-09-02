@@ -36,11 +36,19 @@ class StabilityView:
     reporting measurements that never happened (audit C5, 2026-08). The
     consumer contract (``cognitive_result_v1.schema.json``) has always
     allowed ``null`` here.
+
+    ``risk_level`` is the EMPIRICAL collapse rate (what has been
+    observed so far) and ``risk_ucb`` is the CERTIFIED PAC ceiling
+    (what can be ruled out so far); on a cold turn they legitimately
+    read 0.0 and 1.0 at once, and hiding the ceiling made calm out of
+    maximal uncertainty (campaign INTEGRITY, DM-I3, audit P1-6).
     """
 
     stability_score: float | None
     risk_level: float | None
     regime: str | None
+    risk_ucb: float | None = None
+    risk_verdict: str | None = None
 
     @staticmethod
     def from_snapshot(snapshot: StabilitySnapshot) -> "StabilityView":
@@ -50,6 +58,22 @@ class StabilityView:
                 if value is not None:
                     return float(value)
             return None
+
+        def _inner_number(name: str) -> float | None:
+            value = getattr(snapshot, name, None)
+            if value is None:
+                inner = getattr(snapshot, "core_snapshot", None)
+                value = getattr(inner, name, None) if inner is not None else None
+            if value is None or isinstance(value, bool):
+                return None
+            return float(value) if isinstance(value, (int, float)) else None
+
+        def _inner_text(name: str) -> str | None:
+            value = getattr(snapshot, name, None)
+            if value is None:
+                inner = getattr(snapshot, "core_snapshot", None)
+                value = getattr(inner, name, None) if inner is not None else None
+            return str(value) if value is not None else None
 
         regime = getattr(snapshot, "verdict", None)
         if regime is None:
@@ -69,7 +93,8 @@ class StabilityView:
         # A measured Lyapunov energy V (in [0, 1]) defines the score as
         # its complement: stability_score = 1 - V. The energy lives on
         # the embedded core snapshot when the scientific result wraps a
-        # monitor snapshot (campaign MATH-A, M1).
+        # monitor snapshot (campaign MATH-A, M1). The PAC risk ceiling
+        # and its calibrated verdict live on the same core snapshot.
         score = _number("score", "stability_score")
         if score is None:
             inner = getattr(snapshot, "core_snapshot", None)
@@ -83,6 +108,8 @@ class StabilityView:
             stability_score=score,
             risk_level=_number("collapse_risk", "risk"),
             regime=str(regime) if regime is not None else None,
+            risk_ucb=_inner_number("risk_ucb"),
+            risk_verdict=_inner_text("risk_verdict"),
         )
 
 

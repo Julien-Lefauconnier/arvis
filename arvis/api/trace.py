@@ -87,7 +87,10 @@ class DecisionTraceView:
                     {
                         "score": getattr(self.stability, "score", None),
                         "risk": getattr(self.stability, "collapse_risk", None),
-                        "regime": getattr(self.stability, "verdict", None),
+                        # DM-I3: the regime is the regime; the verdict
+                        # used to be published under this key.
+                        "regime": getattr(self.stability, "regime", None),
+                        "verdict": getattr(self.stability, "verdict", None),
                     }
                     if self.stability
                     else None

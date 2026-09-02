@@ -53,11 +53,22 @@
     "stability": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["score", "risk", "regime"],
+      "required": ["score", "risk", "regime", "risk_ucb", "risk_verdict"],
       "properties": {
         "score": { "type": ["number", "null"] },
-        "risk": { "type": ["number", "null"] },
-        "regime": { "type": ["string", "null"] }
+        "risk": {
+          "type": ["number", "null"],
+          "description": "Empirical collapse rate observed so far."
+        },
+        "regime": { "type": ["string", "null"] },
+        "risk_ucb": {
+          "type": ["number", "null"],
+          "description": "Certified PAC risk ceiling; 1.0 on a cold turn means nothing is ruled out yet."
+        },
+        "risk_verdict": {
+          "type": ["string", "null"],
+          "description": "Calibrated verdict on the certified ceiling."
+        }
       }
     },
     "has_trace": { "type": "boolean" },

@@ -138,13 +138,17 @@ Trace          : Available
 
 `summary()` gives the one-line form. The measured axes and the
 caller-declared assertion are deliberately distinct: `Stability`,
-`Risk` and `Regime` are what the engine's contraction monitor measured
-about this run's cognition (first turn: `warmup`), while
-`DeclaredRisk` is the untrusted scalar the caller asserted, and only
-the declared-risk gate acts on it:
+`Risk`, `RiskCeiling` and `Regime` are what the engine's contraction
+monitor measured about this run's cognition, while `DeclaredRisk` is
+the untrusted scalar the caller asserted, and only the declared-risk
+gate acts on it. On a first turn the empirical rate and the certified
+ceiling are both true at once: nothing bad has been OBSERVED
+(`Risk=0.00`) and nothing has been RULED OUT either
+(`RiskCeiling=1.00 (CRITICAL)`); the ceiling tightens as the
+trajectory accumulates evidence:
 
 ```text
-Decision=ActionDecision(allowed=False, ...) | Stability=0.85 | Risk=0.00 | Regime=warmup | DeclaredRisk=0.92
+Decision=ActionDecision(allowed=False, ...) | Stability=0.85 | Risk=0.00 | RiskCeiling=1.00 (CRITICAL) | Regime=warmup | DeclaredRisk=0.92
 ```
 
 > Note (0.1.0-beta): the gate grades an explicit finite top-level `risk`

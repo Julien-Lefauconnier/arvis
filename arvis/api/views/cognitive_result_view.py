@@ -281,6 +281,15 @@ class CognitiveResultView:
                     self.stability_view.risk_level if self.stability_view else None
                 ),
                 "regime": (self.stability_view.regime if self.stability_view else None),
+                # DM-I3: the certified PAC ceiling and its calibrated
+                # verdict travel beside the empirical rate; on a cold
+                # turn 0.0 and 1.0 are both true and both shown.
+                "risk_ucb": (
+                    self.stability_view.risk_ucb if self.stability_view else None
+                ),
+                "risk_verdict": (
+                    self.stability_view.risk_verdict if self.stability_view else None
+                ),
             },
             "has_trace": self.trace is not None,
             "has_timeline": self.timeline is not None,
@@ -444,6 +453,14 @@ class CognitiveResultView:
         if view is not None:
             parts.append(f"Stability={_fmt(view.stability_score)}")
             parts.append(f"Risk={_fmt(view.risk_level)}")
+            # DM-I3: the certified ceiling is shown whenever it was
+            # measured; Risk=0.00 on a cold turn is an empirical rate,
+            # not calm, and the ceiling says so.
+            if view.risk_ucb is not None:
+                ceiling = f"RiskCeiling={_fmt(view.risk_ucb)}"
+                if view.risk_verdict is not None:
+                    ceiling += f" ({view.risk_verdict})"
+                parts.append(ceiling)
             parts.append(f"Regime={view.regime if view.regime is not None else 'n/a'}")
         else:
             parts.append("Stability=n/a | Risk=n/a | Regime=n/a")
