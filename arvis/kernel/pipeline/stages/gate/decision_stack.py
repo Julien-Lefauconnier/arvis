@@ -70,6 +70,9 @@ from arvis.math.gate.gate_kernel import COLLAPSE_ABSTAIN_THRESHOLD
 from arvis.math.gate.gate_policy import apply_gate_policy
 from arvis.math.gate.gate_types import GateKernelInputs
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.stability.weak_stability_policy import (
+    weak_stability_threshold,
+)
 
 
 def _get_gate_stage_hook(name: str) -> Callable[..., Any] | None:
@@ -416,6 +419,25 @@ class GateDecisionStack:
         )
 
 
+def resolve_weak_stability_threshold(ctx: Any) -> float:
+    """The soft filter's threshold for this turn (campaign SEUIL).
+
+    Default: the registered rate policy (DM-S1) fed by the turn's
+    composite energy. An explicit ``delta_w_soft_threshold`` on the
+    context stays an absolute host override, exactly as the historical
+    ``getattr(ctx, ..., -0.05)`` behaved when a host set it; a
+    non-numeric override degrades to the policy, never to a free pass
+    or an exception inside the gate.
+    """
+    override = getattr(ctx, "delta_w_soft_threshold", None)
+    if override is not None:
+        try:
+            return float(override)
+        except (TypeError, ValueError):
+            pass
+    return weak_stability_threshold(scientific_of(ctx).composite.w_current)
+
+
 def map_kernel_reasons(
     ctx: Any,
     kernel_result: Any,
@@ -480,7 +502,7 @@ def run_gate_fusion(
 
         try:
             if delta_w is not None:
-                soft_threshold = getattr(ctx, "delta_w_soft_threshold", -0.05)
+                soft_threshold = resolve_weak_stability_threshold(ctx)
 
                 if soft_threshold < delta_w < 0:
                     if verdict == LyapunovVerdict.ALLOW:
