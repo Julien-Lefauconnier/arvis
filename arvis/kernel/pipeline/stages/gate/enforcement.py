@@ -91,13 +91,16 @@ def apply_projection_enforcement(
         ):
             if "projection_invalid" not in projection_reasons:
                 projection_reasons.append("projection_invalid")
-            record_verdict_transition(
-                ctx,
-                stage="projection_hard_block",
-                before=verdict,
-                after=LyapunovVerdict.ABSTAIN,
-                reason="projection_invalid",
-            )
+            # LOT G5: record the transition only when the verdict
+            # actually moves; the block itself applies regardless.
+            if verdict != LyapunovVerdict.ABSTAIN:
+                record_verdict_transition(
+                    ctx,
+                    stage="projection_hard_block",
+                    before=verdict,
+                    after=LyapunovVerdict.ABSTAIN,
+                    reason="projection_invalid",
+                )
             ctx.extra["projection_hard_block"] = True
             return LyapunovVerdict.ABSTAIN
 
@@ -123,14 +126,19 @@ def apply_projection_enforcement(
         ):
             if "projection_boundary" not in projection_reasons:
                 projection_reasons.append("projection_boundary")
-            record_verdict_transition(
-                ctx,
-                stage="projection_boundary_enforcement",
-                before=verdict,
-                after=LyapunovVerdict.REQUIRE_CONFIRMATION,
-                reason="projection_boundary",
-            )
+            # LOT G5 (audit P1-2): this record used to be emitted
+            # unconditionally: 431 entries per corpus attested an
+            # ``ABSTAIN -> REQUIRE_CONFIRMATION`` that never happened.
+            # The reason above keeps the observability; the trace
+            # records only the real transition.
             if verdict == LyapunovVerdict.ALLOW:
+                record_verdict_transition(
+                    ctx,
+                    stage="projection_boundary_enforcement",
+                    before=verdict,
+                    after=LyapunovVerdict.REQUIRE_CONFIRMATION,
+                    reason="projection_boundary",
+                )
                 verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
 
         projection_unsafe = is_safe is False
@@ -169,13 +177,14 @@ def apply_projection_enforcement(
         )
         # F-002: a failing guarantee mechanism can never relax; an
         # exception inside the gate forces ABSTAIN (fail-closed).
-        record_verdict_transition(
-            ctx,
-            stage="projection_gate_fail_closed",
-            before=verdict,
-            after=LyapunovVerdict.ABSTAIN,
-            reason="gate_exception",
-        )
+        if verdict != LyapunovVerdict.ABSTAIN:
+            record_verdict_transition(
+                ctx,
+                stage="projection_gate_fail_closed",
+                before=verdict,
+                after=LyapunovVerdict.ABSTAIN,
+                reason="gate_exception",
+            )
         return LyapunovVerdict.ABSTAIN
     return verdict
 
@@ -192,13 +201,14 @@ def apply_kappa_hard_block(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
             reasons = fusion_reasons_of(ctx)
             if "kappa_violation" not in reasons:
                 reasons.append("kappa_violation")
-            record_verdict_transition(
-                ctx,
-                stage="kappa_hard_block",
-                before=verdict,
-                after=LyapunovVerdict.ABSTAIN,
-                reason="kappa_violation",
-            )
+            if verdict != LyapunovVerdict.ABSTAIN:
+                record_verdict_transition(
+                    ctx,
+                    stage="kappa_hard_block",
+                    before=verdict,
+                    after=LyapunovVerdict.ABSTAIN,
+                    reason="kappa_violation",
+                )
             if (journal := journal_of(ctx)) is not None:
                 journal.kappa_hard_block = True
             ctx.extra["kappa_hard_block"] = True
@@ -212,12 +222,13 @@ def apply_kappa_hard_block(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
         )
         # F-002: a failing guarantee mechanism can never relax; an
         # exception inside the gate forces ABSTAIN (fail-closed).
-        record_verdict_transition(
-            ctx,
-            stage="kappa_gate_fail_closed",
-            before=verdict,
-            after=LyapunovVerdict.ABSTAIN,
-            reason="gate_exception",
-        )
+        if verdict != LyapunovVerdict.ABSTAIN:
+            record_verdict_transition(
+                ctx,
+                stage="kappa_gate_fail_closed",
+                before=verdict,
+                after=LyapunovVerdict.ABSTAIN,
+                reason="gate_exception",
+            )
         return LyapunovVerdict.ABSTAIN
     return verdict

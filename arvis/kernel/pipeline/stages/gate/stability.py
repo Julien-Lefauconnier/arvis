@@ -133,13 +133,14 @@ def apply_global_stability_policy(
         )
         # F-002: a failing guarantee mechanism can never relax; an
         # exception inside the gate forces ABSTAIN (fail-closed).
-        record_verdict_transition(
-            ctx,
-            stage=f"{stage_prefix}_fail_closed",
-            before=verdict,
-            after=LyapunovVerdict.ABSTAIN,
-            reason="gate_exception",
-        )
+        if verdict != LyapunovVerdict.ABSTAIN:
+            record_verdict_transition(
+                ctx,
+                stage=f"{stage_prefix}_fail_closed",
+                before=verdict,
+                after=LyapunovVerdict.ABSTAIN,
+                reason="gate_exception",
+            )
         return LyapunovVerdict.ABSTAIN
 
     return verdict
@@ -426,13 +427,14 @@ def apply_validity_enforcement(
         )
         # F-002: a failing guarantee mechanism can never relax; an
         # exception inside the gate forces ABSTAIN (fail-closed).
-        record_verdict_transition(
-            ctx,
-            stage="validity_gate_fail_closed",
-            before=verdict,
-            after=LyapunovVerdict.ABSTAIN,
-            reason="gate_exception",
-        )
+        if verdict != LyapunovVerdict.ABSTAIN:
+            record_verdict_transition(
+                ctx,
+                stage="validity_gate_fail_closed",
+                before=verdict,
+                after=LyapunovVerdict.ABSTAIN,
+                reason="gate_exception",
+            )
         return LyapunovVerdict.ABSTAIN
     return verdict
 

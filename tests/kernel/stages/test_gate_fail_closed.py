@@ -86,6 +86,24 @@ def _last_transition(ctx_extra):
     return trace[-1]
 
 
+def _assert_fail_closed_trace(ctx_extra, verdict, stage=None):
+    """The fail-closed path is traced when the verdict actually moved.
+
+    Campaign GATE-SEM (LOT G5): an incoming ABSTAIN that fails closed
+    stays ABSTAIN; recording an ABSTAIN -> ABSTAIN entry attested a
+    transition that never happened, so the trace stays empty there.
+    """
+    trace = ctx_extra.get("verdict_transition_trace", [])
+    if verdict is LyapunovVerdict.ABSTAIN:
+        assert trace == [], "no phantom no-op entry on an ABSTAIN input"
+        return
+    assert trace, "fail-closed transition must be traced"
+    last = trace[-1]
+    assert last["reason"] == "gate_exception"
+    if stage is not None:
+        assert last["stage"] == stage
+
+
 @pytest.mark.parametrize("verdict", VERDICTS)
 def test_projection_gate_exception_forces_abstain(verdict):
     ctx = SimpleNamespace(
@@ -105,9 +123,7 @@ def test_projection_gate_exception_forces_abstain(verdict):
         switching_safe=True,
     )
     assert out is LyapunovVerdict.ABSTAIN
-    last = _last_transition(ctx.extra)
-    assert last["reason"] == "gate_exception"
-    assert last["stage"] == "projection_gate_fail_closed"
+    _assert_fail_closed_trace(ctx.extra, verdict, "projection_gate_fail_closed")
 
 
 @pytest.mark.parametrize("verdict", VERDICTS)
@@ -115,7 +131,7 @@ def test_kappa_gate_exception_forces_abstain(verdict):
     ctx = SimpleNamespace(extra={}, scientific=_BoomScientific())
     out = apply_kappa_hard_block(ctx, verdict)
     assert out is LyapunovVerdict.ABSTAIN
-    assert _last_transition(ctx.extra)["reason"] == "gate_exception"
+    _assert_fail_closed_trace(ctx.extra, verdict, "kappa_gate_fail_closed")
 
 
 @pytest.mark.parametrize("verdict", VERDICTS)
@@ -123,7 +139,7 @@ def test_global_policy_exception_forces_abstain(verdict):
     ctx = _BoomPolicyCtx()
     out = apply_global_stability_policy(ctx, verdict, global_safe=False)
     assert out is LyapunovVerdict.ABSTAIN
-    assert _last_transition(ctx.extra)["reason"] == "gate_exception"
+    _assert_fail_closed_trace(ctx.extra, verdict, "global_policy_fail_closed")
 
 
 @pytest.mark.parametrize("verdict", VERDICTS)
@@ -131,7 +147,7 @@ def test_validity_gate_exception_forces_abstain(verdict):
     ctx = SimpleNamespace(extra={}, scientific=_BoomScientific())
     out = apply_validity_enforcement(ctx, verdict, GateOverrides())
     assert out is LyapunovVerdict.ABSTAIN
-    assert _last_transition(ctx.extra)["reason"] == "gate_exception"
+    _assert_fail_closed_trace(ctx.extra, verdict, "validity_gate_fail_closed")
 
 
 # ---------------------------------------------------------------

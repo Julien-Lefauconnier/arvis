@@ -335,13 +335,14 @@ class GateDecisionStack:
         if envelope is None and built_envelope is None:
             # F-005: an envelope that could not be built is unknown
             # validity; unknown validity gates nothing and fails closed.
-            record_verdict_transition(
-                ctx,
-                stage="validity_envelope_unavailable",
-                before=verdict,
-                after=LyapunovVerdict.ABSTAIN,
-                reason="gate_exception",
-            )
+            if verdict != LyapunovVerdict.ABSTAIN:
+                record_verdict_transition(
+                    ctx,
+                    stage="validity_envelope_unavailable",
+                    before=verdict,
+                    after=LyapunovVerdict.ABSTAIN,
+                    reason="gate_exception",
+                )
             verdict = LyapunovVerdict.ABSTAIN
 
         verdict = enforce_monotone(
@@ -489,13 +490,16 @@ def run_gate_fusion(
             and getattr(adaptive_metrics, "is_available", False)
             and getattr(adaptive_metrics, "is_unstable", False)
         ):
-            record_verdict_transition(
-                ctx,
-                stage="fusion_adaptive_hard_veto",
-                before=verdict,
-                after=LyapunovVerdict.ABSTAIN,
-                reason="adaptive_metrics_unstable",
-            )
+            # LOT G5: the veto applies regardless; the trace records
+            # only a real transition, never an ABSTAIN no-op.
+            if verdict != LyapunovVerdict.ABSTAIN:
+                record_verdict_transition(
+                    ctx,
+                    stage="fusion_adaptive_hard_veto",
+                    before=verdict,
+                    after=LyapunovVerdict.ABSTAIN,
+                    reason="adaptive_metrics_unstable",
+                )
             verdict = LyapunovVerdict.ABSTAIN
         existing = list(fusion_reasons_of(ctx))
         replace_fusion_reasons(ctx, dict.fromkeys(existing + fusion.reasons))
@@ -548,13 +552,14 @@ def run_gate_fusion(
                 },
             ),
         )
-        record_verdict_transition(
-            ctx,
-            stage="fusion_fail_closed",
-            before=before,
-            after=LyapunovVerdict.ABSTAIN,
-            reason="gate_exception",
-        )
+        if before != LyapunovVerdict.ABSTAIN:
+            record_verdict_transition(
+                ctx,
+                stage="fusion_fail_closed",
+                before=before,
+                after=LyapunovVerdict.ABSTAIN,
+                reason="gate_exception",
+            )
         existing = list(fusion_reasons_of(ctx))
         replace_fusion_reasons(ctx, dict.fromkeys(existing + ["fusion_fallback"]))
         ctx.extra["fusion_error"] = True

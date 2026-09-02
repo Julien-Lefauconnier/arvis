@@ -253,13 +253,14 @@ def apply_input_risk_gate(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict
         )
         # F-002: a failing guarantee mechanism can never relax; an
         # exception inside the gate forces ABSTAIN (fail-closed).
-        record_verdict_transition(
-            ctx,
-            stage="input_risk_fail_closed",
-            before=verdict,
-            after=LyapunovVerdict.ABSTAIN,
-            reason="gate_exception",
-        )
+        if verdict != LyapunovVerdict.ABSTAIN:
+            record_verdict_transition(
+                ctx,
+                stage="input_risk_fail_closed",
+                before=verdict,
+                after=LyapunovVerdict.ABSTAIN,
+                reason="gate_exception",
+            )
         return LyapunovVerdict.ABSTAIN
 
 

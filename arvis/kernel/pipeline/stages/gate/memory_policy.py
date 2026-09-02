@@ -26,13 +26,16 @@ def apply_memory_policy(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdict:
             if "memory_pressure_hard" not in reasons:
                 reasons.append("memory_pressure_hard")
 
-            record_verdict_transition(
-                ctx,
-                stage="memory_hard_block",
-                before=verdict,
-                after=LyapunovVerdict.ABSTAIN,
-                reason="memory_pressure_high",
-            )
+            # LOT G5: the block applies regardless; the trace records
+            # only a real transition, never an ABSTAIN no-op.
+            if verdict != LyapunovVerdict.ABSTAIN:
+                record_verdict_transition(
+                    ctx,
+                    stage="memory_hard_block",
+                    before=verdict,
+                    after=LyapunovVerdict.ABSTAIN,
+                    reason="memory_pressure_high",
+                )
             return LyapunovVerdict.ABSTAIN
 
         if memory_pressure > 0.5:

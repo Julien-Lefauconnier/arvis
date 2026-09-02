@@ -179,13 +179,17 @@ def apply_final_adaptive_veto(
         if (journal := journal_of(ctx)) is not None:
             journal.hard_adaptive_veto = True
         ctx.extra["_hard_adaptive_veto"] = True
-        record_verdict_transition(
-            ctx,
-            stage="final_adaptive_hard_veto",
-            before=verdict,
-            after=LyapunovVerdict.ABSTAIN,
-            reason="adaptive_metrics_unstable",
-        )
+        # LOT G5: the veto flag is set regardless (the global-policy
+        # relaxation guard consults it), but the trace records only a
+        # real transition, never an ABSTAIN -> ABSTAIN no-op.
+        if verdict != LyapunovVerdict.ABSTAIN:
+            record_verdict_transition(
+                ctx,
+                stage="final_adaptive_hard_veto",
+                before=verdict,
+                after=LyapunovVerdict.ABSTAIN,
+                reason="adaptive_metrics_unstable",
+            )
 
         verdict = LyapunovVerdict.ABSTAIN
 
