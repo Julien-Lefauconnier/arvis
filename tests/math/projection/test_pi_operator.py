@@ -109,16 +109,36 @@ def test_pi_operator_is_bounded():
         assert -1.0 < v < 1.0
 
 
-def test_pi_operator_reacts_to_divergence():
-    class Ctx:
-        _dv = 0.5  # forte divergence
-        validity_envelope = type("V", (), {"valid": True})()
-        adaptive_snapshot = type("A", (), {"regime": "stable"})()
+def test_pi_operator_reacts_to_instability_not_to_drift():
+    """Campaign PROJ moved this test.
+
+    It used to seed ``_dv = 0.5`` labeled "forte divergence" and
+    require strong contraction. ``_dv`` carries the drift score, a
+    magnitude clamped to [0, 1], so the assertion pinned a reaction
+    that fired on every turn with any drift at all, not a measured
+    divergence (DM-P1, the same misread campaign ALLOW closed in the
+    certificate). The operator now reacts to the instability channels
+    that actually exist at projection time: the validity envelope and
+    the adaptive regime, read from the canonical scientific nesting.
+    """
+    from types import SimpleNamespace
+
+    def ctx(valid: bool) -> SimpleNamespace:
+        return SimpleNamespace(
+            scientific=SimpleNamespace(
+                adaptive=SimpleNamespace(
+                    validity_envelope=SimpleNamespace(valid=valid),
+                    adaptive_snapshot=SimpleNamespace(regime="stable"),
+                )
+            ),
+            _dv=0.5,
+        )
 
     pi = PiOperator()
-
     view = {"x": 10.0}
-    projected = pi.project(view, Ctx())
 
-    # doit être fortement contracté
-    assert abs(projected["x"]) < 0.8
+    healthy = pi.project(view, ctx(valid=True))
+    unstable = pi.project(view, ctx(valid=False))
+
+    assert abs(unstable["x"]) < abs(healthy["x"])
+    assert abs(unstable["x"]) < 0.9

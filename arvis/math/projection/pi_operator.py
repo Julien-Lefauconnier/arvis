@@ -34,30 +34,26 @@ class PiOperator:
             getattr(adaptive_ctx, "validity_envelope", None), "valid", True
         )
 
-        # Projection strength
+        # Projection strength. Driven by the validity envelope and
+        # the adaptive regime, and by nothing else.
+        #
+        # A "stability feedback control" block used to clamp alpha to
+        # 0.6 whenever the private ctx._dv attribute was positive,
+        # reading it as a signed energy derivative. That attribute
+        # carries float(core_ctx.drift_score), a DriftSignal magnitude
+        # clamped to [0, 1] and never negative, so the clamp fired on
+        # every turn with any drift at all and this light branch was
+        # reachable only at exactly zero drift (campaign PROJ, DM-P1;
+        # same misread as the certificate defect campaign ALLOW
+        # closed). The signal the block wanted does not exist at
+        # projection time; drift-reactive projection strength is
+        # re-posed at DM4 with a real signal.
         if not validity:
             alpha = 0.5  # aggressive projection
         elif regime == "critical":
             alpha = 0.7  # moderate
         else:
-            alpha = 1.0  # light (almost identity)
-
-        # -----------------------------------------
-        # Stability feedback control
-        # -----------------------------------------
-        delta_v = getattr(ctx, "_dv", 0.0) if ctx is not None else 0.0
-        try:
-            dv = float(delta_v)
-        except (TypeError, ValueError, OverflowError):
-            dv = 0.0
-
-        # If system diverges → increase contraction
-        if dv > 0.0:
-            alpha = min(alpha, 0.6)
-
-        # If strongly diverging → strong contraction
-        if dv > 0.2:
-            alpha = min(alpha, 0.2)
+            alpha = 1.0  # light (identity up to the final squash)
 
         for k, v in state.items():
             # -----------------------------------------
