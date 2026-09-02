@@ -341,6 +341,11 @@ def build_validity_envelope(
             kappa_safe=bool(kappa_safe),
             adaptive_available=bool(adaptive_metrics and adaptive_metrics.is_available),
             adaptive_band=adaptive_band,
+            # DM-G2: the raw T1 verdict travels beside the effective
+            # one, so a soft posture can never make the envelope
+            # publish True for a condition measured False without
+            # disclosing the measurement.
+            switching_safe_measured=bool(switching_safe),
         )
         if scientific is not None:
             scientific.adaptive.validity_envelope = validity_envelope

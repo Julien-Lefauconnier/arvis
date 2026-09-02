@@ -118,21 +118,46 @@ def _envelope_ctx(**attrs):
     return SimpleNamespace(**base)
 
 
-def _build(ctx, switching_safe: bool) -> None:
+def _live_adaptive():
+    from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
+
+    return AdaptiveSnapshot(
+        kappa_eff=0.1, margin=-0.05, regime="stable", available=True
+    )
+
+
+def _build(ctx, switching_safe: bool, adaptive_metrics=None) -> None:
     build_validity_envelope(
         ctx=ctx,
         switching_safe=switching_safe,
         w_ratio=None,
         w_bound_tol=1.05,
-        adaptive_metrics=None,
+        adaptive_metrics=adaptive_metrics,
     )
 
 
 def test_switching_soft_mode_is_observability_only():
+    """Campaign GATE-SEM moved this test: it built the envelope with
+    NO adaptive layer and required valid=True, pinning the DM-G2
+    defect (a missing certification axis certified nothing and
+    invalidated nothing). The soft-switching property it actually
+    owns is unchanged and asserted with a live layer; the measured
+    switching verdict now travels beside the effective one."""
     ctx = _envelope_ctx()
-    _build(ctx, switching_safe=False)
-    assert ctx.scientific.adaptive.validity_envelope.valid is True
+    _build(ctx, switching_safe=False, adaptive_metrics=_live_adaptive())
+    envelope = ctx.scientific.adaptive.validity_envelope
+    assert envelope.valid is True
+    assert envelope.switching_safe is True
+    assert envelope.switching_safe_measured is False
     assert "switching_soft_warning" in ctx.extra["fusion_reasons"]
+
+
+def test_absent_adaptive_layer_invalidates_the_envelope():
+    ctx = _envelope_ctx()
+    _build(ctx, switching_safe=True, adaptive_metrics=None)
+    envelope = ctx.scientific.adaptive.validity_envelope
+    assert envelope.valid is False
+    assert envelope.reason == "adaptive_unavailable"
 
 
 def test_switching_enforce_mode_feeds_the_envelope():
@@ -144,7 +169,7 @@ def test_switching_enforce_mode_feeds_the_envelope():
 
 def test_switching_enforce_mode_keeps_safe_switching_valid():
     ctx = _envelope_ctx(switching_envelope_mode="enforce")
-    _build(ctx, switching_safe=True)
+    _build(ctx, switching_safe=True, adaptive_metrics=_live_adaptive())
     assert ctx.scientific.adaptive.validity_envelope.valid is True
 
 
