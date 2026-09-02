@@ -755,9 +755,20 @@ Unsupported files remain represented in the tree but are marked with:
 - `supported = False`
 - `reason = "unsupported_file_type"`
 
-### 16.4 Test behavior
+The executor APPLIES this verdict (campaign HARDEN, DM-H3): the VFS
+item for an unsupported entry is created so the tree stays faithful,
+but its content is never handed to the content importer, and the skip
+is recorded in `skipped_files` under the analyzer's reason.
 
-In test environments, guard enforcement may be disabled to simplify unit testing of analyzer logic.
+### 16.4 Guard injection
+
+The security guard is ALWAYS constructed; no environment variable and
+no runtime mode can remove it (campaign KERNEL removed the historical
+`ENV=test` bypass as a security defect, fixed in 0.1.0b6 and covered
+by its advisory). A test or a caller that needs different limits
+injects a configured `ZipGuard` at the call site; the ingestion
+limits themselves are ambient configuration, resolved lazily and
+validated at guard construction (see `docs/CONFIGURATION.md`).
 
 ---
 
@@ -1162,7 +1173,9 @@ Arguments:
 - `zip_path`
 - `user_id`
 - `target_parent_id: Optional[str]`
-- `keep_zip: bool = False`
+- `keep_zip: bool = False` (accepted no-op since campaign HARDEN,
+  DM-H1: the import never deletes the host source archive; the
+  parameter is kept so signatures do not break)
 - `plan: Optional[ZipImportPlan]`
 
 Returns:
