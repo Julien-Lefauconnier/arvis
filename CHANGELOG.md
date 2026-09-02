@@ -9,6 +9,30 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Changed
+
+- Campaign HONEST-DOCS: the documentation claims what is measured.
+  The M10 report's historical sections are stamped, section 11.4's
+  inverted conclusion is retracted in place, and a new section 16
+  carries the criterion-by-criterion discrimination table ('11 of
+  12' overstates: two registered criteria are structurally unable to
+  fail), the protocol section-5 observations the registered set
+  omitted (violation rate 0.989 / 0.941 among them), and the
+  registration provenance by commit hash. A gate ratchet now checks
+  the report's headline numbers and the PATH_TO_ALLOW table against
+  the tracked artifacts, closing the class of silently stale prose.
+  M13 stops calling M10 'planned', MAPPING states the honest status
+  of every equivalence row, M15 claims stability as a complement to
+  alignment (content out of scope, no priority claim, real verdict
+  vocabulary), and the core specification's Conformance Requirement
+  3 is amended to what the implementation does (measure and disclose
+  always, enforce posture available, ALLOW gated on the live
+  measured adaptive margin) with a reference-implementation
+  disclosures subsection (slow law off by default, fast-V decisive
+  energy, conservative dwell proxy). The README gains the campaigns
+  paragraph with links, executed hash literals, example 07, and
+  absolute doc links.
+
 ## [0.1.0b6] - 2026-09-02
 
 ### Security
