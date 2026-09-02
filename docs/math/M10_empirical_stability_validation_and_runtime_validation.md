@@ -844,3 +844,98 @@ the campaign closure; the moved tests are
 ``test_pi_operator_reacts_to_divergence`` (pinned the drift clamp)
 and ``test_regime_stage.py::test_full_flow`` (pinned the double
 tick).
+
+## 14. Campaign 5 Report: SEUIL, 2026-09-02
+
+### 14.1 The last conventional constant on the ALLOW path
+
+After campaigns ALLOW and PROJ, one floor on the path to a final
+ALLOW remained unmeasured: ``delta_w_soft_threshold``, the local
+soft filter's boundary between a demonstrated contraction and a
+calm-looking wobble. It lived as ``getattr(ctx, ..., -0.05)``, an
+attribute nothing ever set, so in practice a hard-coded -0.05 chosen
+by convention. This campaign calibrated it from the corpora and
+registered the result before the run (DM-S1), the same discipline as
+the metric thresholds of sections 10 and 11.
+
+### 14.2 What the landscape measurement showed
+
+On D-2.0, 767 turns contract, with |dW| median 0.056 and a measured
+contraction RATE |dW|/W of median 0.15. Two structural facts:
+
+- Adversarial turns also contract, and deeply (single-turn dW down
+  to -0.344 on the boundary family). The per-turn delta does not
+  separate adversarial from nominal; this filter is defense in
+  depth, and the layers that do the separating (input risk, the
+  adaptive veto, provenance floors) were measured doing it under
+  every candidate below.
+- The ``nominal_feedback`` family, engineered so its inputs contract
+  on every turn (p_contraction 1.000, section 11.3), converges
+  geometrically: the better it does, the smaller its steps (median
+  |dW| 0.004). Under the absolute -0.05 the family got ZERO ALLOW.
+  A floor that refuses the one family that provably contracts by
+  design is measuring step size, not contraction.
+
+After the PROJ clock fix, the filter's direct victims were 13 turns
+on D-2.0, median |dW| 0.033: real contractions under a conventional
+bar.
+
+### 14.3 The registered rule
+
+DM-S1, registered by the owner on 2026-09-02 before the campaign
+run:
+
+    weak  iff  |delta_w| < max(0.05 * W_current, 0.005)
+
+The 5 per cent rate is one third of the measured median contraction
+rate, so a typical real contraction clears it with margin; the 0.005
+absolute floor brackets the p05-p10 of observed contracting |dW|, so
+a system hovering near W = 0 cannot certify noise. The constants
+live once, in ``arvis/math/stability/weak_stability_policy.py``,
+pinned by the suite. Changing either is a new registration with a
+new campaign run.
+
+### 14.4 The dossier: every candidate measured before the choice
+
+Absolute -0.01, absolute -0.025, keeping -0.05, and the rate rule
+were each run on both full corpora before registration:
+
+| Candidate | D-1.0 ALLOW | D-2.0 ALLOW | feedback unlocked | ALLOW outside healthy families |
+|---|---|---|---|---|
+| keep -0.05 | 11 | 4 | 0 | 0 |
+| -0.025 | 12 | 13 | 8 | 0 |
+| -0.01 | 13 | 15 | 8 | 0 |
+| rate (registered) | 13 | 15 | 8 | 0 |
+
+Both judgments hold under every candidate (11 of 12 and 12 of 12,
+same criteria). On D-1.0, an open-loop corpus, the ABSTAIN count is
+bit-identical under all candidates: the measured proof that this
+filter never relaxes a refusal, it only arbitrates between ALLOW and
+REQUIRES_CONFIRMATION on turns every other layer already cleared.
+On D-2.0 the small ABSTAIN differences between candidates are the
+closed loop reacting to changed verdicts (section 11.1), not the
+filter.
+
+### 14.5 Result on the republished campaigns
+
+Under the registered rule: D-1.0 reaches 13 ALLOW (nominal 8,
+long_horizon 5) and D-2.0 reaches 15 (nominal 4, long_horizon 3,
+``nominal_feedback`` 8). The feedback ALLOW are the first ever on
+that family, and they are the campaign's point: the family built to
+demonstrate A12's contraction regime is finally certified when it
+does. The smallest admitted contraction is |dW| 0.0105; adversarial
+ALLOW remains 0.0 everywhere.
+
+Every constant on the path from a turn to a final ALLOW is now
+either measured, registered against a measurement, or pinned with
+its provenance. What remains conventional is tracked for DM4
+(section 12.5's remaining items are closed by campaigns PROJ and
+SEUIL; DM4 keeps the risk-bound calibration, the composite full-W
+wiring, and drift-reactive projection strength).
+
+### 14.6 Reproduction
+
+``python -m validation.m10 run`` and ``run2`` regenerate the
+artifacts; the sweeps are unaffected (the declared_risk family does
+not cross this filter). Mutation replay is recorded in the campaign
+closure.

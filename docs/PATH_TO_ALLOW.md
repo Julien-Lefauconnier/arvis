@@ -122,39 +122,48 @@ axis is now assessed against the composite energy delta or reported
 unassessed, and the two reason codes went from 1270 occurrences on
 the D-2.0 corpus to zero. M10 section 12 has the full account.
 
-## 5. It has to decrease by enough
+## 5. It has to decrease by enough, relative to its energy
 
-A contraction weaker than `delta_w_soft_threshold` (-0.05 by
-default) is floored with reason `weak_stability`, in the local soft
-filter of the decision stack. A turn whose energy fell by 0.04 is
-contracting, and it will still land on `REQUIRES_CONFIRMATION`.
+A contraction below the registered rate is floored with reason
+`weak_stability`, in the local soft filter of the decision stack.
+Since campaign SEUIL the boundary is a rate, not a step:
 
-This is currently the dominant remaining floor. On the D-2.0 corpus
-it accounts for 108 of the 113 turns where the gate's own pre-verdict
-is `ALLOW` and the final verdict is not. The constant is
-conventional, not calibrated; the M10 campaigns now publish the ΔW
-scale a calibration would need, and that calibration is tracked as
-its own change rather than tuned in place.
+    weak  iff  |delta_w| < max(0.05 * W_current, 0.005)
+
+Five per cent of the turn's current energy (one third of the
+measured median contraction rate), with an absolute floor of 0.005
+so a session hovering near zero energy cannot certify noise. The
+constants were calibrated from the M10 corpora and registered before
+the campaign run (DM-S1, M10 section 14); they live in
+`arvis/math/stability/weak_stability_policy.py` and changing them is
+a new registration. A host may still set `delta_w_soft_threshold` on
+the context as an explicit absolute override.
+
+The practical meaning for an integrator: shedding 1.2 per cent of a
+small energy is a certified contraction, while the same absolute
+step on a large energy is not. A geometrically converging session,
+whose steps shrink as it succeeds, is no longer refused for
+succeeding.
 
 ## What 0.1.x lets you reach
 
 `ALLOW` is reachable. Measured on the current tree, across both M10
-campaigns (campaign PROJ corrected the dwell clock, which ticked
-twice per turn and let the switching guard read twice the real
-dwell, so these counts are lower and harder-won than campaign 3's):
+campaigns (on the corrected dwell clock of campaign PROJ and the
+registered rate floor of campaign SEUIL):
 
 | | D-1.0 (1440 turns) | D-2.0 (1632 turns) |
 |---|---|---|
-| ALLOW | 11 (0.76%) | 4 (0.25%) |
-| REQUIRES_CONFIRMATION | 169 | 237 |
-| ABSTAIN | 1260 | 1391 |
+| ALLOW | 13 (0.90%) | 15 (0.92%) |
+| REQUIRES_CONFIRMATION | 167 | 232 |
+| ABSTAIN | 1260 | 1385 |
 
 Every one of those turns has a strictly negative composite delta,
-and they occur only in the `nominal` and `long_horizon` families.
-Adversarial `ALLOW` remains 0.0 on both corpora.
-
-Conditional on a turn that actually contracted, `ALLOW` reaches
-1.9% overall on D-1.0 and 7.4% on its nominal family.
+and they occur only in the `nominal`, `long_horizon` and
+`nominal_feedback` families; the 8 feedback ALLOW on D-2.0 are the
+first ever on the family engineered to contract, which is the
+outcome the whole path was built to certify. Adversarial `ALLOW`
+remains 0.0 on both corpora, and the smallest admitted contraction
+is |dW| 0.0105.
 
 So a 0.1.x host should still design for the two-level ladder
 (`REQUIRES_CONFIRMATION` and `ABSTAIN`) as the common case, and

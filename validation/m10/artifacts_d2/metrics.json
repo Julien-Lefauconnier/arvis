@@ -425,14 +425,14 @@
         "by_family": {
           "long_horizon": {
             "ABSTAIN": 0.96875,
-            "ALLOW": 0.002083333333,
-            "REQUIRE_CONFIRMATION": 0.029166666667
+            "ALLOW": 0.00625,
+            "REQUIRE_CONFIRMATION": 0.025
           }
         },
         "given_contraction": {
           "ABSTAIN": 0.967592592593,
-          "ALLOW": 0.00462962963,
-          "REQUIRE_CONFIRMATION": 0.027777777778
+          "ALLOW": 0.013888888889,
+          "REQUIRE_CONFIRMATION": 0.018518518519
         },
         "given_expansion": {
           "ABSTAIN": 1.0,
@@ -441,8 +441,8 @@
         },
         "overall": {
           "ABSTAIN": 0.96875,
-          "ALLOW": 0.002083333333,
-          "REQUIRE_CONFIRMATION": 0.029166666667
+          "ALLOW": 0.00625,
+          "REQUIRE_CONFIRMATION": 0.025
         }
       },
       "iss_residual": {
@@ -486,13 +486,13 @@
       },
       "projection_overrides": {
         "comparable_turns": 480,
-        "final_stricter_than_pre": 7,
+        "final_stricter_than_pre": 5,
         "pi_gate_non_allow": 0,
-        "tightening_rate": 0.014583333333,
+        "tightening_rate": 0.010416666667,
         "transition_stages": {
           "final_adaptive_hard_veto": 452,
           "fusion_adaptive_hard_veto": 452,
-          "local_soft_filter": 4,
+          "local_soft_filter": 2,
           "memory_hard_block": 64,
           "projection_boundary_enforcement": 152
         }
@@ -528,14 +528,14 @@
         "by_family": {
           "nominal": {
             "ABSTAIN": 0.916666666667,
-            "ALLOW": 0.015625,
-            "REQUIRE_CONFIRMATION": 0.067708333333
+            "ALLOW": 0.020833333333,
+            "REQUIRE_CONFIRMATION": 0.0625
           }
         },
         "given_contraction": {
           "ABSTAIN": 0.912087912088,
-          "ALLOW": 0.032967032967,
-          "REQUIRE_CONFIRMATION": 0.054945054945
+          "ALLOW": 0.043956043956,
+          "REQUIRE_CONFIRMATION": 0.043956043956
         },
         "given_expansion": {
           "ABSTAIN": 1.0,
@@ -544,8 +544,8 @@
         },
         "overall": {
           "ABSTAIN": 0.916666666667,
-          "ALLOW": 0.015625,
-          "REQUIRE_CONFIRMATION": 0.067708333333
+          "ALLOW": 0.020833333333,
+          "REQUIRE_CONFIRMATION": 0.0625
         }
       },
       "iss_residual": {
@@ -589,13 +589,12 @@
       },
       "projection_overrides": {
         "comparable_turns": 192,
-        "final_stricter_than_pre": 1,
+        "final_stricter_than_pre": 0,
         "pi_gate_non_allow": 0,
-        "tightening_rate": 0.005208333333,
+        "tightening_rate": 0.0,
         "transition_stages": {
           "final_adaptive_hard_veto": 169,
-          "fusion_adaptive_hard_veto": 169,
-          "local_soft_filter": 1
+          "fusion_adaptive_hard_veto": 169
         }
       }
     },
@@ -604,10 +603,10 @@
         "availability": 0.916666666667,
         "available_turns": 176,
         "band_counts": {
-          "critical": 61,
-          "hard": 115
+          "critical": 67,
+          "hard": 109
         },
-        "margin_mean": 0.040707084953,
+        "margin_mean": 0.041072708993,
         "margin_samples": 176,
         "turns": 192
       },
@@ -626,15 +625,15 @@
       "gate_distribution": {
         "by_family": {
           "nominal_feedback": {
-            "ABSTAIN": 0.625,
-            "ALLOW": 0.0,
-            "REQUIRE_CONFIRMATION": 0.375
+            "ABSTAIN": 0.59375,
+            "ALLOW": 0.041666666667,
+            "REQUIRE_CONFIRMATION": 0.364583333333
           }
         },
         "given_contraction": {
-          "ABSTAIN": 0.625,
-          "ALLOW": 0.0,
-          "REQUIRE_CONFIRMATION": 0.375
+          "ABSTAIN": 0.592391304348,
+          "ALLOW": 0.04347826087,
+          "REQUIRE_CONFIRMATION": 0.364130434783
         },
         "given_expansion": {
           "ABSTAIN": 0.0,
@@ -642,9 +641,9 @@
           "REQUIRE_CONFIRMATION": 0.0
         },
         "overall": {
-          "ABSTAIN": 0.625,
-          "ALLOW": 0.0,
-          "REQUIRE_CONFIRMATION": 0.375
+          "ABSTAIN": 0.59375,
+          "ALLOW": 0.041666666667,
+          "REQUIRE_CONFIRMATION": 0.364583333333
         }
       },
       "iss_residual": {
@@ -657,12 +656,12 @@
       "kappa_violations": {
         "abstain_relaxed_past_confirmation": 0,
         "margin_samples": 176,
-        "violation_rate": 0.653409090909,
-        "violations": 115
+        "violation_rate": 0.619318181818,
+        "violations": 109
       },
       "lyapunov_evolution": {
-        "max_expansion": -1.05e-05,
-        "mean_delta": -0.008540717391,
+        "max_expansion": -7.425e-05,
+        "mean_delta": -0.008528851902,
         "p_contraction": 1.0,
         "p_expansion": 0.0,
         "p_marginal": 0.0,
@@ -688,13 +687,12 @@
       },
       "projection_overrides": {
         "comparable_turns": 192,
-        "final_stricter_than_pre": 8,
+        "final_stricter_than_pre": 0,
         "pi_gate_non_allow": 0,
-        "tightening_rate": 0.041666666667,
+        "tightening_rate": 0.0,
         "transition_stages": {
-          "final_adaptive_hard_veto": 115,
-          "fusion_adaptive_hard_veto": 115,
-          "local_soft_filter": 8
+          "final_adaptive_hard_veto": 109,
+          "fusion_adaptive_hard_veto": 109
         }
       }
     },
@@ -802,12 +800,12 @@
       "availability": 0.813725490196,
       "available_turns": 1328,
       "band_counts": {
-        "critical": 73,
-        "hard": 1246,
+        "critical": 79,
+        "hard": 1240,
         "stable": 7,
         "warning": 2
       },
-      "margin_mean": 0.168861745217,
+      "margin_mean": 0.168910201415,
       "margin_samples": 1328,
       "turns": 1632
     },
@@ -847,18 +845,18 @@
         },
         "long_horizon": {
           "ABSTAIN": 0.96875,
-          "ALLOW": 0.002083333333,
-          "REQUIRE_CONFIRMATION": 0.029166666667
+          "ALLOW": 0.00625,
+          "REQUIRE_CONFIRMATION": 0.025
         },
         "nominal": {
           "ABSTAIN": 0.916666666667,
-          "ALLOW": 0.015625,
-          "REQUIRE_CONFIRMATION": 0.067708333333
+          "ALLOW": 0.020833333333,
+          "REQUIRE_CONFIRMATION": 0.0625
         },
         "nominal_feedback": {
-          "ABSTAIN": 0.625,
-          "ALLOW": 0.0,
-          "REQUIRE_CONFIRMATION": 0.375
+          "ABSTAIN": 0.59375,
+          "ALLOW": 0.041666666667,
+          "REQUIRE_CONFIRMATION": 0.364583333333
         },
         "switching_stress": {
           "ABSTAIN": 0.958333333333,
@@ -867,9 +865,9 @@
         }
       },
       "given_contraction": {
-        "ABSTAIN": 0.887874837027,
-        "ALLOW": 0.005215123859,
-        "REQUIRE_CONFIRMATION": 0.106910039113
+        "ABSTAIN": 0.880052151239,
+        "ALLOW": 0.019556714472,
+        "REQUIRE_CONFIRMATION": 0.100391134289
       },
       "given_expansion": {
         "ABSTAIN": 1.0,
@@ -877,9 +875,9 @@
         "REQUIRE_CONFIRMATION": 0.0
       },
       "overall": {
-        "ABSTAIN": 0.852328431373,
-        "ALLOW": 0.002450980392,
-        "REQUIRE_CONFIRMATION": 0.145220588235
+        "ABSTAIN": 0.848651960784,
+        "ALLOW": 0.009191176471,
+        "REQUIRE_CONFIRMATION": 0.142156862745
       }
     },
     "iss_residual": {
@@ -892,12 +890,12 @@
     "kappa_violations": {
       "abstain_relaxed_past_confirmation": 0,
       "margin_samples": 1328,
-      "violation_rate": 0.938253012048,
-      "violations": 1246
+      "violation_rate": 0.933734939759,
+      "violations": 1240
     },
     "lyapunov_evolution": {
       "max_expansion": 0.5535,
-      "mean_delta": 0.003058359694,
+      "mean_delta": 0.003059752073,
       "p_contraction": 0.489158163265,
       "p_expansion": 0.392857142857,
       "p_marginal": 0.117984693878,
@@ -923,15 +921,15 @@
     },
     "projection_overrides": {
       "comparable_turns": 1632,
-      "final_stricter_than_pre": 89,
+      "final_stricter_than_pre": 78,
       "pi_gate_non_allow": 0,
-      "tightening_rate": 0.054534313725,
+      "tightening_rate": 0.047794117647,
       "transition_stages": {
-        "final_adaptive_hard_veto": 1246,
-        "fusion_adaptive_hard_veto": 1246,
+        "final_adaptive_hard_veto": 1240,
+        "fusion_adaptive_hard_veto": 1240,
         "input_risk_gate": 67,
         "input_risk_relax_denied": 60,
-        "local_soft_filter": 13,
+        "local_soft_filter": 2,
         "memory_hard_block": 170,
         "projection_boundary_enforcement": 447,
         "projection_hard_block": 124,

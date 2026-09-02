@@ -425,14 +425,14 @@
         "by_family": {
           "long_horizon": {
             "ABSTAIN": 0.970833333333,
-            "ALLOW": 0.008333333333,
-            "REQUIRE_CONFIRMATION": 0.020833333333
+            "ALLOW": 0.010416666667,
+            "REQUIRE_CONFIRMATION": 0.01875
           }
         },
         "given_contraction": {
           "ABSTAIN": 0.971830985915,
-          "ALLOW": 0.018779342723,
-          "REQUIRE_CONFIRMATION": 0.009389671362
+          "ALLOW": 0.023474178404,
+          "REQUIRE_CONFIRMATION": 0.004694835681
         },
         "given_expansion": {
           "ABSTAIN": 1.0,
@@ -441,8 +441,8 @@
         },
         "overall": {
           "ABSTAIN": 0.970833333333,
-          "ALLOW": 0.008333333333,
-          "REQUIRE_CONFIRMATION": 0.020833333333
+          "ALLOW": 0.010416666667,
+          "REQUIRE_CONFIRMATION": 0.01875
         }
       },
       "iss_residual": {
@@ -486,13 +486,12 @@
       },
       "projection_overrides": {
         "comparable_turns": 480,
-        "final_stricter_than_pre": 3,
+        "final_stricter_than_pre": 2,
         "pi_gate_non_allow": 0,
-        "tightening_rate": 0.00625,
+        "tightening_rate": 0.004166666667,
         "transition_stages": {
           "final_adaptive_hard_veto": 460,
           "fusion_adaptive_hard_veto": 460,
-          "local_soft_filter": 1,
           "memory_hard_block": 64,
           "projection_boundary_enforcement": 152
         }
@@ -528,14 +527,14 @@
         "by_family": {
           "nominal": {
             "ABSTAIN": 0.901041666667,
-            "ALLOW": 0.036458333333,
-            "REQUIRE_CONFIRMATION": 0.0625
+            "ALLOW": 0.041666666667,
+            "REQUIRE_CONFIRMATION": 0.057291666667
           }
         },
         "given_contraction": {
           "ABSTAIN": 0.884210526316,
-          "ALLOW": 0.073684210526,
-          "REQUIRE_CONFIRMATION": 0.042105263158
+          "ALLOW": 0.084210526316,
+          "REQUIRE_CONFIRMATION": 0.031578947368
         },
         "given_expansion": {
           "ABSTAIN": 1.0,
@@ -544,8 +543,8 @@
         },
         "overall": {
           "ABSTAIN": 0.901041666667,
-          "ALLOW": 0.036458333333,
-          "REQUIRE_CONFIRMATION": 0.0625
+          "ALLOW": 0.041666666667,
+          "REQUIRE_CONFIRMATION": 0.057291666667
         }
       },
       "iss_residual": {
@@ -589,13 +588,13 @@
       },
       "projection_overrides": {
         "comparable_turns": 192,
-        "final_stricter_than_pre": 2,
+        "final_stricter_than_pre": 1,
         "pi_gate_non_allow": 0,
-        "tightening_rate": 0.010416666667,
+        "tightening_rate": 0.005208333333,
         "transition_stages": {
           "final_adaptive_hard_veto": 168,
           "fusion_adaptive_hard_veto": 168,
-          "local_soft_filter": 2
+          "local_soft_filter": 1
         }
       }
     },
@@ -748,13 +747,13 @@
         },
         "long_horizon": {
           "ABSTAIN": 0.970833333333,
-          "ALLOW": 0.008333333333,
-          "REQUIRE_CONFIRMATION": 0.020833333333
+          "ALLOW": 0.010416666667,
+          "REQUIRE_CONFIRMATION": 0.01875
         },
         "nominal": {
           "ABSTAIN": 0.901041666667,
-          "ALLOW": 0.036458333333,
-          "REQUIRE_CONFIRMATION": 0.0625
+          "ALLOW": 0.041666666667,
+          "REQUIRE_CONFIRMATION": 0.057291666667
         },
         "switching_stress": {
           "ABSTAIN": 0.958333333333,
@@ -764,8 +763,8 @@
       },
       "given_contraction": {
         "ABSTAIN": 0.968804159445,
-        "ALLOW": 0.019064124783,
-        "REQUIRE_CONFIRMATION": 0.012131715771
+        "ALLOW": 0.022530329289,
+        "REQUIRE_CONFIRMATION": 0.008665511265
       },
       "given_expansion": {
         "ABSTAIN": 1.0,
@@ -774,8 +773,8 @@
       },
       "overall": {
         "ABSTAIN": 0.875,
-        "ALLOW": 0.007638888889,
-        "REQUIRE_CONFIRMATION": 0.117361111111
+        "ALLOW": 0.009027777778,
+        "REQUIRE_CONFIRMATION": 0.115972222222
       }
     },
     "iss_residual": {
@@ -819,15 +818,15 @@
     },
     "projection_overrides": {
       "comparable_turns": 1440,
-      "final_stricter_than_pre": 68,
+      "final_stricter_than_pre": 66,
       "pi_gate_non_allow": 0,
-      "tightening_rate": 0.047222222222,
+      "tightening_rate": 0.045833333333,
       "transition_stages": {
         "final_adaptive_hard_veto": 1139,
         "fusion_adaptive_hard_veto": 1139,
         "input_risk_gate": 57,
         "input_risk_relax_denied": 59,
-        "local_soft_filter": 3,
+        "local_soft_filter": 1,
         "memory_hard_block": 173,
         "memory_soft_constraint": 1,
         "projection_boundary_enforcement": 444,
