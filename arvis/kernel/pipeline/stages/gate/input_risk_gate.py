@@ -65,8 +65,11 @@ _VERDICT_BY_NAME: dict[str, LyapunovVerdict] = {
 }
 
 # Real safety vetoes the input-risk policy must never relax.
+# adaptive_unavailable joined in campaign GATE-SEM (DM-G1): a missing
+# adaptive measurement is a fail-closed floor, not an artifact a
+# declared risk may grade away.
 _REAL_SAFETY_VETOES: frozenset[str] = frozenset(
-    {"kappa_violation", "adaptive_instability_veto"}
+    {"kappa_violation", "adaptive_instability_veto", "adaptive_unavailable"}
 )
 
 # Projection-derived reasons superseded when the input-risk policy governs.

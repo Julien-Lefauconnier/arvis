@@ -26,6 +26,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+from arvis.math.switching.switching_params import DWELL_TIME_FLOOR
+
 
 @dataclass(frozen=True)
 class AdaptiveKappaConfig:
@@ -134,10 +136,23 @@ class AdaptiveKappaEffEstimator:
         return "stable"
 
     def adaptive_switching_margin(self, J: float, tau_d: float) -> float | None:
+        """T1-shaped margin ``ln(J)/tau_d + ln(1 - kappa_smoothed)``.
+
+        A non-positive dwell is floored to ``DWELL_TIME_FLOOR``, the
+        same floor ``switching_lhs`` applies (campaign GATE-SEM,
+        DM-G1): an empty dwell clock makes the margin massively
+        positive, which is the veto the theory prescribes. The
+        previous ``ValueError`` on ``tau_d <= 0`` was swallowed by the
+        gate stage into ``metrics = None``, and an absent adaptive
+        layer constrained nothing, so the least-guarded turn of every
+        trajectory (the first threaded one) was the easiest to ALLOW:
+        6 of 11 D-1.0 and 3 of 4 D-2.0 final ALLOW sat on that hole.
+        """
         if self._kappa_smoothed is None:
             return None
-        if J <= 0.0 or tau_d <= 0.0:
-            raise ValueError("J and tau_d must be strictly positive.")
+        if J <= 0.0:
+            raise ValueError("J must be strictly positive.")
         if self._kappa_smoothed >= 1.0:
             raise ValueError("smoothed contraction factor must stay below 1.")
-        return (math.log(J) / tau_d) + math.log(1.0 - self._kappa_smoothed)
+        floored_tau_d = max(float(tau_d), DWELL_TIME_FLOOR)
+        return (math.log(J) / floored_tau_d) + math.log(1.0 - self._kappa_smoothed)

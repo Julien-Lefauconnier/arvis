@@ -179,7 +179,7 @@ by nothing (audit O3, 2026-08); they are now reserved.
 | `adaptive_instability_veto` | critical | normative | ABSTAIN |
 | `adaptive_band_critical` | high | reserved | ≤ REQUIRE_CONFIRMATION |
 | `adaptive_margin_warning` | medium | normative | REQUIRE_CONFIRMATION |
-| `adaptive_unavailable` | low | reserved | none |
+| `adaptive_unavailable` | high | normative | ≤ REQUIRE_CONFIRMATION |
 
 ---
 

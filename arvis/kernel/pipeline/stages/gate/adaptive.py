@@ -166,6 +166,55 @@ def updated_pre_verdict(
     return pre_verdict
 
 
+def apply_adaptive_unavailable_floor(
+    ctx: Any,
+    verdict: LyapunovVerdict,
+    adaptive_metrics: AdaptiveSnapshot | None,
+    w_prev: float | None,
+    w_current: float | None,
+) -> LyapunovVerdict:
+    """Fail-closed floor for an adaptive layer that should be live.
+
+    Campaign GATE-SEM (DM-G1, aligned with F-002): on a turn carrying
+    both composite energies the adaptive layer is expected to produce
+    a usable margin. If it did not (a genuine computation failure, or
+    a degenerate near-zero previous energy), the missing measurement
+    must constrain the verdict instead of silently constraining
+    nothing: ALLOW floors to REQUIRE_CONFIRMATION. Unthreaded turns
+    (no previous energy) are untouched; the layer is not expected
+    there and the rest of the stack already floors them.
+    """
+    if w_prev is None or w_current is None:
+        return verdict
+
+    margin = (
+        getattr(adaptive_metrics, "margin", None)
+        if adaptive_metrics is not None
+        else None
+    )
+    available = bool(
+        adaptive_metrics is not None
+        and getattr(adaptive_metrics, "is_available", False)
+    )
+    if available and margin is not None:
+        return verdict
+
+    reasons = fusion_reasons_of(ctx)
+    if "adaptive_unavailable" not in reasons:
+        reasons.append("adaptive_unavailable")
+
+    if verdict == LyapunovVerdict.ALLOW:
+        record_verdict_transition(
+            ctx,
+            stage="adaptive_unavailable_floor",
+            before=verdict,
+            after=LyapunovVerdict.REQUIRE_CONFIRMATION,
+            reason="adaptive_unavailable",
+        )
+        return LyapunovVerdict.REQUIRE_CONFIRMATION
+    return verdict
+
+
 def apply_final_adaptive_veto(
     ctx: Any,
     verdict: LyapunovVerdict,
@@ -201,5 +250,6 @@ __all__ = [
     "compute_adaptive_metrics",
     "apply_kappa_margin_layer",
     "updated_pre_verdict",
+    "apply_adaptive_unavailable_floor",
     "apply_final_adaptive_veto",
 ]

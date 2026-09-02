@@ -30,6 +30,7 @@ from arvis.kernel.pipeline.context.scientific_accessors import (
 )
 from arvis.kernel.pipeline.gate_overrides import GateOverrides
 from arvis.kernel.pipeline.stages.gate.adaptive import (
+    apply_adaptive_unavailable_floor,
     apply_final_adaptive_veto,
     apply_kappa_margin_layer,
     updated_pre_verdict,
@@ -383,6 +384,19 @@ class GateDecisionStack:
             "final_adaptive_veto",
             verdict,
             apply_final_adaptive_veto(ctx, verdict, assessment.adaptive_metrics),
+        )
+
+        verdict = enforce_monotone(
+            ctx,
+            "adaptive_unavailable_floor",
+            verdict,
+            apply_adaptive_unavailable_floor(
+                ctx,
+                verdict,
+                assessment.adaptive_metrics,
+                composite.w_prev,
+                composite.w_current,
+            ),
         )
 
         verdict = enforce_monotone(

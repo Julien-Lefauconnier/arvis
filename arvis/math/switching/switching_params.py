@@ -20,6 +20,16 @@ class SwitchingParams:
     J: float
 
 
+# Shared floor for a dwell time entering a T1-shaped bound. A zero
+# dwell (the turn right after a switch, or a fresh clock) makes the
+# bound massively positive, which is exactly what the theory says:
+# no dwell has been accumulated, the switching condition is violated.
+# The adaptive margin (arvis/math/adaptive/adaptive_kappa_eff.py)
+# applies the SAME floor, so the two T1 readings can never diverge on
+# how they treat an empty clock (campaign GATE-SEM, DM-G1).
+DWELL_TIME_FLOOR: float = 1e-6
+
+
 def kappa_eff(params: SwitchingParams) -> float:
     return params.alpha - params.gamma_z * params.eta * params.L_T
 
@@ -29,9 +39,9 @@ def switching_lhs(runtime: SwitchingRuntime | None, params: SwitchingParams) -> 
         return float("-inf")
 
     try:
-        tau_d = max(float(runtime.dwell_time()), 1e-6)
+        tau_d = max(float(runtime.dwell_time()), DWELL_TIME_FLOOR)
     except Exception:  # arvis-broad: fail-soft runtime probe
-        tau_d = 1e-6
+        tau_d = DWELL_TIME_FLOOR
 
     J = max(params.J, 1e-6)
     kappa = kappa_eff(params)
