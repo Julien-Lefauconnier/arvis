@@ -1077,10 +1077,18 @@ territory away: their measured adaptive margin is negative (the
 empirical contraction factor is large enough), but ``switching_lhs``
 computed with the ASSUMED ``kappa_eff`` 0.13 is still positive at
 dwell 1 and 2. The envelope now discloses exactly this
-(``switching_safe_measured: false`` beside the soft posture), and
-whether ALLOW should additionally require the assumed-constant T1
-reading, at the cost of refusing turns whose measured contraction is
-demonstrably stronger than the assumption, is decision DM-G2bis,
-posed to the owner with these two turns as the entire corpus
-evidence. Until it is decided, the pins require the measured margin,
-not the assumed one.
+(``switching_safe_measured: false`` beside the soft posture).
+
+**DM-G2bis, decided by the owner on 2026-09-02: option A.** The
+MEASURED adaptive margin governs the ALLOW path; the assumed-constant
+T1 reading stays monitoring (and is now always disclosed through
+``switching_safe_measured``). Rationale: the assumed ``kappa_eff``
+0.13 is a conservative convention, while the empirical contraction
+factor is measured on the actual trajectory; refusing a turn whose
+measured contraction is demonstrably stronger than the assumption
+would rank the convention above the measurement. The two D-2.0 turns
+cited above are the entire corpus evidence and remain ALLOW. The
+campaign pins therefore require the measured margin, deliberately
+not the assumed one; revisiting this (for instance if a future
+corpus shows measured-margin ALLOW misbehaving at low dwell) is a
+new registered decision.
