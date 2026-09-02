@@ -9,7 +9,58 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Added
+
+- Campaign SURFACE: the production identity channel reaches both
+  entrypoints. `ArvisEngine.run_as(principal, ...)` delegates to
+  `CognitiveOS.run_as` (exact `AuthenticatedPrincipal` stamp);
+  `host_api.engine` exports `CognitiveOS`, `host_api.access` exports
+  `AuthenticatedPrincipal`, and `host_api.tools` exports
+  `ToolInvocation`, `ToolPolicyEvaluator` and
+  `AuthorizedEffectContext`. HOST_API_VERSION 1.0 -> 1.1 (additive
+  only, 53 -> 58 pinned symbols), beta contract manifest
+  regenerated. A contract ratchet now keeps every example on the two
+  supported surfaces (root `arvis` and `arvis.host_api.*`);
+  examples/05 was rewritten accordingly. A second structural ratchet
+  pins that the kernel never imports the host-side
+  `CognitiveControlEngine` (declared for what it is: a host-side
+  control runtime, never the producer of the governed verdict).
+
+### Removed
+
+- Campaign SURFACE: the four dead public-namespace facades
+  `arvis.api.{cognition,math,memory,reasoning}` (imported by
+  nothing) and the unused duplicate `StabilityView` of
+  `arvis.stability.stability_snapshot` are deleted. The public
+  stability view is `arvis.api.stability.StabilityView`.
+
+### Deprecated
+
+- Campaign SURFACE (DM-S4): the `extra["scientific_state_next"]`
+  output echo. The threading contract is
+  `view.next_scientific_state`; the pipeline keeps writing the echo
+  during the VERSIONING deprecation window, then it is removed.
+
 ### Changed
+
+- Campaign SURFACE: one public contract, two surfaces. `arvis.api`
+  is demoted to the internal aggregator it is (its docstring called
+  itself a stable public contract three lines before calling itself
+  semi-stable); VERSIONING.md documents the demotion and corrects
+  the host-surface symbol count (the previous 53 mixed the five
+  provisional control symbols into the stable promise). The README's
+  Public API Levels / When to use what section is rewritten on the
+  two surfaces, including the `run_as` production-identity path.
+  Verdict conversions between the gate vocabularies are now total,
+  typed and fail-closed in one module per boundary (no `.value`
+  string comparison remains on the decision path; wire values are
+  unchanged and pinned). The three verdict-affecting gate postures
+  (`global_stability_action`, `switching_envelope_mode`,
+  `input_risk_mode`) are typed closed sets (StrEnums with the
+  historical wire values; plain strings still compare equal).
+  `LinguisticActType.REFUS` ("refus", the last French identifier in
+  an enum, referenced nowhere and reaching no serialized payload) is
+  renamed REFUSAL ("refusal").
 
 - Campaign HONEST-DOCS: the documentation claims what is measured.
   The M10 report's historical sections are stamped, section 11.4's
