@@ -64,12 +64,16 @@ doctrine (campaign MATH-A, M2): each governed run measures its own turn
 through the core model (the contraction monitor by default) and emits a
 compact, replayable state for the host to thread.
 
-The wire contract:
+The wire contract (campaign SURFACE, DM-S4: one contract):
 
 - input: `run(..., extra={"scientific_state": <previous state>})`
-- output: after the run, `extra["scientific_state_next"]` carries the
-  next state (a plain JSON-safe dict; hosts treat it as an opaque blob
-  and never import its type)
+- output: `view.next_scientific_state` carries the next state (a plain
+  JSON-safe dict; hosts treat it as an opaque blob and never import
+  its type)
+- deprecated output echo: the pipeline still writes
+  `extra["scientific_state_next"]` for compatibility (an input dict is
+  not an output channel); it will be removed after the deprecation
+  window of VERSIONING.md. Read the view.
 
 Properties a host can rely on:
 

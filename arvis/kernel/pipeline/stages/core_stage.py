@@ -85,9 +85,10 @@ class CoreStage:
         # 1. Core processing
         # -----------------------------------------
         # Opaque cross-turn state: the host injects the prior blob under
-        # ctx.extra["scientific_state"] and reads the next one back under
-        # ctx.extra["scientific_state_next"]. The pipeline never inspects
-        # its schema; each core_model owns its own (de)serialization.
+        # ctx.extra["scientific_state"] and reads the next one back on
+        # the result view (view.next_scientific_state, the one contract
+        # per DM-S4, campaign SURFACE). The pipeline never inspects the
+        # schema; each core_model owns its own (de)serialization.
         extra = getattr(ctx, "extra", None)
         prior_state = extra.get("scientific_state") if isinstance(extra, dict) else None
 
@@ -111,6 +112,9 @@ class CoreStage:
         if next_state is not None:
             core_ctx.next_scientific_state = next_state
             if isinstance(extra, dict):
+                # DEPRECATED echo (DM-S4): an input dict is not an
+                # output channel. Kept during the VERSIONING
+                # deprecation window; hosts read the view.
                 extra["scientific_state_next"] = next_state
 
         core_snapshot = (

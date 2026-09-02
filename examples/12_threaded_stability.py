@@ -9,10 +9,10 @@ threaded turn on, the trajectory quantities become live: delta-V
 (contraction signal), the drift score, the PAC risk ceiling tightening
 over the window, and the empirical regime leaving ``warmup``.
 
-The wire contract (campaign MATH-A, M2):
+The wire contract (campaign MATH-A, M2; one contract per DM-S4):
 
 - pass the previous state:  ``run(..., extra={"scientific_state": s})``
-- read the next state back: ``extra["scientific_state_next"]``
+- read the next state back: ``view.next_scientific_state``
 
 The state is a plain JSON-safe dict; the host stores and threads it as
 an opaque blob (per user, per session, wherever its own model of
@@ -24,7 +24,7 @@ from arvis import CognitiveOS
 
 def governed_turn(payload: dict, state: dict | None) -> tuple[str, dict | None]:
     """One engine per governed turn (the documented lifecycle), with
-    the scientific state threaded through the extra channel."""
+    the scientific state read back from the result view (DM-S4)."""
     extra: dict = {}
     if state is not None:
         extra["scientific_state"] = state
@@ -37,7 +37,7 @@ def governed_turn(payload: dict, state: dict | None) -> tuple[str, dict | None]:
         if view is not None
         else "no stability assessment"
     )
-    return line, extra.get("scientific_state_next")
+    return line, result.next_scientific_state
 
 
 def main() -> None:

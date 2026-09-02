@@ -130,6 +130,9 @@ class PipelineFinalizeService:
                 }
                 core_scientific.next_scientific_state = threaded_state
                 if isinstance(getattr(ctx, "extra", None), dict):
+                    # DEPRECATED echo (DM-S4): kept in lockstep with
+                    # the core-stage write during the deprecation
+                    # window; hosts read view.next_scientific_state.
                     ctx.extra["scientific_state_next"] = threaded_state
         except Exception as exc:
             capture_pipeline_degraded_failure(

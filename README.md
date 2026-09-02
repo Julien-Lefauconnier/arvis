@@ -528,8 +528,9 @@ experimental, and out of scope for the 0.1 series:
   trajectory branch) only become live when the host threads the
   replayable `scientific_state` between turns
   (`run(..., extra={"scientific_state": previous})`, read back from
-  `extra["scientific_state_next"]`). A first, unthreaded turn is
-  conservative by construction.
+  `view.next_scientific_state`; the legacy
+  `extra["scientific_state_next"]` echo is deprecated). A first,
+  unthreaded turn is conservative by construction.
 * **stability axes are reported only when measured**: `summary()` and
   the stability view return `n/a`/`null` for axes the run did not
   compute, rather than zeros (`stability_score` is `1 - V`, the
