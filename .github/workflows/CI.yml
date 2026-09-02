@@ -126,6 +126,33 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
 
+  # Non-blocking early signal on the next Python (campaign FINITION,
+  # audit #2 P2-3): the classifier and the blocking matrix entry come
+  # only when this job is green and deliberately promoted; until then
+  # it reports, it never gates.
+  test-next-python:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.14"
+          cache: "pip"
+
+      - name: Install deps
+        run: |
+          pip install --upgrade pip==26.2.1
+          pip install -r requirements/gate.lock --require-hashes --prefer-binary
+          pip install -e . --no-deps
+
+      - name: Tests
+        run: bash scripts/run_quality_gate.sh tests
+
   min-deps:
     timeout-minutes: 30
     # Minimum supported dependencies (audit a15, 7.4): the published
