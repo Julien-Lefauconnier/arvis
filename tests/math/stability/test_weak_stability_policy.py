@@ -65,6 +65,15 @@ def test_an_unreadable_energy_gets_the_floor() -> None:
     assert weak_stability_threshold("not a number") == -0.005  # type: ignore[arg-type]
 
 
+def test_a_negative_energy_is_not_an_energy() -> None:
+    """W is a Lyapunov energy and cannot legitimately be negative; a
+    corrupted channel must degrade to the floor, not scale the
+    threshold with its magnitude. Added after mutation replay, where
+    an abs() rewrite survived every other pin."""
+    assert weak_stability_threshold(-0.4) == -0.005
+    assert weak_stability_threshold(-1e9) == -0.005
+
+
 def test_the_rate_semantics_in_one_sentence() -> None:
     """The defining contrast with the old absolute -0.05: the same
     small step is a real contraction on a small energy and noise on a
