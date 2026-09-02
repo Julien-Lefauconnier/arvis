@@ -45,34 +45,39 @@ jobs:
         run: bash scripts/run_quality_gate.sh static
 
       - name: Dependency audit
-        # Known vulnerabilities in the resolved dependency set. Blocking
-        # since a14 (audit a13, P1-03): the environment is locked, so a
-        # failure here is actionable, never noise from unrelated work.
+        # pip-audit runs from an ISOLATED environment so its own
+        # transitives never enter the frozen gate environment they are
+        # meant to audit (campaign CI: the previous inline install
+        # mutated the very set the next step validated). The
+        # suppression list and its dated justification live once, in
+        # the gate script.
         run: |
-          pip install pip-audit==2.10.1
-          # Blocking (audit a13, P1-03). Exceptions, if ever needed, are
-          # explicit --ignore-vuln flags added here with a dated
-          # justification, per the policy in SECURITY.md.
-          #
-          # PYSEC-2026-1845 (pytest 8.4.2, fixed in 9.0.3), ignored
-          # 2026-07-24: pytest is gate tooling only, absent from the
-          # shipped wheel and from the runtime dependencies. The fix is
-          # the pytest 9 toolchain bump already opened by Dependabot.
-          # Keep it as a dedicated tooling change rather than mixing a
-          # formatter/test-runner transition into a corrective release.
-          # Remove this flag with that bump.
-          pip-audit --strict -r requirements/gate.lock --ignore-vuln PYSEC-2026-1845
+          python -m venv /tmp/auditenv
+          /tmp/auditenv/bin/pip install --quiet --upgrade pip
+          /tmp/auditenv/bin/pip install --quiet pip-audit==2.10.1
+          PIP_AUDIT=/tmp/auditenv/bin/pip-audit \
+            bash scripts/run_quality_gate.sh audit
 
-      - name: Bandit (medium/high)
+      - name: Security gate (bandit medium/high)
         run: bash scripts/run_quality_gate.sh security
 
   test:
-    runs-on: ubuntu-latest
+    # The Python matrix runs on Linux; macOS (arm64) is added on one
+    # version because this library publishes cross-platform
+    # reproducibility guarantees (M10 section 9) and a real one-ulp
+    # divergence between arm64 and x86-64 reached the author's machine
+    # instead of CI, which had no non-Linux runner to catch it
+    # (campaign CI). One extra runner per pull request, not six.
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python-version: ["3.11", "3.12", "3.13"]
+        include:
+          - os: macos-latest
+            python-version: "3.11"
 
     steps:
       - name: Checkout
@@ -101,11 +106,11 @@ jobs:
         run: bash scripts/run_quality_gate.sh tests
 
       - name: Coverage XML for Codecov
-        if: matrix.python-version == '3.11'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         run: python -m coverage xml
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.11'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
 
   min-deps:
@@ -124,8 +129,11 @@ jobs:
       - name: Install minimum runtime bounds and pinned test tools
         run: |
           pip install --upgrade pip
-          pip install "jsonschema==4.26.0" "pyyaml==6.0.3" \
-            "pydantic==2.8.0" "numpy==2.4.1"
+          # Runtime minima, exactly as published.
+          pip install "jsonschema==4.26.0" "pydantic==2.8.0" "numpy==2.4.1"
+          # Gate tooling: pyyaml is read by the compliance scenario
+          # loader only and is a dev dependency, not a runtime one.
+          pip install "pyyaml==6.0.3"
           pip install "pytest==8.4.2" "pytest-asyncio==1.4.0" \
             "pytest-benchmark==5.2.3" "pytest-cov==7.1.0" \
             "pytest-mock==3.15.1" "hypothesis==6.161.2"

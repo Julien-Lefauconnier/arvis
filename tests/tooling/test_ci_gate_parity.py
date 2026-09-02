@@ -38,6 +38,11 @@ _GATE_OWNED_COMMANDS = (
     "check_broad_excepts.py",
     "check_module_coverage.py",
     "run_examples_smoke.sh",
+    # The suppression list lives once, in the gate: it used to be
+    # copy-pasted into two workflows with the dated justification in
+    # only one, so removing it from one left the other suppressing.
+    "pip-audit --strict",
+    "--ignore-vuln",
 )
 
 
@@ -58,7 +63,14 @@ def test_the_gate_exposes_the_granularity_ci_needs() -> None:
     times. The script offers one mode per job instead."""
     modes = _gate_modes()
 
-    assert {"all", "static", "security", "tests", "examples"} <= modes, modes
+    assert {
+        "all",
+        "static",
+        "security",
+        "audit",
+        "tests",
+        "examples",
+    } <= modes, modes
 
 
 def test_every_gate_mode_is_invoked_by_a_workflow() -> None:

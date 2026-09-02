@@ -42,17 +42,24 @@ classifiers = [
 
 dependencies = [
   # Minimum bounds are the versions actually proven by the gate
-  # (audit a14, A14-P1-07): the locked environment for jsonschema,
-  # pyyaml and numpy, and pydantic 2.8 which the beta-manifest
-  # determinism proof exercises explicitly alongside the locked 2.13.
-  # Widening a bound is deliberate and requires proving the older
-  # version in the gate first.
-  "jsonschema>=4.26",
-  "pyyaml>=6.0.3",
+  # (audit a14, A14-P1-07): the locked environment for jsonschema and
+  # numpy, and pydantic 2.8 which the beta-manifest determinism proof
+  # exercises explicitly alongside the locked 2.13. Widening a bound
+  # is deliberate and requires proving the older version in the gate
+  # first.
+  #
+  # Every bound is capped at the next major (campaign CI). This
+  # library's central claim is deterministic, reproducible execution,
+  # and a major release of a numeric or validation dependency can move
+  # that ground under a consumer who only ran `pip install arvis`:
+  # numpy 1 to 2 was breaking, and the published artifacts already
+  # carry a cross-platform ulp correction. A cap is a deliberate,
+  # visible upgrade rather than an automatic one.
+  "jsonschema>=4.26,<5",
   "pydantic>=2.8,<3",
   # numpy 2.4.0 was yanked from the index; 2.4.1 is the lowest
   # installable revision of the proven series (audit a15, 7.4).
-  "numpy>=2.4.1",
+  "numpy>=2.4.1,<3",
 ]
 
 [project.optional-dependencies]
@@ -75,6 +82,11 @@ dev = [
   "hypothesis==6.161.2",
   "pytest-benchmark==5.2.3",
   "pytest-asyncio==1.4.0",
+  # Read by the compliance scenario loader only (compliance/ is
+  # excluded from the wheel), so it is gate tooling and not a runtime
+  # dependency: shipping it made every consumer install a C extension
+  # that arvis/ never imports (campaign CI).
+  "pyyaml>=6.0.3",
 ]
 
 openai = ["openai>=1.0"]

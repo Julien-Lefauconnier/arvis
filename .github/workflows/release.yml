@@ -76,11 +76,19 @@ jobs:
           pip install -e . --no-deps
 
       - name: Dependency audit (blocking)
+        # Isolated so pip-audit's transitives never move a package in
+        # the frozen environment the next step validates: the inline
+        # install did exactly that, contradicting the "exact
+        # transitives the branch gate validated" claim above (campaign
+        # CI). The suppression list and its dated justification live
+        # once, in the gate script, instead of being copy-pasted here
+        # with the justification left behind in CI.yml.
         run: |
-          pip install pip-audit==2.10.1
-          # Same policy and same documented exception as CI.yml
-          # (SECURITY.md, dependency audit policy).
-          pip-audit --strict -r requirements/gate.lock --ignore-vuln PYSEC-2026-1845
+          python -m venv /tmp/auditenv
+          /tmp/auditenv/bin/pip install --quiet --upgrade pip
+          /tmp/auditenv/bin/pip install --quiet pip-audit==2.10.1
+          PIP_AUDIT=/tmp/auditenv/bin/pip-audit \
+            bash scripts/run_quality_gate.sh audit
 
       - name: Quality gate
         # The same gate contributors run: format, lint, mypy strict, bandit,
