@@ -2,6 +2,11 @@
 
 **The Cognitive Operating System for Governed AI Systems**
 
+[![CI](https://github.com/Julien-Lefauconnier/arvis/actions/workflows/CI.yml/badge.svg)](https://github.com/Julien-Lefauconnier/arvis/actions/workflows/CI.yml)
+[![PyPI](https://img.shields.io/pypi/v/arvis)](https://pypi.org/project/arvis/)
+[![Python](https://img.shields.io/pypi/pyversions/arvis)](https://pypi.org/project/arvis/)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/Julien-Lefauconnier/arvis/blob/main/LICENSE)
+
 > Python 3.11+ • Deterministic • Replayable • Governed • Auditable
 
 > **Status: `0.1.0b7.dev0` (beta series, development checkout).** The public surface (`arvis.__all__` and the
@@ -588,3 +593,16 @@ series; experimental internals and the draft standard may still evolve.
 Most AI systems try to generate outputs.
 ARVIS governs whether outputs are allowed to exist.
 ```
+
+---
+
+## Project Reference
+
+- [CHANGELOG](https://github.com/Julien-Lefauconnier/arvis/blob/main/CHANGELOG.md): every campaign, every security fix, every deprecation.
+- [SECURITY](https://github.com/Julien-Lefauconnier/arvis/blob/main/SECURITY.md): reporting, supported versions, audit-suppression policy.
+- [CONTRIBUTING](https://github.com/Julien-Lefauconnier/arvis/blob/main/CONTRIBUTING.md): the quality gate is the contract; English everywhere.
+- [VERSIONING](https://github.com/Julien-Lefauconnier/arvis/blob/main/VERSIONING.md): the two supported surfaces and the deprecation window.
+- [Configuration](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/CONFIGURATION.md): every environment variable ARVIS reads, in one place.
+- [Format versions](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/VERSIONS.md): the map of the version constants.
+
+Licensed under [Apache-2.0](https://github.com/Julien-Lefauconnier/arvis/blob/main/LICENSE).
