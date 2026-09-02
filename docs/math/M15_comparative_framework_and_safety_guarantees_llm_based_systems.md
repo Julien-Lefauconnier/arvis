@@ -80,7 +80,7 @@ o_t \xrightarrow{\Pi} (x_t, z_t, q_t, w_t) \to W_t \to \kappa^t \to G \to C \to 
 | Explicit decision filtering  | ✖                 | ✖               | ✖ (heuristic)   | ✔ (Gate G)             |
 | Bounded perturbation model   | ✔                 | ✖               | ✖               | ✔ (w_t decomposition)  |
 | Bounded practical behavior   | ✔                 | ✖               | ✖               | ✔ (practical tube)     |
-| Empirical runtime validation | optional          | ✔               | ✔               | planned (M10 protocol)  |
+| Empirical runtime validation | optional          | ✔               | ✔               | executed (M10 protocol) |
 
 ## 4. Core Paradigm Difference: Stability vs Optimization
 

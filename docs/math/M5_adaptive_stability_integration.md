@@ -90,7 +90,9 @@ where:
 
 This pipeline is implemented. The projection layer it feeds carries
 offline Phase A evidence (M3 appendix, `tests/math/`); its runtime
-empirical validation is the planned M10 protocol, not yet executed.
+empirical validation is the M10 protocol, executed on two registered
+corpora (campaigns 1 and 2, see the M10 report and its section 16
+for the honest criterion-by-criterion reading).
 
 ---
 

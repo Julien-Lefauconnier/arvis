@@ -247,7 +247,8 @@ This dependence is **indirect**, via runtime signals rather than direct function
 
 ## 10. Empirical Observability (Link to M10)
 
-The operator $\Pi_{\text{ctrl}}$ will be empirically characterized (M10 protocol, planned) by:
+The operator $\Pi_{\text{ctrl}}$ is empirically characterized by the
+executed M10 protocol through:
 
 $$
 P(v_t^\pi), \quad P(v_t^\pi \prec v_t^{\text{gate}}), \quad P(v_t^{\text{final}} \prec v_t^{\text{gate}})
