@@ -142,6 +142,20 @@ def test_projection_stage_passes_previous_projection():
 
 
 def test_projection_validator_rejects_high_divergence():
+    """Campaign ALLOW moved this test.
+
+    It used to seed ``_dv = 0.5`` and require a declared Lyapunov
+    incompatibility. That pinned the defect: ``_dv`` holds the drift
+    score, which ``DriftSignal`` clamps to [0, 1], so the assertion
+    held for every turn with any drift at all and never measured a
+    divergence. Its sibling seeded ``_dv = -0.1``, a value the clamp
+    makes unreachable in the running system, which is the clearest
+    evidence the fallback was written against a signed derivative
+    that never arrived on that attribute.
+
+    Divergence is now what the composite energy delta says it is.
+    """
+
     class DummyDomain:
         def validate(self, projected):
             return True, {}
@@ -152,7 +166,9 @@ def test_projection_validator_rejects_high_divergence():
     validator = ProjectionValidator(domain=DummyDomain())
 
     class Ctx:
-        _dv = 0.5  # divergence forte
+        scientific = PipelineScientificContext()
+        scientific.composite.delta_w = 0.5
+        _dv = 0.5
 
     cert = validator.validate({"x": 0.1}, ctx=Ctx())
 
@@ -171,7 +187,9 @@ def test_projection_validator_accepts_stable():
     validator = ProjectionValidator(domain=DummyDomain())
 
     class Ctx:
-        _dv = -0.1  # stabilisation
+        scientific = PipelineScientificContext()
+        scientific.composite.delta_w = -0.1
+        _dv = 0.1
 
     cert = validator.validate({"x": 0.1}, ctx=Ctx())
 

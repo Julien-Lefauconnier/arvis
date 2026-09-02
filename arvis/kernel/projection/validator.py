@@ -20,11 +20,18 @@ from .domain import ProjectionDomain
 class ProjectionValidator:
     """Turn a raw projection into a runtime certificate.
 
-    Two of the six certificate axes are NOT assessed here. Noise robustness has
-    no estimator and reuses domain validity as a conservative monotonic proxy;
-    mode stability examines nothing at all. Both are recorded as unassessed in
-    ``checks_detail`` and are excluded from the certification level, so a LOCAL
-    certificate only ever attests axes that were actually measured.
+    Three of the six certificate axes may go unassessed here. Noise robustness
+    has no estimator and reuses domain validity as a conservative monotonic
+    proxy; mode stability examines nothing at all; Lyapunov compatibility is
+    assessed only when a composite energy delta is available on the context,
+    which on the pre-gate certificate it never is. All three are recorded as
+    unassessed in ``checks_detail`` and are excluded from the certification
+    level, so a LOCAL certificate only ever attests axes that were actually
+    measured.
+
+    An unassessed axis reports its conservative value and says so. It is never
+    reported as a measured violation: doing that with the drift score standing
+    in for the energy delta is precisely the defect campaign ALLOW closed.
 
     This is a bounded, declared limitation, not a hidden one: see the guarantee
     scope published with the release.
@@ -98,34 +105,62 @@ class ProjectionValidator:
         checks_detail["mode_stability_assessed"] = False
 
         # --- lyapunov compatibility ---
+        # Assessed against the composite energy delta, and against
+        # nothing else. This branch used to fall back to the private
+        # ``ctx._dv`` attribute whenever that delta was absent, which
+        # was a defect on two counts (campaign ALLOW):
+        #
+        # ``ctx._dv`` carries ``float(core_ctx.drift_score)``, and
+        # ``DriftSignal`` stores ``clamp01(abs(value))``. A clamped
+        # magnitude in [0, 1] is never negative, so ``dv <= 1e-9`` held
+        # only when drift was exactly zero: any drift at all was
+        # reported as a measured Lyapunov incompatibility. And the gate
+        # stage writes ``composite.delta_w`` after the projection stage
+        # runs, so on the certificate the gate actually consumes the
+        # delta is always None and the fallback was the branch taken
+        # every time, not an edge case.
+        #
+        # An axis this validator cannot measure at this point is
+        # reported unassessed, exactly as noise robustness and mode
+        # stability already are, and excluded from the certification
+        # level. Assessing it for real would mean making the composite
+        # delta available before certification, which is a pipeline
+        # ordering change with a far wider blast radius.
         lyapunov_ok = True
+        lyapunov_assessed = False
         if ctx is not None:
             try:
                 delta_w = delta_w_of(ctx)
-                dv = getattr(ctx, "_dv", None)
 
                 if delta_w is not None:
                     lyapunov_ok = float(delta_w) <= self.lyapunov_positive_threshold
+                    lyapunov_assessed = True
                     checks_detail["lyapunov_delta_w_non_positive"] = lyapunov_ok
-                elif dv is not None:
-                    lyapunov_ok = float(dv) <= self.lyapunov_positive_threshold
-                    checks_detail["lyapunov_dv_non_positive"] = lyapunov_ok
-                else:
-                    checks_detail["lyapunov_signal_available"] = False
-                    lyapunov_ok = True
             except (TypeError, ValueError, OverflowError):
+                # A signal that is present but uncoercible is a failure
+                # to measure something that was there, not an absence:
+                # it stays fail-closed (F-002).
                 lyapunov_ok = False
+                lyapunov_assessed = True
                 checks_detail["lyapunov_check_error"] = False
 
+        checks_detail["lyapunov_compatibility_assessed"] = lyapunov_assessed
+
         # --- certification level ---
-        # Computed over the axes this validator actually measures. The two
+        # Computed over the axes this validator actually measures. The
         # unassessed axes are deliberately excluded: certifying on an axis that
-        # was never evaluated would overstate what the certificate attests.
-        # Behaviour is unchanged today, since both hold whenever domain_valid
-        # does, and domain_valid is the only branch that reaches here.
+        # was never evaluated would overstate what the certificate attests, and
+        # withdrawing certification over one would understate it just as badly.
+        # Lyapunov compatibility joins that rule whenever no composite delta is
+        # available to assess it against.
+        assessed_axes = [boundedness_ok, lipschitz_ok]
+
+        if lyapunov_assessed:
+            assessed_axes.append(lyapunov_ok)
+
         if not domain_valid:
             level = ProjectionCertificationLevel.NONE
-        elif all([boundedness_ok, lipschitz_ok, lyapunov_ok]):
+        elif all(assessed_axes):
             level = ProjectionCertificationLevel.LOCAL
         else:
             level = ProjectionCertificationLevel.BASIC
