@@ -75,7 +75,11 @@ from arvis.tools.tool_result import ToolEffectState, effect_has_started
 # canonicalization v2, so that format was 3. Campaign 8 canonicalization
 # v3 distinguishes enums from their scalar parents, so format 4 refuses
 # every previously issued record instead of silently reinterpreting it.
-CONFIRMATION_FORMAT_VERSION = 4
+# Format 5 (campaign KERNEL, recorded at the 0.1.0b6 release): the
+# binding material sits on canonicalization v4 and redaction v6, so a
+# record hashed under the previous formats is refused, never
+# reinterpreted.
+CONFIRMATION_FORMAT_VERSION = 5
 
 # Default and mandatory expiry (campaign 6, Lot 4): a confirmation is a
 # time-bounded human decision. Hosts pass an explicit ttl_seconds for

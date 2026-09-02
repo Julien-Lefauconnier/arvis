@@ -39,7 +39,9 @@ def test_issued_record_carries_current_format_version():
     reg = ConfirmationRegistry()
     record = reg.issue(tool_name="t", payload={"id": "A"}, principal="u1")
     assert record.format_version == CONFIRMATION_FORMAT_VERSION
-    assert CONFIRMATION_FORMAT_VERSION == 4
+    # Format 5: the KERNEL canonical-bytes changes recorded at the
+    # 0.1.0b6 release (moving this literal IS the deliberate bump).
+    assert CONFIRMATION_FORMAT_VERSION == 5
 
 
 def test_reserve_refuses_a_record_of_a_foreign_version():

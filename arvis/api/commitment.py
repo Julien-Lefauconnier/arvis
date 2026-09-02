@@ -49,7 +49,12 @@ from arvis.tools.registry import MANIFEST_SCHEMA_VERSION
 
 # v5 (campaign 8): canonicalization v3 distinguishes enums from their
 # scalar parents and therefore changes effect-path hashes upstream.
-COMMITMENT_VERSION = 5
+# v6 (campaign KERNEL, recorded at the 0.1.0b6 release): commitments
+# are minted from redacted, canonicalized material, and both layers
+# changed bytes (canonicalization v4, redaction v6); a v6 commitment
+# never collides with a v5 one because the version is embedded in the
+# hashed material.
+COMMITMENT_VERSION = 6
 
 
 def syscall_pair_commitments(

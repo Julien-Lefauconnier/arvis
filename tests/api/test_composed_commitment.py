@@ -69,9 +69,14 @@ def test_enum_key_named_like_content_is_not_redacted_as_a_string_key():
     assert stable_hash(enum_keyed) != stable_hash(string_keyed)
 
 
-def test_effect_hash_versions_cover_canonicalization_v3():
-    assert REDACTION_POLICY_VERSION == 5
-    assert COMMITMENT_VERSION == 5
+def test_effect_hash_versions_cover_the_kernel_campaign():
+    """Campaign RELEASE-b6: the KERNEL campaign changed canonical
+    bytes (dataclass instance attributes enter the map; redaction
+    keeps tuples) and the format versions must say so, per the
+    VERSIONING rule. These literals are the deliberate act: moving
+    them IS the version bump."""
+    assert REDACTION_POLICY_VERSION == 6
+    assert COMMITMENT_VERSION == 6
 
 
 def test_redacted_journal_carries_no_source_content():

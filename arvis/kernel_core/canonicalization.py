@@ -97,8 +97,14 @@ JSONValue: TypeAlias = (
 # attributes are refused instead of dropped, non-finite floats are
 # refused, and the ``__arvis_canonical__`` serializer hook is honoured.
 # v3 (campaign 8) dispatches enums before their scalar parents and gives
-# enum mapping keys their own typed encoding.
-CANONICALIZATION_VERSION = 3
+# enum mapping keys their own typed encoding. v4 (campaign KERNEL,
+# recorded at the 0.1.0b6 release per the VERSIONING rule that
+# canonical-bytes changes are versioned): the dataclass map is the
+# declared fields union the instance attributes with the same
+# private-state refusal as plain objects, and an unassigned declared
+# field is refused instead of encoded as None, so two materially
+# different dataclass instances can no longer share a hash.
+CANONICALIZATION_VERSION = 4
 
 # Reserved tag keys. A single-key dict whose sole key is one of these is
 # a typed encoding, not a business dict; the encoder namespaces them so

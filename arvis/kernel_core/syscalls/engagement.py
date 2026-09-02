@@ -45,7 +45,11 @@ from arvis.kernel_core.canonicalization import (
 # Redaction policy v5 (campaign 8): canonicalization v3 distinguishes
 # Enum subclasses from their scalar parents, including mapping keys.
 # Widening the content set or changing the digest is a version bump.
-REDACTION_POLICY_VERSION = 5
+# v6 (campaign KERNEL, recorded at the 0.1.0b6 release): redaction no
+# longer rebuilds tuples as lists (a distinction the encoder tags on
+# purpose), and it sits on canonicalization v4, so redacted digests
+# differ from every v5 digest by construction.
+REDACTION_POLICY_VERSION = 6
 
 _CONTENT_KEYS: frozenset[str] = frozenset(
     {

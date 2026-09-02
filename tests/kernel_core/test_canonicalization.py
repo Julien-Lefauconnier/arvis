@@ -346,7 +346,9 @@ def test_dict_key_order_does_not_affect_canonical_bytes():
 
 
 def test_version_constant_is_exposed():
-    assert CANONICALIZATION_VERSION == 3
+    """v4: the KERNEL dataclass-collision fix changed canonical bytes
+    (campaign RELEASE-b6 recorded the bump)."""
+    assert CANONICALIZATION_VERSION == 4
 
 
 # ---------------------------------------------------------------
