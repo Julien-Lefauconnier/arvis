@@ -28,22 +28,74 @@ class ProjectionStage:
     """
 
     def run(self, pipeline: CognitivePipeline, ctx: CognitivePipelineContext) -> None:
-        self._compute_projection(pipeline, ctx, allow_overwrite=False)
+        self._compute_projection(pipeline, ctx)
 
     def refresh(self, pipeline: Any, ctx: Any) -> None:
-        self._compute_projection(pipeline, ctx, allow_overwrite=True)
+        """Post-hoc attestation (campaign PROJ, DM-P2).
+
+        This used to run the full projection again during finalize and
+        overwrite every decision field, certificate included, so the
+        published certificate was not the one the gate consumed: on the
+        smoke corpus the two differed on 42 turns of 42, materially on
+        18 (LOCAL at decision time, BASIC in the trace). The refresh
+        now RE-VALIDATES THE DECISION'S OWN VIEW against the signals
+        that only exist after the gate (the composite energy delta, so
+        the Lyapunov axis is finally assessed for real) and publishes
+        the result under distinct names. What decided stays untouched;
+        what is known after the fact is reported next to it.
+        """
+        try:
+            view = ctx.projection.view
+            if view is None or ctx.projection.certificate is None:
+                return
+
+            previous_projected: dict[str, float] | None = (
+                pipeline.pi_impl.project_previous(ctx)
+            )
+            if hasattr(pipeline, "pi_operator") and previous_projected:
+                previous_projected = pipeline.pi_operator.project(
+                    ProjectionView.from_mapping(previous_projected),
+                    ctx,
+                )
+
+            try:
+                post_certificate = pipeline.projection_validator.validate(
+                    view,
+                    previous_projected=previous_projected,
+                    ctx=ctx,
+                )
+            except TypeError:
+                post_certificate = pipeline.projection_validator.validate(
+                    view,
+                    previous_projected=previous_projected,
+                )
+
+            ctx.projection.post_certificate = post_certificate
+            ctx.extra["projection_post_certification_level"] = (
+                post_certificate.certification_level.value
+            )
+            ctx.extra["projection_post_lyapunov_compatible"] = bool(
+                post_certificate.lyapunov_compatibility_ok
+            )
+        except Exception as exc:
+            capture_pipeline_runtime_failure(
+                ctx,
+                exc,
+                component="ProjectionStage",
+                message="Projection post-hoc attestation failure",
+            )
+            raise
 
     def _compute_projection(
         self,
         pipeline: Any,
         ctx: Any,
-        allow_overwrite: bool = False,
     ) -> None:
         try:
             # -----------------------------------------
             # Skip if already computed (pre-gate)
             # -----------------------------------------
-            if ctx.projection.certificate is not None and not allow_overwrite:
+            if ctx.projection.certificate is not None:
                 return
 
             # -----------------------------------------

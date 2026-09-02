@@ -13,6 +13,13 @@ class PipelineProjectionContext:
     domain_valid: bool | None = None
     margin: float | None = None
 
+    # Post-hoc attestation (campaign PROJ, DM-P2): the decision view
+    # re-validated during finalize against signals that only exist
+    # after the gate, the composite energy delta first of all. The
+    # decision fields above are what the gate consumed and are never
+    # rewritten; this one says what is known after the fact.
+    post_certificate: ProjectionCertificate | None = None
+
     # -----------------------------------------------------
     # Canonical projection namespaces
     # -----------------------------------------------------
