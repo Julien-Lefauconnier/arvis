@@ -6,6 +6,7 @@ from typing import Any
 
 from arvis.api.views.cognitive_result_view import CognitiveResultView
 from arvis.kernel.pipeline.cognitive_pipeline import CognitivePipeline
+from arvis.kernel_core.access.models import AuthenticatedPrincipal
 from arvis.tools.base import BaseTool
 from arvis.tools.spec import ToolSpec
 
@@ -105,6 +106,33 @@ class ArvisEngine:
         """Execute a cognitive request."""
         return self._os.run(
             user_id,
+            cognitive_input,
+            conversation_context=conversation_context,
+            timeline=timeline,
+            confirmation_result=confirmation_result,
+            extra=extra,
+        )
+
+    def run_as(
+        self,
+        principal: AuthenticatedPrincipal,
+        cognitive_input: Any,
+        *,
+        conversation_context: Any = None,
+        timeline: Any = None,
+        confirmation_result: Any = None,
+        extra: dict[str, Any] | None = None,
+    ) -> CognitiveResultView:
+        """Execute a cognitive request with a host-authenticated identity.
+
+        Delegates to :meth:`CognitiveOS.run_as` unchanged: the stamp must
+        be an exact ``AuthenticatedPrincipal`` (no subclasses), ARVIS
+        derives the turn owner from it, and the host stays responsible
+        for authenticating the session or service. This is the channel
+        PRODUCTION effect syscalls require (campaign SURFACE, DM-S2).
+        """
+        return self._os.run_as(
+            principal,
             cognitive_input,
             conversation_context=conversation_context,
             timeline=timeline,

@@ -14,6 +14,7 @@
         "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
         "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
         "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
         "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
       },
       "properties": {
@@ -25,6 +26,40 @@
   },
   "host_api": {
     "access": {
+      "AuthenticatedPrincipal": {
+        "fields": {
+          "authentication_source": {
+            "type": "str"
+          },
+          "authentication_strength": {
+            "type": "str"
+          },
+          "grants": {
+            "default": "<frozenset>",
+            "type": "frozenset[str]"
+          },
+          "organization_id": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "service_id": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "session_id_hash": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "user_id": {
+            "type": "str"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, user_id: str, organization_id: str | None = None, grants: frozenset[str] = <frozenset>, *, authentication_source: str, authentication_strength: str, service_id: str | None = None, session_id_hash: str | None = None) -> None"
+        },
+        "properties": {}
+      },
       "OrganizationScopedAuthorization": {
         "kind": "class",
         "methods": {
@@ -244,11 +279,33 @@
           "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
           "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
           "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
           "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         "properties": {
           "config": "CognitiveOSConfig",
           "os": "CognitiveOS",
+          "version": "str"
+        }
+      },
+      "CognitiveOS": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, config: CognitiveOSConfig | None = None, *, pipeline: CognitivePipeline | None = None)",
+          "freeze_tools": "(self) -> str",
+          "get_tool_spec": "(self, name: str) -> ToolSpec | None",
+          "inspect": "(self, result: CognitiveResultView) -> dict[str, Any]",
+          "list_tool_specs": "(self) -> dict[str, ToolSpec]",
+          "list_tools": "(self) -> list[str]",
+          "register_tool": "(self, tool: Any) -> None",
+          "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
+          "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
+          "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        "properties": {
+          "config": "CognitiveOSConfig",
           "version": "str"
         }
       },
@@ -892,6 +949,50 @@
       }
     },
     "tools": {
+      "AuthorizedEffectContext": {
+        "fields": {
+          "authentication_source": {
+            "type": "str"
+          },
+          "authentication_strength": {
+            "type": "str"
+          },
+          "format_version": {
+            "default": "1",
+            "type": "int"
+          },
+          "host_binding_commitment": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "principal": {
+            "type": "str"
+          },
+          "process_id": {
+            "type": "str"
+          },
+          "run_id": {
+            "type": "str | None"
+          },
+          "service_id": {
+            "type": "str | None"
+          },
+          "session_id_hash": {
+            "type": "str | None"
+          },
+          "tenant": {
+            "type": "str | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, principal: str, tenant: str | None, authentication_source: str, authentication_strength: str, service_id: str | None, session_id_hash: str | None, process_id: str, run_id: str | None, host_binding_commitment: str | None = None, format_version: int = 1) -> None",
+          "to_material": "(self) -> dict[str, Any]"
+        },
+        "properties": {
+          "commitment_sha256": "str"
+        }
+      },
       "BaseTool": {
         "kind": "class",
         "methods": {
@@ -913,6 +1014,69 @@
         },
         "properties": {}
       },
+      "ToolInvocation": {
+        "fields": {
+          "_effect_payload": {
+            "type": "FrozenEffectPayload"
+          },
+          "audit_required": {
+            "default": "False",
+            "type": "bool"
+          },
+          "confirmation_commitment": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "confirmation_id": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "confirmed": {
+            "default": "False",
+            "type": "bool"
+          },
+          "consent_granted": {
+            "default": "()",
+            "type": "tuple[str, ...]"
+          },
+          "effect_context": {
+            "type": "AuthorizedEffectContext"
+          },
+          "idempotency_key": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "risk_score": {
+            "default": "0.0",
+            "type": "float"
+          },
+          "tool_name": {
+            "type": "str"
+          },
+          "user_id": {
+            "default": "None",
+            "type": "str | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, tool_name: str, payload: dict[str, Any] | FrozenEffectPayload, effect_context: AuthorizedEffectContext, user_id: str | None = None, risk_score: float = 0.0, audit_required: bool = False, consent_granted: tuple[str, ...] = (), confirmed: bool = False, confirmation_id: str | None = None, confirmation_commitment: str | None = None, idempotency_key: str | None = None) -> None",
+          "materialize_payload": "(self) -> dict[str, Any]"
+        },
+        "properties": {
+          "authentication_source": "str",
+          "authentication_strength": "str",
+          "canonical_payload_bytes": "bytes",
+          "frozen_payload": "FrozenEffectPayload",
+          "payload": "dict[str, Any]",
+          "payload_sha256": "str",
+          "principal": "str",
+          "process_id": "str",
+          "service_id": "str | None",
+          "session_id_hash": "str | None",
+          "tenant": "str | None"
+        }
+      },
       "ToolManager": {
         "kind": "class",
         "methods": {
@@ -925,6 +1089,13 @@
           "execute_authorized": "(self, *args: typing.Any, **kwargs: typing.Any) -> arvis.tools.tool_result.ToolResult | None",
           "owns_outcome": "(self, outcome: arvis.tools.manager.ToolAuthorizationOutcome) -> builtins.bool",
           "run": "(self, result: typing.Any, ctx: typing.Any) -> arvis.tools.tool_result.ToolResult | None"
+        },
+        "properties": {}
+      },
+      "ToolPolicyEvaluator": {
+        "kind": "class",
+        "methods": {
+          "evaluate": "(invocation: arvis.adapters.tools.invocation.ToolInvocation, registry: arvis.tools.registry.ToolRegistry, *, consent_gate: arvis.adapters.tools.gates.ConsentGate | None = None, egress_gate: arvis.adapters.tools.gates.EgressGate | None = None, require_gates: builtins.bool = False) -> arvis.adapters.tools.authorization.ToolAuthorizationDecision"
         },
         "properties": {}
       },
@@ -1165,7 +1336,7 @@
       }
     }
   },
-  "host_api_version": "1.0",
+  "host_api_version": "1.1",
   "manifest_version": 1,
   "provisional_modules": [
     "control"
@@ -1189,6 +1360,7 @@
         "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
         "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
         "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
         "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
       },
       "properties": {

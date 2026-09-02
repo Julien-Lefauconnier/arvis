@@ -35,6 +35,7 @@ from arvis.host_api import (
 HOST_API_SURFACE: dict[str, list[str]] = {
     "engine": [
         "ArvisEngine",
+        "CognitiveOS",
         "CognitiveOSConfig",
         "CognitiveResultView",
         "ContractionMonitorCore",
@@ -42,6 +43,7 @@ HOST_API_SURFACE: dict[str, list[str]] = {
         "MonitorConfig",
     ],
     "access": [
+        "AuthenticatedPrincipal",
         "OrganizationScopedAuthorization",
         "Principal",
     ],
@@ -62,9 +64,12 @@ HOST_API_SURFACE: dict[str, list[str]] = {
         "VFSParentNotFoundError",
     ],
     "tools": [
+        "AuthorizedEffectContext",
         "BaseTool",
         "ToolExecutor",
+        "ToolInvocation",
         "ToolManager",
+        "ToolPolicyEvaluator",
         "ToolRegistry",
         "ToolSpec",
     ],
@@ -137,7 +142,7 @@ _PAIRS: list[tuple[str, str]] = [
 def test_surface_size_is_pinned() -> None:
     assert len(HOST_API_SURFACE) == 12
     assert sorted(HOST_API_SURFACE) == sorted(_MODULES)
-    assert len(_PAIRS) == 53
+    assert len(_PAIRS) == 58
 
 
 @pytest.mark.parametrize(
@@ -158,6 +163,6 @@ def test_host_api_module_surface_is_exact(module: str) -> None:
 
 
 def test_host_api_version_policy_is_pinned() -> None:
-    assert arvis.host_api.HOST_API_VERSION == "1.0"
+    assert arvis.host_api.HOST_API_VERSION == "1.1"
     assert arvis.host_api.PROVISIONAL_MODULES == frozenset({"control"})
     assert arvis.host_api.PROVISIONAL_MODULES < set(HOST_API_SURFACE)

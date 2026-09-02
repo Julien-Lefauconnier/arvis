@@ -14,7 +14,10 @@ VERSIONING.md) except the modules listed in PROVISIONAL_MODULES, whose
 surface may change in a minor release with a changelog entry.
 """
 
-HOST_API_VERSION = "1.0"
+# 1.1 (campaign SURFACE, DM-S2): additive only. engine gains
+# CognitiveOS; access gains AuthenticatedPrincipal; tools gains
+# ToolInvocation, ToolPolicyEvaluator, AuthorizedEffectContext.
+HOST_API_VERSION = "1.1"
 
 PROVISIONAL_MODULES: frozenset[str] = frozenset({"control"})
 
