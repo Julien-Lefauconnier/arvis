@@ -46,6 +46,29 @@ versioning throughout the pre-1.0 series.
   passed, the failure reported as failed; measured constants
   published report-only (no runtime default changes).
 
+### Changed
+
+- **Campaign SEUIL: the weak-stability floor is a registered
+  contraction rate.** `delta_w_soft_threshold` was a hard-coded
+  -0.05 wearing a `getattr` configuration costume; the M10 corpora
+  measured that it refused ALLOW to the `nominal_feedback` family
+  (engineered to contract on every turn, converging geometrically so
+  its steps shrink as it succeeds) while its direct victims were
+  real contractions with median |dW| 0.033. DM-S1, registered before
+  the campaign run: weak iff `|delta_w| < max(0.05 * W_current,
+  0.005)`, the rate being one third of the measured median
+  contraction rate and the absolute floor bracketing the p05-p10 of
+  observed contractions. Absolute candidates -0.01 and -0.025 and
+  the status quo were each measured on both full corpora first: no
+  candidate yields one ALLOW outside the healthy families, both
+  registered judgments hold everywhere, and D-1.0's ABSTAIN is
+  bit-identical under all of them (the filter never relaxes a
+  refusal). Result: D-1.0 11 to 13 ALLOW, D-2.0 4 to 15 including
+  the first 8 ever on the feedback family. The constants live once
+  in `arvis/math/stability/weak_stability_policy.py`, suite-pinned;
+  the context attribute remains an explicit absolute host override.
+  See M10 section 14.
+
 ### Fixed
 
 - **Campaign PROJ: the projection and switching path tells one
