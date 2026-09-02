@@ -48,6 +48,33 @@ versioning throughout the pre-1.0 series.
 
 ### Fixed
 
+- **Campaign PROJ: the projection and switching path tells one
+  story.** Three coherence defects, fixed together. The projection
+  operator clamped its blending strength whenever the private
+  `ctx._dv` attribute was positive, misreading the clamped drift
+  magnitude as a signed divergence, exactly as the certificate had
+  (the clamp fired on 85 per cent of campaign 2 turns; removing it
+  moves no verdict and clears about 20 spurious boundary flags per
+  corpus). The observability refresh recomputed the projection after
+  the verdict and overwrote the decision certificate, so the trace
+  and the IR contradicted what decided on 42 smoke turns of 42; the
+  refresh is now a post-hoc attestation under distinct names
+  (`post_certificate`, `projection_post_certification_level`) and
+  the decision fields are never rewritten. And the dwell clock
+  ticked twice per turn (regime_stage and runtime_stage both updated
+  the same runtime), so the switching guard read twice the real
+  dwell and `ln(J)/tau_d` was half its true value: the guard was
+  satisfied with half the dwell actually served. One tick per turn
+  now, post-decision; the verdicts harden accordingly (D-2.0 moves
+  1277/349/6 to 1391/237/4, D-1.0 1233/185/22 to 1260/169/11, no
+  ABSTAIN relaxed anywhere) and both registered judgments hold. The
+  opaque scientific state blob additionally gains a `switching`
+  section, so a host on the public `ArvisEngine` contract finally
+  accumulates dwell across turns (a capability previously reserved
+  to deep integrations owning the pipeline); older blobs load
+  unchanged with a fresh clock. See M10 section 13 and
+  `docs/PATH_TO_ALLOW.md`.
+
 - **ALLOW was unreachable because the projection certificate read a
   drift magnitude as an energy derivative.** `ProjectionValidator`
   assessed its Lyapunov axis against `ctx._dv` whenever no composite
