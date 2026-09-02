@@ -36,23 +36,13 @@ jobs:
       - name: Fail on missing __all__
         run: python -c "import arvis; assert hasattr(arvis, '__all__') and arvis.__all__"
 
-      - name: Ruff (lint)
-        run: ruff check .
-
-      - name: Ruff format check
-        run: ruff format --check .
-
-      - name: Mypy
-        run: mypy arvis --strict
-
-      - name: Docs and header integrity
-        # Every repository path referenced from Markdown must exist, and
-        # every "# path/to/file.py" first-line header must name its own
-        # file. Both checks caught real drift when introduced (a phantom
-        # file attested by a spec, 50 wrong headers).
-        run: |
-          python scripts/check_md_refs.py
-          python scripts/check_path_headers.py
+      - name: Static gate (format, lint, types, docs, headers, excepts)
+        # The gate script owns every check exactly once; this job
+        # selects the mode. Hand-copying the commands here is what let
+        # the broad-except ratchet exist in the gate and in no
+        # workflow (campaign CI), and the parity is now pinned by
+        # tests/tooling/test_ci_gate_parity.py.
+        run: bash scripts/run_quality_gate.sh static
 
       - name: Dependency audit
         # Known vulnerabilities in the resolved dependency set. Blocking
@@ -103,14 +93,16 @@ jobs:
           pip install -r requirements/gate.lock --prefer-binary
           pip install -e . --no-deps
 
-      - name: Run tests
-        run: pytest --cov=arvis --cov-report=xml --cov-report=json:coverage.json --cov-fail-under=90 --maxfail=1 --disable-warnings -q
-
-      - name: Per-package coverage floors
+      - name: Tests gate (suite, coverage floor, per-package floors)
         # The aggregate floor let a 59%-covered gate-policy module hide
         # inside a 91% total; the decisive packages carry their own
-        # ratcheting floors (audit G4 / MATH-A M3).
-        run: python scripts/check_module_coverage.py coverage.json
+        # ratcheting floors (audit G4 / MATH-A M3). Both live in the
+        # gate script, which this job selects.
+        run: bash scripts/run_quality_gate.sh tests
+
+      - name: Coverage XML for Codecov
+        if: matrix.python-version == '3.11'
+        run: python -m coverage xml
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'
@@ -180,8 +172,8 @@ jobs:
           pip install -r requirements/gate.lock --prefer-binary
           pip install -e . --no-deps
 
-      - name: Run examples smoke (stable examples)
-        run: bash scripts/run_examples_smoke.sh
+      - name: Examples gate (stable examples smoke)
+        run: bash scripts/run_quality_gate.sh examples
 
   build:
     runs-on: ubuntu-latest

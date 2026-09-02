@@ -27,10 +27,24 @@ One command runs everything CI runs:
 bash scripts/run_quality_gate.sh
 ```
 
-It runs, in order: `ruff format --check`, `ruff check`, `mypy arvis --strict`,
-Bandit at medium and high, the test suite with its coverage floor, and the
-examples smoke run. `bash scripts/run_quality_gate.sh security` runs Bandit
-alone.
+It runs, in order: the static checks (`ruff format --check`, `ruff check`,
+`mypy arvis --strict`, the Markdown path references, the file path headers and
+the broad-except discipline), Bandit at medium and high, the test suite with
+its coverage floor and the per-package floors, and the examples smoke run.
+
+That sentence is literal, not aspirational: CI runs these very checks by
+selecting a mode of this script, never by spelling a command out itself, and
+`tests/tooling/test_ci_gate_parity.py` fails if a workflow ever forks a
+definition again. So a check added to the script is a check CI runs.
+
+For a faster loop while working, each mode runs on its own:
+
+```bash
+bash scripts/run_quality_gate.sh static     # format, lint, types, docs, headers
+bash scripts/run_quality_gate.sh security   # bandit
+bash scripts/run_quality_gate.sh tests      # suite plus coverage floors
+bash scripts/run_quality_gate.sh examples   # examples smoke
+```
 
 A pull request is expected to arrive with the gate green. If something in the
 gate is wrong, say so in the pull request rather than working around it.
