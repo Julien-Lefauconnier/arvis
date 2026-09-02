@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvis.errors.manager import ErrorManager
+from arvis.errors.manager import ERROR_STATS_KEY, ErrorManager
 from arvis.kernel.pipeline.context.journal_context import (
     fusion_reasons_of,
     journal_of,
@@ -231,4 +231,48 @@ def apply_kappa_hard_block(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
                 reason="gate_exception",
             )
         return LyapunovVerdict.ABSTAIN
+    return verdict
+
+
+def apply_sensor_degradation_floor(
+    ctx: Any,
+    verdict: LyapunovVerdict,
+) -> LyapunovVerdict:
+    """Recorded sensor degradations constrain the verdict (DM-H8).
+
+    Campaign HARDEN (audit P1-11). The decision-path sensors fail
+    open individually by design (a failed drift cast reads as no
+    drift, a swallowed adaptive control as no clamp), and every such
+    failure is journaled through ErrorManager; but nothing on the
+    decision path ever consumed the journal, so a degraded run was
+    governed exactly like a healthy one. This floor is the consumer:
+    when the turn's recorded errors reach the escalation predicate
+    (``ErrorManager.should_escalate``: any fatal, any fail-closed, or
+    the degraded/error thresholds), ALLOW floors to
+    REQUIRE_CONFIRMATION, monotone and traced. A clean turn (no error
+    ever captured, the stats key absent) is untouched.
+    """
+    extra = getattr(ctx, "extra", None)
+    if not isinstance(extra, dict):
+        return verdict
+    if not isinstance(extra.get(ERROR_STATS_KEY), dict):
+        # Nothing was ever captured on this turn: the lazily created
+        # statistics do not exist and there is nothing to escalate.
+        return verdict
+    if not ErrorManager.should_escalate(ctx):
+        return verdict
+
+    reasons = fusion_reasons_of(ctx)
+    if "sensor_degradation_floor" not in reasons:
+        reasons.append("sensor_degradation_floor")
+
+    if verdict == LyapunovVerdict.ALLOW:
+        record_verdict_transition(
+            ctx,
+            stage="sensor_degradation_floor",
+            before=verdict,
+            after=LyapunovVerdict.REQUIRE_CONFIRMATION,
+            reason="sensor_degradation_floor",
+        )
+        return LyapunovVerdict.REQUIRE_CONFIRMATION
     return verdict

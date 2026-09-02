@@ -38,6 +38,7 @@ from arvis.kernel.pipeline.stages.gate.adaptive import (
 from arvis.kernel.pipeline.stages.gate.enforcement import (
     apply_kappa_hard_block,
     apply_projection_enforcement,
+    apply_sensor_degradation_floor,
 )
 from arvis.kernel.pipeline.stages.gate.gating_regime import (
     GatingRegime,
@@ -410,6 +411,16 @@ class GateDecisionStack:
             "pi_gate_override",
             verdict,
             apply_pi_gate_override(ctx, verdict),
+        )
+        # DM-H8 (campaign HARDEN): the last floor before input risk.
+        # It runs after every sensor and layer above has had the
+        # chance to journal a failure, so the turn's full degradation
+        # record is what the predicate sees.
+        verdict = enforce_monotone(
+            ctx,
+            "sensor_degradation_floor",
+            verdict,
+            apply_sensor_degradation_floor(ctx, verdict),
         )
         verdict = apply_input_risk_gate(ctx, verdict)
         sync_confirmation_flags(ctx, verdict)

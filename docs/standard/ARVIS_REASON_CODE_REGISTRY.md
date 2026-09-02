@@ -214,6 +214,7 @@ They MUST remain consistent with the final verdict.
 | `input_missing` | high | reserved | ≤ REQUIRE_CONFIRMATION |
 | `input_corrupted` | critical | reserved | ABSTAIN |
 | `state_inconsistent` | critical | reserved | ABSTAIN |
+| `sensor_degradation_floor` | high | normative | ≤ REQUIRE_CONFIRMATION |
 | `unknown_error` | critical | normative | ABSTAIN |
 
 ---
