@@ -48,6 +48,29 @@ versioning throughout the pre-1.0 series.
 
 ### Fixed
 
+- **CI runs the gate instead of reimplementing it.** The lint job
+  hand-copied the gate's static commands and invoked the script only
+  for Bandit, so every new check had to be added twice and the newest
+  one (the broad-except ratchet) was added once: a pull request adding
+  a silently swallowed failure merged green and only failed at tag
+  time. The gate script now exposes the granularity CI's parallel jobs
+  need (`static`, `security`, `audit`, `tests`, `examples`, and `all`
+  as their sum), each job selects a mode, and a ratchet
+  (`tests/tooling/test_ci_gate_parity.py`) fails if a workflow ever
+  forks a definition again.
+- **A non-Linux runner.** The test job gains macos-latest (arm64) on
+  Python 3.11: the library publishes cross-platform reproducibility
+  guarantees and a real one-ulp divergence reached a developer machine
+  because CI had no runner that could catch it.
+- **The dependency surface.** `pyyaml` leaves the runtime dependencies
+  for the dev extra (nothing under `arvis/` imports it; only the
+  compliance loader does, and compliance is excluded from the wheel),
+  and `jsonschema` and `numpy` gain the upper cap `pydantic` already
+  had. The pip-audit suppression, previously copy-pasted into two
+  workflows with its justification in only one, lives once in the gate
+  and runs from an isolated environment so its transitives no longer
+  move packages inside the frozen environment it audits.
+
 - **Canonicalization: a dataclass could hide state from the injective
   encoder.** The dataclass branch built its material from
   `fields(obj)` alone, so any attribute set on the instance beyond the
