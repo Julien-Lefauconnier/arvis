@@ -48,12 +48,14 @@ NON_FINITE_RISKS = (
 # Deliberately duplicated from the repository contract test: this suite
 # must stay self-contained, since the repository is absent when running
 # against the wheel.
+# Counts at HOST_API_VERSION 1.1 (campaign SURFACE, DM-S2: engine,
+# access and tools grew additively).
 HOST_API_MODULES: dict[str, int] = {
-    "engine": 6,
-    "access": 2,
+    "engine": 7,
+    "access": 3,
     "services": 3,
     "vfs": 9,
-    "tools": 5,
+    "tools": 8,
     "memory": 12,
     "knowledge": 4,
     "conversation": 3,
@@ -203,7 +205,7 @@ def test_tool_surface_freezes_to_a_stable_fingerprint() -> None:
 def test_host_api_surface_resolves_as_promised() -> None:
     import importlib
 
-    assert arvis.host_api.HOST_API_VERSION == "1.0"
+    assert arvis.host_api.HOST_API_VERSION == "1.1"
     assert arvis.host_api.PROVISIONAL_MODULES == frozenset({"control"})
 
     total = 0
@@ -217,7 +219,7 @@ def test_host_api_surface_resolves_as_promised() -> None:
         for symbol in exported:
             assert hasattr(module, symbol)
         total += len(exported)
-    assert total == 53
+    assert total == 58
 
 
 def test_vfsitem_b2_positional_constructor_from_the_wheel() -> None:
