@@ -48,6 +48,32 @@ versioning throughout the pre-1.0 series.
 
 ### Fixed
 
+- **ALLOW was unreachable because the projection certificate read a
+  drift magnitude as an energy derivative.** `ProjectionValidator`
+  assessed its Lyapunov axis against `ctx._dv` whenever no composite
+  delta was available. That attribute holds the drift score, which
+  `DriftSignal` clamps to `[0, 1]` and which is therefore never
+  negative, so any drift at all was published as a measured Lyapunov
+  incompatibility. The gate stage writes the composite delta after
+  the projection stage runs, so on the certificate the gate consumes
+  the delta is always absent and the fallback was the branch taken
+  on every certified turn, not an edge case. The axis is now
+  assessed against the composite delta or reported unassessed in
+  `checks_detail` and excluded from the certification level, the
+  same treatment noise robustness and mode stability already
+  receive; a present but uncoercible delta stays fail-closed. On the
+  D-2.0 campaign `projection_unsafe` and
+  `projection_lyapunov_incompatible` go from 1270 occurrences each
+  to zero, the validity envelope goes from alive on 16 per cent of
+  in-domain turns to 100 per cent on both corpora, and ALLOW becomes
+  reachable: 22 turns on D-1.0 and 6 on D-2.0, all with a strictly
+  negative composite delta, confined to the `nominal` and
+  `long_horizon` families. The change relaxes and nothing else: the
+  ABSTAIN count is bit-identical on both corpora, the registered
+  judgments are unchanged (11 of 12 and 12 of 12), and adversarial
+  ALLOW stays at 0.0. See M10 section 12 and
+  `docs/PATH_TO_ALLOW.md`.
+
 - **CI runs the gate instead of reimplementing it.** The lint job
   hand-copied the gate's static commands and invoked the script only
   for Bandit, so every new check had to be added twice and the newest
