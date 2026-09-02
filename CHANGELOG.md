@@ -9,6 +9,41 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Security
+
+- **Canonicalization: a dataclass could hide state from the injective
+  encoder.** The dataclass branch built its material from
+  `fields(obj)` alone, so any attribute set on the instance beyond the
+  declared fields was invisible and the private-attribute refusal was
+  never reached on that path: two materially different payments shared
+  a canonical hash, and a commitment or confirmation is minted from
+  that digest. The map is now the declared fields union the instance
+  attributes, with the same private-state refusal as a plain object,
+  and an unassigned declared field is refused instead of encoded as
+  None. `redact_for_commitment` no longer rebuilds tuples as lists,
+  which erased a distinction the encoder tags on purpose. The
+  canonical-bytes change is versioned per VERSIONING.md:
+  canonicalization v4, redaction policy v6, commitment v6,
+  confirmation format 5; every hash minted under the previous
+  formats is explicitly invalidated.
+- **The intent/result audit pair survives nesting, and an absent
+  journal is no longer read as proof.** The journaled result was
+  stamped with a causal id rebuilt from a sequence counter that a
+  nested dispatch had already advanced, orphaning both halves and
+  reporting legitimate compositions as audit-incomplete; the
+  post-execution paths now journal under the id the intent was minted
+  with. The commitment gatherer coerced a missing journal to an empty
+  list, which satisfies the strict bijection vacuously; an absent or
+  non-list journal is now audit_incomplete, while a present-and-empty
+  journal stays legitimate.
+- **The ZIP firewall can no longer be switched off by the
+  environment.** `ZipAnalyzer` dropped its guard entirely when
+  `ENV=test`, removing the file-count and size caps, the zip-bomb
+  ratio check and the blocked-extension list. The guard is always
+  constructed; different limits are injected at the call site. The
+  advisory `supported` flag no longer deserializes to a fabricated
+  True.
+
 ### Fixed
 
 - Campaign INTEGRITY: the public integrity surface tells the truth.
@@ -210,34 +245,6 @@ versioning throughout the pre-1.0 series.
   and runs from an isolated environment so its transitives no longer
   move packages inside the frozen environment it audits.
 
-- **Canonicalization: a dataclass could hide state from the injective
-  encoder.** The dataclass branch built its material from
-  `fields(obj)` alone, so any attribute set on the instance beyond the
-  declared fields was invisible and the private-attribute refusal was
-  never reached on that path: two materially different payments shared
-  a canonical hash, and a commitment or confirmation is minted from
-  that digest. The map is now the declared fields union the instance
-  attributes, with the same private-state refusal as a plain object,
-  and an unassigned declared field is refused instead of encoded as
-  None. `redact_for_commitment` no longer rebuilds tuples as lists,
-  which erased a distinction the encoder tags on purpose.
-- **The intent/result audit pair survives nesting, and an absent
-  journal is no longer read as proof.** The journaled result was
-  stamped with a causal id rebuilt from a sequence counter that a
-  nested dispatch had already advanced, orphaning both halves and
-  reporting legitimate compositions as audit-incomplete; the
-  post-execution paths now journal under the id the intent was minted
-  with. The commitment gatherer coerced a missing journal to an empty
-  list, which satisfies the strict bijection vacuously; an absent or
-  non-list journal is now audit_incomplete, while a present-and-empty
-  journal stays legitimate.
-- **The ZIP firewall can no longer be switched off by the
-  environment.** `ZipAnalyzer` dropped its guard entirely when
-  `ENV=test`, removing the file-count and size caps, the zip-bomb
-  ratio check and the blocked-extension list. The guard is always
-  constructed; different limits are injected at the call site. The
-  advisory `supported` flag no longer deserializes to a fabricated
-  True.
 
 - The projection domain margin measures the DANGEROUS bounds only.
   It measured the distance to the nearest bound whatever that bound
