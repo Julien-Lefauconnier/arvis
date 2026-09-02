@@ -1,11 +1,13 @@
 # examples/05_tool_authorization.py
 
 from arvis import CognitiveOS
-from arvis.adapters.tools.invocation import ToolInvocation
-from arvis.adapters.tools.policy import ToolPolicyEvaluator
-from arvis.tools.base import BaseTool
-from arvis.tools.effect_context import AuthorizedEffectContext
-from arvis.tools.spec import ToolSpec
+from arvis.host_api.tools import (
+    AuthorizedEffectContext,
+    BaseTool,
+    ToolInvocation,
+    ToolPolicyEvaluator,
+    ToolSpec,
+)
 
 
 class ReadStatusTool(BaseTool):
