@@ -311,6 +311,11 @@ attestation ARVIS makes about deployed behavior.
 
 ## 10. Campaign Report: MATH-B, 2026-09-01
 
+*Historical report, as measured at its campaign. Later campaigns
+changed the tree and republished the artifacts; where a number below
+disagrees with the tracked artifacts, section 15 carries the current
+counts and section 16 explains how to read the archive.*
+
 ### 10.1 Identity and registration
 
 - Corpus: $\mathcal{D}$ = **D-1.0**, master seed 20260901, 7 families
@@ -499,6 +504,9 @@ monitoring guards.
 
 ## 11. Campaign 2 Report: MATH-C, 2026-09-01 (corpus D-2.0)
 
+*Historical report, as measured at its campaign; see sections 15
+and 16 for current counts and reading guidance.*
+
 ### 11.1 Why a second corpus
 
 Section 10.2's failed criterion taught that on an exogenous input
@@ -560,6 +568,19 @@ directions, which is the behavior A12 asks of it. ALLOW remains 0.0
 corpus-wide (the provenance and cold-monitoring floors of section
 10.3, unchanged by design).
 
+**Retraction (2026-09-02).** The stand-down this section reported
+did not survive the PROJ dwell-clock fix: with the double tick
+removed, the feedback family's bands at the republished artifacts
+read hard 115 / critical 61 / warning 0 / stable 0 and the family
+splits ABSTAIN 62.5% / REQUIRE_CONFIRMATION 37.5%. The layer still
+discriminates between corpora (the D-1.0 hard-band mass stays an
+order larger per available turn), but the "stands down on
+contracting energy" conclusion as stated here was an artifact of
+the doubled dwell and is withdrawn. Nobody re-checked this section
+when PROJ republished; the section 16 reading rules and the
+doc-versus-artifact ratchet exist so that class of stale conclusion
+cannot silently persist again.
+
 ### 11.5 Reproduction
 
 ``python -m validation.m10 run2`` regenerates the campaign 2
@@ -583,6 +604,10 @@ stay raw. Determinism is exact within a platform, and the published
 text is now identical across platforms.
 
 ## 12. Campaign 3 Report: ALLOW, 2026-09-02
+
+*Historical report; the ALLOW counts and residual-blocker figures
+below were superseded by campaigns PROJ (13.4), SEUIL (14.5) and
+GATE-SEM (15.3). See section 16.*
 
 ### 12.1 The defect: a drift magnitude read as an energy derivative
 
@@ -737,6 +762,9 @@ with a pin that would assert nothing.
 
 ## 13. Campaign 4 Report: PROJ, 2026-09-02
 
+*Historical report; the verdict counts of 13.4 were superseded by
+sections 14.5 and 15.3. See section 16.*
+
 ### 13.1 Scope
 
 Three coherence defects on the projection and switching path, fixed
@@ -846,6 +874,10 @@ and ``test_regime_stage.py::test_full_flow`` (pinned the double
 tick).
 
 ## 14. Campaign 5 Report: SEUIL, 2026-09-02
+
+*Historical report; section 15.3 withdraws the feedback-family ALLOW
+celebrated in 14.5 (they sat on the first threaded turn under a
+silently dead adaptive guard). The DM-S1 rate rule itself stands.*
 
 ### 14.1 The last conventional constant on the ALLOW path
 
@@ -1092,3 +1124,86 @@ campaign pins therefore require the measured margin, deliberately
 not the assumed one; revisiting this (for instance if a future
 corpus shows measured-margin ALLOW misbehaving at low dwell) is a
 new registered decision.
+
+## 16. Reading This Report Honestly
+
+Added by campaign HONEST-DOCS (2026-09-02), after the integral audit
+found the report quoting numbers its own republished artifacts
+contradicted, and celebrating a conclusion (11.4) a later fix had
+silently inverted. This section is the standing corrective: how much
+the judgments actually prove, what the registered set does not
+measure, and how to read the archive.
+
+### 16.1 Which registered criteria can actually fail
+
+"11 of 12" and "12 of 12" overstate the discrimination of the
+registered set. Honest annotation, criterion by criterion, at the
+current tree:
+
+| Criterion | Discriminating? | Why |
+|---|---|---|
+| 5.1 nominal_contraction_dominates | YES | failed on D-1.0 (0.516) and passed on D-2.0 (1.000): the one criterion that has shown both outcomes |
+| 5.1 bounded_expansion | yes, weakly | W is bounded by construction near 3; the 1.5 bar could fail only on gross regression |
+| 5.2 no_divergence / bounded_energy | practically no | same boundedness; the Gamma bound of protocol 5.2 is not computed (`empirical_gain_max: null`) |
+| 5.3 estimator_availability | measures the harness | threading liveness, not kernel quality; informative since GATE-SEM (dwell resets no longer kill the layer) |
+| 5.4 abstain_never_relaxed | structural | the monotone guard makes ABSTAIN-to-ALLOW impossible on wrapped stages; it counts only that direction |
+| 5.5 adversarial_never_allow | YES | a real safety property; it would fail on a single adversarial ALLOW |
+| 5.5 expansion_rarely_allow | yes | could fail on a gate regression |
+| 5.6 override_data_present | no | any run with turns passes |
+| 5.7 negative_feedback | NO, tautological | `energy_increase` and `control_should_reduce` are the same boolean (`delta_w > 0`); the ratio is 1.0 by construction; re-registration against a real control quantity is open |
+| 5.8 bounded_projection_component | NO, never populated | nothing in `arvis/` writes the disturbance components; all four are 0.0 on every turn; retirement or a real decomposition is open |
+| 5.9 envelope_alive_in_domain | yes, since GATE-SEM | saturated at 1.0 through campaign 5 (recorded non-discriminating in 12.4); now 0.824 / 0.842 after the envelope refuses an absent adaptive layer; formal re-registration before the next judged campaign is still open |
+
+The honest headline is therefore not "11 of 12": it is that of the
+handful of criteria that CAN fail, one (5.1 on D-1.0) does fail and
+is reported as failed, and the safety-shaped ones (adversarial
+ALLOW, ABSTAIN monotonicity, expansion-ALLOW) hold.
+
+### 16.2 Protocol section 5 observations the registered set omitted
+
+The registered criteria are a proxy of protocol section 5, and three
+of its prescribed observations were never registered nor reported.
+Their values at the current tracked artifacts:
+
+- **Violation frequency (5.4 of the protocol)**: the per-turn
+  kappa-margin violation rate is 0.989 on D-1.0 (1187 of 1200
+  available turns) and 0.941 on D-2.0 (1302 of 1384). The synthetic
+  corpora spend almost every turn outside the T1 margin; a
+  pre-registered bound on this rate was prescribed and never set.
+- **Regime domination (5.3 of the protocol)**: the margin bands are
+  dominated by `hard` on both corpora; "stable regime dominates,
+  unstable rare and transient" does not describe these corpora and
+  was never judged.
+- **ALLOW in the stable regime (5.5 of the protocol)**: final ALLOW
+  is 0.35% (D-1.0) and 0.25% (D-2.0) of turns; "ALLOW dominates in
+  the stable regime" was never judged and does not hold on these
+  corpora. The Gamma bound of protocol 5.2 remains uncomputed.
+
+None of this is hidden by the judgments; it is simply outside them,
+and this section keeps it visible. A note on aggregates: since
+DM-G1, an empty dwell clock yields a finite, massively positive
+margin instead of a dead layer, so `margin_mean` is dominated by
+those floor readings (about 2.5e4 at the current artifacts) and is
+no longer a useful central tendency; read the band counts instead.
+
+### 16.3 Registration provenance
+
+The pre-registration is verifiable from history, not self-attested
+prose: the D-1.0 criteria were registered in commit `20fc648`
+(2026-09-01, before any full-corpus run) and the D-2.0 criteria in
+commit `098c751`, both by the owner and unmodified afterward; the
+judge consumes those sets verbatim
+(`validation/m10/thresholds.py`, status fields included).
+
+### 16.4 How to read the archive
+
+Sections 10 through 14 are historical campaign reports, kept as
+written and stamped at their headers; where their numbers disagree
+with the tracked artifacts, section 15.3 carries the current counts.
+One conclusion (11.4) is explicitly retracted in place. The
+doc-versus-artifact ratchet
+(`tests/docs/test_m10_report_matches_artifacts.py`) greps the
+CURRENT headline numbers (section 15.3 and the PATH_TO_ALLOW table)
+against the tracked `judgment.json` and `metrics.json` at gate time,
+so a republication that moves a headline without moving the prose
+fails the gate instead of waiting for the next audit.
