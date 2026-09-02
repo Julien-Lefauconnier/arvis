@@ -23,14 +23,9 @@ class CognitiveGateResult:
         reason_codes: tuple[str, ...] = (),
         decision_trace: GateDecisionTrace | None = None,
     ) -> "CognitiveGateResult":
-        if verdict == LyapunovVerdict.ALLOW:
-            cg_verdict = CognitiveGateVerdict.ALLOW
-        elif verdict == LyapunovVerdict.REQUIRE_CONFIRMATION:
-            cg_verdict = CognitiveGateVerdict.REQUIRE_CONFIRMATION
-        elif verdict == LyapunovVerdict.ABSTAIN:
-            cg_verdict = CognitiveGateVerdict.ABSTAIN
-        else:
-            cg_verdict = CognitiveGateVerdict.ABSTAIN
+        # Total, fail-closed conversion owned by the enum (campaign
+        # SURFACE, DM-S5): unknown inputs map to ABSTAIN, never ALLOW.
+        cg_verdict = CognitiveGateVerdict.from_lyapunov(verdict)
 
         normalized_codes = tuple(
             str(code).strip() for code in reason_codes if str(code).strip()

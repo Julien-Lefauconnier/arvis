@@ -6,6 +6,7 @@ from typing import Any
 
 from arvis.errors.manager import ErrorManager
 from arvis.kernel.gate.pi_gate import PiBasedGate
+from arvis.kernel.gate.verdict_conversions import lyapunov_from_gate_ir
 from arvis.kernel.pipeline.stages.gate.trace_helpers import record_verdict_transition
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
@@ -44,12 +45,10 @@ def apply_pi_gate_override(ctx: Any, verdict: LyapunovVerdict) -> LyapunovVerdic
             ctx.extra["pi_gate_verdict"] = pi_result.verdict.value
             ctx.extra["pi_gate_risk"] = pi_result.risk_level
 
-            if pi_result.verdict.value == "abstain":
-                pi_verdict = LyapunovVerdict.ABSTAIN
-            elif pi_result.verdict.value == "require_confirmation":
-                pi_verdict = LyapunovVerdict.REQUIRE_CONFIRMATION
-            else:
-                pi_verdict = LyapunovVerdict.ALLOW
+            # Total, fail-closed conversion (campaign SURFACE, DM-S5):
+            # the previous string chain fell open to ALLOW on anything
+            # unrecognized; the typed mapping cannot.
+            pi_verdict = lyapunov_from_gate_ir(pi_result.verdict)
 
             kernel_verdict = getattr(ctx, "kernel_result", None)
             if kernel_verdict is not None:

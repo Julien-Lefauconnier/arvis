@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from arvis.ir.gate import CognitiveGateIR, CognitiveGateVerdictIR
+from arvis.kernel.gate.verdict_conversions import parse_gate_verdict_wire
 from arvis.kernel.projection.pi_types import PiState
 
 
@@ -22,7 +23,10 @@ class PiBasedGate:
         # =========================================
         # 0. BASE VERDICT FROM Π
         # =========================================
-        base_verdict = z.gate.verdict
+        # Wire string parsed once, fail-closed (campaign SURFACE,
+        # DM-S5): an unknown value is ABSTAIN, as the else branches
+        # below always treated it.
+        base_verdict = parse_gate_verdict_wire(z.gate.verdict)
 
         # =========================================
         # 1. HARD SAFETY (ABSTAIN)
@@ -75,7 +79,7 @@ class PiBasedGate:
         # → do NOT treat as low margin
         effective_low_margin = margin < 0.3 and margin > 0.0
 
-        if base_verdict == "allow" and (
+        if base_verdict is CognitiveGateVerdictIR.ALLOW and (
             w.uncertainty_pressure > 0.6
             or effective_low_margin
             or x.uncertainty_mass > 0.6
@@ -102,12 +106,7 @@ class PiBasedGate:
 
         reasons.append("pi_decision")
 
-        if base_verdict == "require_confirmation":
-            verdict = CognitiveGateVerdictIR.REQUIRE_CONFIRMATION
-        elif base_verdict == "allow":
-            verdict = CognitiveGateVerdictIR.ALLOW
-        else:
-            verdict = CognitiveGateVerdictIR.ABSTAIN
+        verdict = base_verdict
 
         return CognitiveGateIR(
             verdict=verdict,
