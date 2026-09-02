@@ -143,8 +143,18 @@ def config_fingerprint(config: Any) -> str:
     models) are bound by their declared ``governance_manifest()`` when
     they expose one, so two differently configured instances of the
     same class no longer collide (audit constat 17); a component
-    without a manifest falls back to class identity, as in a7. The
-    fingerprint commits to WHAT governs, never to payloads.
+    without a manifest falls back to class identity (module +
+    qualname since DM-H5). The fingerprint commits to WHAT governs,
+    never to payloads.
+
+    ``confirmation_registry`` is part of the material (DM-H5,
+    campaign HARDEN): the registry of accepted confirmation formats
+    governs. Two fields are excluded ON PURPOSE, each with a pinned
+    doctrine: ``host_context`` is provenance, not governance (it is
+    transported verbatim and stamped on intents, it never changes a
+    decision), and ``telemetry_sink`` is observe-only (emission
+    happens after the result and its commitments are finalized, so it
+    cannot influence determinism or replay).
     """
     adapter_registry = getattr(config, "adapter_registry", None)
     material = {
@@ -168,6 +178,9 @@ def config_fingerprint(config: Any) -> str:
         ),
         "adapter_keys": (
             sorted(adapter_registry) if isinstance(adapter_registry, dict) else None
+        ),
+        "confirmation_registry": component_fingerprint_material(
+            getattr(config, "confirmation_registry", None)
         ),
     }
     return stable_hash(material)

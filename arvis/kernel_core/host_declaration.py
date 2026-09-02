@@ -65,16 +65,20 @@ def component_fingerprint_material(obj: Any) -> JSONValue:
 
     - ``None`` -> ``None`` (absent component).
     - a :class:`GovernanceManifestProvider` -> a mapping binding the
-      class qualname AND the declared manifest, canonicalized
-      injectively. A raising or non-canonicalizable manifest is a host
-      contract violation surfaced as :class:`NonCanonicalizableError`
-      (fail-closed: a component that cannot declare its identity must
-      not be silently reduced to its class name).
-    - any other object -> the qualname only (a7-compatible fallback for
-      components that do not yet declare a manifest).
+      class identity (module + qualname, exactly as the
+      canonicalization layer binds class identity) AND the declared
+      manifest, canonicalized injectively. A raising or
+      non-canonicalizable manifest is a host contract violation
+      surfaced as :class:`NonCanonicalizableError` (fail-closed: a
+      component that cannot declare its identity must not be silently
+      reduced to its class name).
+    - any other object -> module + qualname (DM-H5, campaign HARDEN:
+      the previous qualname-only binding let two homonymous classes
+      from different modules share fingerprint material).
     """
     if obj is None:
         return None
+    identity = f"{type(obj).__module__}.{type(obj).__qualname__}"
     manifest_fn = getattr(obj, "governance_manifest", None)
     if callable(manifest_fn):
         manifest = manifest_fn()
@@ -82,11 +86,11 @@ def component_fingerprint_material(obj: Any) -> JSONValue:
         # canonicalized injectively.
         return canonicalize(
             {
-                "type": type(obj).__qualname__,
+                "type": identity,
                 "manifest": manifest,
             }
         )
-    return type(obj).__qualname__
+    return identity
 
 
 def resolve_host_context(
