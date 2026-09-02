@@ -7,7 +7,13 @@ from collections.abc import Iterable
 
 from .reason_code_registry import ReasonCodeRegistry
 
-STRICT_MODE = os.getenv("ARVIS_REASON_STRICT", "false").lower() == "true"
+
+def _strict_mode() -> bool:
+    """ARVIS_REASON_STRICT, read lazily (DM-H6, campaign HARDEN): the
+    module-level constant froze the value at import time, so setting
+    the variable after ``import arvis`` was silently ignored. See
+    docs/CONFIGURATION.md."""
+    return os.getenv("ARVIS_REASON_STRICT", "false").lower() == "true"
 
 
 class ReasonCodeNormalizer:
@@ -74,7 +80,7 @@ class ReasonCodeNormalizer:
             # VALIDATION
             # -----------------------------------------
             if not ReasonCodeRegistry.is_valid(mapped):
-                if STRICT_MODE:
+                if _strict_mode():
                     raise ValueError(f"Unknown reason code: {mapped}")
                 mapped = "unknown_reason"
 

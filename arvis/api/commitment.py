@@ -44,6 +44,7 @@ from arvis.kernel_core.syscalls.engagement import (
     stable_hash,
     strip_envelope_volatile,
 )
+from arvis.kernel_core.vfs.zip.guard import effective_zip_limits
 from arvis.math.stability.hard_block_policy import HARD_BLOCK_TABLE_VERSION
 from arvis.tools.registry import MANIFEST_SCHEMA_VERSION
 
@@ -182,6 +183,12 @@ def config_fingerprint(config: Any) -> str:
         "confirmation_registry": component_fingerprint_material(
             getattr(config, "confirmation_registry", None)
         ),
+        # DM-H6 (campaign HARDEN): the ZIP ingestion limits are ambient
+        # configuration governing a syscall; a deployment that loosens
+        # a cap through the environment is a differently governed
+        # deployment and must not share a fingerprint with one that
+        # does not.
+        "zip_ingest_limits": effective_zip_limits(),
     }
     return stable_hash(material)
 
