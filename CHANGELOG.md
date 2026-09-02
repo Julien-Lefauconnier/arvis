@@ -9,6 +9,41 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Fixed
+
+- Campaign FINITION: the documentation pages audit #2 caught drifting
+  are corrected and ratcheted. `docs/VERSIONS.md` states the live
+  format versions (it still showed the pre-b6 values one release
+  after they were bumped) and the post-HARDEN IR constant names, with
+  a gate test importing every stated constant back. The VFS spec
+  stops blessing the removed `ENV=test` guard bypass (section 16.4
+  now states the always-constructed guard and call-site injection)
+  and documents `keep_zip` as the accepted no-op it became. The last
+  three "M10 planned" claims (M5, M11, M15) state the executed
+  protocol, with a ratchet closing the phrase class.
+
+### Added
+
+- Campaign FINITION: front-page badges (CI, PyPI, Pythons, license),
+  an explicit license line, and a Project Reference footer linking
+  CHANGELOG, SECURITY, CONTRIBUTING, VERSIONING, the configuration
+  registry and the version map. A non-blocking CI job runs the test
+  gate on Python 3.14 (continue-on-error; the classifier follows
+  only when the job is green and deliberately promoted).
+
+### Removed
+
+- Campaign FINITION: the audited dead code. `adapters.registry.
+  get_llm_adapter` (read adapters out of `ctx.extra` against the
+  injection doctrine, called by nothing) with its package export and
+  allowlist entry; the duplicate `utcnow()` and `WallClockTimestamp`
+  of `types/time.py` (zero consumers; the wall clock has one
+  accessor again); `sufficient_eps_bound` (used by neither tests nor
+  invariants). `RuntimeMode.TEST/RESEARCH` stay on the frozen
+  surface with an honest docstring (no code path branches on them
+  yet). The last free-string verdict comparison (`pi_impl`) goes
+  through the typed fail-closed parser.
+
 ### Security
 
 - Campaign HARDEN: the governed ZIP import no longer deletes its
