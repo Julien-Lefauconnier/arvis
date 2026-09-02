@@ -103,7 +103,7 @@ Output (deterministic; the commitment hash is stable for identical input):
 Status         : REQUIRES_CONFIRMATION
 Approval Need  : YES
 Reason         : execution_blocked
-Commitment     : de29cac2ee667de9...
+Commitment     : 6a9319b8937c7693...
 Trace          : Available
 ```
 
@@ -132,7 +132,7 @@ High-risk input is refused before execution:
 Status         : BLOCKED
 Approval Need  : NO
 Reason         : execution_blocked
-Commitment     : b94e25dea93a541e...
+Commitment     : 26b838cb21e96b3c...
 Trace          : Available
 ```
 
@@ -288,8 +288,8 @@ Each authorized tool receives a canonical frozen payload and an immutable
 context. The syscall boundary compares the current trusted identity with the
 sealed principal, tenant, authentication, service, session, process and run
 bindings before committing an intent. See the normative
-[governed effect path](docs/architecture/EFFECT_PATH.md) and the
-[tool authoring guide](docs/tools/TOOL_AUTHORING_GUIDE.md).
+[governed effect path](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/architecture/EFFECT_PATH.md) and the
+[tool authoring guide](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/tools/TOOL_AUTHORING_GUIDE.md).
 
 ### Explicit Uncertainty
 
@@ -397,12 +397,34 @@ Current suite includes:
   shadow-attribute guard
 * runtime robustness checks
 
-What the suite does **not** yet establish, honestly: the Lyapunov
-decrease property is asserted at unit level and on threaded-state
-runs, not yet as a closed-loop property over long adversarial
-trajectories, and the switching guard evaluates its theorem with
-default constants (alpha, L_T) that have not been measured on real
-traces.
+### Empirical campaigns (M10)
+
+Beyond the suite, the mathematical claims are validated by executed,
+pre-registered campaigns: six M10 campaigns on two published
+synthetic corpora (D-1.0, 1440 turns; D-2.0 with state-feedback
+dynamics, 1632 turns), thresholds registered by commit before each
+run, judged 11 of 12 and 12 of 12 with the one failed criterion
+reported as failed rather than adjusted. `ALLOW` is reachable and
+deliberately rare (5 and 4 turns respectively, every one carrying a
+live measured adaptive margin and a served dwell); adversarial
+`ALLOW` is 0.0 on both corpora. The artifacts are tracked and
+regenerate byte-identically (`python -m validation.m10 run`,
+`run2`); a gate ratchet keeps the report's headline numbers equal to
+the artifacts. The full report, including which criteria can
+actually fail and what the campaigns do not establish, is
+[the M10 report](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/math/M10_empirical_stability_validation_and_runtime_validation.md)
+(read section 16 first), and the integrator-facing account of what
+stands between a call and an `ALLOW` is
+[docs/PATH_TO_ALLOW.md](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/PATH_TO_ALLOW.md).
+
+What the campaigns do **not** yet establish, honestly: the corpora
+are synthetic and small; alpha and L_T are measured on them
+report-only (the runtime constants remain declared assumptions,
+decision DM-B1, adoption deferred to DM4); the switching axis is
+monitor-only in the default posture (measured and disclosed on every
+turn, enforced in the `enforce` posture); and no claim is made about
+the CONTENT a model produces, only about the dynamics of the
+governed decision loop around it.
 
 ---
 
@@ -423,6 +445,7 @@ Included examples:
 4. Human approval
 5. Tool governance
 6. Finance risk screening
+7. Session threading (the ALLOW path's first condition)
 8. Timeline audit trail
 9. Multi-engine hosting (one engine per governed turn)
 10. Runtime inspection

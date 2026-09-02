@@ -60,7 +60,7 @@ Default quickstart output:
 Status         : REQUIRES_CONFIRMATION
 Approval Need  : YES
 Reason         : execution_blocked
-Commitment     : 4ee297032d4aa02b...
+Commitment     : 1777c10affd40040...
 Trace          : Available
 
 Structured Output:
