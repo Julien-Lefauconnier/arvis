@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import PurePosixPath
 
 from arvis.kernel_core.vfs.zip.guard import ZipGuard
@@ -32,12 +31,21 @@ class ZipAnalyzer:
     - no VFS persistence dependency
     """
 
-    def __init__(self) -> None:
-        self.guard = ZipGuard() if os.getenv("ENV") != "test" else None
+    def __init__(self, guard: ZipGuard | None = None) -> None:
+        """The firewall is ALWAYS present (campaign KERNEL, LOT K3).
+
+        It used to be dropped whenever ``os.getenv("ENV") == "test"``,
+        so an ambient variable removed the file-count cap, the size
+        caps, the zip-bomb ratio check and the blocked-extension list
+        on an archive ingestion path: a monotone-hardening violation
+        (F-001) whatever the intent. A caller needing different limits
+        injects a configured guard, which is a decision at the call
+        site rather than an ambient one.
+        """
+        self.guard = guard if guard is not None else ZipGuard()
 
     def analyze(self, zip_path: str) -> ZipNode:
-        if self.guard is not None:
-            self.guard.validate_path(zip_path)
+        self.guard.validate_path(zip_path)
 
         root = ZipNode(
             name="/",

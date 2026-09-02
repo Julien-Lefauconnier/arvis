@@ -1078,7 +1078,10 @@ def _deserialize_zip_node(data: dict[str, Any]) -> ZipNode:
         node_type=data["node_type"],
         size=data.get("size"),
         extension=data.get("extension"),
-        supported=data.get("supported", True),
+        # None means "not assessed", matching the dataclass default;
+        # defaulting to True fabricated an assessment nobody made
+        # (campaign KERNEL, LOT K3).
+        supported=data.get("supported"),
         reason=data.get("reason"),
         zip_path=data.get("zip_path"),
         children=[_deserialize_zip_node(child) for child in data.get("children", [])],
