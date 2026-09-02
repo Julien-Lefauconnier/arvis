@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from arvis.errors.manager import ErrorManager
 from arvis.kernel.pipeline.stages.gate.models import CompositeMetrics
+from arvis.math.gate.gate_kernel import RECOVERY_MIN_IMPROVEMENT
 from arvis.math.lyapunov.composite_lyapunov import CompositeLyapunov
 from arvis.math.lyapunov.lyapunov import (
     LyapunovState,
@@ -230,23 +231,34 @@ def detect_recovery(
     w_prev: float | None,
     w_current: float | None,
 ) -> bool:
+    """Whether the energy shows a REAL improvement between two steps.
+
+    Campaign GATE-SEM (LOT G4, audit P0-2 bis): recovery feeds a
+    sanctioned verdict relaxation downstream (recovery_to_confirmation),
+    and this detector accepted any negative delta down to -1e-18. The
+    kernel-side detector already applied RECOVERY_MIN_IMPROVEMENT
+    (audit G2); the stage-side one is OR-ed with it in the decision
+    stack, so the floor was void. One constant, imported from the
+    kernel, now governs both detectors.
+    """
     prev_lyap = ctx.scientific.lyapunov.prev_lyap
     cur_lyap = ctx.scientific.lyapunov.cur_lyap
 
     recovery_detected = False
     try:
-        if delta_w is not None and delta_w < 0:
+        if delta_w is not None and delta_w < -RECOVERY_MIN_IMPROVEMENT:
             recovery_detected = True
         elif (
             prev_lyap is not None
             and cur_lyap is not None
-            and _fast_energy(cur_lyap) < _fast_energy(prev_lyap)
+            and _fast_energy(prev_lyap) - _fast_energy(cur_lyap)
+            > RECOVERY_MIN_IMPROVEMENT
         ):
             recovery_detected = True
         elif (
             w_prev is not None
             and w_current is not None
-            and float(w_current) < float(w_prev)
+            and float(w_prev) - float(w_current) > RECOVERY_MIN_IMPROVEMENT
         ):
             recovery_detected = True
     except Exception as exc:
