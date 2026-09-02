@@ -139,22 +139,22 @@ its own change rather than tuned in place.
 ## What 0.1.x lets you reach
 
 `ALLOW` is reachable. Measured on the current tree, across both M10
-campaigns:
+campaigns (campaign PROJ corrected the dwell clock, which ticked
+twice per turn and let the switching guard read twice the real
+dwell, so these counts are lower and harder-won than campaign 3's):
 
 | | D-1.0 (1440 turns) | D-2.0 (1632 turns) |
 |---|---|---|
-| ALLOW | 22 (1.53%) | 6 (0.37%) |
-| REQUIRES_CONFIRMATION | 185 | 349 |
-| ABSTAIN | 1233 | 1277 |
+| ALLOW | 11 (0.76%) | 4 (0.25%) |
+| REQUIRES_CONFIRMATION | 169 | 237 |
+| ABSTAIN | 1260 | 1391 |
 
 Every one of those turns has a strictly negative composite delta,
 and they occur only in the `nominal` and `long_horizon` families.
-The `adversarial`, `conflicting`, `boundary`, `declared_risk`,
-`switching_stress` and `nominal_feedback` distributions are
-unchanged by the fix, and adversarial `ALLOW` remains 0.0.
+Adversarial `ALLOW` remains 0.0 on both corpora.
 
 Conditional on a turn that actually contracted, `ALLOW` reaches
-3.8% overall on D-1.0 and 15.8% on its nominal family.
+1.9% overall on D-1.0 and 7.4% on its nominal family.
 
 So a 0.1.x host should still design for the two-level ladder
 (`REQUIRES_CONFIRMATION` and `ABSTAIN`) as the common case, and
@@ -162,24 +162,20 @@ treat `ALLOW` as an outcome that a well-instrumented, threaded,
 genuinely contracting session can now reach rather than a capability
 under construction.
 
-## What 0.1.x still does not let you reach
+## The dwell history now crosses the contract
 
-The switching guard needs a dwell history. The switching condition is
-`ln(J) / tau_d < kappa_eff`, where `tau_d` is how long the system has
-stayed in one regime. A fresh runtime has `tau_d = 0`, which makes
-the left-hand side enormous and adds `switching_unsafe_monitoring`
-to the reasons.
+The switching condition is `ln(J) / tau_d < kappa_eff`, where
+`tau_d` is how long the system has stayed in one regime. A fresh
+runtime has `tau_d = 0`, which makes the left-hand side enormous and
+adds `switching_unsafe_monitoring` to the reasons.
 
-The dwell clock lives on a live runtime object inside the pipeline,
-and the opaque blob of step 1 does not carry it, so a host driving
-ARVIS through `ArvisEngine` cannot yet accumulate dwell time across
-calls. A host that owns the pipeline directly (a deep integration)
-can, by carrying the switching runtime across turns; the measured
-effect is `tau_d` climbing 0 to 38 over 20 turns, after which the
-switching reason disappears.
-
-Carrying the dwell clock through the public contract is planned work,
-not a configuration you are missing.
+Since campaign PROJ the opaque blob of step 1 carries the dwell
+clock: thread the blob and `tau_d` accumulates, one tick per
+completed turn, and the switching reason disappears once enough
+dwell is served (about a dozen threaded turns in one regime). Blobs
+produced before the change simply start a fresh clock. Without
+threading, `tau_d` restarts at zero on every call, which is one more
+reason step 1 is where every integration starts.
 
 ## Debugging your own runs
 
@@ -200,3 +196,10 @@ bag["verdict_transition_trace"]  # every tightening, with its stage
 A verdict you did not expect is always explained by one of those
 five. `delta_w` at `None` in the same bag is the signature of step 2:
 nothing was measured, so nothing could be certified.
+
+Since campaign PROJ the bag also carries the post-hoc attestation
+(`projection_post_certification_level`,
+`projection_post_lyapunov_compatible`): the decision's own view
+re-validated after the gate, when the composite delta finally
+exists. The decision certificate itself is never rewritten, so what
+you read above is always what actually decided.

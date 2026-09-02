@@ -734,3 +734,113 @@ certification level, is an equivalent mutant: no reachable state has
 ``lyapunov_assessed`` false while ``lyapunov_ok`` is false, so no
 test can distinguish it. It is reported rather than papered over
 with a pin that would assert nothing.
+
+## 13. Campaign 4 Report: PROJ, 2026-09-02
+
+### 13.1 Scope
+
+Three coherence defects on the projection and switching path, fixed
+in one campaign because they compound: an operator reacting to a
+misread signal perturbs the view the certificate validates, a
+post-decision refresh rewriting that certificate falsifies the trace
+of the perturbed decision, and a clock ticking twice per turn feeds
+the guard that floors the result. Zero veramem contact.
+
+### 13.2 The operator reacted to the same misread signal (DM-P1)
+
+``PiOperator`` clamped its blending strength to 0.6 whenever
+``ctx._dv`` was positive, reading it as a signed divergence. Campaign
+12 established the attribute carries the drift score, a magnitude in
+[0, 1]: the clamp fired on 85 per cent of campaign 2 turns and the
+light alpha = 1.0 branch was reachable only at exactly zero drift
+(248 of 1632 turns). The measured drift distribution (median 0.048,
+maximum 0.283) also settles the alternative that was considered:
+reinterpreting the thresholds against the magnitude at the declared
+``is_high`` level (0.7) would never fire, dead code with
+unregistered constants. The reaction is removed; drift-reactive
+projection strength is re-posed at DM4 with a real signal.
+
+Effect, measured before pinning: no verdict moves on either corpus,
+both judgments unchanged, and about 20 spurious
+``projection_boundary`` flags disappear per corpus (464 to 444 on
+D-1.0, 467 to 447 on D-2.0).
+
+### 13.3 The published certificate was not the one that decided (DM-P2)
+
+The observability refresh ran the full projection again during
+finalize and overwrote every decision field, certificate included.
+Measured on the smoke corpus: the published certificate differed
+from the one the gate consumed on 42 turns of 42, materially on 18
+(LOCAL with the Lyapunov axis unassessed at decision time, BASIC
+with ``lyapunov_compatibility_ok`` False in the trace). The IR
+adapter read the published one, so the audit trail contradicted the
+decision.
+
+The refresh is now a post-hoc attestation: it re-validates the
+DECISION'S OWN VIEW against the signals that only exist after the
+gate, which is also the first place the Lyapunov axis is assessed
+with the real composite delta, and publishes under distinct names
+(``post_certificate``, ``projection_post_certification_level``,
+``projection_post_lyapunov_compatible``). What decided is never
+rewritten. The overwrite had no test pin, one more measure of the
+distance between this path and the suite's reach.
+
+### 13.4 The dwell clock ticked twice per turn
+
+``regime_stage`` (before the gate) and ``runtime_stage`` (after it)
+both ticked the same ``SwitchingRuntime``, so tau_d counted two per
+turn and the guard's left-hand side ln(J)/tau_d was HALF its true
+value: switching was declared safe with half the dwell actually
+served. This is the campaign's only behavioral change and it is
+anti-conservative in the defect, conservative in the fix. The single
+owner is now ``runtime_stage``, post-decision, so the guard reads
+the dwell of completed turns.
+
+Verdict movement, entirely attributable to this half (decomposition
+run with the blob restore disabled gives identical numbers):
+
+| | D-1.0 before | D-1.0 after | D-2.0 before | D-2.0 after |
+|---|---|---|---|---|
+| ABSTAIN | 1233 | 1260 | 1277 | 1391 |
+| REQUIRE_CONFIRMATION | 185 | 169 | 349 | 237 |
+| ALLOW | 22 | **11** | 6 | **4** |
+
+The movement is monotone hardening on a corrected clock: no ABSTAIN
+was relaxed anywhere, and the ALLOW that remain (nominal 7 and 4,
+long_horizon 4 and 1 per corpus) sit on the same contracting-turn
+profile as before. Both registered judgments hold, 11 of 12 and 12
+of 12, with ``adaptive_estimation.estimator_availability`` easing
+from 0.848 to 0.814 on D-2.0, well above its 0.5 threshold. The
+campaign 3 ALLOW counts (22 and 6) were measured on the inflated
+clock and are superseded by this table.
+
+### 13.5 The dwell clock crosses the public contract
+
+The clock lived on a runtime rebuilt fresh per pipeline; only a deep
+integration owning the pipeline could carry it, which is exactly
+what the M10 harness does (its threading loop carries the runtime
+object). A host on the documented ``ArvisEngine`` contract could
+never accumulate dwell, so ``switching_unsafe_monitoring`` never
+went away for it.
+
+The opaque blob now carries a ``switching`` section, written at
+finalize after the turn's completed regime update and restored at
+``core_stage``, the single ingestion point of the host blob (the
+extra-read ratchet refused a second read site, working as designed).
+``SwitchingRuntime`` owns its own (de)serialization the way the
+monitor owns the rest of the blob; a blob without the section, or
+with a malformed one, degrades to a fresh clock. Campaign artifacts
+regenerate identically under threading because the harness already
+carried the clock: the campaign numbers isolate the tick fix, and
+the engine-level pins measure the contract: tau_d accumulates across
+threaded public turns and the cold-monitoring reason disappears,
+which no ``ArvisEngine`` host could reach before.
+
+### 13.6 Reproduction
+
+``python -m validation.m10 run``, ``run2`` and ``sweep`` regenerate
+the artifacts. Mutation replay on the three surfaces is recorded in
+the campaign closure; the moved tests are
+``test_pi_operator_reacts_to_divergence`` (pinned the drift clamp)
+and ``test_regime_stage.py::test_full_flow`` (pinned the double
+tick).

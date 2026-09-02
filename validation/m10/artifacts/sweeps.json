@@ -37,27 +37,27 @@
   },
   "margin_edges": {
     "edge_-0.02": {
-      "mass_above_edge": 0.965,
-      "mass_within_0.005": 0.011666666667,
-      "mass_within_0.01": 0.024166666667,
-      "mass_within_0.02": 0.055,
-      "mass_within_0.05": 0.18
+      "mass_above_edge": 0.994791666667,
+      "mass_within_0.005": 0.001736111111,
+      "mass_within_0.01": 0.003472222222,
+      "mass_within_0.02": 0.009548611111,
+      "mass_within_0.05": 0.073784722222
     },
     "edge_-0.05": {
-      "mass_above_edge": 0.978333333333,
+      "mass_above_edge": 0.998263888889,
       "mass_within_0.005": 0.0,
-      "mass_within_0.01": 0.003333333333,
-      "mass_within_0.02": 0.010833333333,
-      "mass_within_0.05": 0.069166666667
+      "mass_within_0.01": 0.000868055556,
+      "mass_within_0.02": 0.002604166667,
+      "mass_within_0.05": 0.011284722222
     },
     "edge_0.0": {
-      "mass_above_edge": 0.9225,
-      "mass_within_0.005": 0.034166666667,
-      "mass_within_0.01": 0.064166666667,
-      "mass_within_0.02": 0.1125,
-      "mass_within_0.05": 0.2825
+      "mass_above_edge": 0.988715277778,
+      "mass_within_0.005": 0.006944444444,
+      "mass_within_0.01": 0.019097222222,
+      "mass_within_0.02": 0.043402777778,
+      "mass_within_0.05": 0.1640625
     },
-    "samples": 1200
+    "samples": 1152
   },
   "risk_ceilings_warm": {
     "ok_0.15_critical_0.3": {
