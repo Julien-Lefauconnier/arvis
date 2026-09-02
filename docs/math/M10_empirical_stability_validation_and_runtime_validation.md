@@ -939,3 +939,148 @@ wiring, and drift-reactive projection strength).
 artifacts; the sweeps are unaffected (the declared_risk family does
 not cross this filter). Mutation replay is recorded in the campaign
 closure.
+
+## 15. Campaign 6 Report: GATE-SEM, 2026-09-02
+
+### 15.1 What the integral audit found
+
+The 2026-09-02 integral audit examined every final ALLOW of the
+republished campaigns against the guards the documentation claims
+stand behind it, and found that the majority sat on the one turn
+where no guard was standing. On the first threaded turn of a
+trajectory the dwell clock reads zero; ``adaptive_switching_margin``
+raised ``ValueError`` on ``tau_d <= 0``; the gate stage swallowed
+the exception into ``metrics = None``; and every downstream veto
+checks ``is_available`` and does nothing. An absent adaptive layer
+constrained nothing, the exact opposite of the F-002 fail-closed
+doctrine the switching axis applies, and the turn with the switching
+condition violated by six orders of magnitude (lhs about +6.3e5 at
+the floored dwell) was therefore the EASIEST turn to certify.
+
+On the pre-campaign base (section 14 republication): 8 of 13 D-1.0
+final ALLOW and 13 of 15 on D-2.0 sat on that hole, including all 8
+``nominal_feedback`` ALLOW that section 14.5 published as the rate
+rule's unlock. A second, independent bypass compounded it: the gate
+kernel's acceptance shortcut (``stable`` and a negative delta) fired
+before ``lyapunov_gate`` on every live contracting turn, because on
+the live path ``stable`` is literally ``delta_w <= 0``. The
+``abstain_threshold`` (V >= 0.8) and the DM3 worst-axis refusal
+never executed on real traffic: probed directly, a state with its
+risk axis saturated at 1.0 and a contraction of -0.0375 earned a
+pre-verdict ALLOW, and -1e-18 qualified as acceptance evidence.
+Finally, the audit trail itself recorded transitions that never
+happened (431 phantom ``ABSTAIN -> REQUIRE_CONFIRMATION`` boundary
+entries per corpus and thousands of no-op veto entries), the same
+defect class DM-P2 closed for the certificate.
+
+### 15.2 The decisions
+
+- **DM-G1**: the adaptive margin is computed on a floored dwell,
+  ``max(tau_d, DWELL_TIME_FLOOR)``, the same 1e-6 floor
+  ``switching_lhs`` always applied, with the constant now shared
+  from ``switching_params.py``. An empty clock yields a massively
+  positive margin: regime unstable, hard veto, ABSTAIN. The veto
+  the theory prescribes, instead of a silent disappearance. A
+  genuinely unavailable layer on a turn carrying both composite
+  energies floors ALLOW at REQUIRES_CONFIRMATION
+  (``adaptive_unavailable``, promoted from reserved to normative in
+  the reason-code registry, and added to the input-risk gate's
+  real-safety vetoes).
+- **DM-G2**: the validity envelope refuses ``valid=True`` when the
+  adaptive layer is absent (reason ``adaptive_unavailable``, the
+  mapping section 6 of the envelope spec had reserved), and carries
+  ``switching_safe_measured`` beside the effective value, so the
+  soft posture can no longer overwrite the measurement silently.
+  F-004 soft semantics are otherwise unchanged.
+- **DM-G3**: the kernel acceptance shortcut is reserved for the
+  injected-scalar compliance case its comment always described
+  (``cur_lyap is None``), with the recovery noise floor applied;
+  every turn carrying a Lyapunov quadruple goes through
+  ``lyapunov_gate``, so the worst-axis and mean-energy refusals are
+  live on real traffic.
+- **DM-G4**: the stage-side recovery detector applies the same
+  ``RECOVERY_MIN_IMPROVEMENT`` floor as the kernel's (one constant,
+  imported), closing the -1e-18 path into the sanctioned
+  ``recovery_to_confirmation`` relaxation.
+- **LOT G5**: every transition-record site is guarded so the trace
+  records only real verdict changes; denial events keep their
+  explicit ``_denied`` records. The trace grammar is pinned: a
+  no-op entry only ever comes from an event stage, a relaxation
+  entry only from the sanctioned relaxation stages.
+
+### 15.3 Result on the republished campaigns
+
+Every verdict movement is a hardening; not one turn relaxed, and the
+base ABSTAIN set is preserved bit for bit on both corpora.
+
+| | D-1.0 (1440 turns) | D-2.0 (1632 turns) |
+|---|---|---|
+| ALLOW | 13 -> 5 | 15 -> 4 |
+| REQUIRES_CONFIRMATION | 167 -> 166 | 232 -> 224 |
+| ABSTAIN | 1260 -> 1269 | 1385 -> 1404 |
+
+The five D-1.0 survivors (nominal 4, long_horizon 1) and the D-2.0
+survivors (nominal 3, long_horizon 1) all carry a live adaptive
+layer, a negative measured margin, a served dwell (tau_d 5 to 22 on
+D-1.0), moderate energy (V 0.08 to 0.16) and a real contraction
+(|dW| 0.0105 to 0.129). The entire final-verdict movement is
+attributable to DM-G1; DM-G3 moved no corpus verdict (no surviving
+turn approaches the worst-axis or mean-energy refusals), which is
+the desired shape for a restored guard: protection, not traffic.
+
+**Section 14.5 is superseded on one point and the supersession is
+the honest headline**: the 8 ``nominal_feedback`` ALLOW celebrated
+there as the first on the family engineered to contract were ALL on
+the first threaded turn, certified by the absent layer, and are
+withdrawn. The family now shows 0 ALLOW. The DM-S1 rate rule remains
+registered and correct (the weak-stability floor was not the leak),
+but its unlock effect must be re-measured on trajectories long
+enough for the feedback family to serve dwell under a live guard;
+that re-measurement is future campaign work, not a number this
+report will keep claiming.
+
+The trace movement measures LOT G5: total transition entries fall
+from 3145 to 122 on D-1.0 and from 3351 to 135 on D-2.0. About 96
+per cent of the published audit trail attested transitions that
+never happened; what remains is exactly the set of real changes and
+explicit denials.
+
+### 15.4 Judgments
+
+Both registered judgments hold, unchanged in outcome: D-1.0 11 of 12
+(5.1 nominal contraction still reported failed, observed 0.516) and
+D-2.0 12 of 12. Two observed values moved for cause:
+``estimator_availability`` rises to 0.833 and 0.848 (the layer no
+longer dies on dwell resets), and ``envelope_alive_in_domain`` falls
+from 1.0 to 0.824 and 0.842 (the envelope now refuses turns without
+a live adaptive layer). The latter criterion, recorded in section
+12.4 as non-discriminating at a saturated 1.0, is discriminating
+again; its re-registration before the next campaign remains open.
+
+### 15.5 Reproduction
+
+``python -m validation.m10 run``, ``run2`` and ``sweep`` regenerate
+the artifacts byte-identically; the campaign pins run at gate time
+(``tests/math/m10/test_gate_sem_pins.py``: no ALLOW without a live
+adaptive layer, a positive dwell and a negative measured margin;
+availability never dies mid-trajectory) together with the trace
+grammar pin (``tests/kernel/gate/test_verdict_transition_trace.py``)
+and the kernel bypass pins
+(``tests/math/gate/test_gate_kernel_live_path.py``). Mutation replay
+is recorded in the campaign closure.
+
+### 15.6 Left open, deliberately
+
+Two D-2.0 survivors (nominal-06 turn 3, long_horizon-05 turn 2) hold
+ALLOW while the assumed-constant switching reading is still negative
+territory away: their measured adaptive margin is negative (the
+empirical contraction factor is large enough), but ``switching_lhs``
+computed with the ASSUMED ``kappa_eff`` 0.13 is still positive at
+dwell 1 and 2. The envelope now discloses exactly this
+(``switching_safe_measured: false`` beside the soft posture), and
+whether ALLOW should additionally require the assumed-constant T1
+reading, at the cost of refusing turns whose measured contraction is
+demonstrably stronger than the assumption, is decision DM-G2bis,
+posed to the owner with these two turns as the entire corpus
+evidence. Until it is decided, the pins require the measured margin,
+not the assumed one.

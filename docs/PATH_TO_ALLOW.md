@@ -14,20 +14,24 @@ current tree; the numbers come from the M10 campaigns
 ## The short answer
 
 `ALLOW` requires a **measured contraction on a threaded trajectory
-inside the projected domain**. Five conditions, in the order a host
-meets them:
+inside the projected domain, with the adaptive guard live**. Six
+conditions, in the order a host meets them:
 
 1. the host carries the trajectory across turns,
 2. the input carries structured signals, so there is an energy to
    measure at all,
 3. the projected observation sits inside the domain, away from its
    dangerous bounds,
-4. the composite energy actually decreases on that turn,
-5. it decreases by more than the soft-filter threshold.
+4. the adaptive stability layer is live with a negative measured
+   margin (dwell has been served; an empty clock vetoes),
+5. the composite energy actually decreases on that turn,
+6. it decreases by more than the soft-filter threshold.
 
-Miss any one and the verdict floors at `REQUIRES_CONFIRMATION`. That
-is the monotone-hardening doctrine (F-001) doing its job: a floor is
-never silently lifted.
+Miss any one and the verdict floors at `REQUIRES_CONFIRMATION` (or
+refuses outright: condition 4 vetoes at ABSTAIN, because an empty
+dwell clock is a violated switching condition, not a missing
+nicety). That is the monotone-hardening doctrine (F-001) doing its
+job: a floor is never silently lifted.
 
 ## 1. Carry the trajectory (the host contract)
 
@@ -153,17 +157,19 @@ registered rate floor of campaign SEUIL):
 
 | | D-1.0 (1440 turns) | D-2.0 (1632 turns) |
 |---|---|---|
-| ALLOW | 13 (0.90%) | 15 (0.92%) |
-| REQUIRES_CONFIRMATION | 167 | 232 |
-| ABSTAIN | 1260 | 1385 |
+| ALLOW | 5 (0.35%) | 4 (0.25%) |
+| REQUIRES_CONFIRMATION | 166 | 224 |
+| ABSTAIN | 1269 | 1404 |
 
-Every one of those turns has a strictly negative composite delta,
-and they occur only in the `nominal`, `long_horizon` and
-`nominal_feedback` families; the 8 feedback ALLOW on D-2.0 are the
-first ever on the family engineered to contract, which is the
-outcome the whole path was built to certify. Adversarial `ALLOW`
-remains 0.0 on both corpora, and the smallest admitted contraction
-is |dW| 0.0105.
+Every one of those turns has a strictly negative composite delta, a
+live adaptive layer with a negative measured margin, and a served
+dwell; they occur only in the `nominal` and `long_horizon` families.
+Campaign GATE-SEM (M10 section 15) withdrew the majority of the
+previously published ALLOW, including all 8 `nominal_feedback` ones:
+they sat on the first threaded turn, where the adaptive guard was
+silently dead, and a guard that is not standing certifies nothing.
+Adversarial `ALLOW` remains 0.0 on both corpora, and the smallest
+admitted contraction is |dW| 0.0105.
 
 So a 0.1.x host should still design for the two-level ladder
 (`REQUIRES_CONFIRMATION` and `ABSTAIN`) as the common case, and
@@ -181,10 +187,20 @@ adds `switching_unsafe_monitoring` to the reasons.
 Since campaign PROJ the opaque blob of step 1 carries the dwell
 clock: thread the blob and `tau_d` accumulates, one tick per
 completed turn, and the switching reason disappears once enough
-dwell is served (about a dozen threaded turns in one regime). Blobs
-produced before the change simply start a fresh clock. Without
-threading, `tau_d` restarts at zero on every call, which is one more
-reason step 1 is where every integration starts.
+dwell is served. Blobs produced before the change simply start a
+fresh clock. Without threading, `tau_d` restarts at zero on every
+call, which is one more reason step 1 is where every integration
+starts.
+
+Since campaign GATE-SEM an empty or freshly reset dwell clock is a
+hard veto, not a silent gap: the adaptive margin is computed on the
+floored dwell and comes out massively positive, so the turn refuses
+(ABSTAIN) until real dwell is served. Before that campaign the
+margin computation died on `tau_d = 0` and the absent layer
+constrained nothing, which is exactly where most published ALLOW
+turned out to live (M10 section 15). The envelope also now exports
+`switching_safe_measured` beside the posture-effective value, so a
+soft profile can never hide the raw measurement.
 
 ## Debugging your own runs
 

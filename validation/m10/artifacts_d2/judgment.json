@@ -10,7 +10,7 @@
   },
   "adaptive_estimation.estimator_availability": {
     "comparator": ">=",
-    "observed": 0.813725490196,
+    "observed": 0.848039215686,
     "passed": true,
     "path": "overall.adaptive_estimation.availability",
     "threshold": 0.5
@@ -24,7 +24,7 @@
   },
   "envelope_compliance.envelope_alive_in_domain": {
     "comparator": ">=",
-    "observed": 1.0,
+    "observed": 0.842175066313,
     "passed": true,
     "path": "overall.envelope_compliance.envelope_valid_rate_in_domain",
     "threshold": 0.1
