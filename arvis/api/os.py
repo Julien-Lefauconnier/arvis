@@ -772,8 +772,20 @@ class CognitiveOS:
         try:
             execution = getattr(result, "execution", result)
             execution_state = getattr(execution, "execution_state", None)
-            intents = getattr(execution_state, "syscall_intents", None) or []
-            results = getattr(execution_state, "syscall_results", None) or []
+            # An ABSENT journal is not an EMPTY one (campaign KERNEL,
+            # LOT K2). Coercing a missing attribute to [] made an
+            # unreadable journal satisfy the strict D-5 bijection
+            # vacuously, so a run that proved nothing was committed as
+            # if it had. A present-and-empty journal stays legitimate:
+            # most turns invoke no effect syscall at all.
+            if execution_state is not None:
+                intents = getattr(execution_state, "syscall_intents", None)
+                results = getattr(execution_state, "syscall_results", None)
+                if not isinstance(intents, list) or not isinstance(results, list):
+                    return None, "audit_incomplete"
+            else:
+                intents = []
+                results = []
 
             metadata = getattr(execution_state, "metadata", None)
             if isinstance(metadata, dict) and metadata.get("audit_incomplete"):

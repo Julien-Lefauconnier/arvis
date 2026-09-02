@@ -612,9 +612,11 @@ class SyscallHandler:
                 syscall_name=syscall.name,
             )
             if is_effect:
-                self._journal_effect_result(ctx, syscall, failure, started_tick)
+                self._journal_effect_result(
+                    ctx, syscall, failure, started_tick, causal_id
+                )
             else:
-                self._safe_journal(ctx, syscall, failure, started_tick)
+                self._safe_journal(ctx, syscall, failure, started_tick, causal_id)
             return failure
 
         if not isinstance(result, SyscallResult):
@@ -636,9 +638,9 @@ class SyscallHandler:
                 ),
             )
         if is_effect:
-            self._journal_effect_result(ctx, syscall, result, started_tick)
+            self._journal_effect_result(ctx, syscall, result, started_tick, causal_id)
         else:
-            self._safe_journal(ctx, syscall, result, started_tick)
+            self._safe_journal(ctx, syscall, result, started_tick, causal_id)
         return result
 
     def _validate_tool_authorization_outcome(
@@ -902,6 +904,7 @@ class SyscallHandler:
         syscall: Syscall,
         result: SyscallResult,
         started_tick: int,
+        causal_id: str | None = None,
     ) -> None:
         """Mandatory result journal after an effect (P0-1-a6).
 
@@ -912,7 +915,7 @@ class SyscallHandler:
         incompleteness is never silent.
         """
         try:
-            self._journal(ctx, syscall, result, started_tick)
+            self._journal(ctx, syscall, result, started_tick, causal_id)
         except Exception as exc:  # arvis-broad: marks audit incompleteness
             self._mark_audit_incomplete(ctx, syscall, exc)
 
@@ -966,9 +969,10 @@ class SyscallHandler:
         syscall: Syscall,
         result: SyscallResult,
         started_tick: int,
+        causal_id: str | None = None,
     ) -> None:
         try:
-            self._journal(ctx, syscall, result, started_tick)
+            self._journal(ctx, syscall, result, started_tick, causal_id)
         except Exception as exc:
             if ctx is not None:
                 ErrorManager.attach(
@@ -996,7 +1000,14 @@ class SyscallHandler:
         syscall: Syscall,
         result: SyscallResult,
         started_tick: int,
+        causal_id: str | None = None,
     ) -> None:
+        """Journal one result. ``causal_id`` is the id the intent was
+        minted with; the post-execution paths pass it (campaign KERNEL,
+        LOT K2) instead of letting this method rebuild one from the
+        local sequence counter, which a nested dispatch has already
+        advanced. The early-failure paths, which run before an id
+        exists, keep the rebuild."""
         if ctx is None:
             return
 
@@ -1010,7 +1021,7 @@ class SyscallHandler:
         else:
             results = ctx.extra.setdefault("syscall_results", [])
 
-        syscall_id = self._build_syscall_id(
+        syscall_id = causal_id or self._build_syscall_id(
             syscall,
             started_tick,
             self._local_counter,
