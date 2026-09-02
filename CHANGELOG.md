@@ -9,6 +9,20 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Security
+
+- Campaign HARDEN: the governed ZIP import no longer deletes its
+  host-filesystem source archive (it used to unlink `zip_path` by
+  default, outside any authorization layer; `keep_zip` stays as an
+  accepted no-op), and the analyzer's `supported` verdict now
+  governs the content import (an unsupported entry keeps its VFS
+  item, its content is refused and recorded under
+  `unsupported_file_type`; the field used to be computed, serialized
+  and never read). The gate lock is hash-pinned
+  (`--generate-hashes`) and every installer passes
+  `--require-hashes`; pytest 8.4.2 -> 9.1.1 closes PYSEC-2026-1845,
+  the last suppressed advisory, and pip-audit runs unsuppressed.
+
 ### Added
 
 - Campaign SURFACE: the production identity channel reaches both
@@ -28,6 +42,12 @@ versioning throughout the pre-1.0 series.
 
 ### Removed
 
+- Campaign HARDEN: the interrupt bus's dead pub/sub half
+  (`subscribe`/`unsubscribe`, the per-type subscriber table, and the
+  per-process `subscribed_interrupts` set: zero callers anywhere;
+  `match` routes by explicit target, which is what the runtime
+  does). Reintroducing a real pub/sub is a future design act.
+
 - Campaign SURFACE: the four dead public-namespace facades
   `arvis.api.{cognition,math,memory,reasoning}` (imported by
   nothing) and the unused duplicate `StabilityView` of
@@ -42,6 +62,38 @@ versioning throughout the pre-1.0 series.
   during the VERSIONING deprecation window, then it is removed.
 
 ### Changed
+
+- Campaign HARDEN: the audit's deferred hardening closed. The Pi
+  layer's margin is typed (`float | None`): absence is DM-F3's
+  designed state, a certified 0.0 is the worst state, and the
+  verdict is monotone over certified margins (the audit's probe,
+  margin 0.0 allowing while 0.05 abstained, is pinned inverted).
+  Recorded sensor degradations now constrain the verdict: the
+  escalation predicate is consumed by a monotone
+  REQUIRE_CONFIRMATION floor in the decision stack
+  (`sensor_degradation_floor`, registered reason code). `has_budget`
+  checks the four dimensions `consume` enforces (a process with zero
+  attention tokens was schedulable, then raised). The decision
+  constants live in one place: single kappa band table, canonical
+  `DEFAULT_SWITCHING_PARAMS` (the bootstrap small-gain check
+  consumed its own alpha 0.3 against the set's 0.15), a reachable
+  typed `theoretical_enforcement_mode`, three `IR_VERSION` constants
+  renamed by meaning (wire values unchanged), and
+  `policies_fingerprint` commits to the band thresholds and the
+  switching parameters. Ambient configuration is named, lazy,
+  validated and written down (`docs/CONFIGURATION.md`,
+  `ARVIS_ZIP_MAX_*` with the legacy unprefixed names as a deprecated
+  beta fallback, a malformed value raising a typed error instead of
+  crashing `import arvis`; the effective ZIP limits enter
+  `config_fingerprint`); an env-read outside the documented registry
+  fails the gate. Governance fingerprints bind module + qualname
+  (homonymous classes no longer collide) and `config_fingerprint`
+  gains `confirmation_registry`; the deliberate exclusions
+  (host_context as provenance, telemetry_sink as observe-only) are
+  documented where they act. CI runs least-privilege, bounded and
+  pinned; the sdist ships everything a redistributor needs to
+  replay the gate; the eight mutual package-dependency pairs are
+  frozen shrink-only by a ratchet.
 
 - Campaign SURFACE: one public contract, two surfaces. `arvis.api`
   is demoted to the internal aggregator it is (its docstring called
