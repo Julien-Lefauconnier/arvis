@@ -4,7 +4,7 @@
 
 > Python 3.11+ • Deterministic • Replayable • Governed • Auditable
 
-> **Status: `0.1.0b5` (beta).** The public surface (`arvis.__all__` and the
+> **Status: `0.1.0b6` (beta).** The public surface (`arvis.__all__` and the
 > stable `host_api` modules) is stabilized, versioned, and covered by the
 > deprecation policy in `VERSIONING.md`: removals or type changes require a
 > version bump and a changelog entry.
@@ -538,7 +538,7 @@ ARVIS tracks three distinct version axes, each honestly labeled:
 
 | Axis | Value | Meaning |
 |------|-------|---------|
-| Package version | `0.1.0b5` | the distributed artifact (PEP 440) |
+| Package version | `0.1.0b6` | the distributed artifact (PEP 440) |
 | API version | `0.1` | stable within the beta series under `VERSIONING.md` |
 | Standard version | `draft-v1` | the ARVIS decision / IR specification |
 
@@ -546,7 +546,7 @@ ARVIS tracks three distinct version axes, each honestly labeled:
 
 ## Project Status
 
-**`0.1.0b5` (beta)**: actively developed with a validation-first engineering
+**`0.1.0b6` (beta)**: actively developed with a validation-first engineering
 approach. The documented public and host surfaces are stable within the beta
 series; experimental internals and the draft standard may still evolve.
 

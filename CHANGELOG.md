@@ -9,6 +9,8 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+## [0.1.0b6] - 2026-09-02
+
 ### Security
 
 - **Canonicalization: a dataclass could hide state from the injective
