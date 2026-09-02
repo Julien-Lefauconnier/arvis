@@ -15,6 +15,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 LOCK = Path(__file__).resolve().parents[2] / "requirements" / "gate.lock"
 
 
@@ -40,6 +42,8 @@ def test_every_pinned_requirement_carries_hashes() -> None:
 
 def test_the_installers_require_the_hashes() -> None:
     root = LOCK.parents[1]
+    if not (root / ".github").is_dir():
+        pytest.skip("source checkout required (.github not shipped in sdist)")
     for rel in (".github/workflows/CI.yml", ".github/workflows/release.yml"):
         text = (root / rel).read_text(encoding="utf-8")
         for line in text.splitlines():

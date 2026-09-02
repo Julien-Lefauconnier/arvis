@@ -22,9 +22,20 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 GATE = ROOT / "scripts" / "run_quality_gate.sh"
 WORKFLOWS = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+
+# The parity pins are properties of the repository, not of a
+# distribution: an sdist replay (campaign HARDEN, LOT S) has no
+# .github and skips them, exactly like the other
+# source-checkout-required tests.
+pytestmark = pytest.mark.skipif(
+    not WORKFLOWS,
+    reason="source checkout required (.github not shipped in sdist)",
+)
 
 # Commands that define a check. A workflow naming one of these
 # directly has forked the definition instead of calling the gate.

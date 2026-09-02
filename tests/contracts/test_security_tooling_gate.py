@@ -5,6 +5,8 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
+import pytest
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -23,6 +25,8 @@ def test_bandit_is_exactly_pinned_in_dev_dependencies() -> None:
 
 
 def test_ci_uses_the_shared_security_gate_and_wheel_check() -> None:
+    if not (REPOSITORY_ROOT / ".github").is_dir():
+        pytest.skip("source checkout required (.github not shipped in sdist)")
     quality_gate = (REPOSITORY_ROOT / "scripts/run_quality_gate.sh").read_text(
         encoding="utf-8"
     )
