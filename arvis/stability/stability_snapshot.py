@@ -48,16 +48,8 @@ class StabilitySnapshot:
         )
 
 
-@dataclass(frozen=True)
-class StabilityView:
-    stability_score: float
-    risk_level: float
-    regime: str
-
-    @staticmethod
-    def from_snapshot(s: StabilitySnapshot) -> "StabilityView":
-        return StabilityView(
-            stability_score=s.score,
-            risk_level=s.collapse_risk,
-            regime=s.verdict,
-        )
+# Campaign SURFACE (DM-S5, 2026-09-02): this module used to define a
+# second, three-field StabilityView that nothing imported. The public
+# stability view is arvis.api.stability.StabilityView; the duplicate
+# (whose risk_level was the collapse_risk and whose "regime" was a
+# verdict, both namings the audit flagged) is deleted.
