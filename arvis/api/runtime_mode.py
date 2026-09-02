@@ -18,7 +18,10 @@ class RuntimeMode(StrEnum):
     """Runtime profile of a CognitiveOS instance.
 
     LOCAL is the permissive default for embedding and development,
-    TEST and RESEARCH are explicit non-production postures, and
+    TEST and RESEARCH are explicit non-production postures
+    (currently behaviorally identical to LOCAL: no code path branches
+    on them yet; they exist so a host can DECLARE the posture, and
+    they stay in the frozen surface under the beta contract), and
     PRODUCTION activates the closed profile (host runtime controls
     rejected, deny-by-default tool gates, frozen tool registry).
     """

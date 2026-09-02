@@ -111,20 +111,6 @@ def lyapunov_delta(
     return lyapunov_value(nxt, weights=weights) - lyapunov_value(prev, weights=weights)
 
 
-def sufficient_eps_bound(
-    prev: LyapunovState,
-    nxt: LyapunovState,
-    eps: float,
-    weights: LyapunovWeights | None = None,
-) -> bool:
-    """
-    Utility for tests / invariants:
-    checks ΔV <= eps (with eps clamped >=0).
-    """
-    eps = max(0.0, float(eps))
-    return lyapunov_delta(prev, nxt, weights=weights) <= eps + 1e-12
-
-
 # ------------------------------------------------------------------
 # Backward compatibility layer (temporary)
 # ------------------------------------------------------------------

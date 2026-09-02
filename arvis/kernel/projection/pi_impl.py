@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 from arvis.adapters.llm.observability.observation import LLMObservation
+from arvis.ir.gate import CognitiveGateVerdictIR
+from arvis.kernel.gate.verdict_conversions import parse_gate_verdict_wire
 from arvis.kernel.pipeline.context.observability_accessors import (
     ir_state as ir_state_of,
 )
@@ -305,7 +307,10 @@ class PiImpl:
             verdict=verdict,
             safety_margin=safety_margin,
             veto_intensity=0.0 if safety_margin is None else 1.0 - safety_margin,
-            confirmation_required=(verdict == "require_confirmation"),
+            confirmation_required=(
+                parse_gate_verdict_wire(verdict)
+                is CognitiveGateVerdictIR.REQUIRE_CONFIRMATION
+            ),
         )
 
         # control

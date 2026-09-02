@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
 
 
 @dataclass(frozen=True, order=True)
@@ -27,24 +26,9 @@ class LogicalTimestamp:
             raise ValueError("LogicalTimestamp must be >= 0")
 
 
-@dataclass(frozen=True)
-class WallClockTimestamp:
-    """
-    Real UTC wall-clock timestamp.
-
-    Used for:
-    - observability
-    - audit logs
-    - external tracing
-    - telemetry export
-    """
-
-    value: datetime
-
-    def __post_init__(self) -> None:
-        if self.value.tzinfo != UTC:
-            raise ValueError("WallClockTimestamp must be UTC-aware")
-
-
-def utcnow() -> WallClockTimestamp:
-    return WallClockTimestamp(datetime.now(UTC))
+# Campaign FINITION (audit #2 P2-4, 2026-09-02): this module used to
+# carry a second ``utcnow()`` returning its own WallClockTimestamp
+# type, duplicating arvis/types/timestamps.py with a different return
+# type and zero consumers. Both dead pieces are deleted; the wall
+# clock has exactly one accessor (types/timestamps.py) and this
+# module keeps the consumed LogicalTimestamp only.

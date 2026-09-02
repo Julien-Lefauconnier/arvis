@@ -60,7 +60,6 @@ ALLOWED_EXTRA_READS: frozenset[tuple[str, str]] = frozenset(
         # ---- [host-input] ----
         ("arvis/api/os.py", "retry_tool"),
         ("arvis/api/os.py", "tool_retry_count"),
-        ("arvis/adapters/registry.py", "adapters"),
         ("arvis/adapters/ir/cognitive_ir_builder.py", "tool_results"),
         ("arvis/cognition/state/cognitive_state_builder.py", "tool_results"),
         ("arvis/kernel/projection/pi_impl.py", "llm_observation"),
