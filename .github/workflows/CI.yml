@@ -30,7 +30,7 @@ jobs:
           # Locked gate environment (audit a13, P1-03): the full
           # transitive set is frozen; the package itself installs on top
           # without resolving anything.
-          pip install -r requirements/gate.lock --prefer-binary
+          pip install -r requirements/gate.lock --require-hashes --prefer-binary
           pip install -e . --no-deps
 
       - name: Fail on missing __all__
@@ -95,7 +95,7 @@ jobs:
           # Locked gate environment (audit a13, P1-03): the full
           # transitive set is frozen; the package itself installs on top
           # without resolving anything.
-          pip install -r requirements/gate.lock --prefer-binary
+          pip install -r requirements/gate.lock --require-hashes --prefer-binary
           pip install -e . --no-deps
 
       - name: Tests gate (suite, coverage floor, per-package floors)
@@ -177,7 +177,7 @@ jobs:
           # Locked gate environment (audit a13, P1-03): the full
           # transitive set is frozen; the package itself installs on top
           # without resolving anything.
-          pip install -r requirements/gate.lock --prefer-binary
+          pip install -r requirements/gate.lock --require-hashes --prefer-binary
           pip install -e . --no-deps
 
       - name: Examples gate (stable examples smoke)

@@ -61,18 +61,11 @@ run_audit_gate() {
   # used to be copy-pasted into two workflows with the justification
   # in only one, so removing one left the other silently suppressing.
   #
-  # PYSEC-2026-1845 (pytest 8.4.2, fixed in 9.0.3), first ignored
-  # 2026-07-24, reviewed 2026-09-01: pytest is gate tooling only,
-  # absent from the shipped wheel and from the runtime dependencies.
-  # The fix is available (9.0.3 and later; the suite was verified
-  # green under 9.1.1 on 2026-09-01), and the pytest 9 toolchain bump
-  # is a dedicated change that also regenerates requirements/gate.lock
-  # rather than riding along with unrelated work. Remove this flag
-  # with that bump.
+  # No active suppression (campaign HARDEN, 2026-09-02): the pytest 9
+  # toolchain bump closed PYSEC-2026-1845, the last ignored advisory.
   echo "==> Dependency audit"
   "${PIP_AUDIT:-pip-audit}" --strict \
-    -r requirements/gate.lock \
-    --ignore-vuln PYSEC-2026-1845
+    -r requirements/gate.lock
 }
 
 run_tests_gate() {
