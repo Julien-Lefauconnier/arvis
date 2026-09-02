@@ -6,7 +6,10 @@ from typing import Any
 
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
 from arvis.math.gate.gate_kernel import COLLAPSE_ABSTAIN_THRESHOLD
-from arvis.math.gate.gate_postures import GlobalStabilityAction
+from arvis.math.gate.gate_postures import (
+    GlobalStabilityAction,
+    TheoreticalEnforcementMode,
+)
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.lyapunov.verdict_order import max_strictness
 
@@ -33,10 +36,12 @@ def apply_gate_policy(
     # 1. STRICT MODE
     # -----------------------------------------
     mode = getattr(ctx, "theoretical_enforcement_mode", None) or getattr(
-        getattr(ctx, "pipeline", None), "theoretical_enforcement_mode", "monitor"
+        getattr(ctx, "pipeline", None),
+        "theoretical_enforcement_mode",
+        TheoreticalEnforcementMode.MONITOR,
     )
 
-    if mode == "strict" and envelope.hard_block:
+    if mode == TheoreticalEnforcementMode.STRICT and envelope.hard_block:
         reasons.append(f"strict_veto_{envelope.hard_reason}")
         return LyapunovVerdict.ABSTAIN
 

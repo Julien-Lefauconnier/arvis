@@ -27,7 +27,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from arvis.api.ir import IR_VERSION
+from arvis.api.ir import IR_ENVELOPE_VERSION
 from arvis.kernel.gate.input_risk import (
     INPUT_RISK_ABSTAIN_THRESHOLD,
     INPUT_RISK_CONFIRM_THRESHOLD,
@@ -45,7 +45,12 @@ from arvis.kernel_core.syscalls.engagement import (
     strip_envelope_volatile,
 )
 from arvis.kernel_core.vfs.zip.guard import effective_zip_limits
+from arvis.math.adaptive.kappa_bands import (
+    KAPPA_BAND_CRITICAL_THRESHOLD,
+    KAPPA_BAND_WARNING_THRESHOLD,
+)
 from arvis.math.stability.hard_block_policy import HARD_BLOCK_TABLE_VERSION
+from arvis.math.switching.switching_params import DEFAULT_SWITCHING_PARAMS
 from arvis.tools.registry import MANIFEST_SCHEMA_VERSION
 
 # v5 (campaign 8): canonicalization v3 distinguishes enums from their
@@ -194,7 +199,14 @@ def config_fingerprint(config: Any) -> str:
 
 
 def policies_fingerprint() -> str:
-    """Fingerprint of the active, versioned policy tables."""
+    """Fingerprint of the active, versioned policy tables.
+
+    DM-H9 (campaign HARDEN) added the kappa band thresholds and the
+    canonical switching parameters: both are verdict-affecting policy
+    (the bands scale epsilon and label the margin, the parameters
+    feed the T1 condition), so a build that changes them is a
+    differently governed build.
+    """
     material = {
         "commitment_version": COMMITMENT_VERSION,
         "hard_block_table_version": HARD_BLOCK_TABLE_VERSION,
@@ -202,7 +214,18 @@ def policies_fingerprint() -> str:
         "input_risk_abstain_threshold": INPUT_RISK_ABSTAIN_THRESHOLD,
         "redaction_policy_version": REDACTION_POLICY_VERSION,
         "manifest_schema_version": MANIFEST_SCHEMA_VERSION,
-        "ir_version": IR_VERSION,
+        "ir_version": IR_ENVELOPE_VERSION,
+        "kappa_band_thresholds": {
+            "critical": KAPPA_BAND_CRITICAL_THRESHOLD,
+            "warning": KAPPA_BAND_WARNING_THRESHOLD,
+        },
+        "switching_params": {
+            "alpha": DEFAULT_SWITCHING_PARAMS.alpha,
+            "gamma_z": DEFAULT_SWITCHING_PARAMS.gamma_z,
+            "eta": DEFAULT_SWITCHING_PARAMS.eta,
+            "L_T": DEFAULT_SWITCHING_PARAMS.L_T,
+            "J": DEFAULT_SWITCHING_PARAMS.J,
+        },
     }
     return stable_hash(material)
 

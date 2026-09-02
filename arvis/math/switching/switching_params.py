@@ -54,3 +54,17 @@ def switching_condition(
     runtime: SwitchingRuntime | None, params: SwitchingParams
 ) -> bool:
     return switching_lhs(runtime, params) < 0
+
+
+# Canonical default parameter set of the 0.1 series (campaign HARDEN,
+# DM-H9c: this used to exist as two copies in the pipeline layer, one
+# of them dead, while the bootstrap small-gain check declared its own
+# alpha=0.3 against these alpha=0.15). Single source; consumers:
+# pipeline preparation and the bootstrap small-gain check.
+DEFAULT_SWITCHING_PARAMS = SwitchingParams(
+    alpha=0.15,
+    gamma_z=0.4,
+    eta=0.05,
+    L_T=1.0,
+    J=1.5,
+)

@@ -23,6 +23,7 @@ from arvis.math.adaptive.adaptive_runtime_observer import (
     AdaptiveRuntimeObserver,
 )
 from arvis.math.adaptive.adaptive_snapshot import AdaptiveSnapshot
+from arvis.math.adaptive.kappa_bands import kappa_band as kappa_band_of
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 
 
@@ -96,14 +97,9 @@ def apply_kappa_margin_layer(
 
         ctx.extra["kappa_margin"] = kappa_margin
 
-        if kappa_margin > 0.0:
-            kappa_band = "hard"
-        elif kappa_margin > -0.02:
-            kappa_band = "critical"
-        elif kappa_margin > -0.05:
-            kappa_band = "warning"
-        else:
-            kappa_band = "stable"
+        # Single policy table (DM-H9): same thresholds as the control
+        # stage, by construction.
+        kappa_band = kappa_band_of(kappa_margin)
 
         if (journal := journal_of(ctx)) is not None:
             journal.kappa_band = kappa_band

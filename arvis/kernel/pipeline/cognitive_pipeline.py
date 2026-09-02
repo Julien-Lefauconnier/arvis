@@ -33,16 +33,7 @@ from arvis.kernel.pipeline.services.pipeline_runtime_service import (
 from arvis.kernel.pipeline.services.pipeline_stage_registry_service import (
     PipelineStageRegistryService,
 )
-from arvis.math.switching.switching_params import SwitchingParams
 from arvis.telemetry.sink import NullTelemetrySink, TelemetrySink
-
-DEFAULT_SWITCHING_PARAMS = SwitchingParams(
-    alpha=0.15,
-    gamma_z=0.4,
-    eta=0.05,
-    L_T=1.0,
-    J=1.5,
-)
 
 
 class PipelineStage(Protocol):

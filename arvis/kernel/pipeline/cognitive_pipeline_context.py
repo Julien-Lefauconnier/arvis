@@ -56,6 +56,7 @@ from arvis.math.gate.gate_postures import (
     GlobalStabilityAction,
     InputRiskMode,
     SwitchingEnvelopeMode,
+    TheoreticalEnforcementMode,
 )
 from arvis.math.signals.conflict import ConflictSignal as ConflictPressureSignal
 
@@ -162,6 +163,9 @@ class CognitivePipelineContext:
     # wire values unchanged, plain strings still compare equal)
     # -----------------------------------------
     global_stability_action: str = GlobalStabilityAction.IGNORE
+    # DM-H9d: strict theoretical enforcement is a declared, reachable
+    # posture (the gate read this knob but nothing ever wrote it).
+    theoretical_enforcement_mode: str = TheoreticalEnforcementMode.MONITOR
     # A4/B5: switching safety envelope mode. SOFT keeps switching as
     # observability only; any other value feeds the measured switching
     # safety into the validity envelope. Production sets ENFORCE.

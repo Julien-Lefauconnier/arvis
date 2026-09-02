@@ -101,6 +101,7 @@ from arvis.math.stability.regime_estimator import (
 from arvis.math.switching.global_stability_observer import (
     GlobalStabilityObserver,
 )
+from arvis.math.switching.switching_params import DEFAULT_SWITCHING_PARAMS
 
 if TYPE_CHECKING:
     from arvis.kernel.pipeline.cognitive_pipeline import (
@@ -129,14 +130,17 @@ class PipelineBootstrapService:
 
         comp = CompositeLyapunov()
 
-        # DECLARED bootstrap assumption, not a measurement: these are
-        # the constants the 0.1 series assumes for the small-gain
-        # condition (audit M6). A host with better estimates should
+        # DECLARED bootstrap assumption, not a measurement: the
+        # canonical switching parameters of the 0.1 series (audit M6;
+        # DM-H9c, campaign HARDEN: this check used to declare its own
+        # its own alpha 0.3 against the parameter set's 0.15, exactly the
+        # "old defaults passing by construction" the composite module
+        # says were removed). A host with better estimates should
         # perform its own check with them.
         if not comp.check_small_gain(
-            eta=0.05,
-            alpha=0.3,
-            L_T=1.0,
+            eta=DEFAULT_SWITCHING_PARAMS.eta,
+            alpha=DEFAULT_SWITCHING_PARAMS.alpha,
+            L_T=DEFAULT_SWITCHING_PARAMS.L_T,
         ):
             msg = (
                 "Potentially unstable system configuration: "

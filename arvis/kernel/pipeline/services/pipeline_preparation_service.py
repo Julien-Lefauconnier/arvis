@@ -13,6 +13,9 @@ from arvis.kernel.pipeline.services.pipeline_ir_bootstrap_service import (
 )
 from arvis.kernel.projection.certificate import minimal_projection_certificate
 from arvis.math.switching.switching_params import (
+    DEFAULT_SWITCHING_PARAMS as _CANONICAL_SWITCHING_PARAMS,
+)
+from arvis.math.switching.switching_params import (
     SwitchingParams,
 )
 from arvis.math.switching.switching_runtime import (
@@ -38,13 +41,9 @@ class PipelinePreparationService:
     Preparation MUST occur once per pipeline lifecycle.
     """
 
-    DEFAULT_SWITCHING_PARAMS = SwitchingParams(
-        alpha=0.15,
-        gamma_z=0.4,
-        eta=0.05,
-        L_T=1.0,
-        J=1.5,
-    )
+    # Single source (DM-H9): the canonical defaults live with the
+    # parameter type.
+    DEFAULT_SWITCHING_PARAMS = _CANONICAL_SWITCHING_PARAMS
 
     @staticmethod
     def run(

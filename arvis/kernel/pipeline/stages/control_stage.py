@@ -21,6 +21,10 @@ from arvis.kernel.pipeline.context.scientific_accessors import (
     stable as get_stable,
 )
 from arvis.math.adaptive.adaptive_control_policy import AdaptiveControlPolicy
+from arvis.math.adaptive.kappa_bands import (
+    KAPPA_BAND_EPSILON_FACTORS,
+    kappa_band,
+)
 from arvis.math.control.eps_adaptive import CognitiveMode
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
 from arvis.math.signals import UncertaintySignal
@@ -174,17 +178,11 @@ class ControlStage:
                 # -----------------------------------------
                 margin = adaptive_snapshot.margin
                 if margin is not None:
-                    if margin > 0.0:
-                        epsilon *= 0.25
-                        ctx.kappa_band = "hard"
-                    elif margin > -0.02:
-                        epsilon *= 0.5
-                        ctx.kappa_band = "critical"
-                    elif margin > -0.05:
-                        epsilon *= 0.8
-                        ctx.kappa_band = "warning"
-                    else:
-                        ctx.kappa_band = "stable"
+                    # Single policy table (DM-H9): same thresholds as
+                    # the gate adaptive layer, by construction.
+                    band = kappa_band(float(margin))
+                    epsilon *= KAPPA_BAND_EPSILON_FACTORS[band]
+                    ctx.kappa_band = band
                 # -----------------------------------------
                 # HARD SAFETY: unstable regime clamp
                 # -----------------------------------------

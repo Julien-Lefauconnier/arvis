@@ -7,8 +7,15 @@ from typing import Any
 
 from arvis.api.ir_canonical import hash_ir
 
-IR_VERSION = "arvis-ir.v1"
-IR_FINGERPRINT = "stable"
+# The public IR ENVELOPE tag (campaign HARDEN, DM-H9e: three
+# constants named IR_VERSION carried three different meanings; each
+# now says which one it is). Wire values unchanged.
+IR_ENVELOPE_VERSION = "arvis-ir.v1"
+IR_ENVELOPE_FINGERPRINT = "stable"
+
+# Compatibility aliases (internal aggregator surface, DM-S1).
+IR_VERSION = IR_ENVELOPE_VERSION
+IR_FINGERPRINT = IR_ENVELOPE_FINGERPRINT
 
 
 def build_ir_view(obj: Any) -> dict[str, Any]:
@@ -31,8 +38,8 @@ def build_ir_view(obj: Any) -> dict[str, Any]:
     """
 
     ir = {
-        "version": IR_VERSION,
-        "fingerprint": IR_FINGERPRINT,
+        "version": IR_ENVELOPE_VERSION,
+        "fingerprint": IR_ENVELOPE_FINGERPRINT,
         "input": _serialize_ir(getattr(ir_result, "ir_input", None)),
         "context": _serialize_ir(getattr(ir_result, "ir_context", None)),
         "decision": _serialize_ir(getattr(ir_result, "ir_decision", None)),

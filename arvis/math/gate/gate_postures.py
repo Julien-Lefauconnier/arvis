@@ -51,3 +51,16 @@ class InputRiskMode(StrEnum):
 
     GRADED = "graded"
     HARDEN_ONLY = "harden_only"
+
+
+class TheoreticalEnforcementMode(StrEnum):
+    """Posture of the strict theoretical-enforcement branch.
+
+    MONITOR (default) observes; STRICT turns an envelope hard block
+    into an immediate ABSTAIN. Campaign HARDEN (DM-H9d): the knob was
+    read but never written anywhere, so the strict branch was
+    unreachable; it is now a declared context field a host can set.
+    """
+
+    MONITOR = "monitor"
+    STRICT = "strict"

@@ -41,7 +41,9 @@ if TYPE_CHECKING:
         CognitivePipelineContext,
     )
 
-_IR_VERSION = "1.0"
+# The STATE-ADAPTER payload version (DM-H9e), distinct from the
+# envelope tag and the schema version above the adapters layer.
+_STATE_ADAPTER_IR_VERSION = "1.0"
 
 
 def _maybe_get(obj: Any, *names: str) -> Any:
@@ -95,7 +97,7 @@ class StateIRAdapter:
             "dv": _as_float(getattr(stability, "dv", 0.0)),
             "fused_risk": risk_ir.fused_risk,
             "epsilon": _as_float(getattr(control, "epsilon", 0.0)),
-            "version": _IR_VERSION,
+            "version": _STATE_ADAPTER_IR_VERSION,
         }
 
         state_id = sha256(
