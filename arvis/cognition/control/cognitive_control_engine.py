@@ -97,8 +97,22 @@ class CognitiveControlDeps:
 
 
 class CognitiveControlEngine:
-    """
-    Full ARVIS control engine.
+    """Host-side cognitive control runtime (NOT the kernel gate).
+
+    This engine is a component a host (for example a product embedding
+    arvis) runs on its own surface, exported through the PROVISIONAL
+    ``host_api.control`` module. It is not on the kernel verdict path:
+    the pipeline's gate decision stack is the only producer of the
+    governed verdict, this engine is never instantiated by the
+    pipeline, and a structural contract test keeps the kernel from
+    importing it (campaign SURFACE, DM-S3,
+    ``tests/contracts/test_control_engine_isolation.py``). The
+    Lyapunov verdict it produces below is a host-side recommendation
+    computed with the same math primitives, not the governed decision.
+
+    It constructs its own ``IRGEpsilonController`` instance: tuning
+    the pipeline's controller does not tune this one, and vice versa
+    (constant unification is tracked by audit P1-9, campaign HARDEN).
 
     Responsibilities:
     - fuse risk modulation
@@ -107,7 +121,7 @@ class CognitiveControlEngine:
     - smooth risk
     - update drift/regime/dynamics
     - run adaptive/counterfactual recommendations
-    - produce final Lyapunov verdict
+    - produce a host-side Lyapunov verdict recommendation
     """
 
     def __init__(self, deps: CognitiveControlDeps):
