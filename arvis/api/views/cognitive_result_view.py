@@ -27,7 +27,7 @@ from arvis.api.ir import build_ir_view
 from arvis.api.stability import StabilityView
 from arvis.api.timeline import TimelineView
 from arvis.api.trace import DecisionTraceView
-from arvis.api.version import API_FINGERPRINT, API_VERSION
+from arvis.api.version import API_VERSION, api_fingerprint
 from arvis.api.views.decision_status import DecisionStatus
 from arvis.cognition.state.cognitive_state import CognitiveState
 from arvis.errors.base import ArvisSecurityError
@@ -274,7 +274,7 @@ class CognitiveResultView:
         return {
             "schema_version": RESULT_SCHEMA_VERSION,
             "version": API_VERSION,
-            "fingerprint": API_FINGERPRINT,
+            "fingerprint": api_fingerprint(),
             "decision": self._decision_block(),
             "stability": {
                 "score": (

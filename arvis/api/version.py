@@ -46,13 +46,25 @@ STANDARD_VERSION: Final[str] = "draft-v1"
 
 
 # -----------------------------------------------------
-# New short fingerprint (optional modern export)
+# API surface fingerprint (lazy, cached)
 # -----------------------------------------------------
-# -----------------------------------------------------
-# LEGACY TESTED FUNCTION (64 chars)
-# Must remain 64-char sha256 string
-# -----------------------------------------------------
+# Campaign INTEGRITY (DM-I1, audit P0-4): this used to be an EAGER
+# module constant computed while ``arvis/__init__`` was still
+# executing. ``arvis.__all__`` was not bound yet, so the fallback
+# branch fired on every import and the value emitted in every public
+# result was the bootstrap constant, never the surface hash the
+# shipped schema documents. The fingerprint is now computed on first
+# use, after the root package is fully initialized, and cached.
+_FINGERPRINT_CACHE: str | None = None
+
+
 def compute_api_fingerprint() -> str:
+    """Fingerprint of the public root API surface (uncached).
+
+    ``sha256("|".join(sorted(arvis.__all__)))``; the bootstrap
+    fallback only ever applies when the root package genuinely cannot
+    be imported (a partial checkout), never on a normal import.
+    """
     try:
         import arvis
 
@@ -65,7 +77,17 @@ def compute_api_fingerprint() -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
-# -----------------------------------------------------
-# Public constants (eager, safe via fallback)
-# -----------------------------------------------------
-API_FINGERPRINT: Final[str] = compute_api_fingerprint()
+def api_fingerprint() -> str:
+    """Cached fingerprint of the public root API surface."""
+    global _FINGERPRINT_CACHE
+    if _FINGERPRINT_CACHE is None:
+        _FINGERPRINT_CACHE = compute_api_fingerprint()
+    return _FINGERPRINT_CACHE
+
+
+def __getattr__(name: str) -> str:
+    # Backward-compatible module attribute: the historical constant
+    # name keeps working, now resolving to the lazy value.
+    if name == "API_FINGERPRINT":
+        return api_fingerprint()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
