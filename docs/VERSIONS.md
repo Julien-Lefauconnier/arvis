@@ -21,16 +21,18 @@ checkout.
 
 ## Intermediate representation
 
-Two constants are called `IR_VERSION`, and they are not the same thing. This is
-the confusion this page exists to end.
+Three constants used to share the name `IR_VERSION`; campaign HARDEN
+(DM-H9e) renamed each after what it actually names, keeping the wire
+values. The old names survive as compatibility aliases on the internal
+surfaces.
 
 | Constant | Value | What it names |
 | --- | --- | --- |
-| `arvis.api.ir.IR_VERSION` | `arvis-ir.v1` | the **public** IR view, the one exposed to callers and hashed into commitments |
-| `arvis.ir.version.IR_VERSION` | `1.0` | the **cognitive** IR, the internal representation the adapters build |
-| `arvis.adapters.ir.state_adapter._IR_VERSION` | `1.0` | the state fragment of that cognitive IR |
+| `arvis.api.ir.IR_ENVELOPE_VERSION` | `arvis-ir.v1` | the **public** IR envelope, the one exposed to callers and hashed into commitments |
+| `arvis.ir.version.IR_SCHEMA_VERSION` | `1.0` | the **cognitive** IR schema, the internal representation the adapters build |
+| `arvis.adapters.ir.state_adapter._STATE_ADAPTER_IR_VERSION` | `1.0` | the state fragment of that cognitive IR |
 
-The public IR version is the one that matters to a consumer: it is bound into
+The public envelope version is the one that matters to a consumer: it is bound into
 `commitment.py`, so changing it invalidates every previously issued commitment.
 The cognitive IR version describes an internal structure and has no such reach.
 
@@ -45,14 +47,14 @@ explicitly.
 
 | Constant | Value | Moves when |
 | --- | --- | --- |
-| `CANONICALIZATION_VERSION` | `3` | canonical bytes change, invalidating every hash ever produced |
-| `COMMITMENT_VERSION` | `5` | the commitment structure changes |
-| `CONFIRMATION_FORMAT_VERSION` | `4` | a stored confirmation can no longer be read |
+| `CANONICALIZATION_VERSION` | `4` | canonical bytes change, invalidating every hash ever produced |
+| `COMMITMENT_VERSION` | `6` | the commitment structure changes |
+| `CONFIRMATION_FORMAT_VERSION` | `5` | a stored confirmation can no longer be read |
 | `INVOCATION_FORMAT_VERSION` | `2` | the authorized invocation record changes |
 | `CAPABILITY_FORMAT_VERSION` | `2` | the capability record changes |
 | `CAPABILITY_ACTIVATION_FORMAT_VERSION` | `2` | the activation record changes |
 | `EFFECT_CONTEXT_FORMAT_VERSION` | `1` | the sealed effect context changes |
-| `REDACTION_POLICY_VERSION` | `5` | what is redacted from the journal changes |
+| `REDACTION_POLICY_VERSION` | `6` | what is redacted from the journal changes |
 
 A confirmation minted under an older format version is never silently
 accepted. That is the point of versioning them rather than deprecating them.
