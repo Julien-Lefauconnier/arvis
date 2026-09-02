@@ -23,7 +23,11 @@ and never relaxes a check on the effect path.
 
 The stable surface is exactly what `arvis.__all__` exports. Everything else,
 including every submodule reachable by import, is internal and may change in
-any release.
+any release. In particular `arvis.api` is the internal aggregator the root
+surface is built from, not a third contract: a symbol it exposes is covered
+only where the root or `host_api` also exports it (campaign SURFACE, DM-S1,
+which also deleted the four dead `arvis.api` facades cognition, math, memory
+and reasoning).
 
 This is enforced, not asserted: continuous integration fails if a name leaves
 `arvis.__all__` without a deliberate change to the frozen list, and the effect
@@ -199,7 +203,9 @@ suffix, tag.
 ## Beta series (0.1.0bN)
 
 The beta series stabilizes `arvis.__all__` (11 symbols) and the stable
-`host_api` modules (53 symbols), both frozen by the beta contract
+`host_api` modules (53 symbols across the eleven stable modules at
+HOST_API_VERSION 1.1; the provisional `control` module carries 5 more,
+outside this promise), both frozen by the beta contract
 manifest, plus the shipped serialization contract and the reflexive
 attestation canonicalization. Within the series, removals, renames or
 type changes on this surface require a deprecation cycle: a changelog

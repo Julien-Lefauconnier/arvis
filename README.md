@@ -217,12 +217,12 @@ os = CognitiveOS(config=CognitiveOSConfig.production())
 
 ## Public API Levels
 
-ARVIS exposes two entrypoints:
+ARVIS supports exactly two surfaces (VERSIONING.md):
 
-| API | Intended Use |
-|-----|--------------|
-| ArvisEngine | Recommended developer-facing API |
-| CognitiveOS | Advanced low-level runtime control |
+| Surface | Intended Use |
+|---------|--------------|
+| `arvis` (root, 11 symbols) | Application usage: `ArvisEngine` for most integrations, `CognitiveOS` for deterministic replay, IR control and pipeline customization |
+| `arvis.host_api` (pinned modules) | Host integration: tools, access and identity, memory, VFS, services, telemetry, each import path pinned and frozen by contract tests |
 
 For most integrations, start with:
 
@@ -232,11 +232,17 @@ from arvis import ArvisEngine
 
 ### When to use what?
 
-- Use **ArvisEngine** for application-level integrations
-- Use **CognitiveOS** when you need:
-  - deterministic replay
-  - IR control
-  - pipeline customization
+- Use **ArvisEngine** for application-level integrations. Production
+  effects run through `engine.run_as(principal, ...)` with an
+  `AuthenticatedPrincipal` built from `arvis.host_api.access`.
+- Use **CognitiveOS** when you need deterministic replay, IR control
+  or pipeline customization (also exported by `arvis.host_api.engine`).
+- Use **`arvis.host_api`** modules for everything a host wires in:
+  declaring governed tools (`host_api.tools`), identity and
+  authorization (`host_api.access`), memory governance, VFS, syscalls.
+- Anything else (`arvis.api`, deep module paths) is internal and may
+  change in any release; the examples import only the two surfaces
+  above, enforced by a contract test.
 
 ---
 

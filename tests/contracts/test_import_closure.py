@@ -5,10 +5,9 @@ Reachability is computed statically (ast-level imports) from four
 root sets that together define the supported surface:
 
 - ``arvis`` itself (the public ``__init__``),
-- every ``arvis.api`` module (the curated public namespaces:
-  ``arvis.api.cognition/math/memory/reasoning`` are re-export facades
-  a host imports directly, so the public ``__init__`` does not have
-  to reach them),
+- every ``arvis.api`` module (the internal aggregator layer behind
+  the root surface; campaign SURFACE deleted the four dead re-export
+  facades cognition/math/memory/reasoning that nothing imported),
 - every ``arvis.host_api`` module (the documented host surface),
 - every module of the veramem consumed surface
   (``tests/contracts/test_veramem_consumed_surface.py``), since the
@@ -142,9 +141,8 @@ def _closure(roots: set[str], modules: dict[str, Path]) -> set[str]:
 def _unreachable_now() -> set[str]:
     modules = _all_modules()
     roots = {"arvis"}
-    # arvis.api.* is the curated public namespace layer: hosts import
-    # these facades directly (arvis.api.math, arvis.api.cognition, ...),
-    # so they are roots of the supported surface, not dead code.
+    # arvis.api.* is the aggregator layer behind the root surface:
+    # its modules stay roots so the closure covers what they re-export.
     roots.update(name for name in modules if name.startswith("arvis.api"))
     roots.update(name for name in modules if name.startswith("arvis.host_api"))
     roots.update(CONSUMED_SURFACE.keys())

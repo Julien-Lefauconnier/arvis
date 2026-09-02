@@ -1,20 +1,18 @@
 # arvis/api/__init__.py
-"""
-Public API surface for ARVIS.
+"""Internal aggregator behind the root surface (NOT the contract).
 
-This module defines the supported stable public contract.
-Only symbols listed in __all__ are considered public API.
-"""
+The supported public contract is two surfaces (campaign SURFACE,
+DM-S1): the root ``arvis`` (eleven symbols, application usage) and
+``arvis.host_api`` (the pinned host integration surface). This module
+aggregates the extended symbols those surfaces are built from, for
+advanced users who accept per-release changes: nothing here carries
+the beta-contract deprecation window unless it is also exported by
+one of the two contract surfaces. See VERSIONING.md.
 
-# =====================================================
-# ⚠️ IMPORTANT
-# =====================================================
-# This module exposes the EXTENDED API surface.
-# It is considered semi-stable (advanced users).
-#
-# For stable usage, prefer:
-#     from arvis import ArvisEngine, CognitiveOS
-# =====================================================
+For supported usage, prefer:
+    from arvis import ArvisEngine, CognitiveOS
+    from arvis.host_api import tools, access, engine
+"""
 
 # -----------------------------------------------------
 # Core Runtime
