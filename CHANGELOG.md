@@ -76,6 +76,19 @@ versioning throughout the pre-1.0 series.
 
 ### Security
 
+- **The HARDEN composition change is versioned: `COMMITMENT_VERSION`
+  6 -> 7.** Campaign HARDEN widened what the governance fingerprints
+  cover (`config_fingerprint`: confirmation registry, effective ZIP
+  limits, module+qualname identity binding; `policies_fingerprint`:
+  kappa band table, canonical switching parameters), so a commitment
+  minted by 0.1.0b6 does not recompose under this release for the
+  same run. Per the VERSIONS.md mismatch rule that difference must be
+  announced by the constant: **every commitment minted under
+  version 6 is explicitly invalidated** and must be re-verified
+  against the runtime that minted it. The composition of a default
+  build is now pinned (`test_commitment_composition_pin.py`), so a
+  future widening fails the gate unless it moves the constant and
+  records the invalidation here.
 - Campaign HARDEN: the governed ZIP import no longer deletes its
   host-filesystem source archive (it used to unlink `zip_path` by
   default, outside any authorization layer; `keep_zip` stays as an

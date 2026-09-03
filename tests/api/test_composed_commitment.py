@@ -74,9 +74,11 @@ def test_effect_hash_versions_cover_the_kernel_campaign():
     bytes (dataclass instance attributes enter the map; redaction
     keeps tuples) and the format versions must say so, per the
     VERSIONING rule. These literals are the deliberate act: moving
-    them IS the version bump."""
+    them IS the version bump. Campaign RELEASE-b7 moves the
+    commitment version again: HARDEN widened what the governance
+    fingerprints cover, so a v6 commitment does not recompose."""
     assert REDACTION_POLICY_VERSION == 6
-    assert COMMITMENT_VERSION == 6
+    assert COMMITMENT_VERSION == 7
 
 
 def test_redacted_journal_carries_no_source_content():

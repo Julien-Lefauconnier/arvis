@@ -48,7 +48,7 @@ explicitly.
 | Constant | Value | Moves when |
 | --- | --- | --- |
 | `CANONICALIZATION_VERSION` | `4` | canonical bytes change, invalidating every hash ever produced |
-| `COMMITMENT_VERSION` | `6` | the commitment structure changes |
+| `COMMITMENT_VERSION` | `7` | the commitment structure or the material its composition covers changes |
 | `CONFIRMATION_FORMAT_VERSION` | `5` | a stored confirmation can no longer be read |
 | `INVOCATION_FORMAT_VERSION` | `2` | the authorized invocation record changes |
 | `CAPABILITY_FORMAT_VERSION` | `2` | the capability record changes |

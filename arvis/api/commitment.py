@@ -60,7 +60,16 @@ from arvis.tools.registry import MANIFEST_SCHEMA_VERSION
 # changed bytes (canonicalization v4, redaction v6); a v6 commitment
 # never collides with a v5 one because the version is embedded in the
 # hashed material.
-COMMITMENT_VERSION = 6
+# v7 (campaign HARDEN, recorded at the 0.1.0b7 release): the
+# composition widened, not the encoding. config_fingerprint now
+# covers the confirmation registry, the effective ZIP limits and
+# module+qualname identity binding; policies_fingerprint commits to
+# the kappa band table and the canonical switching parameters. A v6
+# commitment does not recompose under v7 for the same run, and the
+# VERSIONS.md mismatch rule requires this constant to say so. The
+# composition is pinned by test_commitment_composition_pin.py:
+# widening it again without moving this constant fails the gate.
+COMMITMENT_VERSION = 7
 
 
 def syscall_pair_commitments(
