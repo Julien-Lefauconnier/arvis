@@ -11,6 +11,40 @@ versioning throughout the pre-1.0 series.
 
 ### Added
 
+- Campaign ONBOARD: the repo answers its own audit on first contact
+  (audit #3, external cold posture, archived in the project). A
+  fifteen-minute path to visible value
+  (`examples/14_govern_a_real_model_call.py` +
+  `docs/FIRST_REAL_CALL.md`): the model proposes, the host's own
+  policy prices, ARVIS blocks the dangerous act and replays the
+  incident bit for bit; offline by default, `--live` with a real
+  provider key on an identical governance path. A glossary mapping
+  every proprietary term to its nearest standard concept
+  (`docs/GLOSSARY.md`), an honest comparison with NeMo Guardrails,
+  Guardrails AI and LangGraph middleware drawing the content-layer /
+  governance-layer line (`docs/COMPARISON.md`), and published
+  per-turn cost numbers with the script that regenerates them
+  (`docs/PERFORMANCE.md`, `scripts/bench_turn.py`: construction is
+  ~0.15 ms against a ~6 ms turn, so the one-engine-per-turn
+  lifecycle needs no pool). Two new ratchets: 100 percent docstring
+  coverage on the two public surfaces
+  (`test_public_docstrings.py`; the fifteen measured gaps, including
+  `CognitiveOS.run` itself, are filled) and a decreasing ceiling on
+  broad exception handlers (`test_broad_except_ceiling.py`, pinned
+  at the measured 155 with an anti-slack guard).
+
+### Fixed
+
+- The README quickstart claimed its commitment hash is "stable for
+  identical input" while showing a value three format bumps old
+  (the output ratchet normalizes hashes by design, so the literal
+  aged invisibly). The claim now states the truth (deterministic
+  within a version; the value binds the governance identity and
+  moves across releases) and both shown outputs are regenerated
+  from the current tree.
+
+### Added
+
 - Campaign AI-ACT-MAP: an EU AI Act capability mapping
   (`docs/compliance/EU_AI_ACT_CAPABILITY_MAPPING.md`). Article by
   article (9, 12, 13, 14, 15, 26 plus an explicit out-of-scope
