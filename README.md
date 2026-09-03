@@ -6,6 +6,7 @@
 [![PyPI](https://img.shields.io/pypi/v/arvis)](https://pypi.org/project/arvis/)
 [![Python](https://img.shields.io/pypi/pyversions/arvis)](https://pypi.org/project/arvis/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/Julien-Lefauconnier/arvis/blob/main/LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22280253.svg)](https://doi.org/10.5281/zenodo.22280253)
 
 > Python 3.11+ • Deterministic • Replayable • Governed • Auditable
 
@@ -441,6 +442,29 @@ monitor-only in the default posture (measured and disclosed on every
 turn, enforced in the `enforce` posture); and no claim is made about
 the CONTENT a model produces, only about the dynamics of the
 governed decision loop around it.
+
+---
+
+## Citing ARVIS
+
+The architecture, the stability monitoring and the M10 protocol are
+written up in a preprint, which is also where the limits and the
+non-claims are stated in one place:
+
+> Lefauconnier, J. (2026). *ARVIS: A Runtime Assurance Kernel for
+> LLM-Based Systems with Deterministic Replay and Pre-Registered
+> Empirical Validation.* Zenodo.
+> [10.5281/zenodo.22280253](https://doi.org/10.5281/zenodo.22280253)
+
+The preprint describes software version `0.1.0b7`; if you regenerate the
+M10 campaigns against a later version, cite the version you ran.
+[CITATION.cff](https://github.com/Julien-Lefauconnier/arvis/blob/main/CITATION.cff)
+carries the same record in machine-readable form (GitHub's "Cite this
+repository", reference managers).
+
+The preprint has **not** been peer reviewed. It is a public,
+citable statement of what the repository does and does not establish,
+not an external validation of it.
 
 ---
 

@@ -26,6 +26,7 @@ detail. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 | understand why a run says REQUIRES_CONFIRMATION | [PATH_TO_ALLOW.md](PATH_TO_ALLOW.md) |
 | write a tool | [tools/TOOL_AUTHORING_GUIDE.md](tools/TOOL_AUTHORING_GUIDE.md) |
 | build an EU AI Act compliance case on ARVIS | [compliance/EU_AI_ACT_CAPABILITY_MAPPING.md](compliance/EU_AI_ACT_CAPABILITY_MAPPING.md) |
+| cite ARVIS in academic work | [../CITATION.cff](../CITATION.cff), [doi.org/10.5281/zenodo.22280253](https://doi.org/10.5281/zenodo.22280253) |
 | contribute | [../CONTRIBUTING.md](../CONTRIBUTING.md) |
 
 ## The standard

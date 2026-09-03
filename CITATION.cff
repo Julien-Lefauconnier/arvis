@@ -1,0 +1,61 @@
+# CITATION.cff
+#
+# Citation metadata for ARVIS, in the Citation File Format 1.2.0.
+# GitHub reads this file to render the "Cite this repository" button,
+# and reference managers read it directly.
+#
+# The preferred citation is the preprint, not the repository: the
+# paper is what states the claims, the limits and the validation
+# protocol, and it carries a permanent DOI. The preprint describes
+# software version 0.1.0b7; no version string appears here on
+# purpose, because a version pinned in two places drifts (the
+# authoritative ones are pyproject.toml and CHANGELOG.md).
+#
+# The DOI below is pinned by tests/docs/test_citation_metadata.py
+# against the badge and the "Citing ARVIS" section of README.md, so
+# the three citation surfaces cannot disagree.
+
+cff-version: 1.2.0
+message: >-
+  If you use ARVIS in academic work, please cite the preprint below.
+title: ARVIS
+abstract: >-
+  An open-source runtime assurance kernel for LLM-based systems: a
+  monotone fail-closed verdict lattice over proposed acts, evidence-grade
+  auditability with bit-identical deterministic replay, and Lyapunov-based
+  runtime monitoring with measured rather than assumed constants.
+type: software
+authors:
+  - family-names: Lefauconnier
+    given-names: Julien
+    affiliation: VeraMem
+    email: admin@veramem.com
+repository-code: https://github.com/Julien-Lefauconnier/arvis
+url: https://julien-lefauconnier.github.io/arvis/
+license: Apache-2.0
+keywords:
+  - runtime assurance
+  - AI governance
+  - large language models
+  - Lyapunov stability
+  - deterministic replay
+  - auditability
+
+preferred-citation:
+  type: article
+  title: >-
+    ARVIS: A Runtime Assurance Kernel for LLM-Based Systems with
+    Deterministic Replay and Pre-Registered Empirical Validation
+  authors:
+    - family-names: Lefauconnier
+      given-names: Julien
+      affiliation: VeraMem
+      email: admin@veramem.com
+  year: 2026
+  month: 9
+  doi: 10.5281/zenodo.22280253
+  url: https://doi.org/10.5281/zenodo.22280253
+  publisher:
+    name: Zenodo
+  notes: >-
+    Preprint. Describes ARVIS software version 0.1.0b7.

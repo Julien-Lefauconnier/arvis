@@ -99,7 +99,7 @@ llm = [
 [project.urls]
 Homepage = "https://github.com/Julien-Lefauconnier/arvis"
 Repository = "https://github.com/Julien-Lefauconnier/arvis"
-Documentation = "https://github.com/Julien-Lefauconnier/arvis/tree/main/docs"
+Documentation = "https://julien-lefauconnier.github.io/arvis/"
 Issues = "https://github.com/Julien-Lefauconnier/arvis/issues"
 Changelog = "https://github.com/Julien-Lefauconnier/arvis/blob/main/CHANGELOG.md"
 
