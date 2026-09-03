@@ -18,6 +18,7 @@ detail. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 | You want to | Read |
 | --- | --- |
 | understand what ARVIS is for | [WHY_ARVIS.md](WHY_ARVIS.md), [OVERVIEW.md](OVERVIEW.md) |
+| build a first integration, end to end | [GETTING_STARTED.md](GETTING_STARTED.md) |
 | know what is promised, and how far | [../VERSIONING.md](../VERSIONING.md) |
 | understand why a run says REQUIRES_CONFIRMATION | [PATH_TO_ALLOW.md](PATH_TO_ALLOW.md) |
 | write a tool | [tools/TOOL_AUTHORING_GUIDE.md](tools/TOOL_AUTHORING_GUIDE.md) |

@@ -90,6 +90,7 @@ runtime API above) is BLOCKED before execution.
 | `10_runtime_inspection.py`      | Production observability & inspection        |
 | `11_governed_assistant.py`      | Reference assistant: read vs confirmed external effect |
 | `12_threaded_stability.py`      | Scientific state threaded across governed turns |
+| `13_governed_memory_assistant.py` | End-to-end tutorial: the full cycle on a memory assistant (see `docs/GETTING_STARTED.md`) |
 
 ---
 

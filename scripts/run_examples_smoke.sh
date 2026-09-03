@@ -21,6 +21,7 @@ EXAMPLES=(
   examples/10_runtime_inspection.py
   examples/11_governed_assistant.py
   examples/12_threaded_stability.py
+  examples/13_governed_memory_assistant.py
 )
 
 failures=()

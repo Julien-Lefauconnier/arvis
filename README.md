@@ -462,8 +462,10 @@ Included examples:
 10. Runtime inspection
 11. Governed-assistant reference integration
 12. Threaded stability (scientific state across governed turns)
+13. Governed memory assistant, end to end (the `docs/GETTING_STARTED.md` tutorial)
 
-See: `examples/README.md`
+See: `examples/README.md`, and the step-by-step walkthrough in
+`docs/GETTING_STARTED.md`.
 
 ---
 
