@@ -1,0 +1,15 @@
+# requirements/docs.in
+#
+# The documentation-site toolchain plus the runtime imports the API
+# reference needs (mkdocstrings imports the package). Compiled to
+# requirements/docs.lock with hashes:
+#   uv pip compile requirements/docs.in --python-version 3.11 \
+#     --generate-hashes -o requirements/docs.lock
+# The docs CI job installs ONLY docs.lock (never on top of gate.lock:
+# stacking two locks lets the second move the first's pins).
+mkdocs-material
+mkdocstrings[python]
+ruff
+jsonschema>=4.26,<5
+pydantic>=2.8,<3
+numpy>=2.4.1,<3

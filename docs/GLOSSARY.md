@@ -28,7 +28,7 @@ here introduces behavior, it only translates.
 | Dwell time | Switch cooldown | Control-theory guard: a mode switch is not trusted before its dwell is served; an empty clock vetoes (DM-G1). |
 | Kappa bands | Alert severity thresholds | The committed thresholds on the contraction estimate (DM-H9); part of `policies_fingerprint`. |
 | Risk ceiling (`risk_ucb`) | Certified error bound | A PAC upper confidence bound on the risk rate, reported beside the empirical rate (DM-I3); statistics, not vibes. |
-| Contraction monitor / Lyapunov state | Convergence monitoring | Measures whether the decision loop's dynamics are settling or drifting; says nothing about content quality ([math/](math/)). |
+| Contraction monitor / Lyapunov state | Convergence monitoring | Measures whether the decision loop's dynamics are settling or drifting; says nothing about content quality ([math/README.md](math/README.md)). |
 | Ratchet | One-way contract test | A test that can only tighten: surfaces, imports, coverage floors, doc claims; loosening one is a deliberate, argued act. |
 | Quality gate | The canonical check target | `bash scripts/run_quality_gate.sh`, the exact set CI runs, parity enforced by test. |
 
