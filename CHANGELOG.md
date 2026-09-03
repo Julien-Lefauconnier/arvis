@@ -11,6 +11,21 @@ versioning throughout the pre-1.0 series.
 
 ### Added
 
+- Campaign CITATION: the work is citable. The preprint describing the
+  architecture, the stability monitoring and the M10 protocol is
+  archived with a permanent DOI
+  (https://doi.org/10.5281/zenodo.22280253, CC BY 4.0), and the
+  repository now carries the record where readers and tools look for
+  it: a `CITATION.cff` whose preferred citation is the paper (GitHub's
+  "Cite this repository", reference managers), a DOI badge, a "Citing
+  ARVIS" section stating plainly that the preprint is not peer
+  reviewed, and a row in the documentation map. A ratchet
+  (`tests/docs/test_citation_metadata.py`) reads the DOI, the title
+  and the repository URL from the machine-readable record and requires
+  the prose to match, so the three citation surfaces cannot drift
+  apart. The packaged Documentation URL now points at the docs site
+  rather than the GitHub tree.
+
 - Campaign DOCS-SITE: the documentation becomes a site
   (https://julien-lefauconnier.github.io/arvis/). MkDocs Material
   serves docs/ with full navigation and search; mkdocstrings
