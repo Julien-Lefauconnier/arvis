@@ -9,6 +9,25 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Added
+
+- Campaign ACCESSIBILITY: the repo explains itself to an outside
+  reader. Every decision identifier cited in the code (65: `F-***`
+  invariants, `DM-**` campaign decisions, audit findings) resolves
+  under `docs/decisions/`, kept in sync by a two-way ratchet
+  (`tests/docs/test_decision_ids_resolve.py`). A new end-to-end
+  tutorial (`examples/13_governed_memory_assistant.py`, narrated by
+  `docs/GETTING_STARTED.md`) runs the full host cycle on the generic
+  memory-assistant pattern: frozen two-tool surface, threaded
+  scientific state, the confirmation band and the tool-policy risk
+  budget as two independent locks on an externalizing act, the
+  regime graduating out of warmup on a real thread, and the audit
+  record read back; every printed line is measured behavior, with
+  the consent/egress gates stated as the PRODUCTION-profile
+  F-017/F-018 rule. CONTRIBUTING opens with a "Finding your way"
+  section and documents the hash-verified gate.lock setup CI itself
+  uses.
+
 ### Fixed
 
 - Campaign FINITION: the documentation pages audit #2 caught drifting
