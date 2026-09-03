@@ -9,6 +9,8 @@
 
 > Python 3.11+ • Deterministic • Replayable • Governed • Auditable
 
+> **Documentation site: <https://julien-lefauconnier.github.io/arvis/>** (full docs, API reference, search).
+>
 > **Status: `0.1.0b8.dev0` (beta series, development checkout).** The public surface (`arvis.__all__` and the
 > stable `host_api` modules) is stabilized, versioned, and covered by the
 > deprecation policy in `VERSIONING.md`: removals or type changes require a

@@ -11,6 +11,18 @@ versioning throughout the pre-1.0 series.
 
 ### Added
 
+- Campaign DOCS-SITE: the documentation becomes a site
+  (https://julien-lefauconnier.github.io/arvis/). MkDocs Material
+  serves docs/ with full navigation and search; mkdocstrings
+  generates the API reference for the two public surfaces from the
+  docstrings the gate requires at one hundred percent; links that
+  point above docs/ are rewritten to their GitHub URLs at render
+  time so the repository keeps a single set of gate-validated
+  relative links. The toolchain is hash-locked
+  (requirements/docs.lock), the strict build runs in CI on every
+  push and pull request, and main publishes to GitHub Pages with no
+  third-party action.
+
 - Campaign ONBOARD: the repo answers its own audit on first contact
   (audit #3, external cold posture, archived in the project). A
   fifteen-minute path to visible value
