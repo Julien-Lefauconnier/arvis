@@ -9,6 +9,19 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Added
+
+- Campaign AI-ACT-MAP: an EU AI Act capability mapping
+  (`docs/compliance/EU_AI_ACT_CAPABILITY_MAPPING.md`). Article by
+  article (9, 12, 13, 14, 15, 26 plus an explicit out-of-scope
+  list), it states what the kernel mechanically provides, anchored
+  to resolvable decision identifiers, and what remains with the
+  host's provider and deployers; ARVIS's own value-chain position
+  (Article 25(4) open-source component) is stated. A gate test pins
+  the disclaimer, the closed status vocabulary, the summary/section
+  agreement and the resolvability of every cited identifier. A
+  capability mapping, not a compliance claim.
+
 ## [0.1.0b7] - 2026-09-03
 
 ### Security
