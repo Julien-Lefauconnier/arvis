@@ -30,6 +30,17 @@ versioning throughout the pre-1.0 series.
 
 ### Fixed
 
+- `ToolRegistry.list` annotated its return type with the builtin its
+  own name shadows, which breaks under PEP 649 lazy annotation
+  evaluation (Python 3.14 resolves `list` to the method itself:
+  `TypeError: 'function' object is not subscriptable` on any
+  `inspect.signature` of it, including the beta-manifest contract
+  test). The annotation is qualified through `builtins`; the
+  evaluated annotation object and the rendered signature are
+  identical, so no fingerprint or pinned manifest moves. A static
+  ratchet closes the pattern for the package. Found by the
+  non-blocking `test-next-python` job added in FINITION, on its
+  first run.
 - Campaign FINITION: the documentation pages audit #2 caught drifting
   are corrected and ratcheted. `docs/VERSIONS.md` states the live
   format versions (it still showed the pre-b6 values one release

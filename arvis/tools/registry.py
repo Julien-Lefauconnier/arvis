@@ -1,6 +1,7 @@
 # arvis/tools/registry.py
 
 
+import builtins
 import dataclasses
 import hashlib
 import json
@@ -241,7 +242,12 @@ class ToolRegistry:
     def get(self, name: str) -> BaseTool | None:
         return self._tools.get(name)
 
-    def list(self) -> list[str]:
+    def list(self) -> builtins.list[str]:
+        # Qualified because this method shadows the builtin in its own
+        # class scope: under PEP 649 (Python 3.14) a bare list[str] here
+        # resolves to the method itself when the annotation is lazily
+        # evaluated. The annotation object is the identical GenericAlias,
+        # so the pinned beta manifest does not move.
         return list(self._tools.keys())
 
     # -------------------------
