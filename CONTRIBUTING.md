@@ -7,14 +7,35 @@ the effect path deserves the same scrutiny as a feature.
 This document tells you how to run what CI runs, what a change is expected to
 carry, and where the line sits between the kernel and the layer built on it.
 
+## Finding your way
+
+If this is your first look at the codebase:
+[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) walks the full host cycle on
+a runnable example, and [docs/README.md](docs/README.md) says which kind of
+document answers which question.
+
+Code comments cite decision identifiers: `F-017` names a doctrine invariant,
+`DM-H5` a campaign decision, `P0-4` an audit finding. A comment citing one is
+claiming a documented rule at that site, and every cited identifier resolves
+under [docs/decisions/](docs/decisions/README.md); a two-way ratchet
+(`tests/docs/test_decision_ids_resolve.py`) keeps citations and definitions in
+sync, so if you add a comment citing a new identifier, its entry is part of the
+same change.
+
 ## Setup
 
 Python 3.11 or later.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -r requirements/gate.lock --require-hashes --prefer-binary
+pip install -e . --no-deps
 ```
+
+That is the exact environment CI runs the gate in: every dependency pinned and
+hash-verified (`requirements/gate.lock`; a ratchet checks every entry carries
+its hashes). `pip install -e ".[dev]"` installs the same pins without hash
+verification when you want the shorter path.
 
 Development dependencies are pinned exactly, on purpose: a lint or type result
 that shifts with the tooling is not a result.
