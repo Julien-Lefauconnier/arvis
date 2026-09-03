@@ -607,5 +607,6 @@ ARVIS governs whether outputs are allowed to exist.
 - [Configuration](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/CONFIGURATION.md): every environment variable ARVIS reads, in one place.
 - [Format versions](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/VERSIONS.md): the map of the version constants.
 - [EU AI Act capability mapping](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/compliance/EU_AI_ACT_CAPABILITY_MAPPING.md): what the kernel contributes to a compliance case, article by article, and what stays with the host.
+- [Glossary](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/GLOSSARY.md): every ARVIS term mapped to the nearest standard concept.
 
 Licensed under [Apache-2.0](https://github.com/Julien-Lefauconnier/arvis/blob/main/LICENSE).
