@@ -36,4 +36,5 @@ Two terms deserve a warning rather than a mapping. "Cognitive OS" names
 the ambition of the category, not a claim that ARVIS schedules your
 processes; and nothing in this vocabulary implies content filtering:
 ARVIS governs whether an act may happen and proves what governed it,
-which is a different job from moderating what a model says.
+which is a different job from moderating what a model says (see
+[COMPARISON.md](COMPARISON.md)).

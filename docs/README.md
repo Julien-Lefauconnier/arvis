@@ -19,6 +19,7 @@ detail. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 | --- | --- |
 | understand what ARVIS is for | [WHY_ARVIS.md](WHY_ARVIS.md), [OVERVIEW.md](OVERVIEW.md) |
 | translate the vocabulary into standard concepts | [GLOSSARY.md](GLOSSARY.md) |
+| compare with NeMo Guardrails, Guardrails AI, LangGraph | [COMPARISON.md](COMPARISON.md) |
 | build a first integration, end to end | [GETTING_STARTED.md](GETTING_STARTED.md) |
 | know what is promised, and how far | [../VERSIONING.md](../VERSIONING.md) |
 | understand why a run says REQUIRES_CONFIRMATION | [PATH_TO_ALLOW.md](PATH_TO_ALLOW.md) |

@@ -100,8 +100,8 @@ first-class state, and a replayable, hash-committed record of every
 decision.
 
 You did not get content moderation (nothing here inspects what the
-model says; run a content guardrail alongside if you need one), and
-you did not yet get measured
+model says; run a content guardrail alongside if you need one, see
+[COMPARISON.md](COMPARISON.md)), and you did not yet get measured
 stability: that needs the host to thread the scientific state across
 turns and to feed structured signals, which is the next fifteen
 minutes ([GETTING_STARTED.md](GETTING_STARTED.md), example 13, and
