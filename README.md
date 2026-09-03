@@ -102,13 +102,16 @@ result = engine.ask("Should this high-risk transaction be approved?")
 print(result.explain())
 ```
 
-Output (deterministic; the commitment hash is stable for identical input):
+Output (deterministic within a version: the commitment binds the
+governance identity, so re-running this input on YOUR checkout gives a
+stable hash whose value differs from the illustrative one below
+whenever a format version moved between releases):
 
 ```text
 Status         : REQUIRES_CONFIRMATION
 Approval Need  : YES
 Reason         : execution_blocked
-Commitment     : 6a9319b8937c7693...
+Commitment     : ec377b3ac4c2ac6d...
 Trace          : Available
 ```
 
@@ -137,7 +140,7 @@ High-risk input is refused before execution:
 Status         : BLOCKED
 Approval Need  : NO
 Reason         : execution_blocked
-Commitment     : 26b838cb21e96b3c...
+Commitment     : 48d6097aae8efd8c...
 Trace          : Available
 ```
 
