@@ -22,6 +22,7 @@ EXAMPLES=(
   examples/11_governed_assistant.py
   examples/12_threaded_stability.py
   examples/13_governed_memory_assistant.py
+  examples/14_govern_a_real_model_call.py
 )
 
 failures=()

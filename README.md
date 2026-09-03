@@ -463,6 +463,7 @@ Included examples:
 11. Governed-assistant reference integration
 12. Threaded stability (scientific state across governed turns)
 13. Governed memory assistant, end to end (the `docs/GETTING_STARTED.md` tutorial)
+14. Govern a real model call (`docs/FIRST_REAL_CALL.md`; offline by default, `--live` with your key)
 
 See: `examples/README.md`, and the step-by-step walkthrough in
 `docs/GETTING_STARTED.md`.

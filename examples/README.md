@@ -91,6 +91,7 @@ runtime API above) is BLOCKED before execution.
 | `11_governed_assistant.py`      | Reference assistant: read vs confirmed external effect |
 | `12_threaded_stability.py`      | Scientific state threaded across governed turns |
 | `13_governed_memory_assistant.py` | End-to-end tutorial: the full cycle on a memory assistant (see `docs/GETTING_STARTED.md`) |
+| `14_govern_a_real_model_call.py` | Govern a real model's proposals in 15 minutes; offline by default, `--live` with your API key (see `docs/FIRST_REAL_CALL.md`) |
 
 ---
 
