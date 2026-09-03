@@ -193,7 +193,7 @@ consumers must not parse them.
 
 The moment the changelog's `[Unreleased]` section reopens after a
 release, the declared version moves to the next `.dev0` (for example
-`0.1.0b7.dev0`), in the same change. A source checkout therefore
+`0.1.0b8.dev0`), in the same change. A source checkout therefore
 never reports the version string of a published artifact while
 differing from it; the gate enforces this
 (`tests/docs/test_changelog_version_discipline.py`). Cutting a
