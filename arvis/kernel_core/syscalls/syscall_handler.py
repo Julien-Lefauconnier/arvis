@@ -72,6 +72,16 @@ def _execution_state_from_ctx(ctx: Any) -> Any | None:
 
 
 class SyscallHandler:
+    """The mediated boundary every kernel-visible operation crosses.
+
+    Dispatches cognitive syscalls under a sealed identity context:
+    effect payloads are frozen and redacted at authorization,
+    capabilities are single-use, and each effect journals a
+    pre-effect intent bound to its result (F-008-a5). Hosts receive
+    it through arvis.host_api.services for advanced integrations;
+    the engine wires it automatically.
+    """
+
     def __init__(
         self,
         runtime_state: RuntimeStateLike | None,

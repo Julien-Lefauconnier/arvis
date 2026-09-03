@@ -14,6 +14,13 @@ from arvis.types.timestamps import utcnow
 
 
 class TelemetryKind(StrEnum):
+    """Categories of observe-only telemetry events.
+
+    Telemetry never enters any fingerprint or commitment (a pinned
+    exclusion, DM-H5): emitting more or less of it cannot change
+    what a run commits to.
+    """
+
     LIFECYCLE = "lifecycle"
     STABILITY = "stability"
     DECISION = "decision"

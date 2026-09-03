@@ -51,6 +51,13 @@ def _executor_security(executor: object) -> _ExecutorSecurityState:
 
 
 class ToolExecutor:
+    """Executes an AUTHORIZED tool invocation, never a raw one.
+
+    The private minting authority binds execution to the
+    authorization that approved it; calling a tool around this class
+    bypasses the guarantees (docs/architecture/EFFECT_PATH.md).
+    """
+
     def __init__(self, registry: ToolRegistry) -> None:
         self.registry = registry
         # D-7, hardened campaign 6 (Lot 3, closes a8 section 10): the

@@ -9,6 +9,12 @@ from .usage import LLMUsage
 
 
 class LLMResponse(BaseModel):
+    """A provider-neutral completion: content plus usage and provenance.
+
+    What the LLM runtime hands back to the pipeline whatever the
+    provider; hosts see it when they bind a runtime of their own.
+    """
+
     content: str
 
     provider: str = "unknown"

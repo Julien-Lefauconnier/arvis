@@ -8,6 +8,16 @@ from arvis.tools.registry import ToolRegistry
 
 
 class ToolPolicyEvaluator:
+    """Evaluates one tool invocation against the registered manifests.
+
+    Enforces registration and the manifest's declared risk budget
+    (``max_risk``) in every profile. The consent and egress gates
+    are the HOST's: in the PRODUCTION profile a tool declaring
+    ``required_consent`` or ``data_egress`` is denied when the
+    matching host gate is missing (F-017, F-018); other profiles
+    leave that decision to the host.
+    """
+
     @staticmethod
     def evaluate(
         invocation: ToolInvocation,

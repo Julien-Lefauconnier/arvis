@@ -170,6 +170,19 @@ class CognitiveOSConfig:
 # Public Runtime Entrypoint
 # -----------------------------------------------------
 class CognitiveOS:
+    """The governed runtime: one instance runs ONE cognitive turn.
+
+    The host constructs an instance (optionally with a
+    CognitiveOSConfig), registers and freezes its tool surface, and
+    calls :meth:`run` once; parallelism and cross-turn continuity
+    belong to the host by instantiation (one engine per governed
+    turn). Every verdict composes a hashed commitment binding the
+    tool registry, the effective configuration, the active policy
+    tables and the redacted effect journals (F-007), so what ran is
+    what can be proven. :class:`ArvisEngine` is the recommended
+    facade; this class is the runtime it delegates to.
+    """
+
     def __init__(
         self,
         config: CognitiveOSConfig | None = None,
@@ -222,6 +235,12 @@ class CognitiveOS:
     # Tools API
     # -------------------------------------------------
     def register_tool(self, tool: Any) -> None:
+        """Register a tool (a BaseTool with a ToolSpec manifest).
+
+        Bootstrap-time only: after :meth:`freeze_tools` (or the first
+        run in the PRODUCTION profile, F-019) registration is
+        refused by the frozen registry.
+        """
         self.tool_registry.register(tool)
 
     def freeze_tools(self) -> str:
@@ -232,12 +251,15 @@ class CognitiveOS:
         return self.tool_registry.freeze()
 
     def list_tools(self) -> list[str]:
+        """Names of the registered tools, in registry order."""
         return self.tool_registry.list()
 
     def get_tool_spec(self, name: str) -> ToolSpec | None:
+        """Defensive copy of one tool's declared manifest, or None."""
         return self.tool_registry.get_spec(name)
 
     def list_tool_specs(self) -> dict[str, ToolSpec]:
+        """Defensive copies of every declared manifest, by name."""
         return self.tool_registry.list_specs()
 
     # -------------------------------------------------
@@ -253,6 +275,19 @@ class CognitiveOS:
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
     ) -> CognitiveResultView:
+        """Govern one turn and return its full result view.
+
+        ``cognitive_input`` follows the documented input contracts: a
+        dict carrying an explicit ``risk`` float rides the graded
+        three-band policy, and a bare string is governed with a
+        minimal projection (conservative by construction; see
+        docs/PATH_TO_ALLOW.md). Thread the previous turn's
+        ``view.next_scientific_state`` back in through
+        ``extra={"scientific_state": ...}`` to make the trajectory
+        measurable (DM-S4). The view carries the verdict
+        (``status``), the stability assessment, the exported IR and
+        the composed ``global_commitment``.
+        """
         self._ensure_production_ready()
         result = self._run_single(
             user_id=user_id,
@@ -337,6 +372,12 @@ class CognitiveOS:
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        """Govern one turn and return only the exported canonical IR.
+
+        Same contract as :meth:`run`; the return value is the
+        portable, replayable record (docs/IR.md) rather than the
+        full result view.
+        """
         self._ensure_production_ready()
         return self._build_ir_from_input(
             user_id=user_id,
@@ -394,6 +435,11 @@ class CognitiveOS:
     # Inspection
     # -------------------------------------------------
     def inspect(self, result: CognitiveResultView) -> dict[str, Any]:
+        """One dict with a result's summary, trace, stability and IR.
+
+        A convenience for operators and debuggers; every field is
+        also reachable directly on the view.
+        """
         return {
             "summary": result.summary(),
             "trace": result.trace_view.to_dict() if result.trace_view else None,

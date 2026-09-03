@@ -74,6 +74,15 @@ class _CapturedSpec:
 
 
 class ToolRegistry:
+    """The declared tool surface: capture, freeze, fingerprint.
+
+    Registration captures each tool's manifest as canonical bytes;
+    :meth:`freeze` pins the surface (F-004) and returns the
+    fingerprint the commitment composes over. References handed out
+    are caller-owned copies, never the private capture
+    (A14-BETA-01).
+    """
+
     def __init__(self) -> None:
         self._tools: dict[str, BaseTool] = {}
         self._captured: dict[str, _CapturedSpec] = {}
