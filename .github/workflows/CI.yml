@@ -268,3 +268,45 @@ jobs:
           cd /tmp
           /tmp/wheelenv/bin/python -c "import arvis; print('arvis', arvis.__version__); from arvis import ArvisEngine, CognitiveOS, CognitiveOSConfig; print('public API import OK')"
           /tmp/wheelenv/bin/python -c "import json; from importlib import resources; s = json.loads(resources.files('arvis.api').joinpath('schema/ir_schema.json').read_text(encoding='utf-8')); assert s.get('type') == 'object'; print('ir_schema.json loadable from installed wheel')"
+
+  # The documentation site: strict build on every run, so a broken
+  # in-site link or a failed API-reference import blocks like any
+  # other regression; publication to GitHub Pages (gh-pages branch)
+  # only on a push to main. The job installs ONLY the hash-locked
+  # docs environment (requirements/docs.lock): stacking it on
+  # gate.lock would let the second lock move the first's pins.
+  docs:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      # gh-deploy pushes the gh-pages branch; the build itself needs
+      # only read.
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # gh-deploy commits against the checked-out history.
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install the locked docs environment
+        run: |
+          pip install --upgrade pip==26.2.1
+          pip install -r requirements/docs.lock --require-hashes --prefer-binary
+          pip install -e . --no-deps
+
+      - name: Build the site (strict)
+        run: bash scripts/build_docs.sh
+
+      - name: Publish to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python -m mkdocs gh-deploy --force --no-history
