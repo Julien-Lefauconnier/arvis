@@ -1,19 +1,33 @@
 """Contract test: the arvis surface consumed by veramem must keep resolving.
 
-veramem (the proprietary product) imports arvis through ~60 deep-path
-`from <module> import <symbol>` bindings. This file freezes that exact
-surface so the 0.1-alpha consolidation (removal, memory rework,
-gate/projection changes) cannot silently break veramem in production.
+veramem (the proprietary product) imports arvis through 214 import
+lines across 137 files, almost all of them deep-path
+`from <module> import <symbol>` bindings on modules this repository
+declares internal. This file freezes that exact surface so a
+consolidation (removal, memory rework, gate or projection changes)
+cannot silently break veramem in production.
 
-Source of truth: the 2026-07-02 cartography of veramem's imports,
-reconciled against the current veramem repomix. Notably `LLMResponse` is
-now imported from the `arvis.adapters.llm.contracts` package (the earlier
-split request/response import paths no longer exist in veramem).
+Source of truth: a cartography of veramem's imports, re-measured from
+the 2026-09-04 repomix. The previous one dated from 2026-07-02 and had
+drifted in both directions: seven bindings veramem consumes were not
+pinned here, including `AuthenticatedPrincipal` (the single most
+imported arvis symbol in that product, 40 files) and
+`ArvisSecurityError`, while six pins protected symbols veramem had
+stopped using. A safety net with holes is worse than no net, because it
+is trusted.
 
 If arvis is refactored and one of these bindings stops resolving, this
 test fails fail-closed and names the exact broken (module, symbol). It is
 a pure arvis-side test: it does not import veramem, only asserts that
 arvis still exposes what veramem relies on.
+
+This file is a transitional obligation, not a second public surface.
+Every symbol below now has a home in `arvis.host_api` (1.2 added the
+four that did not), so the intended end state is a veramem that imports
+the pinned surface and an arvis free to move its internals again. Until
+that migration happens, merging micro-modules would break veramem in
+production while every arvis gate stayed green: this file is what makes
+that consequence visible instead of surprising.
 """
 
 import importlib
@@ -25,22 +39,18 @@ CONSUMED_SURFACE: dict[str, list[str]] = {
     "arvis": [
         "ArvisEngine",
         "CognitiveOSConfig",
+        "CognitiveResultView",
+        "DecisionStatus",
+        "RESULT_SCHEMA_VERSION",
+        "load_result_schema",
+        "verify_reflexive_attestation",
     ],
     "arvis.adapters.llm.contracts": [
         "LLMResponse",
     ],
-    "arvis.cognition.control": [
-        "exploration_controller",
-        "mode_hysteresis",
-        "regime_policy",
-    ],
     "arvis.cognition.control.cognitive_control_engine": [
         "CognitiveControlDeps",
         "CognitiveControlEngine",
-        "CognitiveControlSnapshot",
-    ],
-    "arvis.cognition.control.cognitive_control_runtime": [
-        "CognitiveControlRuntime",
     ],
     "arvis.cognition.control.exploration_controller": [
         "ExplorationController",
@@ -62,7 +72,11 @@ CONSUMED_SURFACE: dict[str, list[str]] = {
         "PendingTurn",
         "PendingTurnStatus",
     ],
+    "arvis.errors.base": [
+        "ArvisSecurityError",
+    ],
     "arvis.kernel_core.access.models": [
+        "AuthenticatedPrincipal",
         "Principal",
     ],
     "arvis.kernel_core.access.policy": [
@@ -103,9 +117,6 @@ CONSUMED_SURFACE: dict[str, list[str]] = {
     "arvis.math.core.contraction_monitor_core": [
         "ContractionMonitorCore",
         "MonitorConfig",
-    ],
-    "arvis.math.lyapunov.lyapunov_gate": [
-        "lyapunov_gate",
     ],
     "arvis.memory.governance": [
         "Governance",
@@ -188,3 +199,32 @@ def test_consumed_symbol_resolves(module: str, symbol: str) -> None:
             f"veramem relies on `from {module} import {symbol}` but it no "
             f"longer resolves in arvis ({exc!r}); this breaks veramem prod."
         )
+
+
+def test_every_consumed_symbol_has_a_public_home() -> None:
+    """The migration out of this file stays possible at every commit.
+
+    This contract exists because one host is pinned to internal paths.
+    It stops being needed the day that host imports `arvis.host_api`
+    instead, and that day only arrives if every symbol it depends on
+    has a supported home to move to. Adding an internal binding here
+    without a public equivalent would quietly extend the transition
+    forever, so the obligation is checked rather than intended.
+    """
+    import pkgutil
+
+    import arvis
+    from arvis import host_api
+
+    public: set[str] = set(arvis.__all__)
+    for module_info in pkgutil.iter_modules(host_api.__path__):
+        module = importlib.import_module(f"arvis.host_api.{module_info.name}")
+        public |= set(getattr(module, "__all__", ()))
+
+    homeless = sorted({symbol for _, symbol in _PAIRS if symbol not in public})
+    assert not homeless, (
+        f"these symbols are consumed through internal paths and have no "
+        f"home on a public surface: {homeless}. Re-export them from the "
+        "matching arvis.host_api module (additive, bump HOST_API_VERSION) "
+        "so the host has somewhere supported to migrate to."
+    )
