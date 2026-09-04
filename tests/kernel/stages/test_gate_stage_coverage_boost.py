@@ -188,7 +188,7 @@ def test_validity_envelope_block(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.build_validity_envelope",
-        lambda **kwargs: SimpleNamespace(valid=False, reason="test"),
+        lambda **kwargs: SimpleNamespace(valid=False, reason="projection_unavailable"),
     )
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.run_gate_kernel",
@@ -205,7 +205,7 @@ def test_validity_envelope_block(monkeypatch):
 
     GateStage().run(None, ctx)
 
-    assert "validity_test" in ctx.extra["fusion_reasons"]
+    assert "validity_projection_unavailable" in ctx.extra["fusion_reasons"]
 
 
 # --------------------------------------------------
@@ -582,7 +582,7 @@ def test_gate_stage_validity_enforcement(monkeypatch):
 
     monkeypatch.setattr(
         "arvis.kernel.pipeline.stages.gate_stage.build_validity_envelope",
-        lambda **k: SimpleNamespace(valid=False, reason="test"),
+        lambda **k: SimpleNamespace(valid=False, reason="projection_unavailable"),
     )
 
     monkeypatch.setattr(
@@ -600,7 +600,7 @@ def test_gate_stage_validity_enforcement(monkeypatch):
 
     GateStage().run(None, ctx)
 
-    assert "validity_test" in ctx.extra["fusion_reasons"]
+    assert "validity_projection_unavailable" in ctx.extra["fusion_reasons"]
 
 
 # --------------------------------------------------

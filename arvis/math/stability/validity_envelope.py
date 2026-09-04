@@ -120,3 +120,33 @@ def build_validity_envelope(
         reason=None,
         switching_safe_measured=switching_safe_measured,
     )
+
+
+# The gate publishes an invalid envelope as a reason code. That code used
+# to be built as f"validity_{envelope.reason}", which is why none of these
+# five were ever registered: a constructed string is invisible to the
+# registry ratchet, so every one of them reached the IR as
+# "unknown_reason" and the audit record said nothing about why the turn
+# failed closed (campaign REASONS, 2026-09-04). The mapping is explicit so
+# the emitted set stays closed, greppable, and registrable.
+VALIDITY_REASON_CODES: dict[str, str] = {
+    "projection_unavailable": "validity_projection_unavailable",
+    "switching_violation": "validity_switching_violation",
+    "exponential_violation": "validity_exponential_violation",
+    "kappa_violation": "validity_kappa_violation",
+    "adaptive_unavailable": "validity_adaptive_unavailable",
+}
+
+
+def validity_reason_code(reason: str | None) -> str:
+    """Return the registered reason code for an envelope reason.
+
+    An unmapped reason is a defect rather than a value to pass through:
+    the envelope is the only producer of these reasons, so a new one must
+    be registered with the others. It degrades to ``validity_unknown``,
+    which is a registered code, so the audit record still names the layer
+    that refused.
+    """
+    if reason is None:
+        return "validity_unknown"
+    return VALIDITY_REASON_CODES.get(reason, "validity_unknown")

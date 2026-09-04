@@ -48,9 +48,21 @@ class ReasonCodeNormalizer:
         "kappa_margin_critical": "kappa_margin_critical",
         # --- Recovery ---
         "recovery_post_fusion_override": "recovery_override",
+        # --- Declared input risk (campaign REASONS) ---
+        # The gate names its own stage when it records a transition
+        # ("input_risk_gate", "input_risk_harden") and its policy when it
+        # names the cause ("input_risk_policy"): three internal spellings
+        # for two meanings, the declared risk governed the verdict or it
+        # only hardened it. All of them used to arrive as
+        # "unknown_reason".
+        "input_risk_gate": "input_risk_governed",
+        "input_risk_policy": "input_risk_governed",
+        "input_risk_harden": "input_risk_hardened",
+        "verdict_provenance_not_artifact": "input_risk_relax_denied",
         # --- Generic ---
         "fusion_fallback": "fusion_fallback",
         "gate_policy_adjustment": "gate_policy_adjustment",
+        "gate_exception": "gate_fail_closed",
     }
 
     # -----------------------------------------

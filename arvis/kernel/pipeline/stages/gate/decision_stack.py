@@ -72,6 +72,7 @@ from arvis.math.gate.gate_kernel import COLLAPSE_ABSTAIN_THRESHOLD
 from arvis.math.gate.gate_policy import apply_gate_policy
 from arvis.math.gate.gate_types import GateKernelInputs
 from arvis.math.lyapunov.lyapunov_gate import LyapunovVerdict
+from arvis.math.stability.validity_envelope import validity_reason_code
 from arvis.math.stability.weak_stability_policy import (
     weak_stability_threshold,
 )
@@ -288,7 +289,7 @@ class GateDecisionStack:
         # VALIDITY MUST OVERRIDE POLICY
         try:
             if envelope and not bool(getattr(envelope, "valid", True)):
-                reason_code = f"validity_{envelope.reason}"
+                reason_code = validity_reason_code(getattr(envelope, "reason", None))
 
                 fusion_reasons = fusion_reasons_of(ctx)
 

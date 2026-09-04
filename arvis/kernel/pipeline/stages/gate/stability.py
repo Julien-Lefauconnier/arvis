@@ -35,6 +35,9 @@ from arvis.math.stability.hard_block_policy import (
 from arvis.math.stability.validity_envelope import (
     build_validity_envelope as build_math_validity_envelope,
 )
+from arvis.math.stability.validity_envelope import (
+    validity_reason_code,
+)
 from arvis.math.switching.global_stability_observer import GlobalStabilityObserver
 
 # Provenance labels whose ABSTAIN the confirm action may reinterpret:
@@ -411,7 +414,7 @@ def apply_validity_enforcement(
         )
 
         if validity is not None and requires_enforcement:
-            reason_code = f"validity_{validity.reason}"
+            reason_code = validity_reason_code(getattr(validity, "reason", None))
 
             fusion_reasons = fusion_reasons_of(ctx)
 

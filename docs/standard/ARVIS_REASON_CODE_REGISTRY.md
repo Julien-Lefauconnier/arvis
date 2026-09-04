@@ -146,9 +146,28 @@ by nothing (audit O3, 2026-08); they are now reserved.
 
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
+| `validity_projection_unavailable` | high | normative | no ALLOW |
+| `validity_switching_violation` | high | normative | no ALLOW |
+| `validity_exponential_violation` | high | normative | no ALLOW |
+| `validity_kappa_violation` | high | normative | no ALLOW |
+| `validity_adaptive_unavailable` | high | normative | no ALLOW |
+| `validity_unknown` | high | normative | no ALLOW |
 | `validity_invalid` | critical | reserved | ABSTAIN |
 | `validity_degraded` | medium | reserved | REQUIRE_CONFIRMATION |
-| `validity_unknown` | high | reserved | ≤ REQUIRE_CONFIRMATION |
+
+The first five name which certification axis the envelope could not
+establish; `validity_unknown` covers an envelope that refused for a reason
+outside that closed set. Until campaign REASONS (2026-09-04) the gate built
+these as `f"validity_{envelope.reason}"`, and a constructed string is not a
+registered code: the normalizer replaced every one of them with
+`unknown_reason`, so the IR named no cause for what is, under the default
+posture, the most frequent refusal in the system. The emitted set is now
+closed in `arvis/math/stability/validity_envelope.py`.
+
+An invalid envelope blocks ALLOW; it does not by itself force ABSTAIN. On a
+payload exclusively dedicated to a declared risk scalar the input-risk
+policy supersedes projection-derived reasons (F-001-a5), which is how a
+policy-governed ALLOW stays consistent with its own trace.
 
 ---
 
@@ -167,8 +186,16 @@ by nothing (audit O3, 2026-08); they are now reserved.
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
 | `global_instability_confirmed` | critical | normative | ABSTAIN |
+| `global_instability_abstained` | critical | normative | ABSTAIN |
+| `switching_soft_warning` | low | informative | none |
+| `switching_unsafe_monitoring` | medium | informative | none |
 | `global_instability_suspected` | high | reserved | ≤ REQUIRE_CONFIRMATION |
 | `local_instability_detected` | medium | reserved | REQUIRE_CONFIRMATION |
+
+The two switching codes are informative because the switching axis is
+monitor-only under the default posture: they are measured and disclosed on
+every turn and act on the verdict only in the `enforce` posture. They are
+emitted, and were reaching the IR as `unknown_reason`.
 
 ---
 
@@ -207,7 +234,25 @@ They MUST remain consistent with the final verdict.
 
 ---
 
-### 4.8 System Layer
+### 4.8 Declared Input Risk Layer
+
+| Code | Severity | Type | Effect |
+|------|----------|------|--------|
+| `input_risk_governed` | medium | normative | graded verdict |
+| `input_risk_hardened` | medium | normative | harden only |
+| `input_risk_relax_denied` | high | normative | verdict kept |
+
+`input_risk_governed` is emitted when the three-band policy determines the
+verdict, which requires both a payload exclusively dedicated to the risk
+scalar and the `graded` posture. `input_risk_hardened` marks the harden-only
+path (mixed payload, or the `production` posture) where an untrusted
+declared risk may only make the verdict stricter. `input_risk_relax_denied`
+records a relaxation refused because the verdict's provenance was a real
+veto rather than a sparse-projection artifact (F-006).
+
+---
+
+### 4.9 System Layer
 
 | Code | Severity | Type | Effect |
 |------|----------|------|--------|
@@ -215,7 +260,12 @@ They MUST remain consistent with the final verdict.
 | `input_corrupted` | critical | reserved | ABSTAIN |
 | `state_inconsistent` | critical | reserved | ABSTAIN |
 | `sensor_degradation_floor` | high | normative | ≤ REQUIRE_CONFIRMATION |
+| `gate_fail_closed` | critical | normative | ABSTAIN |
 | `unknown_error` | critical | normative | ABSTAIN |
+
+`gate_fail_closed` is the code for an exception raised inside a gate layer:
+a failing guarantee mechanism can never relax, so the verdict becomes
+ABSTAIN and the record says which mechanism failed (F-002).
 
 ---
 
