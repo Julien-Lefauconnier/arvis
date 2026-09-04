@@ -2,7 +2,11 @@
 
 ## Executive Summary
 
-ARVIS is a **Cognitive Operating System** designed for trustworthy AI systems.
+ARVIS is a **runtime assurance kernel** for LLM-based systems. The
+operating-system vocabulary used throughout this document (processes,
+syscalls, scheduler) describes how the kernel is built, not a claim that
+ARVIS schedules your workloads; [GLOSSARY.md](GLOSSARY.md) maps every term
+to its nearest standard concept.
 
 It is not a model.
 

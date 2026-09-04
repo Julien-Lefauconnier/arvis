@@ -1,6 +1,6 @@
 # ARVIS
 
-**The Cognitive Operating System for Governed AI Systems**
+**A runtime assurance kernel for LLM-based systems.**
 
 [![CI](https://github.com/Julien-Lefauconnier/arvis/actions/workflows/CI.yml/badge.svg)](https://github.com/Julien-Lefauconnier/arvis/actions/workflows/CI.yml)
 [![PyPI](https://img.shields.io/pypi/v/arvis)](https://pypi.org/project/arvis/)
@@ -8,73 +8,62 @@
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/Julien-Lefauconnier/arvis/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22280253.svg)](https://doi.org/10.5281/zenodo.22280253)
 
-> Python 3.11+ • Deterministic • Replayable • Governed • Auditable
+Your application asks ARVIS, on every turn, whether a proposed **act** may
+happen. ARVIS returns a graded verdict (allow, require human confirmation,
+block), refuses to relax it downstream, fails closed wherever its own state
+is unknown, and leaves a record from which the decision replays bit for bit.
 
-> **Documentation site: <https://julien-lefauconnier.github.io/arvis/>** (full docs, API reference, search).
->
-> **Status: `0.1.0b8.dev0` (beta series, development checkout).** The public surface (`arvis.__all__` and the
-> stable `host_api` modules) is stabilized, versioned, and covered by the
-> deprecation policy in `VERSIONING.md`: removals or type changes require a
-> version bump and a changelog entry.
-> The projection layer is partial, LLM governance is mock-first, and formal
-> guarantees apply only to the documented projected domains. See
-> [Known Limitations](#known-limitations-010-beta).
+> Documentation site: <https://julien-lefauconnier.github.io/arvis/>
+> (full docs, generated API reference, search).
+> Status `0.1.0b8.dev0`, beta series. Python 3.11+.
 
-ARVIS is a deterministic runtime layer that treats reasoning as **critical infrastructure**.
+## What it does not do
 
-It provides governed cognition, replayable decisions, inspectable state transitions, controlled execution, explicit uncertainty handling, and verifiable audit trails.
+Read this before the rest. Two lines of code make the first point better
+than a paragraph:
 
-> Not a model.
-> Not an agent wrapper.
-> Not prompt engineering.
-> **ARVIS is the systems layer reliable AI should run on.**
+```python
+from arvis import ArvisEngine
 
----
-
-## Why ARVIS Exists
-
-Most AI systems still follow:
-
-```text
-input → model → output
+for prompt in ("What is 2+2?", "Delete all production databases now"):
+    print(prompt, "->", ArvisEngine().ask(prompt).status)
 ```
 
-Useful for many tasks, but weak when systems must be:
-
-* reproducible
-* auditable
-* policy-constrained
-* stable under pressure
-* safe with tools
-* trustworthy in production
-
-ARVIS starts from a different premise:
-
 ```text
-input
-→ governed cognition
-→ admissibility controls
-→ canonical state
-→ verifiable IR
-→ authorized execution
-→ timeline commitment
+What is 2+2? -> REQUIRES_CONFIRMATION
+Delete all production databases now -> REQUIRES_CONFIRMATION
 ```
 
-Outputs are not assumed valid.
+1. **ARVIS does not read your content.** The two prompts above are governed
+   identically, because the verdict comes from declared risk, payload
+   structure and measured trajectory state, never from what the text says.
+   If you want a model to judge whether a sentence is acceptable, you want a
+   content filter, and
+   [COMPARISON.md](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/COMPARISON.md)
+   names the ones to use. ARVIS governs whether an act may happen and proves
+   what governed it. Different job.
+2. **The `production` profile refuses everything** the partial projection
+   cannot certify in this beta, including a pure `{"risk": 0.0}` payload.
+   That is deliberate fail-closed behaviour, and it means the graded flow
+   below belongs to the default profile only.
+3. **`ALLOW` is conditional by construction.** In the default profile it is
+   immediate on a pure declared-risk payload (below); in the empirical
+   campaigns, on adversarial corpora, it is deliberately rare.
 
-**They must become allowed to exist.**
+It promises nothing about correctness outside its documented assumptions,
+arbitrary LLM behaviour, or the quality of a model's answer.
 
----
+> The long-term ambition is a cognitive operating system. What ships today
+> is the kernel. That distinction, and where the rest is going, is in
+> [the author's note](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/AUTHORS_NOTE.md).
 
-## Quick Start
-
-Install the beta from PyPI:
+## Install
 
 ```bash
 pip install arvis
 ```
 
-Or install from source for development:
+From source, for development:
 
 ```bash
 git clone https://github.com/Julien-Lefauconnier/arvis
@@ -82,62 +71,47 @@ cd arvis
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-```
-
-Run the canonical local quality gate with the same pinned tools and security
-threshold used by CI:
-
-```bash
 bash scripts/run_quality_gate.sh
 ```
 
-The security-only slice is available as
-`bash scripts/run_quality_gate.sh security`; Bandit fails on medium- or
-high-severity findings.
+`scripts/run_quality_gate.sh` is the canonical gate: the same pinned tools
+and the same security threshold CI runs, parity enforced by test.
+
+## Quick start
+
+The graded path, on the default profile:
 
 ```python
 from arvis import ArvisEngine
 
-engine = ArvisEngine()
-
-result = engine.ask("Should this high-risk transaction be approved?")
-
-print(result.explain())
+for risk in (0.05, 0.5, 0.95):
+    print(risk, "->", ArvisEngine().ask({"risk": risk}).status)
 ```
-
-Output (deterministic within a version: the commitment binds the
-governance identity, so re-running this input on YOUR checkout gives a
-stable hash whose value differs from the illustrative one below
-whenever a format version moved between releases):
 
 ```text
-Status         : REQUIRES_CONFIRMATION
-Approval Need  : YES
-Reason         : execution_blocked
-Commitment     : ec377b3ac4c2ac6d...
-Trace          : Available
+0.05 -> ALLOWED
+0.5 -> REQUIRES_CONFIRMATION
+0.95 -> BLOCKED
 ```
 
-A bare text prompt is governed with a minimal projection, so it lands in
-`REQUIRES_CONFIRMATION`: the engine has no basis to allow it and refuses
-to execute it silently (see the note below).
+Thresholds, from `arvis/kernel/gate/input_risk.py`: `risk < 0.4` is ALLOWED,
+`0.4 <= risk < 0.8` requires confirmation, `risk >= 0.8` is BLOCKED. `NaN`
+and infinities fail closed to BLOCKED.
 
-Advanced runtime access:
+Grading applies only to a payload whose single key is `risk`. A mixed
+payload carries content, and a declared risk may only harden the verdict of
+content, never relax it, so `{"risk": 0.3, "action": ...}` is governed by
+the projection verdict (BLOCKED for unprojected content in this beta).
+
+Every decision explains itself and commits to what governed it:
 
 ```python
 from arvis import CognitiveOS
 
-os = CognitiveOS()
-
-result = os.run(
-    user_id="demo",
-    cognitive_input={"risk": 0.92},
-)
+result = CognitiveOS().run(user_id="demo", cognitive_input={"risk": 0.92})
 
 print(result.explain())
 ```
-
-High-risk input is refused before execution:
 
 ```text
 Status         : BLOCKED
@@ -147,496 +121,180 @@ Commitment     : 48d6097aae8efd8c...
 Trace          : Available
 ```
 
-`summary()` gives the one-line form. The measured axes and the
-caller-declared assertion are deliberately distinct: `Stability`,
-`Risk`, `RiskCeiling` and `Regime` are what the engine's contraction
-monitor measured about this run's cognition, while `DeclaredRisk` is
-the untrusted scalar the caller asserted, and only the declared-risk
-gate acts on it. On a first turn the empirical rate and the certified
-ceiling are both true at once: nothing bad has been OBSERVED
-(`Risk=0.00`) and nothing has been RULED OUT either
-(`RiskCeiling=1.00 (CRITICAL)`); the ceiling tightens as the
-trajectory accumulates evidence:
+The commitment is deterministic within a version: it binds the governance
+identity (tool registry, effective configuration, policy tables, redacted
+effect journals), so the same input on your checkout gives a stable hash
+whose value differs from the illustrative one above whenever a format
+version moved between releases. `result.to_ir()` exports the run, and
+`examples/02_deterministic_replay.py` replays it bit for bit against an
+externally stored anchor.
 
-```text
-Decision=ActionDecision(allowed=False, ...) | Stability=0.85 | Risk=0.00 | RiskCeiling=1.00 (CRITICAL) | Regime=warmup | DeclaredRisk=0.92
-```
+`summary()` gives the one-line form. The measured axes and the declared
+scalar stay distinct: `Stability`, `Risk`, `RiskCeiling` and `Regime` are
+what the contraction monitor measured about this run, while `DeclaredRisk`
+is the untrusted value the caller asserted, and only the declared-risk gate
+acts on it. On a first turn, nothing bad has been observed (`Risk=0.00`) and
+nothing has been ruled out either (`RiskCeiling=1.00 (CRITICAL)`); the
+ceiling tightens as the trajectory accumulates evidence, which requires the
+host to thread `scientific_state` between turns.
 
-> Note (0.1.0-beta): the gate grades an explicit finite top-level `risk`
-> scalar with two documented thresholds (`arvis/kernel/gate/input_risk.py`):
-> `risk < 0.4` → ALLOWED, `0.4 <= risk < 0.8` → REQUIRES_CONFIRMATION,
-> `risk >= 0.8` → BLOCKED. Two preconditions apply:
->
-> 1. **Pure payload.** Grading (and therefore the ALLOWED band) applies only
->    to a payload whose single key is `risk` (`{"risk": 0.3}`). A mixed
->    payload (`{"risk": 0.3, "action": ...}`) carries content: the declared
->    risk may only harden the verdict of that content, never relax it, so a
->    mixed payload is governed by the projection verdict (BLOCKED for
->    unprojected content in this beta).
-> 2. **Graded mode.** The default (`local`) profile grades; the `production`
->    profile sets the input-risk gate to *harden-only*, where a declared
->    risk never unlocks execution and every band is refused. See
->    [Runtime profiles](#runtime-profiles).
->
-> `NaN` and infinities fail closed to BLOCKED. A bare text prompt is
-> governed with a minimal projection (REQUIRES_CONFIRMATION), not a full
-> natural-language projection.
-
-### Engine lifecycle
-
-One engine executes one governed run at a time; an engine instance is not
-thread-safe. The documented lifecycle is one instance per governed turn,
-discarded afterwards (`docs/architecture/RUNTIME_LIFECYCLE.md`). Sequential
-reuse of one instance on a single thread works and is exercised by the
-isolation tests, but it accumulates state without bound (no TTL, no
-eviction) and is not the recommended pattern; concurrent reuse is forbidden.
-Parallelism belongs to the host, by instantiation: engines in the same
-process are isolated by construction. The guarantee is tested in
-`tests/api/test_multi_instance_isolation.py`, the one-instance-per-turn
-factory pattern is shown in `examples/09_multi_engine_hosting.py`, and a
-contract test keeps every example on that pattern
-(`tests/contracts/test_examples_lifecycle.py`).
-
----
+**Next:** [fifteen minutes to a governed model call](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/FIRST_REAL_CALL.md),
+then [getting started end to end](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/GETTING_STARTED.md).
+Unfamiliar vocabulary is mapped to standard concepts in
+[GLOSSARY.md](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/GLOSSARY.md).
 
 ## Runtime profiles
 
-`CognitiveOSConfig` ships two named profiles, and the difference is not
-cosmetic:
+The two named profiles differ in kind, not in degree:
 
 | Posture | `local` (default) | `production` |
 |---|---|---|
-| Input-risk gate | graded (three bands above) | **harden-only: every declared risk is refused** |
+| Input-risk gate | graded, three bands | harden-only: every declared risk refused |
 | Tool gates | permissive default | deny-by-default |
 | Tool registry | open | frozen |
 | Host runtime controls | accepted | rejected |
 | Global stability action | monitor | confirm |
 | Switching envelope | monitor | enforce |
 
-The default profile is a *development* posture for embedding and
-iteration. `CognitiveOSConfig.production()` is the deployment posture: in
-this beta it refuses every input the partial projection cannot certify,
-including a pure `{"risk": 0.0}` payload. That is deliberate fail-closed
-behavior, not a bug, and it means the graded three-band flow shown above
-is a property of the default profile only.
+The default is a development posture for embedding and iteration.
+`CognitiveOSConfig.production()` is the deployment posture, and in this beta
+it refuses every input the partial projection cannot certify.
 
-```python
-from arvis import CognitiveOS, CognitiveOSConfig
+## The two public surfaces
 
-os = CognitiveOS(config=CognitiveOSConfig.production())
-```
+| Surface | Intended use |
+|---|---|
+| `arvis` (root, 11 symbols) | Applications: `ArvisEngine` for most integrations, `CognitiveOS` for replay, IR control and pipeline customization |
+| `arvis.host_api` (pinned modules) | Hosts: tools, access and identity, memory, VFS, services, telemetry, each import path pinned by contract test |
 
-## Public API Levels
+Anything else (`arvis.api`, deep module paths) is internal and may change in
+any release. Production effects run through `engine.run_as(principal, ...)`
+with an `AuthenticatedPrincipal` from `arvis.host_api.access`; the deprecation
+policy for both surfaces is in
+[VERSIONING.md](https://github.com/Julien-Lefauconnier/arvis/blob/main/VERSIONING.md).
 
-ARVIS supports exactly two surfaces (VERSIONING.md):
+One engine executes one governed run at a time and is not thread-safe. The
+documented lifecycle is one instance per turn
+([RUNTIME_LIFECYCLE.md](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/architecture/RUNTIME_LIFECYCLE.md));
+parallelism belongs to the host, by instantiation.
 
-| Surface | Intended Use |
-|---------|--------------|
-| `arvis` (root, 11 symbols) | Application usage: `ArvisEngine` for most integrations, `CognitiveOS` for deterministic replay, IR control and pipeline customization |
-| `arvis.host_api` (pinned modules) | Host integration: tools, access and identity, memory, VFS, services, telemetry, each import path pinned and frozen by contract tests |
-
-For most integrations, start with:
-
-```python
-from arvis import ArvisEngine
-```
-
-### When to use what?
-
-- Use **ArvisEngine** for application-level integrations. Production
-  effects run through `engine.run_as(principal, ...)` with an
-  `AuthenticatedPrincipal` built from `arvis.host_api.access`.
-- Use **CognitiveOS** when you need deterministic replay, IR control
-  or pipeline customization (also exported by `arvis.host_api.engine`).
-- Use **`arvis.host_api`** modules for everything a host wires in:
-  declaring governed tools (`host_api.tools`), identity and
-  authorization (`host_api.access`), memory governance, VFS, syscalls.
-- Anything else (`arvis.api`, deep module paths) is internal and may
-  change in any release; the examples import only the two surfaces
-  above, enforced by a contract test.
-
----
-
-## What ARVIS Enables
-
-ARVIS is designed for teams building:
-
-* enterprise copilots
-* regulated AI workflows
-* financial decision systems
-* legal / compliance systems
-* secure internal AI tools
-* autonomous workflows with controls
-* long-memory assistants
-* high-trust AI infrastructure
-
-In these environments, output quality alone is not enough.
-
-Systems must be:
-
-* explainable
-* reproducible
-* governable
-* observable
-* safe under uncertainty
-
----
-
-## Core Capabilities
-
-### Deterministic Cognition
-
-Same input + same state + same policy = same result.
-
-### Replayable Decisions
-
-Runs can be replayed and verified.
-
-### Governed Outputs
-
-Unsafe or invalid decisions can be blocked before execution.
-
-### Controlled Tool Use
-
-External tools and side-effects run behind authorization boundaries.
-
-Each authorized tool receives a canonical frozen payload and an immutable
-`AuthorizedEffectContext`; it never receives the mutable cognitive pipeline
-context. The syscall boundary compares the current trusted identity with the
-sealed principal, tenant, authentication, service, session, process and run
-bindings before committing an intent. See the normative
-[governed effect path](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/architecture/EFFECT_PATH.md) and the
-[tool authoring guide](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/tools/TOOL_AUTHORING_GUIDE.md).
-
-### Explicit Uncertainty
-
-Risk, ambiguity, conflict, and instability become system signals.
-
-### Canonical IR
-
-Every run can emit a structured machine-auditable representation.
-
-### Timeline Integrity
-
-Decisions can be linked to verifiable commitments.
-
-### Runtime Observability
-
-Internal cognition remains inspectable in production.
-
----
-
-## Where ARVIS Fits
+## Where ARVIS fits
 
 ARVIS sits between an application's AI-generated proposals and its governed
-tools. The host still owns identity, business rules, memory, models, storage,
-queues and external providers.
+tools. The host keeps identity, business rules, memory, models, storage and
+external providers. Every real-world effect crosses one mediated boundary
+with a sealed identity context, and each authorized tool receives a frozen
+payload plus a single-use capability, never the mutable pipeline context.
 
-Start with:
-
-* [Reference architecture: sovereign, governed AI assistant](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md)
-* [Runnable governed-assistant example](https://github.com/Julien-Lefauconnier/arvis/blob/main/examples/11_governed_assistant.py)
+* [Reference architecture](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md)
+  and its [runnable example](https://github.com/Julien-Lefauconnier/arvis/blob/main/examples/11_governed_assistant.py)
+* [The governed effect path](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/architecture/EFFECT_PATH.md)
+  and the [tool authoring guide](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/tools/TOOL_AUTHORING_GUIDE.md)
 * [VeraMem integration pattern](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/integration/VERAMEM_INTEGRATION_PATTERN.md)
+  (the author's own application of the pattern, not an independent adoption,
+  and not a dependency)
 
-The architecture is implementation-neutral. VeraMem is the author's own
-application of the pattern (not an independent adoption), and neither a
-dependency nor a required deployment stack.
-
----
-
-## Architecture Snapshot
-
-```text
-Scheduler Tick
-  → Select Process
-  → Run Cognitive Pipeline
-  → Build Cognitive State
-  → Policy / Admissibility Gate
-  → Export IR
-  → Optional Authorized Execution
-  → Timeline Commit
-```
-
----
-
-## Separation of Concerns
-
-| Layer     | Responsibility             |
-| --------- | -------------------------- |
-| Pipeline  | Cognition                  |
-| Gate      | Decision admissibility     |
-| Runtime   | Scheduling / orchestration |
-| Memory    | Governed state influence   |
-| IR        | Structured export          |
-| Execution | Side-effects / tools       |
-| Timeline  | Integrity / commitments    |
-| Reflexive | Read-only self-observation |
-
----
-
-## Why Teams Choose ARVIS
-
-Because modern AI systems increasingly need:
-
-* controls before execution
-* replay after incidents
-* audit trails for regulators
-* safe tool usage
-* deterministic workflows
-* bounded autonomy
-* trustable infrastructure
-
-ARVIS addresses these requirements natively.
-
----
+A governed turn costs about 6.4 ms median, engine construction 0.15 ms, with
+the measurement script published
+([PERFORMANCE.md](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/PERFORMANCE.md)).
 
 ## Validation
 
-ARVIS is validated like infrastructure.
+2900+ tests run in under 30 seconds: property-based, adversarial regressions
+pinned on reproduced attack vectors, gate safety-ordering and
+starvation-freedom properties, multi-instance isolation, and about forty
+contract ratchets that can only tighten (import closure, docstring coverage,
+doc claims, coverage floors, a decreasing ceiling on broad exception
+handlers).
 
-Current suite includes:
+Beyond the suite, the mathematical claims are validated by pre-registered
+campaigns: six M10 campaigns on two published synthetic corpora (1440 and
+1632 turns), thresholds registered by commit before each run, judged 11 of
+12 and 12 of 12, with the one failed criterion reported as failed rather
+than adjusted. Artifacts are tracked and regenerate byte-identically, and a
+ratchet keeps the report's headline numbers equal to the artifacts.
 
-* 2900+ passing tests (unit, integration, property-based; the count
-  went *down* across the consolidation campaigns because dead layers
-  left with their tests)
-* deterministic replay verification (full-IR comparison)
-* adversarial regression tests pinning reproduced attack vectors
-  (`tests/adversarial/test_campaign_audit_regression*.py`, VFS scope
-  campaigns)
-* hashchain integrity tests
-* gate safety-ordering and bounded-recovery properties
-  (`tests/math/gate/test_gate_safety_ordering.py`)
-* multi-tick scheduler starvation-freedom properties: budget depletion,
-  not aging, is what prevents starvation, and it is pinned as such over
-  whole runs (`tests/runtime/test_scheduler_starvation_properties.py`)
-* contract ratchets that can only tighten: import closure, the frozen
-  internal `ctx.extra` read surface, and a context facade floor with a
-  shadow-attribute guard
-* runtime robustness checks
-
-### Empirical campaigns (M10)
-
-Beyond the suite, the mathematical claims are validated by executed,
-pre-registered campaigns: six M10 campaigns on two published
-synthetic corpora (D-1.0, 1440 turns; D-2.0 with state-feedback
-dynamics, 1632 turns), thresholds registered by commit before each
-run, judged 11 of 12 and 12 of 12 with the one failed criterion
-reported as failed rather than adjusted. `ALLOW` is reachable and
-deliberately rare (5 and 4 turns respectively, every one carrying a
-live measured adaptive margin and a served dwell); adversarial
-`ALLOW` is 0.0 on both corpora. The artifacts are tracked and
-regenerate byte-identically (`python -m validation.m10 run`,
-`run2`); a gate ratchet keeps the report's headline numbers equal to
-the artifacts. The full report, including which criteria can
-actually fail and what the campaigns do not establish, is
+What the campaigns do not establish: the corpora are synthetic, small, and
+produced by the author; alpha and L_T are measured report-only, so the
+runtime constants remain declared assumptions; the switching axis is
+monitor-only in the default posture; and no claim is made about the CONTENT
+a model produces. The full report, including which criteria can fail, is
 [the M10 report](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/math/M10_empirical_stability_validation_and_runtime_validation.md)
-(read section 16 first), and the integrator-facing account of what
-stands between a call and an `ALLOW` is
-[docs/PATH_TO_ALLOW.md](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/PATH_TO_ALLOW.md).
-
-What the campaigns do **not** yet establish, honestly: the corpora
-are synthetic and small; alpha and L_T are measured on them
-report-only (the runtime constants remain declared assumptions,
-decision DM-B1, adoption deferred to DM4); the switching axis is
-monitor-only in the default posture (measured and disclosed on every
-turn, enforced in the `enforce` posture); and no claim is made about
-the CONTENT a model produces, only about the dynamics of the
-governed decision loop around it.
-
----
+(read section 16 first); the integrator-facing account of what stands
+between a call and an `ALLOW` is
+[PATH_TO_ALLOW.md](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/PATH_TO_ALLOW.md).
 
 ## Citing ARVIS
 
-The architecture, the stability monitoring and the M10 protocol are
-written up in a preprint, which is also where the limits and the
-non-claims are stated in one place:
-
-> Lefauconnier, J. (2026). *ARVIS: A Runtime Assurance Kernel for
-> LLM-Based Systems with Deterministic Replay and Pre-Registered
-> Empirical Validation.* Zenodo.
+> Lefauconnier, J. (2026). *ARVIS: A Runtime Assurance Kernel for LLM-Based
+> Systems with Deterministic Replay and Pre-Registered Empirical
+> Validation.* Zenodo.
 > [10.5281/zenodo.22280253](https://doi.org/10.5281/zenodo.22280253)
 
-The preprint describes software version `0.1.0b7`; if you regenerate the
-M10 campaigns against a later version, cite the version you ran.
+The preprint describes software version `0.1.0b7` and has **not** been peer
+reviewed: it is a citable statement of what this repository does and does
+not establish, not an external validation of it.
 [CITATION.cff](https://github.com/Julien-Lefauconnier/arvis/blob/main/CITATION.cff)
-carries the same record in machine-readable form (GitHub's "Cite this
-repository", reference managers).
-
-The preprint has **not** been peer reviewed. It is a public,
-citable statement of what the repository does and does not establish,
-not an external validation of it.
-
----
+carries the same record machine-readably.
 
 ## Examples
 
-Run ready-to-use examples:
+Fifteen runnable examples, from `python examples/00_quickstart_engine.py` to
+governing a real model call. The ones worth opening first: `01` gate
+refusal, `02` deterministic replay, `05` tool governance, `13` the
+end-to-end governed memory assistant, `14` a real model call with a host
+risk policy. Full list in `examples/README.md`.
 
-```bash
-python examples/00_quickstart_engine.py
-```
+## Known limitations (0.1.0 beta)
 
-Included examples:
+**Stable, documented, tested:** the governed decision pipeline and
+admissibility gate; the graded risk gate above; deterministic replayable IR
+and timeline commitment; the syscall boundary for external effects including
+a governed `llm.generate` path; tool authorization with a per-spec risk
+budget; sealed effect contexts and receipt-activated single-use
+capabilities; a typed runtime error model.
 
-0. ArvisEngine quickstart
-1. Gate refusal
-2. Deterministic replay
-3. IR export
-4. Human approval
-5. Tool governance
-6. Finance risk screening
-7. Session threading (the ALLOW path's first condition)
-8. Timeline audit trail
-9. Multi-engine hosting (one engine per governed turn)
-10. Runtime inspection
-11. Governed-assistant reference integration
-12. Threaded stability (scientific state across governed turns)
-13. Governed memory assistant, end to end (the `docs/GETTING_STARTED.md` tutorial)
-14. Govern a real model call (`docs/FIRST_REAL_CALL.md`; offline by default, `--live` with your key)
+**Behavioural caveats, know these before deploying:**
 
-See: `examples/README.md`, and the step-by-step walkthrough in
-`docs/GETTING_STARTED.md`.
+* The `production` profile refuses everything, as stated above.
+* The contraction monitor is the default core model: every run measures a
+  Lyapunov state, its energy V, a drift score, a PAC risk ceiling and an
+  empirical regime. **Trajectory properties need threaded state**: the engine
+  is one-turn by design, so delta-V and the Lyapunov gate's trajectory branch
+  only become live when the host threads the replayable `scientific_state`
+  between turns (`run(..., extra={"scientific_state": previous})`, read back
+  from `view.next_scientific_state`). A first, unthreaded turn is
+  conservative by construction.
+* Stability axes are reported only when measured: `summary()` returns
+  `n/a`/`null` for axes a run did not compute, never zeros.
 
----
+**Experimental, present but not part of the stable API:** long-term memory;
+conversation state types; the natural-language input surface (a bare prompt
+gets a minimal projection, hence REQUIRES_CONFIRMATION, not a full cognitive
+projection); real LLM providers (the adapter path is wired end to end, the
+bundled provider is a deterministic stub).
 
-## Documentation
-
-Start here:
-
-* `docs/OVERVIEW.md`
-* `docs/WHY_ARVIS.md`
-* `docs/ARCHITECTURE.md`
-* `docs/architecture/REFERENCE_ASSISTANT_ARCHITECTURE.md`
-* `docs/integration/VERAMEM_INTEGRATION_PATTERN.md`
-* `docs/PIPELINE.md`
-* `docs/IR.md`
-* `docs/REFLEXIVE.md`
-* `docs/standard/`
-* `docs/math/`
-
----
-
-## What ARVIS Does Not Claim
-
-ARVIS does **not** promise:
-
-* universal truth
-* AGI magic
-* perfect reasoning
-* correctness outside assumptions
-* optimality in all environments
-
-ARVIS is about **trustworthy operation under constraints**.
-
----
-
-## Known Limitations (0.1.0-beta)
-
-This is a beta of a deterministic cognitive kernel. What is stable,
-experimental, and out of scope for the 0.1 series:
-
-**Stable (documented, tested):**
-
-* governed decision pipeline and admissibility gate
-* graded risk gate for an explicit top-level `risk` scalar, default
-  profile, pure payload (`< 0.4` → ALLOWED, `0.4`–`0.8` →
-  REQUIRES_CONFIRMATION, `>= 0.8` → BLOCKED; see the Quick Start note)
-* deterministic, replayable IR (projection / validity / stability / adaptive /
-  tools axes exposed in the public view) and timeline commitment
-* syscall boundary for external effects, including a governed `llm.generate`
-  path wired end to end
-* tool authorization boundary (per-spec risk budget)
-* sealed tool effect context and receipt-activated single-use capabilities
-* typed runtime error model
-
-**Behavioral caveats (know these before deploying):**
-
-* the **`production` profile refuses everything** the partial projection
-  cannot certify: with `input_risk_mode = "harden_only"`, every declared
-  risk value, including `0.0`, is BLOCKED. The graded three-band gate is
-  a property of the default (`local`) profile.
-* the **contraction monitor is the default core model**: every governed
-  run measures a Lyapunov state, its energy V, a drift score, a PAC
-  risk ceiling and an empirical regime (`ContractionMonitorCore`;
-  `core_model=None` opts out). The measured axes never act on a
-  caller-declared risk scalar, which stays governed by the input-risk
-  gate alone. **Trajectory properties need threaded state**: the
-  engine is one-turn by design, so delta-V (and the Lyapunov gate's
-  trajectory branch) only become live when the host threads the
-  replayable `scientific_state` between turns
-  (`run(..., extra={"scientific_state": previous})`, read back from
-  `view.next_scientific_state`; the legacy
-  `extra["scientific_state_next"]` echo is deprecated). A first,
-  unthreaded turn is conservative by construction.
-* **stability axes are reported only when measured**: `summary()` and
-  the stability view return `n/a`/`null` for axes the run did not
-  compute, rather than zeros (`stability_score` is `1 - V`, the
-  complement of the measured energy).
-
-**Experimental (present, not part of the stable public API):**
-
-* long-term memory
-* conversation state types (the standalone conversation orchestration
-  layer was removed as dead code in the consolidation campaigns; what
-  remains are the typed signals the pipeline consumes)
-* natural-language input surface: a bare text prompt is governed with a
-  *minimal* projection (REQUIRES_CONFIRMATION), not a full cognitive projection
-* real LLM providers: the governed adapter path is wired end to end, but the
-  bundled provider is a deterministic stub; production providers must be
-  configured via the adapter registry
-
-**Out of scope for 0.1:**
-
-* the full cognitive projection Pi (the 0.1 projection is partial and
-  certification-oriented; sparse inputs receive a minimal certificate)
-* risk gating beyond an explicit top-level `risk` scalar (nested signals,
-  structured tool requests, and free text do not yet drive a full projection)
-* general formal guarantees over arbitrary LLM behavior
-* distributed registry, confirmation and idempotency coordination
-
-Formal guarantees apply only to the documented projected domains and their
-assumptions.
-
----
+**Out of scope for 0.1:** the full projection Pi; risk gating beyond an
+explicit top-level `risk` scalar; general formal guarantees over arbitrary
+LLM behaviour; distributed registry, confirmation and idempotency
+coordination. Formal guarantees apply only to the documented projected
+domains and their assumptions.
 
 ## Versioning
 
-ARVIS tracks three distinct version axes, each honestly labeled:
-
 | Axis | Value | Meaning |
-|------|-------|---------|
+|---|---|---|
 | Package version | `0.1.0b8.dev0` | the distributed artifact (PEP 440) |
 | API version | `0.1` | stable within the beta series under `VERSIONING.md` |
 | Standard version | `draft-v1` | the ARVIS decision / IR specification |
 
----
-
-## Project Status
-
-**`0.1.0b8.dev0` (beta series)**: actively developed with a validation-first engineering
-approach. The documented public and host surfaces are stable within the beta
-series; experimental internals and the draft standard may still evolve.
-
----
-
-## Positioning
-
-```text
-Most AI systems try to generate outputs.
-ARVIS governs whether outputs are allowed to exist.
-```
-
----
-
-## Project Reference
+## Project reference
 
 - [CHANGELOG](https://github.com/Julien-Lefauconnier/arvis/blob/main/CHANGELOG.md): every campaign, every security fix, every deprecation.
 - [SECURITY](https://github.com/Julien-Lefauconnier/arvis/blob/main/SECURITY.md): reporting, supported versions, audit-suppression policy.
 - [CONTRIBUTING](https://github.com/Julien-Lefauconnier/arvis/blob/main/CONTRIBUTING.md): the quality gate is the contract; English everywhere.
-- [VERSIONING](https://github.com/Julien-Lefauconnier/arvis/blob/main/VERSIONING.md): the two supported surfaces and the deprecation window.
-- [Configuration](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/CONFIGURATION.md): every environment variable ARVIS reads, in one place.
+- [Configuration](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/CONFIGURATION.md): every environment variable ARVIS reads.
 - [Format versions](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/VERSIONS.md): the map of the version constants.
-- [EU AI Act capability mapping](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/compliance/EU_AI_ACT_CAPABILITY_MAPPING.md): what the kernel contributes to a compliance case, article by article, and what stays with the host.
-- [Glossary](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/GLOSSARY.md): every ARVIS term mapped to the nearest standard concept.
+- [EU AI Act capability mapping](https://github.com/Julien-Lefauconnier/arvis/blob/main/docs/compliance/EU_AI_ACT_CAPABILITY_MAPPING.md): what the kernel contributes, article by article, and what stays with the host.
 
 Licensed under [Apache-2.0](https://github.com/Julien-Lefauconnier/arvis/blob/main/LICENSE).

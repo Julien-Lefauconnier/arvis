@@ -1,4 +1,31 @@
-## Author’s Note
+## The long-term ambition, and what ships today
+
+The package you install is a runtime assurance kernel: it decides whether a
+proposed act may happen, proves what governed that decision, and replays it.
+The README describes that, and only that, because that is what is delivered
+and testable today.
+
+This page is the other half, and it is deliberately separated from the
+evaluation path. The direction ARVIS is heading is a **cognitive operating
+system**: not a scheduler for your processes, but a systems layer where
+reasoning is treated as critical infrastructure, and where the sequence
+
+```text
+input
+  -> cognition
+  -> stability check
+  -> policy gate
+  -> IR
+  -> optional authorized execution
+  -> timeline commitment
+```
+
+replaces `input -> model -> output`. Outputs are not assumed valid: they
+must become allowed to exist. That sentence is a research programme, not a
+release note, and the distance between it and the current beta is stated in
+the README's limitations rather than hidden.
+
+## Author's Note
 
 ARVIS began as a direct response to a structural limitation I kept observing in contemporary AI systems: impressive generation capacity without explicit guarantees of stability, traceability, calibrated uncertainty, or bounded reasoning under stress.
 
