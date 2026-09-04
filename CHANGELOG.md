@@ -9,7 +9,41 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Added
+
+- Campaign HOST-SURFACE: `host_api` 1.2, sized by measurement rather
+  than guesswork. A cartography of the one real integration (veramem,
+  from its 2026-09-04 snapshot) found 214 import lines across 137 files
+  bound to internal module paths, while `arvis.host_api` appeared
+  nowhere in that product: 57 of the 61 symbols it consumes already had
+  a public home, and four did not. Those four are now re-exported, so
+  the last reason to import an internal path is gone.
+  `host_api.conversation` gains `ContinuationResolver`,
+  `host_api.memory` gains `MemoryLongContextProjector` and
+  `DEFAULT_MEMORY_LONG_REGISTRY`, and a thirteenth module
+  `host_api.errors` exposes the two exceptions a host actually catches
+  (`ArvisError` as the root of the hierarchy, `ArvisSecurityError`
+  because a security refusal is an outcome and not a retryable
+  hiccup); the rest of the typed error model stays internal on purpose.
+  Additive only: 63 pinned symbols, HOST_API_VERSION 1.2, beta manifest
+  regenerated. The manifest describer learned to pin a promised
+  singleton by its type and methods rather than its configurable
+  contents.
+
 ### Fixed
+
+- The veramem consumed-surface mirror had drifted from the product it
+  protects. Its cartography dated from 2026-07-02: seven bindings the
+  host consumes were unpinned, including `AuthenticatedPrincipal` (its
+  single most imported arvis symbol, in 40 files) and
+  `ArvisSecurityError`, while six pins guarded symbols it had stopped
+  using. A trusted safety net with holes is worse than none, so the
+  contract is re-measured, and a new assertion keeps the transition
+  terminable: every symbol pinned there must have a home on a public
+  surface, or the day the host migrates never comes. The docstring now
+  also records the consequence nobody had drawn, that merging internal
+  micro-modules would break that host in production while every arvis
+  gate stayed green.
 
 - Campaign REASONS: the IR names the cause of its own verdict. Every
   governed turn in the default posture recorded
