@@ -10,13 +10,17 @@ module pins the import path (see VERSIONING.md, host integration
 surface).
 """
 
-from arvis.conversation.continuation import resolve_continuation
+from arvis.conversation.continuation import (
+    ContinuationResolver,
+    resolve_continuation,
+)
 from arvis.conversation.pending_turn import (
     PendingTurn,
     PendingTurnStatus,
 )
 
 __all__ = [
+    "ContinuationResolver",
     "PendingTurn",
     "PendingTurnStatus",
     "resolve_continuation",

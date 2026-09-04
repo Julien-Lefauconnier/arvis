@@ -23,6 +23,7 @@ from arvis.host_api import (
     control,
     conversation,
     engine,
+    errors,
     knowledge,
     llm,
     memory,
@@ -74,12 +75,14 @@ HOST_API_SURFACE: dict[str, list[str]] = {
         "ToolSpec",
     ],
     "memory": [
+        "DEFAULT_MEMORY_LONG_REGISTRY",
         "Governance",
         "GovernanceEncryption",
         "GovernancePrincipal",
         "GovernanceRetention",
         "GovernanceSharing",
         "GovernanceVisibility",
+        "MemoryLongContextProjector",
         "MemoryLongEntry",
         "MemoryLongPolicyGate",
         "MemoryLongRecord",
@@ -94,6 +97,7 @@ HOST_API_SURFACE: dict[str, list[str]] = {
         "KnowledgeState",
     ],
     "conversation": [
+        "ContinuationResolver",
         "PendingTurn",
         "PendingTurnStatus",
         "resolve_continuation",
@@ -115,6 +119,10 @@ HOST_API_SURFACE: dict[str, list[str]] = {
         "InMemoryTelemetrySink",
         "TelemetryKind",
     ],
+    "errors": [
+        "ArvisError",
+        "ArvisSecurityError",
+    ],
 }
 
 _MODULES: dict[str, ModuleType] = {
@@ -130,6 +138,7 @@ _MODULES: dict[str, ModuleType] = {
     "control": control,
     "llm": llm,
     "telemetry": telemetry,
+    "errors": errors,
 }
 
 _PAIRS: list[tuple[str, str]] = [
@@ -140,9 +149,9 @@ _PAIRS: list[tuple[str, str]] = [
 
 
 def test_surface_size_is_pinned() -> None:
-    assert len(HOST_API_SURFACE) == 12
+    assert len(HOST_API_SURFACE) == 13
     assert sorted(HOST_API_SURFACE) == sorted(_MODULES)
-    assert len(_PAIRS) == 58
+    assert len(_PAIRS) == 63
 
 
 @pytest.mark.parametrize(
@@ -163,6 +172,6 @@ def test_host_api_module_surface_is_exact(module: str) -> None:
 
 
 def test_host_api_version_policy_is_pinned() -> None:
-    assert arvis.host_api.HOST_API_VERSION == "1.1"
+    assert arvis.host_api.HOST_API_VERSION == "1.2"
     assert arvis.host_api.PROVISIONAL_MODULES == frozenset({"control"})
     assert arvis.host_api.PROVISIONAL_MODULES < set(HOST_API_SURFACE)

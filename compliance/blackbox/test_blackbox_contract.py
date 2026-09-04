@@ -56,13 +56,14 @@ HOST_API_MODULES: dict[str, int] = {
     "services": 3,
     "vfs": 9,
     "tools": 8,
-    "memory": 12,
+    "memory": 14,
     "knowledge": 4,
-    "conversation": 3,
+    "conversation": 4,
     "cognition": 1,
     "control": 5,
     "llm": 1,
     "telemetry": 2,
+    "errors": 2,
 }
 
 
@@ -205,7 +206,7 @@ def test_tool_surface_freezes_to_a_stable_fingerprint() -> None:
 def test_host_api_surface_resolves_as_promised() -> None:
     import importlib
 
-    assert arvis.host_api.HOST_API_VERSION == "1.1"
+    assert arvis.host_api.HOST_API_VERSION == "1.2"
     assert arvis.host_api.PROVISIONAL_MODULES == frozenset({"control"})
 
     total = 0
@@ -219,7 +220,7 @@ def test_host_api_surface_resolves_as_promised() -> None:
         for symbol in exported:
             assert hasattr(module, symbol)
         total += len(exported)
-    assert total == 58
+    assert total == 63
 
 
 def test_vfsitem_b2_positional_constructor_from_the_wheel() -> None:

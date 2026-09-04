@@ -144,6 +144,16 @@ class ArvisErrorMetadata:
 
 
 class ArvisError(Exception):
+    """Root of every exception the kernel raises.
+
+    A host catches this at its integration boundary instead of
+    ``Exception``, so an arvis failure stays distinguishable from a bug
+    in the surrounding application. The class attributes carry the
+    classification the error model acts on: domain, category, severity,
+    policy (fail-closed by default), and whether the failure is
+    retryable and deterministic.
+    """
+
     domain = ErrorDomain.CORE
     category = ArvisErrorCategory.RUNTIME
     severity = ArvisErrorSeverity.ERROR
@@ -401,6 +411,15 @@ class ArvisReplayError(ArvisInvariantViolation):
 
 
 class ArvisSecurityError(ArvisInvariantViolation):
+    """A security boundary refused, and the refusal is the outcome.
+
+    Raised when identity, authorization or a sealed effect context does
+    not hold. A host distinguishes this from other kernel failures
+    because it is not a transient condition to retry: it is a governed
+    refusal to surface and audit. Being an invariant violation, it
+    fails closed by construction.
+    """
+
     default_code = ErrorCode.SECURITY_ERROR
     category = ArvisErrorCategory.SECURITY
     domain = ErrorDomain.SECURITY

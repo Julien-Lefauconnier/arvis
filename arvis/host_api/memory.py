@@ -3,8 +3,10 @@
 """Governed long-term memory.
 
 The repository protocol a host implements for persistence, the entry
-and record types, the policy gate, and the governance vocabulary
-(visibility, sharing, retention, encryption, principal).
+and record types, the policy gate, the context projector that turns
+stored entries into turn context, the default type registry, and the
+governance vocabulary (visibility, sharing, retention, encryption,
+principal).
 
 Re-export layer only: every symbol is defined where it lives; this
 module pins the import path (see VERSIONING.md, host integration
@@ -24,17 +26,21 @@ from arvis.memory.memory_long_entry import (
     MemoryLongType,
 )
 from arvis.memory.memory_long_policy_gate import MemoryLongPolicyGate
+from arvis.memory.memory_long_projector import MemoryLongContextProjector
 from arvis.memory.memory_long_record import MemoryLongRecord
+from arvis.memory.memory_long_registry import DEFAULT_MEMORY_LONG_REGISTRY
 from arvis.memory.memory_long_repository import MemoryLongRepository
 from arvis.memory.memory_long_snapshot import MemoryLongSnapshot
 
 __all__ = [
+    "DEFAULT_MEMORY_LONG_REGISTRY",
     "Governance",
     "GovernanceEncryption",
     "GovernancePrincipal",
     "GovernanceRetention",
     "GovernanceSharing",
     "GovernanceVisibility",
+    "MemoryLongContextProjector",
     "MemoryLongEntry",
     "MemoryLongPolicyGate",
     "MemoryLongRecord",

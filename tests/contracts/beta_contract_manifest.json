@@ -221,6 +221,15 @@
       }
     },
     "conversation": {
+      "ContinuationResolver": {
+        "kind": "class",
+        "methods": {
+          "try_resolve": "(self, pending: PendingTurn, turn_text: str) -> str | None"
+        },
+        "properties": {
+          "kind": "str"
+        }
+      },
       "PendingTurn": {
         "fields": {
           "conversation_id": {
@@ -539,6 +548,32 @@
         "properties": {}
       }
     },
+    "errors": {
+      "ArvisError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      },
+      "ArvisSecurityError": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self, message: str = '', *, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, semantics: tuple[ErrorSemantics, ...] | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, fingerprint: str | None = None, created_at: str | None = None, monotonic_ns: int | None = None, sensitive: bool = False, redactable: bool = True, traceback: str | None = None, error_id: str | None = None) -> None",
+          "clone": "(self, *, message: str | None = None, code: str | None = None, domain: ErrorDomain | None = None, category: ArvisErrorCategory | None = None, severity: ArvisErrorSeverity | None = None, policy: ErrorPolicy | None = None, retryable: bool | None = None, deterministic: bool | None = None, replay_safe: bool | None = None, degraded: bool | None = None, details: ErrorDetails | None = None, origin: ErrorOrigin | None = None, cause: ErrorCause | None = None, semantics: tuple[ErrorSemantics, ...] | None = None) -> ArvisError",
+          "to_dict": "(self) -> ErrorPayload",
+          "to_safe_dict": "(self, *, include_traceback: bool = False, include_error_id: bool = True) -> ErrorPayload"
+        },
+        "properties": {
+          "metadata": "ArvisErrorMetadata"
+        }
+      }
+    },
     "knowledge": {
       "KnowledgeEvent": {
         "fields": {
@@ -654,6 +689,16 @@
       }
     },
     "memory": {
+      "DEFAULT_MEMORY_LONG_REGISTRY": {
+        "kind": "instance",
+        "methods": {
+          "__init__": "(self, allowed_keys: set[str], allowed_plain_values: dict[str, set[str]] | None = None) -> None",
+          "is_allowed": "(self, key: builtins.str) -> builtins.bool",
+          "validate_value_plain": "(self, *, key: builtins.str, value: str | None) -> builtins.bool"
+        },
+        "properties": {},
+        "type": "arvis.memory.memory_long_registry.MemoryLongRegistry"
+      },
       "Governance": {
         "fields": {
           "encryption": {
@@ -721,6 +766,13 @@
           "SEALED": "sealed",
           "USABLE": "usable"
         }
+      },
+      "MemoryLongContextProjector": {
+        "kind": "class",
+        "methods": {
+          "project": "(self, snapshot: arvis.memory.memory_long_snapshot.MemoryLongSnapshot) -> dict[str, typing.Any]"
+        },
+        "properties": {}
       },
       "MemoryLongEntry": {
         "fields": {
@@ -1336,7 +1388,7 @@
       }
     }
   },
-  "host_api_version": "1.1",
+  "host_api_version": "1.2",
   "manifest_version": 1,
   "provisional_modules": [
     "control"

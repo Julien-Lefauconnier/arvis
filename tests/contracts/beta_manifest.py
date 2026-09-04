@@ -201,6 +201,18 @@ def _describe(symbol_name: str, obj: Any) -> dict[str, Any]:
         # a17: version constants promised at the root (for example
         # RESULT_SCHEMA_VERSION) freeze their exact value.
         return {"kind": "constant", "type": "str", "value": obj}
+    if not inspect.ismodule(obj):
+        # host_api 1.2: a promised singleton (DEFAULT_MEMORY_LONG_REGISTRY).
+        # Its CONTENT is host-configurable state and is deliberately not
+        # frozen here; what the contract owes a host is the type it
+        # receives and the methods it may call. Replacing the object with
+        # another type, or shrinking its API, therefore breaks the golden.
+        return {
+            "kind": "instance",
+            "type": _qualified_name(type(obj)),
+            "methods": _public_methods(type(obj)),
+            "properties": _properties(type(obj)),
+        }
     raise TypeError(  # pragma: no cover - the surface holds none today
         f"unsupported contract symbol kind for {symbol_name}: {type(obj)!r}"
     )
