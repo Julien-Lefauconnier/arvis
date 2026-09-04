@@ -9,6 +9,25 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Changed
+
+- Campaign L1: the front page says what the package is. External audit
+  #4 ran three prompts through `ask()`, got one identical verdict, and
+  concluded the product did not work; nothing in the 642-line README
+  had warned that ARVIS does not read content, because that sentence
+  was on line 443. The README is now 300 lines and opens on "a runtime
+  assurance kernel for LLM-based systems", with the three decisive
+  caveats (content is not read, `production` refuses everything,
+  `ALLOW` is conditional) inside the first fifty lines, the first one
+  demonstrated by a four-line snippet the gate executes. "Cognitive
+  operating system" survives as the labelled long-term ambition and
+  moves, with the manifesto, into `docs/AUTHORS_NOTE.md`. The PyPI
+  description, `docs/OVERVIEW.md` and `docs/ARCHITECTURE.md` say the
+  same thing as the README and the preprint. New ratchet
+  (`tests/docs/test_readme_front_matter.py`): the caveats stay on the
+  first screen, the ambition is never the definition, and the file
+  length only decreases.
+
 ### Added
 
 - Campaign CITATION: the work is citable. The preprint describing the
