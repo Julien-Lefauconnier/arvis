@@ -9,6 +9,31 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+### Fixed
+
+- Campaign REASONS: the IR names the cause of its own verdict. Every
+  governed turn in the default posture recorded
+  `reason_codes: ["unknown_reason"]`, while the gate had computed a
+  specific cause and thrown it away in the normalizer. Three families
+  were unregistered: the validity envelope's five reasons, built as
+  `f"validity_{envelope.reason}"` and therefore invisible to the
+  registry (a bare prompt's refusal is `validity_adaptive_unavailable`,
+  a declared-risk turn's is `validity_projection_unavailable`); the two
+  switching observations, informative because the axis is monitor-only
+  by default; and the declared-risk policy's own stage names, now
+  `input_risk_governed` / `input_risk_hardened` /
+  `input_risk_relax_denied`. `gate_fail_closed` replaces the unnamed
+  exception path. The emitted validity set is closed in
+  `VALIDITY_REASON_CODES`, so a constructed string can no longer escape
+  registration, and an unmapped reason degrades to `validity_unknown`
+  (promoted from reserved) rather than losing its layer. New ratchet
+  (`tests/contracts/test_reason_codes_reach_the_ir.py`): a governed turn
+  may not record `unknown_reason`, and every code the IR carries must be
+  registered. No verdict moves, no fingerprint composition changes, and
+  both M10 corpora regenerate byte-identically with unchanged judgments
+  (11/12 and 12/12); only the recorded cause changes, from nothing to
+  the layer that refused.
+
 ### Changed
 
 - Campaign L1: the front page says what the package is. External audit
