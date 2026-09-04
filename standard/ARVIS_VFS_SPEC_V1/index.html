@@ -1,0 +1,7769 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Deterministic runtime assurance for LLM-based systems: graded verdicts, hashed commitments, bit-identical replay.">
+      
+      
+      
+        <link rel="canonical" href="https://julien-lefauconnier.github.io/arvis/standard/ARVIS_VFS_SPEC_V1/">
+      
+      
+        <link rel="prev" href="../ARVIS_CONVERSATION_SPEC_V1/">
+      
+      
+        <link rel="next" href="../ARVIS_LINGUISTIC_SPEC_V1/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>VFS - ARVIS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#arvis-vfs-specification-v1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="ARVIS" class="md-header__button md-logo" aria-label="ARVIS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ARVIS
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              VFS
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Julien-Lefauconnier/arvis" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Julien-Lefauconnier/arvis
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ARVIS" class="md-nav__button md-logo" aria-label="ARVIS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ARVIS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Julien-Lefauconnier/arvis" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Julien-Lefauconnier/arvis
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Start
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Start
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../WHY_ARVIS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why ARVIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../OVERVIEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FIRST_REAL_CALL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fifteen minutes to a governed call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GETTING_STARTED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started (end to end)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GLOSSARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../COMPARISON/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison with guardrail tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PATH_TO_ALLOW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The path to ALLOW
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PERFORMANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../AUTHORS_NOTE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Author's note
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The two public surfaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/arvis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    arvis (root)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/host_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    arvis.host_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ARCHITECTURE_INVARIANTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture invariants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PIPELINE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../COGNITIVE_STATE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cognitive state
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../IR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REFLEXIVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reflexive layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/EFFECT_PATH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Effect path
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/RUNTIME_LIFECYCLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/KERNEL_ADAPTERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel adapters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/SIGNALS_PRIMITIVES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signals and primitives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/REFERENCE_ASSISTANT_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference assistant architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/MAPPING_ARVIS_SPECIFICATIONS_IMPLEMENTATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specs to implementation map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration and versions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configuration and versions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONFIGURATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../VERSIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading the identifiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/INVARIANTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invariants (F-***)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/DECISIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Campaign decisions (DM-**)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/AUDITS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit findings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compliance/EU_AI_ACT_CAPABILITY_MAPPING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EU AI Act capability mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/TOOL_AUTHORING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool authoring guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/TOOL_LIFECYCLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/TOOL_SYSTEM_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool system
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Integration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integration/VERAMEM_INTEGRATION_PATTERN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VeraMem integration pattern
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Standard
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Standard
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ARVIS_STANDARD_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The ARVIS standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_SPEC_HIERARCHY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spec hierarchy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_KERNEL_CORE_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_KERNEL_SERVICES_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel services
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_SYSCALLS_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Syscalls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_ACCESS_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Access
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_DECISION_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_GATE_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_IR_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_PROJECTION_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_VALIDITY_ENVELOPE_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validity envelope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_MEMORY_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_CONVERSATION_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conversation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VFS
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VFS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-architectural-position-inside-arvis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Architectural position inside ARVIS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Design principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Design principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-kernel-first-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Kernel-first design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-layer-separation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Layer separation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-determinism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Determinism
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-explicit-failure-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Explicit failure semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-module-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Module layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-core-vfs-domain-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Core VFS domain model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Core VFS domain model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-vfsitemtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 VFSItemType
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-vfsitem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 VFSItem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-vfs-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. VFS exceptions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. VFS exceptions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-base-exception" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Base exception
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-concrete-vfs-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Concrete VFS exceptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-repository-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Repository contract
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Repository contract">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-contract-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Contract role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-required-repository-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Required repository methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-current-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Current implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-repository-migration-010b2-to-010b3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 Repository migration (0.1.0b2 to 0.1.0b3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-in-memory-repository-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. In-memory repository baseline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. In-memory repository baseline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-storage-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Storage model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-repository-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Repository guarantees
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-id-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 ID generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-vfs-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. VFS service
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. VFS service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-public-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Public methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-name-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Name normalization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-parent-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 Parent validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-name-uniqueness-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5 Name uniqueness invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#106-delete-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.6 Delete invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#107-rename-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.7 Rename invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#108-move-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.8 Move invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#109-creation-inheritance-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.9 Creation inheritance invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-tree-projection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Tree projection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Tree projection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-vfstreenode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 VFSTreeNode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-build_vfs_tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 build_vfs_tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-ordering-guarantee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 Ordering guarantee
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-zip-subsystem-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. ZIP subsystem overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. ZIP subsystem overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-major-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 Major components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-two-phase-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 Two-phase model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-zip-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. ZIP models
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. ZIP models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-zipnode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 ZipNode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-zipcollision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 ZipCollision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133-zipcollisionreport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 ZipCollisionReport
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#134-zip-plan-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.4 ZIP plan models
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-zip-security-guard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. ZIP security guard
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. ZIP security guard">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-current-security-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 Current security checks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-blocked-extension-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 Blocked extension baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#144-security-configuration-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.4 Security configuration model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-zip-safe-reader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. ZIP safe reader
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. ZIP safe reader">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 Guarantees
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153-public-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 Public API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#154-entry-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.4 Entry model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-zip-analyzer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. ZIP analyzer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. ZIP analyzer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-important-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 Important invariants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163-supported-file-types-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 Supported file types baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#164-guard-injection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.4 Guard injection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-zip-collision-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. ZIP collision detection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="17. ZIP collision detection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#171-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#172-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.2 Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#173-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.3 Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-zip-plan-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. ZIP plan service
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="18. ZIP plan service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#181-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#182-supported-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.2 Supported actions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#183-current-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.3 Current semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#184-current-syscall-exposure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.4 Current syscall exposure
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-zip-executor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. ZIP executor
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="19. ZIP executor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#191-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#192-current-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.2 Current behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#193-result-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.3 Result shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#194-v1-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.4 V1 note
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-zip-ingest-orchestration-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. ZIP ingest orchestration service
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="20. ZIP ingest orchestration service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#201-zipingestdecision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.1 ZipIngestDecision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#202-zipingestservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.2 ZipIngestService
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="20.2 ZipIngestService">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#public-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#203-dry-run-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.3 Dry-run phase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#204-execution-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.4 Execution phase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#205-convenience-execution-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.5 Convenience execution path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#206-zip-execution-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.6 ZIP execution exceptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-kernel-service-registry-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Kernel service registry integration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="21. Kernel service registry integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#211-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21.1 Purpose
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212-current-registry-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21.2 Current registry fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213-architectural-benefit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21.3 Architectural benefit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-syscall-handler-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Syscall handler integration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="22. Syscall handler integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221-service-access-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22.1 Service access pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222-replay-policy-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22.2 Replay policy classification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="22.2 Replay policy classification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recompute
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#journal-only-replay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Journal-only replay
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#223-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22.3 Rationale
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-vfs-syscall-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. VFS syscall surface
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="23. VFS syscall surface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#231-read-syscalls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23.1 Read syscalls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="23.1 Read syscalls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vfslist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.list
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfsget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.get
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfstree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#232-write-syscalls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23.2 Write syscalls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="23.2 Write syscalls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vfscreate_folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.create_folder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfscreate_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.create_file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfsdelete_item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.delete_item
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfsrename_item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.rename_item
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfsmove_item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.move_item
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#233-zip-syscalls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23.3 ZIP syscalls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="23.3 ZIP syscalls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vfszipanalyze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.zip.analyze
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfszipplan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.zip.plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfszipexecute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.zip.execute
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-syscall-serialization-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Syscall serialization rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="24. Syscall serialization rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#241-vfs-item-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.1 VFS item serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#242-tree-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.2 Tree serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#243-zip-node-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.3 ZIP node serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#244-zip-decision-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.4 ZIP decision serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-syscall-error-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Syscall error mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="25. Syscall error mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#251-vfs-syscall-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25.1 VFS syscall error codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#252-zip-syscall-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25.2 ZIP syscall error codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#253-fallback-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25.3 Fallback behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-determinism-and-replay-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Determinism and replay notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="26. Determinism and replay notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#261-deterministic-tree-projection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26.1 Deterministic tree projection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#262-readwrite-syscall-distinction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26.2 Read/write syscall distinction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#263-zip-plan-purity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26.3 ZIP plan purity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#264-current-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26.4 Current limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-current-tested-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Current tested coverage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-known-implementation-gaps-and-future-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Known implementation gaps and future evolution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="28. Known implementation gaps and future evolution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#281-repository-backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.1 Repository backends
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#282-security-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.2 Security hardening
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#283-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.3 Permissions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#284-content-import-abstraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.4 Content import abstraction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#285-timeline-and-audit-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.5 Timeline and audit integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#286-action-layer-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.6 Action layer alignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-normative-implementation-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Normative implementation guidance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-minimal-compliance-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Minimal compliance checklist
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="30. Minimal compliance checklist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-vfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core VFS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ZIP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syscalls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Syscalls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runtime-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_LINGUISTIC_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linguistic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_REASON_CODE_REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reason-code registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_PUBLIC_OBJECT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public object
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_COMPLIANCE_SUITE_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance suite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mathematics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Mathematics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading the math stack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M0_system_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M0 system boundary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M1_assumptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M1 assumptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M1b_formal_system_definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M1b formal system definition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M1c_result_inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M1c result inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M2_proof_skeleton/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M2 proof skeleton
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M3_1_cognitive_state_model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3.1 cognitive state model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M3_2_observation_and_projection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3.2 observation and projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M3_3_projection_validated_domain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3.3 projection validated domain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M3_appendix_projection_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3 appendix, projection validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M4_adaptive_stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M4 adaptive stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M5_adaptive_stability_integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M5 adaptive stability integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M6_gate_stability_result_and_decision_consistency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M6 gate stability and decision consistency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M7_closedloop_Adaptive_stability_result/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M7 closed-loop adaptive stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M8_Robust_Practical_stability_and_ISS_interpretation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M8 robust practical stability and ISS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M9_system_synthesis_validity_envelop_and_global/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M9 system synthesis and validity envelope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M10_empirical_stability_validation_and_runtime_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M10 empirical validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M11_projection_control_operator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M11 projection control operator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M12_decision_lattice_stability_algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M12 decision lattice stability algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M13_formal_limits_assumptions_boundaries_open_problems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M13 limits, assumptions, open problems
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M14_cognitive_operating_system_%28COS%29_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M14 COS architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/M15_comparative_framework_and_safety_guarantees_llm_based_systems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M15 comparative framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-architectural-position-inside-arvis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Architectural position inside ARVIS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Design principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Design principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-kernel-first-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Kernel-first design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-layer-separation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Layer separation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-determinism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Determinism
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-explicit-failure-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Explicit failure semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-module-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Module layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-core-vfs-domain-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Core VFS domain model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Core VFS domain model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-vfsitemtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 VFSItemType
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-vfsitem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 VFSItem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-vfs-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. VFS exceptions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. VFS exceptions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-base-exception" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Base exception
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-concrete-vfs-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Concrete VFS exceptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-repository-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Repository contract
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Repository contract">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-contract-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Contract role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-required-repository-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Required repository methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-current-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Current implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-repository-migration-010b2-to-010b3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 Repository migration (0.1.0b2 to 0.1.0b3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-in-memory-repository-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. In-memory repository baseline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. In-memory repository baseline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-storage-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Storage model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-repository-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Repository guarantees
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-id-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 ID generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-vfs-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. VFS service
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. VFS service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-public-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Public methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-name-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Name normalization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-parent-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 Parent validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-name-uniqueness-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5 Name uniqueness invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#106-delete-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.6 Delete invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#107-rename-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.7 Rename invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#108-move-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.8 Move invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#109-creation-inheritance-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.9 Creation inheritance invariant
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-tree-projection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Tree projection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Tree projection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-vfstreenode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 VFSTreeNode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-build_vfs_tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 build_vfs_tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-ordering-guarantee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 Ordering guarantee
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-zip-subsystem-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. ZIP subsystem overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. ZIP subsystem overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-major-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 Major components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-two-phase-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 Two-phase model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-zip-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. ZIP models
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. ZIP models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-zipnode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 ZipNode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-zipcollision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 ZipCollision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133-zipcollisionreport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 ZipCollisionReport
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#134-zip-plan-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.4 ZIP plan models
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-zip-security-guard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. ZIP security guard
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. ZIP security guard">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-current-security-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 Current security checks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-blocked-extension-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 Blocked extension baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#144-security-configuration-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.4 Security configuration model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-zip-safe-reader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. ZIP safe reader
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. ZIP safe reader">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 Guarantees
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153-public-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 Public API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#154-entry-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.4 Entry model
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-zip-analyzer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. ZIP analyzer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. ZIP analyzer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-important-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 Important invariants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163-supported-file-types-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 Supported file types baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#164-guard-injection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.4 Guard injection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-zip-collision-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. ZIP collision detection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="17. ZIP collision detection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#171-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#172-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.2 Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#173-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17.3 Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-zip-plan-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. ZIP plan service
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="18. ZIP plan service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#181-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#182-supported-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.2 Supported actions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#183-current-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.3 Current semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#184-current-syscall-exposure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.4 Current syscall exposure
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-zip-executor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. ZIP executor
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="19. ZIP executor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#191-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.1 Role
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#192-current-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.2 Current behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#193-result-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.3 Result shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#194-v1-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19.4 V1 note
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-zip-ingest-orchestration-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. ZIP ingest orchestration service
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="20. ZIP ingest orchestration service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#201-zipingestdecision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.1 ZipIngestDecision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#202-zipingestservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.2 ZipIngestService
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="20.2 ZipIngestService">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#public-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#203-dry-run-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.3 Dry-run phase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#204-execution-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.4 Execution phase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#205-convenience-execution-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.5 Convenience execution path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#206-zip-execution-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20.6 ZIP execution exceptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-kernel-service-registry-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Kernel service registry integration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="21. Kernel service registry integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#211-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21.1 Purpose
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212-current-registry-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21.2 Current registry fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213-architectural-benefit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21.3 Architectural benefit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-syscall-handler-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Syscall handler integration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="22. Syscall handler integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221-service-access-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22.1 Service access pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222-replay-policy-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22.2 Replay policy classification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="22.2 Replay policy classification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recompute
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#journal-only-replay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Journal-only replay
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#223-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22.3 Rationale
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-vfs-syscall-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. VFS syscall surface
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="23. VFS syscall surface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#231-read-syscalls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23.1 Read syscalls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="23.1 Read syscalls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vfslist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.list
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfsget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.get
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfstree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#232-write-syscalls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23.2 Write syscalls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="23.2 Write syscalls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vfscreate_folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.create_folder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfscreate_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.create_file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfsdelete_item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.delete_item
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfsrename_item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.rename_item
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfsmove_item" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.move_item
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#233-zip-syscalls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23.3 ZIP syscalls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="23.3 ZIP syscalls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vfszipanalyze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.zip.analyze
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfszipplan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.zip.plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfszipexecute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vfs.zip.execute
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-syscall-serialization-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Syscall serialization rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="24. Syscall serialization rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#241-vfs-item-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.1 VFS item serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#242-tree-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.2 Tree serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#243-zip-node-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.3 ZIP node serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#244-zip-decision-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.4 ZIP decision serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-syscall-error-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Syscall error mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="25. Syscall error mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#251-vfs-syscall-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25.1 VFS syscall error codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#252-zip-syscall-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25.2 ZIP syscall error codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#253-fallback-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25.3 Fallback behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-determinism-and-replay-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Determinism and replay notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="26. Determinism and replay notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#261-deterministic-tree-projection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26.1 Deterministic tree projection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#262-readwrite-syscall-distinction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26.2 Read/write syscall distinction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#263-zip-plan-purity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26.3 ZIP plan purity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#264-current-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26.4 Current limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-current-tested-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Current tested coverage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-known-implementation-gaps-and-future-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Known implementation gaps and future evolution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="28. Known implementation gaps and future evolution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#281-repository-backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.1 Repository backends
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#282-security-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.2 Security hardening
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#283-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.3 Permissions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#284-content-import-abstraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.4 Content import abstraction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#285-timeline-and-audit-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.5 Timeline and audit integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#286-action-layer-alignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28.6 Action layer alignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-normative-implementation-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Normative implementation guidance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-minimal-compliance-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Minimal compliance checklist
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="30. Minimal compliance checklist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-vfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core VFS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ZIP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syscalls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Syscalls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runtime-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="arvis-vfs-specification-v1">ARVIS VFS Specification V1</h1>
+<blockquote>
+<p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHALL</strong>, <strong>SHALL
+NOT</strong>, <strong>SHOULD</strong>, <strong>SHOULD NOT</strong>, <strong>RECOMMENDED</strong>, <strong>MAY</strong>, and
+<strong>OPTIONAL</strong> in this document are to be interpreted as described in
+<a href="https://www.rfc-editor.org/rfc/rfc2119">RFC 2119</a> and
+<a href="https://www.rfc-editor.org/rfc/rfc8174">RFC 8174</a> when, and only
+when, they appear in all capitals, as shown here.</p>
+</blockquote>
+<p><strong>Project:</strong> ARVIS<br />
+<strong>Subsystem:</strong> Kernel Core Virtual File System (VFS)<br />
+<strong>Version:</strong> V1<br />
+<strong>Status:</strong> Draft / implementation-aligned specification<br />
+<strong>Date:</strong> 2026-04-14</p>
+<hr />
+<h2 id="1-purpose">1. Purpose</h2>
+<p>This document defines the <strong>ARVIS kernel VFS subsystem</strong> as integrated during the current implementation cycle.</p>
+<p>The goal of this specification is to establish a stable reference for:</p>
+<ul>
+<li>the VFS kernel domain model,</li>
+<li>the VFS service invariants,</li>
+<li>the ZIP import sub-system,</li>
+<li>the syscall surface exposed by the kernel,</li>
+<li>deterministic behavior expectations,</li>
+<li>integration constraints for future backends and runtime layers.</li>
+</ul>
+<p>This is not an HTTP API specification and not an application-layer storage specification. It is a <strong>kernel-core subsystem specification</strong>.</p>
+<hr />
+<h2 id="2-scope">2. Scope</h2>
+<p>This V1 specification covers:</p>
+<ul>
+<li>logical files and folders,</li>
+<li>in-memory repository contract and baseline implementation,</li>
+<li>canonical tree projection,</li>
+<li>VFS domain exceptions,</li>
+<li>ZIP dry-run analysis,</li>
+<li>ZIP collision detection,</li>
+<li>ZIP planning,</li>
+<li>ZIP execution orchestration,</li>
+<li>VFS and ZIP syscalls,</li>
+<li>syscall service injection through the kernel service registry.</li>
+</ul>
+<p>This V1 does <strong>not</strong> define:</p>
+<ul>
+<li>HTTP routes,</li>
+<li>authentication or user identity verification,</li>
+<li>permissions / ACLs,</li>
+<li>persistent database or Qdrant-backed repository drivers,</li>
+<li>content encryption,</li>
+<li>semantic indexing,</li>
+<li>action journal persistence,</li>
+<li>full audit-trail semantics,</li>
+<li>distributed filesystem semantics.</li>
+</ul>
+<hr />
+<h2 id="3-architectural-position-inside-arvis">3. Architectural position inside ARVIS</h2>
+<p>The VFS is implemented as a <strong>kernel-core subsystem</strong> under:</p>
+<pre><code class="language-text">arvis/kernel_core/vfs/
+</code></pre>
+<p>It is exposed to the rest of the system primarily through:</p>
+<ul>
+<li>domain services,</li>
+<li>ZIP orchestration services,</li>
+<li>kernel syscalls.</li>
+</ul>
+<p>The VFS syscall layer lives under:</p>
+<pre><code class="language-text">arvis/kernel_core/syscalls/syscalls/vfs_syscalls.py
+</code></pre>
+<p>Runtime service injection is handled through:</p>
+<pre><code class="language-text">arvis/kernel_core/syscalls/service_registry.py
+</code></pre>
+<p>This keeps the syscall handler scalable and prevents constructor growth as additional subsystems are added.</p>
+<hr />
+<h2 id="4-design-principles">4. Design principles</h2>
+<h3 id="41-kernel-first-design">4.1 Kernel-first design</h3>
+<p>The VFS is defined as a pure kernel subsystem, not as a backend feature port.</p>
+<p>Consequences:</p>
+<ul>
+<li>no dependency on FastAPI,</li>
+<li>no dependency on backend application settings,</li>
+<li>no dependency on persistence drivers in the domain contract,</li>
+<li>explicit service boundaries,</li>
+<li>deterministic behaviors wherever possible.</li>
+</ul>
+<h3 id="42-layer-separation">4.2 Layer separation</h3>
+<p>The subsystem is split into the following layers:</p>
+<ol>
+<li>domain models,</li>
+<li>domain exceptions,</li>
+<li>repository contract,</li>
+<li>repository implementations,</li>
+<li>VFS domain service,</li>
+<li>tree projection,</li>
+<li>ZIP models and services,</li>
+<li>syscall exposure.</li>
+</ol>
+<h3 id="43-determinism">4.3 Determinism</h3>
+<p>The subsystem is designed to behave deterministically for equivalent logical input.</p>
+<p>This especially applies to:</p>
+<ul>
+<li>tree projection ordering,</li>
+<li>collision detection semantics,</li>
+<li>syscall result shapes,</li>
+<li>replay-policy classification.</li>
+</ul>
+<h3 id="44-explicit-failure-semantics">4.4 Explicit failure semantics</h3>
+<p>Domain errors are surfaced through explicit VFS and ZIP exception classes and mapped into syscall error codes.</p>
+<p>Fail-closed does not mean fail-opaque: refusing on the indeterminate case (an
+unexpected authorization failure denies) does not require erasing the nature of
+an EXPECTED condition for a legitimately entitled caller. An item that does not
+exist is a normal fact of the world, not an authorization failure, and is
+surfaced as its precise not-found code, not as an opaque refusal. Anti-enumeration
+is carried by the denied case, the only case where it applies (see 25.1).</p>
+<hr />
+<h2 id="5-module-layout">5. Module layout</h2>
+<p>Current kernel layout:</p>
+<pre><code class="language-text">arvis/kernel_core/vfs/
+├── exceptions.py
+├── models.py
+├── repositories/
+│   ├── __init__.py
+│   └── in_memory.py
+├── repository.py
+├── service.py
+├── tree.py
+└── zip/
+    ├── analyzer.py
+    ├── collision.py
+    ├── exceptions.py
+    ├── executor.py
+    ├── guard.py
+    ├── models.py
+    ├── plan.py
+    ├── reader.py
+    └── service.py
+</code></pre>
+<p>Syscall integration:</p>
+<pre><code class="language-text">arvis/kernel_core/syscalls/
+├── service_registry.py
+├── syscall_handler.py
+└── syscalls/
+    ├── tool_syscalls.py
+    └── vfs_syscalls.py
+</code></pre>
+<hr />
+<h2 id="6-core-vfs-domain-model">6. Core VFS domain model</h2>
+<h3 id="61-vfsitemtype">6.1 <code>VFSItemType</code></h3>
+<p>Defined values:</p>
+<ul>
+<li><code>"file"</code></li>
+<li><code>"folder"</code></li>
+</ul>
+<h3 id="62-vfsitem">6.2 <code>VFSItem</code></h3>
+<p><code>VFSItem</code> is the canonical logical item representation.</p>
+<p>Fields (in declaration order):</p>
+<ul>
+<li><code>item_id: str</code></li>
+<li><code>display_name: str</code></li>
+<li><code>item_type: VFSItemType</code></li>
+<li><code>parent_id: Optional[str]</code></li>
+<li><code>owner_id: str</code></li>
+<li><code>organization_id: Optional[str] = None</code></li>
+<li><code>mime: Optional[str] = None</code></li>
+<li><code>file_size: Optional[int] = None</code></li>
+<li><code>created_at: Optional[int] = None</code></li>
+<li><code>resource_scope: Optional[str] = None</code></li>
+</ul>
+<p><code>owner_id</code>, <code>organization_id</code> and <code>resource_scope</code> are the security-bearing
+fields consumed by the access layer (see ARVIS_ACCESS_SPEC_V1). <code>resource_scope</code>
+is an <strong>opaque</strong> token naming an area narrower than the organization; the kernel
+never parses it. It is declared <strong>last</strong> so that every positional constructor
+call written before scoped grants existed keeps producing the exact same object,
+while new callers pass the scope by keyword (audit A-01).</p>
+<p>Behavior helpers:</p>
+<ul>
+<li><code>is_file() -&gt; bool</code></li>
+<li><code>is_folder() -&gt; bool</code></li>
+</ul>
+<p>Reconstruction primitive:</p>
+<ul>
+<li><code>_with_changes(**changes) -&gt; VFSItem</code> returns a copy with only the named fields
+  changed, every other field <strong>preserved</strong>. A mutation states what it changes;
+  every security-bearing field it does not name is carried over unchanged. This
+  makes it structurally impossible to drop <code>owner_id</code>, <code>organization_id</code> or
+  <code>resource_scope</code> when reconstructing an item after a rename or a move (audit
+  A-02). It is private (leading underscore): an internal reconstruction
+  primitive, not part of the host integration surface. An unknown field name
+  raises rather than building a divergent object.</li>
+</ul>
+<h3 id="63-semantics">6.3 Semantics</h3>
+<p>A <code>VFSItem</code> is a <strong>logical node</strong>, not necessarily a persisted content object.</p>
+<p>A file item may exist without a content storage backend.</p>
+<p>A folder item is a namespace node.</p>
+<hr />
+<h2 id="7-vfs-exceptions">7. VFS exceptions</h2>
+<p>The VFS domain uses explicit exception types.</p>
+<h3 id="71-base-exception">7.1 Base exception</h3>
+<ul>
+<li><code>VFSError</code></li>
+</ul>
+<h3 id="72-concrete-vfs-exceptions">7.2 Concrete VFS exceptions</h3>
+<ul>
+<li><code>VFSItemNotFoundError</code></li>
+<li><code>VFSParentNotFoundError</code></li>
+<li><code>VFSParentNotFolderError</code></li>
+<li><code>VFSNameConflictError</code></li>
+<li><code>VFSFolderNotEmptyError</code></li>
+<li><code>VFSCycleError</code></li>
+<li><code>VFSInvalidNameError</code></li>
+<li><code>VFSInheritanceViolationError</code></li>
+<li><code>VFSInheritanceRollbackError</code></li>
+</ul>
+<h3 id="73-semantics">7.3 Semantics</h3>
+<p>These exceptions are domain-level failures used by the VFS service to signal
+invariant violations. Routine failures are mapped to stable VFS syscall error
+codes; inheritance failures are mapped to stable security-refusal reason codes
+(Section 25.1).</p>
+<hr />
+<h2 id="8-repository-contract">8. Repository contract</h2>
+<h3 id="81-contract-role">8.1 Contract role</h3>
+<p>The repository contract defines the persistence boundary for VFS items.</p>
+<p>The kernel service depends on the contract, not on a concrete backend.</p>
+<h3 id="82-required-repository-methods">8.2 Required repository methods</h3>
+<p>A VFS repository must provide:</p>
+<ul>
+<li><code>list_items(user_id: str) -&gt; list[VFSItem]</code></li>
+<li><code>get_item(user_id: str, item_id: str) -&gt; Optional[VFSItem]</code></li>
+<li><code>create_folder(user_id: str, name: str, parent_id: Optional[str], organization_id: Optional[str] = None, resource_scope: Optional[str] = None) -&gt; str</code></li>
+<li><code>create_file_item(user_id: str, name: str, parent_id: Optional[str], size: Optional[int], mime: Optional[str], organization_id: Optional[str] = None, resource_scope: Optional[str] = None) -&gt; str</code></li>
+<li><code>delete_item(user_id: str, item_id: str) -&gt; None</code></li>
+<li><code>rename_item(user_id: str, item_id: str, new_name: str) -&gt; None</code></li>
+<li><code>move_item(user_id: str, item_id: str, parent_id: Optional[str]) -&gt; None</code></li>
+</ul>
+<p>The two creation methods carry the inherited security context
+(<code>organization_id</code>, <code>resource_scope</code>) that the service derives from the parent
+and passes down (Section 10.9). Both parameters are optional and default to
+<code>None</code>, which is behaviour-neutral for an unscoped, personal creation. A
+repository written for <code>0.1.0b2</code> must be migrated to the new signature; the
+migration strategy is stated in Section 8.4. <code>VFSRepository</code> is not exported by
+<code>arvis.host_api</code>, so this evolution does not by itself change
+<code>HOST_API_VERSION</code>.</p>
+<p>The persistence adapter is part of the VFS trust boundary. For creation it
+MUST:</p>
+<ul>
+<li>persist the supplied <code>organization_id</code> and <code>resource_scope</code> atomically with
+  the new item;</li>
+<li>make the created item immediately readable through <code>get_item</code>;</li>
+<li>provide reliable <code>delete_item</code> and read-after-delete semantics for the
+  compensating rollback path.</li>
+</ul>
+<p><code>VFSService</code> verifies inheritance and refuses a mismatched result, but it cannot
+make an arbitrary external store transactional. A host repository that violates
+these obligations can retain a mis-scoped item even though the syscall caller is
+denied.</p>
+<h3 id="83-current-implementation">8.3 Current implementation</h3>
+<p>V1 ships with:</p>
+<ul>
+<li><code>InMemoryVFSRepository</code></li>
+</ul>
+<p>This is the baseline driver used for deterministic tests and kernel validation.</p>
+<h3 id="84-repository-migration-010b2-to-010b3">8.4 Repository migration (0.1.0b2 to 0.1.0b3)</h3>
+<p>The creation methods gained two optional parameters (<code>organization_id</code>,
+<code>resource_scope</code>). The service always passes them, so a repository written for
+the <code>0.1.0b2</code> signature raises <code>TypeError</code> even when both values are <code>None</code>.</p>
+<p>The retained strategy is explicit migration (no compatibility shim): a custom
+repository MUST adopt the new signature. The reference in-memory repository and
+any host repository (for example a VeraMem adapter) are updated to accept and
+stamp the two parameters. A contract test asserts the repository honours the
+inherited context, so a future divergence is caught rather than silently
+dropping scope. This keeps a single creation contract across all paths at the
+cost of a one-time migration for host-provided repositories.</p>
+<hr />
+<h2 id="9-in-memory-repository-baseline">9. In-memory repository baseline</h2>
+<h3 id="91-storage-model">9.1 Storage model</h3>
+<p>The in-memory repository stores VFS items in a bucket per user.</p>
+<p>Conceptually:</p>
+<ul>
+<li>top-level map keyed by <code>user_id</code></li>
+<li>inner map keyed by <code>item_id</code></li>
+</ul>
+<h3 id="92-repository-guarantees">9.2 Repository guarantees</h3>
+<p>The repository itself does <strong>not</strong> enforce all domain invariants.</p>
+<p>It is intentionally thin.</p>
+<p>The VFS service is responsible for:</p>
+<ul>
+<li>name validation,</li>
+<li>parent validation,</li>
+<li>collision detection,</li>
+<li>cycle prevention,</li>
+<li>folder non-empty checks.</li>
+</ul>
+<h3 id="93-id-generation">9.3 ID generation</h3>
+<p>The baseline implementation uses UUIDs for item creation.</p>
+<p>This is acceptable for V1 because deterministic ordering in tree projection relies on explicit sorting, not insertion order.</p>
+<hr />
+<h2 id="10-vfs-service">10. VFS service</h2>
+<h3 id="101-role">10.1 Role</h3>
+<p><code>VFSService</code> is the authoritative domain service for logical filesystem mutations and reads.</p>
+<h3 id="102-public-methods">10.2 Public methods</h3>
+<p>Current service surface:</p>
+<ul>
+<li><code>list_items(user_id)</code></li>
+<li><code>get_item(user_id, item_id)</code></li>
+<li><code>create_folder(user_id, name, parent_id)</code></li>
+<li><code>create_file_item(user_id, name, parent_id, size, mime)</code></li>
+<li><code>delete_item(user_id, item_id)</code></li>
+<li><code>rename_item(user_id, item_id, new_name)</code></li>
+<li><code>move_item(user_id, item_id, parent_id)</code></li>
+</ul>
+<p>The service creation methods deliberately do NOT accept an explicit
+<code>organization_id</code> or <code>resource_scope</code>: the parent is authoritative. The service
+derives the inherited context from it, imposes it on the repository call and
+verifies the created item carries it (Section 10.9). This makes creation
+inheritance a single, centralized invariant that every creation path, including
+ZIP import, obtains without passing anything.</p>
+<h3 id="103-name-normalization">10.3 Name normalization</h3>
+<p>All item names are normalized with <code>strip()</code>.</p>
+<p>If the normalized name is empty, the service raises:</p>
+<ul>
+<li><code>VFSInvalidNameError</code></li>
+</ul>
+<h3 id="104-parent-validation">10.4 Parent validation</h3>
+<p>If a <code>parent_id</code> is provided:</p>
+<ul>
+<li>the parent must exist,</li>
+<li>the parent must be a folder.</li>
+</ul>
+<p>Failures map to:</p>
+<ul>
+<li><code>VFSParentNotFoundError</code></li>
+<li><code>VFSParentNotFolderError</code></li>
+</ul>
+<h3 id="105-name-uniqueness-invariant">10.5 Name uniqueness invariant</h3>
+<p>Within a given parent folder, item names are globally unique.</p>
+<p>This means the following is forbidden in the same parent:</p>
+<ul>
+<li>file <code>note</code></li>
+<li>folder <code>note</code></li>
+</ul>
+<p>Any collision raises:</p>
+<ul>
+<li><code>VFSNameConflictError</code></li>
+</ul>
+<h3 id="106-delete-invariant">10.6 Delete invariant</h3>
+<p>Deleting a file is allowed if the file exists.</p>
+<p>Deleting a folder is allowed only if the folder is empty.</p>
+<p>If the folder contains children, the service raises:</p>
+<ul>
+<li><code>VFSFolderNotEmptyError</code></li>
+</ul>
+<h3 id="107-rename-invariant">10.7 Rename invariant</h3>
+<p>Renaming an item preserves:</p>
+<ul>
+<li>its identity,</li>
+<li>its type,</li>
+<li>its parent,</li>
+<li>its owner, organization and resource scope,</li>
+<li>its metadata except display name.</li>
+</ul>
+<p>A rename must not create a same-parent conflict. Preservation of the
+security-bearing fields is guaranteed by reconstructing through
+<code>_with_changes(display_name=...)</code>, which changes only the name (audit A-02).</p>
+<h3 id="108-move-invariant">10.8 Move invariant</h3>
+<p>Moving an item requires:</p>
+<ul>
+<li>target parent exists if provided,</li>
+<li>target parent is a folder,</li>
+<li>no name conflict in the target parent,</li>
+<li>the item's owner, organization and resource scope are preserved (a plain move
+  changes only the parent).</li>
+</ul>
+<p>For folders, moving into self or a descendant is forbidden.</p>
+<p>Such invalid moves raise:</p>
+<ul>
+<li><code>VFSCycleError</code></li>
+</ul>
+<p>Governance of a move is defined at the syscall surface (Section 23.2): a plain
+move stays inside a single governed area. A move that would cross organization
+or scope, or write into a parent the caller may not write, is refused before any
+mutation. See <code>vfs.move_item</code>.</p>
+<h3 id="109-creation-inheritance-invariant">10.9 Creation inheritance invariant</h3>
+<p>A newly created item inherits its parent's security context:</p>
+<ul>
+<li>creating under a parent, the new item MUST carry the parent's
+  <code>organization_id</code> and <code>resource_scope</code>;</li>
+<li>creating at the root (no parent) inherits nothing: the item is unscoped, the
+  historical behaviour.</li>
+</ul>
+<p>This inheritance is a <strong>governed invariant centralized in <code>VFSService</code></strong>, the
+common boundary of every creation path (unit creation and ZIP import alike). The
+service derives the parent's context, imposes it on the repository call, and
+then reads the actual persisted item back and VERIFIES it carries the inherited
+context. A missing read-after-create result is indeterminate and MUST NOT be
+replaced by a synthetic item. An unreadable or non-conforming item is deleted,
+the deletion is verified by read-after-delete, and
+<code>VFSInheritanceViolationError</code> is raised; the syscall body maps it to a
+fail-closed security refusal.</p>
+<p>If deletion fails or the item remains readable,
+<code>VFSInheritanceRollbackError</code> is raised and the syscall returns the distinct
+<code>inheritance_rollback_failed</code> refusal. This path is observable rather than
+silently swallowed, but it cannot erase data from a non-conforming external
+store by force. The host repository therefore remains part of the persistence
+trust boundary and MUST provide the atomicity and rollback semantics in Section
+8.2. Placing the invariant in the service (rather than in each syscall body) is
+what closes the ZIP path, which reaches the service directly without going
+through a creation syscall.</p>
+<hr />
+<h2 id="11-tree-projection">11. Tree projection</h2>
+<h3 id="111-vfstreenode">11.1 <code>VFSTreeNode</code></h3>
+<p>Tree projection uses <code>VFSTreeNode</code>:</p>
+<ul>
+<li><code>item: VFSItem</code></li>
+<li><code>children: list[VFSTreeNode]</code></li>
+</ul>
+<p>This is a derived structure only.</p>
+<p>It is:</p>
+<ul>
+<li>not persisted,</li>
+<li>not indexed,</li>
+<li>not canonical storage.</li>
+</ul>
+<h3 id="112-build_vfs_tree">11.2 <code>build_vfs_tree</code></h3>
+<p><code>build_vfs_tree(items)</code> constructs a stable tree projection from flat VFS items.</p>
+<h3 id="113-ordering-guarantee">11.3 Ordering guarantee</h3>
+<p>Tree nodes are sorted deterministically using this order:</p>
+<ol>
+<li>folders before files,</li>
+<li>case-insensitive display name,</li>
+<li>item id as final tie-breaker.</li>
+</ol>
+<p>This deterministic sort is required for:</p>
+<ul>
+<li>reproducible projections,</li>
+<li>stable syscalls,</li>
+<li>replay-friendly behavior.</li>
+</ul>
+<hr />
+<h2 id="12-zip-subsystem-overview">12. ZIP subsystem overview</h2>
+<p>The ZIP subsystem is a VFS-adjacent kernel service used to safely analyze and import ZIP archives.</p>
+<h3 id="121-major-components">12.1 Major components</h3>
+<ul>
+<li><code>ZipGuard</code></li>
+<li><code>ZipSafeReader</code></li>
+<li><code>ZipAnalyzer</code></li>
+<li><code>ZipCollisionService</code></li>
+<li><code>ZipImportPlanService</code></li>
+<li><code>ZipExecutor</code></li>
+<li><code>ZipIngestService</code></li>
+</ul>
+<h3 id="122-two-phase-model">12.2 Two-phase model</h3>
+<p>ZIP import is intentionally split into two phases:</p>
+<ol>
+<li><strong>dry-run phase</strong></li>
+<li>archive validation,</li>
+<li>ZIP tree analysis,</li>
+<li>
+<p>VFS collision detection.</p>
+</li>
+<li>
+<p><strong>execution phase</strong></p>
+</li>
+<li>optional user plan application,</li>
+<li>logical VFS creation,</li>
+<li>optional content ingestion behavior through executor integration.</li>
+</ol>
+<p>This separation is a core invariant of the subsystem.</p>
+<hr />
+<h2 id="13-zip-models">13. ZIP models</h2>
+<h3 id="131-zipnode">13.1 <code>ZipNode</code></h3>
+<p><code>ZipNode</code> is the logical in-memory representation of a ZIP tree entry.</p>
+<p>Fields:</p>
+<ul>
+<li><code>name: str</code></li>
+<li><code>node_type: Literal["file", "folder"]</code></li>
+<li><code>parent: Optional[ZipNode] = None</code></li>
+<li><code>children: list[ZipNode] = []</code></li>
+<li><code>size: Optional[int] = None</code></li>
+<li><code>extension: Optional[str] = None</code></li>
+<li><code>supported: Optional[bool] = None</code></li>
+<li><code>reason: Optional[str] = None</code></li>
+<li><code>zip_path: Optional[str] = None</code></li>
+</ul>
+<p>Helpers:</p>
+<ul>
+<li><code>is_file()</code></li>
+<li><code>is_folder()</code></li>
+<li><code>add_child(child)</code></li>
+<li><code>iter_tree()</code></li>
+<li><code>full_path_debug()</code></li>
+</ul>
+<h3 id="132-zipcollision">13.2 <code>ZipCollision</code></h3>
+<p>Represents a single conflict between a ZIP node and an existing VFS item.</p>
+<p>Fields:</p>
+<ul>
+<li><code>zip_node: ZipNode</code></li>
+<li><code>vfs_item: VFSItem</code></li>
+<li><code>reason: ZipCollisionReason</code></li>
+</ul>
+<p>Current reasons:</p>
+<ul>
+<li><code>already_exists</code></li>
+<li><code>parent_is_file</code></li>
+</ul>
+<h3 id="133-zipcollisionreport">13.3 <code>ZipCollisionReport</code></h3>
+<p>Fields:</p>
+<ul>
+<li><code>has_conflicts: bool</code></li>
+<li><code>collisions: list[ZipCollision]</code></li>
+</ul>
+<h3 id="134-zip-plan-models">13.4 ZIP plan models</h3>
+<p>Current kernel ZIP plan types are defined in <code>zip.models</code>.</p>
+<p>They include:</p>
+<ul>
+<li><code>ZipImportPlan</code></li>
+<li><code>ZipImportPlanEntry</code></li>
+</ul>
+<p>Supported plan actions are:</p>
+<ul>
+<li><code>import</code></li>
+<li><code>skip</code></li>
+<li><code>rename</code></li>
+</ul>
+<hr />
+<h2 id="14-zip-security-guard">14. ZIP security guard</h2>
+<h3 id="141-role">14.1 Role</h3>
+<p><code>ZipGuard</code> is the first security boundary for archive analysis.</p>
+<p>It validates archive-level and entry-level constraints before analysis proceeds.</p>
+<h3 id="142-current-security-checks">14.2 Current security checks</h3>
+<p>The guard rejects:</p>
+<ul>
+<li>missing archive path,</li>
+<li>non-file archive path,</li>
+<li>non-<code>.zip</code> extension,</li>
+<li>corrupted ZIP archive,</li>
+<li>empty archive,</li>
+<li>too many files,</li>
+<li>file entries larger than configured limits,</li>
+<li>excessive total uncompressed size,</li>
+<li>suspicious compression ratio,</li>
+<li>absolute paths,</li>
+<li>path traversal entries,</li>
+<li>blocked executable/script-like extensions.</li>
+</ul>
+<h3 id="143-blocked-extension-baseline">14.3 Blocked extension baseline</h3>
+<p>The current blocked extension set includes entries such as:</p>
+<ul>
+<li><code>.exe</code></li>
+<li><code>.dll</code></li>
+<li><code>.bat</code></li>
+<li><code>.cmd</code></li>
+<li><code>.sh</code></li>
+<li><code>.js</code></li>
+<li><code>.jar</code></li>
+<li><code>.py</code></li>
+<li><code>.php</code></li>
+<li><code>.pl</code></li>
+<li><code>.rb</code></li>
+<li><code>.so</code></li>
+<li><code>.bin</code></li>
+</ul>
+<h3 id="144-security-configuration-model">14.4 Security configuration model</h3>
+<p>V1 uses environment-backed constants inside the guard implementation.</p>
+<p>This is acceptable for the current implementation, but the preferred future direction is a dedicated ARVIS-side configuration object for ZIP guard limits.</p>
+<hr />
+<h2 id="15-zip-safe-reader">15. ZIP safe reader</h2>
+<h3 id="151-role">15.1 Role</h3>
+<p><code>ZipSafeReader</code> provides secure, non-extractive archive access.</p>
+<h3 id="152-guarantees">15.2 Guarantees</h3>
+<p>It guarantees:</p>
+<ul>
+<li>no extraction to disk,</li>
+<li>normalized relative POSIX paths,</li>
+<li>rejection of absolute paths,</li>
+<li>rejection of path traversal,</li>
+<li>controlled binary file opening.</li>
+</ul>
+<h3 id="153-public-api">15.3 Public API</h3>
+<ul>
+<li><code>iter_entries()</code></li>
+<li><code>open_file(path)</code></li>
+<li>context manager support</li>
+</ul>
+<h3 id="154-entry-model">15.4 Entry model</h3>
+<p>The reader exposes <code>ZipEntry</code> with:</p>
+<ul>
+<li><code>path: str</code></li>
+<li><code>size: int</code></li>
+<li><code>is_dir: bool</code></li>
+</ul>
+<hr />
+<h2 id="16-zip-analyzer">16. ZIP analyzer</h2>
+<h3 id="161-role">16.1 Role</h3>
+<p><code>ZipAnalyzer</code> performs passive archive analysis and produces a logical <code>ZipNode</code> tree.</p>
+<h3 id="162-important-invariants">16.2 Important invariants</h3>
+<p>The analyzer must:</p>
+<ul>
+<li>perform no VFS writes,</li>
+<li>perform no ingest execution,</li>
+<li>avoid disk extraction,</li>
+<li>mark supported and unsupported files,</li>
+<li>produce a virtual root node named <code>/</code>.</li>
+</ul>
+<h3 id="163-supported-file-types-baseline">16.3 Supported file types baseline</h3>
+<p>The current supported extension set includes:</p>
+<ul>
+<li><code>.pdf</code></li>
+<li><code>.txt</code></li>
+<li><code>.md</code></li>
+<li><code>.png</code></li>
+<li><code>.jpg</code></li>
+<li><code>.jpeg</code></li>
+<li><code>.docx</code></li>
+<li><code>.xlsx</code></li>
+<li><code>.pptx</code></li>
+</ul>
+<p>Unsupported files remain represented in the tree but are marked with:</p>
+<ul>
+<li><code>supported = False</code></li>
+<li><code>reason = "unsupported_file_type"</code></li>
+</ul>
+<p>The executor APPLIES this verdict (campaign HARDEN, DM-H3): the VFS
+item for an unsupported entry is created so the tree stays faithful,
+but its content is never handed to the content importer, and the skip
+is recorded in <code>skipped_files</code> under the analyzer's reason.</p>
+<h3 id="164-guard-injection">16.4 Guard injection</h3>
+<p>The security guard is ALWAYS constructed; no environment variable and
+no runtime mode can remove it (campaign KERNEL removed the historical
+<code>ENV=test</code> bypass as a security defect, fixed in 0.1.0b6 and covered
+by its advisory). A test or a caller that needs different limits
+injects a configured <code>ZipGuard</code> at the call site; the ingestion
+limits themselves are ambient configuration, resolved lazily and
+validated at guard construction (see <code>docs/CONFIGURATION.md</code>).</p>
+<hr />
+<h2 id="17-zip-collision-detection">17. ZIP collision detection</h2>
+<h3 id="171-role">17.1 Role</h3>
+<p><code>ZipCollisionService</code> detects logical conflicts between a ZIP import tree and the current VFS state.</p>
+<h3 id="172-behavior">17.2 Behavior</h3>
+<p>The service:</p>
+<ul>
+<li>loads existing VFS items for the user,</li>
+<li>indexes them by parent/name,</li>
+<li>walks the ZIP tree,</li>
+<li>reports conflicts where an item already exists in the target parent,</li>
+<li>reports invalid parent states where a ZIP subtree would descend into a file.</li>
+</ul>
+<h3 id="173-output">17.3 Output</h3>
+<p>The output is always a <code>ZipCollisionReport</code>.</p>
+<hr />
+<h2 id="18-zip-plan-service">18. ZIP plan service</h2>
+<h3 id="181-role">18.1 Role</h3>
+<p><code>ZipImportPlanService</code> applies an explicit user plan to a <code>ZipNode</code> tree before execution.</p>
+<h3 id="182-supported-actions">18.2 Supported actions</h3>
+<ul>
+<li><code>import</code>: keep the file unchanged,</li>
+<li><code>skip</code>: remove the file from the effective import tree,</li>
+<li><code>rename</code>: rename the file before execution.</li>
+</ul>
+<h3 id="183-current-semantics">18.3 Current semantics</h3>
+<p>The current plan service acts on file nodes and leaves the virtual root intact.</p>
+<p>For rename actions:</p>
+<ul>
+<li><code>new_name</code> is required,</li>
+<li><code>/</code> and <code>\\</code> are forbidden in the new name,</li>
+<li>duplicate rename targets are rejected.</li>
+</ul>
+<h3 id="184-current-syscall-exposure">18.4 Current syscall exposure</h3>
+<p>The V1 syscall layer now includes:</p>
+<ul>
+<li><code>vfs.zip.plan</code></li>
+</ul>
+<p>Its job is to apply a user-provided plan to a serialized ZIP root and return a transformed serialized ZIP root.</p>
+<p>This syscall is <strong>purely structural</strong> and does not execute VFS writes.</p>
+<hr />
+<h2 id="19-zip-executor">19. ZIP executor</h2>
+<h3 id="191-role">19.1 Role</h3>
+<p><code>ZipExecutor</code> performs the actual import after analysis and optional planning.</p>
+<h3 id="192-current-behavior">19.2 Current behavior</h3>
+<p>The executor:</p>
+<ul>
+<li>traverses the effective ZIP tree,</li>
+<li>creates folders in the VFS,</li>
+<li>creates files in the VFS,</li>
+<li>delegates file ingestion through the configured ingest integration where applicable,</li>
+<li>returns a structured result summary.</li>
+</ul>
+<h3 id="193-result-shape">19.3 Result shape</h3>
+<p>Current result payload shape is dictionary-based and includes:</p>
+<ul>
+<li><code>status</code></li>
+<li><code>imported_files</code></li>
+<li><code>skipped_files</code></li>
+<li><code>created_items</code></li>
+</ul>
+<h3 id="194-v1-note">19.4 V1 note</h3>
+<p>The executor remains the most infrastructure-sensitive part of the ZIP subsystem and is a likely evolution point for future driver abstraction.</p>
+<hr />
+<h2 id="20-zip-ingest-orchestration-service">20. ZIP ingest orchestration service</h2>
+<h3 id="201-zipingestdecision">20.1 <code>ZipIngestDecision</code></h3>
+<p>The dry-run result model contains:</p>
+<ul>
+<li><code>status: str</code> where expected values are <code>ready</code>, <code>conflict</code>, <code>rejected</code></li>
+<li><code>zip_root: Optional[ZipNode]</code></li>
+<li><code>collisions: Optional[ZipCollisionReport]</code></li>
+<li><code>reason: Optional[str]</code></li>
+</ul>
+<h3 id="202-zipingestservice">20.2 <code>ZipIngestService</code></h3>
+<p>This service orchestrates the ZIP lifecycle.</p>
+<h4 id="public-methods">Public methods</h4>
+<ul>
+<li><code>analyze_and_validate(...) -&gt; ZipIngestDecision</code></li>
+<li><code>execute_import(...) -&gt; dict</code></li>
+<li><code>execute_from_path(...) -&gt; dict</code></li>
+</ul>
+<h3 id="203-dry-run-phase">20.3 Dry-run phase</h3>
+<p><code>analyze_and_validate</code>:</p>
+<ol>
+<li>analyzes the ZIP,</li>
+<li>detects collisions,</li>
+<li>returns one of:</li>
+<li><code>ready</code></li>
+<li><code>conflict</code></li>
+<li><code>rejected</code></li>
+</ol>
+<h3 id="204-execution-phase">20.4 Execution phase</h3>
+<p><code>execute_import</code>:</p>
+<ol>
+<li>optionally applies the plan,</li>
+<li>delegates execution to the ZIP executor.</li>
+</ol>
+<h3 id="205-convenience-execution-path">20.5 Convenience execution path</h3>
+<p><code>execute_from_path</code>:</p>
+<ol>
+<li>runs dry-run validation,</li>
+<li>raises a ZIP domain exception on invalid state,</li>
+<li>executes the import when ready.</li>
+</ol>
+<h3 id="206-zip-execution-exceptions">20.6 ZIP execution exceptions</h3>
+<p>ZIP execution currently uses:</p>
+<ul>
+<li><code>ZipIngestError</code></li>
+<li><code>ZipRejectedError</code></li>
+<li><code>ZipConflictError</code></li>
+</ul>
+<hr />
+<h2 id="21-kernel-service-registry-integration">21. Kernel service registry integration</h2>
+<h3 id="211-purpose">21.1 Purpose</h3>
+<p>ARVIS now uses a <code>KernelServiceRegistry</code> to inject subsystem services into the syscall layer.</p>
+<h3 id="212-current-registry-fields">21.2 Current registry fields</h3>
+<p>The registry currently exposes:</p>
+<ul>
+<li><code>tool_executor</code></li>
+<li><code>tool_manager</code></li>
+<li><code>vfs_service</code></li>
+<li><code>zip_ingest_service</code></li>
+<li><code>llm_adapter</code></li>
+<li><code>authorization_service</code></li>
+<li><code>audit_intent_sink</code></li>
+<li><code>require_durable_intent_sink</code></li>
+</ul>
+<h3 id="213-architectural-benefit">21.3 Architectural benefit</h3>
+<p>This avoids constructor growth in <code>SyscallHandler</code> and provides a scalable pattern for future kernel subsystems.</p>
+<p>Future services can be added without changing the syscall handler signature each time.</p>
+<hr />
+<h2 id="22-syscall-handler-integration">22. Syscall handler integration</h2>
+<h3 id="221-service-access-pattern">22.1 Service access pattern</h3>
+<p>VFS syscalls resolve services through:</p>
+<ul>
+<li><code>handler.services.vfs_service</code></li>
+<li><code>handler.services.zip_ingest_service</code></li>
+</ul>
+<h3 id="222-replay-policy-classification">22.2 Replay policy classification</h3>
+<p>The syscall handler currently classifies replay policies as follows:</p>
+<h4 id="recompute">Recompute</h4>
+<ul>
+<li><code>vfs.list</code></li>
+<li><code>vfs.tree</code></li>
+<li><code>vfs.zip.analyze</code></li>
+</ul>
+<p>These are treated as recomputable read-like syscalls.</p>
+<h4 id="journal-only-replay">Journal-only replay</h4>
+<p>Any <code>vfs.*</code> syscall not in the recompute set is treated as a mutating syscall and classified as:</p>
+<ul>
+<li><code>journal_only_replay</code></li>
+</ul>
+<p>This includes write syscalls and ZIP execution/planning syscalls.</p>
+<h3 id="223-rationale">22.3 Rationale</h3>
+<p>This policy preserves replay safety by distinguishing:</p>
+<ul>
+<li>read-side structural recomputation,</li>
+<li>state-mutating operations that should be journal-driven.</li>
+</ul>
+<hr />
+<h2 id="23-vfs-syscall-surface">23. VFS syscall surface</h2>
+<h3 id="231-read-syscalls">23.1 Read syscalls</h3>
+<h4 id="vfslist"><code>vfs.list</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>user_id</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>serialized list of VFS items</li>
+</ul>
+<blockquote>
+<p>Governance: the caller's own scope is authorized at the syscall boundary, then
+<strong>every</strong> returned item is evaluated against the full policy (owner,
+organization, resource scope). Only items the caller may access survive; an
+item whose evaluation errors is excluded, never included by default, and the
+result is never widened.</p>
+</blockquote>
+<h4 id="vfsget"><code>vfs.get</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>user_id</code></li>
+<li><code>item_id</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>serialized VFS item</li>
+</ul>
+<blockquote>
+<p>Governance (single-read): the access resolver reads the item once, to
+authorize against its real owner, organization and scope, and hands that same
+item to the body, which returns it WITHOUT a second read. What is authorized
+is exactly what is returned. This closes a read time-of-check/time-of-use gap
+at its root: a body that re-read could receive, from a live store, a different
+resource than the one authorized. If the resolver's read raised an expected
+not-found, the body maps the precise code without re-reading, so a retry can
+never surface a foreign resource.</p>
+</blockquote>
+<h4 id="vfstree"><code>vfs.tree</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>user_id</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>serialized deterministic VFS tree</li>
+</ul>
+<blockquote>
+<p>Governance: the flat item list is filtered through the full policy BEFORE the
+tree is built, so no forbidden node is ever materialized. A covered item whose
+parent is filtered out surfaces as a root (its own coverage stands); the
+forbidden parent is never revealed.</p>
+</blockquote>
+<h3 id="232-write-syscalls">23.2 Write syscalls</h3>
+<blockquote>
+<p>Governance (mutation atomicity is the store's responsibility): a write syscall
+first resolves and authorizes an EXISTING target's current labels (owner,
+organization, scope), then asks the service to mutate BY ID. ARVIS is a
+governance kernel, not a transactional engine: it does not, and cannot, make
+that store-level mutation atomic with the successful authorization read,
+because the store stays live between the two and ARVIS does not own it. A host
+that requires strict serializability (the target's labels cannot change
+between authorization and mutation) MUST provide it in its repository,
+through a compare-and-swap on the labels or an equivalent transaction. This
+is deliberately NOT faked at the kernel level: passing a pre-read in-memory
+snapshot to the mutation would only displace the window while creating a
+false assurance of atomicity.</p>
+<p>An authorization-time EXPECTED ABSENCE is different: it is a terminal lookup
+outcome, not permission to act on an item that may appear later. Every VFS
+body consumes the carried error and returns its precise public code WITHOUT
+touching the service. Thus "absent during authorization, present during
+dispatch" never reaches create, delete, rename, move, ZIP analysis or ZIP
+execution. Store atomicity is required only after a real target was found and
+authorized.</p>
+</blockquote>
+<h4 id="vfscreate_folder"><code>vfs.create_folder</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>user_id</code></li>
+<li><code>name</code></li>
+<li><code>parent_id: Optional[str]</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>serialized created VFS item</li>
+</ul>
+<blockquote>
+<p>Governance (inheritance): the parent defines the child's security context. The
+parent is resolved (the caller's write access to it is already governed), its
+organization and scope are imposed as a constraint passed to the service, and
+the created item is then verified to carry them; a non-conforming item is
+rolled back and the creation refused. Creation at the root inherits nothing and
+stays unscoped.</p>
+</blockquote>
+<h4 id="vfscreate_file"><code>vfs.create_file</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>user_id</code></li>
+<li><code>name</code></li>
+<li><code>parent_id: Optional[str]</code></li>
+<li><code>size: Optional[int]</code></li>
+<li><code>mime: Optional[str]</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>serialized created VFS item</li>
+</ul>
+<h4 id="vfsdelete_item"><code>vfs.delete_item</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>user_id</code></li>
+<li><code>item_id</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>deletion summary payload</li>
+</ul>
+<h4 id="vfsrename_item"><code>vfs.rename_item</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>user_id</code></li>
+<li><code>item_id</code></li>
+<li><code>new_name</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>serialized updated VFS item</li>
+</ul>
+<h4 id="vfsmove_item"><code>vfs.move_item</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>user_id</code></li>
+<li><code>item_id</code></li>
+<li><code>parent_id: Optional[str]</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>serialized updated VFS item</li>
+</ul>
+<blockquote>
+<p>Governance (both sides): before any mutation, the source and the destination
+parent are read. The move is refused, with no partial mutation, if the caller
+may not write into the destination parent, if source and destination differ in
+organization or scope (compared by opaque equality; the kernel never parses a
+scope), if a scoped item would be moved to the unscoped root, or if the source
+or destination is indeterminate. A cross-scope transfer is not an ordinary
+move; it would be a separate, explicitly governed capability.</p>
+</blockquote>
+<h3 id="233-zip-syscalls">23.3 ZIP syscalls</h3>
+<h4 id="vfszipanalyze"><code>vfs.zip.analyze</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>zip_path</code></li>
+<li><code>user_id</code></li>
+<li><code>target_parent_id: Optional[str]</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>serialized <code>ZipIngestDecision</code></li>
+</ul>
+<h4 id="vfszipplan"><code>vfs.zip.plan</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>zip_root</code> (serialized ZIP root)</li>
+<li><code>plan</code> (serialized ZIP import plan or typed plan)</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>transformed serialized ZIP root</li>
+</ul>
+<p>Semantics:</p>
+<ul>
+<li>no VFS write,</li>
+<li>no archive re-read required,</li>
+<li>pure structural transformation.</li>
+</ul>
+<h4 id="vfszipexecute"><code>vfs.zip.execute</code></h4>
+<p>Arguments:</p>
+<ul>
+<li><code>zip_path</code></li>
+<li><code>user_id</code></li>
+<li><code>target_parent_id: Optional[str]</code></li>
+<li><code>keep_zip: bool = False</code> (accepted no-op since campaign HARDEN,
+  DM-H1: the import never deletes the host source archive; the
+  parameter is kept so signatures do not break)</li>
+<li><code>plan: Optional[ZipImportPlan]</code></li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>structured execution result dictionary</li>
+</ul>
+<hr />
+<h2 id="24-syscall-serialization-rules">24. Syscall serialization rules</h2>
+<h3 id="241-vfs-item-serialization">24.1 VFS item serialization</h3>
+<p>A VFS item is serialized as:</p>
+<ul>
+<li><code>item_id</code></li>
+<li><code>display_name</code></li>
+<li><code>item_type</code></li>
+<li><code>parent_id</code></li>
+<li><code>mime</code></li>
+<li><code>file_size</code></li>
+<li><code>created_at</code></li>
+</ul>
+<h3 id="242-tree-serialization">24.2 Tree serialization</h3>
+<p>A tree node is serialized as:</p>
+<ul>
+<li><code>item</code></li>
+<li><code>children</code></li>
+</ul>
+<h3 id="243-zip-node-serialization">24.3 ZIP node serialization</h3>
+<p>A ZIP node is serialized with:</p>
+<ul>
+<li><code>name</code></li>
+<li><code>node_type</code></li>
+<li><code>size</code></li>
+<li><code>extension</code></li>
+<li><code>supported</code></li>
+<li><code>reason</code></li>
+<li><code>zip_path</code></li>
+<li><code>children</code></li>
+</ul>
+<h3 id="244-zip-decision-serialization">24.4 ZIP decision serialization</h3>
+<p>A ZIP decision is serialized with:</p>
+<ul>
+<li><code>status</code></li>
+<li><code>reason</code></li>
+<li><code>zip_root</code></li>
+<li><code>collisions</code></li>
+</ul>
+<hr />
+<h2 id="25-syscall-error-mapping">25. Syscall error mapping</h2>
+<h3 id="251-vfs-syscall-error-codes">25.1 VFS syscall error codes</h3>
+<p>After authorization has succeeded and a syscall body is dispatched, the syscall
+layer maps VFS exceptions to stable string codes:</p>
+<ul>
+<li><code>VFSItemNotFoundError</code> → <code>vfs_item_not_found</code></li>
+<li><code>VFSParentNotFoundError</code> → <code>vfs_parent_not_found</code></li>
+<li><code>VFSParentNotFolderError</code> → <code>vfs_parent_not_folder</code></li>
+<li><code>VFSNameConflictError</code> → <code>vfs_name_conflict</code></li>
+<li><code>VFSFolderNotEmptyError</code> → <code>vfs_folder_not_empty</code></li>
+<li><code>VFSCycleError</code> → <code>vfs_cycle_error</code></li>
+<li><code>VFSInvalidNameError</code> → <code>vfs_invalid_name</code></li>
+</ul>
+<p>Resolving an item or parent for authorization can itself fail, and the two kinds
+of failure are distinguished (fail-closed does not mean fail-opaque):</p>
+<ul>
+<li>an EXPECTED VFS condition (the item or parent does not exist, and the other
+  conditions above) is a terminal fact about the lookup, not indeterminate
+  infrastructure and not authority over a later resource. The resolver carries
+  it with a neutral decision context; every item/parent VFS body maps that SAME
+  condition to its precise code (<code>vfs_item_not_found</code>, ...) WITHOUT reading or
+  mutating the service. For a parent reference, a missing item lookup is
+  translated to the public <code>vfs_parent_not_found</code> code. A successful pure read
+  likewise returns the exact carried resource (single-read, see 23.1);</li>
+<li>an UNEXPECTED failure (a transient outage, proxy, cache, inconsistency) leaves
+  the authorization metadata indeterminate: it becomes <code>security_error</code> with
+  <code>reason_code=authorization_failure</code>, and the body is not dispatched.</li>
+</ul>
+<p>This preserves anti-enumeration WITHOUT erasing not-found: a principal without
+access to an EXISTING item is denied by the owner, organization and scope policy
+(<code>reason_code=access_denied</code>), indistinguishable from any other denial, so it
+can never tell "exists but forbidden" from "does not exist". The precise
+not-found code is only ever returned to a caller whose authorization would have
+succeeded had the item existed, i.e. one entitled to that scope, for whom the
+item's absence is not a secret.</p>
+<p>Creation inheritance violations are security refusals with
+<code>reason_code=inheritance_violation</code>; an unproved compensating rollback uses
+<code>reason_code=inheritance_rollback_failed</code>.</p>
+<p>Missing VFS service resolves to:</p>
+<ul>
+<li><code>no_vfs_service</code></li>
+</ul>
+<h3 id="252-zip-syscall-error-codes">25.2 ZIP syscall error codes</h3>
+<p>The syscall layer maps ZIP exceptions to:</p>
+<ul>
+<li><code>ZipRejectedError</code> → <code>zip_rejected</code></li>
+<li><code>ZipConflictError</code> → <code>zip_conflict</code></li>
+</ul>
+<p>Missing ZIP ingest service resolves to:</p>
+<ul>
+<li><code>no_zip_ingest_service</code></li>
+</ul>
+<h3 id="253-fallback-behavior">25.3 Fallback behavior</h3>
+<p>Unknown exceptions currently fall back to:</p>
+<ul>
+<li><code>"{ExceptionType}:{message}"</code></li>
+</ul>
+<p>This is acceptable in V1, though future versions may normalize these more aggressively.</p>
+<hr />
+<h2 id="26-determinism-and-replay-notes">26. Determinism and replay notes</h2>
+<h3 id="261-deterministic-tree-projection">26.1 Deterministic tree projection</h3>
+<p>Deterministic sorting in <code>build_vfs_tree</code> is a hard requirement.</p>
+<h3 id="262-readwrite-syscall-distinction">26.2 Read/write syscall distinction</h3>
+<p>Replay policy classification distinguishes read-like and write-like VFS syscalls.</p>
+<h3 id="263-zip-plan-purity">26.3 ZIP plan purity</h3>
+<p><code>vfs.zip.plan</code> is intentionally pure and should remain free of side effects.</p>
+<p>This makes it an important deterministic transformation point in the ZIP flow.</p>
+<h3 id="264-current-limits">26.4 Current limits</h3>
+<p>The in-memory repository uses UUID-based item ids, so exact ids are not reproducible across independent fresh runs. Determinism at V1 is therefore defined primarily around:</p>
+<ul>
+<li>invariant enforcement,</li>
+<li>ordering,</li>
+<li>structural results,</li>
+<li>syscall semantics.</li>
+</ul>
+<hr />
+<h2 id="27-current-tested-coverage">27. Current tested coverage</h2>
+<p>The subsystem is backed by dedicated tests under:</p>
+<pre><code class="language-text">tests/kernel_core/vfs/
+</code></pre>
+<p>Current coverage includes:</p>
+<ul>
+<li>VFS service,</li>
+<li>VFS tree projection,</li>
+<li>ZIP analyzer,</li>
+<li>ZIP collision detection,</li>
+<li>ZIP guard,</li>
+<li>ZIP planning,</li>
+<li>ZIP reader,</li>
+<li>ZIP service orchestration,</li>
+<li>VFS syscalls.</li>
+</ul>
+<p>The syscall handler integration is also covered in the kernel-core syscall test suite.</p>
+<hr />
+<h2 id="28-known-implementation-gaps-and-future-evolution">28. Known implementation gaps and future evolution</h2>
+<h3 id="281-repository-backends">28.1 Repository backends</h3>
+<p>Future versions may add:</p>
+<ul>
+<li>persistent SQL repository,</li>
+<li>Qdrant-backed metadata driver,</li>
+<li>object storage metadata bridge.</li>
+</ul>
+<h3 id="282-security-hardening">28.2 Security hardening</h3>
+<p>Future versions should formalize ZIP security configuration in a dedicated ARVIS config model rather than environment-backed constants embedded directly in the guard.</p>
+<h3 id="283-permissions">28.3 Permissions</h3>
+<p>No general permissions model exists in V1; access is governed by owner, organization and scope isolation (see above and ARVIS_ACCESS_SPEC_V1)</p>
+<blockquote>
+<p><strong>Host service obligations.</strong> The reference <code>VFSService</code> and in-memory
+repository implement the scope-isolation invariants (metadata preservation on
+rename and move, both-sided move governance, impose-and-verify creation
+inheritance). A host that supplies its own VFS service (arvis types it
+structurally, it is not part of <code>host_api</code>) MUST honour the same invariants:
+preserve the security-bearing fields on reconstruction, stamp the inherited
+organization and scope atomically on creation, and provide reliable
+delete/read-after-delete semantics. The kernel verifies creation inheritance,
+attempts and verifies rollback, and refuses the caller on every violation. A
+rollback it cannot prove is surfaced as <code>inheritance_rollback_failed</code>; the
+host must then quarantine or abort the affected persistence workflow because
+ARVIS cannot guarantee deletion from an arbitrary non-conforming store.
+Rename and move preservation likewise remain the host service's
+responsibility.</p>
+</blockquote>
+<h3 id="284-content-import-abstraction">28.4 Content import abstraction</h3>
+<p>The ZIP executor should likely evolve toward a cleaner content importer protocol with stricter interface boundaries.</p>
+<h3 id="285-timeline-and-audit-integration">28.5 Timeline and audit integration</h3>
+<p>The VFS currently integrates through syscall journaling and runtime event emission indirectly. A future version could add explicit VFS event models.</p>
+<h3 id="286-action-layer-alignment">28.6 Action layer alignment</h3>
+<p>A VFS action catalog does not exist yet (an earlier draft of this section asserted one did; the file it named was never in the repository). The <code>arvis/action/</code> layer is the natural place for future policy coupling, but action-policy integration is not part of V1.</p>
+<hr />
+<h2 id="29-normative-implementation-guidance">29. Normative implementation guidance</h2>
+<p>Any future implementation claiming compatibility with <strong>ARVIS VFS Specification V1</strong> should satisfy the following requirements:</p>
+<ol>
+<li>it must expose the VFS domain model and invariant behavior defined here,</li>
+<li>it must preserve same-parent unique naming,</li>
+<li>it must preserve folder non-empty deletion protection,</li>
+<li>it must preserve cycle prevention on folder moves,</li>
+<li>it must preserve deterministic tree ordering,</li>
+<li>it must expose the documented syscall semantics,</li>
+<li>it must provide the documented syscall error mappings or stricter equivalents,</li>
+<li>it must preserve the two-phase ZIP import model,</li>
+<li>it must preserve the purity of ZIP planning,</li>
+<li>it must not introduce hard dependencies from the kernel VFS domain to application HTTP frameworks.</li>
+</ol>
+<hr />
+<h2 id="30-minimal-compliance-checklist">30. Minimal compliance checklist</h2>
+<h3 id="core-vfs">Core VFS</h3>
+<ul>
+<li>[ ] <code>VFSItem</code> model implemented</li>
+<li>[ ] explicit VFS exception hierarchy implemented</li>
+<li>[ ] repository contract implemented</li>
+<li>[ ] same-parent unique naming enforced</li>
+<li>[ ] delete-folder-if-empty-only enforced</li>
+<li>[ ] cycle prevention on move enforced</li>
+<li>[ ] deterministic tree sort enforced</li>
+</ul>
+<h3 id="zip">ZIP</h3>
+<ul>
+<li>[ ] ZIP guard implemented</li>
+<li>[ ] ZIP safe reader implemented</li>
+<li>[ ] ZIP analyzer implemented</li>
+<li>[ ] ZIP collision detection implemented</li>
+<li>[ ] ZIP plan service implemented</li>
+<li>[ ] ZIP ingest service implemented</li>
+<li>[ ] ZIP execution service implemented</li>
+</ul>
+<h3 id="syscalls">Syscalls</h3>
+<ul>
+<li>[ ] <code>vfs.list</code></li>
+<li>[ ] <code>vfs.get</code></li>
+<li>[ ] <code>vfs.tree</code></li>
+<li>[ ] <code>vfs.create_folder</code></li>
+<li>[ ] <code>vfs.create_file</code></li>
+<li>[ ] <code>vfs.delete_item</code></li>
+<li>[ ] <code>vfs.rename_item</code></li>
+<li>[ ] <code>vfs.move_item</code></li>
+<li>[ ] <code>vfs.zip.analyze</code></li>
+<li>[ ] <code>vfs.zip.plan</code></li>
+<li>[ ] <code>vfs.zip.execute</code></li>
+</ul>
+<h3 id="runtime-integration">Runtime integration</h3>
+<ul>
+<li>[ ] service registry wiring in syscall handler</li>
+<li>[ ] replay policy classification present</li>
+<li>[ ] syscall results serializable</li>
+</ul>
+<hr />
+<h2 id="31-conclusion">31. Conclusion</h2>
+<p>The ARVIS VFS subsystem is now no longer a migration idea or a backend extraction draft. In V1 form, it exists as a real kernel-core subsystem with:</p>
+<ul>
+<li>a stable domain model,</li>
+<li>explicit invariants,</li>
+<li>a deterministic tree projection,</li>
+<li>a secure ZIP analysis path,</li>
+<li>a structured ZIP orchestration flow,</li>
+<li>a scalable syscall integration pattern through a service registry.</li>
+</ul>
+<p>This V1 forms a strong base for future work on:</p>
+<ul>
+<li>persistent drivers,</li>
+<li>audit and timeline enrichment,</li>
+<li>policy integration,</li>
+<li>permission models,</li>
+<li>cognitive document flows,</li>
+<li>broader ARVIS kernel resource semantics.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

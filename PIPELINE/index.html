@@ -1,0 +1,4771 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Deterministic runtime assurance for LLM-based systems: graded verdicts, hashed commitments, bit-identical replay.">
+      
+      
+      
+        <link rel="canonical" href="https://julien-lefauconnier.github.io/arvis/PIPELINE/">
+      
+      
+        <link rel="prev" href="../ARCHITECTURE_INVARIANTS/">
+      
+      
+        <link rel="next" href="../COGNITIVE_STATE/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Pipeline - ARVIS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#arvis-cognitive-pipeline" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ARVIS" class="md-header__button md-logo" aria-label="ARVIS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ARVIS
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Pipeline
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Julien-Lefauconnier/arvis" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Julien-Lefauconnier/arvis
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ARVIS" class="md-nav__button md-logo" aria-label="ARVIS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ARVIS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Julien-Lefauconnier/arvis" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Julien-Lefauconnier/arvis
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Start
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Start
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../WHY_ARVIS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why ARVIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../OVERVIEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIRST_REAL_CALL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fifteen minutes to a governed call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GETTING_STARTED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started (end to end)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GLOSSARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../COMPARISON/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison with guardrail tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PATH_TO_ALLOW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The path to ALLOW
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PERFORMANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AUTHORS_NOTE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Author's note
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The two public surfaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/arvis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    arvis (root)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/host_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    arvis.host_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE_INVARIANTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture invariants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Principle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logical-vs-physical-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logical vs Physical Execution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Logical vs Physical Execution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#logical-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logical (Pipeline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#physical-kernel-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Physical (Kernel Execution)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime Integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Contract
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pipeline Contract">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finalization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modular-pipeline-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modular Pipeline Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modular Pipeline Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#determinism-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Determinism Guarantees
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fail-safe-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fail-Safe Execution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tool-interaction-pre-cognitive-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool Interaction (Pre-Cognitive Layer)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tool Interaction (Pre-Cognitive Layer)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tool-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool Stages
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-by-stage-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage-by-Stage Specification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage-by-Stage Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-decision-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Decision Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-passive-context-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Passive Context Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-bundle-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Bundle Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-conflict-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Conflict Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-core-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Core Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-regime-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Regime Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-temporal-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Temporal Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-conflict-modulation-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Conflict Modulation Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-control-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Control Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-projection-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Projection Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#11-gate-stage-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Gate Stage (Critical)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-control-feedback-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Control Feedback Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-structural-risk-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Structural Risk Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-confirmation-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Confirmation Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-execution-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Execution Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-action-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Action Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-intent-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Intent Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-runtime-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Runtime Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-of-the-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output of the Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output of the Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#output-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boundary-with-kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Boundary with Kernel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-pipeline-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-Pipeline Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-boundary-reminder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Boundary Reminder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observability-read-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observability (Read-Only)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design Principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-pure-cognition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Pure Cognition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-stability-before-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Stability Before Action
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-signals-over-scalars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Signals Over Scalars
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-fail-soft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Fail-Soft
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-full-traceability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Full Traceability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-facade-over-internals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Façade over Internals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../COGNITIVE_STATE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cognitive state
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REFLEXIVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reflexive layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/EFFECT_PATH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Effect path
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/RUNTIME_LIFECYCLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/KERNEL_ADAPTERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel adapters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/SIGNALS_PRIMITIVES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signals and primitives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/REFERENCE_ASSISTANT_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference assistant architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/MAPPING_ARVIS_SPECIFICATIONS_IMPLEMENTATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specs to implementation map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration and versions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configuration and versions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONFIGURATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VERSIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading the identifiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/INVARIANTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invariants (F-***)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/DECISIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Campaign decisions (DM-**)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/AUDITS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit findings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compliance/EU_AI_ACT_CAPABILITY_MAPPING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EU AI Act capability mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/TOOL_AUTHORING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool authoring guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/TOOL_LIFECYCLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/TOOL_SYSTEM_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool system
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Integration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integration/VERAMEM_INTEGRATION_PATTERN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VeraMem integration pattern
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Standard
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Standard
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARVIS_STANDARD_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The ARVIS standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_SPEC_HIERARCHY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spec hierarchy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_KERNEL_CORE_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_KERNEL_SERVICES_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel services
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_SYSCALLS_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Syscalls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_ACCESS_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Access
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_DECISION_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_GATE_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_IR_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_PROJECTION_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_VALIDITY_ENVELOPE_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validity envelope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_MEMORY_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_CONVERSATION_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conversation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_VFS_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VFS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_LINGUISTIC_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linguistic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_REASON_CODE_REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reason-code registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_PUBLIC_OBJECT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public object
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standard/ARVIS_COMPLIANCE_SUITE_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance suite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mathematics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Mathematics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading the math stack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M0_system_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M0 system boundary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M1_assumptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M1 assumptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M1b_formal_system_definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M1b formal system definition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M1c_result_inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M1c result inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M2_proof_skeleton/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M2 proof skeleton
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M3_1_cognitive_state_model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3.1 cognitive state model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M3_2_observation_and_projection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3.2 observation and projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M3_3_projection_validated_domain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3.3 projection validated domain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M3_appendix_projection_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3 appendix, projection validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M4_adaptive_stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M4 adaptive stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M5_adaptive_stability_integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M5 adaptive stability integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M6_gate_stability_result_and_decision_consistency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M6 gate stability and decision consistency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M7_closedloop_Adaptive_stability_result/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M7 closed-loop adaptive stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M8_Robust_Practical_stability_and_ISS_interpretation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M8 robust practical stability and ISS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M9_system_synthesis_validity_envelop_and_global/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M9 system synthesis and validity envelope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M10_empirical_stability_validation_and_runtime_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M10 empirical validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M11_projection_control_operator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M11 projection control operator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M12_decision_lattice_stability_algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M12 decision lattice stability algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M13_formal_limits_assumptions_boundaries_open_problems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M13 limits, assumptions, open problems
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M14_cognitive_operating_system_%28COS%29_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M14 COS architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/M15_comparative_framework_and_safety_guarantees_llm_based_systems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M15 comparative framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Principle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logical-vs-physical-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logical vs Physical Execution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Logical vs Physical Execution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#logical-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logical (Pipeline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#physical-kernel-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Physical (Kernel Execution)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime Integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Contract
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pipeline Contract">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finalization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modular-pipeline-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modular Pipeline Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modular Pipeline Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#determinism-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Determinism Guarantees
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fail-safe-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fail-Safe Execution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tool-interaction-pre-cognitive-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool Interaction (Pre-Cognitive Layer)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tool Interaction (Pre-Cognitive Layer)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tool-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool Stages
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-by-stage-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage-by-Stage Specification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage-by-Stage Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-decision-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Decision Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-passive-context-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Passive Context Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-bundle-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Bundle Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-conflict-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Conflict Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-core-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Core Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-regime-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Regime Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-temporal-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Temporal Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-conflict-modulation-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Conflict Modulation Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-control-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Control Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-projection-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Projection Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#11-gate-stage-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Gate Stage (Critical)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-control-feedback-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Control Feedback Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-structural-risk-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Structural Risk Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-confirmation-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Confirmation Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-execution-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Execution Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-action-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Action Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-intent-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Intent Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-runtime-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Runtime Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-of-the-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output of the Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output of the Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#output-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boundary-with-kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Boundary with Kernel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-pipeline-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-Pipeline Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-boundary-reminder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Boundary Reminder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observability-read-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observability (Read-Only)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design Principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-pure-cognition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Pure Cognition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-stability-before-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Stability Before Action
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-signals-over-scalars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Signals Over Scalars
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-fail-soft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Fail-Soft
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-full-traceability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Full Traceability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-facade-over-internals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Façade over Internals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="arvis-cognitive-pipeline">ARVIS Cognitive Pipeline</h1>
+<h2 id="overview">Overview</h2>
+<p>The ARVIS Cognitive Pipeline is a <strong>deterministic, stage-based cognitive system</strong>
+implemented through a modular service architecture.</p>
+<p>It transforms input into a <strong>stability-constrained, validated cognitive intent</strong>.</p>
+<p>It is NOT an execution system.</p>
+<p>It is a <strong>pure cognitive protocol</strong> enforcing:</p>
+<ul>
+<li>ordered reasoning</li>
+<li>explicit signal propagation</li>
+<li>stability constraints before action</li>
+<li>traceable decision formation</li>
+</ul>
+<hr />
+<h2 id="core-principle">Core Principle</h2>
+<blockquote>
+<p>The pipeline defines cognition.<br />
+It does NOT control execution.</p>
+</blockquote>
+<p>Execution orchestration is handled by the <strong>Kernel Core</strong> and <code>CognitiveRuntime</code>.
+The pipeline remains responsible only for cognitive semantics.</p>
+<hr />
+<h2 id="execution-model">Execution Model</h2>
+<p>The pipeline is logically sequential:</p>
+<pre><code class="language-text">→ToolFeedback
+→ ToolRetry
+→ Decision
+→ PassiveContext
+→ Bundle
+→ Conflict
+→ Core
+→ Regime
+→ Temporal
+→ ConflictModulation
+→ Control
+→ Projection
+→ Gate
+→ ControlFeedback
+→ StructuralRisk
+→ Confirmation
+→ Execution
+→ Action
+→ Intent
+→ Runtime
+</code></pre>
+<hr />
+<h2 id="logical-vs-physical-execution">Logical vs Physical Execution</h2>
+<h3 id="logical-pipeline">Logical (Pipeline)</h3>
+<pre><code class="language-text">input → pipeline → validated cognitive intent
+</code></pre>
+<h3 id="physical-kernel-execution">Physical (Kernel Execution)</h3>
+<pre><code class="language-text">Kernel Scheduler → executes ONE stage per tick
+</code></pre>
+<p>Key properties:</p>
+<ul>
+<li>pipeline is logically atomic</li>
+<li>execution is physically iterative</li>
+<li>preemption does NOT affect final result</li>
+</ul>
+<hr />
+<h2 id="runtime-integration">Runtime Integration</h2>
+<p>The public execution path is:</p>
+<pre><code class="language-text">CognitiveOS
+  → CognitiveRuntime
+  → CognitivePipeline
+  → pipeline services / factories
+  → CognitiveResultView / IR
+</code></pre>
+<p><code>CognitiveRuntime</code> is responsible for orchestration.</p>
+<p>It:</p>
+<ul>
+<li>receives a <code>CognitivePipelineContext</code></li>
+<li>manages runtime execution boundaries</li>
+<li>delegates cognitive work to the pipeline</li>
+<li>returns a state/result execution envelope</li>
+</ul>
+<p>It does NOT:</p>
+<ul>
+<li>define cognitive semantics</li>
+<li>alter stage logic</li>
+<li>make decisions</li>
+<li>bypass pipeline finalization</li>
+</ul>
+<p>This preserves the separation between runtime orchestration and cognitive logic.</p>
+<hr />
+<h2 id="pipeline-contract">Pipeline Contract</h2>
+<h3 id="stage-properties">Stage Properties</h3>
+<p>Each stage is:</p>
+<ul>
+<li>deterministic</li>
+<li>non-terminal</li>
+<li>side-effect free</li>
+<li>confined to ctx</li>
+</ul>
+<p>STRICT RULE:</p>
+<p>No stage may produce a final decision.</p>
+<p>ABSOLUTE RULE:</p>
+<p>No stage may:</p>
+<ul>
+<li>trigger syscalls</li>
+<li>access external systems</li>
+<li>mutate memory</li>
+<li>produce side-effects of any kind</li>
+</ul>
+<hr />
+<h3 id="finalization">Finalization</h3>
+<p>Pipeline completion occurs ONLY via:</p>
+<pre><code class="language-python">finalize_run(ctx)
+</code></pre>
+<p>This MUST:</p>
+<ul>
+<li>produce a non-null result</li>
+<li>represent the only valid terminal decision</li>
+</ul>
+<p>Forbidden:</p>
+<ul>
+<li>stage-level completion</li>
+<li>implicit decision emission</li>
+</ul>
+<p>CRITICAL:</p>
+<p>finalize_run() is the ONLY allowed terminal point of the pipeline.</p>
+<p>It MUST:</p>
+<ul>
+<li>construct the final CognitiveState</li>
+<li>generate the Intermediate Representation (IR)</li>
+<li>produce a non-null executable intent</li>
+</ul>
+<p>No other component may emit a terminal decision.</p>
+<hr />
+<h2 id="modular-pipeline-architecture">Modular Pipeline Architecture</h2>
+<p><code>CognitivePipeline</code> is now a façade over explicit pipeline services and factories.</p>
+<p>The pipeline implementation is decomposed into dedicated modules under:</p>
+<pre><code class="language-text">arvis/kernel/pipeline/services/
+arvis/kernel/pipeline/factories/
+</code></pre>
+<p>Service responsibilities include:</p>
+<ul>
+<li>bootstrap and context initialization</li>
+<li>input preparation</li>
+<li>IR bootstrap</li>
+<li>stage registry construction</li>
+<li>preparation and finalization (idempotent, typed lifecycle latches)</li>
+<li>replay execution</li>
+<li>observability</li>
+<li>error handling</li>
+</ul>
+<p>Factories include:</p>
+<ul>
+<li><code>PipelineResultFactory</code></li>
+<li><code>PipelineTraceFactory</code></li>
+</ul>
+<p>This structure keeps the pipeline deterministic while making each responsibility
+isolated, testable, and replaceable.</p>
+<p>Important:</p>
+<blockquote>
+<p><code>cognitive_pipeline.py</code> remains the orchestration façade.
+Pipeline services implement the specialized internal mechanics.</p>
+</blockquote>
+<hr />
+<h3 id="determinism-guarantees">Determinism Guarantees</h3>
+<p>The pipeline guarantees:</p>
+<ul>
+<li>fixed execution order</li>
+<li>no hidden branching</li>
+<li>identical input → identical output</li>
+<li>replayable execution</li>
+</ul>
+<p>Determinism is independent of runtime execution strategy.</p>
+<hr />
+<h2 id="fail-safe-execution">Fail-Safe Execution</h2>
+<p>All stages are executed under:</p>
+<pre><code class="language-python">_safe_run(stage, ctx)
+</code></pre>
+<p>If a stage fails:</p>
+<ul>
+<li>execution continues</li>
+<li>error is recorded in ctx.error_state.errors (exported to hosts
+  under ctx.extra["errors"] at the runtime boundary)</li>
+</ul>
+<p>This ensures:</p>
+<ul>
+<li>no pipeline interruption</li>
+<li>full traceability of degraded reasoning</li>
+</ul>
+<hr />
+<h2 id="tool-interaction-pre-cognitive-layer">Tool Interaction (Pre-Cognitive Layer)</h2>
+<p>The pipeline integrates tool results but does NOT execute tools.</p>
+<h3 id="tool-stages">Tool Stages</h3>
+<ul>
+<li>ToolFeedbackStage</li>
+<li>ToolRetryStage</li>
+</ul>
+<p>Responsibilities:</p>
+<ul>
+<li>process previous tool outputs</li>
+<li>prepare retry signals</li>
+<li>inject feedback into cognitive context</li>
+</ul>
+<p>IMPORTANT:</p>
+<p>Tool execution is strictly external to the pipeline.</p>
+<ul>
+<li>tools are executed ONLY via syscalls</li>
+<li>syscalls occur ONLY after finalize_run()</li>
+<li>tool results are re-injected in the next pipeline run</li>
+</ul>
+<hr />
+<h2 id="stage-by-stage-specification">Stage-by-Stage Specification</h2>
+<h3 id="1-decision-stage">1. Decision Stage</h3>
+<p>Initializes decision context.</p>
+<p>Outputs:</p>
+<ul>
+<li>ctx.decision_layer.decision_result</li>
+<li>ctx.runtime_bindings.control_runtime</li>
+</ul>
+<hr />
+<h3 id="2-passive-context-stage">2. Passive Context Stage</h3>
+<p>Integrates:</p>
+<ul>
+<li>memory snapshot (read-only projection)</li>
+<li>conversation context</li>
+<li>timeline signals</li>
+</ul>
+<hr />
+<h3 id="memory-model">Memory Model</h3>
+<p>Memory is NOT queried dynamically.</p>
+<p>Instead:</p>
+<ul>
+<li>memory is projected into the pipeline as a <strong>deterministic snapshot</strong></li>
+<li>the pipeline consumes memory as input, not as a service</li>
+</ul>
+<p>Forbidden:</p>
+<ul>
+<li>dynamic memory queries</li>
+<li>repository access</li>
+<li>syscall invocation</li>
+</ul>
+<hr />
+<h3 id="3-bundle-stage">3. Bundle Stage</h3>
+<p>Builds unified cognitive representation.</p>
+<p>Outputs:</p>
+<ul>
+<li>ctx.decision_layer.bundle</li>
+</ul>
+<hr />
+<h3 id="4-conflict-stage">4. Conflict Stage</h3>
+<p>Detects and structures conflicts.</p>
+<p>Outputs:</p>
+<ul>
+<li>ctx.conflict</li>
+<li>ctx.conflict_pressure</li>
+</ul>
+<hr />
+<h3 id="5-core-stage">5. Core Stage</h3>
+<p>Scientific modeling:</p>
+<ul>
+<li>risk</li>
+<li>drift</li>
+<li>Lyapunov state</li>
+<li>stability</li>
+</ul>
+<hr />
+<h3 id="6-regime-stage">6. Regime Stage</h3>
+<p>Classifies system dynamics.</p>
+<hr />
+<h3 id="7-temporal-stage">7. Temporal Stage</h3>
+<p>Applies temporal constraints.</p>
+<hr />
+<h3 id="8-conflict-modulation-stage">8. Conflict Modulation Stage</h3>
+<p>Adjusts behavior based on conflict pressure.</p>
+<hr />
+<h3 id="9-control-stage">9. Control Stage</h3>
+<p>Adaptive cognitive control:</p>
+<ul>
+<li>exploration</li>
+<li>epsilon</li>
+<li>regime-aware adjustments</li>
+</ul>
+<hr />
+<h3 id="10-projection-stage">10. Projection Stage</h3>
+<p>Applies projection constraints:</p>
+<ul>
+<li>bounded domain</li>
+<li>safety certification</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>ctx.projection.certificate</li>
+</ul>
+<hr />
+<h3 id="11-gate-stage-critical">11. Gate Stage (Critical)</h3>
+<p>Performs multi-axial stability validation.</p>
+<p>Combines:</p>
+<ul>
+<li>Lyapunov stability</li>
+<li>switching constraints</li>
+<li>trajectory stability</li>
+<li>system confidence</li>
+<li>projection certificate</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>ctx.gate_result</li>
+</ul>
+<hr />
+<h3 id="12-control-feedback-stage">12. Control Feedback Stage</h3>
+<p>Closes control loop based on Gate outcome.</p>
+<hr />
+<h3 id="13-structural-risk-stage">13. Structural Risk Stage</h3>
+<p>Detects systemic instability.</p>
+<hr />
+<h3 id="14-confirmation-stage">14. Confirmation Stage</h3>
+<p>Handles:</p>
+<ul>
+<li>uncertainty</li>
+<li>human validation</li>
+<li>override logic</li>
+</ul>
+<hr />
+<h3 id="15-execution-stage">15. Execution Stage</h3>
+<p>Determines:</p>
+<ul>
+<li>execution eligibility</li>
+<li>confirmation requirements</li>
+<li>constraint compliance</li>
+</ul>
+<p>IMPORTANT:</p>
+<p>This stage does NOT trigger execution.</p>
+<p>It only determines whether execution would be allowed.</p>
+<hr />
+<h3 id="16-action-stage">16. Action Stage</h3>
+<p>Maps decision to action.</p>
+<hr />
+<h3 id="17-intent-stage">17. Intent Stage</h3>
+<p>Produces executable cognitive intent.</p>
+<p>Outputs:</p>
+<ul>
+<li>ctx.execution.executable_intent</li>
+</ul>
+<hr />
+<h3 id="18-runtime-stage">18. Runtime Stage</h3>
+<p>Publishes the run's risk and action into the per-user control runtime
+and updates the switching runtime and global stability observer.</p>
+<p>Outputs:</p>
+<ul>
+<li>ctx.runtime_bindings.control_runtime (last_risk, inertia_risk,
+  last_action)</li>
+<li>ctx.scientific.switching.switching_runtime (regime update)</li>
+<li>ctx.scientific.adaptive.global_stability_metrics</li>
+</ul>
+<hr />
+<h2 id="output-of-the-pipeline">Output of the Pipeline</h2>
+<p>The pipeline produces:</p>
+<ul>
+<li>a validated cognitive intent</li>
+<li>a canonical CognitiveState</li>
+<li>an Intermediate Representation (IR)</li>
+<li>a normalized result view through the public API layer</li>
+</ul>
+<p>The IR is the canonical output of cognition.</p>
+<hr />
+<h3 id="output-contract">Output Contract</h3>
+<pre><code class="language-text">ctx → finalize_run() → CognitiveState → PipelineResult → CognitiveResultView / IR
+</code></pre>
+<p>The IR defines:</p>
+<ul>
+<li>the decision structure</li>
+<li>execution eligibility</li>
+<li>response constraints</li>
+</ul>
+<p>It does NOT:</p>
+<ul>
+<li>execute actions</li>
+<li>trigger side-effects</li>
+</ul>
+<hr />
+<h2 id="boundary-with-kernel">Boundary with Kernel</h2>
+<p>STRICT SEPARATION:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pipeline</td>
+<td>Cognition</td>
+</tr>
+<tr>
+<td>Kernel Core</td>
+<td>Execution</td>
+</tr>
+<tr>
+<td>Syscalls</td>
+<td>Side-effects</td>
+</tr>
+</tbody>
+</table>
+<p>CRITICAL:</p>
+<p>The pipeline cannot:</p>
+<ul>
+<li>call the Kernel</li>
+<li>trigger syscalls</li>
+<li>influence execution timing</li>
+</ul>
+<p>It produces cognition only.</p>
+<hr />
+<h2 id="post-pipeline-processing">Post-Pipeline Processing</h2>
+<p>After pipeline completion:</p>
+<ul>
+<li>finalize_run() produces a terminal pipeline result</li>
+<li>CognitiveState is exposed through the result envelope</li>
+<li>DecisionTrace is built through pipeline trace factories</li>
+<li>IR is exported through the API / IR services</li>
+<li>Kernel MAY trigger syscalls (post-decision)</li>
+<li>Observability is computed (read-only)</li>
+</ul>
+<hr />
+<h2 id="execution-boundary-reminder">Execution Boundary Reminder</h2>
+<pre><code class="language-text">CognitiveRuntime → Pipeline → finalize_run → Result / IR → Kernel → Syscalls
+</code></pre>
+<p>The pipeline ends BEFORE any side-effect occurs.</p>
+<p>This boundary is strict and enforced by the Kernel.</p>
+<hr />
+<h2 id="observability-read-only">Observability (Read-Only)</h2>
+<p>Observability computes:</p>
+<ul>
+<li>predictive state</li>
+<li>global stability</li>
+<li>system metrics</li>
+</ul>
+<p>It is:</p>
+<ul>
+<li>read-only</li>
+<li>non-causal</li>
+</ul>
+<hr />
+<h2 id="design-principles">Design Principles</h2>
+<h3 id="1-pure-cognition">1. Pure Cognition</h3>
+<p>The pipeline contains no execution logic.</p>
+<hr />
+<h3 id="2-stability-before-action">2. Stability Before Action</h3>
+<p>No decision exists without passing the Gate.</p>
+<hr />
+<h3 id="3-signals-over-scalars">3. Signals Over Scalars</h3>
+<p>All critical values are typed signals.</p>
+<hr />
+<h3 id="4-fail-soft">4. Fail-Soft</h3>
+<p>Failures are captured, never fatal.</p>
+<hr />
+<h3 id="5-full-traceability">5. Full Traceability</h3>
+<p>All reasoning is:</p>
+<ul>
+<li>inspectable</li>
+<li>replayable</li>
+<li>auditable</li>
+</ul>
+<hr />
+<h3 id="6-facade-over-internals">6. Façade over Internals</h3>
+<p>The public pipeline object should stay thin.</p>
+<p>Specialized mechanics belong in services and factories, not in the façade.</p>
+<p>This keeps the pipeline readable while preserving deterministic behavior.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The ARVIS pipeline is:</p>
+<p>a deterministic cognitive system
+   independent from execution
+   producing only validated intent</p>
+<p>Execution is:</p>
+<p>orchestrated by CognitiveRuntime and the Kernel Core</p>
+<p>The pipeline never interacts with reality.</p>
+<p>It only determines what would be allowed to happen.</p>
+<p>Its implementation is now modular, service-driven, and replay-aware.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
