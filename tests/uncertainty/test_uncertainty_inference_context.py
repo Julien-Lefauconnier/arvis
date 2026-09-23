@@ -22,6 +22,16 @@ def test_memory_present_resolves_context() -> None:
     assert result.gaps == []
 
 
+def test_host_context_present_resolves_without_memory() -> None:
+    result = UncertaintyInference().infer(
+        context_dependent=1.0,
+        memory_present=False,
+        host_context_available=True,
+    )
+    assert result.frames == []
+    assert result.gaps == []
+
+
 def test_below_threshold_is_silent() -> None:
     result = UncertaintyInference().infer(context_dependent=0.0, memory_present=False)
     assert result.frames == []

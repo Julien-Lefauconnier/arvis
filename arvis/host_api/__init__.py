@@ -14,6 +14,11 @@ VERSIONING.md) except the modules listed in PROVISIONAL_MODULES, whose
 surface may change in a minor release with a changelog entry.
 """
 
+# 1.4 (campaign CTX1, 2026-09-23): additive engine-contract change.
+# Run-shaped entrypoints gain a dedicated bool host_context_available channel.
+# It carries no transcript, cannot be supplied through cognitive_input/extra,
+# and is committed in the IR only when true. Memory semantics stay separate.
+#
 # 1.3 (campaign HOST-SURFACE, 2026-09-23): additive only. A fresh
 # VeraMem cartography found the remaining unsupported host-facing types in
 # access, syscall effect classification and durable audit. The public surface
@@ -32,7 +37,7 @@ surface may change in a minor release with a changelog entry.
 # 1.1 (campaign SURFACE, DM-S2): additive only. engine gains
 # CognitiveOS; access gains AuthenticatedPrincipal; tools gains
 # ToolInvocation, ToolPolicyEvaluator, AuthorizedEffectContext.
-HOST_API_VERSION = "1.3"
+HOST_API_VERSION = "1.4"
 
 PROVISIONAL_MODULES: frozenset[str] = frozenset({"control"})
 

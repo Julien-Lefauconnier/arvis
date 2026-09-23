@@ -5,9 +5,10 @@ Consumes only ZK-safe perception features (no raw text) plus the kernel's own
 intent, and emits declarative :class:`ReasoningGap` / :class:`UncertaintyFrame`
 / :class:`ConflictSignal` observations. Pure: no decision, no execution, no
 backend coupling. Increment 1 covers referential under-determination; increment
-2 adds contextual under-determination (a context-dependent query the kernel has
-no memory to resolve); increment 3 adds internal conflict (an action request
-whose target is under-determined): kernel-computed, orthogonal to grounding.
+2 adds contextual under-determination (a context-dependent query for which the
+kernel has neither memory nor host-attested context); increment 3 adds internal
+conflict (an action request whose target is under-determined): kernel-computed,
+orthogonal to grounding.
 """
 
 from __future__ import annotations
@@ -34,7 +35,7 @@ _REFERENTIAL_FRAME = UncertaintyFrame(
 _CONTEXTUAL_FRAME = UncertaintyFrame(
     frame_id="CONTEXTUAL",
     label="Missing context",
-    description="The query depends on context the kernel has no memory to supply.",
+    description="The query depends on context unavailable to the kernel.",
     axes={UncertaintyAxis.CONTEXT_DEPENDENT},
 )
 _CONFLICT_FRAME = UncertaintyFrame(
@@ -75,13 +76,16 @@ class UncertaintyInference:
         referential_ambiguity: float = 0.0,
         context_dependent: float = 0.0,
         memory_present: bool = True,
+        host_context_available: bool = False,
         reason: str = "",
     ) -> UncertaintyInferenceResult:
         gaps: list[ReasoningGap] = []
         frames: list[UncertaintyFrame] = []
         conflicts: list[ConflictSignal] = []
         referential_under = referential_ambiguity >= self._theta_ref
-        context_under = context_dependent >= self._theta_ctx and not memory_present
+        context_under = context_dependent >= self._theta_ctx and not (
+            memory_present or host_context_available
+        )
         if referential_under:
             gaps.append(
                 ReasoningGap(
@@ -93,14 +97,16 @@ class UncertaintyInference:
             )
             frames.append(_REFERENTIAL_FRAME)
         # Contextual: the conjunction is the gap. A context-dependent query
-        # whose context memory CAN supply is resolved => no gap.
+        # is resolved when either kernel memory or trusted host context can supply
+        # the missing context. Host context availability is content-free and does
+        # not turn into memory.
         if context_under:
             gaps.append(
                 ReasoningGap(
                     gap_type=GapType.MISSING_CONTEXT,
                     origin=GapOrigin.CONTEXT,
                     severity=GapSeverity.MEDIUM,
-                    description="Query depends on context absent from memory.",
+                    description="Query depends on context unavailable to the kernel.",
                 )
             )
             frames.append(_CONTEXTUAL_FRAME)

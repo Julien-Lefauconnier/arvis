@@ -55,10 +55,12 @@ class DecisionEvaluator:
             raw_cd = getattr(cognitive_input, "context_dependent", 0.0)
         referential = float(raw_ra or 0.0)
         contextual = float(raw_cd or 0.0)
+        host_context_available = getattr(ctx, "host_context_available", False) is True
         inferred = self._uncertainty.infer(
             referential_ambiguity=referential,
             context_dependent=contextual,
             memory_present=bool(memory_influence["memory_present"]),
+            host_context_available=host_context_available,
             reason=reason,
         )
 

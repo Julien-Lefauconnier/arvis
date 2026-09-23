@@ -28,6 +28,14 @@ first.
 VeraMem remains the product and integration layer. ARVIS remains the
 application-independent governance kernel.
 
+For a context-dependent turn, VeraMem may set
+`host_context_available=True` only after it has loaded, authorized, selected
+and judged relevant the product-side context. The flag is a content-free
+attestation: no transcript, document passage or prompt fragment enters ARVIS
+through it, and it does not become long-term memory. ARVIS uses the signal only
+to distinguish "context absent" from "relevant host context is available" when
+producing its contextual uncertainty gap.
+
 ## Illustrative topology
 
 ```mermaid

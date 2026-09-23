@@ -48,7 +48,7 @@ NON_FINITE_RISKS = (
 # Deliberately duplicated from the repository contract test: this suite
 # must stay self-contained, since the repository is absent when running
 # against the wheel.
-# Counts at HOST_API_VERSION 1.3. The host surface grew additively:
+# Counts at HOST_API_VERSION 1.4. The host surface grew additively:
 # access exposes the generic access context/verdict types, services exposes
 # SyscallEffect, and audit is a dedicated durable-audit contract module.
 HOST_API_MODULES: dict[str, int] = {
@@ -208,7 +208,7 @@ def test_tool_surface_freezes_to_a_stable_fingerprint() -> None:
 def test_host_api_surface_resolves_as_promised() -> None:
     import importlib
 
-    assert arvis.host_api.HOST_API_VERSION == "1.3"
+    assert arvis.host_api.HOST_API_VERSION == "1.4"
     assert arvis.host_api.PROVISIONAL_MODULES == frozenset({"control"})
 
     total = 0
@@ -223,6 +223,31 @@ def test_host_api_surface_resolves_as_promised() -> None:
             assert hasattr(module, symbol)
         total += len(exported)
     assert total == 73
+
+
+def test_ctx1_host_context_availability_from_the_wheel() -> None:
+    """CTX1: a host can attest context without putting transcript into ARVIS."""
+    engine = ArvisEngine()
+    view = engine.run(
+        "blackbox",
+        {
+            "input_id": "ctx1-blackbox",
+            "intent_type": "question",
+            "context_dependent": 1.0,
+        },
+        host_context_available=True,
+    )
+    ir = view.to_ir()
+    assert ir["context"]["extra"]["host_context_available"] is True
+    assert "host_context_available" not in ir["input"]["metadata"]
+    assert view.global_commitment is not None
+    assert (
+        engine.replay_verified(
+            ir,
+            expected_global_commitment=view.global_commitment,
+        ).to_ir()
+        == ir
+    )
 
 
 def test_vfsitem_b2_positional_constructor_from_the_wheel() -> None:

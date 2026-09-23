@@ -270,6 +270,7 @@ class CognitiveOS:
         user_id: str,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -292,6 +293,7 @@ class CognitiveOS:
         result = self._run_single(
             user_id=user_id,
             cognitive_input=cognitive_input,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline,
             confirmation_result=confirmation_result,
@@ -304,6 +306,7 @@ class CognitiveOS:
         principal: AuthenticatedPrincipal,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -320,6 +323,7 @@ class CognitiveOS:
         return self._run_single(
             user_id=principal.user_id,
             cognitive_input=cognitive_input,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline,
             confirmation_result=confirmation_result,
@@ -367,6 +371,7 @@ class CognitiveOS:
         user_id: str,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -382,6 +387,7 @@ class CognitiveOS:
         return self._build_ir_from_input(
             user_id=user_id,
             cognitive_input=cognitive_input,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline,
             confirmation_result=confirmation_result,
@@ -471,15 +477,20 @@ class CognitiveOS:
         user_id: str,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
         extra: dict[str, Any] | None = None,
         principal: AuthenticatedPrincipal | None = None,
     ) -> CognitivePipelineContext:
+        if type(host_context_available) is not bool:
+            raise TypeError("host_context_available must be a bool")
+
         ctx = CognitivePipelineContext(
             user_id=user_id,
             cognitive_input=cognitive_input,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline or [],
             confirmation_result=confirmation_result,
@@ -515,6 +526,7 @@ class CognitiveOS:
         user_id: str,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -525,6 +537,7 @@ class CognitiveOS:
             self._build_context(
                 user_id=user_id,
                 cognitive_input=cognitive_input,
+                host_context_available=host_context_available,
                 conversation_context=conversation_context,
                 timeline=timeline,
                 confirmation_result=confirmation_result,
@@ -618,6 +631,7 @@ class CognitiveOS:
         user_id: str,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -627,6 +641,7 @@ class CognitiveOS:
         state, result = self._execute(
             user_id=user_id,
             cognitive_input=cognitive_input,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline,
             confirmation_result=confirmation_result,
@@ -646,6 +661,7 @@ class CognitiveOS:
         user_id: str,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -654,6 +670,7 @@ class CognitiveOS:
         state, result = self._execute(
             user_id=user_id,
             cognitive_input=cognitive_input,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline,
             confirmation_result=confirmation_result,

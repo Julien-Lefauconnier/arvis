@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import is_dataclass, replace
 from typing import Any
 
@@ -163,6 +164,15 @@ class PipelineIRBootstrapService:
             )
         )
 
+        context_extra = {
+            "memory_pressure": memory_pressure,
+            "has_constraints": memory_has_constraints,
+            "has_timezone": memory_has_timezone,
+            "has_language_pref": memory_has_language_pref,
+        }
+        if getattr(ctx, "host_context_available", False) is True:
+            context_extra["host_context_available"] = True
+
         ctx.ir_context = CognitiveContextIR(
             user_id=ctx.user_id,
             runtime_mode=getattr(ctx, "runtime_profile", None),
@@ -180,13 +190,23 @@ class PipelineIRBootstrapService:
             memory_constraint_count=memory_constraint_count,
             memory_has_language_pref=memory_has_language_pref,
             memory_has_timezone=memory_has_timezone,
-            extra={
-                "memory_pressure": memory_pressure,
-                "has_constraints": memory_has_constraints,
-                "has_timezone": memory_has_timezone,
-                "has_language_pref": memory_has_language_pref,
-            },
+            extra=context_extra,
         )
+
+    @staticmethod
+    def read_committed_host_context_available(
+        ir_context: CognitiveContextIR,
+    ) -> bool:
+        """Read the CTX1 marker from an immutable IR boundary snapshot.
+
+        This is deliberately centralized in the existing IR-boundary service:
+        live pipeline code must not read its own ``ctx.extra`` export bus.
+        Only an exact committed ``True`` marker resolves host context on replay.
+        """
+        extra = ir_context.extra
+        if not isinstance(extra, Mapping):
+            return False
+        return extra.get("host_context_available") is True
 
     @staticmethod
     def refresh_context_extra(

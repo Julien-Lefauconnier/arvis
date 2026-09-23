@@ -11,9 +11,10 @@ from __future__ import annotations
 import importlib
 
 
-def test_host_api_version_advances_to_1_3() -> None:
+def test_host_api_version_has_not_regressed_below_1_3() -> None:
     host_api = importlib.import_module("arvis.host_api")
-    assert host_api.HOST_API_VERSION == "1.3"
+    major, minor = host_api.HOST_API_VERSION.split(".", maxsplit=1)
+    assert (int(major), int(minor)) >= (1, 3)
 
 
 def test_access_host_surface_exposes_generic_access_contract() -> None:

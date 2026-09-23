@@ -22,10 +22,10 @@ class ArvisEngine:
     explicit signature, and run-shaped methods return a single public
     type, CognitiveResultView.
 
-    The input channels (``cognitive_input``, ``conversation_context``,
-    ``timeline``, ``confirmation_result``, ``extra``) are host injection
-    channels and deliberately typed ``Any``: their shape belongs to the
-    host integration, not to this facade.
+    The open-shaped input channels (``cognitive_input``,
+    ``conversation_context``, ``timeline``, ``confirmation_result``, ``extra``)
+    belong to host integration. ``host_context_available`` is deliberately
+    different: a typed, content-free host attestation and never raw context.
 
     Example:
         from arvis import ArvisEngine
@@ -98,6 +98,7 @@ class ArvisEngine:
         user_id: str,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -107,6 +108,7 @@ class ArvisEngine:
         return self._os.run(
             user_id,
             cognitive_input,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline,
             confirmation_result=confirmation_result,
@@ -118,6 +120,7 @@ class ArvisEngine:
         principal: AuthenticatedPrincipal,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -134,6 +137,7 @@ class ArvisEngine:
         return self._os.run_as(
             principal,
             cognitive_input,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline,
             confirmation_result=confirmation_result,
@@ -145,6 +149,7 @@ class ArvisEngine:
         prompt: str,
         *,
         user_id: str = "default",
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -156,6 +161,7 @@ class ArvisEngine:
         return self._os.run(
             user_id=user_id,
             cognitive_input=prompt,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline,
             confirmation_result=confirmation_result,
@@ -170,6 +176,7 @@ class ArvisEngine:
         user_id: str,
         cognitive_input: Any,
         *,
+        host_context_available: bool = False,
         conversation_context: Any = None,
         timeline: Any = None,
         confirmation_result: Any = None,
@@ -179,6 +186,7 @@ class ArvisEngine:
         return self._os.run_ir(
             user_id,
             cognitive_input,
+            host_context_available=host_context_available,
             conversation_context=conversation_context,
             timeline=timeline,
             confirmation_result=confirmation_result,

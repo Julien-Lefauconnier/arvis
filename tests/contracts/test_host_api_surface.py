@@ -186,6 +186,6 @@ def test_host_api_module_surface_is_exact(module: str) -> None:
 
 
 def test_host_api_version_policy_is_pinned() -> None:
-    assert arvis.host_api.HOST_API_VERSION == "1.3"
+    assert arvis.host_api.HOST_API_VERSION == "1.4"
     assert arvis.host_api.PROVISIONAL_MODULES == frozenset({"control"})
     assert arvis.host_api.PROVISIONAL_MODULES < set(HOST_API_SURFACE)

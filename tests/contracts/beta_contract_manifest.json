@@ -4,7 +4,7 @@
       "kind": "class",
       "methods": {
         "__init__": "(self, config: CognitiveOSConfig | None = None, *, pipeline: CognitivePipeline | None = None, **kwargs: Any) -> None",
-        "ask": "(self, prompt: str, *, user_id: str = 'default', conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "ask": "(self, prompt: str, *, user_id: str = 'default', host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
         "freeze_tools": "(self) -> str",
         "get_tool_spec": "(self, name: str) -> ToolSpec | None",
         "inspect": "(self, result: CognitiveResultView) -> dict[str, Any]",
@@ -13,9 +13,9 @@
         "register_tool": "(self, tool: BaseTool) -> None",
         "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
         "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
-        "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-        "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-        "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+        "run": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_ir": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
       },
       "properties": {
         "config": "CognitiveOSConfig",
@@ -442,7 +442,7 @@
         "kind": "class",
         "methods": {
           "__init__": "(self, config: CognitiveOSConfig | None = None, *, pipeline: CognitivePipeline | None = None, **kwargs: Any) -> None",
-          "ask": "(self, prompt: str, *, user_id: str = 'default', conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "ask": "(self, prompt: str, *, user_id: str = 'default', host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
           "freeze_tools": "(self) -> str",
           "get_tool_spec": "(self, name: str) -> ToolSpec | None",
           "inspect": "(self, result: CognitiveResultView) -> dict[str, Any]",
@@ -451,9 +451,9 @@
           "register_tool": "(self, tool: BaseTool) -> None",
           "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
           "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
-          "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-          "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-          "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+          "run": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "run_ir": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         "properties": {
           "config": "CognitiveOSConfig",
@@ -473,9 +473,9 @@
           "register_tool": "(self, tool: Any) -> None",
           "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
           "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
-          "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-          "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-          "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+          "run": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+          "run_ir": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         "properties": {
           "config": "CognitiveOSConfig",
@@ -1559,7 +1559,7 @@
       }
     }
   },
-  "host_api_version": "1.3",
+  "host_api_version": "1.4",
   "manifest_version": 1,
   "provisional_modules": [
     "control"
@@ -1573,7 +1573,7 @@
       "kind": "class",
       "methods": {
         "__init__": "(self, config: CognitiveOSConfig | None = None, *, pipeline: CognitivePipeline | None = None, **kwargs: Any) -> None",
-        "ask": "(self, prompt: str, *, user_id: str = 'default', conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "ask": "(self, prompt: str, *, user_id: str = 'default', host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
         "freeze_tools": "(self) -> str",
         "get_tool_spec": "(self, name: str) -> ToolSpec | None",
         "inspect": "(self, result: CognitiveResultView) -> dict[str, Any]",
@@ -1582,9 +1582,9 @@
         "register_tool": "(self, tool: BaseTool) -> None",
         "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
         "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
-        "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-        "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-        "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+        "run": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_ir": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
       },
       "properties": {
         "config": "CognitiveOSConfig",
@@ -1612,9 +1612,9 @@
         "register_tool": "(self, tool: Any) -> None",
         "replay_recomposed": "(self, ir: dict[str, Any]) -> CognitiveResultView",
         "replay_verified": "(self, ir: dict[str, Any], *, expected_global_commitment: str) -> CognitiveResultView",
-        "run": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-        "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
-        "run_ir": "(self, user_id: str, cognitive_input: Any, *, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
+        "run": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_as": "(self, principal: AuthenticatedPrincipal, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> CognitiveResultView",
+        "run_ir": "(self, user_id: str, cognitive_input: Any, *, host_context_available: bool = False, conversation_context: Any = None, timeline: Any = None, confirmation_result: Any = None, extra: dict[str, Any] | None = None) -> dict[str, Any]"
       },
       "properties": {
         "config": "CognitiveOSConfig",

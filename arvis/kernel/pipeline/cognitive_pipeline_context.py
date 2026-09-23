@@ -88,6 +88,10 @@ class CognitivePipelineContext:
     # Inputs
     # -------------------------
     cognitive_input: Any
+    # Trusted, content-free host attestation: the host has already assembled
+    # and authorized relevant context for this turn. It carries no transcript
+    # and is deliberately distinct from memory_projection.
+    host_context_available: bool = False
     ir_input: CognitiveInputIR | None = None
     ir_context: CognitiveContextIR | None = None
     long_memory: dict[str, Any] = field(default_factory=dict)

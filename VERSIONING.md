@@ -204,7 +204,7 @@ suffix, tag.
 
 The beta series stabilizes `arvis.__all__` (11 symbols) and the stable
 `host_api` modules (68 symbols across the thirteen stable modules at
-HOST_API_VERSION 1.3; the provisional `control` module carries 5 more,
+HOST_API_VERSION 1.4; the provisional `control` module carries 5 more,
 outside this promise), both frozen by the beta contract
 manifest, plus the shipped serialization contract and the reflexive
 attestation canonicalization. Within the series, removals, renames or

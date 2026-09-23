@@ -11,6 +11,18 @@ versioning throughout the pre-1.0 series.
 
 ### Added
 
+- Campaign CTX1: run-shaped `CognitiveOS` and `ArvisEngine` entrypoints gain
+  the keyword-only `host_context_available: bool = False` host attestation.
+  The host remains solely responsible for loading, authorizing, selecting and
+  judging relevant transcript/retrieval context; ARVIS receives no transcript
+  through this channel. The decision layer treats either kernel memory or an
+  exact trusted host-context attestation as sufficient to avoid a
+  `MISSING_CONTEXT` gap, while memory influence remains false when only host
+  context is present. Request `cognitive_input` and `extra` cannot spoof the
+  typed channel. A true marker is committed in `CognitiveContextIR.extra` and
+  restored on replay; false is omitted so old-run IR shape stays unchanged.
+  `HOST_API_VERSION` 1.3 -> 1.4; no commitment-format or package-version bump.
+
 - Campaign HOST-SURFACE 1.3: the public host boundary now covers the generic
   contracts VeraMem still had to import from kernel internals after a fresh
   2026-09-23 cartography (225 ARVIS import statements across 144 Python

@@ -27,3 +27,13 @@ def test_context_dependent_without_memory_emits_frame() -> None:
 def test_memory_present_resolves() -> None:
     signal = DecisionEvaluator().evaluate(_ctx(1.0, memory=True))
     assert signal.uncertainty_frames == []
+
+
+def test_host_context_resolves_without_becoming_memory() -> None:
+    ctx = _ctx(1.0, memory=False)
+    ctx.host_context_available = True
+
+    signal = DecisionEvaluator().evaluate(ctx)
+
+    assert signal.uncertainty_frames == []
+    assert signal.memory_influence["memory_present"] is False
