@@ -80,7 +80,7 @@ dev = [
   "pytest-cov==7.1.0",
   "pytest-mock==3.15.1",
   "hypothesis==6.161.2",
-  "pytest-benchmark==5.2.3",
+  "pytest-benchmark==5.3.0",
   "pytest-asyncio==1.4.0",
   # Read by the compliance scenario loader only (compliance/ is
   # excluded from the wheel), so it is gate tooling and not a runtime
