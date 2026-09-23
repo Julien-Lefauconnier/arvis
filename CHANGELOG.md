@@ -9,6 +9,8 @@ versioning throughout the pre-1.0 series.
 
 ## [Unreleased]
 
+## [0.1.0b8] - 2026-09-23
+
 ### Added
 
 - Campaign CTX1: run-shaped `CognitiveOS` and `ArvisEngine` entrypoints gain

@@ -15,7 +15,7 @@ is unknown, and leaves a record from which the decision replays bit for bit.
 
 > Documentation site: <https://julien-lefauconnier.github.io/arvis/>
 > (full docs, generated API reference, search).
-> Status `0.1.0b8.dev0`, beta series. Python 3.11+.
+> Status `0.1.0b8`, beta series. Python 3.11+.
 
 ## What it does not do
 
@@ -284,7 +284,7 @@ domains and their assumptions.
 
 | Axis | Value | Meaning |
 |---|---|---|
-| Package version | `0.1.0b8.dev0` | the distributed artifact (PEP 440) |
+| Package version | `0.1.0b8` | the distributed artifact (PEP 440) |
 | API version | `0.1` | stable within the beta series under `VERSIONING.md` |
 | Standard version | `draft-v1` | the ARVIS decision / IR specification |
 
