@@ -79,7 +79,7 @@ dev = [
   "types-jsonschema==4.26.0.20260518",
   "pytest-cov==7.1.0",
   "pytest-mock==3.15.1",
-  "hypothesis==6.161.2",
+  "hypothesis==6.167.0",
   "pytest-benchmark==5.2.3",
   "pytest-asyncio==1.4.0",
   # Read by the compliance scenario loader only (compliance/ is
