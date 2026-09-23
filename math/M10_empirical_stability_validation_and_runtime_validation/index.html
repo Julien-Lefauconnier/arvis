@@ -1,0 +1,6103 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Deterministic runtime assurance for LLM-based systems: graded verdicts, hashed commitments, bit-identical replay.">
+      
+      
+      
+        <link rel="canonical" href="https://julien-lefauconnier.github.io/arvis/math/M10_empirical_stability_validation_and_runtime_validation/">
+      
+      
+        <link rel="prev" href="../M9_system_synthesis_validity_envelop_and_global/">
+      
+      
+        <link rel="next" href="../M11_projection_control_operator/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>M10 empirical validation - ARVIS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#m10-empirical-stability-validation-protocol-and-campaign-report" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="ARVIS" class="md-header__button md-logo" aria-label="ARVIS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ARVIS
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              M10 empirical validation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Julien-Lefauconnier/arvis" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Julien-Lefauconnier/arvis
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ARVIS" class="md-nav__button md-logo" aria-label="ARVIS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ARVIS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Julien-Lefauconnier/arvis" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Julien-Lefauconnier/arvis
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Start
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Start
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../WHY_ARVIS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why ARVIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../OVERVIEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FIRST_REAL_CALL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fifteen minutes to a governed call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GETTING_STARTED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started (end to end)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GLOSSARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../COMPARISON/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison with guardrail tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PATH_TO_ALLOW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The path to ALLOW
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PERFORMANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../AUTHORS_NOTE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Author's note
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The two public surfaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/arvis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    arvis (root)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/host_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    arvis.host_api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ARCHITECTURE_INVARIANTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture invariants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PIPELINE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../COGNITIVE_STATE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cognitive state
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../IR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REFLEXIVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reflexive layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/EFFECT_PATH/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Effect path
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/RUNTIME_LIFECYCLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/KERNEL_ADAPTERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel adapters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/SIGNALS_PRIMITIVES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signals and primitives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/REFERENCE_ASSISTANT_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference assistant architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/MAPPING_ARVIS_SPECIFICATIONS_IMPLEMENTATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specs to implementation map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration and versions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configuration and versions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONFIGURATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../VERSIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading the identifiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/INVARIANTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invariants (F-***)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/DECISIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Campaign decisions (DM-**)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/AUDITS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit findings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compliance/EU_AI_ACT_CAPABILITY_MAPPING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EU AI Act capability mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/TOOL_AUTHORING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool authoring guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/TOOL_LIFECYCLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/TOOL_SYSTEM_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool system
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Integration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integration/VERAMEM_INTEGRATION_PATTERN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VeraMem integration pattern
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Standard
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Standard
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ARVIS_STANDARD_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The ARVIS standard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_SPEC_HIERARCHY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spec hierarchy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_KERNEL_CORE_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_KERNEL_SERVICES_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel services
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_SYSCALLS_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Syscalls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_ACCESS_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Access
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_DECISION_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_GATE_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_IR_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_PROJECTION_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_VALIDITY_ENVELOPE_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validity envelope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_MEMORY_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_CONVERSATION_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conversation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_VFS_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VFS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_LINGUISTIC_SPEC_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linguistic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_REASON_CODE_REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reason-code registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_PUBLIC_OBJECT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public object
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standard/ARVIS_COMPLIANCE_SUITE_V1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance suite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mathematics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Mathematics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reading the math stack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M0_system_boundary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M0 system boundary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M1_assumptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M1 assumptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M1b_formal_system_definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M1b formal system definition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M1c_result_inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M1c result inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M2_proof_skeleton/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M2 proof skeleton
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M3_1_cognitive_state_model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3.1 cognitive state model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M3_2_observation_and_projection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3.2 observation and projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M3_3_projection_validated_domain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3.3 projection validated domain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M3_appendix_projection_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M3 appendix, projection validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M4_adaptive_stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M4 adaptive stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M5_adaptive_stability_integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M5 adaptive stability integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M6_gate_stability_result_and_decision_consistency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M6 gate stability and decision consistency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M7_closedloop_Adaptive_stability_result/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M7 closed-loop adaptive stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M8_Robust_Practical_stability_and_ISS_interpretation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M8 robust practical stability and ISS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M9_system_synthesis_validity_envelop_and_global/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M9 system synthesis and validity envelope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M10 empirical validation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M10 empirical validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-objective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Objective
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-position-in-the-arvis-mathematical-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Position in the ARVIS Mathematical Stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-validation-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Validation Scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Validation Scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-system-under-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 System Under Test
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-validation-dataset-to-be-constructed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Validation Dataset (to be constructed)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Validation Dataset (to be constructed)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-dataset-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Dataset Construction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-dataset-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Dataset Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-metrics-and-pass-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Metrics and Pass Criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Metrics and Pass Criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-lyapunov-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Lyapunov Evolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-iss-residual-bound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 ISS Residual Bound
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-adaptive-stability-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Adaptive Stability Estimation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-kappa-violation-frequency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Kappa Violation Frequency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-gate-behavior-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Gate Behavior Distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-projection-control-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 Projection-Control Overrides
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57-closed-loop-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7 Closed-Loop Feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#58-perturbation-decomposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.8 Perturbation Decomposition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#59-validity-envelope-compliance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.9 Validity Envelope Compliance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-target-result-statement-hypothesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Target Result Statement (hypothesis)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-theoretical-results-awaiting-runtime-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Theoretical Results Awaiting Runtime Evidence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-what-this-protocol-will-not-establish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. What This Protocol Will Not Establish
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-execution-and-publication-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Execution and Publication Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-campaign-report-math-b-2026-09-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Campaign Report: MATH-B, 2026-09-01
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Campaign Report: MATH-B, 2026-09-01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-identity-and-registration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Identity and registration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-judgment-against-the-registered-thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Judgment against the registered thresholds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-verdict-distribution-observed-on-d-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Verdict distribution observed on D-1.0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-measured-constants-lot-b2-report-only-per-dm-b1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 Measured constants (LOT B2, report-only per DM-B1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-mechanism-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5 Mechanism findings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#106-sensitivity-lot-b4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.6 Sensitivity (LOT B4)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#107-what-this-campaign-does-not-establish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.7 What this campaign does not establish
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-campaign-2-report-math-c-2026-09-01-corpus-d-20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Campaign 2 Report: MATH-C, 2026-09-01 (corpus D-2.0)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Campaign 2 Report: MATH-C, 2026-09-01 (corpus D-2.0)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-why-a-second-corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 Why a second corpus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-registration-and-judgment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 Registration and judgment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-the-treatmentcontrol-contrast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 The treatment/control contrast
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#114-the-adaptive-layer-discriminates-in-both-directions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.4 The adaptive layer discriminates in both directions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#115-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.5 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-campaign-3-report-allow-2026-09-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Campaign 3 Report: ALLOW, 2026-09-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Campaign 3 Report: ALLOW, 2026-09-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-the-defect-a-drift-magnitude-read-as-an-energy-derivative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 The defect: a drift magnitude read as an energy derivative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-effect-on-both-campaigns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 Effect on both campaigns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123-what-the-relaxation-did-and-did-not-touch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.3 What the relaxation did and did not touch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#124-a-threshold-that-has-stopped-discriminating" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.4 A threshold that has stopped discriminating
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#125-what-allow-still-requires" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.5 What ALLOW still requires
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#126-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.6 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-campaign-4-report-proj-2026-09-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Campaign 4 Report: PROJ, 2026-09-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. Campaign 4 Report: PROJ, 2026-09-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 Scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-the-operator-reacted-to-the-same-misread-signal-dm-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 The operator reacted to the same misread signal (DM-P1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133-the-published-certificate-was-not-the-one-that-decided-dm-p2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 The published certificate was not the one that decided (DM-P2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#134-the-dwell-clock-ticked-twice-per-turn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.4 The dwell clock ticked twice per turn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#135-the-dwell-clock-crosses-the-public-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.5 The dwell clock crosses the public contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#136-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.6 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-campaign-5-report-seuil-2026-09-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Campaign 5 Report: SEUIL, 2026-09-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. Campaign 5 Report: SEUIL, 2026-09-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-the-last-conventional-constant-on-the-allow-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 The last conventional constant on the ALLOW path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-what-the-landscape-measurement-showed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 What the landscape measurement showed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-the-registered-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 The registered rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#144-the-dossier-every-candidate-measured-before-the-choice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.4 The dossier: every candidate measured before the choice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#145-result-on-the-republished-campaigns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.5 Result on the republished campaigns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#146-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.6 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-campaign-6-report-gate-sem-2026-09-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Campaign 6 Report: GATE-SEM, 2026-09-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. Campaign 6 Report: GATE-SEM, 2026-09-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151-what-the-integral-audit-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 What the integral audit found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152-the-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 The decisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153-result-on-the-republished-campaigns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 Result on the republished campaigns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#154-judgments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.4 Judgments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#155-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.5 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#156-left-open-deliberately" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.6 Left open, deliberately
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-reading-this-report-honestly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Reading This Report Honestly
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. Reading This Report Honestly">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-which-registered-criteria-can-actually-fail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 Which registered criteria can actually fail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-protocol-section-5-observations-the-registered-set-omitted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 Protocol section 5 observations the registered set omitted
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163-registration-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 Registration provenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#164-how-to-read-the-archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.4 How to read the archive
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M11_projection_control_operator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M11 projection control operator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M12_decision_lattice_stability_algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M12 decision lattice stability algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M13_formal_limits_assumptions_boundaries_open_problems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M13 limits, assumptions, open problems
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M14_cognitive_operating_system_%28COS%29_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M14 COS architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../M15_comparative_framework_and_safety_guarantees_llm_based_systems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M15 comparative framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-objective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Objective
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-position-in-the-arvis-mathematical-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Position in the ARVIS Mathematical Stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-validation-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Validation Scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Validation Scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-system-under-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 System Under Test
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-validation-dataset-to-be-constructed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Validation Dataset (to be constructed)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Validation Dataset (to be constructed)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-dataset-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Dataset Construction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-dataset-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Dataset Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-metrics-and-pass-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Metrics and Pass Criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Metrics and Pass Criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-lyapunov-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Lyapunov Evolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-iss-residual-bound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 ISS Residual Bound
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-adaptive-stability-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Adaptive Stability Estimation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-kappa-violation-frequency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Kappa Violation Frequency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-gate-behavior-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Gate Behavior Distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-projection-control-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 Projection-Control Overrides
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57-closed-loop-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7 Closed-Loop Feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#58-perturbation-decomposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.8 Perturbation Decomposition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#59-validity-envelope-compliance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.9 Validity Envelope Compliance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-target-result-statement-hypothesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Target Result Statement (hypothesis)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-theoretical-results-awaiting-runtime-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Theoretical Results Awaiting Runtime Evidence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-what-this-protocol-will-not-establish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. What This Protocol Will Not Establish
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-execution-and-publication-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Execution and Publication Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-campaign-report-math-b-2026-09-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Campaign Report: MATH-B, 2026-09-01
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Campaign Report: MATH-B, 2026-09-01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-identity-and-registration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Identity and registration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-judgment-against-the-registered-thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Judgment against the registered thresholds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-verdict-distribution-observed-on-d-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Verdict distribution observed on D-1.0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-measured-constants-lot-b2-report-only-per-dm-b1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 Measured constants (LOT B2, report-only per DM-B1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-mechanism-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5 Mechanism findings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#106-sensitivity-lot-b4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.6 Sensitivity (LOT B4)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#107-what-this-campaign-does-not-establish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.7 What this campaign does not establish
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-campaign-2-report-math-c-2026-09-01-corpus-d-20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Campaign 2 Report: MATH-C, 2026-09-01 (corpus D-2.0)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Campaign 2 Report: MATH-C, 2026-09-01 (corpus D-2.0)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-why-a-second-corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 Why a second corpus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-registration-and-judgment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 Registration and judgment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-the-treatmentcontrol-contrast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 The treatment/control contrast
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#114-the-adaptive-layer-discriminates-in-both-directions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.4 The adaptive layer discriminates in both directions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#115-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.5 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-campaign-3-report-allow-2026-09-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Campaign 3 Report: ALLOW, 2026-09-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Campaign 3 Report: ALLOW, 2026-09-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-the-defect-a-drift-magnitude-read-as-an-energy-derivative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 The defect: a drift magnitude read as an energy derivative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-effect-on-both-campaigns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 Effect on both campaigns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123-what-the-relaxation-did-and-did-not-touch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.3 What the relaxation did and did not touch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#124-a-threshold-that-has-stopped-discriminating" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.4 A threshold that has stopped discriminating
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#125-what-allow-still-requires" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.5 What ALLOW still requires
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#126-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.6 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-campaign-4-report-proj-2026-09-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Campaign 4 Report: PROJ, 2026-09-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. Campaign 4 Report: PROJ, 2026-09-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 Scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-the-operator-reacted-to-the-same-misread-signal-dm-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 The operator reacted to the same misread signal (DM-P1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133-the-published-certificate-was-not-the-one-that-decided-dm-p2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 The published certificate was not the one that decided (DM-P2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#134-the-dwell-clock-ticked-twice-per-turn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.4 The dwell clock ticked twice per turn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#135-the-dwell-clock-crosses-the-public-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.5 The dwell clock crosses the public contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#136-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.6 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-campaign-5-report-seuil-2026-09-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Campaign 5 Report: SEUIL, 2026-09-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. Campaign 5 Report: SEUIL, 2026-09-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-the-last-conventional-constant-on-the-allow-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 The last conventional constant on the ALLOW path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-what-the-landscape-measurement-showed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 What the landscape measurement showed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-the-registered-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.3 The registered rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#144-the-dossier-every-candidate-measured-before-the-choice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.4 The dossier: every candidate measured before the choice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#145-result-on-the-republished-campaigns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.5 Result on the republished campaigns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#146-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.6 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-campaign-6-report-gate-sem-2026-09-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Campaign 6 Report: GATE-SEM, 2026-09-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. Campaign 6 Report: GATE-SEM, 2026-09-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#151-what-the-integral-audit-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.1 What the integral audit found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#152-the-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.2 The decisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#153-result-on-the-republished-campaigns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.3 Result on the republished campaigns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#154-judgments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.4 Judgments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#155-reproduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.5 Reproduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#156-left-open-deliberately" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15.6 Left open, deliberately
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-reading-this-report-honestly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Reading This Report Honestly
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. Reading This Report Honestly">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-which-registered-criteria-can-actually-fail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.1 Which registered criteria can actually fail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-protocol-section-5-observations-the-registered-set-omitted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.2 Protocol section 5 observations the registered set omitted
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#163-registration-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.3 Registration provenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#164-how-to-read-the-archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.4 How to read the archive
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="m10-empirical-stability-validation-protocol-and-campaign-report">M10: Empirical Stability Validation Protocol and Campaign Report</h1>
+<blockquote>
+<p><strong>Status: protocol executed on synthetic corpora; reports in
+sections 10 and 11.</strong> Sections 1 to 9 are the registered protocol,
+unchanged. Campaign MATH-B (2026-09-01) executed it on the
+deterministic synthetic corpus $\mathcal{D}$ = D-1.0 with
+pre-registered thresholds; section 10 records the observed values,
+the judgment and the mechanism findings. Only the status pointers
+of sections 2, 5 and 9 were updated to reference section 10; no
+criterion of the registered protocol changed. <strong>Scope of the empirical
+claim, precisely: the campaign validates the measurement harness
+and the kernel's decision mechanics under controlled synthetic
+dynamics. It is not evidence about production traffic</strong>, and the
+certification level vocabulary of the runtime is still the only
+stability attestation ARVIS makes about deployed behavior. The
+offline Phase A of the projection layer remains documented in
+<code>M3_appendix_projection_validation.md</code>.</p>
+</blockquote>
+<h2 id="1-objective">1. Objective</h2>
+<p>Define the empirical validation layer of the ARVIS Cognitive Operating
+System: the dataset, the metrics, the pass criteria and the publication
+requirements under which the theoretical results of M6–M9 would gain
+runtime empirical support.</p>
+<p>When executed, this protocol is intended to provide:
+- quantitative confrontation of the theoretical results of M6–M9 with
+  observed runtime behavior,
+- runtime characterization of stability behavior,
+- statistical assessment of robustness and practical stability claims,
+- an evidence-backed description of the validity envelope under
+  realistic conditions.</p>
+<hr />
+<h2 id="2-position-in-the-arvis-mathematical-stack">2. Position in the ARVIS Mathematical Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Nature</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M0–M9</td>
+<td>Theoretical / structural</td>
+<td>Written, self-consistent</td>
+</tr>
+<tr>
+<td>M3 Phase A</td>
+<td>Empirical, offline, projection layer</td>
+<td>Executed (<code>tests/math/</code>)</td>
+</tr>
+<tr>
+<td>M10</td>
+<td>Empirical, runtime, closed loop</td>
+<td><strong>Executed: D-1.0 (sec. 10), D-2.0 (sec. 11)</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-validation-scope">3. Validation Scope</h2>
+<p>All metrics of this protocol apply exclusively to trajectories that
+remain inside the validated projection domain:</p>
+<p>$$
+\forall t, \quad o_t \in \mathcal{O}_{\text{valid}}
+$$</p>
+<p>as defined and bounded in M3.</p>
+<h3 id="31-system-under-test">3.1 System Under Test</h3>
+<p>The evaluated closed-loop pipeline is:</p>
+<p>$$
+o_t \ \xrightarrow{\Pi}\ (x_t,\ z_t,\ q_t,\ w_t)\ \to\ W_t\ \to\ \widehat{\kappa}_t\ \to\ v_t^{\text{gate}} \ \to\ v_t^{\text{final}} \ \to\ u_t
+$$</p>
+<p>with:</p>
+<p>$$
+v_t^{\text{final}} = \min_{\succ}(v_t^{\text{gate}},\ v_t^{\pi})
+$$</p>
+<p>including in particular:
+- projection layer ($\Pi$)
+- composite Lyapunov evaluation
+- adaptive $\kappa$ estimator
+- GateStage (verdict computation)
+- PiBasedGate (projection-control layer $\Pi_{\text{ctrl}}$)
+- control modulation layer</p>
+<hr />
+<h2 id="4-validation-dataset-to-be-constructed">4. Validation Dataset (to be constructed)</h2>
+<h3 id="41-dataset-construction">4.1 Dataset Construction</h3>
+<p>A deterministic, reproducible validation corpus $\mathcal{D}$ will be
+constructed, containing:
+- nominal (healthy) trajectories
+- boundary / edge-of-domain cases
+- adversarial-style perturbations (bounded)
+- high-frequency switching stress cases
+- memory-intensive / long-horizon cases
+- conflicting or inconsistent signal inputs</p>
+<h3 id="42-dataset-requirements">4.2 Dataset Requirements</h3>
+<p>$$
+\mathcal{D} = { o_{0:T_i}^{(i)} }_{i=1}^N
+$$</p>
+<p>with:
+- bounded trajectory lengths $T_i$
+- perfect reproducibility (fixed, published seeds; deterministic
+  projection)
+- intentional coverage of the projection domain corners and interior</p>
+<p>The corpus, its seeds and its generator are versioned artifacts: the
+campaign is not considered executed unless a third party can regenerate
+$\mathcal{D}$ bit-for-bit and rerun every metric.</p>
+<hr />
+<h2 id="5-metrics-and-pass-criteria">5. Metrics and Pass Criteria</h2>
+<p>Every subsection states the metric and the criterion the runtime has
+to satisfy. The observed values are recorded in sections 10 and 11.</p>
+<h3 id="51-lyapunov-evolution">5.1 Lyapunov Evolution</h3>
+<p><strong>Metric</strong>: $\Delta W_t = W_{t+1} - W_t$</p>
+<p><strong>Evaluations</strong>:
+- full distribution of $\Delta W_t$
+- proportions: $P(\Delta W_t &lt; 0)$ (contraction),
+  $P(\Delta W_t \approx 0)$ (marginal), $P(\Delta W_t &gt; 0)$ (expansion)</p>
+<p><strong>Pass criterion</strong>: contraction events dominate; positive excursions
+are bounded and rare, with the thresholds fixed and published before
+the campaign runs.</p>
+<h3 id="52-iss-residual-bound">5.2 ISS Residual Bound</h3>
+<p><strong>Metric</strong>:
+$W(t) - C e^{-\beta t} W(0)$ and the empirical gain
+$\Gamma = \sup_t W(t) / \sup_{k \leq t} |w_k|$</p>
+<p><strong>Pass criterion</strong>:
+- bounded empirical gain $\Gamma$
+- no divergence on $\mathcal{O}_{\text{valid}}$
+- a practical residual tube of the form
+  $W(t) \leq \Gamma(\bar{w}) + r$ with published constants</p>
+<h3 id="53-adaptive-stability-estimation">5.3 Adaptive Stability Estimation</h3>
+<p><strong>Metric</strong>: $\widehat{\kappa}_t$ (smoothed adaptive contraction
+estimate)</p>
+<p><strong>Evaluations</strong>:
+- distribution of $\widehat{\kappa}<em>t$
+- regime frequencies (stable / marginal / unstable)
+- adaptive margin $m_t = \widehat{\kappa}_t - \kappa</em>{\text{threshold}}$</p>
+<p><strong>Pass criterion</strong>: the stable regime dominates; the critical regime
+is localized near domain boundaries; the unstable regime is rare and
+transient, per pre-registered thresholds.</p>
+<h3 id="54-kappa-violation-frequency">5.4 Kappa Violation Frequency</h3>
+<p><strong>Metric</strong>: $P(\kappa^t &lt; \kappa_{\text{threshold}})$</p>
+<p><strong>Pass criteria</strong>:
+- violation frequency below a pre-registered bound
+- violations associated with adversarial inputs, projection edge cases
+  or switching boundary conditions
+- <strong>hard invariant of M6, checked on every violation</strong>: whenever a
+  violation occurs, the gate abstains:</p>
+<p>$$
+v_t^{\text{gate}} = \text{ABSTAIN} \Rightarrow v_t^{\text{final}} = \text{ABSTAIN}
+$$</p>
+<h3 id="55-gate-behavior-distribution">5.5 Gate Behavior Distribution</h3>
+<p><strong>Metric</strong>:
+$v_t^{\text{final}} \in {\text{ALLOW}, \text{REQUIRE_CONFIRMATION}, \text{ABSTAIN}}$</p>
+<p><strong>Evaluations</strong>:
+- marginal frequency of each verdict
+- conditional probabilities $P(v_t \mid \Delta W_t, \widehat{\kappa}_t)$</p>
+<p><strong>Pass criterion</strong>: ALLOW dominates in the stable regime,
+REQUIRE_CONFIRMATION concentrates near marginal zones, ABSTAIN
+concentrates in regions of detected instability: the gate behaves as a
+monotone stability filter.</p>
+<h3 id="56-projection-control-overrides">5.6 Projection-Control Overrides</h3>
+<p><strong>Metrics</strong>:</p>
+<p>$$
+P(v_t^{\pi}), \qquad P(v_t^{\pi} \prec v_t^{\text{gate}}), \qquad P(v_t^{\text{final}} \prec v_t^{\text{gate}})
+$$</p>
+<p><strong>Purpose</strong>:
+- measure how often structural constraints dominate energy-based
+  decisions
+- quantify the contribution of $\Pi_{\text{ctrl}}$ in restricting
+  unsafe transitions</p>
+<h3 id="57-closed-loop-feedback">5.7 Closed-Loop Feedback</h3>
+<p><strong>Invariant under test</strong>:
+$\Delta W_t &gt; 0 \Longrightarrow u_t \downarrow$</p>
+<p><strong>Pass criterion</strong>: an increase in the Lyapunov value produces a
+measurable decrease in aggressiveness ($\epsilon$) and exploration
+scale, supporting the negative feedback loop claimed in M7.</p>
+<h3 id="58-perturbation-decomposition">5.8 Perturbation Decomposition</h3>
+<p><strong>Decomposition</strong>:
+$w_t = w_t^{\mathrm{proj}} + w_t^{\mathrm{noise}} + w_t^{\mathrm{switch}} + w_t^{\mathrm{adv}}$</p>
+<p><strong>Pass criterion</strong>: perturbation sources are identified and bounded;
+no evidence of uncontrolled amplification.</p>
+<h3 id="59-validity-envelope-compliance">5.9 Validity Envelope Compliance</h3>
+<p><strong>Metric</strong>: $P(\mathcal{V}_t.\mathrm{valid})$ where $\mathcal{V}_t$ is
+the runtime validity certificate.</p>
+<p><strong>Pass criterion</strong>: high compliance rate inside
+$\mathcal{O}<em>{\mathrm{valid}}$, with every violation traced to a known
+stress condition, supporting
+$o_t \in \mathcal{O}</em>{\mathrm{valid}} \Longrightarrow \mathcal{V}_t.\mathrm{valid} = \mathrm{True}$.</p>
+<hr />
+<h2 id="6-target-result-statement-hypothesis">6. Target Result Statement (hypothesis)</h2>
+<p><strong>T10 (to be established): Empirical Stability Validation</strong></p>
+<p>Under:
+- the validated projection domain (M3),
+- bounded composite perturbations,
+- the fully implemented GateStage and adaptive estimator (M4–M5),</p>
+<p>the campaign would have to exhibit, on every tested trajectory:</p>
+<p>$$
+W(t) \leq C \, e^{-\beta t} \, W(0) + \Gamma_{\text{emp}}(\bar{w}) + r
+$$</p>
+<p>together with the structural filtering invariant:</p>
+<p>$$
+v_t^{\pi} = \text{ABSTAIN} \Rightarrow v_t^{\text{final}} = \text{ABSTAIN}
+$$</p>
+<p>and the monotone non-relaxation property of M11–M12:</p>
+<p>$$
+v_t^{\text{final}} \preceq v_t^{\text{gate}}
+$$</p>
+<p>T10 remains a hypothesis until the campaign runs and its artifacts are
+published.</p>
+<hr />
+<h2 id="7-theoretical-results-awaiting-runtime-evidence">7. Theoretical Results Awaiting Runtime Evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Result</th>
+<th>Theoretical claim</th>
+<th>Runtime empirical status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T6</td>
+<td>Gate stability preservation</td>
+<td>pending (this protocol)</td>
+</tr>
+<tr>
+<td>T7</td>
+<td>Closed-loop adaptive stability</td>
+<td>pending (this protocol)</td>
+</tr>
+<tr>
+<td>T8</td>
+<td>Robust practical stability + ISS</td>
+<td>pending (this protocol)</td>
+</tr>
+<tr>
+<td>T9</td>
+<td>Global validity envelope</td>
+<td>pending (this protocol)</td>
+</tr>
+<tr>
+<td>T11–T12</td>
+<td>Decision monotonicity and stability algebra</td>
+<td>pending (this protocol)</td>
+</tr>
+</tbody>
+</table>
+<p>The offline Phase A evidence for the projection layer itself (bounded,
+locally Lipschitz, noise-robust, switching-stable, Lyapunov-compatible
+on the fixture corpus) exists and is documented in
+<code>M3_appendix_projection_validation.md</code>.</p>
+<hr />
+<h2 id="8-what-this-protocol-will-not-establish">8. What This Protocol Will Not Establish</h2>
+<p>Even fully executed, this campaign does not prove or claim:
+- global stability outside $\mathcal{O}_{\text{valid}}$
+- worst-case adversarial resilience (minimax sense)
+- asymptotic convergence guarantees for <strong>all</strong> possible trajectories
+- tightness of the residual tube constants</p>
+<p>And as long as it is not executed, <strong>no ARVIS release should be read as
+certifying runtime stability behavior beyond what <code>VERSIONING.md</code>
+states</strong>: the projection certificate's noise robustness and mode
+stability axes are not assessed, and <code>noise_gain_estimate</code> is always
+<code>None</code>.</p>
+<hr />
+<h2 id="9-execution-and-publication-requirements">9. Execution and Publication Requirements</h2>
+<p>The campaign is considered executed only when, together:</p>
+<ol>
+<li>the corpus $\mathcal{D}$, its generator and its seeds are published
+   as versioned artifacts;</li>
+<li>every metric of section 5 has an observed value with its
+   pre-registered threshold;</li>
+<li>the full run is reproducible bit-for-bit by a third party;</li>
+<li>the results are recorded in this document (turning it from protocol
+   to report) with a changelog entry.</li>
+</ol>
+<p>These four conditions were met by campaign MATH-B; section 10 is the
+record. The certification level vocabulary of the runtime
+(<code>VERSIONING.md</code>, certification levels) remains the only stability
+attestation ARVIS makes about deployed behavior.</p>
+<hr />
+<h2 id="10-campaign-report-math-b-2026-09-01">10. Campaign Report: MATH-B, 2026-09-01</h2>
+<p><em>Historical report, as measured at its campaign. Later campaigns
+changed the tree and republished the artifacts; where a number below
+disagrees with the tracked artifacts, section 15 carries the current
+counts and section 16 explains how to read the archive.</em></p>
+<h3 id="101-identity-and-registration">10.1 Identity and registration</h3>
+<ul>
+<li>Corpus: $\mathcal{D}$ = <strong>D-1.0</strong>, master seed 20260901, 7 families
+  (nominal, boundary, adversarial, switching_stress, long_horizon,
+  conflicting, declared_risk), 56 trajectories, 1440 turns. Generator,
+  seeds and manifest published under <code>validation/m10/</code>
+  (<code>corpus_manifest.json</code>); the corpus is bit-for-bit reproducible
+  (pinned by <code>tests/math/m10/</code>).</li>
+<li>Thresholds: 12 criteria proposed, then <strong>registered unmodified by
+  the project owner on 2026-09-01, before any full-corpus run</strong>
+  (<code>validation/m10/thresholds.py</code>, decision DM-B2).</li>
+<li>Harness: closed-loop, pipeline level. Each turn runs a real
+  <code>CognitivePipeline</code>; the harness threads the scientific state, the
+  fast and slow Lyapunov states, the switching runtime and the
+  adaptive observer across turns (the host role). The declared_risk
+  family deliberately runs unthreaded. No LLM anywhere; fully
+  deterministic; runs in seconds.</li>
+<li>Reproduction: <code>python -m validation.m10 run</code> then
+  <code>python -m validation.m10 sweep</code> (Python 3.11+, no network). The
+  per-turn measurements (3 MB) regenerate identically rather than
+  being tracked.</li>
+</ul>
+<h3 id="102-judgment-against-the-registered-thresholds">10.2 Judgment against the registered thresholds</h3>
+<p><strong>11 of 12 criteria passed.</strong> Per the registration discipline, the
+failure is reported as a failure and the thresholds were not revised
+after observation.</p>
+<table>
+<thead>
+<tr>
+<th>Criterion (section)</th>
+<th>Registered</th>
+<th>Observed</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.1 nominal contraction dominates</td>
+<td>&gt;= 0.60</td>
+<td>0.516</td>
+<td><strong>FAIL</strong></td>
+</tr>
+<tr>
+<td>5.1 bounded expansion</td>
+<td>&lt;= 1.50</td>
+<td>0.563</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.2 no divergent trajectory</td>
+<td>== 0</td>
+<td>0</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.2 bounded energy sup W</td>
+<td>&lt;= 6.0</td>
+<td>1.496</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.3 estimator availability</td>
+<td>&gt;= 0.50</td>
+<td>0.833</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.4 ABSTAIN never relaxed (M6)</td>
+<td>== 0</td>
+<td>0</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.5 adversarial ALLOW share</td>
+<td>&lt;= 0</td>
+<td>0.0</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.5 ALLOW given expansion</td>
+<td>&lt;= 0.05</td>
+<td>0.0</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.6 override data present</td>
+<td>&gt;= 1</td>
+<td>1440</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.7 negative feedback consistency</td>
+<td>&gt;= 0.95</td>
+<td>1.00</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.8 bounded projection component</td>
+<td>&lt;= 10.0</td>
+<td>0.0</td>
+<td>pass</td>
+</tr>
+<tr>
+<td>5.9 envelope alive in domain</td>
+<td>&gt;= 0.10</td>
+<td>0.176</td>
+<td>pass</td>
+</tr>
+</tbody>
+</table>
+<p>The failed criterion is substantive and instructive: on the nominal
+family the observation axes follow a bounded exogenous walk, and the
+composite energy the gate consumes tracks them. Nothing in the
+closed loop pulls the corpus's observations toward equilibrium (the
+loop adjusts verdicts, not the synthetic inputs), so contraction
+events sit near one half (0.516) instead of dominating. The
+criterion, as registered, measured a property of the corpus's
+dynamics rather than of the kernel. It stays failed on D-1.0; a
+future corpus revision should encode the intended contraction regime
+in the input dynamics (state-feedback synthetic inputs), and the
+lesson is recorded here rather than papered over.</p>
+<p>Disclosed instrument correction: run 1's distribution encoder
+omitted verdicts with zero share, so the two zero-observation
+criteria of 5.5 resolved to missing data and scored FAIL under the
+fail-closed judge even though the observed ALLOW mass was exactly
+zero in both. The encoder now emits every canonical verdict with an
+explicit share; the registered thresholds were untouched, and run
+1's judgment is preserved as
+<code>validation/m10/artifacts/judgment_run1_encoder_defect.json</code>.</p>
+<h3 id="103-verdict-distribution-observed-on-d-10">10.3 Verdict distribution observed on D-1.0</h3>
+<p>Overall: ABSTAIN 85.6%, REQUIRE_CONFIRMATION 14.4%, <strong>ALLOW 0.0%</strong>
+(0 of 1440 turns). The refusal-shaped criteria pass trivially in
+such a regime, which is why the mechanism findings of 10.5 matter
+more than the marginals: the corpus exercises the fail-closed side
+of the gate far more than its permissive side.</p>
+<p>The declared_risk family shows the graded input-risk ladder with
+zero bleed between bands: declared risk in the allow band produced
+REQUIRE_CONFIRMATION on 59/59 turns, the confirm band
+REQUIRE_CONFIRMATION on 76/76, the block band ABSTAIN on 57/57.
+Monotone, deterministic, no crossovers. The ALLOW rung itself is
+unreachable on this corpus: the pre-verdict floor is already
+REQUIRE_CONFIRMATION on a cold pipeline (<code>switching_unsafe_monitoring</code>,
+<code>projection_boundary</code>), and the low-band relaxation is then refused
+by the provenance guard (<code>input_risk_relax_denied</code>,
+<code>verdict_provenance_not_artifact</code>). Both are fail-closed guards
+working as specified; the graded ladder is effectively two-level on
+synthetic turns.</p>
+<h3 id="104-measured-constants-lot-b2-report-only-per-dm-b1">10.4 Measured constants (LOT B2, report-only per DM-B1)</h3>
+<p>M13 flags the constants of assumption A12 as assumed, not measured.
+This campaign measured both on D-1.0; per decision DM-B1 the values
+are published here and in <code>constants.json</code> and <strong>no runtime default
+changes</strong> (calibration on real traffic remains reserved, decision
+DM4).</p>
+<ul>
+<li>Contraction factor $\alpha$ (nominal family, per-step
+  $1 - W_{t+1}/W_t$ over 99 contracting pairs): median 0.348,
+  p10 0.091, p90 0.622; contraction share of steps 0.538.</li>
+<li>Target-map Lipschitz constant $L_T$ (4000 sampled ratios over an
+  explicit, published input metric on symbolic states): median
+  0.126, p99 0.360, max 0.736, against the assumed 1.0.</li>
+<li>Small-gain margin $\kappa_{eff} = \alpha - \gamma_z \eta L_T$:
+  assumed 0.13; at the conservative quantiles (alpha at p10, L_T at
+  p99) the measured value is <strong>0.084 &gt; 0</strong>. The small-gain condition
+  survives measurement on D-1.0 with a reduced but positive margin.
+  Caveats: alpha is conditioned on contracting steps of a synthetic
+  family; L_T depends on the declared input metric; neither is a
+  production estimate.</li>
+</ul>
+<h3 id="105-mechanism-findings">10.5 Mechanism findings</h3>
+<ol>
+<li><strong>The adaptive layer was structurally dead and is now live
+   (DM-B0).</strong> The MATH-A rename split the estimator snapshot into
+   <code>kappa_raw/kappa_clipped/kappa_smoothed</code>; the runtime observer
+   kept reading the historical <code>kappa_eff</code> field through a silent
+   <code>getattr</code>, so the whole layer (kappa bands, confirmation forcing,
+   ABSTAIN veto, recovery-relaxation block) never fired on a live
+   path. Fixed RED-first during this campaign, direction verified
+   strictly hardening on every consumer. No previously green test
+   moved, which quantifies how far the live conditions were from the
+   suite's reach; the m10 harness now pins layer liveness.</li>
+<li><strong>Once live, the adaptive hard veto dominates non-contracting
+   dynamics.</strong> With margins $\ln(J)/\tau_d + \ln(1-\kappa)$ mostly
+   positive on a corpus whose energy does not contract (mean margin
+   +0.137; bands: hard 1107, critical 51, warning 16, stable 26 of
+   1200 available turns), the final verdict source is the hard
+   adaptive veto on 952 of 1248 threaded turns. This is the
+   fail-closed reading of A12 doing exactly what it says under
+   sustained non-contraction; on real, partly contracting traffic
+   the band mix is an open measurement (DM4).</li>
+<li><strong>Cold-start evidence, quantified.</strong> An unthreaded turn faces an
+   evidence-free PAC ceiling: risk_ucb = 1.0 on all 192 unthreaded
+   turns, hence a CRITICAL risk verdict whatever the declared risk.
+   Warming the estimator (threading only the scientific state)
+   halves CRITICAL to 58.3% with 41.7% WARN and moves no final
+   verdict at all on this family: the monitor's risk verdict is
+   observability, not gating, on D. At the default
+   $\delta = 0.01$, certifying OK ($\leq 0.15$) needs on the order
+   of 100 clean turns; 24-turn trajectories cannot reach it.</li>
+<li><strong>The composite fast-energy shortcut discards slow coupling
+   exactly when the state is complete</strong> (found in LOT B1): on
+   complete quadruples the gate consumes the fast energy directly
+   and the slow term only enters on incomplete states. The corpus
+   therefore exercises the fast path; the slow-coupling term of M7
+   remains validated only by unit fixtures. Campaign MATH-C measured
+   the full-W variant on D-1.0 before deciding (LOT C2): wiring
+   W = V + lambda*mismatch everywhere breaks the registered ISS
+   bound (sup W 8.81 against 6.0, the mismatch term dominating),
+   moves 57 of 1440 verdicts in BOTH directions (37 relaxations, 20
+   tightenings, so not a hardening-only change under F-001), lifts
+   nominal contraction from 0.516 to 0.592 without passing, and
+   shrinks the measured conservative small-gain margin from 0.084
+   to 0.052. Decision DM-C1 (owner, 2026-09-01): the shortcut is
+   the v0 design, kept and documented here; full wiring is re-posed
+   at DM4 with lambda calibrated on real traffic rather than the
+   arbitrary 0.5.</li>
+</ol>
+<h3 id="106-sensitivity-lot-b4">10.6 Sensitivity (LOT B4)</h3>
+<p>Published in <code>sweeps.json</code>:</p>
+<ul>
+<li><strong>Adaptive veto edge (margin 0)</strong>: 92.3% of available margins sit
+  above the edge; only 11.3% sit within +-0.02 of it. The veto's
+  dominance on D is structural, not a hair-trigger boundary effect;
+  moving the critical/warning band edges (-0.02, -0.05) reallocates
+  under 4% of mass.</li>
+<li><strong>Collapse-abstain threshold 0.8</strong>: flip mass at most 1.5% across
+  alternates 0.7 to 0.9; the collapse signal is close to bimodal on
+  D and the threshold choice is robust there.</li>
+<li><strong>Risk-verdict ceilings on the warm variant</strong>: the ok ceiling
+  (0.10/0.15/0.20) changes nothing on D (the UCB never gets low
+  enough); the critical ceiling (0.30/0.40/0.50) moves the
+  CRITICAL/WARN split (100%/58%/38% CRITICAL) and, on this corpus,
+  never a final verdict.</li>
+</ul>
+<h3 id="107-what-this-campaign-does-not-establish">10.7 What this campaign does not establish</h3>
+<p>Section 8's list stands. In particular: no claim about production
+or veramem traffic (the corpus is synthetic and its nominal dynamics
+proved exogenous rather than contracting); no adversarial-robustness
+claim beyond the corpus's schema-level adversarial family; no
+calibration of runtime defaults (DM-B1, DM4); and the ALLOW side of
+the gate distribution is untested at this level because ALLOW is
+unreachable on cold synthetic turns by design of the provenance and
+monitoring guards.</p>
+<hr />
+<h2 id="11-campaign-2-report-math-c-2026-09-01-corpus-d-20">11. Campaign 2 Report: MATH-C, 2026-09-01 (corpus D-2.0)</h2>
+<p><em>Historical report, as measured at its campaign; see sections 15
+and 16 for current counts and reading guidance.</em></p>
+<h3 id="111-why-a-second-corpus">11.1 Why a second corpus</h3>
+<p>Section 10.2's failed criterion taught that on an exogenous input
+walk, contraction dominance measures the corpus, not the kernel.
+D-2.0 encodes A12's contraction regime in the input dynamics: a new
+<code>nominal_feedback</code> family whose fast input channels start stressed
+and relax geometrically toward published targets, faster when the
+previous final verdict tightened (the complete loop: verdict back
+into input). The law's constants are published as <code>FEEDBACK_LAW</code>
+in <code>validation/m10/corpus.py</code> and executed by the harness; the
+seven D-1.0 families are regenerated under D-2.0's own master seed
+(20260902) as controls. 64 trajectories, 1632 turns, bit-for-bit
+reproducible.</p>
+<h3 id="112-registration-and-judgment">11.2 Registration and judgment</h3>
+<p>The campaign 2 criteria (<code>PROPOSED_D2</code>) are the registered D-1.0
+set with one change, published before any run: 5.1 judges the
+feedback family. The owner registered the set unmodified on
+2026-09-01 (DM-C2), before the first full D-2.0 run.</p>
+<p><strong>12 of 12 criteria passed</strong>, including:</p>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Registered</th>
+<th>Observed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.1 feedback contraction dominates</td>
+<td>&gt;= 0.60</td>
+<td><strong>1.000</strong></td>
+</tr>
+<tr>
+<td>5.1 bounded expansion</td>
+<td>&lt;= 1.50</td>
+<td>0.554</td>
+</tr>
+<tr>
+<td>5.2 no divergence / bounded energy</td>
+<td>== 0, &lt;= 6.0</td>
+<td>0, 1.563</td>
+</tr>
+<tr>
+<td>5.3 estimator availability</td>
+<td>&gt;= 0.50</td>
+<td>0.848</td>
+</tr>
+<tr>
+<td>5.4 ABSTAIN never relaxed (M6)</td>
+<td>== 0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>5.5 adversarial ALLOW, expansion ALLOW</td>
+<td>&lt;= 0, &lt;= 0.05</td>
+<td>0.0, 0.0</td>
+</tr>
+<tr>
+<td>5.7 negative feedback consistency</td>
+<td>&gt;= 0.95</td>
+<td>1.00</td>
+</tr>
+</tbody>
+</table>
+<h3 id="113-the-treatmentcontrol-contrast">11.3 The treatment/control contrast</h3>
+<p>The same run carries both nominal families:</p>
+<ul>
+<li><code>nominal_feedback</code> (contraction encoded in inputs):
+  p_contraction <strong>1.000</strong>;</li>
+<li><code>nominal</code> (exogenous walk, the D-1.0 control): p_contraction
+  0.495.</li>
+</ul>
+<p>This is the D-1.0 lesson demonstrated in one experiment: the
+projection-to-energy chain tracks the input dynamics faithfully, and
+the 5.1 criterion is meaningful exactly when the corpus declares
+what the inputs do.</p>
+<h3 id="114-the-adaptive-layer-discriminates-in-both-directions">11.4 The adaptive layer discriminates in both directions</h3>
+<p>On D-1.0 the revived adaptive layer vetoed almost everything (bands:
+hard 1107 of 1200 available turns; final verdict by hard veto on 952
+of 1248 threaded turns) because the corpus energy did not contract.
+On D-2.0's feedback family the same layer, unchanged, reads the
+contracting energy and stands down: bands hard 16 / critical 66 /
+warning 77 / stable 25, ABSTAIN 10.9% and REQUIRE_CONFIRMATION 89.1%
+on the family. Together the two campaigns show the DM-B0 layer is
+not a constant brake: it responds to measured contraction in both
+directions, which is the behavior A12 asks of it. ALLOW remains 0.0
+corpus-wide (the provenance and cold-monitoring floors of section
+10.3, unchanged by design).</p>
+<p><strong>Retraction (2026-09-02).</strong> The stand-down this section reported
+did not survive the PROJ dwell-clock fix: with the double tick
+removed, the feedback family's bands at the republished artifacts
+read hard 115 / critical 61 / warning 0 / stable 0 and the family
+splits ABSTAIN 62.5% / REQUIRE_CONFIRMATION 37.5%. The layer still
+discriminates between corpora (the D-1.0 hard-band mass stays an
+order larger per available turn), but the "stands down on
+contracting energy" conclusion as stated here was an artifact of
+the doubled dwell and is withdrawn. Nobody re-checked this section
+when PROJ republished; the section 16 reading rules and the
+doc-versus-artifact ratchet exist so that class of stale conclusion
+cannot silently persist again.</p>
+<h3 id="115-reproduction">11.5 Reproduction</h3>
+<p><code>python -m validation.m10 run2</code> regenerates the campaign 2
+artifacts under <code>validation/m10/artifacts_d2/</code> (the per-turn
+measurements are untracked and regenerate identically). The gate
+pins the D-2.0 identity: the eight families as a literal, manifest
+reproducibility, and the deterministic contracting transient of the
+feedback family.</p>
+<p>Scope of the byte-identity guarantee, sharpened by the first
+third-party reproduction: the owner's macOS arm64 run reproduced
+every manifest and judgment byte-for-byte but drifted a single
+double by one ulp (a family <code>sup_w_max</code>, 0.9532080249999999
+against 0.953208025) relative to the Linux x86-64 reference, the
+signature of fused-multiply-add reductions in the numeric backend.
+Aggregates absorb such noise; a raw <code>max</code> publishes it. Published
+artifacts are therefore serialized with floats rounded to 12
+decimals, far above the 1e-16 relative ulp noise and far below any
+scientific meaning in these metrics; internal judge comparisons
+stay raw. Determinism is exact within a platform, and the published
+text is now identical across platforms.</p>
+<h2 id="12-campaign-3-report-allow-2026-09-02">12. Campaign 3 Report: ALLOW, 2026-09-02</h2>
+<p><em>Historical report; the ALLOW counts and residual-blocker figures
+below were superseded by campaigns PROJ (13.4), SEUIL (14.5) and
+GATE-SEM (15.3). See section 16.</em></p>
+<h3 id="121-the-defect-a-drift-magnitude-read-as-an-energy-derivative">12.1 The defect: a drift magnitude read as an energy derivative</h3>
+<p>Sections 10.3 and 11.4 both closed on the same observation, treated
+as a design floor: ALLOW was never observed as a final verdict, 0
+times across the 3072 turns of campaigns 1 and 2. That reading was
+wrong. The floor was a defect in the projection certificate.</p>
+<p><code>ProjectionValidator</code> assessed <code>lyapunov_compatibility_ok</code>
+against the composite energy delta, and fell back to the private
+<code>ctx._dv</code> attribute when no delta was available:</p>
+<pre><code class="language-python">delta_w = delta_w_of(ctx)
+dv = getattr(ctx, &quot;_dv&quot;, None)
+if delta_w is not None:
+    lyapunov_ok = float(delta_w) &lt;= self.lyapunov_positive_threshold
+elif dv is not None:
+    lyapunov_ok = float(dv) &lt;= self.lyapunov_positive_threshold
+</code></pre>
+<p>Two facts make the fallback a defect rather than a degraded mode.</p>
+<p><code>ctx._dv</code> is written by the core stage as
+<code>float(core_ctx.drift_score)</code>, and <code>DriftSignal.__post_init__</code>
+stores <code>clamp01(abs(value))</code>. The value is a magnitude in [0, 1]
+and is never negative, so <code>dv &lt;= 1e-9</code> held only when drift was
+exactly zero. Any drift at all was published as a measured Lyapunov
+incompatibility. The suite's own fixtures record the intent that was
+lost: the sibling test seeded <code>_dv = -0.1</code>, a value the clamp makes
+unreachable in the running system, which is the clearest evidence
+the branch was written against a signed derivative that never
+arrived on that attribute.</p>
+<p>And <code>composite.delta_w</code> is written by the gate stage, which runs
+after the projection stage. On the certificate the gate consumes,
+the delta is therefore always <code>None</code>. The fallback was not an edge
+case: it was the branch taken on every certified turn. Instrumented
+over campaign 2, <code>ProjectionValidator.validate</code> was called 3264
+times for 1632 turns, and every one of the 1632 pre-gate calls took
+the fallback. The second call per turn is
+<code>PipelineObservabilityService</code>, which refreshes the certificate
+during finalize, after the verdict is decided: the corrected
+certificate existed, but only in the observability export, never in
+the decision.</p>
+<p>The consequence chain is mechanical:</p>
+<pre><code>lyapunov_compatibility_ok = False
+  -&gt; is_projection_safe = False
+      -&gt; projection_unsafe                    (soft floor on ALLOW)
+      -&gt; projection_available = False          in the validity envelope
+          -&gt; validity_projection_unavailable   (second floor)
+</code></pre>
+<h3 id="122-effect-on-both-campaigns">12.2 Effect on both campaigns</h3>
+<p>The axis is now assessed only against the composite delta. When no
+delta is available it is reported unassessed in <code>checks_detail</code>
+and excluded from the certification level, which is the treatment
+noise robustness and mode stability already receive (section 5.9). A
+delta that is present but uncoercible stays fail-closed under F-002.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>D-1.0 before</th>
+<th>D-1.0 after</th>
+<th>D-2.0 before</th>
+<th>D-2.0 after</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>projection_unsafe</code></td>
+<td>(see note)</td>
+<td><strong>0</strong></td>
+<td>1270</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td><code>projection_lyapunov_incompatible</code></td>
+<td>(see note)</td>
+<td><strong>0</strong></td>
+<td>1270</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td><code>validity_projection_unavailable</code></td>
+<td>(see note)</td>
+<td>131</td>
+<td>1394</td>
+<td>124</td>
+</tr>
+<tr>
+<td>envelope alive in domain</td>
+<td>0.1757</td>
+<td><strong>1.000</strong></td>
+<td>0.1578</td>
+<td><strong>1.000</strong></td>
+</tr>
+<tr>
+<td>ABSTAIN</td>
+<td>0.85625</td>
+<td><strong>0.85625</strong></td>
+<td>0.782475</td>
+<td><strong>0.782475</strong></td>
+</tr>
+<tr>
+<td>REQUIRE_CONFIRMATION</td>
+<td>0.14375</td>
+<td>0.128472</td>
+<td>0.217525</td>
+<td>0.213848</td>
+</tr>
+<tr>
+<td>ALLOW</td>
+<td>0.0</td>
+<td><strong>0.015278</strong></td>
+<td>0.0</td>
+<td><strong>0.003676</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Note: the per-turn measurement files are untracked (section 11.5),
+so the before counts are reported for the corpus on which they were
+instrumented live during the investigation. The envelope rate is a
+tracked metric and carries the same evidence on both corpora.</p>
+<p>The registered judgments are unchanged: <strong>11 of 12 on D-1.0 and 12
+of 12 on D-2.0</strong>, the same criteria passing and the same one
+failing.</p>
+<h3 id="123-what-the-relaxation-did-and-did-not-touch">12.3 What the relaxation did and did not touch</h3>
+<p>This campaign lifts a floor, which under F-001 requires the floor to
+be shown illegitimate rather than merely inconvenient. The measured
+containment:</p>
+<ul>
+<li><strong>ABSTAIN is bit-identical on both corpora</strong>, 1233 and 1277 turns.
+  No refusal was relaxed. The change moves REQUIRE_CONFIRMATION to
+  ALLOW and nothing else.</li>
+<li>ALLOW appears in two families only, <code>nominal</code> (15 and 4) and
+  <code>long_horizon</code> (7 and 2). The <code>adversarial</code>, <code>conflicting</code>,
+  <code>boundary</code>, <code>declared_risk</code>, <code>switching_stress</code> and
+  <code>nominal_feedback</code> distributions are unchanged to the digit.</li>
+<li>Criterion 5.5 (adversarial never ALLOW) still observes 0.0, and it
+  now observes it on a system where ALLOW is reachable, which is the
+  first campaign in which that criterion carries information.</li>
+<li>Every ALLOW turn has a strictly negative composite delta, from
+  -0.0575 to -0.4148.</li>
+</ul>
+<p>Conditional on a contracting turn, ALLOW reaches 0.0381 overall and
+0.1579 on the nominal family of D-1.0.</p>
+<h3 id="124-a-threshold-that-has-stopped-discriminating">12.4 A threshold that has stopped discriminating</h3>
+<p><code>envelope_compliance.envelope_alive_in_domain</code> was registered at</p>
+<blockquote>
+<p>= 0.10 and observed 0.1757 and 0.1578. Those numbers were the
+defect: the validity envelope was dead on roughly five turns out of
+six inside its own domain. It now observes 1.000 on both corpora.</p>
+</blockquote>
+<p>The criterion still passes, but at a threshold it can no longer
+fail. It is recorded here as non-discriminating and must be
+re-registered before campaign 4 rather than carried forward as
+evidence. Registering a replacement now, after seeing the result,
+would be exactly the post-hoc move section 9 forbids.</p>
+<h3 id="125-what-allow-still-requires">12.5 What ALLOW still requires</h3>
+<p>ALLOW is reachable, and it is still not the outcome of an ordinary
+quickstart turn. Measured on the public <code>ArvisEngine</code> contract, 40
+threaded turns of plain text prompts return REQUIRES_CONFIRMATION
+throughout, with <code>delta_w</code> at <code>None</code> on every turn: a bare
+informational input produces the minimal certificate of section 3.3,
+so there is no measured contraction to certify. The defect this
+campaign closed affected structured, certified turns; it never
+touched the bare-prompt path, which floors for the honest reason.</p>
+<p>The two conditions that remain, both documented in
+<code>docs/PATH_TO_ALLOW.md</code>:</p>
+<ol>
+<li>the switching dwell clock still cannot cross the public contract,
+   so a host driving the engine accumulates no dwell time;</li>
+<li><code>delta_w_soft_threshold</code> (-0.05) floors a contraction that is
+   real but weaker than the threshold, with reason
+   <code>weak_stability</code>. On D-2.0 that single condition accounts for
+   108 of the 113 turns where the gate says ALLOW and the final
+   verdict does not. The constant is conventional; the campaigns now
+   provide the ΔW scale needed to calibrate it, and that calibration
+   is a dedicated change with its own registration.</li>
+</ol>
+<h3 id="126-reproduction">12.6 Reproduction</h3>
+<p><code>python -m validation.m10 run</code> and <code>run2</code> regenerate both
+campaigns. Mutation replay on the certificate surface: 7 mutants, 6
+killed. The survivor, folding the unassessed axis back into the
+certification level, is an equivalent mutant: no reachable state has
+<code>lyapunov_assessed</code> false while <code>lyapunov_ok</code> is false, so no
+test can distinguish it. It is reported rather than papered over
+with a pin that would assert nothing.</p>
+<h2 id="13-campaign-4-report-proj-2026-09-02">13. Campaign 4 Report: PROJ, 2026-09-02</h2>
+<p><em>Historical report; the verdict counts of 13.4 were superseded by
+sections 14.5 and 15.3. See section 16.</em></p>
+<h3 id="131-scope">13.1 Scope</h3>
+<p>Three coherence defects on the projection and switching path, fixed
+in one campaign because they compound: an operator reacting to a
+misread signal perturbs the view the certificate validates, a
+post-decision refresh rewriting that certificate falsifies the trace
+of the perturbed decision, and a clock ticking twice per turn feeds
+the guard that floors the result. Zero veramem contact.</p>
+<h3 id="132-the-operator-reacted-to-the-same-misread-signal-dm-p1">13.2 The operator reacted to the same misread signal (DM-P1)</h3>
+<p><code>PiOperator</code> clamped its blending strength to 0.6 whenever
+<code>ctx._dv</code> was positive, reading it as a signed divergence. Campaign
+12 established the attribute carries the drift score, a magnitude in
+[0, 1]: the clamp fired on 85 per cent of campaign 2 turns and the
+light alpha = 1.0 branch was reachable only at exactly zero drift
+(248 of 1632 turns). The measured drift distribution (median 0.048,
+maximum 0.283) also settles the alternative that was considered:
+reinterpreting the thresholds against the magnitude at the declared
+<code>is_high</code> level (0.7) would never fire, dead code with
+unregistered constants. The reaction is removed; drift-reactive
+projection strength is re-posed at DM4 with a real signal.</p>
+<p>Effect, measured before pinning: no verdict moves on either corpus,
+both judgments unchanged, and about 20 spurious
+<code>projection_boundary</code> flags disappear per corpus (464 to 444 on
+D-1.0, 467 to 447 on D-2.0).</p>
+<h3 id="133-the-published-certificate-was-not-the-one-that-decided-dm-p2">13.3 The published certificate was not the one that decided (DM-P2)</h3>
+<p>The observability refresh ran the full projection again during
+finalize and overwrote every decision field, certificate included.
+Measured on the smoke corpus: the published certificate differed
+from the one the gate consumed on 42 turns of 42, materially on 18
+(LOCAL with the Lyapunov axis unassessed at decision time, BASIC
+with <code>lyapunov_compatibility_ok</code> False in the trace). The IR
+adapter read the published one, so the audit trail contradicted the
+decision.</p>
+<p>The refresh is now a post-hoc attestation: it re-validates the
+DECISION'S OWN VIEW against the signals that only exist after the
+gate, which is also the first place the Lyapunov axis is assessed
+with the real composite delta, and publishes under distinct names
+(<code>post_certificate</code>, <code>projection_post_certification_level</code>,
+<code>projection_post_lyapunov_compatible</code>). What decided is never
+rewritten. The overwrite had no test pin, one more measure of the
+distance between this path and the suite's reach.</p>
+<h3 id="134-the-dwell-clock-ticked-twice-per-turn">13.4 The dwell clock ticked twice per turn</h3>
+<p><code>regime_stage</code> (before the gate) and <code>runtime_stage</code> (after it)
+both ticked the same <code>SwitchingRuntime</code>, so tau_d counted two per
+turn and the guard's left-hand side ln(J)/tau_d was HALF its true
+value: switching was declared safe with half the dwell actually
+served. This is the campaign's only behavioral change and it is
+anti-conservative in the defect, conservative in the fix. The single
+owner is now <code>runtime_stage</code>, post-decision, so the guard reads
+the dwell of completed turns.</p>
+<p>Verdict movement, entirely attributable to this half (decomposition
+run with the blob restore disabled gives identical numbers):</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>D-1.0 before</th>
+<th>D-1.0 after</th>
+<th>D-2.0 before</th>
+<th>D-2.0 after</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABSTAIN</td>
+<td>1233</td>
+<td>1260</td>
+<td>1277</td>
+<td>1391</td>
+</tr>
+<tr>
+<td>REQUIRE_CONFIRMATION</td>
+<td>185</td>
+<td>169</td>
+<td>349</td>
+<td>237</td>
+</tr>
+<tr>
+<td>ALLOW</td>
+<td>22</td>
+<td><strong>11</strong></td>
+<td>6</td>
+<td><strong>4</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The movement is monotone hardening on a corrected clock: no ABSTAIN
+was relaxed anywhere, and the ALLOW that remain (nominal 7 and 4,
+long_horizon 4 and 1 per corpus) sit on the same contracting-turn
+profile as before. Both registered judgments hold, 11 of 12 and 12
+of 12, with <code>adaptive_estimation.estimator_availability</code> easing
+from 0.848 to 0.814 on D-2.0, well above its 0.5 threshold. The
+campaign 3 ALLOW counts (22 and 6) were measured on the inflated
+clock and are superseded by this table.</p>
+<h3 id="135-the-dwell-clock-crosses-the-public-contract">13.5 The dwell clock crosses the public contract</h3>
+<p>The clock lived on a runtime rebuilt fresh per pipeline; only a deep
+integration owning the pipeline could carry it, which is exactly
+what the M10 harness does (its threading loop carries the runtime
+object). A host on the documented <code>ArvisEngine</code> contract could
+never accumulate dwell, so <code>switching_unsafe_monitoring</code> never
+went away for it.</p>
+<p>The opaque blob now carries a <code>switching</code> section, written at
+finalize after the turn's completed regime update and restored at
+<code>core_stage</code>, the single ingestion point of the host blob (the
+extra-read ratchet refused a second read site, working as designed).
+<code>SwitchingRuntime</code> owns its own (de)serialization the way the
+monitor owns the rest of the blob; a blob without the section, or
+with a malformed one, degrades to a fresh clock. Campaign artifacts
+regenerate identically under threading because the harness already
+carried the clock: the campaign numbers isolate the tick fix, and
+the engine-level pins measure the contract: tau_d accumulates across
+threaded public turns and the cold-monitoring reason disappears,
+which no <code>ArvisEngine</code> host could reach before.</p>
+<h3 id="136-reproduction">13.6 Reproduction</h3>
+<p><code>python -m validation.m10 run</code>, <code>run2</code> and <code>sweep</code> regenerate
+the artifacts. Mutation replay on the three surfaces is recorded in
+the campaign closure; the moved tests are
+<code>test_pi_operator_reacts_to_divergence</code> (pinned the drift clamp)
+and <code>test_regime_stage.py::test_full_flow</code> (pinned the double
+tick).</p>
+<h2 id="14-campaign-5-report-seuil-2026-09-02">14. Campaign 5 Report: SEUIL, 2026-09-02</h2>
+<p><em>Historical report; section 15.3 withdraws the feedback-family ALLOW
+celebrated in 14.5 (they sat on the first threaded turn under a
+silently dead adaptive guard). The DM-S1 rate rule itself stands.</em></p>
+<h3 id="141-the-last-conventional-constant-on-the-allow-path">14.1 The last conventional constant on the ALLOW path</h3>
+<p>After campaigns ALLOW and PROJ, one floor on the path to a final
+ALLOW remained unmeasured: <code>delta_w_soft_threshold</code>, the local
+soft filter's boundary between a demonstrated contraction and a
+calm-looking wobble. It lived as <code>getattr(ctx, ..., -0.05)</code>, an
+attribute nothing ever set, so in practice a hard-coded -0.05 chosen
+by convention. This campaign calibrated it from the corpora and
+registered the result before the run (DM-S1), the same discipline as
+the metric thresholds of sections 10 and 11.</p>
+<h3 id="142-what-the-landscape-measurement-showed">14.2 What the landscape measurement showed</h3>
+<p>On D-2.0, 767 turns contract, with |dW| median 0.056 and a measured
+contraction RATE |dW|/W of median 0.15. Two structural facts:</p>
+<ul>
+<li>Adversarial turns also contract, and deeply (single-turn dW down
+  to -0.344 on the boundary family). The per-turn delta does not
+  separate adversarial from nominal; this filter is defense in
+  depth, and the layers that do the separating (input risk, the
+  adaptive veto, provenance floors) were measured doing it under
+  every candidate below.</li>
+<li>The <code>nominal_feedback</code> family, engineered so its inputs contract
+  on every turn (p_contraction 1.000, section 11.3), converges
+  geometrically: the better it does, the smaller its steps (median
+  |dW| 0.004). Under the absolute -0.05 the family got ZERO ALLOW.
+  A floor that refuses the one family that provably contracts by
+  design is measuring step size, not contraction.</li>
+</ul>
+<p>After the PROJ clock fix, the filter's direct victims were 13 turns
+on D-2.0, median |dW| 0.033: real contractions under a conventional
+bar.</p>
+<h3 id="143-the-registered-rule">14.3 The registered rule</h3>
+<p>DM-S1, registered by the owner on 2026-09-02 before the campaign
+run:</p>
+<pre><code>weak  iff  |delta_w| &lt; max(0.05 * W_current, 0.005)
+</code></pre>
+<p>The 5 per cent rate is one third of the measured median contraction
+rate, so a typical real contraction clears it with margin; the 0.005
+absolute floor brackets the p05-p10 of observed contracting |dW|, so
+a system hovering near W = 0 cannot certify noise. The constants
+live once, in <code>arvis/math/stability/weak_stability_policy.py</code>,
+pinned by the suite. Changing either is a new registration with a
+new campaign run.</p>
+<h3 id="144-the-dossier-every-candidate-measured-before-the-choice">14.4 The dossier: every candidate measured before the choice</h3>
+<p>Absolute -0.01, absolute -0.025, keeping -0.05, and the rate rule
+were each run on both full corpora before registration:</p>
+<table>
+<thead>
+<tr>
+<th>Candidate</th>
+<th>D-1.0 ALLOW</th>
+<th>D-2.0 ALLOW</th>
+<th>feedback unlocked</th>
+<th>ALLOW outside healthy families</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>keep -0.05</td>
+<td>11</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>-0.025</td>
+<td>12</td>
+<td>13</td>
+<td>8</td>
+<td>0</td>
+</tr>
+<tr>
+<td>-0.01</td>
+<td>13</td>
+<td>15</td>
+<td>8</td>
+<td>0</td>
+</tr>
+<tr>
+<td>rate (registered)</td>
+<td>13</td>
+<td>15</td>
+<td>8</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Both judgments hold under every candidate (11 of 12 and 12 of 12,
+same criteria). On D-1.0, an open-loop corpus, the ABSTAIN count is
+bit-identical under all candidates: the measured proof that this
+filter never relaxes a refusal, it only arbitrates between ALLOW and
+REQUIRES_CONFIRMATION on turns every other layer already cleared.
+On D-2.0 the small ABSTAIN differences between candidates are the
+closed loop reacting to changed verdicts (section 11.1), not the
+filter.</p>
+<h3 id="145-result-on-the-republished-campaigns">14.5 Result on the republished campaigns</h3>
+<p>Under the registered rule: D-1.0 reaches 13 ALLOW (nominal 8,
+long_horizon 5) and D-2.0 reaches 15 (nominal 4, long_horizon 3,
+<code>nominal_feedback</code> 8). The feedback ALLOW are the first ever on
+that family, and they are the campaign's point: the family built to
+demonstrate A12's contraction regime is finally certified when it
+does. The smallest admitted contraction is |dW| 0.0105; adversarial
+ALLOW remains 0.0 everywhere.</p>
+<p>Every constant on the path from a turn to a final ALLOW is now
+either measured, registered against a measurement, or pinned with
+its provenance. What remains conventional is tracked for DM4
+(section 12.5's remaining items are closed by campaigns PROJ and
+SEUIL; DM4 keeps the risk-bound calibration, the composite full-W
+wiring, and drift-reactive projection strength).</p>
+<h3 id="146-reproduction">14.6 Reproduction</h3>
+<p><code>python -m validation.m10 run</code> and <code>run2</code> regenerate the
+artifacts; the sweeps are unaffected (the declared_risk family does
+not cross this filter). Mutation replay is recorded in the campaign
+closure.</p>
+<h2 id="15-campaign-6-report-gate-sem-2026-09-02">15. Campaign 6 Report: GATE-SEM, 2026-09-02</h2>
+<h3 id="151-what-the-integral-audit-found">15.1 What the integral audit found</h3>
+<p>The 2026-09-02 integral audit examined every final ALLOW of the
+republished campaigns against the guards the documentation claims
+stand behind it, and found that the majority sat on the one turn
+where no guard was standing. On the first threaded turn of a
+trajectory the dwell clock reads zero; <code>adaptive_switching_margin</code>
+raised <code>ValueError</code> on <code>tau_d &lt;= 0</code>; the gate stage swallowed
+the exception into <code>metrics = None</code>; and every downstream veto
+checks <code>is_available</code> and does nothing. An absent adaptive layer
+constrained nothing, the exact opposite of the F-002 fail-closed
+doctrine the switching axis applies, and the turn with the switching
+condition violated by six orders of magnitude (lhs about +6.3e5 at
+the floored dwell) was therefore the EASIEST turn to certify.</p>
+<p>On the pre-campaign base (section 14 republication): 8 of 13 D-1.0
+final ALLOW and 13 of 15 on D-2.0 sat on that hole, including all 8
+<code>nominal_feedback</code> ALLOW that section 14.5 published as the rate
+rule's unlock. A second, independent bypass compounded it: the gate
+kernel's acceptance shortcut (<code>stable</code> and a negative delta) fired
+before <code>lyapunov_gate</code> on every live contracting turn, because on
+the live path <code>stable</code> is literally <code>delta_w &lt;= 0</code>. The
+<code>abstain_threshold</code> (V &gt;= 0.8) and the DM3 worst-axis refusal
+never executed on real traffic: probed directly, a state with its
+risk axis saturated at 1.0 and a contraction of -0.0375 earned a
+pre-verdict ALLOW, and -1e-18 qualified as acceptance evidence.
+Finally, the audit trail itself recorded transitions that never
+happened (431 phantom <code>ABSTAIN -&gt; REQUIRE_CONFIRMATION</code> boundary
+entries per corpus and thousands of no-op veto entries), the same
+defect class DM-P2 closed for the certificate.</p>
+<h3 id="152-the-decisions">15.2 The decisions</h3>
+<ul>
+<li><strong>DM-G1</strong>: the adaptive margin is computed on a floored dwell,
+  <code>max(tau_d, DWELL_TIME_FLOOR)</code>, the same 1e-6 floor
+  <code>switching_lhs</code> always applied, with the constant now shared
+  from <code>switching_params.py</code>. An empty clock yields a massively
+  positive margin: regime unstable, hard veto, ABSTAIN. The veto
+  the theory prescribes, instead of a silent disappearance. A
+  genuinely unavailable layer on a turn carrying both composite
+  energies floors ALLOW at REQUIRES_CONFIRMATION
+  (<code>adaptive_unavailable</code>, promoted from reserved to normative in
+  the reason-code registry, and added to the input-risk gate's
+  real-safety vetoes).</li>
+<li><strong>DM-G2</strong>: the validity envelope refuses <code>valid=True</code> when the
+  adaptive layer is absent (reason <code>adaptive_unavailable</code>, the
+  mapping section 6 of the envelope spec had reserved), and carries
+  <code>switching_safe_measured</code> beside the effective value, so the
+  soft posture can no longer overwrite the measurement silently.
+  F-004 soft semantics are otherwise unchanged.</li>
+<li><strong>DM-G3</strong>: the kernel acceptance shortcut is reserved for the
+  injected-scalar compliance case its comment always described
+  (<code>cur_lyap is None</code>), with the recovery noise floor applied;
+  every turn carrying a Lyapunov quadruple goes through
+  <code>lyapunov_gate</code>, so the worst-axis and mean-energy refusals are
+  live on real traffic.</li>
+<li><strong>DM-G4</strong>: the stage-side recovery detector applies the same
+  <code>RECOVERY_MIN_IMPROVEMENT</code> floor as the kernel's (one constant,
+  imported), closing the -1e-18 path into the sanctioned
+  <code>recovery_to_confirmation</code> relaxation.</li>
+<li><strong>LOT G5</strong>: every transition-record site is guarded so the trace
+  records only real verdict changes; denial events keep their
+  explicit <code>_denied</code> records. The trace grammar is pinned: a
+  no-op entry only ever comes from an event stage, a relaxation
+  entry only from the sanctioned relaxation stages.</li>
+</ul>
+<h3 id="153-result-on-the-republished-campaigns">15.3 Result on the republished campaigns</h3>
+<p>Every verdict movement is a hardening; not one turn relaxed, and the
+base ABSTAIN set is preserved bit for bit on both corpora.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>D-1.0 (1440 turns)</th>
+<th>D-2.0 (1632 turns)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ALLOW</td>
+<td>13 -&gt; 5</td>
+<td>15 -&gt; 4</td>
+</tr>
+<tr>
+<td>REQUIRES_CONFIRMATION</td>
+<td>167 -&gt; 166</td>
+<td>232 -&gt; 224</td>
+</tr>
+<tr>
+<td>ABSTAIN</td>
+<td>1260 -&gt; 1269</td>
+<td>1385 -&gt; 1404</td>
+</tr>
+</tbody>
+</table>
+<p>The five D-1.0 survivors (nominal 4, long_horizon 1) and the D-2.0
+survivors (nominal 3, long_horizon 1) all carry a live adaptive
+layer, a negative measured margin, a served dwell (tau_d 5 to 22 on
+D-1.0), moderate energy (V 0.08 to 0.16) and a real contraction
+(|dW| 0.0105 to 0.129). The entire final-verdict movement is
+attributable to DM-G1; DM-G3 moved no corpus verdict (no surviving
+turn approaches the worst-axis or mean-energy refusals), which is
+the desired shape for a restored guard: protection, not traffic.</p>
+<p><strong>Section 14.5 is superseded on one point and the supersession is
+the honest headline</strong>: the 8 <code>nominal_feedback</code> ALLOW celebrated
+there as the first on the family engineered to contract were ALL on
+the first threaded turn, certified by the absent layer, and are
+withdrawn. The family now shows 0 ALLOW. The DM-S1 rate rule remains
+registered and correct (the weak-stability floor was not the leak),
+but its unlock effect must be re-measured on trajectories long
+enough for the feedback family to serve dwell under a live guard;
+that re-measurement is future campaign work, not a number this
+report will keep claiming.</p>
+<p>The trace movement measures LOT G5: total transition entries fall
+from 3145 to 122 on D-1.0 and from 3351 to 135 on D-2.0. About 96
+per cent of the published audit trail attested transitions that
+never happened; what remains is exactly the set of real changes and
+explicit denials.</p>
+<h3 id="154-judgments">15.4 Judgments</h3>
+<p>Both registered judgments hold, unchanged in outcome: D-1.0 11 of 12
+(5.1 nominal contraction still reported failed, observed 0.516) and
+D-2.0 12 of 12. Two observed values moved for cause:
+<code>estimator_availability</code> rises to 0.833 and 0.848 (the layer no
+longer dies on dwell resets), and <code>envelope_alive_in_domain</code> falls
+from 1.0 to 0.824 and 0.842 (the envelope now refuses turns without
+a live adaptive layer). The latter criterion, recorded in section
+12.4 as non-discriminating at a saturated 1.0, is discriminating
+again; its re-registration before the next campaign remains open.</p>
+<h3 id="155-reproduction">15.5 Reproduction</h3>
+<p><code>python -m validation.m10 run</code>, <code>run2</code> and <code>sweep</code> regenerate
+the artifacts byte-identically; the campaign pins run at gate time
+(<code>tests/math/m10/test_gate_sem_pins.py</code>: no ALLOW without a live
+adaptive layer, a positive dwell and a negative measured margin;
+availability never dies mid-trajectory) together with the trace
+grammar pin (<code>tests/kernel/gate/test_verdict_transition_trace.py</code>)
+and the kernel bypass pins
+(<code>tests/math/gate/test_gate_kernel_live_path.py</code>). Mutation replay
+is recorded in the campaign closure.</p>
+<h3 id="156-left-open-deliberately">15.6 Left open, deliberately</h3>
+<p>Two D-2.0 survivors (nominal-06 turn 3, long_horizon-05 turn 2) hold
+ALLOW while the assumed-constant switching reading is still negative
+territory away: their measured adaptive margin is negative (the
+empirical contraction factor is large enough), but <code>switching_lhs</code>
+computed with the ASSUMED <code>kappa_eff</code> 0.13 is still positive at
+dwell 1 and 2. The envelope now discloses exactly this
+(<code>switching_safe_measured: false</code> beside the soft posture).</p>
+<p><strong>DM-G2bis, decided by the owner on 2026-09-02: option A.</strong> The
+MEASURED adaptive margin governs the ALLOW path; the assumed-constant
+T1 reading stays monitoring (and is now always disclosed through
+<code>switching_safe_measured</code>). Rationale: the assumed <code>kappa_eff</code>
+0.13 is a conservative convention, while the empirical contraction
+factor is measured on the actual trajectory; refusing a turn whose
+measured contraction is demonstrably stronger than the assumption
+would rank the convention above the measurement. The two D-2.0 turns
+cited above are the entire corpus evidence and remain ALLOW. The
+campaign pins therefore require the measured margin, deliberately
+not the assumed one; revisiting this (for instance if a future
+corpus shows measured-margin ALLOW misbehaving at low dwell) is a
+new registered decision.</p>
+<h2 id="16-reading-this-report-honestly">16. Reading This Report Honestly</h2>
+<p>Added by campaign HONEST-DOCS (2026-09-02), after the integral audit
+found the report quoting numbers its own republished artifacts
+contradicted, and celebrating a conclusion (11.4) a later fix had
+silently inverted. This section is the standing corrective: how much
+the judgments actually prove, what the registered set does not
+measure, and how to read the archive.</p>
+<h3 id="161-which-registered-criteria-can-actually-fail">16.1 Which registered criteria can actually fail</h3>
+<p>"11 of 12" and "12 of 12" overstate the discrimination of the
+registered set. Honest annotation, criterion by criterion, at the
+current tree:</p>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Discriminating?</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.1 nominal_contraction_dominates</td>
+<td>YES</td>
+<td>failed on D-1.0 (0.516) and passed on D-2.0 (1.000): the one criterion that has shown both outcomes</td>
+</tr>
+<tr>
+<td>5.1 bounded_expansion</td>
+<td>yes, weakly</td>
+<td>W is bounded by construction near 3; the 1.5 bar could fail only on gross regression</td>
+</tr>
+<tr>
+<td>5.2 no_divergence / bounded_energy</td>
+<td>practically no</td>
+<td>same boundedness; the Gamma bound of protocol 5.2 is not computed (<code>empirical_gain_max: null</code>)</td>
+</tr>
+<tr>
+<td>5.3 estimator_availability</td>
+<td>measures the harness</td>
+<td>threading liveness, not kernel quality; informative since GATE-SEM (dwell resets no longer kill the layer)</td>
+</tr>
+<tr>
+<td>5.4 abstain_never_relaxed</td>
+<td>structural</td>
+<td>the monotone guard makes ABSTAIN-to-ALLOW impossible on wrapped stages; it counts only that direction</td>
+</tr>
+<tr>
+<td>5.5 adversarial_never_allow</td>
+<td>YES</td>
+<td>a real safety property; it would fail on a single adversarial ALLOW</td>
+</tr>
+<tr>
+<td>5.5 expansion_rarely_allow</td>
+<td>yes</td>
+<td>could fail on a gate regression</td>
+</tr>
+<tr>
+<td>5.6 override_data_present</td>
+<td>no</td>
+<td>any run with turns passes</td>
+</tr>
+<tr>
+<td>5.7 negative_feedback</td>
+<td>NO, tautological</td>
+<td><code>energy_increase</code> and <code>control_should_reduce</code> are the same boolean (<code>delta_w &gt; 0</code>); the ratio is 1.0 by construction; re-registration against a real control quantity is open</td>
+</tr>
+<tr>
+<td>5.8 bounded_projection_component</td>
+<td>NO, never populated</td>
+<td>nothing in <code>arvis/</code> writes the disturbance components; all four are 0.0 on every turn; retirement or a real decomposition is open</td>
+</tr>
+<tr>
+<td>5.9 envelope_alive_in_domain</td>
+<td>yes, since GATE-SEM</td>
+<td>saturated at 1.0 through campaign 5 (recorded non-discriminating in 12.4); now 0.824 / 0.842 after the envelope refuses an absent adaptive layer; formal re-registration before the next judged campaign is still open</td>
+</tr>
+</tbody>
+</table>
+<p>The honest headline is therefore not "11 of 12": it is that of the
+handful of criteria that CAN fail, one (5.1 on D-1.0) does fail and
+is reported as failed, and the safety-shaped ones (adversarial
+ALLOW, ABSTAIN monotonicity, expansion-ALLOW) hold.</p>
+<h3 id="162-protocol-section-5-observations-the-registered-set-omitted">16.2 Protocol section 5 observations the registered set omitted</h3>
+<p>The registered criteria are a proxy of protocol section 5, and three
+of its prescribed observations were never registered nor reported.
+Their values at the current tracked artifacts:</p>
+<ul>
+<li><strong>Violation frequency (5.4 of the protocol)</strong>: the per-turn
+  kappa-margin violation rate is 0.989 on D-1.0 (1187 of 1200
+  available turns) and 0.941 on D-2.0 (1302 of 1384). The synthetic
+  corpora spend almost every turn outside the T1 margin; a
+  pre-registered bound on this rate was prescribed and never set.</li>
+<li><strong>Regime domination (5.3 of the protocol)</strong>: the margin bands are
+  dominated by <code>hard</code> on both corpora; "stable regime dominates,
+  unstable rare and transient" does not describe these corpora and
+  was never judged.</li>
+<li><strong>ALLOW in the stable regime (5.5 of the protocol)</strong>: final ALLOW
+  is 0.35% (D-1.0) and 0.25% (D-2.0) of turns; "ALLOW dominates in
+  the stable regime" was never judged and does not hold on these
+  corpora. The Gamma bound of protocol 5.2 remains uncomputed.</li>
+</ul>
+<p>None of this is hidden by the judgments; it is simply outside them,
+and this section keeps it visible. A note on aggregates: since
+DM-G1, an empty dwell clock yields a finite, massively positive
+margin instead of a dead layer, so <code>margin_mean</code> is dominated by
+those floor readings (about 2.5e4 at the current artifacts) and is
+no longer a useful central tendency; read the band counts instead.</p>
+<h3 id="163-registration-provenance">16.3 Registration provenance</h3>
+<p>The pre-registration is verifiable from history, not self-attested
+prose: the D-1.0 criteria were registered in commit <code>20fc648</code>
+(2026-09-01, before any full-corpus run) and the D-2.0 criteria in
+commit <code>098c751</code>, both by the owner and unmodified afterward; the
+judge consumes those sets verbatim
+(<code>validation/m10/thresholds.py</code>, status fields included).</p>
+<h3 id="164-how-to-read-the-archive">16.4 How to read the archive</h3>
+<p>Sections 10 through 14 are historical campaign reports, kept as
+written and stamped at their headers; where their numbers disagree
+with the tracked artifacts, section 15.3 carries the current counts.
+One conclusion (11.4) is explicitly retracted in place. The
+doc-versus-artifact ratchet
+(<code>tests/docs/test_m10_report_matches_artifacts.py</code>) greps the
+CURRENT headline numbers (section 15.3 and the PATH_TO_ALLOW table)
+against the tracked <code>judgment.json</code> and <code>metrics.json</code> at gate time,
+so a republication that moves a headline without moving the prose
+fails the gate instead of waiting for the next audit.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
