@@ -11,6 +11,19 @@ versioning throughout the pre-1.0 series.
 
 ### Added
 
+- Campaign HOST-SURFACE 1.3: the public host boundary now covers the generic
+  contracts VeraMem still had to import from kernel internals after a fresh
+  2026-09-23 cartography (225 ARVIS import statements across 144 Python
+  files). `host_api.access` gains `AccessContext`, `AccessDecision`,
+  `AccessVerdict` and `ResolvedAccess`; `host_api.services` gains
+  `SyscallEffect`; new `host_api.audit` exposes the durable-audit protocol
+  (`AuditReceipt`, `AuditSinkDurabilityClass`, `AuditSinkManifest`,
+  `DurableAuditSink`) plus the in-memory reference implementation. This is an
+  additive integration-surface change only: host authentication, workspace and
+  scope construction, concrete persistence, business policy and operational
+  recovery remain host responsibilities. `HOST_API_VERSION` 1.2 -> 1.3 and the
+  beta manifest are regenerated deliberately.
+
 - Campaign HOST-SURFACE: `host_api` 1.2, sized by measurement rather
   than guesswork. A cartography of the one real integration (veramem,
   from its 2026-09-04 snapshot) found 214 import lines across 137 files

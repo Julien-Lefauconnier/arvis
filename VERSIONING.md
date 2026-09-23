@@ -38,8 +38,8 @@ Importing an internal module is allowed. Depending on its stability is not.
 ## The host integration surface is `arvis.host_api`
 
 A host (the application embedding arvis) integrates the kernel through
-`arvis.host_api`: thirteen capability modules (engine, access, services, vfs,
-tools, memory, knowledge, conversation, cognition, control, llm, telemetry,
+`arvis.host_api`: fourteen capability modules (engine, access, services, audit,
+vfs, tools, memory, knowledge, conversation, cognition, control, llm, telemetry,
 errors) that re-export the symbols a host legitimately consumes. Symbols stay defined
 where they live; `host_api` pins the import paths and carries the
 compatibility promise, versioned by `HOST_API_VERSION` independently of the
@@ -203,8 +203,8 @@ suffix, tag.
 ## Beta series (0.1.0bN)
 
 The beta series stabilizes `arvis.__all__` (11 symbols) and the stable
-`host_api` modules (58 symbols across the twelve stable modules at
-HOST_API_VERSION 1.2; the provisional `control` module carries 5 more,
+`host_api` modules (68 symbols across the thirteen stable modules at
+HOST_API_VERSION 1.3; the provisional `control` module carries 5 more,
 outside this promise), both frozen by the beta contract
 manifest, plus the shipped serialization contract and the reflexive
 attestation canonicalization. Within the series, removals, renames or

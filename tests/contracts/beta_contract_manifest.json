@@ -26,6 +26,65 @@
   },
   "host_api": {
     "access": {
+      "AccessContext": {
+        "fields": {
+          "effect": {
+            "type": "SyscallEffect"
+          },
+          "principal": {
+            "type": "Principal"
+          },
+          "resource_id": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "resource_organization_id": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "resource_owner_id": {
+            "type": "str"
+          },
+          "resource_scope": {
+            "default": "None",
+            "type": "str | None"
+          },
+          "syscall_name": {
+            "default": "None",
+            "type": "str | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, principal: Principal, effect: SyscallEffect, resource_owner_id: str, resource_organization_id: str | None = None, resource_id: str | None = None, resource_scope: str | None = None, syscall_name: str | None = None) -> None"
+        },
+        "properties": {}
+      },
+      "AccessDecision": {
+        "kind": "enum",
+        "members": {
+          "ALLOW": "allow",
+          "DENY": "deny"
+        }
+      },
+      "AccessVerdict": {
+        "fields": {
+          "decision": {
+            "type": "AccessDecision"
+          },
+          "reason_code": {
+            "default": "None",
+            "type": "str | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, decision: AccessDecision, reason_code: str | None = None) -> None"
+        },
+        "properties": {
+          "allowed": "bool"
+        }
+      },
       "AuthenticatedPrincipal": {
         "fields": {
           "authentication_source": {
@@ -85,6 +144,111 @@
         "kind": "dataclass",
         "methods": {
           "__init__": "(self, user_id: str, organization_id: str | None = None, grants: frozenset[str] = <frozenset>) -> None"
+        },
+        "properties": {}
+      },
+      "ResolvedAccess": {
+        "fields": {
+          "context": {
+            "type": "AccessContext"
+          },
+          "lookup_error": {
+            "default": "None",
+            "type": "Exception | None"
+          },
+          "resource": {
+            "default": "None",
+            "type": "object | None"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, context: AccessContext, resource: object | None = None, lookup_error: Exception | None = None) -> None"
+        },
+        "properties": {}
+      }
+    },
+    "audit": {
+      "AuditReceipt": {
+        "fields": {
+          "causal_id": {
+            "type": "str"
+          },
+          "committed_at": {
+            "type": "str"
+          },
+          "durable_position": {
+            "type": "str"
+          },
+          "intent_sha256": {
+            "type": "str"
+          },
+          "receipt_id": {
+            "type": "str"
+          },
+          "run_id": {
+            "type": "str | None"
+          },
+          "store_fingerprint": {
+            "type": "str"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, receipt_id: str, run_id: str | None, causal_id: str, intent_sha256: str, durable_position: str, store_fingerprint: str, committed_at: str) -> None",
+          "to_material": "(self) -> dict[str, Any]"
+        },
+        "properties": {}
+      },
+      "AuditSinkDurabilityClass": {
+        "kind": "enum",
+        "members": {
+          "DATABASE": "database",
+          "DISTRIBUTED_LOG": "distributed_log",
+          "FILESYSTEM": "filesystem",
+          "MEMORY": "memory",
+          "PROCESS": "process"
+        }
+      },
+      "AuditSinkManifest": {
+        "fields": {
+          "append_only": {
+            "type": "bool"
+          },
+          "durability_class": {
+            "type": "AuditSinkDurabilityClass"
+          },
+          "implementation_version": {
+            "type": "str"
+          },
+          "sink_kind": {
+            "type": "str"
+          },
+          "store_fingerprint": {
+            "type": "str"
+          },
+          "transactional": {
+            "type": "bool"
+          }
+        },
+        "kind": "dataclass",
+        "methods": {
+          "__init__": "(self, sink_kind: str, durability_class: AuditSinkDurabilityClass, transactional: bool, append_only: bool, store_fingerprint: str, implementation_version: str) -> None"
+        },
+        "properties": {}
+      },
+      "DurableAuditSink": {
+        "kind": "class",
+        "methods": {
+          "append": "(self, intent: dict[str, Any]) -> AuditReceipt"
+        },
+        "properties": {}
+      },
+      "InMemoryAuditSink": {
+        "kind": "class",
+        "methods": {
+          "__init__": "(self) -> None",
+          "append": "(self, intent: dict[str, Any]) -> AuditReceipt"
         },
         "properties": {}
       }
@@ -967,6 +1131,13 @@
         },
         "properties": {}
       },
+      "SyscallEffect": {
+        "kind": "enum",
+        "members": {
+          "EFFECT": "effect",
+          "READ": "read"
+        }
+      },
       "SyscallHandler": {
         "kind": "class",
         "methods": {
@@ -1388,7 +1559,7 @@
       }
     }
   },
-  "host_api_version": "1.2",
+  "host_api_version": "1.3",
   "manifest_version": 1,
   "provisional_modules": [
     "control"

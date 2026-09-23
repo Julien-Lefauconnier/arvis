@@ -15,9 +15,11 @@ from arvis.kernel_core.syscalls import (
     SyscallHandler,
 )
 from arvis.kernel_core.syscalls.service_registry import KernelServiceRegistry
+from arvis.kernel_core.syscalls.syscall_registry import SyscallEffect
 
 __all__ = [
     "KernelServiceRegistry",
     "Syscall",
+    "SyscallEffect",
     "SyscallHandler",
 ]

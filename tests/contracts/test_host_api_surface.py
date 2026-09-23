@@ -19,6 +19,7 @@ import pytest
 import arvis.host_api
 from arvis.host_api import (
     access,
+    audit,
     cognition,
     control,
     conversation,
@@ -44,14 +45,26 @@ HOST_API_SURFACE: dict[str, list[str]] = {
         "MonitorConfig",
     ],
     "access": [
+        "AccessContext",
+        "AccessDecision",
+        "AccessVerdict",
         "AuthenticatedPrincipal",
         "OrganizationScopedAuthorization",
         "Principal",
+        "ResolvedAccess",
     ],
     "services": [
         "KernelServiceRegistry",
         "Syscall",
+        "SyscallEffect",
         "SyscallHandler",
+    ],
+    "audit": [
+        "AuditReceipt",
+        "AuditSinkDurabilityClass",
+        "AuditSinkManifest",
+        "DurableAuditSink",
+        "InMemoryAuditSink",
     ],
     "vfs": [
         "VFSCycleError",
@@ -129,6 +142,7 @@ _MODULES: dict[str, ModuleType] = {
     "engine": engine,
     "access": access,
     "services": services,
+    "audit": audit,
     "vfs": vfs,
     "tools": tools,
     "memory": memory,
@@ -149,9 +163,9 @@ _PAIRS: list[tuple[str, str]] = [
 
 
 def test_surface_size_is_pinned() -> None:
-    assert len(HOST_API_SURFACE) == 13
+    assert len(HOST_API_SURFACE) == 14
     assert sorted(HOST_API_SURFACE) == sorted(_MODULES)
-    assert len(_PAIRS) == 63
+    assert len(_PAIRS) == 73
 
 
 @pytest.mark.parametrize(
@@ -172,6 +186,6 @@ def test_host_api_module_surface_is_exact(module: str) -> None:
 
 
 def test_host_api_version_policy_is_pinned() -> None:
-    assert arvis.host_api.HOST_API_VERSION == "1.2"
+    assert arvis.host_api.HOST_API_VERSION == "1.3"
     assert arvis.host_api.PROVISIONAL_MODULES == frozenset({"control"})
     assert arvis.host_api.PROVISIONAL_MODULES < set(HOST_API_SURFACE)

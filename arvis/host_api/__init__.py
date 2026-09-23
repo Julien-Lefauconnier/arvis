@@ -3,8 +3,8 @@
 """The host integration surface of arvis.
 
 A host (the application embedding arvis) integrates the kernel through
-the thirteen capability modules of this package: engine, access,
-services, vfs, tools, memory, knowledge, conversation, cognition,
+the fourteen capability modules of this package: engine, access,
+services, audit, vfs, tools, memory, knowledge, conversation, cognition,
 control, llm, telemetry, errors. Each module is a pure re-export layer:
 symbols stay defined where they live, host_api pins the import paths and
 the compatibility promise.
@@ -14,6 +14,12 @@ VERSIONING.md) except the modules listed in PROVISIONAL_MODULES, whose
 surface may change in a minor release with a changelog entry.
 """
 
+# 1.3 (campaign HOST-SURFACE, 2026-09-23): additive only. A fresh
+# VeraMem cartography found the remaining unsupported host-facing types in
+# access, syscall effect classification and durable audit. The public surface
+# now exposes those generic contracts without moving host-owned identity,
+# workspace, persistence or business policy into ARVIS.
+#
 # 1.2 (campaign HOST-SURFACE, 2026-09-04): additive only, and driven by
 # measurement rather than guesswork. A cartography of the one real
 # integration (veramem) showed 214 import lines against internal module
@@ -26,7 +32,7 @@ surface may change in a minor release with a changelog entry.
 # 1.1 (campaign SURFACE, DM-S2): additive only. engine gains
 # CognitiveOS; access gains AuthenticatedPrincipal; tools gains
 # ToolInvocation, ToolPolicyEvaluator, AuthorizedEffectContext.
-HOST_API_VERSION = "1.2"
+HOST_API_VERSION = "1.3"
 
 PROVISIONAL_MODULES: frozenset[str] = frozenset({"control"})
 

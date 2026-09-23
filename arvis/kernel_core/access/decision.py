@@ -7,6 +7,8 @@ from enum import StrEnum
 
 
 class AccessDecision(StrEnum):
+    """Binary authorization decision emitted by an access policy."""
+
     ALLOW = "allow"
     DENY = "deny"
 
